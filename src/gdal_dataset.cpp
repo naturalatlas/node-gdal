@@ -1,0 +1,231 @@
+#include "gdal_common.hpp"
+#include "gdal_majorobject.hpp"
+#include "gdal_dataset.hpp"
+#include "gdal_rasterband.hpp"
+#include "gdal_driver.hpp"
+
+Persistent<FunctionTemplate> Dataset::constructor;
+
+void Dataset::Initialize(Handle<Object> target) {
+	HandleScope scope;
+
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Dataset::New));
+	constructor->Inherit(MajorObject::constructor);
+	constructor->InstanceTemplate()->SetInternalFieldCount(1);
+	constructor->SetClassName(String::NewSymbol("Dataset"));
+
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterXSize", getRasterXSize);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterYSize", getRasterYSize);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterCount", getRasterCount);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterBand", getRasterBand);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getProjectionRef", getProjectionRef);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "setProjection", setProjection);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "addBand", addBand);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getDriver", getDriver);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPCount", getGCPCount);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPProjection", getGCPProjection);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeoTransform", getGeoTransform);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeoTransform", setGeoTransform);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPs", getGCPs);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "setGCPs", setGCPs);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getFileList", getFileList);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
+
+	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
+}
+
+Dataset::Dataset(GDALDataset *ds)
+: ObjectWrap(),
+	this_(ds)
+{}
+
+Dataset::Dataset()
+: ObjectWrap(),
+	this_(0)
+{
+}
+
+Dataset::~Dataset()
+{
+	GDALClose(this_);
+}
+
+Handle<Value> Dataset::New(const Arguments& args)
+{
+	HandleScope scope;
+
+	if (!args.IsConstructCall()) {
+		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+	}
+	if (args[0]->IsExternal()) {
+		Local<External> ext = Local<External>::Cast(args[0]);
+		void* ptr = ext->Value();
+		Dataset *f =  static_cast<Dataset *>(ptr);
+		f->Wrap(args.This());
+		return args.This();
+	} else {
+		return ThrowException(String::New("Cannot create dataset directly"));
+	}
+}
+
+Handle<Value> Dataset::New(GDALDataset *ds)
+{
+	return ClosedPtr<Dataset, GDALDataset>::Closed(ds);
+}
+
+Handle<Value> Dataset::toString(const Arguments& args)
+{
+	HandleScope scope;
+	return scope.Close(String::New("Dataset"));
+}
+
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterXSize, Integer, GetRasterXSize);
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterYSize, Integer, GetRasterYSize);
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, getRasterBand, RasterBand, GetRasterBand, "band id");
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, String, GetProjectionRef);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Dataset, setProjection, Integer, SetProjection, "wkt/proj4 string");
+NODE_WRAPPED_METHOD_WITH_RESULT_1_ENUM_PARAM(Dataset, addBand, Integer, AddBand, GDALDataType, "data type");
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, String, GetGCPProjection);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, createMaskBand, Integer, CreateMaskBand, "flags");
+NODE_WRAPPED_METHOD(Dataset, flushCache, FlushCache);
+
+Handle<Value> Dataset::getGeoTransform(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	double transform[6];
+	if (ds->this_->GetGeoTransform(transform)) {
+		return NODE_THROW("Error getting transform");
+	}
+
+	Handle<Array> result = Array::New(6);
+	result->Set(0, Number::New(transform[0]));
+	result->Set(1, Number::New(transform[1]));
+	result->Set(2, Number::New(transform[2]));
+	result->Set(3, Number::New(transform[3]));
+	result->Set(4, Number::New(transform[4]));
+	result->Set(5, Number::New(transform[5]));
+
+	return scope.Close(result);
+}
+
+Handle<Value> Dataset::setGeoTransform(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	Handle<Array> transform;
+	NODE_ARG_ARRAY(0, "transform", transform);
+
+	if (transform->Length() != 6) {
+		return NODE_THROW("transform array must have 6 elements")
+	}
+
+	double buffer[6];
+	for (int i = 0; i < 6; i++) {
+		Local<Value> val = transform->Get(i);
+		if (!val->IsNumber()) {
+			return NODE_THROW("transform array must only contain numbers");
+		}
+		buffer[i] = val->NumberValue();
+	}
+
+	return scope.Close(Integer::New(ds->this_->SetGeoTransform(buffer)));
+}
+
+Handle<Value> Dataset::getFileList(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	char **list = ds->this_->GetFileList();
+	Handle<Array> results = Array::New(0);
+
+	if (!list) {
+		return scope.Close(results);
+	}
+
+	int i = 0;
+	while (list[i]) {
+		results->Set(i, String::New(list[i]));
+		i++;
+	}
+
+	CSLDestroy(list);
+
+	return scope.Close(results);
+}
+
+Handle<Value> Dataset::getGCPs(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	int n = ds->this_->GetGCPCount();
+	const GDAL_GCP *gcps = ds->this_->GetGCPs();
+
+	Handle<Array> results = Array::New(0);
+
+	if (!gcps) {
+		return scope.Close(results);
+	}
+
+	for (int i = 0; i < n; i++) {
+		GDAL_GCP gcp = gcps[i];
+		Local<Object> obj = Object::New();
+		obj->Set(String::NewSymbol("pszId"), String::New(gcp.pszId));
+		obj->Set(String::NewSymbol("pszInfo"), String::New(gcp.pszInfo));
+		obj->Set(String::NewSymbol("dfGCPPixel"), Number::New(gcp.dfGCPPixel));
+		obj->Set(String::NewSymbol("dfGCPLine"), Number::New(gcp.dfGCPLine));
+		obj->Set(String::NewSymbol("dfGCPX"), Number::New(gcp.dfGCPX));
+		obj->Set(String::NewSymbol("dfGCPY"), Number::New(gcp.dfGCPY));
+		obj->Set(String::NewSymbol("dfGCPZ"), Number::New(gcp.dfGCPZ));
+		results->Set(i, obj);
+	}
+
+	return scope.Close(results);
+}
+
+Handle<Value> Dataset::setGCPs(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	Handle<Array> gcps;
+	std::string projection("");
+	NODE_ARG_ARRAY(0, "gcps", gcps);
+	NODE_ARG_OPT_STR(1, "projection", projection);
+
+	GDAL_GCP* list = new GDAL_GCP [gcps->Length()];
+	GDAL_GCP* gcp = list;
+	for (unsigned int i = 0; i < gcps->Length(); ++i) {
+		Local<Value> val = gcps->Get(i);
+		if (!val->IsObject()) {
+			return NODE_THROW("list of GCPs must only contain objects");
+		}
+		Local<Object> obj = val->ToObject();
+
+		NODE_STR_FROM_OBJ_OPT(obj, "pszId", gcp->pszId);
+		NODE_STR_FROM_OBJ_OPT(obj, "pszInfo", gcp->pszInfo);
+		NODE_DOUBLE_FROM_OBJ(obj, "dfGCPPixel", gcp->dfGCPPixel);
+		NODE_DOUBLE_FROM_OBJ(obj, "dfGCPLine", gcp->dfGCPLine);
+		NODE_DOUBLE_FROM_OBJ(obj, "dfGCPX", gcp->dfGCPX);
+		NODE_DOUBLE_FROM_OBJ(obj, "dfGCPY", gcp->dfGCPY);
+		NODE_DOUBLE_FROM_OBJ_OPT(obj, "dfGCPZ", gcp->dfGCPZ);
+		gcp++;
+	}
+
+	if (list) delete [] list;
+
+	return scope.Close(Integer::New(ds->this_->SetGCPs(gcps->Length(), list, projection.c_str())));
+}

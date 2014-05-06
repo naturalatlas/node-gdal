@@ -1,0 +1,34 @@
+{
+  "name": "gdal",
+  "version": "0.0.1",
+  "description": "Native GDAL bindings",
+  "url": "http://github.com/naturalatlas/node-gdal",
+  "main": "./lib/index.js",
+  "keywords": [
+    "gis",
+    "geo",
+    "geography",
+    "geospatial",
+    "raster",
+    "gdal",
+    "libgdal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/naturalatlas/node-gdal.git"
+  },
+  "author": {
+    "name": "Brandon Reavis",
+    "url": "https://github.com/brandonreavis",
+    "email": "brandon@naturalatlas.com"
+  },
+  "licenses": [{
+    "type": "Apache License, Version 2.0",
+    "url": "http://www.apache.org/licenses/LICENSE-2.0"
+  }],
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=0.6.0"
+  }
+}
