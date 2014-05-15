@@ -1,5 +1,6 @@
 {
   "variables": {
+    "runtime_link%":"shared",
     "node_gdal_sources": [
       "src/node_gdal.cpp",
       "src/gdal_dataset.cpp",
@@ -25,6 +26,11 @@
       ],
       "libraries": [
         "<!@(gdal-config --libs)"
+      ],
+      "conditions": [
+           ["runtime_link == 'static'", {
+              'libraries': ['<!@(gdal-config --dep-libs)']
+          }]
       ],
       "cflags": [
         "<!@(gdal-config --cflags)"
