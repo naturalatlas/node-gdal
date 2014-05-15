@@ -1,6 +1,6 @@
 'use strict';
 
-var test = require('tape').test;
+var test = require('tap').test;
 var gdal = require('../');
 
 test('Driver', function(t) {
