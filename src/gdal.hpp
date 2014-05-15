@@ -35,7 +35,17 @@ namespace node_ogr {
 
 		return scope.Close(Dataset::New(ds));
 	}
+	static Handle<Value> close(const Arguments &args) {
+		Dataset* ds;
 
+		NODE_ARG_WRAPPED(0, "dataset", Dataset, ds);
+
+		if(ds->get()) GDALClose(ds->get());
+		ds->nullify();
+		
+		return Null();
+	}
+	
 	static Handle<Value> openShared(const Arguments &args) {
 		HandleScope scope;
 

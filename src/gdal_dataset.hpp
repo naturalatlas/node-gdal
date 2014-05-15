@@ -39,9 +39,11 @@ class Dataset: public node::ObjectWrap {
     static Handle<Value> getGCPs(const Arguments &args);
     static Handle<Value> setGCPs(const Arguments &args);
     static Handle<Value> getMetadata(const Arguments &args);
+    static Handle<Value> close(const Arguments &args);
 
     Dataset();
     Dataset(GDALDataset *ds);
+    inline void nullify() { this_ = NULL; }
     inline GDALDataset *get() { return this_; }
 
   private:

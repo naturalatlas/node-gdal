@@ -47,6 +47,7 @@ extern "C" {
 		NODE_SET_METHOD(target, "getDriverByName", node_ogr::getDriverByName);
 		NODE_SET_METHOD(target, "getDriverCount", node_ogr::getDriverCount);
 		NODE_SET_METHOD(target, "getDriver", node_ogr::getDriver);
+		NODE_SET_METHOD(target, "close", node_ogr::close);
 
 		MajorObject::Initialize(target);
 		Driver::Initialize(target);

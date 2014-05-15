@@ -31,6 +31,7 @@ void Dataset::Initialize(Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGCPs", setGCPs);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFileList", getFileList);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "close", close);
 
 	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
 }
@@ -48,7 +49,7 @@ Dataset::Dataset()
 
 Dataset::~Dataset()
 {
-	GDALClose(this_);
+	if(this_) GDALClose(this_);
 }
 
 Handle<Value> Dataset::New(const Arguments& args)
@@ -92,6 +93,14 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, String, GetGCPProjection);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, createMaskBand, Integer, CreateMaskBand, "flags");
 NODE_WRAPPED_METHOD(Dataset, flushCache, FlushCache);
+
+Handle<Value> Dataset::close(const Arguments& args)
+{
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(ds->this_) GDALClose(ds->this_);
+	ds->nullify();
+	return Undefined();
+}
 
 Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 {
