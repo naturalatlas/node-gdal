@@ -26,8 +26,13 @@
     "type": "Apache License, Version 2.0",
     "url": "http://www.apache.org/licenses/LICENSE-2.0"
   }],
+  "scripts": {
+    "test": "tap test/*.js"
+  },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "tap": "~2.13.0"
+  },
   "engines": {
     "node": ">=0.6.0"
   }
