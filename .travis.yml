@@ -4,6 +4,6 @@ node_js:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get -qq install libgdal1-dev
-  - sudo npm install -g tap
+  - npm install
 script:
   - npm test
