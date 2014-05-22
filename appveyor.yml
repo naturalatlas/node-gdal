@@ -1,0 +1,20 @@
+environment:
+  matrix:
+    - nodejs_version: 0.8
+    - nodejs_version: 0.10
+
+platform:
+  - x64
+  - x86
+
+install:
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
+  - node --version
+  - npm --version
+  - npm install --build-from-source
+  - npm test
+
+build: OFF
+test: OFF
+test_script: OFF
+deploy: OFF
