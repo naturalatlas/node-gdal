@@ -22,16 +22,19 @@
     "url": "https://github.com/brandonreavis",
     "email": "brandon@naturalatlas.com"
   },
-  "licenses": [{
-    "type": "Apache License, Version 2.0",
-    "url": "http://www.apache.org/licenses/LICENSE-2.0"
-  }],
+  "licenses": [
+    {
+      "type": "Apache License, Version 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
   "scripts": {
-    "test": "tap test/*.js"
+    "pretest": "npm install --dev",
+    "test": "make test"
   },
   "dependencies": {},
   "devDependencies": {
-    "tap": "~0.4.9"
+    "mocha": "^1.19.0"
   },
   "engines": {
     "node": ">=0.6.0"

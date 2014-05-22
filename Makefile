@@ -1,6 +1,7 @@
-.PHONY: configure clean build release
+.PHONY: configure clean build release test
 
-NODE_PATH := $(shell pwd)/lib
+MOCHA=node_modules/.bin/mocha
+NODE_PATH:=$(shell pwd)/lib
 
 all: build
 
@@ -13,6 +14,9 @@ build:
 clean:
 	node-gyp clean
 	rm -rf build
+
+test:
+	$(MOCHA) -R list
 
 release:
 ifeq ($(strip $(version)),)
