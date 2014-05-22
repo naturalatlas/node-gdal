@@ -34,7 +34,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "mocha": "^1.19.0"
+    "mocha": "~1.19.0"
   },
   "engines": {
     "node": ">=0.6.0"
