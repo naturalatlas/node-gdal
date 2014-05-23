@@ -16,25 +16,6 @@ using namespace v8;
 using namespace node;
 
 namespace node_ogr {
-	static Handle<Value> open(const Arguments &args) {
-		HandleScope scope;
-
-		std::string ds_name;
-		GDALAccess access = GA_ReadOnly;
-
-		NODE_ARG_STR(0, "dataset", ds_name);
-		NODE_ARG_ENUM_OPT(1, "update", GDALAccess, access);
-
-		GDALDataset *ds = NULL;
-
-		ds = (GDALDataset*) GDALOpen(ds_name.c_str(), access);
-
-		if (ds == NULL) {
-			return ThrowException(Exception::Error(String::New("Error opening dataset")));
-		}
-
-		return scope.Close(Dataset::New(ds));
-	}
 	static Handle<Value> close(const Arguments &args) {
 		Dataset* ds;
 
@@ -45,6 +26,33 @@ namespace node_ogr {
 		
 		return Null();
 	}
+
+	static Handle<Value> open(const Arguments &args) {
+		HandleScope scope;
+
+		std::string ds_name;
+		GDALAccess access = GA_ReadOnly;
+
+		NODE_ARG_STR(0, "dataset", ds_name);
+
+		if (args.Length() > 1) {
+			if (args[1]->IsInt32() || args[1]->IsBoolean()) {
+			  access = static_cast<GDALAccess>(args[1]->IntegerValue());
+			} else {
+			  return NODE_THROW("Update argument must be integer or boolean");
+			}
+		}
+
+		GDALDataset *ds = NULL;
+
+		ds = (GDALDataset*) GDALOpen(ds_name.c_str(), access);
+
+		if (ds == NULL) {
+			return NODE_THROW("Error opening dataset");
+		}
+
+		return scope.Close(Dataset::New(ds));
+	}
 	
 	static Handle<Value> openShared(const Arguments &args) {
 		HandleScope scope;
@@ -53,14 +61,21 @@ namespace node_ogr {
 		GDALAccess access = GA_ReadOnly;
 
 		NODE_ARG_STR(0, "dataset", ds_name);
-		NODE_ARG_ENUM_OPT(1, "update", GDALAccess, access);
+		
+		if (args.Length() > 1) {
+			if (args[1]->IsInt32() || args[1]->IsBoolean()) {
+			  access = static_cast<GDALAccess>(args[1]->IntegerValue());
+			} else {
+			  return NODE_THROW("Update argument must be integer or boolean");
+			}
+		}
 
 		GDALDataset *ds = NULL;
 
 		ds = (GDALDataset*) GDALOpenShared(ds_name.c_str(), access);
 
 		if (ds == NULL) {
-			return ThrowException(Exception::Error(String::New("Error opening dataset")));
+			return NODE_THROW("Error opening dataset");
 		}
 
 		return scope.Close(Dataset::New(ds));
@@ -76,7 +91,7 @@ namespace node_ogr {
 		GDALDriver *driver = GetGDALDriverManager()->GetDriverByName(driver_name.c_str());
 
 		if (driver == NULL) {
-			return ThrowException(Exception::Error(String::New("Error retrieving driver")));
+			return NODE_THROW("Error retrieving driver");
 		}
 
 		return scope.Close(Driver::New(driver));
@@ -95,7 +110,13 @@ namespace node_ogr {
 
 		NODE_ARG_INT(0, "driver index", driver_index);
 
-		return scope.Close(Driver::New(GetGDALDriverManager()->GetDriver(driver_index)));
+		GDALDriver *driver = GetGDALDriverManager()->GetDriver(driver_index);
+
+		if (driver == NULL) {
+			return NODE_THROW("Error retrieving driver");
+		}
+
+		return scope.Close(Driver::New(driver));
 	}
 
 }

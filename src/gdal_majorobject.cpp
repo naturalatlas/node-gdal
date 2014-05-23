@@ -75,10 +75,9 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 	while (metadata[i]) {
 		char* val = strchr(metadata[i], '=');
 		if (val) {
-			*val = 0; //split string into to
+			*val = 0; //split string into key and value
 			result->Set(String::NewSymbol(metadata[i]), String::New(val+1));
 		}
-		// result->Set(i, String::New(metadata[i]));
 		i++;
 	}
 

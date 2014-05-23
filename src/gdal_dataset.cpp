@@ -14,6 +14,7 @@ void Dataset::Initialize(Handle<Object> target) {
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("Dataset"));
 
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterXSize", getRasterXSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterYSize", getRasterYSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterCount", getRasterCount);
@@ -85,12 +86,11 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterXSize, Integer, GetRasterXSize
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterYSize, Integer, GetRasterYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, getRasterBand, RasterBand, GetRasterBand, "band id");
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, String, GetProjectionRef);
-NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Dataset, setProjection, Integer, SetProjection, "wkt/proj4 string");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_ENUM_PARAM(Dataset, addBand, Integer, AddBand, GDALDataType, "data type");
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, SafeString, GetProjectionRef);
+NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, String, GetGCPProjection);
+NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, SafeString, GetGCPProjection);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, createMaskBand, Integer, CreateMaskBand, "flags");
 NODE_WRAPPED_METHOD(Dataset, flushCache, FlushCache);
 
@@ -102,6 +102,37 @@ Handle<Value> Dataset::close(const Arguments& args)
 	return Undefined();
 }
 
+Handle<Value> Dataset::addBand(const Arguments& args)
+{
+	HandleScope scope;
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+
+	GDALDataType type;
+	Handle<Array> band_options = Array::New(0);
+	char **options = NULL;
+	
+	NODE_ARG_ENUM(0, "data type", GDALDataType, type);
+	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
+
+	if (band_options->Length() > 0) {
+		options = new char* [band_options->Length()];
+		for (unsigned int i = 0; i < band_options->Length(); ++i) {
+			options[i] = TOSTR(band_options->Get(i));
+		}
+	}
+
+	CPLErr err = ds->this_->AddBand(type, options);
+	
+	if (options) {
+		delete [] options;
+	}
+
+	if(err) return NODE_THROW_CPLERR(err);
+
+	return scope.Close(RasterBand::New(ds->this_->GetRasterBand(ds->this_->GetRasterCount()))); 
+}
+
 Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 {
 	HandleScope scope;
@@ -109,9 +140,8 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
 
 	double transform[6];
-	if (ds->this_->GetGeoTransform(transform)) {
-		return NODE_THROW("Error getting transform");
-	}
+	CPLErr err = ds->this_->GetGeoTransform(transform);
+	if(err) return NODE_THROW_CPLERR(err);
 
 	Handle<Array> result = Array::New(6);
 	result->Set(0, Number::New(transform[0]));
@@ -126,27 +156,28 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 
 Handle<Value> Dataset::setGeoTransform(const Arguments& args)
 {
-	HandleScope scope;
-
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
 
 	Handle<Array> transform;
 	NODE_ARG_ARRAY(0, "transform", transform);
 
 	if (transform->Length() != 6) {
-		return NODE_THROW("transform array must have 6 elements")
+		return NODE_THROW("Transform array must have 6 elements")
 	}
 
 	double buffer[6];
 	for (int i = 0; i < 6; i++) {
 		Local<Value> val = transform->Get(i);
 		if (!val->IsNumber()) {
-			return NODE_THROW("transform array must only contain numbers");
+			return NODE_THROW("Transform array must only contain numbers");
 		}
 		buffer[i] = val->NumberValue();
 	}
 
-	return scope.Close(Integer::New(ds->this_->SetGeoTransform(buffer)));
+	CPLErr err = ds->this_->SetGeoTransform(buffer);
+	if (err) return NODE_THROW_CPLERR(err);
+
+	return Undefined();
 }
 
 Handle<Value> Dataset::getFileList(const Arguments& args)
@@ -206,8 +237,6 @@ Handle<Value> Dataset::getGCPs(const Arguments& args)
 
 Handle<Value> Dataset::setGCPs(const Arguments& args)
 {
-	HandleScope scope;
-
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
 
 	Handle<Array> gcps;
@@ -236,5 +265,8 @@ Handle<Value> Dataset::setGCPs(const Arguments& args)
 
 	if (list) delete [] list;
 
-	return scope.Close(Integer::New(ds->this_->SetGCPs(gcps->Length(), list, projection.c_str())));
+	CPLErr err = ds->this_->SetGCPs(gcps->Length(), list, projection.c_str());
+	if(err) return NODE_THROW_CPLERR(err);
+
+	return Undefined();
 }

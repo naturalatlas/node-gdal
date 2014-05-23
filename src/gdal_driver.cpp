@@ -15,6 +15,7 @@ void Driver::Initialize(Handle<Object> target) {
 	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("LongName"), longNameGetter);
 	constructor->SetClassName(String::NewSymbol("Driver"));
 
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createCopy", createCopy);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "delete", deleteDataset);
@@ -60,6 +61,8 @@ Handle<Value> Driver::New(const Arguments& args)
 }
 
 Handle<Value> Driver::New(GDALDriver *driver) {
+	if(!driver) return Null();
+	
 	v8::HandleScope scope;
 	Driver *wrapped = new Driver(driver);
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);

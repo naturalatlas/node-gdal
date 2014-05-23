@@ -4,7 +4,35 @@
 
 #include <v8.h>
 
+//String::New(null) -> seg fault
+class SafeString {
+  public:
+    static v8::Handle<v8::Value> New(const char * data){
+      if(!data) return v8::Null();
+      else return v8::String::New(data);
+    }
+};
+
 #define TOSTR(obj) (*String::Utf8Value((obj)->ToString()))
+
+#define NODE_THROW(msg) ThrowException(Exception::Error(String::New(msg)));
+
+#define NODE_THROW_CPLERR(err) ThrowException(Exception::Error(String::New(CPLGetLastErrorMsg())));
+
+template <typename T, typename K>
+class ClosedPtr {
+public:
+  static v8::Handle<v8::Value> Closed(K *raw) {
+    if(!raw) return v8::Null();
+    v8::HandleScope scope;
+    T *wrapped = new T(raw);
+    v8::Handle<v8::Value> ext = v8::External::New(wrapped);
+    v8::Handle<v8::Object> obj = T::constructor->GetFunction()->NewInstance(1, &ext);
+    return scope.Close(obj);
+  }
+};
+
+// ----- object property conversion -------
 
 #define NODE_DOUBLE_FROM_OBJ(obj, key, var)                                                               \
 {                                                                                                         \
@@ -56,6 +84,7 @@
   }                                                                                                       \
 }
 
+// ----- argument conversion -------
 
 #define NODE_ARG_INT(num, name, var)                                                                           \
   if (args.Length() < num + 1) {                                                                               \
@@ -137,6 +166,7 @@
   }                                                                                                           \
   var = (*String::Utf8Value((args[num])->ToString()))
                                                                                               
+// ----- optional argument conversion -------
 
 #define NODE_ARG_INT_OPT(num, name, var)                                                                         \
   if (args.Length() > num) {                                                                                     \
@@ -207,6 +237,7 @@
     }                                                                                                          \
   }
 
+// ----- wrapped methods w/ results-------
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT(klass, method, result_type, wrapped_method)                               \
 Handle<Value> klass::method(const Arguments& args)                                                                \
@@ -263,6 +294,65 @@ Handle<Value> klass::method(const Arguments& args)                              
   return scope.Close(result_type::New(ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param)));  \
 }
 
+// ----- wrapped methods w/ CPLErr result (throws) -------
+
+#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT(klass, method, wrapped_method)                                          \
+Handle<Value> klass::method(const Arguments& args)                                                                  \
+{                                                                                                                   \
+  int err = ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method();                                        \
+  if (err) return NODE_THROW_CPLERR(err);                                                                           \
+  return Undefined();                                                                                               \
+}
+
+
+#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name)          \
+Handle<Value> klass::method(const Arguments& args)                                                                          \
+{                                                                                                                           \
+  HandleScope scope;                                                                                                        \
+  param_type *param;                                                                                                        \
+  NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
+  int err = ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param->get());                                    \
+  if (err) return NODE_THROW_CPLERR(err);                                                                                   \
+  return Undefined();                                                                                                       \
+}
+
+
+#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(klass, method, wrapped_method, param_name)                 \
+Handle<Value> klass::method(const Arguments& args)                                                                    \
+{                                                                                                                     \
+  HandleScope scope;                                                                                                  \
+  std::string param;                                                                                                  \
+  NODE_ARG_STR(0, #param_name, param);                                                                                \
+  int err = ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param.c_str());                             \
+  if (err) return NODE_THROW_CPLERR(err);                                                                             \
+  return Undefined();                                                                                                 \
+}
+
+
+#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_INTEGER_PARAM(klass, method, wrapped_method, param_name)          \
+Handle<Value> klass::method(const Arguments& args)                                                              \
+{                                                                                                               \
+  HandleScope scope;                                                                                            \
+  int param;                                                                                                    \
+  NODE_ARG_INT(0, #param_name, param);                                                                          \
+  int err = ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param);                               \
+  if (err) return NODE_THROW_CPLERR(err);                                                                       \
+  return Undefined();                                                                                           \
+}
+
+
+#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)          \
+Handle<Value> klass::method(const Arguments& args)                                                             \
+{                                                                                                              \
+  HandleScope scope;                                                                                           \
+  double param;                                                                                                \
+  NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
+  int err = ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param);                              \
+  if (err) return NODE_THROW_CPLERR(err);                                                                      \
+  return Undefined();                                                                                          \
+}
+
+// ----- wrapped methods -------
 
 #define NODE_WRAPPED_METHOD(klass, method, wrapped_method)           \
 Handle<Value> klass::method(const Arguments& args)                   \
@@ -337,20 +427,5 @@ Handle<Value> klass::method(const Arguments& args)                              
   ObjectWrap::Unwrap<klass>(args.This())->this_->wrapped_method(param.c_str());             \
   return Undefined();                                                                       \
 }
-
-
-#define NODE_THROW(msg) ThrowException(Exception::Error(String::New(msg)));
-
-template <typename T, typename K>
-class ClosedPtr {
-public:
-  static v8::Handle<v8::Value> Closed(K *raw) {
-    v8::HandleScope scope;
-    T *wrapped = new T(raw);
-    v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-    v8::Handle<v8::Object> obj = T::constructor->GetFunction()->NewInstance(1, &ext);
-    return scope.Close(obj);
-  }
-};
 
 #endif
