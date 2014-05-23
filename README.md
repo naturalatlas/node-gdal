@@ -1,4 +1,7 @@
 # node-gdal
+[![NPM version](https://badge.fury.io/js/gdal.png)](http://badge.fury.io/js/gdal)
+[![Build Status](https://travis-ci.org/naturalatlas/node-gdal.png?branch=master)](https://travis-ci.org/naturalatlas/node-gdal)
+[![Build Status](https://ci.appveyor.com/api/projects/status/mo06c2r5opdwak95)](https://ci.appveyor.com/project/brianreavis/node-gdal)
 
 Read and write raster geospatial files straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) (1.9.x) binding.
 
