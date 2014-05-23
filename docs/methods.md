@@ -32,14 +32,14 @@
 
 ## Driver
 
-- `toString()`
+- `toString() : string`
 - `getMetadata(string domain = null) : object`
-- `create()`
-- `createCopy()`
-- `delete()`
-- `quietDelete()`
-- `rename()`
-- `copyFiles()`
+- `create(string filename, integer x_size, integer y_size, int n_bands = 1, int gdal_data_type = GDT_Byte, string[] co): Dataset #throws`
+- `createCopy(string filename, Dataset src, boolean strict = false, string[] options = null): Dataset #throws`
+- `deleteDataset() : void #throws`
+- `quietDelete() : void #throws`
+- `rename(string new_name, string old_name): void #throws`
+- `copyFiles(string new_name, string old_name) : void #throws`
 
 ### Properties
 

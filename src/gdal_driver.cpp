@@ -11,18 +11,19 @@ void Driver::Initialize(Handle<Object> target) {
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Driver::New));
 	constructor->Inherit(MajorObject::constructor);
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ShortName"), shortNameGetter);
-	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("LongName"), longNameGetter);
 	constructor->SetClassName(String::NewSymbol("Driver"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createCopy", createCopy);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "delete", deleteDataset);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "deleteDataset", deleteDataset);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "quietDelete", quietDelete);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "rename", rename);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "copyFiles", copyFiles);
 
+	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ShortName"), shortNameGetter);
+	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("LongName"), longNameGetter);
+	
 	target->Set(String::NewSymbol("Driver"), constructor->GetFunction());
 }
 
@@ -46,23 +47,23 @@ Handle<Value> Driver::New(const Arguments& args)
 	HandleScope scope;
 
 	if (!args.IsConstructCall())
-			return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
 
 	if (args[0]->IsExternal()) {
-			Local<External> ext = Local<External>::Cast(args[0]);
-			void* ptr = ext->Value();
-			Driver *f =  static_cast<Driver *>(ptr);
-			f->Wrap(args.This());
+		Local<External> ext = Local<External>::Cast(args[0]);
+		void* ptr = ext->Value();
+		Driver *f =  static_cast<Driver *>(ptr);
+		f->Wrap(args.This());
 
-			return args.This();
+		return args.This();
 	}else{
-			return ThrowException(String::New("Cannot create Driver directly"));
+		return ThrowException(String::New("Cannot create Driver directly"));
 	}
 }
 
 Handle<Value> Driver::New(GDALDriver *driver) {
 	if(!driver) return Null();
-	
+
 	v8::HandleScope scope;
 	Driver *wrapped = new Driver(driver);
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
@@ -80,18 +81,17 @@ Handle<Value> Driver::toString(const Arguments& args)
 Handle<Value> Driver::shortNameGetter(Local<String> property, const AccessorInfo& info)
 {
 	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return String::New(driver->this_->GetDescription());
+	return SafeString::New(driver->this_->GetDescription());
 }
 
 Handle<Value> Driver::longNameGetter(Local<String> property, const AccessorInfo& info)
 {
 	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return String::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME));
+	return SafeString::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME));
 }
 
-
-NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Driver, deleteDataset, Integer, Delete, "dataset name");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Driver, quietDelete, Integer, QuietDelete, "dataset name");
+NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Driver, deleteDataset, Delete, "dataset name");
+NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Driver, quietDelete, QuietDelete, "dataset name");
 
 Handle<Value> Driver::create(const Arguments& args)
 {
@@ -124,6 +124,8 @@ Handle<Value> Driver::create(const Arguments& args)
 
 	if (options) delete [] options;
 
+	if(!dataset) return NODE_THROW("Error creating dataset");
+
 	return scope.Close(Dataset::New(dataset));
 }
 Handle<Value> Driver::createCopy(const Arguments& args)
@@ -136,9 +138,9 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 
 	NODE_ARG_STR(0, "filename", filename);
 	NODE_ARG_WRAPPED(1, "source dataset", Dataset, src_dataset);
-	NODE_ARG_INT(2, "strict", strict);
+	NODE_ARG_BOOL_OPT(2, "strict", strict);
 	NODE_ARG_ARRAY_OPT(3, "dataset creation options", dataset_options);
-	//todo: add optional progress call back argument
+	//todo: add optional progress callback argument
 
 	char **options = NULL;
 	
@@ -156,13 +158,13 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 
 	if (options) delete [] options;
 
+	if(!dataset) return NODE_THROW("Error copying dataset");
+
 	return scope.Close(Dataset::New(dataset));
 }
 
 Handle<Value> Driver::copyFiles(const Arguments& args)
 {
-	HandleScope scope;
-
 	std::string old_name;
 	std::string new_name;
 
@@ -171,7 +173,10 @@ Handle<Value> Driver::copyFiles(const Arguments& args)
 
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
-	return scope.Close(Integer::New(driver->this_->CopyFiles(new_name.c_str(), old_name.c_str())));
+	CPLErr err = driver->this_->CopyFiles(new_name.c_str(), old_name.c_str());
+	if(err) return NODE_THROW_CPLERR(err);
+
+	return Undefined();
 }
 
 Handle<Value> Driver::rename(const Arguments& args)
@@ -186,5 +191,8 @@ Handle<Value> Driver::rename(const Arguments& args)
 
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
-	return scope.Close(Integer::New(driver->this_->Rename(new_name.c_str(), old_name.c_str())));
+	CPLErr err = driver->this_->Rename(new_name.c_str(), old_name.c_str());
+	if(err) return NODE_THROW_CPLERR(err);
+
+	return Undefined();
 }
