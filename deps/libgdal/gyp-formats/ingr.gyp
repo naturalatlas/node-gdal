@@ -14,7 +14,8 @@
 				"../gdal/frmts/ingr/JpegHelper.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/ingr"
+				"../gdal/frmts/ingr",
+				"../gdal/frmts/gtiff/libtiff"
 			]
 		}
 	]

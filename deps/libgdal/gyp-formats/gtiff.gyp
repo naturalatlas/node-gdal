@@ -69,7 +69,9 @@
 				"../gdal/frmts/gtiff/tifvsi.cpp"
 			],
 			"include_dirs": [
+				"../gdal/frmts/zlib",
 				"../gdal/frmts/gtiff",
+				"../gdal/frmts/gtiff/libtiff",
 				"../gdal/frmts/gtiff/libgeotiff"
 			]
 		}

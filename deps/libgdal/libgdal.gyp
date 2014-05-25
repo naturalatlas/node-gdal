@@ -193,6 +193,7 @@
 				"./gdal/port",
 				"./gdal/bridge",
 				"./gdal/frmts",
+				"./gdal/frmts/zlib",
 				"./gdal/ogr",
 				"./gdal/ogr/ogrsf_frmts",
 				"./gdal/ogr/ogrsf_frmts/mem"

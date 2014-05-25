@@ -69,7 +69,7 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt 
 	idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg 
 	coasp tsx terragen blx til r northwood saga xyz hf2 
-	kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map
+	kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib
 	${OPT_GDAL_FORMATS}"
 
 mkdir -p $dir_formats_gyp

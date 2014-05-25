@@ -26,7 +26,8 @@
 			],
 			"include_dirs": [
 				"../gdal/frmts/nitf",
-				"../gdal/frmts/vrt"
+				"../gdal/frmts/vrt",
+				"../gdal/frmts/gtiff/libtiff"
 			]
 		}
 	]

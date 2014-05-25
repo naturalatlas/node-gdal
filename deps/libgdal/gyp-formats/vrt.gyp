@@ -19,7 +19,8 @@
 				"../gdal/frmts/vrt/vrtwarped.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/vrt"
+				"../gdal/frmts/vrt",
+				"../gdal/frmts/raw"
 			]
 		}
 	]
