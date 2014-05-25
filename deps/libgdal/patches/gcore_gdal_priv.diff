@@ -1,0 +1,14 @@
+--- libgdal/gcore/gdal_priv.h	2014-04-16 14:04:48.000000000 -0600
++++ libgdal/gcore/gdal_priv_mac.h	2014-05-22 23:11:49.000000000 -0600
+@@ -113,7 +113,11 @@
+     CPLString           sDescription;
+     GDALMultiDomainMetadata oMDMD;
+     
++    #ifdef __clang__
++    char               **BuildMetadataDomainList(char** papszList, int bCheckNonEmpty, ...);
++    #else
+     char               **BuildMetadataDomainList(char** papszList, int bCheckNonEmpty, ...) CPL_NULL_TERMINATED;
++    #endif
+     
+   public:
+                         GDALMajorObject();

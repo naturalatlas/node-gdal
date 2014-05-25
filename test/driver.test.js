@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var gdal = require('../');
+var gdal = require('../lib/gdal.js');
 
 describe('Driver', function() {
 	var expected = {

@@ -1,40 +1,64 @@
 {
-  "variables": {
-    "runtime_link%":"shared",
-    "node_gdal_sources": [
-      "src/node_gdal.cpp",
-      "src/gdal_dataset.cpp",
-      "src/gdal_driver.cpp",
-      "src/gdal_rasterband.cpp",
-      "src/gdal_majorobject.cpp"
-    ]
-  },
-  "targets": [
-    {
-      "target_name": "gdal",
-      "product_name": "gdal",
-      "type": "loadable_module",
-      "product_prefix": "",
-      "product_extension":"node",
-      "sources": [
-        "<@(node_gdal_sources)"
-      ],
-      "defines": [
-        "PLATFORM='<(OS)'",
-        "_LARGEFILE_SOURCE",
-        "_FILE_OFFSET_BITS=64"
-      ],
-      "libraries": [
-        "<!@(gdal-config --libs)"
-      ],
-      "conditions": [
-           ["runtime_link == 'static'", {
-              'libraries': ['<!@(gdal-config --dep-libs)']
-          }]
-      ],
-      "cflags": [
-        "<!@(gdal-config --cflags)"
-      ]
-    }
-  ]
+	"includes": ["common.gypi"],
+	"variables": {
+		"shared_gdal%": "false",
+		"runtime_link%": "shared"
+	},
+	"targets": [
+		{
+			"target_name": "gdal",
+			"type": "loadable_module",
+			"product_prefix": "",
+			"product_extension": "node",
+			"sources": [
+				"src/node_gdal.cpp",
+				"src/gdal_dataset.cpp",
+				"src/gdal_driver.cpp",
+				"src/gdal_rasterband.cpp",
+				"src/gdal_majorobject.cpp"
+			],
+			"defines": [
+				"PLATFORM='<(OS)'",
+				"_LARGEFILE_SOURCE",
+				"_FILE_OFFSET_BITS=64"
+			],
+			"xcode_settings": {
+				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
+			},
+			"conditions": [
+				["shared_gdal == 'false'", {
+					"dependencies": [
+						"deps/libgdal/libgdal.gyp:libgdal"
+					]
+				}, {
+					"conditions": [
+						["runtime_link == 'static'", {
+							"libraries": ["<!@(gdal-config --dep-libs)"]
+						}, {
+							"libraries": ["<!@(gdal-config --libs)"]
+						}]
+					],
+					"cflags_cc": ["<!@(gdal-config --cflags)"],
+					"xcode_settings": {
+						"OTHER_CPLUSPLUSFLAGS":[
+							"<!@(gdal-config --cflags)"
+						]
+					}
+				}]
+			]
+		},
+		{
+			"target_name": "action_after_build",
+			"type": "none",
+			"dependencies": [ "<(module_name)" ],
+			"copies": [
+				{
+					"files": [
+						"<(PRODUCT_DIR)/gdal.node"
+					],
+					"destination": "<(module_path)"
+				}
+			]
+		}
+	]
 }

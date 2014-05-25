@@ -1,6 +1,6 @@
 'use strict';
 
-var gdal = require('../');
+var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('assert');
 

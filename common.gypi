@@ -1,0 +1,66 @@
+{
+	"variables": {
+		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
+	},
+	"target_defaults": {
+		"default_configuration": "Release",
+		"conditions": [
+			["'<(prefers_libcpp)' == 'True'", {
+				"xcode_settings": {
+					"MACOSX_DEPLOYMENT_TARGET": "10.9"
+				}
+			}],
+			["OS == 'mac'", {
+				"xcode_settings": {
+					"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+					"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
+					"OTHER_CFLAGS": [
+						"-mmacosx-version-min=10.7",
+						"-Wno-deprecated-register",
+						"-Wno-unused-const-variable"
+					],
+					"OTHER_CPLUSPLUSFLAGS": [
+						"-mmacosx-version-min=10.7",
+						"-std=c++11",
+						"-stdlib=libc++",
+						"-Wno-deprecated-register",
+						"-Wno-unused-const-variable"
+					]
+				}
+			}]
+		],
+		"configurations": {
+			"Debug": {
+				"cflags_cc!": ["-O3", "-Os", "-DNDEBUG"],
+				"xcode_settings": {
+					"OTHER_CPLUSPLUSFLAGS": ["-O3", "-Os", "-DNDEBUG"],
+					"GCC_OPTIMIZATION_LEVEL": "0",
+					"GCC_GENERATE_DEBUGGING_SYMBOLS": "YES"
+				},
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"ExceptionHandling": 1,
+						"RuntimeTypeInfo": "true"
+					}
+				}
+			},
+			"Release": {
+				"xcode_settings": {
+					"GCC_OPTIMIZATION_LEVEL": "s",
+					"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",
+					"DEAD_CODE_STRIPPING": "YES",
+					"GCC_INLINES_ARE_PRIVATE_EXTERN": "YES"
+				},
+				"ldflags": [
+					"-Wl,-s"
+				],
+				"msvs_settings": {
+					"VCCLCompilerTool": {
+						"ExceptionHandling": 1,
+						"RuntimeTypeInfo": "true"
+					}
+				}
+			}
+		}
+	}
+}

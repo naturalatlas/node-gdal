@@ -1,0 +1,13 @@
+.gitignore
+.npmignore
+.gitmodules
+node_modules
+lib/binding
+build
+test
+benchmark
+Makefile
+.travis.yml
+appveyor.yml
+examples
+*tgz

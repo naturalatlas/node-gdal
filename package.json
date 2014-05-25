@@ -13,6 +13,13 @@
     "gdal",
     "libgdal"
   ],
+  "binary": {
+    "module_name": "gdal",
+    "module_path": "./lib/binding/",
+    "remote_path": "v{version}",
+    "host": "https://node-gdal.s3-us-west-1.amazonaws.com",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/naturalatlas/node-gdal.git"
@@ -30,13 +37,19 @@
   ],
   "scripts": {
     "pretest": "npm install --dev",
-    "test": "make test"
+    "test": "make test",
+    "install": "node-pre-gyp install --fallback-to-build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "node-pre-gyp": "~0.5.13"
+  },
   "devDependencies": {
     "mocha": "~1.19.0"
   },
+  "bundledDependencies": [
+    "node-pre-gyp"
+  ],
   "engines": {
-    "node": ">=0.6.0"
+    "node": ">=0.8.0"
   }
 }

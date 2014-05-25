@@ -1,0 +1,11 @@
+--- libgdal/frmts/wms/gdalwmsdataset.cpp	2014-04-16 14:04:35.000000000 -0600
++++ libgdal/frmts/wms/gdalwmsdataset_new.cpp	2014-05-22 23:27:36.000000000 -0600
+@@ -380,7 +380,7 @@
+     
+     if (ret == CE_None) {
+         const char *pszHttpZeroBlockCodes = CPLGetXMLValue(config, "ZeroBlockHttpCodes", "");
+-        if(pszHttpZeroBlockCodes == '\0') {
++        if(pszHttpZeroBlockCodes[0] == '\0') {
+             m_http_zeroblock_codes.push_back(204);
+         } else {
+             char **kv = CSLTokenizeString2(pszHttpZeroBlockCodes,",",CSLT_HONOURSTRINGS);

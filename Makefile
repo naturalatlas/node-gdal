@@ -1,19 +1,25 @@
-.PHONY: configure clean build release test
+.PHONY: clean build rebuild release test
 
 MOCHA=node_modules/.bin/mocha
 NODE_PATH:=$(shell pwd)/lib
 
 all: build
 
-configure:
-	node-gyp configure
-
-build:
-	node-gyp build
-
 clean:
-	node-gyp clean
-	rm -rf build
+	@rm -rf ./build
+	@rm -rf lib/binding
+	@rm -f ./test/**/*.aux.xml
+	@cd deps/libgdal && make clean
+
+./node_modules/.bin/node-pre-gyp:
+	npm install node-pre-gyp
+
+build: ./node_modules/.bin/node-pre-gyp
+	./node_modules/.bin/node-pre-gyp build
+
+rebuild:
+	@make clean
+	@make
 
 test:
 	$(MOCHA) -R list

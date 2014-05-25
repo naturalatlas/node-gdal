@@ -4,3 +4,4 @@ test/data/*.aux*
 node_modules
 /.project
 .DS_Store
+deps/libgdal/gdal.tar.gz

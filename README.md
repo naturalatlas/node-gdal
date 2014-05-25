@@ -3,15 +3,17 @@
 [![Build Status](https://travis-ci.org/naturalatlas/node-gdal.png?branch=master)](https://travis-ci.org/naturalatlas/node-gdal)
 [![Build Status](https://ci.appveyor.com/api/projects/status/mo06c2r5opdwak95)](https://ci.appveyor.com/project/brianreavis/node-gdal)
 
-Read and write raster geospatial files straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) (1.9.x) binding.
+Read and write raster geospatial files straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [1.11.0](http://trac.osgeo.org/gdal/wiki/Release/1.11.0-News) comes bundled, so node-gdal will work straight out of the box.
 
 ```sh
 $ npm install gdal --save
 ```
-### Installing GDAL
 
-- **OSX** – Via [homebrew](http://brew.sh/): ```brew install gdal```
-- **Other** – Source: http://trac.osgeo.org/gdal/wiki/DownloadSource
+To link against shared libgdal, install using:
+
+```sh
+$ npm install --shared_gdal
+```
 
 ## Usage
 
@@ -24,6 +26,12 @@ console.log("number of bands: " + dataset.getRasterCount());
 console.log("width: " + dataset.getRasterXSize());
 console.log("height: " + dataset.getRasterYSize());
 console.log("geotransform: " + dataset.getGeoTransform());
+```
+
+## Test
+
+```sh
+$ npm test
 ```
 
 ## License
