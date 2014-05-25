@@ -9,7 +9,6 @@ clean:
 	@rm -rf ./build
 	@rm -rf lib/binding
 	@rm -f ./test/**/*.aux.xml
-	@cd deps/libgdal && make clean
 
 ./node_modules/.bin/node-pre-gyp:
 	npm install node-pre-gyp

@@ -2,9 +2,13 @@ language: node_js
 node_js:
   - "0.8"
   - "0.10"
-before_install:
+script:
+  # bundled gdal
+  - npm install --build-from-source
+  - npm test
+
+  # shared gdal
+  - make clean
   - sudo apt-get -qq update
   - sudo apt-get -qq install libgdal1-dev
-  - npm install
-script:
-  - npm test
+  - npm install --build-from-source --shared_gdal
