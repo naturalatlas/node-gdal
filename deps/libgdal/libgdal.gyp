@@ -10,7 +10,6 @@
 			"sources": [
 				"gdal/frmts/gdalallregister.cpp",
 
-				"gdal/ogr/generate_encoding_table.c",
 				"gdal/ogr/osr_cs_wkt.c",
 				"gdal/ogr/osr_cs_wkt_parser.c",
 				"gdal/ogr/gml2ogrgeometry.cpp",
