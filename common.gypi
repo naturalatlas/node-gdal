@@ -39,7 +39,7 @@
 				},
 				"msvs_settings": {
 					"VCCLCompilerTool": {
-						"ExceptionHandling": 1,
+						"ExceptionHandling": 2, # /EHsc
 						"RuntimeTypeInfo": "true"
 					}
 				}
@@ -56,7 +56,7 @@
 				],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
-						"ExceptionHandling": 1,
+						"ExceptionHandling": 2, # /EHsc
 						"RuntimeTypeInfo": "true"
 					}
 				}
