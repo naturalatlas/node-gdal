@@ -5,3 +5,4 @@ node_modules
 /.project
 .DS_Store
 deps/libgdal/gdal.tar.gz
+lib/binding
