@@ -101,7 +101,7 @@
 				"gdal/gcore/gdal_rat.cpp",
 				"gdal/gcore/gdal_rpcimdio.cpp",
 				"gdal/gcore/gdalallvalidmaskband.cpp",
-				# "gdal/gcore/gdalclientserver.cpp",
+				"gdal/gcore/gdalclientserver.cpp",
 				"gdal/gcore/gdalcolortable.cpp",
 				"gdal/gcore/gdaldataset.cpp",
 				"gdal/gcore/gdaldefaultasync.cpp",
@@ -170,7 +170,7 @@
 				"gdal/port/cpl_vsil_curl.cpp",
 				"gdal/port/cpl_vsil_curl_streaming.cpp",
 				"gdal/port/cpl_vsil_gzip.cpp",
-				"gdal/port/cpl_vsil_simple.cpp",
+				# "gdal/port/cpl_vsil_simple.cpp",
 				"gdal/port/cpl_vsil_sparsefile.cpp",
 				"gdal/port/cpl_vsil_stdin.cpp",
 				"gdal/port/cpl_vsil_stdout.cpp",
@@ -202,6 +202,15 @@
             ],
 			"defines": [
 				'<@(gdal_format_defs)'
+			],
+			"conditions": [
+				["OS == 'win'", {
+					"link_settings": {
+						"libraries": [
+							"-lws2_32.lib",
+						]
+					}
+				}]
 			],
 			"direct_dependent_settings": {
 				"include_dirs": [
