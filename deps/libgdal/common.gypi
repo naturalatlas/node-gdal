@@ -20,7 +20,8 @@
 			"_FILE_OFFSET_BITS=64",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
-		"cflags_cc!": ["-fno-rtti"],
+		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
+		"cflags!": ["-fno-rtti", "-fno-exceptions"],
 		"conditions": [
 			["OS == 'win'", {
 				"include_dirs": ["./arch/win"]

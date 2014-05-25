@@ -4,28 +4,28 @@
 	},
 	"target_defaults": {
 		"default_configuration": "Release",
+		"cflags_cc!": ["-fno-exceptions"],
+		"cflags!": ["-fno-exceptions"],
+		"xcode_settings": {
+			"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+			"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
+			"OTHER_CFLAGS": [
+				"-mmacosx-version-min=10.7",
+				"-Wno-deprecated-register",
+				"-Wno-unused-const-variable"
+			],
+			"OTHER_CPLUSPLUSFLAGS": [
+				"-mmacosx-version-min=10.7",
+				"-std=c++11",
+				"-stdlib=libc++",
+				"-Wno-deprecated-register",
+				"-Wno-unused-const-variable"
+			]
+		},
 		"conditions": [
 			["'<(prefers_libcpp)' == 'True'", {
 				"xcode_settings": {
 					"MACOSX_DEPLOYMENT_TARGET": "10.9"
-				}
-			}],
-			["OS == 'mac'", {
-				"xcode_settings": {
-					"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
-					"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
-					"OTHER_CFLAGS": [
-						"-mmacosx-version-min=10.7",
-						"-Wno-deprecated-register",
-						"-Wno-unused-const-variable"
-					],
-					"OTHER_CPLUSPLUSFLAGS": [
-						"-mmacosx-version-min=10.7",
-						"-std=c++11",
-						"-stdlib=libc++",
-						"-Wno-deprecated-register",
-						"-Wno-unused-const-variable"
-					]
 				}
 			}]
 		],
