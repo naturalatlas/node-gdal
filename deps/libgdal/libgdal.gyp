@@ -91,7 +91,7 @@
 				"gdal/alg/rasterfill.cpp",
 				"gdal/alg/thinplatespline.cpp",
 				"gdal/alg/gdal_crs.c",
-				"gdal/alg/gdal_nrgcrs.c",
+				# "gdal/alg/gdal_nrgcrs.c",
 				"gdal/alg/gdalwarpkernel_opencl.c",
 
 				"gdal/bridge/gdalbridge.cpp",
@@ -101,7 +101,7 @@
 				"gdal/gcore/gdal_rat.cpp",
 				"gdal/gcore/gdal_rpcimdio.cpp",
 				"gdal/gcore/gdalallvalidmaskband.cpp",
-				"gdal/gcore/gdalclientserver.cpp",
+				# "gdal/gcore/gdalclientserver.cpp",
 				"gdal/gcore/gdalcolortable.cpp",
 				"gdal/gcore/gdaldataset.cpp",
 				"gdal/gcore/gdaldefaultasync.cpp",
