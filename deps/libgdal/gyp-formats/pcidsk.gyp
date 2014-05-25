@@ -30,7 +30,6 @@
 				"../gdal/frmts/pcidsk/sdk/core/pcidskopen.cpp",
 				"../gdal/frmts/pcidsk/sdk/core/sysvirtualfile.cpp",
 				"../gdal/frmts/pcidsk/sdk/port/io_stdio.cpp",
-				"../gdal/frmts/pcidsk/sdk/port/pthread_mutex.cpp",
 				"../gdal/frmts/pcidsk/sdk/segment/cpcidsk_array.cpp",
 				"../gdal/frmts/pcidsk/sdk/segment/cpcidsk_tex.cpp",
 				"../gdal/frmts/pcidsk/sdk/segment/cpcidskads40model.cpp",
@@ -57,6 +56,10 @@
 					"sources": [
 						"../gdal/frmts/pcidsk/sdk/port/io_win32.cpp",
 						"../gdal/frmts/pcidsk/sdk/port/win32_mutex.cpp"
+					]
+				}, {
+					"sources": [
+						"../gdal/frmts/pcidsk/sdk/port/pthread_mutex.cpp"
 					]
 				}]
 			],

@@ -12,3 +12,4 @@ script:
   - sudo apt-get -qq update
   - sudo apt-get -qq install libgdal1-dev
   - npm install --build-from-source --shared_gdal
+  - npm test
