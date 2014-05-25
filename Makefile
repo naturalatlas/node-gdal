@@ -1,6 +1,5 @@
 .PHONY: clean build rebuild release test
 
-MOCHA=node_modules/.bin/mocha
 NODE_PATH:=$(shell pwd)/lib
 
 all: build
@@ -21,7 +20,7 @@ rebuild:
 	@make
 
 test:
-	$(MOCHA) -R list
+	npm test
 
 release:
 ifeq ($(strip $(version)),)

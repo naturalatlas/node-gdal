@@ -37,7 +37,7 @@
   ],
   "scripts": {
     "pretest": "npm install --dev",
-    "test": "make test",
+    "test": "mocha test -R list",
     "install": "node-pre-gyp install --fallback-to-build"
   },
   "dependencies": {
