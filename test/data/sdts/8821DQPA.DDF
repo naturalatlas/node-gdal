@@ -1,0 +1,32 @@
+001482L 1 0600049   22040000210000012921DQPA49500000;&8821DQPA.DDF0100;&DDF RECORD IDENTIFER1600;&Positional AccuracyMODN!RCID!COMT(A,I,A)00858 D 1   00041   310400010080DQPA80980000001DQPA1DEM LEVEL  1 means: Depending on the specific production process used, a given DEM shall meet the maximum 7-meter root mean square error (RMSE) or may have an RMSE less than half of the contour interval of the corresponding topographic series map.  A vertical RMSE of 7 meters or less is the desired accuracy standard.  A RMSE of 15 meters is the maximum permitted.  A 7.5-minute DEM at Level 1 has an absolute elevation error tolerance of 50 meters (approximately three times the 15-meter RMSE) for blunders fror any grid node when compared to the true elevation.  Any array of points in the DEM can not encompass more than 49 contiguous elevations in error by more than 21 meters (three times the 7-meter RMSE).  Systematic errors within the stated accuracy standards are tolerated in Level 1 DEM's.00197 D 1   00041   310400010080DQPA14880000002DQPA2ACCURACY: RMSE of the DEM data relative to the file's datum
+(x,y,z) is (0, 0, 1); accuracy has been calculated based on a sample
+size of 30.00086 D 1   00039   21040001080DQPA3980000003DQPA3CONTOUR INTERVAL:  Unspecified.00087 D 1   00039   21040001080DQPA4080000004DQPA4CONTOUR INTERVAL UNITS:  METERS.00087 D 1   00039   21040001080DQPA4080000005DQPA5SUSPECT AREAS: No suspect areas.00296 D 1   00041   310400010080DQPA24780000006DQPA6VERTICAL DATUM SHIFT: 1.090000. Adding this value to
+the elevation values will convert it to North American Vertical Datum
+1988. Value is computed by averaging the shift values for the four
+quadrangle corners obtained from program VERTCON.01219 D 1   00043   4104000100080DQPA116880000007DQPA7SUSPECT AREAS: Suspect areas in the DEM result from corresponding
+areas on the graphic source that are shown as disturbed surfaces.
+They are symbolized by contours that have been overprinted with
+photorevised or other surface patterns. Examples of disturbed surfaces
+are: lava flows, land slides, open pit mining, construction cut and
+fill, and land fill operations. An estimated elevation is supplied for
+suspect areas based on the presumed elevation at the time the DEM grid
+is generated; however, the true elevation is subject to change without
+notice. When an elevation cannot be estimated for a suspect area, the
+area is downgraded to a void area and assigned a false negative value
+-32,767. Grid posts falling in suspect areas are added to the DEM grid
+as though they were valid elevations; they are distinguishable from
+normal DEM grid posts only by an independent inspection of the graphic
+source. For this reason, no percentage value for the total number of
+cells in the DEM that are assigned an estimated value. Suspect areas
+relate only to graphic sources. Furthermore, no commensurate code
+exists for suspects areas in the DLG hypsography category.00296 D 1   00041   310400010080DQPA24780000008DQPA8WATER BODIES: Water body areas are naturally occurring
+areas of constant elevation.  Oceans or estuaries at mean sea level
+are assigned an elevation value of zero.  All other water bodies are
+assigned their known or an estimated elevation.00586 D 1   00041   310400010080DQPA53780000009DQPA9HORIZONTAL ACCURACY: The horizontal positions of grid posts
+in USGS DEM's are located at precise mathematically defined positions
+in UTM meters or arc seconds.  These grid posts are fixed in position
+and can be considered constants for the purpose of determining
+accuracy.  The only measurable or perceivable errors in the DEM exist
+as vertical errors that may be partially attributable to horizontal
+error inherent in the source data or to errors in converting
+horizontal and vertical components of the source to gridded format.
