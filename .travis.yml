@@ -1,15 +1,42 @@
-language: node_js
-node_js:
-  - "0.8"
-  - "0.10"
-script:
+language: cpp
+compiler:
+  - gcc
+matrix:
+  - NODE_NVM_VERSION="0.10"
+  - NODE_NVM_VERSION="0.8"
+
+before_install:
+  - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+  - echo $COMMIT_MESSAGE
+  - export PATH=`pwd`/node_modules/.bin:$PATH
+
+  # here we set up the node version on the fly based on the matrix value.
+  # This is done manually so that it is easy to flip the 'language' to
+  # objective-c in another branch (to run the same travis.yml on OS X)
+  - git clone https://github.com/creationix/nvm.git ../.nvm
+  - source ../.nvm/nvm.sh
+  - nvm install $NODE_NVM_VERSION
+  - nvm use $NODE_NVM_VERSION
+  - node --version
+  - npm --version
+  - platform=$(uname -s | sed "y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/")
+  - if [[ "$platform" == 'linux' ]]; then sudo apt-get -qq update; fi;
+  - npm install aws-sdk
+
+install:
+
   # bundled gdal
   - npm install --build-from-source
+  - npm test
+  - node-pre-gyp package testpackage
   - npm test
 
   # shared gdal
   - make clean
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install libgdal1-dev
+  - if [[ "$platform" == 'linux' ]]; then sudo apt-get -qq install libgdal1-dev; fi;
+  - if [[ "$platform" == 'darwin' ]]; then brew install gdal; fi;
   - npm install --build-from-source --shared_gdal
   - npm test
+
+script:
+  - echo "(todo: publish package)"
