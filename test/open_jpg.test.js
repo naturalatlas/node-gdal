@@ -2,7 +2,8 @@
 
 var gdal = require('../lib/gdal.js');
 var path = require('path');
-var assert = require('assert');
+var assert = require('chai').assert;
+var expect = require('chai').expect;
 
 describe('Open', function() {
 	describe('JPG', function() {
@@ -71,9 +72,10 @@ describe('Open', function() {
 			];
 
 			var actual_files = ds.getFileList();
-			assert.equal(actual_files.length, files.length);
-			assert.ok(actual_files.indexOf(files[0]) > -1);
-			assert.ok(actual_files.indexOf(files[1]) > -1);
+			actual_files.sort();
+			files.sort();
+
+			expect(actual_files).to.eql(files);
 		});
 	});
 });
