@@ -41,4 +41,4 @@ install:
   - npm test
 
 script:
-  - echo "(todo: publish package)"
+  - echo todo publish
