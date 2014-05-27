@@ -30,22 +30,20 @@ namespace node_ogr {
 	static Handle<Value> open(const Arguments &args) {
 		HandleScope scope;
 
-		std::string ds_name;
+		std::string path;
+		std::string mode = "r";
 		GDALAccess access = GA_ReadOnly;
 
-		NODE_ARG_STR(0, "dataset", ds_name);
+		NODE_ARG_STR(0, "path", path);
+		NODE_ARG_OPT_STR(1, "mode", mode);
 
-		if (args.Length() > 1) {
-			if (args[1]->IsInt32() || args[1]->IsBoolean()) {
-			  access = static_cast<GDALAccess>(args[1]->IntegerValue());
-			} else {
-			  return NODE_THROW("Update argument must be integer or boolean");
-			}
+		if (mode == "r+") {
+			access = GA_Update;
 		}
 
 		GDALDataset *ds = NULL;
 
-		ds = (GDALDataset*) GDALOpen(ds_name.c_str(), access);
+		ds = (GDALDataset*) GDALOpen(path.c_str(), access);
 
 		if (ds == NULL) {
 			return NODE_THROW("Error opening dataset");
