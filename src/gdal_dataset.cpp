@@ -85,7 +85,6 @@ Handle<Value> Dataset::toString(const Arguments& args)
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterXSize, Integer, GetRasterXSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterYSize, Integer, GetRasterYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
-NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, getRasterBand, RasterBand, GetRasterBand, "band id");
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, SafeString, GetProjectionRef);
 NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
@@ -102,6 +101,23 @@ Handle<Value> Dataset::close(const Arguments& args)
 	return Undefined();
 }
 
+Handle<Value> Dataset::getRasterBand(const Arguments& args)
+{
+	HandleScope scope;
+	GDALRasterBand *poBand;
+	int band_id;
+	NODE_ARG_INT(0, "band id", band_id);
+
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	poBand = ds->this_->GetRasterBand(band_id);
+
+	if (poBand == NULL) {
+		return NODE_THROW("Specified band not found");
+	}
+
+	return scope.Close(RasterBand::New(poBand));
+}
+
 Handle<Value> Dataset::addBand(const Arguments& args)
 {
 	HandleScope scope;
@@ -111,7 +127,7 @@ Handle<Value> Dataset::addBand(const Arguments& args)
 	GDALDataType type;
 	Handle<Array> band_options = Array::New(0);
 	char **options = NULL;
-	
+
 	NODE_ARG_ENUM(0, "data type", GDALDataType, type);
 	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
 
@@ -123,14 +139,14 @@ Handle<Value> Dataset::addBand(const Arguments& args)
 	}
 
 	CPLErr err = ds->this_->AddBand(type, options);
-	
+
 	if (options) {
 		delete [] options;
 	}
 
 	if(err) return NODE_THROW_CPLERR(err);
 
-	return scope.Close(RasterBand::New(ds->this_->GetRasterBand(ds->this_->GetRasterCount()))); 
+	return scope.Close(RasterBand::New(ds->this_->GetRasterBand(ds->this_->GetRasterCount())));
 }
 
 Handle<Value> Dataset::getGeoTransform(const Arguments& args)
