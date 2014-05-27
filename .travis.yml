@@ -1,9 +1,11 @@
 language: cpp
 compiler:
   - gcc
-matrix:
-  - NODE_NVM_VERSION="0.10"
-  - NODE_NVM_VERSION="0.8"
+
+env:
+  matrix:
+    - NODE_NVM_VERSION="0.10"
+    - NODE_NVM_VERSION="0.8"
 
 before_install:
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
