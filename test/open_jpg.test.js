@@ -63,5 +63,17 @@ describe('Open', function() {
 			assert.equal(size.x, 1361);
 			assert.equal(size.y, 1);
 		});
+
+		it('should have file list', function() {
+			var files = [
+				path.join(__dirname,"data/a39se10.jpg"),
+				path.join(__dirname,"data/a39se10.jgw")
+			];
+
+			var actual_files = ds.getFileList();
+			assert.equal(actual_files.length, files.length);
+			assert.ok(actual_files.indexOf(files[0]) > -1);
+			assert.ok(actual_files.indexOf(files[1]) > -1);
+		});
 	});
 });

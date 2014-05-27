@@ -12,7 +12,6 @@ describe('Dataset', function() {
 	describe('getRasterBand()', function() {
 		var ds;
 		before(function() {
-			var filename = path.join(__dirname,"data/sample.tif");
 			ds = gdal.open(__dirname + "/data/sample.tif");
 		});
 
