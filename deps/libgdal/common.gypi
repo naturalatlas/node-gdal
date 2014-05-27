@@ -8,7 +8,7 @@
 			"./gdal/gcore",
 			"./gdal/port",
 			"./gdal/bridge",
-			"./gdal/frmts",	
+			"./gdal/frmts",
 			"./gdal/frmts/gtiff",
 			"./gdal/ogr",
 			"./gdal/ogr/ogrsf_frmts/shape",
@@ -18,6 +18,7 @@
 		"defines": [
 			"_LARGEFILE_SOURCE",
 			"_FILE_OFFSET_BITS=64",
+			"PAM_ENABLED=1",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
 		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],

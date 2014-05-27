@@ -68,6 +68,7 @@ describe('Open', function() {
 		it('should have file list', function() {
 			var files = [
 				path.join(__dirname,"data/a39se10.jpg"),
+				path.join(__dirname,"data/a39se10.jpg.aux.xml"),
 				path.join(__dirname,"data/a39se10.jgw")
 			];
 

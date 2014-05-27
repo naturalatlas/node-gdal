@@ -68,6 +68,7 @@ describe('Open', function() {
 		it('should have file list', function() {
 			var files = [
 				path.join(__dirname,"data/CM13ct.png"),
+				path.join(__dirname,"data/CM13ct.png.aux.xml"),
 				path.join(__dirname,"data/CM13ct.pgw")
 			];
 
