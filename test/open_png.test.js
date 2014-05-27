@@ -5,28 +5,28 @@ var path = require('path');
 var assert = require('assert');
 
 describe('Open', function() {
-	describe('JPG', function() {
+	describe('PNG', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname,"data/a39se10.jpg");
+			filename = path.join(__dirname,"data/CM13ct.png");
 			ds = gdal.open(filename);
 		});
 
 		it('should be able to read raster size', function() {
-			assert.equal(ds.getRasterXSize(),1361);
-			assert.equal(ds.getRasterYSize(),1744);
-			assert.equal(ds.getRasterCount(),3);
+			assert.equal(ds.getRasterXSize(),1951);
+			assert.equal(ds.getRasterYSize(),3109);
+			assert.equal(ds.getRasterCount(),1);
 		});
 
 		it('should be able to read geotransform', function() {
 			var expected_geotransform = [
-				1485309.3937136543,
-				3.28077925649814,
+				674425.2950174398,
+				10,
 				0,
-				603662.5109447651,
+				6462458.631486551,
 				0,
-				-3.28077925649814
+				-10
 			];
 
 			var actual_geotransform = ds.getGeoTransform();
@@ -44,10 +44,10 @@ describe('Open', function() {
 
 			var band = ds.getRasterBand(1);
 			var expected_stats = {
-				min: 0,
-				max: 255,
-				mean: 118.37471983296146,
-				std_dev: 50.89389997162665
+				min: 1,
+				max: 253,
+				mean: 125.58997597595655,
+				std_dev: 59.3013235226549
 			};
 
 			var actual_stats = band.getStatistics(0,1);
@@ -60,14 +60,14 @@ describe('Open', function() {
 		it('should be able to read block size', function() {
 			var band = ds.getRasterBand(1);
 			var size = band.getBlockSize();
-			assert.equal(size.x, 1361);
+			assert.equal(size.x, 1951);
 			assert.equal(size.y, 1);
 		});
 
 		it('should have file list', function() {
 			var files = [
-				path.join(__dirname,"data/a39se10.jpg"),
-				path.join(__dirname,"data/a39se10.jgw")
+				path.join(__dirname,"data/CM13ct.png"),
+				path.join(__dirname,"data/CM13ct.pgw")
 			];
 
 			var actual_files = ds.getFileList();

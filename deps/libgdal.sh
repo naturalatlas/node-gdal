@@ -7,7 +7,7 @@ dir_gyp_templates=./gyp-templates
 
 #
 # download gdal source
-# 
+#
 
 rm -rf $dir_gdal
 if [[ ! -f gdal.tar.gz ]]; then
@@ -62,15 +62,15 @@ patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff 
 
 #
 # create format gyps
-# 
+#
 
-GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm 
-	sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b 
-	nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt 
-	idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg 
-	coasp tsx terragen blx til r northwood saga xyz hf2 
+GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
+	sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b
+	nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt
+	idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg
+	coasp tsx terragen blx til r northwood saga xyz hf2
 	kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib
-	jpeg
+	jpeg png
 	${OPT_GDAL_FORMATS}"
 
 mkdir -p $dir_formats_gyp
@@ -115,7 +115,7 @@ do
 	file_gyp="${dir_formats_gyp}/${fmt}.gyp"
 	target_name="libgdal_${fmt}_frmt"
 	format_target_name=$(wrap_string "$target_name")
-	
+
 	dir_format=".${dir_gdal}/frmts/${fmt}"
 	files_src=`find ${dir_gdal}/frmts/${fmt} | egrep '\.(c|cpp)$' | awk '{print "." $0}'`
 	gyp_template="${format_gyp_template}"
