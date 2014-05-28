@@ -23,7 +23,7 @@ void Driver::Initialize(Handle<Object> target) {
 
 	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ShortName"), shortNameGetter);
 	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("LongName"), longNameGetter);
-	
+
 	target->Set(String::NewSymbol("Driver"), constructor->GetFunction());
 }
 
@@ -47,7 +47,7 @@ Handle<Value> Driver::New(const Arguments& args)
 	HandleScope scope;
 
 	if (!args.IsConstructCall())
-		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
 
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
@@ -57,7 +57,7 @@ Handle<Value> Driver::New(const Arguments& args)
 
 		return args.This();
 	}else{
-		return ThrowException(String::New("Cannot create Driver directly"));
+		return NODE_THROW("Cannot create Driver directly");
 	}
 }
 
@@ -143,7 +143,7 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 	//todo: add optional progress callback argument
 
 	char **options = NULL;
-	
+
 	if (dataset_options->Length() > 0) {
 		options = new char* [dataset_options->Length()+1];
 		for (i = 0; i < dataset_options->Length(); ++i) {
