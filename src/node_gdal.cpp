@@ -68,6 +68,9 @@ extern "C" {
 
 		GDALAllRegister();
 
+		//by default don't print errors to stderr
+		CPLSetErrorHandler(CPLQuietErrorHandler); 
+
 		GDALDriverManager  *reg = GetGDALDriverManager();
 
 		int driver_count = reg->GetDriverCount();
