@@ -150,11 +150,11 @@ public:
   if (args.Length() < num + 1) {                                                                                                         \
     return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));                                \
   }                                                                                                                                      \
-  Local<Object> obj = args[num]->ToObject();                                                                                             \
-  if (obj->IsNull() || obj->IsUndefined() || !type::constructor->HasInstance(obj)) {                                                     \
+  Local<Object> var##_obj = args[num]->ToObject();                                                                                       \
+  if (var##_obj->IsNull() || var##_obj->IsUndefined() || !type::constructor->HasInstance(var##_obj)) {                                   \
     return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
   }                                                                                                                                      \
-  var = ObjectWrap::Unwrap<type>(obj);                                                                                                   \
+  var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
   if(!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));
 
 
@@ -221,11 +221,11 @@ public:
 
 #define NODE_ARG_WRAPPED_OPT(num, name, type, var)                                                                                         \
   if (args.Length() > num) {                                                                                                               \
-    Local<Object> obj = args[num]->ToObject();                                                                                             \
-    if (obj->IsNull() || obj->IsUndefined() || !type::constructor->HasInstance(obj)) {                                                     \
+    Local<Object> var##_obj = args[num]->ToObject();                                                                                       \
+    if (var##_obj->IsNull() || var##_obj->IsUndefined() || !type::constructor->HasInstance(var##_obj)) {                                   \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
     }                                                                                                                                      \
-    var = ObjectWrap::Unwrap<type>(obj);                                                                                                   \
+    var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
     if(!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));                             \
   }
 
