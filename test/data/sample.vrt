@@ -1,0 +1,19 @@
+<VRTDataset rasterXSize="984" rasterYSize="804">
+  <SRS>PROJCS["unnamed",GEOGCS["GRS 1980(IUGG, 1980)",DATUM["unknown",SPHEROID["GRS80",6378137,298.257222101],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["standard_parallel_1",29.5],PARAMETER["standard_parallel_2",45.5],PARAMETER["latitude_of_center",23],PARAMETER["longitude_of_center",-96],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]]]</SRS>
+  <GeoTransform> 0,  7.5020719301461893e+00,  0.0000000000000000e+00,  2.4857104658232867e+06,  0.0000000000000000e+00, -7.5020719301459424e+00</GeoTransform>
+  <Metadata>
+    <MDI key="AREA_OR_POINT">Area</MDI>
+  </Metadata>
+  <VRTRasterBand dataType="Byte" band="1">
+    <Metadata />
+    <NoDataValue>nan</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">sample.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="984" RasterYSize="804" DataType="Byte" BlockXSize="984" BlockYSize="8" />
+      <SrcRect xOff="0" yOff="0" xSize="984" ySize="804" />
+      <DstRect xOff="0" yOff="0" xSize="984" ySize="804" />
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>
