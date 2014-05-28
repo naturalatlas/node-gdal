@@ -90,8 +90,8 @@ Handle<Value> Driver::longNameGetter(Local<String> property, const AccessorInfo&
 	return SafeString::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME));
 }
 
-NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Driver, deleteDataset, Delete, "dataset name");
-NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Driver, quietDelete, QuietDelete, "dataset name");
+NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Driver, deleteDataset, Delete, "dataset name");
+NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Driver, quietDelete, QuietDelete, "dataset name");
 
 Handle<Value> Driver::create(const Arguments& args)
 {

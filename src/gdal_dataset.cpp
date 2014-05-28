@@ -86,7 +86,7 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterXSize, Integer, GetRasterXSize
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterYSize, Integer, GetRasterYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, SafeString, GetProjectionRef);
-NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
+NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, SafeString, GetGCPProjection);

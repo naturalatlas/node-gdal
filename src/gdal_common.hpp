@@ -310,7 +310,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 
 // ----- wrapped methods w/ CPLErr result (throws) -------
 
-#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT(klass, method, wrapped_method)                                          \
+#define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT(klass, method, wrapped_method)                                       \
 Handle<Value> klass::method(const Arguments& args)                                                                  \
 {                                                                                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                              \
@@ -321,7 +321,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 }
 
 
-#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name)          \
+#define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name)       \
 Handle<Value> klass::method(const Arguments& args)                                                                          \
 {                                                                                                                           \
   HandleScope scope;                                                                                                        \
@@ -335,7 +335,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 }
 
 
-#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_STRING_PARAM(klass, method, wrapped_method, param_name)                 \
+#define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(klass, method, wrapped_method, param_name)              \
 Handle<Value> klass::method(const Arguments& args)                                                                    \
 {                                                                                                                     \
   HandleScope scope;                                                                                                  \
@@ -349,7 +349,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 }
 
 
-#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_INTEGER_PARAM(klass, method, wrapped_method, param_name)          \
+#define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(klass, method, wrapped_method, param_name)       \
 Handle<Value> klass::method(const Arguments& args)                                                              \
 {                                                                                                               \
   HandleScope scope;                                                                                            \
@@ -363,7 +363,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 }
 
 
-#define NODE_WRAPPED_METHOD_WITH_ERR_RESULT_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)          \
+#define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)       \
 Handle<Value> klass::method(const Arguments& args)                                                             \
 {                                                                                                              \
   HandleScope scope;                                                                                           \
