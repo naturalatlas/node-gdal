@@ -132,6 +132,7 @@ Handle<Value> RasterBand::getBlockSize(const Arguments& args)
 
 	int x, y;
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 	band->this_->GetBlockSize(&x, &y);
 
 	Local<Object> size = Object::New();
@@ -146,6 +147,7 @@ Handle<Value> RasterBand::getCategoryNames(const Arguments& args)
 	HandleScope scope;
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 	char ** names = band->this_->GetCategoryNames();
 
 	if (!names) return Undefined();
@@ -169,6 +171,7 @@ Handle<Value> RasterBand::setCategoryNames(const Arguments& args)
 	NODE_ARG_ARRAY(0, "category names", names);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 
 	char **list = NULL;
 	if (names->Length() > 0) {
@@ -195,6 +198,7 @@ Handle<Value> RasterBand::fill(const Arguments& args)
 	NODE_ARG_DOUBLE_OPT(1, "imaginary value", real);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 	return scope.Close(Integer::New(band->this_->Fill(real, imaginary)));
 }
 
@@ -207,6 +211,7 @@ Handle<Value> RasterBand::getStatistics(const Arguments& args)
 	NODE_ARG_INT(1, "force", force);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 	int err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
 
 	if (err) {
@@ -233,6 +238,7 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 	NODE_ARG_INT(0, "allow approximation", approx);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 
 	if (band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL)) {
 		return NODE_THROW("Error computing statistics");
@@ -258,6 +264,7 @@ Handle<Value> RasterBand::setStatistics(const Arguments& args)
 	NODE_ARG_DOUBLE(3, "standard deviation", std_dev);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
 
 	return scope.Close(Integer::New(band->this_->SetStatistics(min, max, mean, std_dev)));
 }

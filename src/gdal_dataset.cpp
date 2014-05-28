@@ -96,7 +96,9 @@ NODE_WRAPPED_METHOD(Dataset, flushCache, FlushCache);
 Handle<Value> Dataset::close(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(ds->this_) GDALClose(ds->this_);
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	
+	GDALClose(ds->this_);
 	ds->nullify();
 	return Undefined();
 }
@@ -123,6 +125,7 @@ Handle<Value> Dataset::addBand(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	GDALDataType type;
 	Handle<Array> band_options = Array::New(0);
@@ -154,6 +157,7 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	double transform[6];
 	CPLErr err = ds->this_->GetGeoTransform(transform);
@@ -173,6 +177,7 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 Handle<Value> Dataset::setGeoTransform(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	Handle<Array> transform;
 	NODE_ARG_ARRAY(0, "transform", transform);
@@ -201,6 +206,7 @@ Handle<Value> Dataset::getFileList(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	char **list = ds->this_->GetFileList();
 	Handle<Array> results = Array::New(0);
@@ -225,6 +231,7 @@ Handle<Value> Dataset::getGCPs(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	int n = ds->this_->GetGCPCount();
 	const GDAL_GCP *gcps = ds->this_->GetGCPs();
@@ -254,6 +261,7 @@ Handle<Value> Dataset::getGCPs(const Arguments& args)
 Handle<Value> Dataset::setGCPs(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 
 	Handle<Array> gcps;
 	std::string projection("");

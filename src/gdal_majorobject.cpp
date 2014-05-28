@@ -65,6 +65,7 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
 	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
+	if(!obj->this_) return NODE_THROW("MajorObject object has already been destroyed");
 	char **metadata = obj->this_->GetMetadata(domain.empty() ? NULL : domain.c_str());
 
 	if(!metadata) return Undefined();
