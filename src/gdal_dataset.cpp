@@ -111,6 +111,7 @@ Handle<Value> Dataset::getRasterBand(const Arguments& args)
 	NODE_ARG_INT(0, "band id", band_id);
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 	poBand = ds->this_->GetRasterBand(band_id);
 
 	if (poBand == NULL) {
