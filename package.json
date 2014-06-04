@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Native GDAL bindings",
   "url": "http://github.com/naturalatlas/node-gdal",
-  "main": "./lib/index.js",
+  "main": "./lib/gdal.js",
   "keywords": [
     "gis",
     "geo",
