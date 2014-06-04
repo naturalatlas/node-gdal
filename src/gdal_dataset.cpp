@@ -5,6 +5,7 @@
 #include "gdal_driver.hpp"
 
 Persistent<FunctionTemplate> Dataset::constructor;
+ObjectCache Dataset::cache;
 
 void Dataset::Initialize(Handle<Object> target) {
 	HandleScope scope;
@@ -59,7 +60,7 @@ void Dataset::dispose(){
 	if(this_) {
 		//dispose of all wrapped child bands
 		int n = this_->GetRasterCount();
-		for(int i = 0; i < n; i++) {
+		for(int i = 1; i <= n; i++) {
 			band = this_->GetRasterBand(i);
 			if(RasterBand::cache.has(band)){
 				RasterBand *band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
@@ -90,9 +91,21 @@ Handle<Value> Dataset::New(const Arguments& args)
 	}
 }
 
-Handle<Value> Dataset::New(GDALDataset *ds)
+Handle<Value> Dataset::New(GDALDataset *raw)
 {
-	return ClosedPtr<Dataset, GDALDataset>::Closed(ds);
+	HandleScope scope;
+
+	if(!raw) return Null();
+	if(cache.has(raw)) return cache.get(raw);
+
+	Dataset *wrapped = new Dataset(raw);
+
+	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
+	v8::Handle<v8::Object> obj = Dataset::constructor->GetFunction()->NewInstance(1, &ext);
+
+	cache.add(raw, obj);
+
+	return scope.Close(obj);
 }
 
 Handle<Value> Dataset::toString(const Arguments& args)

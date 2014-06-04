@@ -11,6 +11,8 @@
 // gdal
 #include <gdal_priv.h>
 
+#include "obj_cache.hpp"
+
 using namespace v8;
 using namespace node;
 
@@ -40,6 +42,8 @@ class Dataset: public node::ObjectWrap {
     static Handle<Value> setGCPs(const Arguments &args);
     static Handle<Value> getMetadata(const Arguments &args);
     static Handle<Value> close(const Arguments &args);
+
+    static ObjectCache cache;
 
     Dataset();
     Dataset(GDALDataset *ds);
