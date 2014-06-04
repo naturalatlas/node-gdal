@@ -15,7 +15,8 @@
 				"src/gdal_dataset.cpp",
 				"src/gdal_driver.cpp",
 				"src/gdal_rasterband.cpp",
-				"src/gdal_majorobject.cpp"
+				"src/gdal_majorobject.cpp",
+				"src/obj_cache.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

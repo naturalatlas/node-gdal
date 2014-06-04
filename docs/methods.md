@@ -9,6 +9,8 @@
 
 ## Dataset
 
+Note: all methods throw errors if the dataset has already been explicitly destroyed
+
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
 - `close() : void`
@@ -48,36 +50,38 @@
 
 ## RasterBand
 
-- `toString()`
+Note: all methods throw errors if the band has been destroyed by the dataset
+
+- `toString() : string`
 - `getMetadata(string domain = null) : object`
-- `getXSize()`
-- `getYSize()`
-- `getBand()`
-- `getDataset()`
-- `getRasterDataType()`
-- `getBlockSize()`
-- `getAccess()`
-- `flushCache()`
-- `getCategoryNames()`
-- `getNoDataValue()`
-- `getMinimum()`
-- `getMaximum()`
-- `getOffset()`
-- `getScale()`
-- `getUnitType()`
-- `fill()`
-- `setCategoryNames()`
-- `setNoDataValue()`
-- `setOffset()`
-- `setScale()`
-- `setUnitType()`
-- `getStatistics()`
-- `computeStatistics()`
-- `setStatistics()`
-- `hasArbitraryOverviews()`
-- `getOverviewCount()`
-- `getOverview()`
-- `getRasterSampleOverview()`
-- `getMaskBand()`
-- `getMaskFlags()`
-- `createMaskBand()`
+- `getXSize() : integer`
+- `getYSize() : integer`
+- `getBand(integer i) : RasterBand`
+- `getDataset() : Dataset`
+- `getRasterDataType() : integer`
+- `getBlockSize() : object`
+- `getAccess() : integer`
+- `flushCache() : void`
+- `getCategoryNames() : string[]`
+- `getNoDataValue() : Number`
+- `getMinimum() : Number`
+- `getMaximum() : Number`
+- `getOffset() : Number`
+- `getScale() : Number`
+- `getUnitType() : string`
+- `fill(number real_value, number imag_value = 0) : void #throws`
+- `setCategoryNames(string[] names) : void #throws`
+- `setNoDataValue(Number no_data_val) : void #throws`
+- `setOffset(Number offset) : void #throws`
+- `setScale(Number scale) : void #throws`
+- `setUnitType(string type) : void #throws`
+- `getStatistics(boolean allow_approx, boolean force) : object #throws`
+- `computeStatistics(boolean allow_approx) : object #throws`
+- `setStatistics(Number min, Number max, Number mean, Number std_dev) : void #throws`
+- `hasArbitraryOverviews() : boolean`
+- `getOverviewCount() : integer`
+- `getOverview(integer i) : RasterBand`
+- `getRasterSampleOverview(integer num_samples) : RasterBand`
+- `getMaskBand() : RasterBand`
+- `getMaskFlags() : integer`
+- `createMaskBand(integer num_samples) : void #throws`

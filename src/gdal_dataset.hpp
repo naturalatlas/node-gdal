@@ -43,8 +43,8 @@ class Dataset: public node::ObjectWrap {
 
     Dataset();
     Dataset(GDALDataset *ds);
-    inline void nullify() { this_ = NULL; }
     inline GDALDataset *get() { return this_; }
+    void dispose();
 
   private:
     ~Dataset();

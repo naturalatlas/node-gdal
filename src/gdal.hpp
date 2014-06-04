@@ -21,10 +21,9 @@ namespace node_ogr {
 
 		NODE_ARG_WRAPPED(0, "dataset", Dataset, ds);
 
-		if(ds->get()) GDALClose(ds->get());
-		ds->nullify();
+		ds->dispose();
 		
-		return Null();
+		return Undefined();
 	}
 
 	static Handle<Value> open(const Arguments &args) {

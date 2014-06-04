@@ -50,7 +50,26 @@ Dataset::Dataset()
 
 Dataset::~Dataset()
 {
-	if(this_) GDALClose(this_);
+	//Destroy at garbage collection time if not already explicitly destroyed
+	dispose();
+}
+
+void Dataset::dispose(){
+	GDALRasterBand *band;
+	if(this_) {
+		//dispose of all wrapped child bands
+		int n = this_->GetRasterCount();
+		for(int i = 0; i < n; i++) {
+			band = this_->GetRasterBand(i);
+			if(RasterBand::cache.has(band)){
+				RasterBand *band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
+				band_wrapped->dispose();
+			}
+		}
+
+		GDALClose(this_);
+		this_ = NULL;
+	}
 }
 
 Handle<Value> Dataset::New(const Arguments& args)
@@ -98,8 +117,8 @@ Handle<Value> Dataset::close(const Arguments& args)
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
 	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
 	
-	GDALClose(ds->this_);
-	ds->nullify();
+	ds->dispose();
+	
 	return Undefined();
 }
 

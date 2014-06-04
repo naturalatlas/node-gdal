@@ -11,6 +11,8 @@
 // gdal
 #include <gdal_priv.h>
 
+#include "obj_cache.hpp"
+
 using namespace v8;
 using namespace node;
 
@@ -61,10 +63,12 @@ class RasterBand: public node::ObjectWrap {
 		static Handle<Value> createMaskBand(const Arguments &args);
 		static Handle<Value> getMetadata(const Arguments &args);
 
+		static ObjectCache cache;
 
 		RasterBand();
 		RasterBand(GDALRasterBand *band);
 		inline GDALRasterBand *get() { return this_; }
+		void dispose();
 
 	private:
 		~RasterBand();
