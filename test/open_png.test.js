@@ -51,7 +51,7 @@ describe('Open', function() {
 				std_dev: 59.3013235226549
 			};
 
-			var actual_stats = band.getStatistics(0,1);
+			var actual_stats = band.getStatistics(false, true);
 			assert.ok(Math.abs(expected_stats.min - actual_stats.min) < .00001);
 			assert.ok(Math.abs(expected_stats.max - actual_stats.max) < .00001);
 			assert.ok(Math.abs(expected_stats.mean - actual_stats.mean) < .00001);
