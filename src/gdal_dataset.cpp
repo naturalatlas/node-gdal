@@ -5,7 +5,7 @@
 #include "gdal_driver.hpp"
 
 Persistent<FunctionTemplate> Dataset::constructor;
-ObjectCache Dataset::cache;
+ObjectCache<GDALDataset*> Dataset::cache;
 
 void Dataset::Initialize(Handle<Object> target) {
 	HandleScope scope;

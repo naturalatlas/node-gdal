@@ -6,7 +6,7 @@
 #include "gdal_dataset.hpp"
 
 Persistent<FunctionTemplate> RasterBand::constructor;
-ObjectCache RasterBand::cache;
+ObjectCache<GDALRasterBand*> RasterBand::cache;
 
 void RasterBand::Initialize(Handle<Object> target) {
 	HandleScope scope;

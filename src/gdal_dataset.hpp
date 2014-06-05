@@ -43,7 +43,7 @@ class Dataset: public node::ObjectWrap {
     static Handle<Value> getMetadata(const Arguments &args);
     static Handle<Value> close(const Arguments &args);
 
-    static ObjectCache cache;
+    static ObjectCache<GDALDataset*> cache;
 
     Dataset();
     Dataset(GDALDataset *ds);

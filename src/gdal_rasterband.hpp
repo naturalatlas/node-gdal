@@ -63,7 +63,7 @@ class RasterBand: public node::ObjectWrap {
 		static Handle<Value> createMaskBand(const Arguments &args);
 		static Handle<Value> getMetadata(const Arguments &args);
 
-		static ObjectCache cache;
+		static ObjectCache<GDALRasterBand*> cache;
 
 		RasterBand();
 		RasterBand(GDALRasterBand *band);
