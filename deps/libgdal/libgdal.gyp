@@ -232,7 +232,8 @@
 					"./gdal/gcore",
 					"./gdal/port",
 					"./gdal/bridge",
-					"./gdal/ogr"
+					"./gdal/ogr",
+					"./gdal/ogr/ogrsf_frmts"
 				],
 				"conditions": [
 					["OS == 'win'", {

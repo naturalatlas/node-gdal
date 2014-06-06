@@ -1,7 +1,7 @@
 .lock-wscript
 build/
-test/data/*.aux*
-test/data/*.tmp*
+test/data/**/*.aux*
+test/data/**/*.tmp*
 node_modules
 /.project
 .DS_Store
