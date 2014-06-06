@@ -1,15 +1,26 @@
-## Global Methods
+# Node.js GDAL Bindings
+
+## Globals
+
+#### Methods
 
 - `open(string ds_name, bool update = false) : Dataset #throws` //todo: test giving integer and boolean to update arg
 - `openShared(string ds_name, bool update = false) : Dataset #throws`
 - `close(Dataset ds) : void`
-- `getDriver() : Driver #throws`
-- `getDriverByName() : Driver #throws`
+- `getDriver(integer driver_index) : Driver #throws`
+- `getDriverByName(string name) : Driver #throws`
 - `getDriverCount() : integer`
+
+#### Properties
+
+- `ogr : object` ([details](ogr.md))
+- `drivers : string[]`
 
 ## Dataset
 
 Note: all methods throw errors if the dataset has already been explicitly destroyed
+
+#### Methods
 
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
@@ -32,7 +43,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getFileList() : string[]`
 - `flushCache() : void`
 
-### Proposed Properties
+#### Proposed Properties
 
 - `size : object`
 - `x_size : integer //width?`
@@ -43,6 +54,8 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 ## Driver
 
+#### Methods
+
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
 - `create(string filename, integer x_size, integer y_size, int n_bands = 1, int gdal_data_type = GDT_Byte, string[] co): Dataset #throws`
@@ -52,7 +65,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `rename(string new_name, string old_name): void #throws`
 - `copyFiles(string new_name, string old_name) : void #throws`
 
-### Properties
+#### Properties
 
 - `LongName : string`
 - `ShortName : string`
@@ -60,6 +73,8 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 ## RasterBand
 
 Note: all methods throw errors if the band has been destroyed by the dataset
+
+#### Methods
 
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
@@ -95,7 +110,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `getMaskFlags() : integer`
 - `createMaskBand(integer num_samples) : void #throws`
 
-### Proposed Properties
+#### Proposed Properties
 
 - `size : object`
 - `x_size : integer //width?`

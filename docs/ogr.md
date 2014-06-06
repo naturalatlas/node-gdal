@@ -1,0 +1,304 @@
+# Node.js OGR Bindings
+
+## Globals
+
+#### Methods
+
+- `open(string ds_name, boolean update = false) : Datasource #throws`
+- `getDriverByName(string name) : Driver #throws`
+- `getDriverCount() : integer`
+- `getDriver(integer driver_index) : Driver #throws`
+- `getOpenDSCount() : integer`
+- `getOpenDS(integer ds_index) : Datasource`
+- `createGeometryFromWKT(string wkt, SpatialReference srs = null) : Geometry`
+
+#### Properties
+
+- `drivers : string[]`
+
+## SpatialReference
+
+Note: all spatial references owned by features, layers, etc are cloned to avoid segfaults when layers are destroyed and to avoid modifying read-only spatial references. They are only cloned once. This means that any method wrapping a method returning an OGRSpatialReference pointer will always return the same javascript object - instead of recloning. 
+
+#### Constructors 
+
+- `SpatialReference()`
+- `SpatialReference(string wkt) #throws`
+
+#### Methods 
+
+- `toString() : string`
+- `clone() : SpatialReference`
+- `cloneGeogCS() : SpatialReference`
+- `exportToWKT() : string #throws`
+- `exportToPrettyWKT(boolean simplify = false) : string #throws`
+- `exportToProj4() : string #throws`
+- `exportToXML() : string #throws`
+- `importFromWKT() : void #throws`
+- `importFromProj4() : void #throws`
+- `importFromEPSG(integer code) : void #throws`
+- `importFromEPSGA(integer code) : void #throws`
+- `importFromWMSAUTO(string wmsauto) #throws`
+- `importFromXML(string xml) : void #throws`
+- `importFromURN(string urn) : void #throws`
+- `importFromCRSURL(string url) : void #throws`
+- `importFromURL(string url) : void #throws`
+- `importFromMICoordSys(string name) : void #throws`
+- `setWellKnownGeogCS(string name) : void #throws`
+- `setFromUserInput(string name) : void #throws`
+- `autoIdentifyEPSG() : void #throws`
+- `morphToESRI() : void #throws`
+- `morphFromESRI() : void #throws`
+- `EPSGTreatsAsLatLong() : boolean`
+- `EPSGTreatsAsNorthingEasting() : boolean`
+- `getLinearUnits() : Number`
+- `getAngularUnits() : Number`
+- `isGeocentric() : boolean`
+- `isProjected() : boolean`
+- `isLocal() : boolean`
+- `isVertical() : boolean`
+- `isCompound() : boolean`
+- `isSameGeogCS(SpatialReference srs) : boolean`
+- `isSameVertCS(SpatialReference srs) : boolean`
+- `isSame(SpatialReference srs) : boolean`
+- `getAuthorityName(string key) : string`
+- `getAuthorityCode(string key) : string`
+- `getAttrValue(string node_name, integer attr_index = 0) : string`
+
+## Datasource
+
+Note: all methods throw errors if the datasource has already been explicitly destroyed
+
+#### Methods 
+
+- `destroy() : void` //any use of the datasource after destroy call will cause segfault 
+- `toString() : string`
+- `getName() : string`
+- `getLayerByName(string name) : Layer`
+- `getLayerCount() : integer`
+- `getLayer(integer i) : Layer`
+- `getDriver() : Driver`
+- `deleteLayer(integer i_layer) : void #throws`
+- `testCapability(string capability_name) : boolean`
+- `executeSQL(string sql_text, Geometry spatial_filter = null, string dialect = null) : Layer #throws // result sets are released when datasource is destroyed or V8 does GC on the layer`
+- `createLayer(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null) : void #throws`
+- `copyLayer(string src_lyr_name, string dst_lyr_name, string[] options = null) : void #throws`
+- `syncToDisk() #throws`
+
+## Layer
+
+Note: all methods throw errors if the layer has been destroyed by the datasource
+
+#### Methods 
+
+- `toString() : string`
+- `resetReading() : void`
+- `getNextFeature() : Feature`
+- `getLayerDefn() : LayerDefn`
+- `getFeature(integer feature_index) : Feature #throws`
+- `getFeatureCount(boolean force = true) : integer`
+- `setFeature(feature f) : void #throws`
+- `createFeature(feature f) : void #throws`
+- `deleteFeature(integer feature_index) : void #throws`
+- `getGeomType() : integer`
+- `getName() : string`
+- `testCapability(string capability_name) : boolean`
+- `syncToDisk() #throws`
+- `getFIDColumn() : string`
+- `getGeometryColumn() : string`
+- `createField() : void #throws`
+- `getSpatialRef() : SpatialReference`
+
+## Driver
+
+#### Methods 
+
+- `toString() : string`
+- `getName() : string`
+- `open(string ds_name, boolean update = false) : Datasource #throws`
+- `testCapability(string capability_name) : boolean`
+- `createDataSource(string name, string[] dsco = null) : Datasource #throws`
+- `deleteDataSource() : Datasource #throws`
+- `copyDataSource(Datasource src, string new_name, string[] dsco = null) : Datasource #throws`
+
+## Geometry
+
+Note: all geometry objects owned by features are cloned to avoid segfaults when features are destroyed and to avoid modifying read-only geometries.
+
+#### Constructors
+
+- `Geometry(wkbGeometryType type)`
+- `Point()`
+- `Point(Number x, Number y)`
+- `Point(Number x, Number y, Number z)`
+- `LineString()`
+- `LinearRing()`
+- `Polygon()`
+- `GeometryCollection()`
+- `MultiPoint()`
+- `MultiLineString()`
+- `MultiPolygon()`
+
+#### Methods
+
+- `toString() : string`
+- `getDimension() : integer`
+- `getCoordinateDimension() : integer`
+- `isEmpty() : boolean`
+- `isValid() : boolean`
+- `isSimple() : boolean`
+- `isRing() : boolean`
+- `clone() : Geometry`
+- `empty()`
+- `wkbSize() : integer`
+- `getGeometryType() : integer`
+- `getGeometryName() : string`
+- `exportToKML() : string`
+- `exportToGML() : string`
+- `exportToJSON() : string`
+- `exportToWKT() : string`
+- `closeRings()`
+- `intersects(Geometry geom) : boolean`
+- `equals(Geometry geom) : boolean`
+- `disjoint(Geometry geom) : boolean`
+- `touches(Geometry geom) : boolean`
+- `crosses(Geometry geom) : boolean`
+- `within(Geometry geom) : boolean`
+- `contains(Geometry geom) : boolean`
+- `overlaps(Geometry geom) : boolean`
+- `boundary() : Geometry`
+- `distance(Geometry geom) : Number`
+- `convexHull() : Geometry`
+- `buffer(Number distance, int segs = 30) : Geometry`
+- `intersection(Geometry geom) : Geometry`
+- `union(Geometry geom) : Geometry`
+- `unionCascaded(Geometry geom) : Geometry #throws //(wkbMultiPolygon)`
+- `difference(Geometry geom) : Geometry`
+- `symDifference(Geometry geom) : Geometry`
+- `centroid() : Geometry`
+- `simplify(Number tolerance) : void`
+- `simplifyPreserveTopology(Number tolerance) : void`
+- `polygonize() : void #throws //(wkbMultiLineString)`
+- `segmentize(Number segment_length)`
+- `swapXY() : void`
+- `getArea() : Number #throws //(wkbPolygon, wkbMultiPolygon, wkbLinearRing, wkbGeometryCollection)`
+- `addPoint(Geometry geom) : void #throws //(wkbLinearRing, wkbLineString)`
+- `addGeometry(Geometry geom) : void #throws //(wkbMulti*, wkbGeometryCollection, wkbPolygon)`
+- `getGeometry() : Geometry #throws //(wkbMulti*, wkbGeometryCollection)`
+- `getNumGeometries() : integer #throws //(wkbMulti*, wkbGeometryCollection)`
+- `getEnvelope() : object`
+- `getEnvelope3D() : object`
+- `getLength() : Number #throws //(wkbLinearRing, wkbLineString, wkbGeometryCollection, wkbMultiLineString)`
+- `value(Number distance) : Number #throws //(wkbLinearRing, wkbLineString)`
+- `getPoint() : Geometry #throws //(wkbLinearRing, wkbLineString)`
+- `getX() : Number #throws //(wkbPoint)`
+- `getY() : Number #throws //(wkbPoint)`
+- `getZ() : Number #throws //(wkbPoint)`
+- `setX(Number x) : void #throws //(wkbPoint)`
+- `setY(Number y) : void #throws //(wkbPoint)`
+- `setZ(Number z) : void #throws //(wkbPoint)`
+- `transform(CoordinateTransformation transform) : void #throws`
+- `transformTo(SpatialReference srs) : void #throws`
+- `getSpatialReference() : SpatialReference`
+- `assignSpatialReference(SpatialReference srs) : void`
+
+
+## Feature
+
+Note: all methods throw errors if the feature has already been explicitly destroyed
+
+#### Constructor
+
+- `Feature(FeatureDefn defn)`
+
+#### Methods
+
+- `toString() : string`
+- `getDefn() : FeatureDefn`
+- `getGeometry() : Geometry #throws`
+- `setGeometryDirectly(Geometry geom) : void #throws //alias to setGeometry in current version` 
+- `setGeometry(Geometry geom) : void #throws`
+- `clone() : Feature`
+- `equal(Feature f) : boolean`
+- `getFieldCount() : integer`
+- `getFieldDefn(integer index) : FieldDefn #throws`
+- `getFieldIndex(string field_name) : integer`
+- `isFieldSet(integer index) : boolean #throws`
+- `unsetField(integer index) : void #throws`
+- `getFieldAsInteger(integer index) : integer #throws`
+- `getFieldAsDouble(integer index) : Number #throws`
+- `getFieldAsString(integer index) : string #throws`
+- `getFieldAsIntegerList(integer index) : integer[] #throws`
+- `getFieldAsDoubleList(integer index) : Number[] #throws`
+- `getFieldAsStringList(integer index) : string[] #throws`
+- `getFieldAsBinary(integer index) : Buffer #throws`
+- `getFieldAsDateTime(integer index) : object #throws`
+- `getField(integer index) : object #throws`
+- `getField(string field_name) : object #throws`
+- `setField(integer index, object value) : void #throws`
+- `setField(string field_name, object value) : void #throws`
+- `getFields() : object`
+- `setFields(object values) : void #throws`
+- `getFID() : integer`
+- `setFID(integer fid) : void`
+- `setFrom(Feature f, boolean forgiving = true) : void #throws`
+- `setFrom(Feature f, integer[] index_map, boolean forgiving = true) : void #throws`
+
+## FieldDefn
+
+Note: all field definitions owned by feature definitions are cloned to avoid segfaults when feature definitions are destroyed and to avoid modifying read-only field definitions.
+
+#### Constructor
+
+- `FieldDefn(string field_name, OGRFieldType type)`
+
+#### Methods
+
+- `toString() : string`
+- `getName() : string`
+- `setName(string name) : void`
+- `getType() : integer`
+- `setType(OGRFieldType type) : void`
+- `getJustify() : integer`
+- `setJustify(integer justification) : void`
+- `getWidth() : integer`
+- `setWidth(integer width) : void`
+- `getPrecision() : integer`
+- `setPrecision(integer precision) : void`
+- `isIgnored() : boolean`
+- `setIgnored(boolean ignored) : void`
+
+
+## FeatureDefn
+
+Note: all feature definitions owned by layers are cloned to avoid segfaults when layers are destroyed and to avoid modifying read-only feature definitions.
+
+#### Methods
+
+- `toString() : string`
+- `getName() : string`
+- `getFieldCount() : integer`
+- `getFieldDefn(integer index) : FieldDefn #throws`
+- `addFieldDefn(FieldDefn defn) : void`
+- `getFieldIndex(string field_name) : integer`
+- `deleteFieldDefn(integer index) : void #throws`
+- `reorderFieldDefns(integer[] field_map) : void #throws`
+- `getGeomType() : integer`
+- `setGeomType(wkbGeometryType type) : void`
+- `clone() : FeatureDefn`
+- `isGeometryIgnored() : boolean`
+- `setGeometryIgnored(boolean ignore) : void`
+- `isStyleIgnored() : boolean`
+- `setStyleIgnored(boolean ignore) : void`
+
+## CoordinateTransformation
+
+#### Constructor
+
+- `CoordinateTransformation(SpatialReference source, SpatialReference target)`
+
+#### Methods
+
+- `toString() : string`
+- `transformPoint(obj point) : object #throws`
+- `transformPoint(Number x, Number y, Number z = 0) : object #throws`

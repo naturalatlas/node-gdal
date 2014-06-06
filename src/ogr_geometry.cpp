@@ -8,6 +8,14 @@
 using namespace node_ogr;
 
 Persistent<FunctionTemplate> Geometry::constructor;
+Persistent<FunctionTemplate> Geometry::point_constructor;
+Persistent<FunctionTemplate> Geometry::polygon_constructor;
+Persistent<FunctionTemplate> Geometry::linearring_constructor;
+Persistent<FunctionTemplate> Geometry::linestring_constructor;
+Persistent<FunctionTemplate> Geometry::geometrycollection_constructor;
+Persistent<FunctionTemplate> Geometry::multipoint_constructor;
+Persistent<FunctionTemplate> Geometry::multilinestring_constructor;
+Persistent<FunctionTemplate> Geometry::multipolygon_constructor;
 
 void Geometry::Initialize(Handle<Object> target) {
   HandleScope scope;
@@ -15,6 +23,39 @@ void Geometry::Initialize(Handle<Object> target) {
   constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::New));
   constructor->InstanceTemplate()->SetInternalFieldCount(1);
   constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  point_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewPoint));
+  point_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  point_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  polygon_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewPolygon));
+  polygon_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  polygon_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  linearring_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewLinearRing));
+  linearring_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  linearring_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  linestring_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewLineString));
+  linestring_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  linestring_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  geometrycollection_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewGeometryCollection));
+  geometrycollection_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  geometrycollection_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  multipoint_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewMultiPoint));
+  multipoint_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  multipoint_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  multilinestring_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewMultiLineString));
+  multilinestring_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  multilinestring_constructor->SetClassName(String::NewSymbol("Geometry"));
+
+  multipolygon_constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Geometry::NewMultiPolygon));
+  multipolygon_constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  multipolygon_constructor->SetClassName(String::NewSymbol("Geometry"));
+
 
   NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
   NODE_SET_PROTOTYPE_METHOD(constructor, "getDimension", getDimension);
@@ -79,6 +120,14 @@ void Geometry::Initialize(Handle<Object> target) {
 
 
   target->Set(String::NewSymbol("Geometry"), constructor->GetFunction());
+  target->Set(String::NewSymbol("Point"), point_constructor->GetFunction());
+  target->Set(String::NewSymbol("Polygon"), polygon_constructor->GetFunction());
+  target->Set(String::NewSymbol("LinearRing"), linearring_constructor->GetFunction());
+  target->Set(String::NewSymbol("LineString"), linestring_constructor->GetFunction());
+  target->Set(String::NewSymbol("GeometryCollection"), geometrycollection_constructor->GetFunction());
+  target->Set(String::NewSymbol("MultiPoint"), multipoint_constructor->GetFunction());
+  target->Set(String::NewSymbol("MultiLineString"), multilinestring_constructor->GetFunction());
+  target->Set(String::NewSymbol("MultiPolygon"), multipolygon_constructor->GetFunction());
 }
 
 Geometry::Geometry(OGRGeometry *geom)
@@ -108,7 +157,7 @@ Geometry::~Geometry()
 Handle<Value> Geometry::New(const Arguments& args)
 {
   HandleScope scope;
-  Geometry* f;
+  Geometry *f;
 
   if (!args.IsConstructCall())
     return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
@@ -127,6 +176,141 @@ Handle<Value> Geometry::New(const Arguments& args)
 
   f->Wrap(args.This());
   return args.This();
+}
+
+Handle<Value> Geometry::NewPoint(const Arguments& args)
+{
+  HandleScope scope;
+  Geometry *f;
+  OGRGeometry *geom;
+  double x = 0, y = 0, z = 0;
+
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    
+    NODE_ARG_DOUBLE_OPT(0, "x", x);
+    NODE_ARG_DOUBLE_OPT(1, "y", y);
+    NODE_ARG_DOUBLE_OPT(2, "z", z);
+    
+    if(args.Length() == 1)
+      return NODE_THROW("Point constructor must be given 0, 2, or 3 arguments"); 
+    
+    if(args.Length() == 3) 
+      geom = new OGRPoint(x, y, z);
+    else
+      geom = new OGRPoint(x, y);
+
+    f = new Geometry(geom);
+    f->Wrap(args.This());
+    return args.This();
+
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewPolygon(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("Polygon constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRPolygon());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewLineString(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("LineString constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRLineString());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewLinearRing(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("LinearRing constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRLinearRing());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewGeometryCollection(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("GeometryCollection constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRGeometryCollection());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewMultiPoint(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("MultiPoint constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRMultiPoint());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewMultiLineString(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("MultiLineString constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRMultiLineString());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
+}
+
+Handle<Value> Geometry::NewMultiPolygon(const Arguments& args)
+{
+  HandleScope scope;
+  if(args.IsConstructCall() && !args[0]->IsExternal()){
+    if(args.Length() != 0)
+      return NODE_THROW("MultiPolygon constructor doesn't take any arguments"); 
+    
+    Geometry *f = new Geometry(new OGRMultiPolygon());
+    f->Wrap(args.This());
+    return args.This();
+  }else{
+    return Geometry::New(args);
+  }
 }
 
 Handle<Value> Geometry::New(OGRGeometry *geom) {

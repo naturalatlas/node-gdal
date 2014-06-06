@@ -21,8 +21,25 @@ class Geometry: public node::ObjectWrap {
 
   public:
     static Persistent<FunctionTemplate> constructor;
+    static Persistent<FunctionTemplate> point_constructor;
+    static Persistent<FunctionTemplate> polygon_constructor;
+    static Persistent<FunctionTemplate> linearring_constructor;
+    static Persistent<FunctionTemplate> linestring_constructor;
+    static Persistent<FunctionTemplate> geometrycollection_constructor;
+    static Persistent<FunctionTemplate> multipoint_constructor;
+    static Persistent<FunctionTemplate> multilinestring_constructor;
+    static Persistent<FunctionTemplate> multipolygon_constructor;
+
     static void Initialize(Handle<Object> target);
     static Handle<Value> New(const Arguments &args);
+    static Handle<Value> NewPoint(const Arguments &args);
+    static Handle<Value> NewPolygon(const Arguments &args);
+    static Handle<Value> NewLinearRing(const Arguments &args);
+    static Handle<Value> NewLineString(const Arguments &args);
+    static Handle<Value> NewGeometryCollection(const Arguments &args);
+    static Handle<Value> NewMultiPoint(const Arguments &args);
+    static Handle<Value> NewMultiLineString(const Arguments &args);
+    static Handle<Value> NewMultiPolygon(const Arguments &args);
     static Handle<Value> New(OGRGeometry *geom);
     static Handle<Value> New(OGRGeometry *geom, bool owned);
     static Handle<Value> toString(const Arguments &args);
