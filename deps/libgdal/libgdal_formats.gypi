@@ -59,7 +59,12 @@
 			"./gyp-formats/map.gyp:libgdal_map_frmt",
 			"./gyp-formats/zlib.gyp:libgdal_zlib_frmt",
 			"./gyp-formats/jpeg.gyp:libgdal_jpeg_frmt",
-			"./gyp-formats/png.gyp:libgdal_png_frmt"
+			"./gyp-formats/png.gyp:libgdal_png_frmt",
+			"./gyp-formats/ogr_generic.gyp:libgdal_ogr_generic_frmt",
+			"./gyp-formats/ogr_shape.gyp:libgdal_ogr_shape_frmt",
+			"./gyp-formats/ogr_vrt.gyp:libgdal_ogr_vrt_frmt",
+			"./gyp-formats/ogr_avc.gyp:libgdal_ogr_avc_frmt",
+			"./gyp-formats/ogr_geojson.gyp:libgdal_ogr_geojson_frmt"
 		],
 		"gdal_format_defs": [
 			"GDAL_FORMATS=gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg coasp tsx terragen blx til r northwood saga xyz hf2 kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib jpeg png ",
@@ -121,7 +126,12 @@
 			"FRMT_map=1",
 			"FRMT_zlib=1",
 			"FRMT_jpeg=1",
-			"FRMT_png=1"
+			"FRMT_png=1",
+			"FRMT_generic=1",
+			"FRMT_shape=1",
+			"FRMT_vrt=1",
+			"FRMT_avc=1",
+			"FRMT_geojson=1"
 		]
 	}
 }

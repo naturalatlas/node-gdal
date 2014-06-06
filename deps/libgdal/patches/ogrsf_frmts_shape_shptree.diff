@@ -1,0 +1,10 @@
+--- ./libgdal/gdal/ogr/ogrsf_frmts/shape/shptree_new.c	2014-06-06 12:25:02.000000000 -0600
++++ ./libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c	2014-06-06 12:24:49.000000000 -0600
+@@ -90,6 +90,7 @@
+ 
+ #include "shapefil.h"
+ 
++#include <limits.h>
+ #include <math.h>
+ #include <assert.h>
+ #include <stdlib.h>
