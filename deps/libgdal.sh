@@ -74,7 +74,7 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	jpeg png
 	${OPT_GDAL_FORMATS}"
 
-OGR_FORMATS="generic shape vrt avc geojson"
+OGR_FORMATS="shape vrt avc geojson"
 
 mkdir -p $dir_formats_gyp
 
@@ -140,7 +140,13 @@ function generate_formats() {
 			echo "Skipping: $format_target_name (\"$file_gyp\")"
 		fi
 
-		format_list_defs="$format_list_defs"$'\n'"FRMT_$fmt=1"
+		if [[ $directory == *ogrsf* ]]; then
+			frmt_upper=`echo $fmt | tr '[:lower:]' '[:upper:]'`
+			format_list_defs="$format_list_defs"$'\n'"${frmt_upper}_ENABLED=1"
+		else
+			format_list_defs="$format_list_defs"$'\n'"FRMT_$fmt=1"
+		fi
+
 		format_list_gyps="$format_list_gyps"$'\n'"$file_gyp:$target_name"
 	done
 }

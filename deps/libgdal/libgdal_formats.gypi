@@ -60,7 +60,6 @@
 			"./gyp-formats/zlib.gyp:libgdal_zlib_frmt",
 			"./gyp-formats/jpeg.gyp:libgdal_jpeg_frmt",
 			"./gyp-formats/png.gyp:libgdal_png_frmt",
-			"./gyp-formats/ogr_generic.gyp:libgdal_ogr_generic_frmt",
 			"./gyp-formats/ogr_shape.gyp:libgdal_ogr_shape_frmt",
 			"./gyp-formats/ogr_vrt.gyp:libgdal_ogr_vrt_frmt",
 			"./gyp-formats/ogr_avc.gyp:libgdal_ogr_avc_frmt",
@@ -127,11 +126,10 @@
 			"FRMT_zlib=1",
 			"FRMT_jpeg=1",
 			"FRMT_png=1",
-			"FRMT_generic=1",
-			"FRMT_shape=1",
-			"FRMT_vrt=1",
-			"FRMT_avc=1",
-			"FRMT_geojson=1"
+			"SHAPE_ENABLED=1",
+			"VRT_ENABLED=1",
+			"AVC_ENABLED=1",
+			"GEOJSON_ENABLED=1"
 		]
 	}
 }

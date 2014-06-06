@@ -1,8 +1,7 @@
 'use strict';
 
-var assert = require('assert');
+var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
-var expect = require('chai').assert;
 
 describe('Driver', function() {
 	var expected = {
