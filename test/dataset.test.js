@@ -12,7 +12,7 @@ describe('Dataset', function() {
 	it('should not be instantiable', function() {
 		assert.throws(function() {
 			new gdal.Dataset();
-		});
+		}, /Cannot create dataset directly/);
 	});
 
 	describe('getProjectionRef()', function() {
@@ -35,7 +35,7 @@ describe('Dataset', function() {
 			var ds = gdal.open(__dirname + "/data/sample.tif");
 			assert.throws(function() {
 				ds.setProjection('`1`inoinawfawfian!@121');
-			});
+			}, /not supported/);
 		});
 		it('should set projection (WKT)', function() {
 			var file_orig = __dirname + "/data/dem_azimuth50_pa.img";
@@ -82,7 +82,7 @@ describe('Dataset', function() {
 		});
 		it('should return RasterBand instance when valid band', function() {
 			var band = ds.getRasterBand(1);
-			assert.ok(band instanceof gdal.RasterBand);
+			assert.instanceOf(band, gdal.RasterBand);
 		});
 	});
 

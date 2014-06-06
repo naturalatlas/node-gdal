@@ -9,6 +9,6 @@ describe('Open', function() {
 		var filename = path.join(__dirname,"data/invalid");
 		assert.throws(function() {
 			gdal.open(filename);
-		});
+		}, /Error opening dataset/);
 	});
 });

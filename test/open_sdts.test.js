@@ -2,7 +2,7 @@
 
 var gdal = require('../lib/gdal.js');
 var path = require('path');
-var assert = require('assert');
+var assert = require('chai').assert;
 
 describe('Open', function() {
 	describe('SDTS (DDF)', function() {
@@ -30,12 +30,13 @@ describe('Open', function() {
 			];
 
 			var actual_geotransform = ds.getGeoTransform();
-			assert.ok(Math.abs(actual_geotransform[0] - expected_geotransform[0]) < .00001);
-			assert.ok(Math.abs(actual_geotransform[1] - expected_geotransform[1]) < .00001);
-			assert.ok(Math.abs(actual_geotransform[2] - expected_geotransform[2]) < .00001);
-			assert.ok(Math.abs(actual_geotransform[3] - expected_geotransform[3]) < .00001);
-			assert.ok(Math.abs(actual_geotransform[4] - expected_geotransform[4]) < .00001);
-			assert.ok(Math.abs(actual_geotransform[5] - expected_geotransform[5]) < .00001);
+			var delta = .00001;
+			assert.closeTo(actual_geotransform[0], expected_geotransform[0], delta);
+			assert.closeTo(actual_geotransform[1], expected_geotransform[1], delta);
+			assert.closeTo(actual_geotransform[2], expected_geotransform[2], delta);
+			assert.closeTo(actual_geotransform[3], expected_geotransform[3], delta);
+			assert.closeTo(actual_geotransform[4], expected_geotransform[4], delta);
+			assert.closeTo(actual_geotransform[5], expected_geotransform[5], delta);
 		});
 
 		it('should be able to read statistics', function() {
@@ -50,10 +51,11 @@ describe('Open', function() {
 			};
 
 			var actual_stats = band.getStatistics(false, true);
-			assert.ok(Math.abs(expected_stats.min - actual_stats.min) < .00001);
-			assert.ok(Math.abs(expected_stats.max - actual_stats.max) < .00001);
-			assert.ok(Math.abs(expected_stats.mean - actual_stats.mean) < .00001);
-			assert.ok(Math.abs(expected_stats.std_dev - actual_stats.std_dev) < .00001);
+			var delta = .00001;
+			assert.closeTo(expected_stats.min, actual_stats.min, delta);
+			assert.closeTo(expected_stats.max, actual_stats.max, delta);
+			assert.closeTo(expected_stats.mean, actual_stats.mean, delta);
+			assert.closeTo(expected_stats.std_dev, actual_stats.std_dev, delta);
 		});
 	});
 });
