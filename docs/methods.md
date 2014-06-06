@@ -32,6 +32,15 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getFileList() : string[]`
 - `flushCache() : void`
 
+### Proposed Properties
+
+- `size : object`
+- `x_size : integer //width?`
+- `y_size : integer //height?`
+- `raster_count : integer`
+- `raster_bands : RasterBand[]`
+- `driver : Driver`
+
 ## Driver
 
 - `toString() : string`
@@ -85,3 +94,15 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `getMaskBand() : RasterBand`
 - `getMaskFlags() : integer`
 - `createMaskBand(integer num_samples) : void #throws`
+
+### Proposed Properties
+
+- `size : object`
+- `x_size : integer //width?`
+- `y_size : integer //height?`
+- `block_size : object`
+- `unit_type : string`
+- `scale : Number`
+- `offset : Number`
+- `minimum : Number`
+- `maximum : Number`

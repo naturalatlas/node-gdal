@@ -1,6 +1,6 @@
 
-#ifndef __OGR_COMMON_H__
-#define __OGR_COMMON_H__
+#ifndef __GDAL_COMMON_H__
+#define __GDAL_COMMON_H__
 
 #include <v8.h>
 

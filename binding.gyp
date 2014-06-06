@@ -15,7 +15,17 @@
 				"src/gdal_dataset.cpp",
 				"src/gdal_driver.cpp",
 				"src/gdal_rasterband.cpp",
-				"src/gdal_majorobject.cpp"
+				"src/gdal_majorobject.cpp",
+				"src/node_ogr.cpp",
+				"src/ogr_datasource.cpp",
+				"src/ogr_driver.cpp",
+				"src/ogr_feature.cpp",
+				"src/ogr_feature_defn.cpp",
+				"src/ogr_field_defn.cpp",
+				"src/ogr_geometry.cpp",
+				"src/ogr_layer.cpp",
+				"src/ogr_coordinate_transformation.cpp",
+				"src/ogr_spatial_reference.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",
