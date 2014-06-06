@@ -1,5 +1,5 @@
-#ifndef __NODE_OGR_GLOBAL_H__
-#define __NODE_OGR_GLOBAL_H__
+#ifndef __NODE_GDAL_GLOBAL_H__
+#define __NODE_GDAL_GLOBAL_H__
 
 // v8
 #include <v8.h>
@@ -15,7 +15,7 @@
 using namespace v8;
 using namespace node;
 
-namespace node_ogr {
+namespace node_gdal {
 	static Handle<Value> close(const Arguments &args) {
 		Dataset* ds;
 

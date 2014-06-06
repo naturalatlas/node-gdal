@@ -90,6 +90,7 @@
 
 #include "shapefil.h"
 
+#include <limits.h>
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>

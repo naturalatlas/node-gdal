@@ -59,6 +59,7 @@ rm -f $dir_gdal/Vagrantfile
 
 patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
 patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
+patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
 
 #
 # create format gyps
@@ -73,9 +74,11 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	jpeg png
 	${OPT_GDAL_FORMATS}"
 
+OGR_FORMATS="shape vrt avc geojson mem mitab"
+
 mkdir -p $dir_formats_gyp
 
-function wrap_array(){
+function wrap_array() {
 	local serialized=
 	local indent="$2"
 	local var=""
@@ -90,7 +93,7 @@ function wrap_array(){
 	var=$(trim_comma "$var")
 	printf "%s" "$var"
 }
-function wrap_string(){
+function wrap_string() {
 	local var=$(trim $1)
 	printf "%s" "\"$var\""
 }
@@ -108,34 +111,48 @@ function trim_comma() {
 
 format_list_gyps=""
 format_list_defs=""
-
 format_gyp_template=`cat ${dir_gyp_templates}/libgdal_format.gyp`
-for fmt in $GDAL_FORMATS
-do
-	file_gyp="${dir_formats_gyp}/${fmt}.gyp"
-	target_name="libgdal_${fmt}_frmt"
-	format_target_name=$(wrap_string "$target_name")
 
-	dir_format=".${dir_gdal}/frmts/${fmt}"
-	files_src=`find ${dir_gdal}/frmts/${fmt} | egrep '\.(c|cpp)$' | awk '{print "." $0}'`
-	gyp_template="${format_gyp_template}"
+function generate_formats() {
+	local formats="$1"
+	local directory="$2"
+	local prefix="$3"
 
-	format_sources=$(wrap_array "$files_src" 4)
-	format_include_dirs=$(wrap_string "$dir_format")
+	for fmt in $formats; do
+		file_gyp="${dir_formats_gyp}/${prefix}${fmt}.gyp"
+		target_name="libgdal_${prefix}${fmt}_frmt"
+		format_target_name=$(wrap_string "$target_name")
 
-	if [[ ! -f "$file_gyp" ]]; then
-		echo "Defining target: $format_target_name (\"$file_gyp\")"
-		gyp_template=${gyp_template//'$TARGET_NAME'/$format_target_name}
-		gyp_template=${gyp_template//'$INCLUDE_DIRS'/$format_include_dirs}
-		gyp_template=${gyp_template//'$SOURCES'/$format_sources}
-		echo -e "$gyp_template" > $file_gyp
-	else
-		echo "Skipping: $format_target_name (\"$file_gyp\")"
-	fi
+		dir_format="${directory}/${fmt}"
+		files_src=`find ${dir_format} | egrep '\.(c|cpp)$' | awk '{print "." $0}'`
+		gyp_template="${format_gyp_template}"
 
-	format_list_defs="$format_list_defs"$'\n'"FRMT_$fmt=1"
-	format_list_gyps="$format_list_gyps"$'\n'"$file_gyp:$target_name"
-done
+		format_sources=$(wrap_array "$files_src" 4)
+		format_include_dirs=$(wrap_string "$dir_format")
+
+		if [[ ! -f "$file_gyp" ]]; then
+			echo "Defining target: $format_target_name (\"$file_gyp\")"
+			gyp_template=${gyp_template//'$TARGET_NAME'/$format_target_name}
+			gyp_template=${gyp_template//'$INCLUDE_DIRS'/$format_include_dirs}
+			gyp_template=${gyp_template//'$SOURCES'/$format_sources}
+			echo -e "$gyp_template" > $file_gyp
+		else
+			echo "Skipping: $format_target_name (\"$file_gyp\")"
+		fi
+
+		if [[ $directory == *ogrsf* ]]; then
+			frmt_upper=`echo $fmt | tr '[:lower:]' '[:upper:]'`
+			format_list_defs="$format_list_defs"$'\n'"${frmt_upper}_ENABLED=1"
+		else
+			format_list_defs="$format_list_defs"$'\n'"FRMT_$fmt=1"
+		fi
+
+		format_list_gyps="$format_list_gyps"$'\n'"$file_gyp:$target_name"
+	done
+}
+
+generate_formats "$GDAL_FORMATS" "${dir_gdal}/frmts"
+generate_formats "$OGR_FORMATS" "${dir_gdal}/ogr/ogrsf_frmts" "ogr_"
 
 #
 # create format list

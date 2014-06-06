@@ -11,6 +11,9 @@
 			"./gdal/frmts",
 			"./gdal/frmts/gtiff",
 			"./gdal/ogr",
+			"./gdal/ogr/ogrsf_frmts",
+			"./gdal/ogr/ogrsf_frmts/mem",
+			"./gdal/ogr/ogrsf_frmts/generic",
 			"./gdal/ogr/ogrsf_frmts/shape",
 			"./gdal/ogr/ogrsf_frmts/avc",
 			"./gdal/ogr/ogrsf_frmts/geojson/libjson"

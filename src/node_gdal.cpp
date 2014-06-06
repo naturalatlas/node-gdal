@@ -17,6 +17,9 @@
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
 
+// node-ogr
+#include "ogr.hpp"
+
 // std
 #include <string>
 #include <sstream>
@@ -42,12 +45,13 @@ extern "C" {
 
 	static void Init(Handle<Object> target)
 	{
-		NODE_SET_METHOD(target, "open", node_ogr::open);
-		NODE_SET_METHOD(target, "openShared", node_ogr::openShared);
-		NODE_SET_METHOD(target, "getDriverByName", node_ogr::getDriverByName);
-		NODE_SET_METHOD(target, "getDriverCount", node_ogr::getDriverCount);
-		NODE_SET_METHOD(target, "getDriver", node_ogr::getDriver);
-		NODE_SET_METHOD(target, "close", node_ogr::close);
+
+		NODE_SET_METHOD(target, "open", node_gdal::open);
+		NODE_SET_METHOD(target, "openShared", node_gdal::openShared);
+		NODE_SET_METHOD(target, "getDriverByName", node_gdal::getDriverByName);
+		NODE_SET_METHOD(target, "getDriverCount", node_gdal::getDriverCount);
+		NODE_SET_METHOD(target, "getDriver", node_gdal::getDriver);
+		NODE_SET_METHOD(target, "close", node_gdal::close);
 
 		MajorObject::Initialize(target);
 		Driver::Initialize(target);
@@ -139,6 +143,10 @@ extern "C" {
 		NODE_DEFINE_CONSTANT(target, GCI_YCbCr_CbBand);
 		NODE_DEFINE_CONSTANT(target, GCI_YCbCr_CrBand);
 		NODE_DEFINE_CONSTANT(target, GCI_Max);
+
+		Local<Object> ogr = Object::New();
+		target->Set(String::NewSymbol("ogr"), ogr);
+		::node_ogr::Init(ogr);
 	}
 
 }
