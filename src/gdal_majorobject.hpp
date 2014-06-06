@@ -21,6 +21,7 @@ class MajorObject: public node::ObjectWrap {
 		static Handle<Value> New(const Arguments &args);
 		static Handle<Value> New(GDALMajorObject *obj);
 		static Handle<Value> getMetadata(const Arguments &args);
+		static Handle<Value> getDescription(const Arguments &args);
 
 		MajorObject();
 		MajorObject(GDALMajorObject *obj);

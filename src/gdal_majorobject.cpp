@@ -12,6 +12,7 @@ void MajorObject::Initialize(Handle<Object> target) {
 	constructor->SetClassName(String::NewSymbol("MajorObject"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMetadata", getMetadata);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getDescription", getDescription);
 
 	target->Set(String::NewSymbol("MajorObject"), constructor->GetFunction());
 }
@@ -84,3 +85,5 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 
 	return scope.Close(result);
 }
+
+NODE_WRAPPED_METHOD_WITH_RESULT(MajorObject, getDescription, SafeString, GetDescription);
