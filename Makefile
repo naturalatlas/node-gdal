@@ -1,13 +1,16 @@
-.PHONY: clean build rebuild release test
+.PHONY: clean clean-test build rebuild release test test-concurrent
 
 NODE_PATH:=$(shell pwd)/lib
 
 all: build
 
-clean:
+clean: clean-test
 	@rm -rf ./build
 	@rm -rf lib/binding
+
+clean-test:
 	@rm -f ./test/**/*.aux.xml
+	@rm -f ./test/**/*.tmp*
 
 ./node_modules/.bin/node-pre-gyp:
 	npm install node-pre-gyp
@@ -19,8 +22,18 @@ rebuild:
 	@make clean
 	@make
 
-test:
+test: clean-test
 	npm test
+	@make clean-test
+
+test-concurrent: clean-test
+	node ./node_modules/.bin/_mocha \
+		& node ./node_modules/.bin/_mocha \
+		& node ./node_modules/.bin/_mocha \
+		& node ./node_modules/.bin/_mocha \
+		& node ./node_modules/.bin/_mocha \
+		& node ./node_modules/.bin/_mocha
+	@make clean-test
 
 release:
 ifeq ($(strip $(version)),)
