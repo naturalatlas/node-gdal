@@ -5,11 +5,11 @@ var path = require('path');
 var assert = require('chai').assert;
 
 describe('Open', function() {
-	describe('GeoJSON', function() {
+	describe('ESRI Shapefile', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname,"data/park.geo.json");
+			filename = path.join(__dirname,"data/sample.shp");
 			ds = ogr.open(filename);
 		});
 		it('should be able to read layer count', function() {
@@ -33,22 +33,32 @@ describe('Open', function() {
 					assert.instanceOf(defn, ogr.FeatureDefn);
 				});
 				it('should have all fields defined', function() {
-					assert.equal(defn.getFieldCount(), 3);
-					assert.equal(defn.getFieldDefn(0).getName(), 'kind');
+					assert.equal(defn.getFieldCount(), 8);
+					assert.equal(defn.getFieldDefn(0).getName(), 'path');
 					assert.equal(defn.getFieldDefn(1).getName(), 'name');
-					assert.equal(defn.getFieldDefn(2).getName(), 'state');
+					assert.equal(defn.getFieldDefn(2).getName(), 'type');
+					assert.equal(defn.getFieldDefn(3).getName(), 'long_name');
+					assert.equal(defn.getFieldDefn(4).getName(), 'fips_num');
+					assert.equal(defn.getFieldDefn(5).getName(), 'fips');
+					assert.equal(defn.getFieldDefn(6).getName(), 'state_fips');
+					assert.equal(defn.getFieldDefn(7).getName(), 'state_abbr');
 				});
 			});
 			describe('features', function() {
 				it('should be readable', function() {
-					assert.equal(layer.getFeatureCount(), 1);
+					assert.equal(layer.getFeatureCount(), 23);
 					var feature = layer.getFeature(0);
 					var fields = feature.getFields();
 
 					assert.deepEqual(fields, {
-						'kind': 'county',
-						'state': 'WY',
-						'name': 'Park'
+						'fips': 'US56029',
+						'fips_num': '56029',
+						'long_name': 'Park County',
+						'name': 'Park',
+						'path': 'US.WY.PARK',
+						'state_abbr': 'WY',
+						'state_fips': '56',
+						'type': 'County'
 					});
 				});
 			});
