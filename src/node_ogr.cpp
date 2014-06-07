@@ -62,6 +62,13 @@ namespace node_ogr {
     FieldDefn::Initialize(target);
     Geometry::Initialize(target);
     Point::Initialize(target);
+    LineString::Initialize(target);
+    LinearRing::Initialize(target);
+    Polygon::Initialize(target);
+    GeometryCollection::Initialize(target);
+    MultiPoint::Initialize(target);
+    MultiLineString::Initialize(target);
+    MultiPolygon::Initialize(target);
     SpatialReference::Initialize(target);
     CoordinateTransformation::Initialize(target);
 
