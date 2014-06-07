@@ -27,7 +27,6 @@ namespace node_ogr {
   Handle<Value> getDriver(const Arguments &args);
   Handle<Value> getOpenDSCount(const Arguments &args);
   Handle<Value> getOpenDS(const Arguments &args);
-  Handle<Value> createGeometryFromWkt(const Arguments &args);
 
 }
 

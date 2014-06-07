@@ -10,7 +10,6 @@
 - `getDriver(integer driver_index) : Driver #throws`
 - `getOpenDSCount() : integer`
 - `getOpenDS(integer ds_index) : Datasource`
-- `createGeometryFromWKT(string wkt, SpatialReference srs = null) : Geometry`
 
 #### Properties
 
@@ -94,7 +93,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `toString() : string`
 - `resetReading() : void`
 - `getNextFeature() : Feature`
-- `getLayerDefn() : LayerDefn`
+- `getLayerDefn() : FeatureDefn`
 - `getFeature(integer feature_index) : Feature #throws`
 - `getFeatureCount(boolean force = true) : integer`
 - `setFeature(feature f) : void #throws`
@@ -106,7 +105,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `syncToDisk() #throws`
 - `getFIDColumn() : string`
 - `getGeometryColumn() : string`
-- `createField() : void #throws`
+- `createField(FieldDefn field, bool approx = true) : void #throws`
 - `getSpatialRef() : SpatialReference`
 
 ## Driver
@@ -125,19 +124,10 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 Note: all geometry objects owned by features are cloned to avoid segfaults when features are destroyed and to avoid modifying read-only geometries.
 
-#### Constructors
+#### Static methods
 
-- `Geometry(wkbGeometryType type)`
-- `Point()`
-- `Point(Number x, Number y)`
-- `Point(Number x, Number y, Number z)`
-- `LineString()`
-- `LinearRing()`
-- `Polygon()`
-- `GeometryCollection()`
-- `MultiPoint()`
-- `MultiLineString()`
-- `MultiPolygon()`
+- `create(wkbGeometryType type) : Geometry`
+- `createFromWKT(string wkt, SpatialReference srs = null) : Geometry`
 
 #### Methods
 
@@ -149,7 +139,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `isSimple() : boolean`
 - `isRing() : boolean`
 - `clone() : Geometry`
-- `empty()`
+- `empty() : void`
 - `wkbSize() : integer`
 - `getGeometryType() : integer`
 - `getGeometryName() : string`
@@ -172,35 +162,147 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `buffer(Number distance, int segs = 30) : Geometry`
 - `intersection(Geometry geom) : Geometry`
 - `union(Geometry geom) : Geometry`
-- `unionCascaded(Geometry geom) : Geometry #throws //(wkbMultiPolygon)`
 - `difference(Geometry geom) : Geometry`
 - `symDifference(Geometry geom) : Geometry`
-- `centroid() : Geometry`
+- `centroid() : Point`
 - `simplify(Number tolerance) : void`
 - `simplifyPreserveTopology(Number tolerance) : void`
-- `polygonize() : void #throws //(wkbMultiLineString)`
-- `segmentize(Number segment_length)`
+- `segmentize(Number segment_length) : void`
 - `swapXY() : void`
-- `getArea() : Number #throws //(wkbPolygon, wkbMultiPolygon, wkbLinearRing, wkbGeometryCollection)`
-- `addPoint(Geometry geom) : void #throws //(wkbLinearRing, wkbLineString)`
-- `addGeometry(Geometry geom) : void #throws //(wkbMulti*, wkbGeometryCollection, wkbPolygon)`
-- `getGeometry() : Geometry #throws //(wkbMulti*, wkbGeometryCollection)`
-- `getNumGeometries() : integer #throws //(wkbMulti*, wkbGeometryCollection)`
 - `getEnvelope() : object`
 - `getEnvelope3D() : object`
-- `getLength() : Number #throws //(wkbLinearRing, wkbLineString, wkbGeometryCollection, wkbMultiLineString)`
-- `value(Number distance) : Number #throws //(wkbLinearRing, wkbLineString)`
-- `getPoint() : Geometry #throws //(wkbLinearRing, wkbLineString)`
-- `getX() : Number #throws //(wkbPoint)`
-- `getY() : Number #throws //(wkbPoint)`
-- `getZ() : Number #throws //(wkbPoint)`
-- `setX(Number x) : void #throws //(wkbPoint)`
-- `setY(Number y) : void #throws //(wkbPoint)`
-- `setZ(Number z) : void #throws //(wkbPoint)`
 - `transform(CoordinateTransformation transform) : void #throws`
 - `transformTo(SpatialReference srs) : void #throws`
 - `getSpatialReference() : SpatialReference`
 - `assignSpatialReference(SpatialReference srs) : void`
+
+
+
+## Point 
+
+Inherits from Geometry
+
+#### Constructors
+
+- `Point()`
+- `Point(Number x, Number y)`
+- `Point(Number x, Number y, Number z)`
+
+#### Properties
+
+- `x : Number`
+- `y : Number`
+- `z : Number`
+
+
+
+## LineString
+
+Inherits from Geometry
+
+#### Constructor
+
+- `LineString()`
+
+#### Methods
+
+- `getPoint(integer i) : Geometry`
+- `addPoint(Point geom) : void`
+- `getNumPoints() : integer`
+- `getLength() : Number`
+- `value(Number distance) : Point`
+
+
+
+## LinearRing
+
+Inherits from LineString
+
+#### Constructor
+
+- `LinearRing()`
+
+#### Methods
+
+- `getArea() : Number`
+
+
+## Polygon
+
+Inherits from Geometry
+
+#### Constructor
+
+- `Polygon()`
+
+#### Methods
+
+- `getArea() : Number`
+- `getNumInteriorRings() : integer`
+- `addRing(LinearRing ring) : void`
+- `getExteriorRing() : LinearRing`
+- `getInteriorRing(integer index) : LinearRing`
+
+
+
+## GeometryCollection
+
+Inherits from Geometry
+
+#### Constructor
+
+- `GeometryCollection()`
+
+#### Methods
+
+- `addGeometry(Geometry geom) : void #throws`
+- `getGeometry(integer i) : Geometry`
+- `getNumGeometries() : integer`
+- `getArea() : Number`
+- `getLength() : Number`
+
+
+
+## MultiPoint
+
+Inherits from GeometryCollection
+
+#### Constructor
+
+- `MultiPoint()`
+
+#### Methods
+
+- `getGeometry(integer i) : Point`
+
+
+## MultiLineString
+
+Inherits from GeometryCollection
+
+#### Constructor
+
+- `MultiLineString()`
+
+#### Methods
+
+- `polygonize() : void #throws`
+- `getGeometry(integer i) : LineString`
+
+
+
+## MultiPolygon
+
+Inherits from GeometryCollection
+
+#### Constructor
+
+- `MultiPolygon()`
+
+#### Methods
+
+- `unionCascaded(Geometry geom) : Geometry #throws`
+- `getGeometry(integer i) : Polygon`
 
 
 ## Feature

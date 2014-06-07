@@ -21,25 +21,9 @@ class Geometry: public node::ObjectWrap {
 
   public:
     static Persistent<FunctionTemplate> constructor;
-    static Persistent<FunctionTemplate> point_constructor;
-    static Persistent<FunctionTemplate> polygon_constructor;
-    static Persistent<FunctionTemplate> linearring_constructor;
-    static Persistent<FunctionTemplate> linestring_constructor;
-    static Persistent<FunctionTemplate> geometrycollection_constructor;
-    static Persistent<FunctionTemplate> multipoint_constructor;
-    static Persistent<FunctionTemplate> multilinestring_constructor;
-    static Persistent<FunctionTemplate> multipolygon_constructor;
 
     static void Initialize(Handle<Object> target);
     static Handle<Value> New(const Arguments &args);
-    static Handle<Value> NewPoint(const Arguments &args);
-    static Handle<Value> NewPolygon(const Arguments &args);
-    static Handle<Value> NewLinearRing(const Arguments &args);
-    static Handle<Value> NewLineString(const Arguments &args);
-    static Handle<Value> NewGeometryCollection(const Arguments &args);
-    static Handle<Value> NewMultiPoint(const Arguments &args);
-    static Handle<Value> NewMultiLineString(const Arguments &args);
-    static Handle<Value> NewMultiPolygon(const Arguments &args);
     static Handle<Value> New(OGRGeometry *geom);
     static Handle<Value> New(OGRGeometry *geom, bool owned);
     static Handle<Value> toString(const Arguments &args);
@@ -74,7 +58,6 @@ class Geometry: public node::ObjectWrap {
     static Handle<Value> buffer(const Arguments &args);
     static Handle<Value> intersection(const Arguments &args);
     static Handle<Value> unionGeometry(const Arguments &args);
-    static Handle<Value> unionCascaded(const Arguments &args);
     static Handle<Value> difference(const Arguments &args);
     static Handle<Value> symDifference(const Arguments &args);
     static Handle<Value> centroid(const Arguments &args);
@@ -82,35 +65,25 @@ class Geometry: public node::ObjectWrap {
     static Handle<Value> simplifyPreserveTopology(const Arguments &args);
     static Handle<Value> polygonize(const Arguments &args);
     static Handle<Value> swapXY(const Arguments &args);
-    static Handle<Value> getArea(const Arguments &args);
-    static Handle<Value> addPoint(const Arguments &args);
-    static Handle<Value> addGeometry(const Arguments &args);
-    static Handle<Value> getGeometry(const Arguments &args);
     static Handle<Value> getNumGeometries(const Arguments &args);
     static Handle<Value> getEnvelope(const Arguments &args);
     static Handle<Value> getEnvelope3D(const Arguments &args);
-    static Handle<Value> getLength(const Arguments &args);
-    static Handle<Value> value(const Arguments &args);
-    static Handle<Value> getPoint(const Arguments &args);
-    static Handle<Value> getX(const Arguments &args);
-    static Handle<Value> getY(const Arguments &args);
-    static Handle<Value> getZ(const Arguments &args);
-    static Handle<Value> setX(const Arguments &args);
-    static Handle<Value> setY(const Arguments &args);
-    static Handle<Value> setZ(const Arguments &args);
     static Handle<Value> transform(const Arguments &args);
     static Handle<Value> transformTo(const Arguments &args);
     static Handle<Value> getSpatialReference(const Arguments &args);
     static Handle<Value> assignSpatialReference(const Arguments &args);
 
-    static OGRwkbGeometryType getGeometryType_fixed(Geometry* geom);
-    static void updateAmountOfExternalAllocatedMemory(Geometry* geom);
+    //static constructor methods
+    static Handle<Value> create(const Arguments &args);
+    static Handle<Value> createFromWkt(const Arguments &args);
+
+    static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
 
     Geometry();
     Geometry(OGRGeometry *geom);
     inline OGRGeometry *get() { return this_; }
 
-  private:
+  protected:
     ~Geometry();
     OGRGeometry *this_;
     bool owned_;
@@ -118,5 +91,20 @@ class Geometry: public node::ObjectWrap {
 };
 
 }
+
+#define UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(geom) {                                        \
+    int new_size = geom->this_->WkbSize();                                              \
+    if(geom->owned_) V8::AdjustAmountOfExternalAllocatedMemory(new_size - geom->size_); \
+    geom->size_ = new_size;                                                             \
+}
+
+#include "ogr_point.hpp"
+#include "ogr_linestring.hpp"
+#include "ogr_linearring.hpp"
+#include "ogr_polygon.hpp"
+#include "ogr_geometrycollection.hpp"
+#include "ogr_multipoint.hpp"
+#include "ogr_multilinestring.hpp"
+#include "ogr_multipolygon.hpp"
 
 #endif

@@ -21,6 +21,7 @@
 #include "ogr_geometry.hpp"
 #include "ogr_spatial_reference.hpp"
 #include "ogr_coordinate_transformation.hpp"
+#include "ogr_point.hpp"
 
 // std
 #include <string>
@@ -52,7 +53,6 @@ namespace node_ogr {
     NODE_SET_METHOD(target, "getDriver", node_ogr::getDriver);
     NODE_SET_METHOD(target, "getOpenDSCount", node_ogr::getOpenDSCount);
     NODE_SET_METHOD(target, "getOpenDS", node_ogr::getOpenDS);
-    NODE_SET_METHOD(target, "createGeometryFromWkt", node_ogr::createGeometryFromWkt);
 
     Driver::Initialize(target);
     Datasource::Initialize(target);
@@ -61,6 +61,7 @@ namespace node_ogr {
     FeatureDefn::Initialize(target);
     FieldDefn::Initialize(target);
     Geometry::Initialize(target);
+    Point::Initialize(target);
     SpatialReference::Initialize(target);
     CoordinateTransformation::Initialize(target);
 
@@ -186,28 +187,6 @@ namespace node_ogr {
     NODE_ARG_INT(0, "data source index", ds_index);
 
     return scope.Close(Datasource::New(OGRSFDriverRegistrar::GetRegistrar()->GetOpenDS(ds_index)));
-  }
-
-  Handle<Value> createGeometryFromWkt(const Arguments &args) {
-    HandleScope scope;
-
-    std::string wkt_string; 
-    SpatialReference *srs = NULL;
-
-    NODE_ARG_STR(0, "wkt", wkt_string);
-    NODE_ARG_WRAPPED_OPT(1, "srs", SpatialReference, srs);
-
-    char *wkt = (char*) wkt_string.c_str(); 
-    OGRGeometry *geom = NULL;
-    OGRSpatialReference *ogr_srs = NULL;
-    if(srs) 
-      ogr_srs = srs->get();
-
-    if(OGRGeometryFactory::createFromWkt(&wkt, ogr_srs, &geom)){
-      return NODE_THROW("Error creating geometry");
-    }
-
-    return scope.Close(Geometry::New(geom, true));
   }
 
 } // namespace node_ogr
