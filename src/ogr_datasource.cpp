@@ -133,8 +133,6 @@ Handle<Value> Datasource::toString(const Arguments& args)
 NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getName, SafeString, GetName);
 NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getLayerCount, Integer, GetLayerCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getDriver, node_ogr::Driver, GetDriver);
-NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Datasource, getLayerByName, Layer, GetLayerByName, "layer name");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Datasource, getLayer, Layer, GetLayer, "layer index to fetch");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Datasource, syncToDisk, SyncToDisk);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(Datasource, deleteLayer, DeleteLayer, "layer index to delete");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Datasource, testCapability, Boolean, TestCapability, "capability to test");
@@ -216,7 +214,31 @@ Handle<Value> Datasource::createLayer(const Arguments& args)
   }
 }
 
+Handle<Value> Datasource::getLayerByName(const Arguments& args)
+{
+  HandleScope scope;
 
+  Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
+  if(!ds->this_) return NODE_THROW("Datasource object already destroyed");
+
+  std::string name("");
+  NODE_ARG_STR(0, "layer name", name);
+
+  return scope.Close(Layer::New(ds->this_->GetLayerByName(name.c_str()), ds->this_));
+}
+
+Handle<Value> Datasource::getLayer(const Arguments& args)
+{
+  HandleScope scope;
+
+  Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
+  if(!ds->this_) return NODE_THROW("Datasource object already destroyed");
+
+  int i;
+  NODE_ARG_INT(0, "layer index", i);
+
+  return scope.Close(Layer::New(ds->this_->GetLayer(i), ds->this_));
+}
 
 Handle<Value> Datasource::copyLayer(const Arguments& args)
 {
@@ -250,7 +272,7 @@ Handle<Value> Datasource::copyLayer(const Arguments& args)
   }
 
   if (layer) {
-    return scope.Close(Layer::New(layer));
+    return scope.Close(Layer::New(layer, ds->this_));
   } else { 
     return NODE_THROW("Error copying layer");
   }

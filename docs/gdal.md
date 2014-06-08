@@ -81,7 +81,6 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `getXSize() : integer`
 - `getYSize() : integer`
 - `getBand(integer i) : RasterBand`
-- `getDataset() : Dataset`
 - `getRasterDataType() : integer`
 - `getBlockSize() : object`
 - `getAccess() : integer`
@@ -109,6 +108,10 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `getMaskBand() : RasterBand`
 - `getMaskFlags() : integer`
 - `createMaskBand(integer num_samples) : void #throws`
+
+#### Properties
+
+- `ds : Dataset`
 
 #### Proposed Properties
 

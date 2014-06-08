@@ -5,6 +5,7 @@
 #include "ogr_feature_defn.hpp"
 #include "ogr_field_defn.hpp"
 #include "ogr_spatial_reference.hpp"
+#include "ogr_datasource.hpp"
 
 #include <stdlib.h>
 #include <sstream>
@@ -38,6 +39,9 @@ void Layer::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryColumn", getGeometryColumn);
   NODE_SET_PROTOTYPE_METHOD(constructor, "createField", createField);
   NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialRef", getSpatialRef);
+
+  constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ds"), dsGetter, dsSetter);
+
   target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
 
@@ -99,11 +103,6 @@ Handle<Value> Layer::New(const Arguments& args)
   return args.This();
 }
 
-Handle<Value> Layer::New(OGRLayer *raw) {
-  HandleScope scope;
-  return scope.Close(Layer::New(raw, NULL, false));
-}
-
 Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *parent) {
   HandleScope scope;
   return scope.Close(Layer::New(raw, parent, false));
@@ -123,6 +122,17 @@ Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *parent, bool result_set) 
   v8::Handle<v8::Object> obj = Layer::constructor->GetFunction()->NewInstance(1, &ext);
   
   cache.add(raw, obj);
+
+  //add reference to datasource so datasource doesnt get GC'ed while layer is alive 
+  if(parent){
+    Handle<Value> ds;
+    if(Datasource::cache.has(parent)){
+      ds = Datasource::cache.get(parent);
+    }else{
+      ds = Datasource::New(parent); //this should never happen
+    }
+    obj->SetHiddenValue(String::NewSymbol("ds_"), ds); 
+  }
 
   return scope.Close(obj);
 }
@@ -225,4 +235,12 @@ Handle<Value> Layer::getSpatialRef(const Arguments& args)
   return scope.Close(srs);
 }
 
+void Layer::dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+  NODE_THROW("ds is a read-only property");
+}
 
+Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
+{
+  return info.This()->GetHiddenValue(String::NewSymbol("ds_"));
+}

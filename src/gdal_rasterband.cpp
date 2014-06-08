@@ -20,7 +20,7 @@ void RasterBand::Initialize(Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getXSize", getXSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getYSize", getYSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getBand", getBand);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getDataset", getDataset);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getDataset", getDataset);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterDataType", getRasterDataType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getBlockSize", getBlockSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getAccess", getAccess);
@@ -56,6 +56,8 @@ void RasterBand::Initialize(Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaskFlags", getMaskFlags);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
 
+	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ds"), dsGetter, dsSetter);
+
 	target->Set(String::NewSymbol("RasterBand"), constructor->GetFunction());
 }
 
@@ -76,6 +78,7 @@ RasterBand::~RasterBand()
 void RasterBand::dispose(){
 	GDALRasterBand *band;
 	RasterBand *band_wrapped;
+
 	if(this_) {
 		//dispose of all wrapped overview bands
 		int n = this_->GetOverviewCount();
@@ -93,7 +96,9 @@ void RasterBand::dispose(){
 			band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
 			band_wrapped->dispose();
 		}
-
+		#ifdef VERBOSE_GC
+			printf("Disposing band [%p]\n", this_);
+		#endif
 		this_ = NULL;
 	}
 }
@@ -131,6 +136,18 @@ Handle<Value> RasterBand::New(GDALRasterBand *raw) {
 
 	cache.add(raw, obj);
 
+	//add reference to dataset so dataset doesnt get GC'ed while band is alive 
+	GDALDataset *parent = raw->GetDataset();
+	if(parent){
+		Handle<Value> ds;
+		if(Dataset::cache.has(parent)){
+			ds = Dataset::cache.get(parent);
+		}else{
+			ds = Dataset::New(parent); //this should never happen
+		}
+		obj->SetHiddenValue(String::NewSymbol("ds_"), ds);
+	}
+
 	return scope.Close(obj);
 }
 
@@ -144,7 +161,7 @@ NODE_WRAPPED_METHOD(RasterBand, flushCache, FlushCache);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getXSize, Integer, GetXSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getYSize, Integer, GetYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getBand, Integer, GetBand);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getDataset, Dataset, GetDataset);
+//NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getDataset, Dataset, GetDataset);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getRasterDataType, Integer, GetRasterDataType);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getAccess, Integer, GetAccess);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getNoDataValue, Number, GetNoDataValue);
@@ -315,4 +332,14 @@ Handle<Value> RasterBand::setStatistics(const Arguments& args)
 
 	if(err) return NODE_THROW_CPLERR(err);
 	return Undefined();
+}
+
+void RasterBand::dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	NODE_THROW("ds is a read-only property");
+}
+
+Handle<Value> RasterBand::dsGetter(Local<String> property, const AccessorInfo &info)
+{
+ 	return info.This()->GetHiddenValue(String::NewSymbol("ds_"));
 }

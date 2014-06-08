@@ -67,7 +67,9 @@ void Dataset::dispose(){
 				band_wrapped->dispose();
 			}
 		}
-
+		#ifdef VERBOSE_GC
+			printf("Disposing dataset [%p]\n", this_);
+		#endif
 		GDALClose(this_);
 		this_ = NULL;
 	}

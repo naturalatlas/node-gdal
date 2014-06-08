@@ -26,7 +26,7 @@ class RasterBand: public node::ObjectWrap {
 		static Handle<Value> getXSize(const Arguments &args);
 		static Handle<Value> getYSize(const Arguments &args);
 		static Handle<Value> getBand(const Arguments &args);
-		static Handle<Value> getDataset(const Arguments &args);
+		//static Handle<Value> getDataset(const Arguments &args);
 		static Handle<Value> getRasterDataType(const Arguments &args);
 		static Handle<Value> getBlockSize(const Arguments &args);
 		static Handle<Value> getAccess(const Arguments &args);
@@ -62,6 +62,9 @@ class RasterBand: public node::ObjectWrap {
 		static Handle<Value> getMaskFlags(const Arguments &args);
 		static Handle<Value> createMaskBand(const Arguments &args);
 		static Handle<Value> getMetadata(const Arguments &args);
+
+		static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+		static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
 
 		static ObjectCache<GDALRasterBand*> cache;
 

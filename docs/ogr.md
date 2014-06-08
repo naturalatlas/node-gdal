@@ -108,6 +108,10 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `createField(FieldDefn field, bool approx = true) : void #throws`
 - `getSpatialRef() : SpatialReference`
 
+#### Properties
+
+- `ds : Datasource`
+
 ## Driver
 
 #### Methods 
