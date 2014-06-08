@@ -62,10 +62,21 @@ Layer::~Layer()
 }
 
 void Layer::dispose(){
-  if(is_result_set && parent_ds && this_){
-    parent_ds->ReleaseResultSet(this_);
+  if(this_){
+    if(is_result_set && parent_ds && this_){
+     
+      #ifdef VERBOSE_GC
+        printf("Releasing result set [%p] from datasource [%p]\n", this_, parent_ds);
+      #endif
+
+      parent_ds->ReleaseResultSet(this_);
+    }
+
+    #ifdef VERBOSE_GC
+        printf("Disposing layer [%p]\n", this_);
+    #endif
+    this_ = NULL;
   }
-  this_ = NULL;
 };
 
 Handle<Value> Layer::New(const Arguments& args)
@@ -121,6 +132,8 @@ Handle<Value> Layer::toString(const Arguments& args)
   HandleScope scope;
 
   Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+  if(!layer->this_) return scope.Close(String::New("Null layer"));
+
   std::ostringstream ss;
   ss << "Layer (" << layer->this_->GetName() << ")";
 
@@ -142,13 +155,21 @@ NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Layer, createField, Creat
 
 Handle<Value> Layer::getLayerDefn(const Arguments& args)
 {
-  return HandleScope().Close(FeatureDefn::New(ObjectWrap::Unwrap<Layer>(args.This())->this_->GetLayerDefn(), false));
+  HandleScope scope;
+  
+  Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+
+  if(!layer->this_) return NODE_THROW("Layer object already destroyed");
+
+  return scope.Close(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
 }
 
 Handle<Value> Layer::getNextFeature(const Arguments& args)
 {
   HandleScope scope;
+
   Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+  if(!layer->this_) return NODE_THROW("Layer object already destroyed");
 
   OGRFeature *next = layer->this_->GetNextFeature();
 
@@ -167,6 +188,7 @@ Handle<Value> Layer::getFeature(const Arguments& args)
   NODE_ARG_INT(0, "feature id", feature_id);
 
   Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+  if(!layer->this_) return NODE_THROW("Layer object already destroyed");
 
   OGRFeature *feature = layer->this_->GetFeature(feature_id);
 
@@ -184,6 +206,7 @@ Handle<Value> Layer::getFeatureCount(const Arguments& args)
   NODE_ARG_BOOL_OPT(0, "force", force);
 
   Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+  if(!layer->this_) return NODE_THROW("Layer object already destroyed");
 
   int count = layer->this_->GetFeatureCount(force);
 
@@ -193,7 +216,10 @@ Handle<Value> Layer::getFeatureCount(const Arguments& args)
 Handle<Value> Layer::getSpatialRef(const Arguments& args)
 {
   HandleScope scope;
+
   Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+  if(!layer->this_) return NODE_THROW("Layer object already destroyed");
+
   OGRSpatialReference* ogr_srs = layer->this_->GetSpatialRef();
   Handle<Value> srs = SpatialReference::New(ogr_srs, false);
   return scope.Close(srs);

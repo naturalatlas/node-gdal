@@ -37,12 +37,14 @@ void Datasource::Initialize(Handle<Object> target) {
 
 Datasource::Datasource(OGRDataSource *ds)
 : ObjectWrap(),
-  this_(ds)
+  this_(ds),
+  result_sets()
 {}
 
 Datasource::Datasource()
 : ObjectWrap(),
-  this_(0)
+  this_(0),
+  result_sets()
 {
 }
 
@@ -54,17 +56,33 @@ Datasource::~Datasource()
 
 void Datasource::dispose(){
   OGRLayer *lyr;
+  Layer *lyr_wrapped;
+
   if(this_) {
     //dispose of all wrapped child layers
     int n = this_->GetLayerCount();
     for(int i = 0; i < n; i++) {
       lyr = this_->GetLayer(i);
       if(Layer::cache.has(lyr)){
-        Layer *lyr_wrapped = ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
+        lyr_wrapped = ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
         lyr_wrapped->dispose();
       }
     }
 
+    //dispose of all result sets
+    n = result_sets.size();
+    for(int i = 0; i < n; i++){
+      lyr = result_sets[i];
+      if(Layer::cache.has(lyr)){
+        lyr_wrapped = ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
+        lyr_wrapped->dispose();
+      }
+    }
+    result_sets.clear();
+
+    #ifdef VERBOSE_GC
+        printf("Disposing datasource [%p]\n", this_);
+    #endif
     OGRDataSource::DestroyDataSource(this_);
     this_ = NULL;
   }
@@ -149,6 +167,7 @@ Handle<Value> Datasource::executeSQL(const Arguments& args)
                                           sql_dialect.empty() ? NULL : sql_dialect.c_str());
 
   if (layer) {
+    ds->result_sets.push_back(layer);
     return scope.Close(Layer::New(layer, ds->this_, true));
   } else { 
     return NODE_THROW("Error executing SQL");

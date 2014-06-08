@@ -10,7 +10,9 @@
 
 // ogr
 #include <ogrsf_frmts.h>
+
 #include "obj_cache.hpp"
+#include <vector>
 
 using namespace v8;
 using namespace node;
@@ -46,6 +48,7 @@ class Datasource: public node::ObjectWrap {
   private:
     ~Datasource();
     OGRDataSource *this_;
+    std::vector<OGRLayer*> result_sets;
 };
 
 #endif
