@@ -8,7 +8,8 @@
 Persistent<FunctionTemplate> RasterBand::constructor;
 ObjectCache<GDALRasterBand*> RasterBand::cache;
 
-void RasterBand::Initialize(Handle<Object> target) {
+void RasterBand::Initialize(Handle<Object> target)
+{
 	HandleScope scope;
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(RasterBand::New));
@@ -62,11 +63,11 @@ void RasterBand::Initialize(Handle<Object> target) {
 }
 
 RasterBand::RasterBand(GDALRasterBand *band)
-: ObjectWrap(), this_(band)
+	: ObjectWrap(), this_(band)
 {}
 
 RasterBand::RasterBand()
-: ObjectWrap(), this_(0)
+	: ObjectWrap(), this_(0)
 {
 }
 
@@ -75,16 +76,17 @@ RasterBand::~RasterBand()
 	dispose();
 }
 
-void RasterBand::dispose(){
+void RasterBand::dispose()
+{
 	GDALRasterBand *band;
 	RasterBand *band_wrapped;
 
-	if(this_) {
+	if (this_) {
 		//dispose of all wrapped overview bands
 		int n = this_->GetOverviewCount();
 		for(int i = 0; i < n; i++) {
 			band = this_->GetOverview(i);
-			if(RasterBand::cache.has(band)){
+			if (RasterBand::cache.has(band)) {
 				band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
 				band_wrapped->dispose();
 			}
@@ -92,13 +94,13 @@ void RasterBand::dispose(){
 
 		//dispose of wrapped mask band
 		band = this_->GetMaskBand();
-		if(RasterBand::cache.has(band)){
+		if (RasterBand::cache.has(band)) {
 			band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
 			band_wrapped->dispose();
 		}
-		#ifdef VERBOSE_GC
-			printf("Disposing band [%p]\n", this_);
-		#endif
+#ifdef VERBOSE_GC
+		printf("Disposing band [%p]\n", this_);
+#endif
 		this_ = NULL;
 	}
 }
@@ -123,11 +125,16 @@ Handle<Value> RasterBand::New(const Arguments& args)
 	}
 }
 
-Handle<Value> RasterBand::New(GDALRasterBand *raw) {
+Handle<Value> RasterBand::New(GDALRasterBand *raw)
+{
 	HandleScope scope;
 
-	if(!raw) return Null();
-	if(cache.has(raw)) return cache.get(raw);
+	if (!raw) {
+		return Null();
+	}
+	if (cache.has(raw)) {
+		return cache.get(raw);
+	}
 
 	RasterBand *wrapped = new RasterBand(raw);
 
@@ -136,13 +143,13 @@ Handle<Value> RasterBand::New(GDALRasterBand *raw) {
 
 	cache.add(raw, obj);
 
-	//add reference to dataset so dataset doesnt get GC'ed while band is alive 
+	//add reference to dataset so dataset doesnt get GC'ed while band is alive
 	GDALDataset *parent = raw->GetDataset();
-	if(parent){
+	if (parent) {
 		Handle<Value> ds;
-		if(Dataset::cache.has(parent)){
+		if (Dataset::cache.has(parent)) {
 			ds = Dataset::cache.get(parent);
-		}else{
+		} else {
 			ds = Dataset::New(parent); //this should never happen
 		}
 		obj->SetHiddenValue(String::NewSymbol("ds_"), ds);
@@ -189,7 +196,9 @@ Handle<Value> RasterBand::getBlockSize(const Arguments& args)
 
 	int x, y;
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 	band->this_->GetBlockSize(&x, &y);
 
 	Local<Object> size = Object::New();
@@ -204,12 +213,14 @@ Handle<Value> RasterBand::getCategoryNames(const Arguments& args)
 	HandleScope scope;
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 	char ** names = band->this_->GetCategoryNames();
 
 	Handle<Array> results = Array::New();
 
-	if(names){
+	if (names) {
 		int i = 0;
 		while (names[i]) {
 			results->Set(i, String::New(names[i]));
@@ -228,7 +239,9 @@ Handle<Value> RasterBand::setCategoryNames(const Arguments& args)
 	NODE_ARG_ARRAY(0, "category names", names);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 
 	char **list = NULL;
 	if (names->Length() > 0) {
@@ -242,9 +255,13 @@ Handle<Value> RasterBand::setCategoryNames(const Arguments& args)
 
 	int err = band->this_->SetCategoryNames(list);
 
-	if (list) delete [] list;
+	if (list) {
+		delete [] list;
+	}
 
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 	return Undefined();
 }
 
@@ -256,11 +273,15 @@ Handle<Value> RasterBand::fill(const Arguments& args)
 	NODE_ARG_DOUBLE_OPT(1, "imaginary value", real);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 
 	int err = band->this_->Fill(real, imaginary);
 
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 	return Undefined();
 }
 
@@ -273,11 +294,13 @@ Handle<Value> RasterBand::getStatistics(const Arguments& args)
 	NODE_ARG_BOOL(1, "force", force);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 	int err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
 
 	if (err) {
-		if (!force && err == CE_Warning){
+		if (!force && err == CE_Warning) {
 			return NODE_THROW("Statistics cannot be efficiently computed without scanning raster");
 		}
 		return NODE_THROW("Error getting statistics");
@@ -300,7 +323,9 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 	NODE_ARG_BOOL(0, "allow approximation", approx);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 
 	if (band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL)) {
 		return NODE_THROW("Error computing statistics");
@@ -326,11 +351,15 @@ Handle<Value> RasterBand::setStatistics(const Arguments& args)
 	NODE_ARG_DOUBLE(3, "standard deviation", std_dev);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if(!band->this_) return NODE_THROW("RasterBand object has already been destroyed");
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
 
 	int err = band->this_->SetStatistics(min, max, mean, std_dev);
 
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 	return Undefined();
 }
 
@@ -342,5 +371,5 @@ void RasterBand::dsSetter(Local<String> property, Local<Value> value, const Acce
 Handle<Value> RasterBand::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
- 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
 }

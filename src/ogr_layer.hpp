@@ -17,48 +17,50 @@ using namespace node;
 
 namespace node_ogr {
 
-class Layer: public node::ObjectWrap {
-  public:
-    static Persistent<FunctionTemplate> constructor;
-    static void Initialize(Handle<Object> target);
-    static Handle<Value> New(const Arguments &args);
-    static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent);
-    static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent, bool result_set);
-    static Handle<Value> weakCallback(Persistent<Value> object, void *parameter);
-    static Handle<Value> toString(const Arguments &args);
-    static Handle<Value> resetReading(const Arguments &args);
-    static Handle<Value> getNextFeature(const Arguments &args);
-    static Handle<Value> getLayerDefn(const Arguments &args);
-    static Handle<Value> getFeature(const Arguments &args);
-    static Handle<Value> setFeature(const Arguments &args);
-    static Handle<Value> getFeatureCount(const Arguments &args);
-    static Handle<Value> createFeature(const Arguments &args);
-    static Handle<Value> deleteFeature(const Arguments &args);
-    static Handle<Value> getGeomType(const Arguments &args);
-    static Handle<Value> getName(const Arguments &args);
-    static Handle<Value> testCapability(const Arguments &args);
-    static Handle<Value> syncToDisk(const Arguments &args);
-    static Handle<Value> getFIDColumn(const Arguments &args);
-    static Handle<Value> getGeometryColumn(const Arguments &args);
-    static Handle<Value> createField(const Arguments &args);
-    static Handle<Value> getSpatialRef(const Arguments &args);
+	class Layer: public node::ObjectWrap {
+	public:
+		static Persistent<FunctionTemplate> constructor;
+		static void Initialize(Handle<Object> target);
+		static Handle<Value> New(const Arguments &args);
+		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent);
+		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent, bool result_set);
+		static Handle<Value> weakCallback(Persistent<Value> object, void *parameter);
+		static Handle<Value> toString(const Arguments &args);
+		static Handle<Value> resetReading(const Arguments &args);
+		static Handle<Value> getNextFeature(const Arguments &args);
+		static Handle<Value> getLayerDefn(const Arguments &args);
+		static Handle<Value> getFeature(const Arguments &args);
+		static Handle<Value> setFeature(const Arguments &args);
+		static Handle<Value> getFeatureCount(const Arguments &args);
+		static Handle<Value> createFeature(const Arguments &args);
+		static Handle<Value> deleteFeature(const Arguments &args);
+		static Handle<Value> getGeomType(const Arguments &args);
+		static Handle<Value> getName(const Arguments &args);
+		static Handle<Value> testCapability(const Arguments &args);
+		static Handle<Value> syncToDisk(const Arguments &args);
+		static Handle<Value> getFIDColumn(const Arguments &args);
+		static Handle<Value> getGeometryColumn(const Arguments &args);
+		static Handle<Value> createField(const Arguments &args);
+		static Handle<Value> getSpatialRef(const Arguments &args);
 
-    static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-    static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
+		static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+		static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
 
-    static ObjectCache<OGRLayer*> cache;
+		static ObjectCache<OGRLayer*> cache;
 
-    Layer();
-    Layer(OGRLayer *ds);
-    inline OGRLayer *get() { return this_; }
-    void dispose();
-    
-  private:
-    ~Layer();
-    OGRLayer *this_;
-    OGRDataSource *parent_ds;
-    bool is_result_set;
-};
+		Layer();
+		Layer(OGRLayer *ds);
+		inline OGRLayer *get() {
+			return this_;
+		}
+		void dispose();
+
+	private:
+		~Layer();
+		OGRLayer *this_;
+		OGRDataSource *parent_ds;
+		bool is_result_set;
+	};
 
 }
 

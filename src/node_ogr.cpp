@@ -33,168 +33,174 @@ using namespace v8;
 
 namespace node_ogr {
 
-  /*enum {
-    Success = 0,
-    NotEnoughData = 1,
-    NotEnoughMemory = 2,
-    UnsupportedGeometryType = 3,
-    UnsupportedOperation = 4,
-    CorruptData = 5,
-    Failure = 6,
-    UnsupportedSRS = 7,
-    InvalidHandle = 8
-  } Error;*/
+	/*enum {
+	  Success = 0,
+	  NotEnoughData = 1,
+	  NotEnoughMemory = 2,
+	  UnsupportedGeometryType = 3,
+	  UnsupportedOperation = 4,
+	  CorruptData = 5,
+	  Failure = 6,
+	  UnsupportedSRS = 7,
+	  InvalidHandle = 8
+	} Error;*/
 
-  void Init(Handle<Object> target)
-  {
-    NODE_SET_METHOD(target, "open", node_ogr::open);
-    NODE_SET_METHOD(target, "getDriverByName", node_ogr::getDriverByName);
-    NODE_SET_METHOD(target, "getDriverCount", node_ogr::getDriverCount);
-    NODE_SET_METHOD(target, "getDriver", node_ogr::getDriver);
-    NODE_SET_METHOD(target, "getOpenDSCount", node_ogr::getOpenDSCount);
-    NODE_SET_METHOD(target, "getOpenDS", node_ogr::getOpenDS);
+	void Init(Handle<Object> target)
+	{
+		NODE_SET_METHOD(target, "open", node_ogr::open);
+		NODE_SET_METHOD(target, "getDriverByName", node_ogr::getDriverByName);
+		NODE_SET_METHOD(target, "getDriverCount", node_ogr::getDriverCount);
+		NODE_SET_METHOD(target, "getDriver", node_ogr::getDriver);
+		NODE_SET_METHOD(target, "getOpenDSCount", node_ogr::getOpenDSCount);
+		NODE_SET_METHOD(target, "getOpenDS", node_ogr::getOpenDS);
 
-    Driver::Initialize(target);
-    Datasource::Initialize(target);
-    Layer::Initialize(target);
-    Feature::Initialize(target);
-    FeatureDefn::Initialize(target);
-    FieldDefn::Initialize(target);
-    Geometry::Initialize(target);
-    Point::Initialize(target);
-    LineString::Initialize(target);
-    LinearRing::Initialize(target);
-    Polygon::Initialize(target);
-    GeometryCollection::Initialize(target);
-    MultiPoint::Initialize(target);
-    MultiLineString::Initialize(target);
-    MultiPolygon::Initialize(target);
-    SpatialReference::Initialize(target);
-    CoordinateTransformation::Initialize(target);
+		Driver::Initialize(target);
+		Datasource::Initialize(target);
+		Layer::Initialize(target);
+		Feature::Initialize(target);
+		FeatureDefn::Initialize(target);
+		FieldDefn::Initialize(target);
+		Geometry::Initialize(target);
+		Point::Initialize(target);
+		LineString::Initialize(target);
+		LinearRing::Initialize(target);
+		Polygon::Initialize(target);
+		GeometryCollection::Initialize(target);
+		MultiPoint::Initialize(target);
+		MultiLineString::Initialize(target);
+		MultiPolygon::Initialize(target);
+		SpatialReference::Initialize(target);
+		CoordinateTransformation::Initialize(target);
 
-    OGRRegisterAll();
-   
-    OGRSFDriverRegistrar *reg = OGRSFDriverRegistrar::GetRegistrar();
+		OGRRegisterAll();
 
-    int driver_count = reg->GetDriverCount();
+		OGRSFDriverRegistrar *reg = OGRSFDriverRegistrar::GetRegistrar();
 
-    Local<Array> supported_drivers = Array::New(driver_count);
+		int driver_count = reg->GetDriverCount();
 
-    for (int i = 0; i < driver_count; ++i) {
-      OGRSFDriver *driver = reg->GetDriver(i);
-      supported_drivers->Set(Integer::New(static_cast<int>(i)), String::New(driver->GetName()));
-    }
+		Local<Array> supported_drivers = Array::New(driver_count);
 
-    target->Set(String::NewSymbol("drivers"), supported_drivers);
+		for (int i = 0; i < driver_count; ++i) {
+			OGRSFDriver *driver = reg->GetDriver(i);
+			supported_drivers->Set(Integer::New(static_cast<int>(i)), String::New(driver->GetName()));
+		}
 
-    NODE_DEFINE_CONSTANT(target, wkbUnknown);
-    NODE_DEFINE_CONSTANT(target, wkbPoint);
-    NODE_DEFINE_CONSTANT(target, wkbLineString);
-    NODE_DEFINE_CONSTANT(target, wkbPolygon);
-    NODE_DEFINE_CONSTANT(target, wkbMultiPoint);
-    NODE_DEFINE_CONSTANT(target, wkbMultiLineString);
-    NODE_DEFINE_CONSTANT(target, wkbMultiPolygon);
-    NODE_DEFINE_CONSTANT(target, wkbGeometryCollection);
-    NODE_DEFINE_CONSTANT(target, wkbNone);
-    NODE_DEFINE_CONSTANT(target, wkbLinearRing);
-    NODE_DEFINE_CONSTANT(target, wkbPoint25D);
-    NODE_DEFINE_CONSTANT(target, wkbLineString25D);
-    NODE_DEFINE_CONSTANT(target, wkbPolygon25D);
-    NODE_DEFINE_CONSTANT(target, wkbMultiPoint25D);
-    NODE_DEFINE_CONSTANT(target, wkbMultiLineString25D);
-    NODE_DEFINE_CONSTANT(target, wkbMultiPolygon25D);
-    NODE_DEFINE_CONSTANT(target, wkbGeometryCollection25D);
+		target->Set(String::NewSymbol("drivers"), supported_drivers);
 
-    NODE_DEFINE_CONSTANT(target, OFTInteger);
-    NODE_DEFINE_CONSTANT(target, OFTIntegerList);
-    NODE_DEFINE_CONSTANT(target, OFTReal);
-    NODE_DEFINE_CONSTANT(target, OFTRealList);
-    NODE_DEFINE_CONSTANT(target, OFTString);
-    NODE_DEFINE_CONSTANT(target, OFTStringList);
-    NODE_DEFINE_CONSTANT(target, OFTWideString);
-    NODE_DEFINE_CONSTANT(target, OFTWideStringList);
-    NODE_DEFINE_CONSTANT(target, OFTBinary);
-    NODE_DEFINE_CONSTANT(target, OFTDate);
-    NODE_DEFINE_CONSTANT(target, OFTTime);
-    NODE_DEFINE_CONSTANT(target, OFTDateTime);
+		NODE_DEFINE_CONSTANT(target, wkbUnknown);
+		NODE_DEFINE_CONSTANT(target, wkbPoint);
+		NODE_DEFINE_CONSTANT(target, wkbLineString);
+		NODE_DEFINE_CONSTANT(target, wkbPolygon);
+		NODE_DEFINE_CONSTANT(target, wkbMultiPoint);
+		NODE_DEFINE_CONSTANT(target, wkbMultiLineString);
+		NODE_DEFINE_CONSTANT(target, wkbMultiPolygon);
+		NODE_DEFINE_CONSTANT(target, wkbGeometryCollection);
+		NODE_DEFINE_CONSTANT(target, wkbNone);
+		NODE_DEFINE_CONSTANT(target, wkbLinearRing);
+		NODE_DEFINE_CONSTANT(target, wkbPoint25D);
+		NODE_DEFINE_CONSTANT(target, wkbLineString25D);
+		NODE_DEFINE_CONSTANT(target, wkbPolygon25D);
+		NODE_DEFINE_CONSTANT(target, wkbMultiPoint25D);
+		NODE_DEFINE_CONSTANT(target, wkbMultiLineString25D);
+		NODE_DEFINE_CONSTANT(target, wkbMultiPolygon25D);
+		NODE_DEFINE_CONSTANT(target, wkbGeometryCollection25D);
 
-    target->Set(String::NewSymbol("CreateDataSourceOption"), String::New(ODrCCreateDataSource));
-    target->Set(String::NewSymbol("DeleteDataSourceOption"), String::New(ODrCDeleteDataSource));
-  }
+		NODE_DEFINE_CONSTANT(target, OFTInteger);
+		NODE_DEFINE_CONSTANT(target, OFTIntegerList);
+		NODE_DEFINE_CONSTANT(target, OFTReal);
+		NODE_DEFINE_CONSTANT(target, OFTRealList);
+		NODE_DEFINE_CONSTANT(target, OFTString);
+		NODE_DEFINE_CONSTANT(target, OFTStringList);
+		NODE_DEFINE_CONSTANT(target, OFTWideString);
+		NODE_DEFINE_CONSTANT(target, OFTWideStringList);
+		NODE_DEFINE_CONSTANT(target, OFTBinary);
+		NODE_DEFINE_CONSTANT(target, OFTDate);
+		NODE_DEFINE_CONSTANT(target, OFTTime);
+		NODE_DEFINE_CONSTANT(target, OFTDateTime);
 
-  Handle<Value> open(const Arguments &args) {
-    HandleScope scope;
+		target->Set(String::NewSymbol("CreateDataSourceOption"), String::New(ODrCCreateDataSource));
+		target->Set(String::NewSymbol("DeleteDataSourceOption"), String::New(ODrCDeleteDataSource));
+	}
 
-    std::string ds_name;
-    bool is_update = false;
+	Handle<Value> open(const Arguments &args)
+	{
+		HandleScope scope;
 
-    NODE_ARG_STR(0, "datasource", ds_name);
-    NODE_ARG_BOOL_OPT(1, "update", is_update);
+		std::string ds_name;
+		bool is_update = false;
 
-    OGRDataSource *ds = NULL;
+		NODE_ARG_STR(0, "datasource", ds_name);
+		NODE_ARG_BOOL_OPT(1, "update", is_update);
 
-    ds = OGRSFDriverRegistrar::Open(ds_name.c_str(), is_update);
+		OGRDataSource *ds = NULL;
 
-    if (ds == NULL) {
-      return ThrowException(Exception::Error(String::New("Error opening datasource")));
-    }
+		ds = OGRSFDriverRegistrar::Open(ds_name.c_str(), is_update);
 
-    return scope.Close(Datasource::New(ds));
-  }
+		if (ds == NULL) {
+			return ThrowException(Exception::Error(String::New("Error opening datasource")));
+		}
 
-  Handle<Value> getDriverByName(const Arguments &args) {
-    HandleScope scope;
+		return scope.Close(Datasource::New(ds));
+	}
 
-    std::string driver_name;
+	Handle<Value> getDriverByName(const Arguments &args)
+	{
+		HandleScope scope;
 
-    NODE_ARG_STR(0, "driver name", driver_name);
+		std::string driver_name;
 
-    OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(driver_name.c_str());
+		NODE_ARG_STR(0, "driver name", driver_name);
 
-    if (driver == NULL) {
-      return ThrowException(Exception::Error(String::New("Error retrieving driver")));
-    }
+		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(driver_name.c_str());
 
-    return scope.Close(Driver::New(driver));
-  }
+		if (driver == NULL) {
+			return ThrowException(Exception::Error(String::New("Error retrieving driver")));
+		}
 
-  Handle<Value> getDriverCount(const Arguments &args) {
-    HandleScope scope;
+		return scope.Close(Driver::New(driver));
+	}
 
-    return scope.Close(Integer::New(OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount()));
-  }
+	Handle<Value> getDriverCount(const Arguments &args)
+	{
+		HandleScope scope;
 
-  Handle<Value> getDriver(const Arguments &args) {
-    HandleScope scope;
+		return scope.Close(Integer::New(OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount()));
+	}
 
-    int driver_index;
+	Handle<Value> getDriver(const Arguments &args)
+	{
+		HandleScope scope;
 
-    NODE_ARG_INT(0, "driver index", driver_index);
+		int driver_index;
 
-    OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(driver_index);
+		NODE_ARG_INT(0, "driver index", driver_index);
 
-    if (driver == NULL) {
-      return ThrowException(Exception::Error(String::New("Error retrieving driver")));
-    }
+		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(driver_index);
 
-    return scope.Close(Driver::New(driver));
-  }
+		if (driver == NULL) {
+			return ThrowException(Exception::Error(String::New("Error retrieving driver")));
+		}
 
-  Handle<Value> getOpenDSCount(const Arguments &args) {
-    HandleScope scope;
+		return scope.Close(Driver::New(driver));
+	}
 
-    return scope.Close(Integer::New(OGRSFDriverRegistrar::GetRegistrar()->GetOpenDSCount()));
-  }
+	Handle<Value> getOpenDSCount(const Arguments &args)
+	{
+		HandleScope scope;
 
-  Handle<Value> getOpenDS(const Arguments &args) {
-    HandleScope scope;
+		return scope.Close(Integer::New(OGRSFDriverRegistrar::GetRegistrar()->GetOpenDSCount()));
+	}
 
-    int ds_index;
+	Handle<Value> getOpenDS(const Arguments &args)
+	{
+		HandleScope scope;
 
-    NODE_ARG_INT(0, "data source index", ds_index);
+		int ds_index;
 
-    return scope.Close(Datasource::New(OGRSFDriverRegistrar::GetRegistrar()->GetOpenDS(ds_index)));
-  }
+		NODE_ARG_INT(0, "data source index", ds_index);
+
+		return scope.Close(Datasource::New(OGRSFDriverRegistrar::GetRegistrar()->GetOpenDS(ds_index)));
+	}
 
 } // namespace node_ogr
 

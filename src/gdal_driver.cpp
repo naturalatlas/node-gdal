@@ -5,7 +5,8 @@
 
 Persistent<FunctionTemplate> Driver::constructor;
 
-void Driver::Initialize(Handle<Object> target) {
+void Driver::Initialize(Handle<Object> target)
+{
 	HandleScope scope;
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Driver::New));
@@ -28,11 +29,11 @@ void Driver::Initialize(Handle<Object> target) {
 }
 
 Driver::Driver(GDALDriver *ds)
-: ObjectWrap(), this_(ds)
+	: ObjectWrap(), this_(ds)
 {}
 
 Driver::Driver()
-: ObjectWrap(), this_(0)
+	: ObjectWrap(), this_(0)
 {
 }
 
@@ -46,8 +47,9 @@ Handle<Value> Driver::New(const Arguments& args)
 {
 	HandleScope scope;
 
-	if (!args.IsConstructCall())
+	if (!args.IsConstructCall()) {
 		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+	}
 
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
@@ -56,13 +58,16 @@ Handle<Value> Driver::New(const Arguments& args)
 		f->Wrap(args.This());
 
 		return args.This();
-	}else{
+	} else {
 		return NODE_THROW("Cannot create Driver directly");
 	}
 }
 
-Handle<Value> Driver::New(GDALDriver *driver) {
-	if(!driver) return Null();
+Handle<Value> Driver::New(GDALDriver *driver)
+{
+	if (!driver) {
+		return Null();
+	}
 
 	v8::HandleScope scope;
 	Driver *wrapped = new Driver(driver);
@@ -124,9 +129,13 @@ Handle<Value> Driver::create(const Arguments& args)
 
 	GDALDataset* dataset = driver->this_->Create(filename.c_str(), x_size, y_size, n_bands, type, options);
 
-	if (options) delete [] options;
+	if (options) {
+		delete [] options;
+	}
 
-	if(!dataset) return NODE_THROW("Error creating dataset");
+	if (!dataset) {
+		return NODE_THROW("Error creating dataset");
+	}
 
 	return scope.Close(Dataset::New(dataset));
 }
@@ -158,9 +167,13 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 
 	GDALDataset* dataset = driver->this_->CreateCopy(filename.c_str(), src_dataset->get(), strict, options, NULL, NULL);
 
-	if (options) delete [] options;
+	if (options) {
+		delete [] options;
+	}
 
-	if(!dataset) return NODE_THROW("Error copying dataset");
+	if (!dataset) {
+		return NODE_THROW("Error copying dataset");
+	}
 
 	return scope.Close(Dataset::New(dataset));
 }
@@ -176,7 +189,9 @@ Handle<Value> Driver::copyFiles(const Arguments& args)
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
 	CPLErr err = driver->this_->CopyFiles(new_name.c_str(), old_name.c_str());
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	return Undefined();
 }
@@ -194,7 +209,9 @@ Handle<Value> Driver::rename(const Arguments& args)
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
 	CPLErr err = driver->this_->Rename(new_name.c_str(), old_name.c_str());
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	return Undefined();
 }

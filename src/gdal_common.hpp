@@ -6,11 +6,14 @@
 
 //String::New(null) -> seg fault
 class SafeString {
-  public:
-    static v8::Handle<v8::Value> New(const char * data){
-      if(!data) return v8::Null();
-      else return v8::String::New(data);
-    }
+public:
+	static v8::Handle<v8::Value> New(const char * data) {
+		if (!data) {
+			return v8::Null();
+		} else {
+			return v8::String::New(data);
+		}
+	}
 };
 
 #define TOSTR(obj) (*String::Utf8Value((obj)->ToString()))
@@ -25,14 +28,16 @@ class SafeString {
 template <typename T, typename K>
 class ClosedPtr {
 public:
-  static v8::Handle<v8::Value> Closed(K *raw) {
-    if(!raw) return v8::Null();
-    v8::HandleScope scope;
-    T *wrapped = new T(raw);
-    v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-    v8::Handle<v8::Object> obj = T::constructor->GetFunction()->NewInstance(1, &ext);
-    return scope.Close(obj);
-  }
+	static v8::Handle<v8::Value> Closed(K *raw) {
+		if (!raw) {
+			return v8::Null();
+		}
+		v8::HandleScope scope;
+		T *wrapped = new T(raw);
+		v8::Handle<v8::Value> ext = v8::External::New(wrapped);
+		v8::Handle<v8::Object> obj = T::constructor->GetFunction()->NewInstance(1, &ext);
+		return scope.Close(obj);
+	}
 };
 
 // ----- object property conversion -------
@@ -40,11 +45,11 @@ public:
 #define NODE_DOUBLE_FROM_OBJ(obj, key, var)                                                               \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if(!obj->Has(sym)){                                                                                     \
+  if (!obj->Has(sym)){                                                                                    \
      return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
-  if(!val->IsNumber()){                                                                                   \
+  if (!val->IsNumber()){                                                                                  \
     return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a number")));        \
   }                                                                                                       \
   var = val->NumberValue();                                                                               \
@@ -53,11 +58,11 @@ public:
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if(!obj->Has(sym)){                                                                                     \
+  if (!obj->Has(sym)){                                                                                    \
      return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
-  if(!val->IsString()){                                                                                   \
+  if (!val->IsString()){                                                                                  \
     return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a string")));        \
   }                                                                                                       \
   var = (*String::Utf8Value(val->ToString()));                                                            \
@@ -66,9 +71,9 @@ public:
 #define NODE_DOUBLE_FROM_OBJ_OPT(obj, key, var)                                                           \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if(obj->Has(sym)){                                                                                      \
+  if (obj->Has(sym)){                                                                                     \
     Local<Value> val = obj->Get(sym);                                                                     \
-    if(!val->IsNumber()){                                                                                 \
+    if (!val->IsNumber()){                                                                                \
       return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a number")));      \
     }                                                                                                     \
     var = val->NumberValue();                                                                             \
@@ -78,9 +83,9 @@ public:
 #define NODE_STR_FROM_OBJ_OPT(obj, key, var)                                                              \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if(obj->Has(sym)){                                                                                      \
+  if (obj->Has(sym)){                                                                                     \
     Local<Value> val = obj->Get(sym);                                                                     \
-    if(!val->IsString()){                                                                                 \
+    if (!val->IsString()){                                                                                \
       return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a string")));      \
     }                                                                                                     \
     var = (*String::Utf8Value(val->ToString()));                                                          \
@@ -158,7 +163,7 @@ public:
     return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
   }                                                                                                                                      \
   var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
-  if(!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));
+  if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));
 
 
 #define NODE_ARG_STR(num, name, var)                                                                          \
@@ -229,7 +234,7 @@ public:
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
     }                                                                                                                                      \
     var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
-    if(!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));                             \
+    if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));                            \
   }
 
 
@@ -248,7 +253,7 @@ public:
 Handle<Value> klass::method(const Arguments& args)                                                                \
 {                                                                                                                 \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                            \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");  \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed"); \
   return HandleScope().Close(result_type::New(obj->this_->wrapped_method()));     \
 }
 
@@ -260,7 +265,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if(!obj->this_)   return NODE_THROW(#klass" object has already been destroyed");                 \
+  if (!obj->this_)   return NODE_THROW(#klass" object has already been destroyed");                \
   return scope.Close(result_type::New(obj->this_->wrapped_method(param->get())));                  \
 }
 
@@ -271,7 +276,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   enum_type param;                                                                                                      \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                   \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                  \
   return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                         \
 }
 
@@ -283,7 +288,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                   \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                  \
   return scope.Close(result_type::New(obj->this_->wrapped_method(param.c_str())));                 \
 }
 
@@ -295,7 +300,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
   return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                                      \
 }
 
@@ -307,7 +312,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
   return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                                     \
 }
 
@@ -317,7 +322,7 @@ Handle<Value> klass::method(const Arguments& args)                              
 Handle<Value> klass::method(const Arguments& args)                                                                  \
 {                                                                                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                              \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                    \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                   \
   int err = obj->this_->wrapped_method();                                                                           \
   if (err) return NODE_THROW_CPLERR(err);                                                                           \
   return Undefined();                                                                                               \
@@ -331,7 +336,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                           \
   int err = obj->this_->wrapped_method(param->get());                                                                       \
   if (err) return NODE_THROW_CPLERR(err);                                                                                   \
   return Undefined();                                                                                                       \
@@ -345,7 +350,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                      \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                     \
   int err = obj->this_->wrapped_method(param.c_str());                                                                \
   if (err) return NODE_THROW_CPLERR(err);                                                                             \
   return Undefined();                                                                                                 \
@@ -359,7 +364,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
   int err = obj->this_->wrapped_method(param);                                                                  \
   if (err) return NODE_THROW_CPLERR(err);                                                                       \
   return Undefined();                                                                                           \
@@ -373,7 +378,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
   int err =obj->this_->wrapped_method(param);                                                                  \
   if (err) return NODE_THROW_CPLERR(err);                                                                      \
   return Undefined();                                                                                          \
@@ -386,7 +391,7 @@ Handle<Value> klass::method(const Arguments& args)                   \
 {                                                                    \
   HandleScope scope;                                                 \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());               \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed"); \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed"); \
   obj->this_->wrapped_method();                                      \
   return Undefined();                                                \
 }
@@ -399,7 +404,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   param_type *param;                                                                                    \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                  \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                  \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                        \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                       \
   obj->this_->wrapped_method(param->get());                                                             \
   return Undefined();                                                                                   \
 }
@@ -412,7 +417,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   int param;                                                                                \
   NODE_ARG_INT(0, #param_name, param);                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
   obj->this_->wrapped_method(param);                                                        \
   return Undefined();                                                                       \
 }
@@ -425,7 +430,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   double param;                                                                             \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
   obj->this_->wrapped_method(param);                                                        \
   return Undefined();                                                                       \
 }
@@ -438,7 +443,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   bool param;                                                                               \
   NODE_ARG_BOOL(0, #param_name, param);                                                     \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
   obj->this_->wrapped_method(param);                                                        \
   return Undefined();                                                                       \
 }
@@ -451,7 +456,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   enum_type param;                                                                                  \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                  \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                              \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                    \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                   \
   obj->this_->wrapped_method(param);                                                                \
   return Undefined();                                                                               \
 }
@@ -464,7 +469,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   std::string param;                                                                        \
   NODE_ARG_STR(0, #param_name, param);                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
   obj->this_->wrapped_method(param.c_str());                                                \
   return Undefined();                                                                       \
 }

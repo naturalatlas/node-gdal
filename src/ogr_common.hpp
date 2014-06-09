@@ -6,19 +6,29 @@
 
 #include "gdal_common.hpp"
 
-inline const char* getOGRErrMsg(int err) {
-  switch(err){
-    case 0:  return "No error";
-    case 1:  return "Not enough data";
-    case 2:  return "Not enough memory";
-    case 3:  return "Unsupported geometry type";                                        
-    case 4:  return "Unsupported operation";
-    case 5:  return "Corrupt Data";
-    case 6:  return "Failure";
-    case 7:  return "Unsupported SRS";
-    default: return "Invalid Error";
-  } 
-}; 
+inline const char* getOGRErrMsg(int err)
+{
+	switch(err) {
+	case 0:
+		return "No error";
+	case 1:
+		return "Not enough data";
+	case 2:
+		return "Not enough memory";
+	case 3:
+		return "Unsupported geometry type";
+	case 4:
+		return "Unsupported operation";
+	case 5:
+		return "Corrupt Data";
+	case 6:
+		return "Failure";
+	case 7:
+		return "Unsupported SRS";
+	default:
+		return "Invalid Error";
+	}
+};
 
 #define NODE_THROW_OGRERR(err) ThrowException(Exception::Error(String::New(getOGRErrMsg(err))));
 
@@ -28,7 +38,7 @@ inline const char* getOGRErrMsg(int err) {
 Handle<Value> klass::method(const Arguments& args)                                                                  \
 {                                                                                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                              \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                    \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                   \
   int err = obj->this_->wrapped_method();                                                                           \
   if (err) return NODE_THROW_OGRERR(err);                                                                           \
   return Undefined();                                                                                               \
@@ -42,7 +52,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                      \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                            \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                           \
   int err = obj->this_->wrapped_method(param->get());                                                                       \
   if (err) return NODE_THROW_OGRERR(err);                                                                                   \
   return Undefined();                                                                                                       \
@@ -56,7 +66,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                      \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                     \
   int err = obj->this_->wrapped_method(param.c_str());                                                                \
   if (err) return NODE_THROW_OGRERR(err);                                                                             \
   return Undefined();                                                                                                 \
@@ -70,7 +80,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
   int err = obj->this_->wrapped_method(param);                                                                  \
   if (err) return NODE_THROW_OGRERR(err);                                                                       \
   return Undefined();                                                                                           \
@@ -84,7 +94,7 @@ Handle<Value> klass::method(const Arguments& args)                              
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if(!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
+  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
   int err =obj->this_->wrapped_method(param);                                                                  \
   if (err) return NODE_THROW_OGRERR(err);                                                                      \
   return Undefined();                                                                                          \

@@ -17,32 +17,34 @@ using namespace node;
 
 namespace node_ogr {
 
-class GeometryCollection: public node::ObjectWrap {
+	class GeometryCollection: public node::ObjectWrap {
 
-  public:
-    static Persistent<FunctionTemplate> constructor;
+	public:
+		static Persistent<FunctionTemplate> constructor;
 
-    static void Initialize(Handle<Object> target);
-    static Handle<Value> New(const Arguments &args);
-    static Handle<Value> New(OGRGeometryCollection *geom);
-    static Handle<Value> New(OGRGeometryCollection *geom, bool owned);
-    static Handle<Value> toString(const Arguments &args);
-    static Handle<Value> getArea(const Arguments &args);
-    static Handle<Value> getLength(const Arguments &args);
-    static Handle<Value> addGeometry(const Arguments &args);
-    static Handle<Value> getGeometry(const Arguments &args);
-    static Handle<Value> getNumGeometries(const Arguments &args);
+		static void Initialize(Handle<Object> target);
+		static Handle<Value> New(const Arguments &args);
+		static Handle<Value> New(OGRGeometryCollection *geom);
+		static Handle<Value> New(OGRGeometryCollection *geom, bool owned);
+		static Handle<Value> toString(const Arguments &args);
+		static Handle<Value> getArea(const Arguments &args);
+		static Handle<Value> getLength(const Arguments &args);
+		static Handle<Value> addGeometry(const Arguments &args);
+		static Handle<Value> getGeometry(const Arguments &args);
+		static Handle<Value> getNumGeometries(const Arguments &args);
 
-    GeometryCollection();
-    GeometryCollection(OGRGeometryCollection *geom);
-    inline OGRGeometryCollection *get() { return this_; }
+		GeometryCollection();
+		GeometryCollection(OGRGeometryCollection *geom);
+		inline OGRGeometryCollection *get() {
+			return this_;
+		}
 
-  private:
-    ~GeometryCollection();
-    OGRGeometryCollection *this_;
-    bool owned_;
-    int size_;
-};
+	private:
+		~GeometryCollection();
+		OGRGeometryCollection *this_;
+		bool owned_;
+		int size_;
+	};
 
 }
 

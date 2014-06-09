@@ -16,17 +16,19 @@ using namespace v8;
 using namespace node;
 
 namespace node_gdal {
-	static Handle<Value> close(const Arguments &args) {
+	static Handle<Value> close(const Arguments &args)
+	{
 		Dataset* ds;
 
 		NODE_ARG_WRAPPED(0, "dataset", Dataset, ds);
 
 		ds->dispose();
-		
+
 		return Undefined();
 	}
 
-	static Handle<Value> open(const Arguments &args) {
+	static Handle<Value> open(const Arguments &args)
+	{
 		HandleScope scope;
 
 		std::string path;
@@ -50,20 +52,21 @@ namespace node_gdal {
 
 		return scope.Close(Dataset::New(ds));
 	}
-	
-	static Handle<Value> openShared(const Arguments &args) {
+
+	static Handle<Value> openShared(const Arguments &args)
+	{
 		HandleScope scope;
 
 		std::string ds_name;
 		GDALAccess access = GA_ReadOnly;
 
 		NODE_ARG_STR(0, "dataset", ds_name);
-		
+
 		if (args.Length() > 1) {
 			if (args[1]->IsInt32() || args[1]->IsBoolean()) {
-			  access = static_cast<GDALAccess>(args[1]->IntegerValue());
+				access = static_cast<GDALAccess>(args[1]->IntegerValue());
 			} else {
-			  return NODE_THROW("Update argument must be integer or boolean");
+				return NODE_THROW("Update argument must be integer or boolean");
 			}
 		}
 
@@ -78,7 +81,8 @@ namespace node_gdal {
 		return scope.Close(Dataset::New(ds));
 	}
 
-	static Handle<Value> getDriverByName(const Arguments &args) {
+	static Handle<Value> getDriverByName(const Arguments &args)
+	{
 		HandleScope scope;
 
 		std::string driver_name;
@@ -94,13 +98,15 @@ namespace node_gdal {
 		return scope.Close(Driver::New(driver));
 	}
 
-	static Handle<Value> getDriverCount(const Arguments &args) {
+	static Handle<Value> getDriverCount(const Arguments &args)
+	{
 		HandleScope scope;
 
 		return scope.Close(Integer::New(GetGDALDriverManager()->GetDriverCount()));
 	}
 
-	static Handle<Value> getDriver(const Arguments &args) {
+	static Handle<Value> getDriver(const Arguments &args)
+	{
 		HandleScope scope;
 
 		int driver_index;

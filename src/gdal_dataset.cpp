@@ -7,7 +7,8 @@
 Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset*> Dataset::cache;
 
-void Dataset::Initialize(Handle<Object> target) {
+void Dataset::Initialize(Handle<Object> target)
+{
 	HandleScope scope;
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Dataset::New));
@@ -39,13 +40,13 @@ void Dataset::Initialize(Handle<Object> target) {
 }
 
 Dataset::Dataset(GDALDataset *ds)
-: ObjectWrap(),
-	this_(ds)
+	: ObjectWrap(),
+	  this_(ds)
 {}
 
 Dataset::Dataset()
-: ObjectWrap(),
-	this_(0)
+	: ObjectWrap(),
+	  this_(0)
 {
 }
 
@@ -55,21 +56,22 @@ Dataset::~Dataset()
 	dispose();
 }
 
-void Dataset::dispose(){
+void Dataset::dispose()
+{
 	GDALRasterBand *band;
-	if(this_) {
+	if (this_) {
 		//dispose of all wrapped child bands
 		int n = this_->GetRasterCount();
 		for(int i = 1; i <= n; i++) {
 			band = this_->GetRasterBand(i);
-			if(RasterBand::cache.has(band)){
+			if (RasterBand::cache.has(band)) {
 				RasterBand *band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
 				band_wrapped->dispose();
 			}
 		}
-		#ifdef VERBOSE_GC
-			printf("Disposing dataset [%p]\n", this_);
-		#endif
+#ifdef VERBOSE_GC
+		printf("Disposing dataset [%p]\n", this_);
+#endif
 		GDALClose(this_);
 		this_ = NULL;
 	}
@@ -97,8 +99,12 @@ Handle<Value> Dataset::New(GDALDataset *raw)
 {
 	HandleScope scope;
 
-	if(!raw) return Null();
-	if(cache.has(raw)) return cache.get(raw);
+	if (!raw) {
+		return Null();
+	}
+	if (cache.has(raw)) {
+		return cache.get(raw);
+	}
 
 	Dataset *wrapped = new Dataset(raw);
 
@@ -130,10 +136,12 @@ NODE_WRAPPED_METHOD(Dataset, flushCache, FlushCache);
 Handle<Value> Dataset::close(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
-	
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
 	ds->dispose();
-	
+
 	return Undefined();
 }
 
@@ -145,7 +153,9 @@ Handle<Value> Dataset::getRasterBand(const Arguments& args)
 	NODE_ARG_INT(0, "band id", band_id);
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 	poBand = ds->this_->GetRasterBand(band_id);
 
 	if (poBand == NULL) {
@@ -160,7 +170,9 @@ Handle<Value> Dataset::addBand(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	GDALDataType type;
 	Handle<Array> band_options = Array::New(0);
@@ -182,7 +194,9 @@ Handle<Value> Dataset::addBand(const Arguments& args)
 		delete [] options;
 	}
 
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	return scope.Close(RasterBand::New(ds->this_->GetRasterBand(ds->this_->GetRasterCount())));
 }
@@ -192,11 +206,15 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	double transform[6];
 	CPLErr err = ds->this_->GetGeoTransform(transform);
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	Handle<Array> result = Array::New(6);
 	result->Set(0, Number::New(transform[0]));
@@ -212,7 +230,9 @@ Handle<Value> Dataset::getGeoTransform(const Arguments& args)
 Handle<Value> Dataset::setGeoTransform(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	Handle<Array> transform;
 	NODE_ARG_ARRAY(0, "transform", transform);
@@ -221,7 +241,7 @@ Handle<Value> Dataset::setGeoTransform(const Arguments& args)
 		return NODE_THROW("Transform array must have 6 elements")
 	}
 
-	double buffer[6];
+		   double buffer[6];
 	for (int i = 0; i < 6; i++) {
 		Local<Value> val = transform->Get(i);
 		if (!val->IsNumber()) {
@@ -231,7 +251,9 @@ Handle<Value> Dataset::setGeoTransform(const Arguments& args)
 	}
 
 	CPLErr err = ds->this_->SetGeoTransform(buffer);
-	if (err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	return Undefined();
 }
@@ -241,7 +263,9 @@ Handle<Value> Dataset::getFileList(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	char **list = ds->this_->GetFileList();
 	Handle<Array> results = Array::New(0);
@@ -266,7 +290,9 @@ Handle<Value> Dataset::getGCPs(const Arguments& args)
 	HandleScope scope;
 
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	int n = ds->this_->GetGCPCount();
 	const GDAL_GCP *gcps = ds->this_->GetGCPs();
@@ -296,7 +322,9 @@ Handle<Value> Dataset::getGCPs(const Arguments& args)
 Handle<Value> Dataset::setGCPs(const Arguments& args)
 {
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if(!ds->this_) return NODE_THROW("Dataset object has already been destroyed");
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
 
 	Handle<Array> gcps;
 	std::string projection("");
@@ -322,10 +350,14 @@ Handle<Value> Dataset::setGCPs(const Arguments& args)
 		gcp++;
 	}
 
-	if (list) delete [] list;
+	if (list) {
+		delete [] list;
+	}
 
 	CPLErr err = ds->this_->SetGCPs(gcps->Length(), list, projection.c_str());
-	if(err) return NODE_THROW_CPLERR(err);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
 
 	return Undefined();
 }

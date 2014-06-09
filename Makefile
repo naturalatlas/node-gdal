@@ -12,6 +12,15 @@ clean-test:
 	@rm -f ./test/**/*.aux.xml
 	@rm -f ./test/**/*.tmp*
 
+format-code:
+	astyle \
+		--indent=force-tab=4 \
+		--indent-namespaces \
+		--add-brackets \
+		--style=stroustrup \
+		./src/*
+	@rm -rf ./src/*.orig
+
 ./node_modules/.bin/node-pre-gyp:
 	npm install node-pre-gyp
 

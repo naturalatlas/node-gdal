@@ -17,30 +17,32 @@ using namespace node;
 
 namespace node_ogr {
 
-class MultiLineString: public node::ObjectWrap {
+	class MultiLineString: public node::ObjectWrap {
 
-  public:
-    static Persistent<FunctionTemplate> constructor;
+	public:
+		static Persistent<FunctionTemplate> constructor;
 
-    static void Initialize(Handle<Object> target);
-    static Handle<Value> New(const Arguments &args);
-    static Handle<Value> New(OGRMultiLineString *geom);
-    static Handle<Value> New(OGRMultiLineString *geom, bool owned);
-    static Handle<Value> toString(const Arguments &args);
-    static Handle<Value> polygonize(const Arguments &args);
-    static Handle<Value> getGeometry(const Arguments &args);
+		static void Initialize(Handle<Object> target);
+		static Handle<Value> New(const Arguments &args);
+		static Handle<Value> New(OGRMultiLineString *geom);
+		static Handle<Value> New(OGRMultiLineString *geom, bool owned);
+		static Handle<Value> toString(const Arguments &args);
+		static Handle<Value> polygonize(const Arguments &args);
+		static Handle<Value> getGeometry(const Arguments &args);
 
 
-    MultiLineString();
-    MultiLineString(OGRMultiLineString *geom);
-    inline OGRMultiLineString *get() { return this_; }
+		MultiLineString();
+		MultiLineString(OGRMultiLineString *geom);
+		inline OGRMultiLineString *get() {
+			return this_;
+		}
 
-  private:
-    ~MultiLineString();
-    OGRMultiLineString *this_;
-    bool owned_;
-    int size_;
-};
+	private:
+		~MultiLineString();
+		OGRMultiLineString *this_;
+		bool owned_;
+		int size_;
+	};
 
 }
 

@@ -16,23 +16,25 @@ using namespace node;
 
 namespace node_ogr {
 
-class CoordinateTransformation: public node::ObjectWrap {
-  public:
-    static Persistent<FunctionTemplate> constructor;
-    static void Initialize(Handle<Object> target);
-    static Handle<Value> New(const Arguments &args);
-    static Handle<Value> New(OGRCoordinateTransformation *transform);
-    static Handle<Value> toString(const Arguments &args);
-    static Handle<Value> transformPoint(const Arguments &args);
+	class CoordinateTransformation: public node::ObjectWrap {
+	public:
+		static Persistent<FunctionTemplate> constructor;
+		static void Initialize(Handle<Object> target);
+		static Handle<Value> New(const Arguments &args);
+		static Handle<Value> New(OGRCoordinateTransformation *transform);
+		static Handle<Value> toString(const Arguments &args);
+		static Handle<Value> transformPoint(const Arguments &args);
 
-    CoordinateTransformation();
-    CoordinateTransformation(OGRCoordinateTransformation *srs);
-    inline OGRCoordinateTransformation *get() { return this_; }
+		CoordinateTransformation();
+		CoordinateTransformation(OGRCoordinateTransformation *srs);
+		inline OGRCoordinateTransformation *get() {
+			return this_;
+		}
 
-  private:
-    ~CoordinateTransformation();
-    OGRCoordinateTransformation *this_;
-};
+	private:
+		~CoordinateTransformation();
+		OGRCoordinateTransformation *this_;
+	};
 
 }
 

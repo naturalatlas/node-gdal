@@ -16,17 +16,17 @@
 
 namespace node_ogr {
 
-  using namespace v8;
-  using namespace node;
+	using namespace v8;
+	using namespace node;
 
-  void Init(Handle<Object> target);
+	void Init(Handle<Object> target);
 
-  Handle<Value> open(const Arguments &args);
-  Handle<Value> getDriverByName(const Arguments &args);
-  Handle<Value> getDriverCount(const Arguments &args);
-  Handle<Value> getDriver(const Arguments &args);
-  Handle<Value> getOpenDSCount(const Arguments &args);
-  Handle<Value> getOpenDS(const Arguments &args);
+	Handle<Value> open(const Arguments &args);
+	Handle<Value> getDriverByName(const Arguments &args);
+	Handle<Value> getDriverCount(const Arguments &args);
+	Handle<Value> getDriver(const Arguments &args);
+	Handle<Value> getOpenDSCount(const Arguments &args);
+	Handle<Value> getOpenDS(const Arguments &args);
 
 }
 

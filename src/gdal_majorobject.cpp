@@ -4,7 +4,8 @@
 
 Persistent<FunctionTemplate> MajorObject::constructor;
 
-void MajorObject::Initialize(Handle<Object> target) {
+void MajorObject::Initialize(Handle<Object> target)
+{
 	HandleScope scope;
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(MajorObject::New));
@@ -18,12 +19,12 @@ void MajorObject::Initialize(Handle<Object> target) {
 }
 
 MajorObject::MajorObject(GDALMajorObject *obj)
-: ObjectWrap(), this_(obj)
+	: ObjectWrap(), this_(obj)
 {
 }
 
 MajorObject::MajorObject()
-: ObjectWrap(), this_(0)
+	: ObjectWrap(), this_(0)
 {
 }
 
@@ -66,10 +67,14 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
 	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
-	if(!obj->this_) return NODE_THROW("MajorObject object has already been destroyed");
+	if (!obj->this_) {
+		return NODE_THROW("MajorObject object has already been destroyed");
+	}
 	char **metadata = obj->this_->GetMetadata(domain.empty() ? NULL : domain.c_str());
 
-	if(!metadata) return Undefined();
+	if (!metadata) {
+		return Undefined();
+	}
 
 	Local<Object> result = Object::New();
 
