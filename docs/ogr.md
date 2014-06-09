@@ -70,7 +70,7 @@ Note: all methods throw errors if the datasource has already been explicitly des
 
 #### Methods 
 
-- `destroy() : void` //any use of the datasource after destroy call will cause segfault 
+- `destroy() : void`
 - `toString() : string`
 - `getName() : string`
 - `getLayerByName(string name) : Layer`
