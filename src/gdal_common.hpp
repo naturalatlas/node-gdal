@@ -19,6 +19,9 @@ class SafeString {
 
 #define NODE_THROW_CPLERR(err) ThrowException(Exception::Error(String::New(CPLGetLastErrorMsg())));
 
+#define ATTR(t, name, get, set)                                         \
+    t->InstanceTemplate()->SetAccessor(String::NewSymbol(name), get, set);
+
 template <typename T, typename K>
 class ClosedPtr {
 public:

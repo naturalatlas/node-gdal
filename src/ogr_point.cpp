@@ -19,9 +19,9 @@ void Point::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
   
   // properties
-  constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("x"), xGetter, xSetter);
-  constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("y"), yGetter, ySetter);
-  constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("z"), zGetter, zSetter);
+  ATTR(constructor, "x", xGetter, xSetter);
+  ATTR(constructor, "y", yGetter, ySetter);
+  ATTR(constructor, "z", zGetter, zSetter);
 
   target->Set(String::NewSymbol("Point"), constructor->GetFunction());
 }
@@ -122,12 +122,14 @@ Handle<Value> Point::toString(const Arguments& args)
 
 Handle<Value> Point::xGetter(Local<String> property, const AccessorInfo &info)
 {
+  HandleScope scope;
   Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-  return Number::New((geom->this_)->getX());
+  return scope.Close(Number::New((geom->this_)->getX()));
 }
 
 void Point::xSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
 {
+  HandleScope scope;
   Point *geom = ObjectWrap::Unwrap<Point>(info.This());
 
   if(!value->IsNumber()) {
@@ -141,12 +143,14 @@ void Point::xSetter(Local<String> property, Local<Value> value, const AccessorIn
 
 Handle<Value> Point::yGetter(Local<String> property, const AccessorInfo &info)
 {
+  HandleScope scope;
   Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-  return Number::New((geom->this_)->getY());
+  return scope.Close(Number::New((geom->this_)->getY()));
 }
 
 void Point::ySetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
 {
+  HandleScope scope;
   Point *geom = ObjectWrap::Unwrap<Point>(info.This());
 
   if(!value->IsNumber()) {
@@ -160,8 +164,9 @@ void Point::ySetter(Local<String> property, Local<Value> value, const AccessorIn
 
 Handle<Value> Point::zGetter(Local<String> property, const AccessorInfo &info)
 {
+  HandleScope scope;
   Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-  return Number::New((geom->this_)->getZ());
+  return scope.Close(Number::New((geom->this_)->getZ()));
 }
 
 void Point::zSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)

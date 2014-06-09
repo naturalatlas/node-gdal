@@ -40,7 +40,7 @@ void Layer::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(constructor, "createField", createField);
   NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialRef", getSpatialRef);
 
-  constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ds"), dsGetter, dsSetter);
+  ATTR(constructor, "ds", dsGetter, dsSetter);
 
   target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
@@ -242,5 +242,6 @@ void Layer::dsSetter(Local<String> property, Local<Value> value, const AccessorI
 
 Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
 {
-  return info.This()->GetHiddenValue(String::NewSymbol("ds_"));
+  HandleScope scope;
+  return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
 }

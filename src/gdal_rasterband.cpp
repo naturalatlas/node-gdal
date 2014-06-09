@@ -56,7 +56,7 @@ void RasterBand::Initialize(Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaskFlags", getMaskFlags);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
 
-	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ds"), dsGetter, dsSetter);
+	ATTR(constructor, "ds", dsGetter, dsSetter);
 
 	target->Set(String::NewSymbol("RasterBand"), constructor->GetFunction());
 }
@@ -341,5 +341,6 @@ void RasterBand::dsSetter(Local<String> property, Local<Value> value, const Acce
 
 Handle<Value> RasterBand::dsGetter(Local<String> property, const AccessorInfo &info)
 {
- 	return info.This()->GetHiddenValue(String::NewSymbol("ds_"));
+	HandleScope scope;
+ 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
 }

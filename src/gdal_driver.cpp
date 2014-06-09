@@ -21,8 +21,8 @@ void Driver::Initialize(Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor, "rename", rename);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "copyFiles", copyFiles);
 
-	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("ShortName"), shortNameGetter);
-	constructor->InstanceTemplate()->SetAccessor(String::NewSymbol("LongName"), longNameGetter);
+	ATTR(constructor, "ShortName", shortNameGetter, NULL);
+	ATTR(constructor, "LongName", longNameGetter, NULL);
 
 	target->Set(String::NewSymbol("Driver"), constructor->GetFunction());
 }
@@ -80,14 +80,16 @@ Handle<Value> Driver::toString(const Arguments& args)
 
 Handle<Value> Driver::shortNameGetter(Local<String> property, const AccessorInfo& info)
 {
+	HandleScope scope;
 	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return SafeString::New(driver->this_->GetDescription());
+	return scope.Close(SafeString::New(driver->this_->GetDescription()));
 }
 
 Handle<Value> Driver::longNameGetter(Local<String> property, const AccessorInfo& info)
 {
+	HandleScope scope;
 	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return SafeString::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME));
+	return scope.Close(SafeString::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME)));
 }
 
 NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Driver, deleteDataset, Delete, "dataset name");
