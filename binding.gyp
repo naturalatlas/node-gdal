@@ -12,6 +12,7 @@
 			"product_extension": "node",
 			"sources": [
 				"src/node_gdal.cpp",
+				"src/gdal_common.cpp",
 				"src/gdal_dataset.cpp",
 				"src/gdal_driver.cpp",
 				"src/gdal_rasterband.cpp",

@@ -25,6 +25,8 @@ public:
 #define ATTR(t, name, get, set)                                         \
     t->InstanceTemplate()->SetAccessor(String::NewSymbol(name), get, set);
 
+void READ_ONLY_SETTER(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+
 template <typename T, typename K>
 class ClosedPtr {
 public:

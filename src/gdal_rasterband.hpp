@@ -23,8 +23,6 @@ public:
 	static Handle<Value> New(const Arguments &args);
 	static Handle<Value> New(GDALRasterBand *band);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getXSize(const Arguments &args);
-	static Handle<Value> getYSize(const Arguments &args);
 	static Handle<Value> getBand(const Arguments &args);
 	//static Handle<Value> getDataset(const Arguments &args);
 	static Handle<Value> getRasterDataType(const Arguments &args);
@@ -63,8 +61,8 @@ public:
 	static Handle<Value> createMaskBand(const Arguments &args);
 	static Handle<Value> getMetadata(const Arguments &args);
 
-	static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
 
 	static ObjectCache<GDALRasterBand*> cache;
 

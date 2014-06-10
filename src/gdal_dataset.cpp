@@ -17,8 +17,6 @@ void Dataset::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Dataset"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterXSize", getRasterXSize);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterYSize", getRasterYSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterCount", getRasterCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterBand", getRasterBand);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getProjectionRef", getProjectionRef);
@@ -35,6 +33,8 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFileList", getFileList);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "close", close);
+
+	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
 }
@@ -122,8 +122,6 @@ Handle<Value> Dataset::toString(const Arguments& args)
 	return scope.Close(String::New("Dataset"));
 }
 
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterXSize, Integer, GetRasterXSize);
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterYSize, Integer, GetRasterYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, SafeString, GetProjectionRef);
 NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
@@ -360,4 +358,18 @@ Handle<Value> Dataset::setGCPs(const Arguments& args)
 	}
 
 	return Undefined();
+}
+
+Handle<Value> Dataset::sizeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
+	Local<Object> result = Object::New();
+	result->Set(String::NewSymbol("x"), Integer::New(ds->this_->GetRasterXSize()));
+	result->Set(String::NewSymbol("y"), Integer::New(ds->this_->GetRasterYSize()));
+	return scope.Close(result);
 }

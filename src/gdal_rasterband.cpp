@@ -18,10 +18,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("RasterBand"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getXSize", getXSize);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getYSize", getYSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getBand", getBand);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getDataset", getDataset);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterDataType", getRasterDataType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getBlockSize", getBlockSize);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getAccess", getAccess);
@@ -57,7 +54,8 @@ void RasterBand::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaskFlags", getMaskFlags);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
 
-	ATTR(constructor, "ds", dsGetter, dsSetter);
+	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("RasterBand"), constructor->GetFunction());
 }
@@ -165,8 +163,6 @@ Handle<Value> RasterBand::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD(RasterBand, flushCache, FlushCache);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getXSize, Integer, GetXSize);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getYSize, Integer, GetYSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getBand, Integer, GetBand);
 //NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getDataset, Dataset, GetDataset);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getRasterDataType, Integer, GetRasterDataType);
@@ -363,13 +359,21 @@ Handle<Value> RasterBand::setStatistics(const Arguments& args)
 	return Undefined();
 }
 
-void RasterBand::dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
-{
-	NODE_THROW("ds is a read-only property");
-}
-
 Handle<Value> RasterBand::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
+}
+Handle<Value> RasterBand::sizeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	Local<Object> result = Object::New();
+	result->Set(String::NewSymbol("x"), Integer::New(band->this_->GetXSize()));
+	result->Set(String::NewSymbol("y"), Integer::New(band->this_->GetYSize()));
+	return scope.Close(result);
 }

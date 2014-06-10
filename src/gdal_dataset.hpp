@@ -23,8 +23,6 @@ public:
 	static Handle<Value> New(const Arguments &args);
 	static Handle<Value> New(GDALDataset *ds);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getRasterXSize(const Arguments &args);
-	static Handle<Value> getRasterYSize(const Arguments &args);
 	static Handle<Value> getRasterCount(const Arguments &args);
 	static Handle<Value> getRasterBand(const Arguments &args);
 	static Handle<Value> flushCache(const Arguments &args);
@@ -42,6 +40,8 @@ public:
 	static Handle<Value> setGCPs(const Arguments &args);
 	static Handle<Value> getMetadata(const Arguments &args);
 	static Handle<Value> close(const Arguments &args);
+
+	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
 
 	static ObjectCache<GDALDataset*> cache;
 
