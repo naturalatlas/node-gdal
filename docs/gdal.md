@@ -25,8 +25,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
 - `close() : void`
-- `getRasterXSize() : integer`
-- `getRasterYSize() : integer`
 - `getRasterCount() : integer`
 - `getRasterBand(integer band_id) : RasterBand`
 - `getProjectionRef() : string`
@@ -43,14 +41,14 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getFileList() : string[]`
 - `flushCache() : void`
 
-#### Proposed Properties
+#### Properties
 
 - `size : object`
-- `x_size : integer //width?`
-- `y_size : integer //height?`
-- `raster_count : integer`
-- `raster_bands : RasterBand[]`
-- `driver : Driver`
+
+#### Proposed Properties
+
+- `bands : BandCollection`
+- `driver : string`
 
 ## Driver
 
