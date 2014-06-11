@@ -60,7 +60,7 @@ Handle<Value> Point::New(const Arguments& args)
 	double x = 0, y = 0, z = 0;
 
 	if (!args.IsConstructCall()) {
-		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
 	}
 
 	if (args[0]->IsExternal()) {

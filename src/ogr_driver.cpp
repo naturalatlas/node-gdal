@@ -48,7 +48,7 @@ Handle<Value> Driver::New(const Arguments& args)
 	HandleScope scope;
 
 	if (!args.IsConstructCall()) {
-		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
 	}
 
 	if (args[0]->IsExternal()) {
@@ -58,7 +58,7 @@ Handle<Value> Driver::New(const Arguments& args)
 		f->Wrap(args.This());
 		return args.This();
 	} else {
-		return ThrowException(String::New("Cannot create driver directly."));
+		return NODE_THROW("Cannot create driver directly.");
 	}
 
 	return args.This();

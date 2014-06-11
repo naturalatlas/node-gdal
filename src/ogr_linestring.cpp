@@ -59,7 +59,7 @@ Handle<Value> LineString::New(const Arguments& args)
 	LineString *f;
 
 	if (!args.IsConstructCall()) {
-		return ThrowException(String::New("Cannot call constructor as function, you need to use 'new' keyword"));
+		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
 	}
 
 	if (args[0]->IsExternal()) {
