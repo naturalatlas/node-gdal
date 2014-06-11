@@ -15,25 +15,27 @@ void SpatialReference::Initialize(Handle<Object> target)
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("SpatialReference"));
 
+	NODE_SET_METHOD(constructor, "fromUserInput", fromUserInput);
+	NODE_SET_METHOD(constructor, "fromWKT", fromWKT);
+	NODE_SET_METHOD(constructor, "fromProj4", fromProj4);
+	NODE_SET_METHOD(constructor, "fromEPSG", fromEPSG);
+	NODE_SET_METHOD(constructor, "fromEPSGA", fromEPSGA);
+	NODE_SET_METHOD(constructor, "fromWMSAUTO", fromWMSAUTO);
+	NODE_SET_METHOD(constructor, "fromXML", fromXML);
+	NODE_SET_METHOD(constructor, "fromURN", fromURN);
+	NODE_SET_METHOD(constructor, "fromCRSURL", fromCRSURL);
+	NODE_SET_METHOD(constructor, "fromURL", fromURL);
+	NODE_SET_METHOD(constructor, "fromMICoordSys", fromMICoordSys);
+
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKT", exportToWKT);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toPrettyWKT", exportToPrettyWKT);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toProj4", exportToProj4);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toXML", exportToXML);
+
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "cloneGeogCS", clone);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromWKT", importFromWKT);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromProj4", importFromProj4);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromEPSG", importFromEPSG);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromEPSGA", importFromEPSGA);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromWMSAUTO", importFromWMSAUTO);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromXML", importFromXML);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromURN", importFromURN);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromCRSURL", importFromCRSURL);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromURL", importFromURL);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromMICoordSys", importFromMICoordSys);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setWellKnownGeogCS", setWellKnownGeogCS);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setFromUserInput", setFromUserInput);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "morphToESRI", morphToESRI);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "morphFromESRI", morphFromESRI);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "EPSGTreatsAsLatLong", EPSGTreatsAsLatLong);
@@ -165,17 +167,7 @@ Handle<Value> SpatialReference::toString(const Arguments& args)
 
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, clone, SpatialReference, Clone);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, cloneGeogCS, SpatialReference, CloneGeogCS);
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromProj4, importFromProj4, "input");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(SpatialReference, importFromEPSG, importFromEPSG, "epsg");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(SpatialReference, importFromEPSGA, importFromEPSGA, "epsg");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromWMSAUTO, importFromWMSAUTO, "input");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromXML, importFromXML, "xml");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromURN, importFromURN, "input");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromCRSURL, importFromCRSURL, "url");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromURL, importFromUrl, "url");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, importFromMICoordSys, importFromMICoordSys, "input");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, setWellKnownGeogCS, SetWellKnownGeogCS, "input");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, setFromUserInput, SetFromUserInput, "input");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphToESRI, morphToESRI);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphFromESRI, morphFromESRI);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsLatLong, Boolean, EPSGTreatsAsLatLong);
@@ -270,23 +262,6 @@ Handle<Value> SpatialReference::exportToXML(const Arguments& args)
 	return scope.Close(result);
 }
 
-Handle<Value> SpatialReference::importFromWKT(const Arguments& args)
-{
-	HandleScope scope;
-
-	SpatialReference *srs = ObjectWrap::Unwrap<SpatialReference>(args.This());
-	std::string wkt("");
-	NODE_ARG_STR(0, "wkt", wkt);
-	char* str = (char*) wkt.c_str();
-
-	int err = srs->this_->importFromWkt(&str);
-	if (err) {
-		return NODE_THROW_OGRERR(err);
-	}
-
-	return Undefined();
-}
-
 Handle<Value> SpatialReference::getAttrValue(const Arguments& args)
 {
 	HandleScope scope;
@@ -297,4 +272,181 @@ Handle<Value> SpatialReference::getAttrValue(const Arguments& args)
 	NODE_ARG_STR(0, "node name", node_name);
 	NODE_ARG_INT_OPT(1, "child", child);
 	return scope.Close(SafeString::New(srs->this_->GetAttrValue(node_name.c_str(), child)));
+}
+
+Handle<Value> SpatialReference::fromWKT(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string wkt("");
+	NODE_ARG_STR(0, "wkt", wkt);
+	char* str = (char*) wkt.c_str();
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromWkt(&str);
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromProj4(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "input", input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromProj4(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromWMSAUTO(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "input", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromWMSAUTO(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromXML(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "xml", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromXML(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromURN(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "input", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromURN(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromCRSURL(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "url", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromCRSURL(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromURL(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "url", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromUrl(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromMICoordSys(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "input", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromMICoordSys(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromUserInput(const Arguments& args)
+{
+	HandleScope scope;
+
+	std::string input("");
+	NODE_ARG_STR(0, "input", input);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->SetFromUserInput(input.c_str());
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromEPSG(const Arguments& args)
+{
+	HandleScope scope;
+
+	int epsg;
+	NODE_ARG_INT(0, "epsg", epsg);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromEPSG(epsg);
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::fromEPSGA(const Arguments& args)
+{
+	HandleScope scope;
+
+	int epsg;
+	NODE_ARG_INT(0, "epsg", epsg);
+	
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromEPSGA(epsg);
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(SpatialReference::New(srs, true));
 }

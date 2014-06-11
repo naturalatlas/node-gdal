@@ -24,27 +24,30 @@ Note: all spatial references owned by features, layers, etc are cloned to avoid 
 - `SpatialReference()`
 - `SpatialReference(string wkt) #throws`
 
+#### Static Methods
+
+- `fromWKT(string wkt) : SpatialReference #throws`
+- `fromProj4(string proj4) : SpatialReference #throws`
+- `fromEPSG(integer code) : SpatialReference #throws`
+- `fromEPSGA(integer code) : SpatialReference #throws`
+- `fromWMSAUTO(string wmsauto) : SpatialReference #throws`
+- `fromXML(string xml) : SpatialReference  #throws`
+- `fromURN(string urn) : SpatialReference #throws`
+- `fromCRSURL(string url) : SpatialReference #throws`
+- `fromURL(string url) : SpatialReference #throws`
+- `fromMICoordSys(string name) : SpatialReference #throws`
+- `fromUserInput(string name) : SpatialReference #throws`
+
 #### Methods 
 
 - `toString() : string`
+- `toWKT() : string #throws`
+- `toPrettyWKT(boolean simplify = false) : string #throws`
+- `toProj4() : string #throws`
+- `toXML() : string #throws`
 - `clone() : SpatialReference`
 - `cloneGeogCS() : SpatialReference`
-- `exportToWKT() : string #throws`
-- `exportToPrettyWKT(boolean simplify = false) : string #throws`
-- `exportToProj4() : string #throws`
-- `exportToXML() : string #throws`
-- `importFromWKT() : void #throws`
-- `importFromProj4() : void #throws`
-- `importFromEPSG(integer code) : void #throws`
-- `importFromEPSGA(integer code) : void #throws`
-- `importFromWMSAUTO(string wmsauto) #throws`
-- `importFromXML(string xml) : void #throws`
-- `importFromURN(string urn) : void #throws`
-- `importFromCRSURL(string url) : void #throws`
-- `importFromURL(string url) : void #throws`
-- `importFromMICoordSys(string name) : void #throws`
 - `setWellKnownGeogCS(string name) : void #throws`
-- `setFromUserInput(string name) : void #throws`
 - `autoIdentifyEPSG() : void #throws`
 - `morphToESRI() : void #throws`
 - `morphFromESRI() : void #throws`

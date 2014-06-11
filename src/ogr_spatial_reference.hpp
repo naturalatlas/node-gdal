@@ -21,6 +21,7 @@ namespace node_ogr {
 	public:
 		static Persistent<FunctionTemplate> constructor;
 		static void Initialize(Handle<Object> target);
+
 		static Handle<Value> New(const Arguments &args);
 		static Handle<Value> New(OGRSpatialReference *srs);
 		static Handle<Value> New(OGRSpatialReference *srs, bool owned);
@@ -31,18 +32,7 @@ namespace node_ogr {
 		static Handle<Value> exportToPrettyWKT(const Arguments &args);
 		static Handle<Value> exportToProj4(const Arguments &args);
 		static Handle<Value> exportToXML(const Arguments &args);
-		static Handle<Value> importFromWKT(const Arguments &args);
-		static Handle<Value> importFromProj4(const Arguments &args);
-		static Handle<Value> importFromEPSG(const Arguments &args);
-		static Handle<Value> importFromEPSGA(const Arguments &args);
-		static Handle<Value> importFromWMSAUTO(const Arguments &args);
-		static Handle<Value> importFromXML(const Arguments &args);
-		static Handle<Value> importFromURN(const Arguments &args);
-		static Handle<Value> importFromCRSURL(const Arguments &args);
-		static Handle<Value> importFromURL(const Arguments &args);
-		static Handle<Value> importFromMICoordSys(const Arguments &args);
 		static Handle<Value> setWellKnownGeogCS(const Arguments &args);
-		static Handle<Value> setFromUserInput(const Arguments &args);
 		static Handle<Value> morphToESRI(const Arguments &args);
 		static Handle<Value> morphFromESRI(const Arguments &args);
 		static Handle<Value> EPSGTreatsAsLatLong(const Arguments &args);
@@ -61,6 +51,18 @@ namespace node_ogr {
 		static Handle<Value> getAuthorityCode(const Arguments &args);
 		static Handle<Value> getAuthorityName(const Arguments &args);
 		static Handle<Value> getAttrValue(const Arguments &args);
+
+		static Handle<Value> fromUserInput(const Arguments &args);
+		static Handle<Value> fromWKT(const Arguments &args);
+		static Handle<Value> fromProj4(const Arguments &args);
+		static Handle<Value> fromEPSG(const Arguments &args);
+		static Handle<Value> fromEPSGA(const Arguments &args);
+		static Handle<Value> fromWMSAUTO(const Arguments &args);
+		static Handle<Value> fromXML(const Arguments &args);
+		static Handle<Value> fromURN(const Arguments &args);
+		static Handle<Value> fromCRSURL(const Arguments &args);
+		static Handle<Value> fromURL(const Arguments &args);
+		static Handle<Value> fromMICoordSys(const Arguments &args);
 
 		static ObjectCache<OGRSpatialReference*> cache;
 
