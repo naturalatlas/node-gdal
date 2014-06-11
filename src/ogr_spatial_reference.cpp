@@ -16,12 +16,12 @@ void SpatialReference::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("SpatialReference"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKT", exportToWKT);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toPrettyWKT", exportToPrettyWKT);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toProj4", exportToProj4);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toXML", exportToXML);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "cloneGeogCS", clone);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToWKT", exportToWKT);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToPrettyWKT", exportToPrettyWKT);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToProj4", exportToProj4);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToXML", exportToXML);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromWKT", importFromWKT);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromProj4", importFromProj4);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "importFromEPSG", importFromEPSG);

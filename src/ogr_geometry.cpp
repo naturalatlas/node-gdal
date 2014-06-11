@@ -23,6 +23,10 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(constructor, "createFromWkt", Geometry::createFromWkt);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toKML", exportToKML);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toGML", exportToGML);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toJSON", exportToJSON);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKT", exportToWKT);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getDimension", getDimension);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getCoordinateDimension", getCoordinateDimension);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isEmpty", isEmpty);
@@ -33,10 +37,6 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "empty", empty);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryType", getGeometryType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryName", getGeometryName);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToKML", exportToKML);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToGML", exportToGML);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToJSON", exportToJSON);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "exportToWKT", exportToWKT);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "closeRings", closeRings);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "intersects", intersects);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);

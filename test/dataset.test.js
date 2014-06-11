@@ -18,9 +18,9 @@ describe('Dataset', function() {
 
 	describe('"srs" property', function() {
 		describe('getter', function() {
-			it('should return projection string', function() {
+			it('should return SpatialReference', function() {
 				var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
-				assert.equal(ds.srs.toString(), 'PROJCS["WGS_1984_Albers",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9108"]],AUTHORITY["EPSG","4326"]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["standard_parallel_1",40],PARAMETER["standard_parallel_2",42],PARAMETER["latitude_of_center",39],PARAMETER["longitude_of_center",-78],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["meters",1]]');
+				assert.equal(ds.srs.toWKT(), 'PROJCS["WGS_1984_Albers",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9108"]],AUTHORITY["EPSG","4326"]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["standard_parallel_1",40],PARAMETER["standard_parallel_2",42],PARAMETER["latitude_of_center",39],PARAMETER["longitude_of_center",-78],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["meters",1]]');
 			});
 			it('should return null when dataset doesn\'t have projection', function() {
 				var ds = gdal.open(__dirname + "/data/blank.jpg");
@@ -50,7 +50,7 @@ describe('Dataset', function() {
 				srs.importFromWKT(ref);
 
 				ds.srs = srs;
-				assert.equal(ds.srs.toString(), ref);
+				assert.equal(ds.srs.toWKT(), ref);
 			});
 		});
 	});

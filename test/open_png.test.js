@@ -39,9 +39,11 @@ describe('Open', function() {
 			assert.closeTo(actual_geotransform[5], expected_geotransform[5], delta);
 		});
 
-		it('should be able to read statistics', function() {
-			assert.equal(ds.srs, null);
+		it('should not have projection', function() {
+			assert.isNull(ds.srs);
+		});
 
+		it('should be able to read statistics', function() {
 			var band = ds.getRasterBand(1);
 			var expected_stats = {
 				min: 1,
