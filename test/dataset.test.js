@@ -46,10 +46,7 @@ describe('Dataset', function() {
 					'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
 					'UNIT["Meter",1.0]]';
 
-				var srs = new gdal.ogr.SpatialReference();
-				srs.importFromWKT(ref);
-
-				ds.srs = srs;
+				ds.srs = new gdal.ogr.SpatialReference.fromWKT(ref);
 				assert.equal(ds.srs.toWKT(), ref);
 			});
 		});
