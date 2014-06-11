@@ -70,12 +70,13 @@ namespace node_ogr {
 		static Handle<Value> getEnvelope3D(const Arguments &args);
 		static Handle<Value> transform(const Arguments &args);
 		static Handle<Value> transformTo(const Arguments &args);
-		static Handle<Value> getSpatialReference(const Arguments &args);
-		static Handle<Value> assignSpatialReference(const Arguments &args);
 
 		//static constructor methods
 		static Handle<Value> create(const Arguments &args);
 		static Handle<Value> createFromWkt(const Arguments &args);
+
+		static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
+		static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 		static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
 

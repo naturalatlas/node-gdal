@@ -39,9 +39,9 @@ void Layer::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFIDColumn", getFIDColumn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryColumn", getGeometryColumn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createField", createField);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialRef", getSpatialRef);
 
-	ATTR(constructor, "ds", dsGetter, dsSetter);
+	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
@@ -244,27 +244,18 @@ Handle<Value> Layer::getFeatureCount(const Arguments& args)
 	return scope.Close(Integer::New(count));
 }
 
-Handle<Value> Layer::getSpatialRef(const Arguments& args)
-{
-	HandleScope scope;
-
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		return NODE_THROW("Layer object already destroyed");
-	}
-
-	OGRSpatialReference* ogr_srs = layer->this_->GetSpatialRef();
-	Handle<Value> srs = SpatialReference::New(ogr_srs, false);
-	return scope.Close(srs);
-}
-
-void Layer::dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
-{
-	NODE_THROW("ds is a read-only property");
-}
-
 Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
+}
+
+Handle<Value> Layer::srsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+	return scope.Close(SpatialReference::New(layer->this_->GetSpatialRef(), false));
 }

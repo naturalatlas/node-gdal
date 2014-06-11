@@ -106,11 +106,11 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `getFIDColumn() : string`
 - `getGeometryColumn() : string`
 - `createField(FieldDefn field, bool approx = true) : void #throws`
-- `getSpatialRef() : SpatialReference`
 
 #### Properties
 
 - `ds : Datasource`
+- `srs : SpatialReference //get`
 
 ## Driver
 
@@ -177,10 +177,10 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `getEnvelope3D() : object`
 - `transform(CoordinateTransformation transform) : void #throws`
 - `transformTo(SpatialReference srs) : void #throws`
-- `getSpatialReference() : SpatialReference`
-- `assignSpatialReference(SpatialReference srs) : void`
 
+#### Properties 
 
+- `srs : SpatialReference //get and set`
 
 ## Point 
 

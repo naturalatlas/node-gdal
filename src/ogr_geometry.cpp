@@ -63,11 +63,10 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getEnvelope3D", getEnvelope3D);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "transform", transform);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "transformTo", transformTo);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialReference", getSpatialReference);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "assignSpatialReference", assignSpatialReference);
 
-	//change to getter
-	NODE_SET_PROTOTYPE_METHOD(constructor, "wkbSize", wkbSize);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "wkbSize", wkbSize);	//change to getter
+
+	ATTR(constructor, "srs", srsGetter, srsSetter);
 
 	target->Set(String::NewSymbol("Geometry"), constructor->GetFunction());
 }
@@ -222,7 +221,6 @@ NODE_WRAPPED_METHOD_WITH_RESULT_1_DOUBLE_PARAM(Geometry, simplifyPreserveTopolog
 NODE_WRAPPED_METHOD_WITH_1_DOUBLE_PARAM(Geometry, segmentize, segmentize, "segment length");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transform, transform, CoordinateTransformation, "transform");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transformTo, transformTo, SpatialReference, "spatial reference");
-NODE_WRAPPED_METHOD_WITH_1_WRAPPED_PARAM(Geometry, assignSpatialReference, assignSpatialReference, SpatialReference, "spatial reference");
 
 //manually wrap this method because we don't have macros for multiple params
 Handle<Value> Geometry::buffer(const Arguments& args)
@@ -316,14 +314,6 @@ Handle<Value> Geometry::getEnvelope3D(const Arguments& args)
 	return scope.Close(obj);
 }
 
-Handle<Value> Geometry::getSpatialReference(const Arguments& args)
-{
-	HandleScope scope;
-
-	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	return scope.Close(SpatialReference::New(geom->this_->getSpatialReference(), false));
-}
-
 // --- JS static methods (OGRGeometryFactory) ---
 
 Handle<Value> Geometry::createFromWkt(const Arguments &args)
@@ -358,4 +348,28 @@ Handle<Value> Geometry::create(const Arguments &args)
 	NODE_ARG_ENUM(0, "type", OGRwkbGeometryType, type);
 
 	return scope.Close(Geometry::New(OGRGeometryFactory::createGeometry(type), true));
+}
+
+Handle<Value> Geometry::srsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(SpatialReference::New(geom->this_->getSpatialReference(), false));
+}
+
+void Geometry::srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+
+	OGRSpatialReference *srs = NULL;
+	if (SpatialReference::constructor->HasInstance(value)) {
+		SpatialReference *srs_obj = ObjectWrap::Unwrap<SpatialReference>(value->ToObject());
+		srs = srs_obj->get();
+	} else if (!value->IsNull() && !value->IsUndefined()) {
+		NODE_THROW("srs must be SpatialReference object");
+		return;
+	}
+
+	geom->this_->assignSpatialReference(srs);
 }

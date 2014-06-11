@@ -3,6 +3,8 @@
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
 #include "gdal_driver.hpp"
+#include "ogr_common.hpp"
+#include "ogr_spatial_reference.hpp"
 
 Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset*> Dataset::cache;
@@ -19,8 +21,6 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterCount", getRasterCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterBand", getRasterBand);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getProjectionRef", getProjectionRef);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setProjection", setProjection);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "addBand", addBand);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getDriver", getDriver);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPCount", getGCPCount);
@@ -35,6 +35,7 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "close", close);
 
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "srs", srsGetter, srsSetter);
 
 	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
 }
@@ -123,8 +124,6 @@ Handle<Value> Dataset::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getProjectionRef, SafeString, GetProjectionRef);
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Dataset, setProjection, SetProjection, "wkt/proj4 string");
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, SafeString, GetGCPProjection);
@@ -372,4 +371,65 @@ Handle<Value> Dataset::sizeGetter(Local<String> property, const AccessorInfo &in
 	result->Set(String::NewSymbol("x"), Integer::New(ds->this_->GetRasterXSize()));
 	result->Set(String::NewSymbol("y"), Integer::New(ds->this_->GetRasterYSize()));
 	return scope.Close(result);
+}
+
+Handle<Value> Dataset::srsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
+	//get projection wkt and return null if not set
+	char* wkt = (char*) ds->this_->GetProjectionRef();
+	if (*wkt == '\0') {
+		//getProjectionRef returns string of length 0 if no srs set
+		return Null();
+	}
+	//otherwise construct and return SpatialReference from wkt
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromWkt(&wkt);
+
+	if(err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(node_ogr::SpatialReference::New(srs, true));
+}
+
+
+void Dataset::srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		NODE_THROW("Dataset object has already been destroyed");
+		return;
+	}
+
+	std::string wkt("");
+	if (node_ogr::SpatialReference::constructor->HasInstance(value)) {
+		
+		node_ogr::SpatialReference *srs_obj = ObjectWrap::Unwrap<node_ogr::SpatialReference>(value->ToObject());
+		OGRSpatialReference *srs = srs_obj->get();
+		//Get wkt from OGRSpatialReference
+		char* str;
+		if (srs->exportToWkt(&str)) {
+			NODE_THROW("Error exporting srs to wkt");
+			return;
+		}
+		wkt = str; //copy string
+		CPLFree(str);
+
+	} else if (!value->IsNull() && !value->IsUndefined()) {
+		NODE_THROW("srs must be SpatialReference object");
+		return;
+	}
+
+	CPLErr err = ds->this_->SetProjection(wkt.c_str());
+	
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
 }

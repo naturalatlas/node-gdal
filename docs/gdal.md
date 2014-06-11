@@ -27,8 +27,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `close() : void`
 - `getRasterCount() : integer`
 - `getRasterBand(integer band_id) : RasterBand`
-- `getProjectionRef() : string`
-- `setProjection(string wkt_or_proj4) : void #throws`
 - `addBand(integer gdal_data_type, string[] options) : RasterBand #throws`
 - `getDriver() : Driver`
 - `getGCPCount() : integer`
@@ -44,6 +42,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 #### Properties
 
 - `size : object`
+- `srs : SpatialReference //get and set`
 
 #### Proposed Properties
 

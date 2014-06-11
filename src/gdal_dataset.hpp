@@ -26,8 +26,6 @@ public:
 	static Handle<Value> getRasterCount(const Arguments &args);
 	static Handle<Value> getRasterBand(const Arguments &args);
 	static Handle<Value> flushCache(const Arguments &args);
-	static Handle<Value> getProjectionRef(const Arguments &args);
-	static Handle<Value> setProjection(const Arguments &args);
 	static Handle<Value> getGeoTransform(const Arguments &args);
 	static Handle<Value> setGeoTransform(const Arguments &args);
 	static Handle<Value> addBand(const Arguments &args);
@@ -42,6 +40,8 @@ public:
 	static Handle<Value> close(const Arguments &args);
 
 	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
+	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	static ObjectCache<GDALDataset*> cache;
 
