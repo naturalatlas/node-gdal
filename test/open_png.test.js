@@ -14,8 +14,8 @@ describe('Open', function() {
 		});
 
 		it('should be able to read raster size', function() {
-			assert.equal(ds.getRasterXSize(),1951);
-			assert.equal(ds.getRasterYSize(),3109);
+			assert.equal(ds.size.x,1951);
+			assert.equal(ds.size.y,3109);
 			assert.equal(ds.getRasterCount(),1);
 		});
 
@@ -40,8 +40,7 @@ describe('Open', function() {
 		});
 
 		it('should be able to read statistics', function() {
-			var srs = ds.getProjectionRef();
-			assert.equal(srs, '');
+			assert.equal(ds.srs, null);
 
 			var band = ds.getRasterBand(1);
 			var expected_stats = {
