@@ -76,15 +76,9 @@ Note: all methods throw errors if the datasource has already been explicitly des
 - `destroy() : void`
 - `toString() : string`
 - `getName() : string`
-- `getLayerByName(string name) : Layer`
-- `getLayerCount() : integer`
-- `getLayer(integer i) : Layer`
 - `getDriver() : Driver`
-- `deleteLayer(integer i_layer) : void #throws`
 - `testCapability(string capability_name) : boolean`
 - `executeSQL(string sql_text, Geometry spatial_filter = null, string dialect = null) : Layer #throws // result sets are released when datasource is destroyed or V8 does GC on the layer`
-- `createLayer(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null) : void #throws`
-- `copyLayer(string src_lyr_name, string dst_lyr_name, string[] options = null) : void #throws`
 - `syncToDisk() #throws`
 
 #### Properties
