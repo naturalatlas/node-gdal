@@ -22,6 +22,7 @@
 
 //collections
 #include "collections/rasterband.hpp"
+#include "collections/layer.hpp"
 
 // std
 #include <string>
@@ -60,7 +61,9 @@ namespace node_gdal {
 			Driver::Initialize(target);
 			Dataset::Initialize(target);
 			RasterBand::Initialize(target);
+
 			RasterBandCollection::Initialize(target);
+			LayerCollection::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));

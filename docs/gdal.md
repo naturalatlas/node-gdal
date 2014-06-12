@@ -42,15 +42,17 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `srs : SpatialReference //get and set`
 - `bands : RasterBandCollection`
 
-#### RasterBandCollection Methods
-
-- `bands.get(integer band_id) : RasterBand #throws`
-- `bands.count() : Integer`
-- `bands.create(integer gdal_data_type, string[] options) : RasterBand #throws`
-
 #### Proposed Properties
 
 - `driver : Driver`
+
+## RasterBandCollection
+
+#### Methods
+
+- `get(integer band_id) : RasterBand #throws`
+- `count() : Integer`
+- `create(integer gdal_data_type, string[] options) : RasterBand #throws`
 
 ## Driver
 

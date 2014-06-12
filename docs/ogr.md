@@ -87,6 +87,21 @@ Note: all methods throw errors if the datasource has already been explicitly des
 - `copyLayer(string src_lyr_name, string dst_lyr_name, string[] options = null) : void #throws`
 - `syncToDisk() #throws`
 
+#### Properties
+
+- `layers : LayerCollection`
+
+## LayerCollection 
+
+#### Methods
+
+- `get(integer layer_id) : Layer #throws`
+- `get(string name) : Layer #throws`
+- `count() : Integer`
+- `create(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null) : Layer #throws`
+- `copy (string src_lyr_name, string dst_lyr_name, string[] options = null) : Layer #throws`
+- `remove (int layer_id) : void #throws`
+
 ## Layer
 
 Note: all methods throw errors if the layer has been destroyed by the datasource

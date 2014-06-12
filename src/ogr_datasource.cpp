@@ -4,6 +4,7 @@
 #include "ogr_datasource.hpp"
 #include "ogr_geometry.hpp"
 #include "ogr_driver.hpp"
+#include "collections/layer.hpp"
 
 using namespace node_ogr;
 
@@ -21,17 +22,13 @@ void Datasource::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getDriver", getDriver);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerByName", getLayerByName);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerCount", getLayerCount);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayer", getLayer);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "deleteLayer", deleteLayer);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "executeSQL", executeSQL);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "syncToDisk", syncToDisk);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "createLayer", createLayer);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "copyLayer", copyLayer);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "releaseResultSet", releaseResultSet);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
+
+	ATTR(constructor, "layers", layersGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Datasource"), constructor->GetFunction());
 }
@@ -104,6 +101,10 @@ Handle<Value> Datasource::New(const Arguments& args)
 		void* ptr = ext->Value();
 		Datasource *f =  static_cast<Datasource *>(ptr);
 		f->Wrap(args.This());
+
+		Handle<Value> layers = LayerCollection::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("layers_"), layers); 
+
 		return args.This();
 	} else {
 		return NODE_THROW("Cannot create datasource directly. Create with driver instead.");
@@ -139,10 +140,8 @@ Handle<Value> Datasource::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getName, SafeString, GetName);
-NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getLayerCount, Integer, GetLayerCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Datasource, getDriver, node_ogr::Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Datasource, syncToDisk, SyncToDisk);
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(Datasource, deleteLayer, DeleteLayer, "layer index to delete");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Datasource, testCapability, Boolean, TestCapability, "capability to test");
 //NODE_WRAPPED_METHOD_WITH_1_WRAPPED_PARAM(Datasource, releaseResultSet, ReleaseResultSet, Layer, "layer to release");
 
@@ -184,116 +183,8 @@ Handle<Value> Datasource::executeSQL(const Arguments& args)
 	}
 }
 
-
-Handle<Value> Datasource::createLayer(const Arguments& args)
+Handle<Value> Datasource::layersGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
-	std::string layer_name;
-	std::string spatial_ref = "";
-	OGRwkbGeometryType geom_type = wkbUnknown;
-	Handle<Array> layer_options = Array::New(0);
-
-	NODE_ARG_STR(0, "layer name", layer_name);
-	NODE_ARG_OPT_STR(1, "spatial reference", spatial_ref);
-	NODE_ARG_ENUM_OPT(2, "geometry type", OGRwkbGeometryType, geom_type);
-	NODE_ARG_ARRAY_OPT(3, "layer creation options", layer_options);
-
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Datasource object already destroyed");
-	}
-
-	char **options = NULL;
-
-	if (layer_options->Length() > 0) {
-		options = new char* [layer_options->Length()];
-		for (unsigned int i = 0; i < layer_options->Length(); ++i) {
-			options[i] = TOSTR(layer_options->Get(i));
-		}
-	}
-
-	OGRLayer *layer = ds->this_->CreateLayer(layer_name.c_str(),
-					  NULL,
-					  geom_type,
-					  options);
-
-	if (options) {
-		delete [] options;
-	}
-
-	if (layer) {
-		return scope.Close(Layer::New(layer, ds->this_, false));
-	} else {
-		return NODE_THROW("Error creating layer");
-	}
-}
-
-Handle<Value> Datasource::getLayerByName(const Arguments& args)
-{
-	HandleScope scope;
-
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Datasource object already destroyed");
-	}
-
-	std::string name("");
-	NODE_ARG_STR(0, "layer name", name);
-
-	return scope.Close(Layer::New(ds->this_->GetLayerByName(name.c_str()), ds->this_));
-}
-
-Handle<Value> Datasource::getLayer(const Arguments& args)
-{
-	HandleScope scope;
-
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Datasource object already destroyed");
-	}
-
-	int i;
-	NODE_ARG_INT(0, "layer index", i);
-
-	return scope.Close(Layer::New(ds->this_->GetLayer(i), ds->this_));
-}
-
-Handle<Value> Datasource::copyLayer(const Arguments& args)
-{
-	HandleScope scope;
-	Layer *layer_to_copy;
-	std::string new_name = "";
-	Handle<Array> layer_options = Array::New(0);
-
-	NODE_ARG_WRAPPED(0, "layer to copy", Layer, layer_to_copy);
-	NODE_ARG_STR(1, "new layer name", new_name);
-	NODE_ARG_ARRAY_OPT(2, "layer creation options", layer_options);
-
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Datasource object already destroyed");
-	}
-
-	char **options = NULL;
-
-	if (layer_options->Length() > 0) {
-		options = new char* [layer_options->Length()];
-		for (unsigned int i = 0; i < layer_options->Length(); ++i) {
-			options[i] = TOSTR(layer_options->Get(i));
-		}
-	}
-
-	OGRLayer *layer = ds->this_->CopyLayer(layer_to_copy->get(),
-										   new_name.c_str(),
-										   options);
-
-	if (options) {
-		delete [] options;
-	}
-
-	if (layer) {
-		return scope.Close(Layer::New(layer, ds->this_));
-	} else {
-		return NODE_THROW("Error copying layer");
-	}
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("layers_")));
 }

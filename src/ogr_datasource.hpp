@@ -26,17 +26,13 @@ public:
 	static Handle<Value> toString(const Arguments &args);
 	static Handle<Value> getName(const Arguments &args);
 	static Handle<Value> getDriver(const Arguments &args);
-	static Handle<Value> getLayerCount(const Arguments &args);
-	static Handle<Value> getLayerByName(const Arguments &args);
-	static Handle<Value> getLayer(const Arguments &args);
-	static Handle<Value> deleteLayer(const Arguments &args);
 	static Handle<Value> testCapability(const Arguments &args);
 	static Handle<Value> executeSQL(const Arguments &args);
 	static Handle<Value> syncToDisk(const Arguments &args);
-	static Handle<Value> createLayer(const Arguments &args);
-	static Handle<Value> copyLayer(const Arguments &args);
 	//static Handle<Value> releaseResultSet(const Arguments &args);
 	static Handle<Value> destroy(const Arguments& args);
+
+	static Handle<Value> layersGetter(Local<String> property, const AccessorInfo &info);
 
 	static ObjectCache<OGRDataSource*> cache;
 

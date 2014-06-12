@@ -35,7 +35,8 @@
 				"src/ogr_layer.cpp",
 				"src/ogr_coordinate_transformation.cpp",
 				"src/ogr_spatial_reference.cpp",
-				"src/collections/rasterband.cpp"
+				"src/collections/rasterband.cpp",
+				"src/collections/layer.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",
