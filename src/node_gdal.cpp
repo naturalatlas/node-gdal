@@ -20,6 +20,9 @@
 // node-ogr
 #include "ogr.hpp"
 
+//collections
+#include "collections/rasterband.hpp"
+
 // std
 #include <string>
 #include <sstream>
@@ -57,6 +60,7 @@ namespace node_gdal {
 			Driver::Initialize(target);
 			Dataset::Initialize(target);
 			RasterBand::Initialize(target);
+			RasterBandCollection::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));

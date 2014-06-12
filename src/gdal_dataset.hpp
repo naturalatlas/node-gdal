@@ -39,6 +39,7 @@ public:
 	static Handle<Value> getMetadata(const Arguments &args);
 	static Handle<Value> close(const Arguments &args);
 
+	static Handle<Value> bandsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
 	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);

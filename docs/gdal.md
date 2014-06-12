@@ -25,9 +25,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
 - `close() : void`
-- `getRasterCount() : integer`
-- `getRasterBand(integer band_id) : RasterBand`
-- `addBand(integer gdal_data_type, string[] options) : RasterBand #throws`
 - `getDriver() : Driver`
 - `getGCPCount() : integer`
 - `getGCPProjection() : string`
@@ -43,11 +40,17 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 - `size : object`
 - `srs : SpatialReference //get and set`
+- `bands : RasterBandCollection`
+
+#### RasterBandCollection Methods
+
+- `bands.get(integer band_id) : RasterBand #throws`
+- `bands.count() : Integer`
+- `bands.create(integer gdal_data_type, string[] options) : RasterBand #throws`
 
 #### Proposed Properties
 
-- `bands : BandCollection`
-- `driver : string`
+- `driver : Driver`
 
 ## Driver
 

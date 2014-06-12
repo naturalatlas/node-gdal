@@ -5,6 +5,7 @@
 #include "gdal_driver.hpp"
 #include "ogr_common.hpp"
 #include "ogr_spatial_reference.hpp"
+#include "collections/rasterband.hpp"
 
 Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset*> Dataset::cache;
@@ -34,6 +35,7 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "close", close);
 
+	ATTR(constructor, "bands", bandsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, srsSetter);
 
@@ -90,6 +92,10 @@ Handle<Value> Dataset::New(const Arguments& args)
 		void* ptr = ext->Value();
 		Dataset *f =  static_cast<Dataset *>(ptr);
 		f->Wrap(args.This());
+
+		Handle<Value> bands = RasterBandCollection::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("bands_"), bands); 
+		
 		return args.This();
 	} else {
 		return NODE_THROW("Cannot create dataset directly");
@@ -432,4 +438,10 @@ void Dataset::srsSetter(Local<String> property, Local<Value> value, const Access
 	if (err) {
 		NODE_THROW_CPLERR(err);
 	}
+}
+
+Handle<Value> Dataset::bandsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("bands_")));
 }
