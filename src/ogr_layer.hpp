@@ -24,16 +24,9 @@ namespace node_ogr {
 		static Handle<Value> New(const Arguments &args);
 		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent);
 		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent, bool result_set);
-		static Handle<Value> weakCallback(Persistent<Value> object, void *parameter);
 		static Handle<Value> toString(const Arguments &args);
 		static Handle<Value> resetReading(const Arguments &args);
-		static Handle<Value> getNextFeature(const Arguments &args);
 		static Handle<Value> getLayerDefn(const Arguments &args);
-		static Handle<Value> getFeature(const Arguments &args);
-		static Handle<Value> setFeature(const Arguments &args);
-		static Handle<Value> getFeatureCount(const Arguments &args);
-		static Handle<Value> createFeature(const Arguments &args);
-		static Handle<Value> deleteFeature(const Arguments &args);
 		static Handle<Value> getGeomType(const Arguments &args);
 		static Handle<Value> getName(const Arguments &args);
 		static Handle<Value> testCapability(const Arguments &args);
@@ -45,6 +38,7 @@ namespace node_ogr {
 		static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 		static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
 		static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> featuresGetter(Local<String> property, const AccessorInfo &info);
 
 		static ObjectCache<OGRLayer*> cache;
 

@@ -6,6 +6,7 @@
 #include "ogr_field_defn.hpp"
 #include "ogr_spatial_reference.hpp"
 #include "ogr_datasource.hpp"
+#include "collections/feature.hpp"
 
 #include <stdlib.h>
 #include <sstream>
@@ -25,13 +26,7 @@ void Layer::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "resetReading", resetReading);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getNextFeature", getNextFeature);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFeature", getFeature);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFeatureCount", getFeatureCount);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setFeature", setFeature);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "createFeature", createFeature);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "deleteFeature", deleteFeature);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
@@ -42,6 +37,7 @@ void Layer::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "features", featuresGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
@@ -98,6 +94,10 @@ Handle<Value> Layer::New(const Arguments& args)
 		void* ptr = ext->Value();
 		Layer *f = static_cast<Layer *>(ptr);
 		f->Wrap(args.This());
+
+		Handle<Value> features = FeatureCollection::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("features_"), features); 
+
 		return args.This();
 	} else {
 		return NODE_THROW("Cannot create layer directly. Create with datasource instead.");
@@ -168,9 +168,6 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeomType, Integer, GetGeomType);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getName, SafeString, GetName);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getFIDColumn, SafeString, GetFIDColumn);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeometryColumn, SafeString, GetGeometryColumn);
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Layer, setFeature, SetFeature, Feature, "feature");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Layer, createFeature, CreateFeature, Feature, "feature");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(Layer, deleteFeature, DeleteFeature, "feature");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Layer, createField, CreateField, FieldDefn, "feature");
 
@@ -187,63 +184,6 @@ Handle<Value> Layer::getLayerDefn(const Arguments& args)
 	return scope.Close(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
 }
 
-Handle<Value> Layer::getNextFeature(const Arguments& args)
-{
-	HandleScope scope;
-
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		return NODE_THROW("Layer object already destroyed");
-	}
-
-	OGRFeature *next = layer->this_->GetNextFeature();
-
-	if (next) {
-		return scope.Close(Feature::New(next));
-	}
-
-	return Undefined();
-}
-
-Handle<Value> Layer::getFeature(const Arguments& args)
-{
-	HandleScope scope;
-	int feature_id;
-
-	NODE_ARG_INT(0, "feature id", feature_id);
-
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		return NODE_THROW("Layer object already destroyed");
-	}
-
-	OGRFeature *feature = layer->this_->GetFeature(feature_id);
-
-	if (!feature) {
-		return NODE_THROW("Error getting feature");
-	}
-
-	return scope.Close(Feature::New(feature));
-}
-
-
-Handle<Value> Layer::getFeatureCount(const Arguments& args)
-{
-	HandleScope scope;
-	bool force = true;
-
-	NODE_ARG_BOOL_OPT(0, "force", force);
-
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		return NODE_THROW("Layer object already destroyed");
-	}
-
-	int count = layer->this_->GetFeatureCount(force);
-
-	return scope.Close(Integer::New(count));
-}
-
 Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
@@ -258,4 +198,10 @@ Handle<Value> Layer::srsGetter(Local<String> property, const AccessorInfo &info)
 		return NODE_THROW("Layer object has already been destroyed");
 	}
 	return scope.Close(SpatialReference::New(layer->this_->GetSpatialRef(), false));
+}
+
+Handle<Value> Layer::featuresGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("features_")));
 }

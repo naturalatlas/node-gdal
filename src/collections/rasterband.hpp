@@ -17,7 +17,6 @@ using namespace node;
 class RasterBandCollection: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
-	Persistent<Object> parent;
 
 	static void Initialize(Handle<Object> target);
 	static Handle<Value> New(const Arguments &args);

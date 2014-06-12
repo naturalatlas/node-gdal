@@ -23,6 +23,7 @@
 //collections
 #include "collections/rasterband.hpp"
 #include "collections/layer.hpp"
+#include "collections/feature.hpp"
 
 // std
 #include <string>
@@ -64,6 +65,7 @@ namespace node_gdal {
 
 			RasterBandCollection::Initialize(target);
 			LayerCollection::Initialize(target);
+			FeatureCollection::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));

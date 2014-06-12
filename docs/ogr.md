@@ -110,13 +110,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 - `toString() : string`
 - `resetReading() : void`
-- `getNextFeature() : Feature`
 - `getLayerDefn() : FeatureDefn`
-- `getFeature(integer feature_index) : Feature #throws`
-- `getFeatureCount(boolean force = true) : integer`
-- `setFeature(feature f) : void #throws`
-- `createFeature(feature f) : void #throws`
-- `deleteFeature(integer feature_index) : void #throws`
 - `getGeomType() : integer`
 - `getName() : string`
 - `testCapability(string capability_name) : boolean`
@@ -129,6 +123,19 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 - `ds : Datasource`
 - `srs : SpatialReference //get`
+- `features : FeatureCollection`
+
+## FeatureCollection
+
+#### Methods
+
+- `add(feature f) : Feature`
+- `get() : Feature //equivalent to getNextFeature()`
+- `get(integer fid) : Feature`
+- `count(boolean force = true) : integer`
+- `set(feature f) : void #throws`
+- `set(integer fid, feature f) : void #throws`
+- `remove(integer fid) : void #throws`
 
 ## Driver
 
