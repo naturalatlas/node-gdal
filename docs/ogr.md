@@ -95,7 +95,7 @@ Note: all methods throw errors if the datasource has already been explicitly des
 - `create(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null) : Layer #throws`
 - `copy (string src_lyr_name, string dst_lyr_name, string[] options = null) : Layer #throws`
 - `remove (int layer_id) : void #throws`
-- `forEach(function iterator) : void`
+- `forEach(function iterator) : boolean`
 
 #### Properties
 
@@ -129,13 +129,14 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Methods
 
 - `add(feature f) : Feature`
-- `get() : Feature //equivalent to getNextFeature()`
+- `first() : Feature`
+- `next() : Feature`
 - `get(integer fid) : Feature`
 - `count(boolean force = true) : integer`
 - `set(feature f) : void #throws`
 - `set(integer fid, feature f) : void #throws`
 - `remove(integer fid) : void #throws`
-- `forEach(function iterator) : void`
+- `forEach(function iterator) : boolean`
 
 #### Properties
 
@@ -377,7 +378,7 @@ Note: all methods throw errors if the feature has already been explicitly destro
 - `indexOf(string field_name) : integer`
 - `toJSON() : object`
 - `toArray() : Array`
-- `forEach(function iterator) : void`
+- `forEach(function iterator) : boolean`
 
 #### Properties
 

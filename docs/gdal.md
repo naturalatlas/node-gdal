@@ -53,7 +53,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `get(integer band_id) : RasterBand #throws`
 - `count() : Integer`
 - `create(integer gdal_data_type, string[] options) : RasterBand #throws`
-- `forEach(function iterator) : void`
+- `forEach(function iterator) : boolean`
 
 #### Properties
 

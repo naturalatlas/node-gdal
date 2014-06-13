@@ -24,6 +24,8 @@ public:
 	static Handle<Value> toString(const Arguments &args);
 
 	static Handle<Value> get(const Arguments &args);
+	static Handle<Value> first(const Arguments &args);
+	static Handle<Value> next(const Arguments &args);
 	static Handle<Value> count(const Arguments &args);
 	static Handle<Value> add(const Arguments &args);
 	static Handle<Value> set(const Arguments &args);

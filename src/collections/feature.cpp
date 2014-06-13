@@ -20,6 +20,8 @@ void FeatureCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "first", first);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "next", next);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 
 	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
@@ -81,14 +83,40 @@ Handle<Value> FeatureCollection::get(const Arguments& args)
 		return NODE_THROW("Layer object already destroyed");
 	}
 
-	OGRFeature *feature;
-	if(args.Length() == 0){
-		feature = layer->get()->GetNextFeature();
-	} else {
-		int feature_id;
-		NODE_ARG_INT(0, "feature id", feature_id);
-		feature = layer->get()->GetFeature(feature_id);
+	int feature_id;
+	NODE_ARG_INT(0, "feature id", feature_id);
+	OGRFeature *feature = layer->get()->GetFeature(feature_id);
+
+	return scope.Close(Feature::New(feature));
+}
+
+Handle<Value> FeatureCollection::first(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	if (!layer->get()) {
+		return NODE_THROW("Layer object already destroyed");
 	}
+
+	layer->get()->ResetReading();
+	OGRFeature *feature = layer->get()->GetNextFeature();
+
+	return scope.Close(Feature::New(feature));
+}
+
+Handle<Value> FeatureCollection::next(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	if (!layer->get()) {
+		return NODE_THROW("Layer object already destroyed");
+	}
+
+	OGRFeature *feature = layer->get()->GetNextFeature();
 
 	return scope.Close(Feature::New(feature));
 }
