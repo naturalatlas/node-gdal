@@ -22,6 +22,8 @@ void FeatureCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 
+	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
+
 	target->Set(String::NewSymbol("FeatureCollection"), constructor->GetFunction());
 }
 
@@ -181,4 +183,10 @@ Handle<Value> FeatureCollection::remove(const Arguments& args)
 	}
 
 	return Undefined();
+}
+
+Handle<Value> FeatureCollection::layerGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }

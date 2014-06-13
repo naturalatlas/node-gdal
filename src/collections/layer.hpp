@@ -29,6 +29,8 @@ public:
 	static Handle<Value> copy(const Arguments &args);
 	static Handle<Value> remove(const Arguments &args);
 
+	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
+
 	LayerCollection();
 private:
 	~LayerCollection();

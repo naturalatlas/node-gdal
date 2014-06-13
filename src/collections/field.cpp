@@ -25,6 +25,8 @@ void FieldCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
 
+	ATTR(constructor, "feature", featureGetter, READ_ONLY_SETTER);
+
 	target->Set(String::NewSymbol("FieldCollection"), constructor->GetFunction());
 }
 
@@ -419,4 +421,10 @@ Handle<Value> FieldCollection::getFieldAsDateTime(OGRFeature* feature, int field
 	} else {
 		return Undefined();
 	}
+}
+
+Handle<Value> FieldCollection::featureGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }

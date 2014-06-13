@@ -18,6 +18,8 @@ void RasterBandCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 
+	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+
 	target->Set(String::NewSymbol("RasterBandCollection"), constructor->GetFunction());
 }
 
@@ -135,4 +137,10 @@ Handle<Value> RasterBandCollection::count(const Arguments& args)
 	}
 	
 	return scope.Close(Integer::New(ds->get()->GetRasterCount()));
+}
+
+Handle<Value> RasterBandCollection::dsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }

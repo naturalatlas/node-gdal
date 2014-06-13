@@ -27,6 +27,8 @@ public:
 	static Handle<Value> count(const Arguments &args);
 	static Handle<Value> create(const Arguments &args);
 
+	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
+	
 	RasterBandCollection();
 private:
 	~RasterBandCollection();

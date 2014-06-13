@@ -29,6 +29,8 @@ public:
 	static Handle<Value> set(const Arguments &args);
 	static Handle<Value> remove(const Arguments &args);
 
+	static Handle<Value> layerGetter(Local<String> property, const AccessorInfo &info);
+
 	FeatureCollection();
 private:
 	~FeatureCollection();

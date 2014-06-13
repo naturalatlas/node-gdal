@@ -20,6 +20,8 @@ void LayerCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 
+	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+
 	target->Set(String::NewSymbol("LayerCollection"), constructor->GetFunction());
 }
 
@@ -212,4 +214,10 @@ Handle<Value> LayerCollection::remove(const Arguments& args)
 	}
 
 	return Undefined();
+}
+
+Handle<Value> LayerCollection::dsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }

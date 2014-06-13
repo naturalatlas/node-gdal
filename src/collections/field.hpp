@@ -37,6 +37,8 @@ public:
 	static Handle<Value> getFieldAsBinary(OGRFeature* feature, int field_index);
 	static Handle<Value> getFieldAsDateTime(OGRFeature* feature, int field_index);
 
+	static Handle<Value> featureGetter(Local<String> property, const AccessorInfo &info);
+
 	FieldCollection();
 private:
 	~FieldCollection();
