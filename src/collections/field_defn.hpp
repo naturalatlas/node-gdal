@@ -1,5 +1,5 @@
-#ifndef __NODE_GDAL_LYR_FIELD_DEFN_COLLECTION_H__
-#define __NODE_GDAL_LYR_FIELD_DEFN_COLLECTION_H__
+#ifndef __NODE_GDAL_FIELD_DEFN_COLLECTION_H__
+#define __NODE_GDAL_FIELD_DEFN_COLLECTION_H__
 
 // v8
 #include <v8.h>
@@ -14,14 +14,9 @@
 using namespace v8;
 using namespace node;
 
-// Layer.fields : LayerFieldDefnCollection
+// FeatureDefn.fields : FieldDefnCollection
 
-// Identical to FeatureDefn.fields object from the outside
-// but on the inside it uses the parent layer
-// to create/modify fields instead of illegally
-// adding them directly to the layer definition  
-
-class LayerFieldDefnCollection: public node::ObjectWrap {
+class FieldDefnCollection: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 
@@ -41,11 +36,11 @@ public:
 	// - implement in the future -
 	//static Handle<Value> alter(const Arguments &args);
 
-	static Handle<Value> layerGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> featureDefnGetter(Local<String> property, const AccessorInfo &info);
 
-	LayerFieldDefnCollection();
+	FieldDefnCollection();
 private:
-	~LayerFieldDefnCollection();
+	~FieldDefnCollection();
 };
 
 #endif

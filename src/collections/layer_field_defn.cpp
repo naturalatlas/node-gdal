@@ -21,8 +21,8 @@ void LayerFieldDefnCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
 
 	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
 
@@ -210,6 +210,59 @@ Handle<Value> LayerFieldDefnCollection::add(const Arguments& args)
 		return NODE_THROW_OGRERR(err);
 	}
 
+	return Undefined();
+}
+
+Handle<Value> LayerFieldDefnCollection::reorder(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	if (!layer->get()) {
+		return NODE_THROW("Layer object already destroyed");
+	}
+	
+	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
+	if (!def) {
+		return NODE_THROW("Layer has no layer definition set");
+	}
+
+	Handle<Array> field_map = Array::New(0);
+	NODE_ARG_ARRAY(0, "field map", field_map);
+
+	int n = def->GetFieldCount();
+	OGRErr err = 0;
+
+	if ((int)field_map->Length() != n) {
+		return NODE_THROW("Array length must match field count");
+	}
+	
+	int *field_map_array = new int[n];
+
+	for (int i = 0; i < n; i++) {
+		Handle<Value> val = field_map->Get(i);
+		if (!val->IsNumber()) {
+			delete [] field_map_array;
+			return NODE_THROW("Array must only contain integers"); 
+		}
+		
+		int key = val->IntegerValue();
+		if (key < 0 || key >= n) {
+			delete [] field_map_array;
+			return NODE_THROW("Values must be between 0 and field count - 1");
+		}
+		
+		field_map_array[i] = key;
+	}
+	
+	err = layer->get()->ReorderFields(field_map_array);
+
+	delete [] field_map_array;
+
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
 	return Undefined();
 }
 

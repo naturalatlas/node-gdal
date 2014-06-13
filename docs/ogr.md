@@ -152,6 +152,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 -`get(string field_name) : FieldDefn #throws`
 -`getNames() : string[]`
 -`indexOf(string field_name) : integer`
+-`reorder(integer[] map) : void #throws`
 
 ## Driver
 
@@ -428,12 +429,6 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 
 - `toString() : string`
 - `getName() : string`
-- `getFieldCount() : integer`
-- `getFieldDefn(integer index) : FieldDefn #throws`
-- `addFieldDefn(FieldDefn defn) : void`
-- `getFieldIndex(string field_name) : integer`
-- `deleteFieldDefn(integer index) : void #throws`
-- `reorderFieldDefns(integer[] field_map) : void #throws`
 - `getGeomType() : integer`
 - `setGeomType(wkbGeometryType type) : void`
 - `clone() : FeatureDefn`
@@ -441,6 +436,10 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 - `setGeometryIgnored(boolean ignore) : void`
 - `isStyleIgnored() : boolean`
 - `setStyleIgnored(boolean ignore) : void`
+
+#### Properties
+
+- `fields : FieldDefnCollection`
 
 ## CoordinateTransformation
 

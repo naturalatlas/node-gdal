@@ -26,6 +26,7 @@
 #include "collections/feature.hpp"
 #include "collections/field.hpp"
 #include "collections/layer_field_defn.hpp"
+#include "collections/field_defn.hpp"
 
 // std
 #include <string>
@@ -70,6 +71,7 @@ namespace node_gdal {
 			FeatureCollection::Initialize(target);
 			FieldCollection::Initialize(target);
 			LayerFieldDefnCollection::Initialize(target);
+			FieldDefnCollection::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
