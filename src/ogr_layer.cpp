@@ -7,6 +7,7 @@
 #include "ogr_spatial_reference.hpp"
 #include "ogr_datasource.hpp"
 #include "collections/feature.hpp"
+#include "collections/layer_field_defn.hpp"
 
 #include <stdlib.h>
 #include <sstream>
@@ -25,18 +26,18 @@ void Layer::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Layer"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "syncToDisk", syncToDisk);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFIDColumn", getFIDColumn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryColumn", getGeometryColumn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "createField", createField);
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "features", featuresGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
@@ -96,6 +97,9 @@ Handle<Value> Layer::New(const Arguments& args)
 
 		Handle<Value> features = FeatureCollection::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("features_"), features); 
+
+		Handle<Value> fields = LayerFieldDefnCollection::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
 
 		return args.This();
 	} else {
@@ -166,8 +170,8 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getName, SafeString, GetName);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getFIDColumn, SafeString, GetFIDColumn);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeometryColumn, SafeString, GetGeometryColumn);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Layer, createField, CreateField, FieldDefn, "feature");
 
+/*
 Handle<Value> Layer::getLayerDefn(const Arguments& args)
 {
 	HandleScope scope;
@@ -179,7 +183,7 @@ Handle<Value> Layer::getLayerDefn(const Arguments& args)
 	}
 
 	return scope.Close(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
-}
+}*/
 
 Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
 {
@@ -201,4 +205,10 @@ Handle<Value> Layer::featuresGetter(Local<String> property, const AccessorInfo &
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("features_")));
+}
+
+Handle<Value> Layer::fieldsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
 }

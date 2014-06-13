@@ -96,6 +96,25 @@ public:
 
 // ----- argument conversion -------
 
+//determine field index based on string/numeric js argument
+//f -> OGRFeature* or OGRFeatureDefn*
+
+#define ARG_FIELD_ID(num, f, var) {                                    \
+  if (args[num]->IsString()) {                                         \
+    var = f->GetFieldIndex(TOSTR(args[num]));                          \
+    if (field_index == -1) {                                           \
+      return NODE_THROW("Specified field name does not exist");        \
+    }                                                                  \
+  } else if (args[num]->IsInt32()) {                                   \
+    var = args[num]->Int32Value();                                     \
+    if (var < 0 || var >= f->GetFieldCount()) {                        \
+      return NODE_THROW("Invalid field index");                        \
+    }                                                                  \
+  } else {                                                             \
+    return NODE_THROW("Field index must be integer or string");        \
+  }                                                                    \
+}
+
 #define NODE_ARG_INT(num, name, var)                                                                           \
   if (args.Length() < num + 1) {                                                                               \
     return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));      \

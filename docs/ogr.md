@@ -108,20 +108,19 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Methods 
 
 - `toString() : string`
-- `getLayerDefn() : FeatureDefn`
 - `getGeomType() : integer`
 - `getName() : string`
 - `testCapability(string capability_name) : boolean`
 - `syncToDisk() #throws`
 - `getFIDColumn() : string`
 - `getGeometryColumn() : string`
-- `createField(FieldDefn field, bool approx = true) : void #throws`
 
 #### Properties
 
 - `ds : Datasource`
 - `srs : SpatialReference //get`
 - `features : FeatureCollection`
+- `fields : FieldDefnCollection`
 
 ## FeatureCollection
 
@@ -140,6 +139,19 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Properties
 
 - `layer : Layer`
+
+## FieldDefnCollection
+
+#### Methods
+
+-`count() : integer`
+-`add(FieldDefn def, bool approx = true) : void #throws`
+-`remove(integer i) : void #throws`
+-`remove(string field_name) : void #throws`
+-`get(integer i) : FieldDefn #throws`
+-`get(string field_name) : FieldDefn #throws`
+-`getNames() : string[]`
+-`indexOf(string field_name) : integer`
 
 ## Driver
 
