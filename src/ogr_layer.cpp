@@ -25,7 +25,6 @@ void Layer::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Layer"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "resetReading", resetReading);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
@@ -161,8 +160,6 @@ Handle<Value> Layer::toString(const Arguments& args)
 	return scope.Close(SafeString::New(ss.str().c_str()));
 }
 
-
-NODE_WRAPPED_METHOD(Layer, resetReading, ResetReading);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeomType, Integer, GetGeomType);
 NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getName, SafeString, GetName);

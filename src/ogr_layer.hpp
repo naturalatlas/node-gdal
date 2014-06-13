@@ -25,7 +25,6 @@ namespace node_ogr {
 		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent);
 		static Handle<Value> New(OGRLayer *raw, OGRDataSource *parent, bool result_set);
 		static Handle<Value> toString(const Arguments &args);
-		static Handle<Value> resetReading(const Arguments &args);
 		static Handle<Value> getLayerDefn(const Arguments &args);
 		static Handle<Value> getGeomType(const Arguments &args);
 		static Handle<Value> getName(const Arguments &args);

@@ -108,7 +108,6 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Methods 
 
 - `toString() : string`
-- `resetReading() : void`
 - `getLayerDefn() : FeatureDefn`
 - `getGeomType() : integer`
 - `getName() : string`
