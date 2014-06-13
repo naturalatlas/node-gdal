@@ -345,29 +345,28 @@ Note: all methods throw errors if the feature has already been explicitly destro
 - `setGeometry(Geometry geom) : void #throws`
 - `clone() : Feature`
 - `equal(Feature f) : boolean`
-- `getFieldCount() : integer`
 - `getFieldDefn(integer index) : FieldDefn #throws`
-- `getFieldIndex(string field_name) : integer`
-- `isFieldSet(integer index) : boolean #throws`
-- `unsetField(integer index) : void #throws`
-- `getFieldAsInteger(integer index) : integer #throws`
-- `getFieldAsDouble(integer index) : Number #throws`
-- `getFieldAsString(integer index) : string #throws`
-- `getFieldAsIntegerList(integer index) : integer[] #throws`
-- `getFieldAsDoubleList(integer index) : Number[] #throws`
-- `getFieldAsStringList(integer index) : string[] #throws`
-- `getFieldAsBinary(integer index) : Buffer #throws`
-- `getFieldAsDateTime(integer index) : object #throws`
-- `getField(integer index) : object #throws`
-- `getField(string field_name) : object #throws`
-- `setField(integer index, object value) : void #throws`
-- `setField(string field_name, object value) : void #throws`
-- `getFields() : object`
-- `setFields(object values) : void #throws`
 - `getFID() : integer`
 - `setFID(integer fid) : void`
 - `setFrom(Feature f, boolean forgiving = true) : void #throws`
 - `setFrom(Feature f, integer[] index_map, boolean forgiving = true) : void #throws`
+
+#### Properties
+
+- `fields : FieldCollection`
+
+## FieldCollection
+
+#### Methods 
+
+- `count() : integer`
+- `get(integer i) : value`
+- `set(integer i, value) : integer`
+- `set(Array values) : integer`
+- `set(object values) : integer`
+- `indexOf(string field_name) : integer`
+- `toJSON() : object`
+- `toArray() : Array`
 
 ## FieldDefn
 

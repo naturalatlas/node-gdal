@@ -4,9 +4,7 @@
 #include "ogr_feature_defn.hpp"
 #include "ogr_geometry.hpp"
 #include "ogr_field_defn.hpp"
-
-// node
-#include <node_buffer.h>
+#include "collections/field.hpp"
 
 using namespace node_ogr;
 
@@ -28,25 +26,13 @@ void Feature::Initialize(Handle<Object> target)
 	// NODE_SET_PROTOTYPE_METHOD(constructor, "stealGeometry", stealGeometry);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "equal", equal);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldCount", getFieldCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldIndex", getFieldIndex);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "isFieldSet", isFieldSet);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "unsetField", unsetField);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsInteger", getFieldAsInteger);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsDouble", getFieldAsDouble);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsString", getFieldAsString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsIntegerList", getFieldAsIntegerList);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsDoubleList", getFieldAsDoubleList);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsStringList", getFieldAsStringList);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsBinary", getFieldAsBinary);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldAsDateTime", getFieldAsDateTime);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getField", getField);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setField", setField);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFID", getFID);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setFID", setFID);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setFrom", setFrom);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
+
+	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Feature"), constructor->GetFunction());
 }
@@ -98,6 +84,9 @@ Handle<Value> Feature::New(const Arguments& args)
 		OGRFeature *ogr_f = new OGRFeature(def->get());
 		f = new Feature(ogr_f);
 	}
+
+	Handle<Value> fields = FieldCollection::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
 
 	f->Wrap(args.This());
 	return args.This();
@@ -178,10 +167,8 @@ Handle<Value> Feature::getFieldDefn(const Arguments& args)
 }
 //NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
 NODE_WRAPPED_METHOD_WITH_RESULT(Feature, clone, Feature, Clone);
-NODE_WRAPPED_METHOD_WITH_RESULT(Feature, getFieldCount, Integer, GetFieldCount);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equal, Boolean, Equal, Feature, "feature");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Feature, getFieldIndex, Integer, GetFieldIndex, "field name");
 NODE_WRAPPED_METHOD_WITH_RESULT(Feature, getFID, Integer, GetFID);
 NODE_WRAPPED_METHOD_WITH_1_INTEGER_PARAM(Feature, setFID, SetFID, "feature identifier");
 
@@ -195,50 +182,6 @@ Handle<Value> Feature::destroy(const Arguments& args)
 	feature->dispose();
 	return Undefined();
 }
-
-Handle<Value> Feature::setField(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-
-	if (args.Length() < 2) {
-		return NODE_THROW("A value must be specified");
-	}
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	//allows field to be referred to by name like python binding
-	if (args[0]->IsString()) {
-		field_index = feature->this_->GetFieldIndex("name");
-		if (field_index == -1) {
-			return NODE_THROW("Specified field name does not exist");
-		}
-	} else if (args[0]->IsInt32()) {
-		field_index = args[0]->Int32Value();
-		if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-			return NODE_THROW("Invalid field index");
-		}
-	} else {
-		return NODE_THROW("Field index must be integer or string");
-	}
-
-	if (args[1]->IsInt32()) {
-		feature->this_->SetField(field_index, args[1]->Int32Value());
-	} else if (args[1]->IsNumber()) {
-		feature->this_->SetField(field_index, args[1]->NumberValue());
-	} else if (args[1]->IsString()) {
-		feature->this_->SetField(field_index, TOSTR(args[1]));
-	} else {
-		return NODE_THROW("Invalid value specified to setField");
-	}
-
-	return Undefined();
-}
-
-
 
 Handle<Value> Feature::setGeometryDirectly(const Arguments& args)
 {
@@ -319,327 +262,8 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> Feature::isFieldSet(const Arguments& args)
+Handle<Value> Feature::fieldsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	return scope.Close(Boolean::New(feature->this_->IsFieldSet(field_index)));
-}
-
-Handle<Value> Feature::getFieldAsInteger(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	return scope.Close(Integer::New(feature->this_->GetFieldAsInteger(field_index)));
-}
-
-Handle<Value> Feature::getFieldAsDouble(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	return scope.Close(Number::New(feature->this_->GetFieldAsDouble(field_index)));
-}
-
-Handle<Value> Feature::getFieldAsString(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	return scope.Close(SafeString::New(feature->this_->GetFieldAsString(field_index)));
-}
-
-Handle<Value> Feature::getFieldAsIntegerList(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	int count_of_values = 0;
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	const int *values = feature->this_->GetFieldAsIntegerList(field_index, &count_of_values);
-
-	if (count_of_values < 0) {
-		return NODE_THROW("Invalid list length");
-	}
-
-	Local<Array> return_array = Array::New(count_of_values);
-
-	if (count_of_values > 0) {
-		for (int index = 0; index < count_of_values; index++) {
-			return_array->Set(index, Integer::New(values[index]));
-		}
-	}
-
-	return scope.Close(return_array);
-}
-
-
-Handle<Value> Feature::getFieldAsDoubleList(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	int count_of_values = 0;
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	const double *values = feature->this_->GetFieldAsDoubleList(field_index, &count_of_values);
-
-	if (count_of_values < 0) {
-		return NODE_THROW("Invalid list length");
-	}
-
-	Local<Array> return_array = Array::New(count_of_values);
-
-	if (count_of_values > 0) {
-		for (int index = 0; index < count_of_values; index++) {
-			return_array->Set(index, Number::New(values[index]));
-		}
-	}
-
-	return scope.Close(return_array);
-}
-
-
-Handle<Value> Feature::getFieldAsStringList(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	char **values = feature->this_->GetFieldAsStringList(field_index);
-
-	int count_of_values = CSLCount(values);
-
-	if (count_of_values < 0) {
-		return NODE_THROW("Invalid list length");
-	}
-
-	Local<Array> return_array = Array::New(count_of_values);
-
-	if (count_of_values > 0) {
-		for (int index = 0; index < count_of_values; index++) {
-			return_array->Set(index, SafeString::New(values[index]));
-		}
-	}
-
-	return scope.Close(return_array);
-}
-
-
-Handle<Value> Feature::getFieldAsBinary(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	int count_of_bytes = 0;
-
-	GByte *values = feature->this_->GetFieldAsBinary(field_index, &count_of_bytes);
-
-	if (count_of_bytes < 0) {
-		return NODE_THROW("Invalid buffer length");
-	}
-
-	if (count_of_bytes > 0) {
-		char *data = new char[count_of_bytes];
-		memcpy(data, values, count_of_bytes);
-		Local<Buffer> return_buffer = Buffer::New(data, count_of_bytes);
-		return scope.Close(return_buffer->handle_);
-	}
-
-	return Undefined();
-}
-
-
-Handle<Value> Feature::getFieldAsDateTime(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	int year, month, day, hour, minute, second, timezone;
-
-	year = month = day = hour = minute = second = timezone = 0;
-
-	int result = feature->this_->GetFieldAsDateTime(field_index, &year, &month,
-				 &day, &hour, &minute, &second, &timezone);
-
-	if (result == TRUE) {
-		Local<Object> hash = Object::New();
-
-		if (year) {
-			hash->Set(String::New("year"), Integer::New(year));
-		}
-		if (month) {
-			hash->Set(String::New("month"), Integer::New(month));
-		}
-		if (day) {
-			hash->Set(String::New("day"), Integer::New(day));
-		}
-		if (hour) {
-			hash->Set(String::New("hour"), Integer::New(hour));
-		}
-		if (minute) {
-			hash->Set(String::New("minute"), Integer::New(minute));
-		}
-		if (second) {
-			hash->Set(String::New("second"), Integer::New(second));
-		}
-		if (timezone) {
-			hash->Set(String::New("timezone"), Integer::New(timezone));
-		}
-
-		return scope.Close(hash);
-	} else {
-		return NODE_THROW("Could not get field as DateTime object");
-	}
-}
-
-Handle<Value> Feature::getField(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	OGRFieldDefn *field_def = feature->this_->GetFieldDefnRef(field_index);
-	switch(field_def->GetType()) {
-	case OFTInteger:
-		return feature->getFieldAsInteger(args);
-	case OFTIntegerList:
-		return feature->getFieldAsIntegerList(args);
-	case OFTReal:
-		return feature->getFieldAsDouble(args);
-	case OFTRealList:
-		return feature->getFieldAsDoubleList(args);
-	case OFTString:
-		return feature->getFieldAsString(args);
-	case OFTStringList:
-		return feature->getFieldAsStringList(args);
-	case OFTBinary:
-		return feature->getFieldAsBinary(args);
-	case OFTDate:
-		return feature->getFieldAsDateTime(args);
-	case OFTTime:
-		return feature->getFieldAsDateTime(args);
-	case OFTDateTime:
-		return feature->getFieldAsDateTime(args);
-	default:
-		return NODE_THROW("Unsupported field type in getFieldValue method");
-	}
-}
-
-Handle<Value> Feature::unsetField(const Arguments& args)
-{
-	HandleScope scope;
-	int field_index;
-	NODE_ARG_INT(0, "field index", field_index);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
-	}
-
-	feature->this_->UnsetField(field_index);
-	return Undefined();
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
 }

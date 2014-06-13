@@ -38,6 +38,7 @@
 				"src/collections/rasterband.cpp",
 				"src/collections/layer.cpp",
 				"src/collections/feature.cpp",
+				"src/collections/field.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

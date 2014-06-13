@@ -19,6 +19,8 @@ void LayerCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "copy", copy);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
+
+	target->Set(String::NewSymbol("LayerCollection"), constructor->GetFunction());
 }
 
 LayerCollection::LayerCollection()

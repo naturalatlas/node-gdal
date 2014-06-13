@@ -21,6 +21,8 @@ void FeatureCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
+
+	target->Set(String::NewSymbol("FeatureCollection"), constructor->GetFunction());
 }
 
 FeatureCollection::FeatureCollection()

@@ -17,6 +17,8 @@ void RasterBandCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
+
+	target->Set(String::NewSymbol("RasterBandCollection"), constructor->GetFunction());
 }
 
 RasterBandCollection::RasterBandCollection()
