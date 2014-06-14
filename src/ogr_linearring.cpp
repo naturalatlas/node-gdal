@@ -1,6 +1,7 @@
 
 #include "ogr_common.hpp"
 #include "ogr_geometry.hpp"
+#include "collections/linestring_points.hpp"
 
 #include <stdlib.h>
 
@@ -68,6 +69,9 @@ Handle<Value> LinearRing::New(const Arguments& args)
 		}
 		f = new LinearRing(new OGRLinearRing());
 	}
+
+	Handle<Value> points = LineStringPoints::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("points_"), points); 
 
 	f->Wrap(args.This());
 	return args.This();

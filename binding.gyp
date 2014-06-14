@@ -40,7 +40,10 @@
 				"src/collections/layer_features.cpp",
 				"src/collections/layer_fields.cpp",
 				"src/collections/feature_fields.cpp",
-				"src/collections/feature_defn_fields.cpp"
+				"src/collections/feature_defn_fields.cpp",
+				"src/collections/geometry_collection_children.cpp",
+				"src/collections/polygon_rings.cpp",
+				"src/collections/linestring_points.cpp",
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

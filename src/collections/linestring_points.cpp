@@ -1,0 +1,235 @@
+#include "../ogr_common.hpp"
+#include "../ogr_geometry.hpp"
+#include "../ogr_point.hpp"
+#include "linestring_points.hpp"
+
+Persistent<FunctionTemplate> LineStringPoints::constructor;
+
+using namespace node_ogr;
+
+void LineStringPoints::Initialize(Handle<Object> target)
+{
+	HandleScope scope;
+
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LineStringPoints::New));
+	constructor->InstanceTemplate()->SetInternalFieldCount(1);
+	constructor->SetClassName(String::NewSymbol("LineStringPoints"));
+
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "reverse", reverse);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "resize", resize);
+
+	target->Set(String::NewSymbol("LineStringPoints"), constructor->GetFunction());
+}
+
+LineStringPoints::LineStringPoints()
+	: ObjectWrap()
+{}
+
+LineStringPoints::~LineStringPoints() 
+{}
+
+Handle<Value> LineStringPoints::New(const Arguments& args)
+{
+	HandleScope scope;
+
+	if (!args.IsConstructCall()) {
+		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+	}
+	if (args[0]->IsExternal()) {
+		Local<External> ext = Local<External>::Cast(args[0]);
+		void* ptr = ext->Value();
+		LineStringPoints *geom =  static_cast<LineStringPoints *>(ptr);
+		geom->Wrap(args.This());
+		return args.This();
+	} else {
+		return NODE_THROW("Cannot create LineStringPoints directly");
+	}
+}
+
+Handle<Value> LineStringPoints::New(Handle<Value> geom)
+{
+	HandleScope scope;
+
+	LineStringPoints *wrapped = new LineStringPoints();
+
+	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
+	v8::Handle<v8::Object> obj = LineStringPoints::constructor->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(String::NewSymbol("parent_"), geom);
+
+	return scope.Close(obj);
+}
+
+Handle<Value> LineStringPoints::toString(const Arguments& args)
+{
+	HandleScope scope;
+	return scope.Close(String::New("LineStringPoints"));
+}
+
+Handle<Value> LineStringPoints::count(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	return scope.Close(Integer::New(geom->get()->getNumPoints()));
+}
+
+Handle<Value> LineStringPoints::reverse(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	geom->get()->reversePoints();
+
+	return Undefined();
+}
+
+Handle<Value> LineStringPoints::resize(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	int count;
+	NODE_ARG_INT(0, "point count", count)
+	geom->get()->setNumPoints(count);
+
+	return Undefined();
+}
+
+Handle<Value> LineStringPoints::get(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	OGRPoint *pt = new OGRPoint();
+	int i;
+
+	NODE_ARG_INT(0, "index", i);
+	if(i < 0 || i >= geom->get()->getNumPoints()) {
+		return NODE_THROW("Point index out of range");
+	}
+
+	geom->get()->getPoint(i, pt);
+
+	return scope.Close(Point::New(pt));
+}
+
+Handle<Value> LineStringPoints::set(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	int i;
+	NODE_ARG_INT(0, "index", i);
+	if(i < 0 || i >= geom->get()->getNumPoints()) {
+		return NODE_THROW("Point index out of range");
+	}
+
+	int n = args.Length() - 1;
+
+	if(n == 0) {
+		return NODE_THROW("Point must be given");
+	} else if(n == 1) {
+		if(!args[1]->IsObject()) {
+			return NODE_THROW("Point or object expected for second argument");
+		}
+		Handle<Object> obj = args[1]->ToObject();
+		if(Point::constructor->HasInstance(obj)){
+			//set from Point object
+			Point* pt = ObjectWrap::Unwrap<Point>(obj);
+			geom->get()->setPoint(i, pt->get());
+		} else {
+			//set from object {x: 0, y: 5}
+			double x, y, z = 0;
+			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
+			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
+			NODE_DOUBLE_FROM_OBJ_OPT(obj, "z", z);
+
+			geom->get()->setPoint(i, x, y, z);
+		}
+	} else {
+		//set x, y, z from numeric arguments
+		if(!args[1]->IsNumber()){
+			return NODE_THROW("Number expected for second argument");
+		}
+		if(!args[2]->IsNumber()){
+			return NODE_THROW("Number expected for third argument");
+		}
+		if(n == 2){
+			geom->get()->setPoint(i, args[1]->NumberValue(), args[2]->NumberValue());
+		} else {
+			if(!args[3]->IsNumber()){
+				return NODE_THROW("Number expected for fourth argument");
+			}
+
+			geom->get()->setPoint(i, args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
+		}
+	}
+
+	return Undefined();
+}
+
+Handle<Value> LineStringPoints::add(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
+
+	int n = args.Length();
+
+	if(n == 0) {
+		return NODE_THROW("Point must be given");
+	} else if(n == 1) {
+		if(!args[0]->IsObject()) {
+			return NODE_THROW("Point or object expected for second argument");
+		}
+		Handle<Object> obj = args[0]->ToObject();
+		if(Point::constructor->HasInstance(obj)){
+			//set from Point object
+			Point* pt = ObjectWrap::Unwrap<Point>(obj);
+			geom->get()->addPoint(pt->get());
+		} else {
+			//set from object {x: 0, y: 5}
+			double x, y, z = 0;
+			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
+			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
+			NODE_DOUBLE_FROM_OBJ_OPT(obj, "z", z);
+
+			geom->get()->addPoint(x, y, z);
+		}
+	} else {
+		//set x, y, z from numeric arguments
+		if(!args[0]->IsNumber()){
+			return NODE_THROW("Number expected for first argument");
+		}
+		if(!args[1]->IsNumber()){
+			return NODE_THROW("Number expected for second argument");
+		}
+		if(n == 2){
+			geom->get()->addPoint(args[0]->NumberValue(), args[1]->NumberValue());
+		} else {
+			if(!args[2]->IsNumber()){
+				return NODE_THROW("Number expected for third argument");
+			}
+
+			geom->get()->addPoint(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue());
+		}
+	}
+	
+	return Undefined();
+}

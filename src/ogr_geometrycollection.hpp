@@ -29,9 +29,8 @@ namespace node_ogr {
 		static Handle<Value> toString(const Arguments &args);
 		static Handle<Value> getArea(const Arguments &args);
 		static Handle<Value> getLength(const Arguments &args);
-		static Handle<Value> addGeometry(const Arguments &args);
-		static Handle<Value> getGeometry(const Arguments &args);
-		static Handle<Value> getNumGeometries(const Arguments &args);
+
+		static Handle<Value> childrenGetter(Local<String> property, const AccessorInfo &info);
 
 		GeometryCollection();
 		GeometryCollection(OGRGeometryCollection *geom);

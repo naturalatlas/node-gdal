@@ -1,6 +1,7 @@
 
 #include "ogr_common.hpp"
 #include "ogr_geometry.hpp"
+#include "collections/linestring_points.hpp"
 
 #include <stdlib.h>
 
@@ -24,6 +25,7 @@ void LineString::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getLength", getLength);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "value", value);
 
+	ATTR(constructor, "points", pointsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("LineString"), constructor->GetFunction());
 }
@@ -73,6 +75,9 @@ Handle<Value> LineString::New(const Arguments& args)
 		}
 		f = new LineString(new OGRLineString());
 	}
+
+	Handle<Value> points = LineStringPoints::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("points_"), points); 
 
 	f->Wrap(args.This());
 	return args.This();
@@ -181,4 +186,10 @@ Handle<Value> LineString::addPoint(const Arguments& args)
 	}
 
 	return Undefined();
+}
+
+Handle<Value> LineString::pointsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("points_")));
 }

@@ -1,6 +1,7 @@
 
 #include "ogr_common.hpp"
 #include "ogr_geometry.hpp"
+#include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
 
@@ -68,6 +69,9 @@ Handle<Value> MultiPoint::New(const Arguments& args)
 		}
 		f = new MultiPoint(new OGRMultiPoint());
 	}
+
+	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("children_"), children); 
 
 	f->Wrap(args.This());
 	return args.This();

@@ -47,7 +47,7 @@ public:
 #define NODE_DOUBLE_FROM_OBJ(obj, key, var)                                                               \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if (!obj->Has(sym)){                                                                                    \
+  if (!obj->HasOwnProperty(sym)){                                                                                    \
      return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -60,7 +60,7 @@ public:
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if (!obj->Has(sym)){                                                                                    \
+  if (!obj->HasOwnProperty(sym)){                                                                                    \
      return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -73,7 +73,7 @@ public:
 #define NODE_DOUBLE_FROM_OBJ_OPT(obj, key, var)                                                           \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if (obj->Has(sym)){                                                                                     \
+  if (obj->HasOwnProperty(sym)){                                                                                     \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsNumber()){                                                                                \
       return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a number")));      \
@@ -85,7 +85,7 @@ public:
 #define NODE_STR_FROM_OBJ_OPT(obj, key, var)                                                              \
 {                                                                                                         \
   Local<String> sym = String::NewSymbol(key);                                                             \
-  if (obj->Has(sym)){                                                                                     \
+  if (obj->HasOwnProperty(sym)){                                                                                     \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsString()){                                                                                \
       return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a string")));      \
@@ -181,7 +181,7 @@ public:
   }                                                                                                                                      \
   Local<Object> var##_obj = args[num]->ToObject();                                                                                       \
   if (var##_obj->IsNull() || var##_obj->IsUndefined() || !type::constructor->HasInstance(var##_obj)) {                                   \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
+    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#type)).c_str()))); \
   }                                                                                                                                      \
   var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
   if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));
@@ -252,7 +252,7 @@ public:
   if (args.Length() > num) {                                                                                                               \
     Local<Object> var##_obj = args[num]->ToObject();                                                                                       \
     if (var##_obj->IsNull() || var##_obj->IsUndefined() || !type::constructor->HasInstance(var##_obj)) {                                   \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#name)).c_str()))); \
+      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#type)).c_str()))); \
     }                                                                                                                                      \
     var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
     if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));                            \

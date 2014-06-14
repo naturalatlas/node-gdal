@@ -1,6 +1,7 @@
 
 #include "ogr_common.hpp"
 #include "ogr_geometry.hpp"
+#include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
 
@@ -20,9 +21,8 @@ void GeometryCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getArea", getArea);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getLength", getLength);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "addGeometry", addGeometry);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getNumGeometries", getNumGeometries);
+
+	ATTR(constructor, "children", childrenGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("GeometryCollection"), constructor->GetFunction());
 }
@@ -73,6 +73,9 @@ Handle<Value> GeometryCollection::New(const Arguments& args)
 		f = new GeometryCollection(new OGRGeometryCollection());
 	}
 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("children_"), children); 
+
 	f->Wrap(args.This());
 	return args.This();
 }
@@ -121,16 +124,9 @@ Handle<Value> GeometryCollection::toString(const Arguments& args)
 
 NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getArea, Number, get_Area);
 NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getLength, Number, get_Length);
-NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getNumGeometries, Integer, getNumGeometries);
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(GeometryCollection, addGeometry, addGeometry, Geometry, "geometry to add");
 
-Handle<Value> GeometryCollection::getGeometry(const Arguments& args)
+Handle<Value> GeometryCollection::childrenGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
-	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(args.This());
-
-	int i;
-	NODE_ARG_INT(0, "index", i);
-
-	return scope.Close(Geometry::New(geom->this_->getGeometryRef(i), false));
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("children_")));
 }

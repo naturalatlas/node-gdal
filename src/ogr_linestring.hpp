@@ -33,6 +33,8 @@ namespace node_ogr {
 		static Handle<Value> getNumPoints(const Arguments &args);
 		static Handle<Value> value(const Arguments &args);
 
+		static Handle<Value> pointsGetter(Local<String> property, const AccessorInfo &info);
+
 		LineString();
 		LineString(OGRLineString *geom);
 		inline OGRLineString *get() {

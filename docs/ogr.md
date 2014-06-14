@@ -240,8 +240,6 @@ Inherits from Geometry
 - `y : Number`
 - `z : Number`
 
-
-
 ## LineString
 
 Inherits from Geometry
@@ -252,13 +250,28 @@ Inherits from Geometry
 
 #### Methods
 
-- `getPoint(integer i) : Geometry`
-- `addPoint(Point geom) : void`
-- `getNumPoints() : integer`
 - `getLength() : Number`
 - `value(Number distance) : Point`
 
+#### Properties
 
+- `points : LineStringPoints`
+
+## LineStringPoints
+
+#### Methods
+
+- `count() : integer`
+- `add(Point pt) : void`
+- `add(object pt) : void`
+- `add(double x, y, z = 0) : void`
+- `set(integer i, Point pt) : void #throws`
+- `set(integer i, object pt) : void #throws`
+- `set(integer i, double x, y, z = 0) : void #throws`
+- `get(integer i) : Point #throws`
+- `resize(integer pt_count) : void`
+- `reverse() : void`
+- `forEach(function iterator) : void`
 
 ## LinearRing
 
@@ -272,6 +285,9 @@ Inherits from LineString
 
 - `getArea() : Number`
 
+#### Properties
+
+- `points : LineStringPoints`
 
 ## Polygon
 
@@ -284,12 +300,19 @@ Inherits from Geometry
 #### Methods
 
 - `getArea() : Number`
-- `getNumInteriorRings() : integer`
-- `addRing(LinearRing ring) : void`
-- `getExteriorRing() : LinearRing`
-- `getInteriorRing(integer index) : LinearRing`
 
+#### Properties
 
+- `rings : PolygonRings`
+
+## PolygonRings
+
+#### Methods
+
+- `get(integer i) : LinearRing`
+- `add(LinearRing ring) : LinearRing`
+- `count() : integer`
+- `forEach(function iterator) : void`
 
 ## GeometryCollection
 
@@ -301,13 +324,21 @@ Inherits from Geometry
 
 #### Methods
 
-- `addGeometry(Geometry geom) : void #throws`
-- `getGeometry(integer i) : Geometry`
-- `getNumGeometries() : integer`
 - `getArea() : Number`
 - `getLength() : Number`
 
+#### Properties
 
+- `children : GeometryCollectionChildren`
+
+## GeometryCollectionChildren
+
+#### Methods
+
+- `add(Geometry geom) : void #throws`
+- `get(integer i) : Geometry`
+- `count() : integer`
+- `forEach(function iterator) : void`
 
 ## MultiPoint
 
@@ -317,10 +348,9 @@ Inherits from GeometryCollection
 
 - `MultiPoint()`
 
-#### Methods
+#### Properties
 
-- `getGeometry(integer i) : Point`
-
+- `children : GeometryCollectionChildren`
 
 ## MultiLineString
 
@@ -333,9 +363,10 @@ Inherits from GeometryCollection
 #### Methods
 
 - `polygonize() : void #throws`
-- `getGeometry(integer i) : LineString`
 
+#### Properties
 
+- `children : GeometryCollectionChildren`
 
 ## MultiPolygon
 
@@ -348,8 +379,10 @@ Inherits from GeometryCollection
 #### Methods
 
 - `unionCascaded(Geometry geom) : Geometry #throws`
-- `getGeometry(integer i) : Polygon`
 
+#### Properties
+
+- `children : GeometryCollectionChildren`
 
 ## Feature
 

@@ -27,6 +27,9 @@
 #include "collections/feature_fields.hpp"
 #include "collections/layer_fields.hpp"
 #include "collections/feature_defn_fields.hpp"
+#include "collections/geometry_collection_children.hpp"
+#include "collections/polygon_rings.hpp"
+#include "collections/linestring_points.hpp"
 
 // std
 #include <string>
@@ -72,6 +75,9 @@ namespace node_gdal {
 			FeatureFields::Initialize(target);
 			LayerFields::Initialize(target);
 			FeatureDefnFields::Initialize(target);
+			GeometryCollectionChildren::Initialize(target);
+			PolygonRings::Initialize(target);
+			LineStringPoints::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));

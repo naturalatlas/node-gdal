@@ -28,10 +28,8 @@ namespace node_ogr {
 		static Handle<Value> New(OGRPolygon *geom, bool owned);
 		static Handle<Value> toString(const Arguments &args);
 		static Handle<Value> getArea(const Arguments &args);
-		static Handle<Value> addRing(const Arguments &args);
-		static Handle<Value> getExteriorRing(const Arguments &args);
-		static Handle<Value> getInteriorRing(const Arguments &args);
-		static Handle<Value> getNumInteriorRings(const Arguments &args);
+
+		static Handle<Value> ringsGetter(Local<String> property, const AccessorInfo &info);
 
 		Polygon();
 		Polygon(OGRPolygon *geom);

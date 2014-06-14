@@ -1,6 +1,7 @@
 
 #include "ogr_common.hpp"
 #include "ogr_geometry.hpp"
+#include "collections/polygon_rings.hpp"
 
 #include <stdlib.h>
 
@@ -19,9 +20,8 @@ void Polygon::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getArea", getArea);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "addRing", addRing);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getExteriorRing", getExteriorRing);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getInteriorRing", getInteriorRing);
+
+	ATTR(constructor, "rings", ringsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Polygon"), constructor->GetFunction());
 }
@@ -72,6 +72,9 @@ Handle<Value> Polygon::New(const Arguments& args)
 		f = new Polygon(new OGRPolygon());
 	}
 
+	Handle<Value> rings = PolygonRings::New(args.This()); 
+	args.This()->SetHiddenValue(String::NewSymbol("rings_"), rings); 
+
 	f->Wrap(args.This());
 	return args.This();
 }
@@ -117,26 +120,9 @@ Handle<Value> Polygon::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getArea, Number, get_Area);
-NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getNumInteriorRings, Integer, getNumInteriorRings);
-NODE_WRAPPED_METHOD_WITH_1_WRAPPED_PARAM(Polygon, addRing, addRing, LinearRing, "geometry");
 
-Handle<Value> Polygon::getExteriorRing(const Arguments& args)
+Handle<Value> Polygon::ringsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
-
-	Polygon *geom = ObjectWrap::Unwrap<Polygon>(args.This());
-
-	return scope.Close(Geometry::New(geom->this_->getExteriorRing(), false));
-}
-
-Handle<Value> Polygon::getInteriorRing(const Arguments& args)
-{
-	HandleScope scope;
-
-	Polygon *geom = ObjectWrap::Unwrap<Polygon>(args.This());
-
-	int i;
-	NODE_ARG_INT(0, "index", i);
-
-	return scope.Close(Geometry::New(geom->this_->getInteriorRing(i), false));
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("rings_")));
 }
