@@ -1,19 +1,19 @@
 #include "../ogr_common.hpp"
 #include "../ogr_layer.hpp"
 #include "../ogr_feature.hpp"
-#include "feature.hpp"
+#include "layer_features.hpp"
 
-Persistent<FunctionTemplate> FeatureCollection::constructor;
+Persistent<FunctionTemplate> LayerFeatures::constructor;
 
 using namespace node_ogr;
 
-void FeatureCollection::Initialize(Handle<Object> target)
+void LayerFeatures::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FeatureCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LayerFeatures::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("FeatureCollection"));
+	constructor->SetClassName(String::NewSymbol("LayerFeatures"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
@@ -26,17 +26,17 @@ void FeatureCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("FeatureCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("LayerFeatures"), constructor->GetFunction());
 }
 
-FeatureCollection::FeatureCollection()
+LayerFeatures::LayerFeatures()
 	: ObjectWrap()
 {}
 
-FeatureCollection::~FeatureCollection() 
+LayerFeatures::~LayerFeatures() 
 {}
 
-Handle<Value> FeatureCollection::New(const Arguments& args)
+Handle<Value> LayerFeatures::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -46,34 +46,34 @@ Handle<Value> FeatureCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		FeatureCollection *f =  static_cast<FeatureCollection *>(ptr);
+		LayerFeatures *f =  static_cast<LayerFeatures *>(ptr);
 		f->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create FeatureCollection directly");
+		return NODE_THROW("Cannot create LayerFeatures directly");
 	}
 }
 
-Handle<Value> FeatureCollection::New(Handle<Value> layer_obj)
+Handle<Value> LayerFeatures::New(Handle<Value> layer_obj)
 {
 	HandleScope scope;
 
-	FeatureCollection *wrapped = new FeatureCollection();
+	LayerFeatures *wrapped = new LayerFeatures();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = FeatureCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = LayerFeatures::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> FeatureCollection::toString(const Arguments& args)
+Handle<Value> LayerFeatures::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("FeatureCollection"));
+	return scope.Close(String::New("LayerFeatures"));
 }
 
-Handle<Value> FeatureCollection::get(const Arguments& args)
+Handle<Value> LayerFeatures::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -90,7 +90,7 @@ Handle<Value> FeatureCollection::get(const Arguments& args)
 	return scope.Close(Feature::New(feature));
 }
 
-Handle<Value> FeatureCollection::first(const Arguments& args)
+Handle<Value> LayerFeatures::first(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -106,7 +106,7 @@ Handle<Value> FeatureCollection::first(const Arguments& args)
 	return scope.Close(Feature::New(feature));
 }
 
-Handle<Value> FeatureCollection::next(const Arguments& args)
+Handle<Value> LayerFeatures::next(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -121,7 +121,7 @@ Handle<Value> FeatureCollection::next(const Arguments& args)
 	return scope.Close(Feature::New(feature));
 }
 
-Handle<Value> FeatureCollection::add(const Arguments& args)
+Handle<Value> LayerFeatures::add(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -141,7 +141,7 @@ Handle<Value> FeatureCollection::add(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> FeatureCollection::count(const Arguments& args)
+Handle<Value> LayerFeatures::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -157,7 +157,7 @@ Handle<Value> FeatureCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(layer->get()->GetFeatureCount(force)));
 }
 
-Handle<Value> FeatureCollection::set(const Arguments& args)
+Handle<Value> LayerFeatures::set(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -193,7 +193,7 @@ Handle<Value> FeatureCollection::set(const Arguments& args)
 }
 
 
-Handle<Value> FeatureCollection::remove(const Arguments& args)
+Handle<Value> LayerFeatures::remove(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -213,7 +213,7 @@ Handle<Value> FeatureCollection::remove(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> FeatureCollection::layerGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> LayerFeatures::layerGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

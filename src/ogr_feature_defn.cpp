@@ -2,7 +2,7 @@
 #include "ogr_common.hpp"
 #include "ogr_feature_defn.hpp"
 #include "ogr_field_defn.hpp"
-#include "collections/field_defn.hpp"
+#include "collections/feature_defn_fields.hpp"
 
 using namespace node_ogr;
 
@@ -69,7 +69,7 @@ Handle<Value> FeatureDefn::New(const Arguments& args)
 		f->Wrap(args.This());
 	}
 
-	Handle<Value> fields = FieldDefnCollection::New(args.This()); 
+	Handle<Value> fields = FeatureDefnFields::New(args.This()); 
 	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
 
 	return args.This();

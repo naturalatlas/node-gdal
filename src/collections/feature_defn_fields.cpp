@@ -1,19 +1,19 @@
 #include "../ogr_common.hpp"
 #include "../ogr_field_defn.hpp"
 #include "../ogr_feature_defn.hpp"
-#include "field_defn.hpp"
+#include "feature_defn_fields.hpp"
 
-Persistent<FunctionTemplate> FieldDefnCollection::constructor;
+Persistent<FunctionTemplate> FeatureDefnFields::constructor;
 
 using namespace node_ogr;
 
-void FieldDefnCollection::Initialize(Handle<Object> target)
+void FeatureDefnFields::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FieldDefnCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FeatureDefnFields::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("FieldDefnCollection"));
+	constructor->SetClassName(String::NewSymbol("FeatureDefnFields"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
@@ -26,17 +26,17 @@ void FieldDefnCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("FieldDefnCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("FeatureDefnFields"), constructor->GetFunction());
 }
 
-FieldDefnCollection::FieldDefnCollection()
+FeatureDefnFields::FeatureDefnFields()
 	: ObjectWrap()
 {}
 
-FieldDefnCollection::~FieldDefnCollection() 
+FeatureDefnFields::~FeatureDefnFields() 
 {}
 
-Handle<Value> FieldDefnCollection::New(const Arguments& args)
+Handle<Value> FeatureDefnFields::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -46,34 +46,34 @@ Handle<Value> FieldDefnCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		FieldDefnCollection *feature_def =  static_cast<FieldDefnCollection *>(ptr);
+		FeatureDefnFields *feature_def =  static_cast<FeatureDefnFields *>(ptr);
 		feature_def->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create FieldDefnCollection directly");
+		return NODE_THROW("Cannot create FeatureDefnFields directly");
 	}
 }
 
-Handle<Value> FieldDefnCollection::New(Handle<Value> layer_obj)
+Handle<Value> FeatureDefnFields::New(Handle<Value> layer_obj)
 {
 	HandleScope scope;
 
-	FieldDefnCollection *wrapped = new FieldDefnCollection();
+	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = FieldDefnCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = FeatureDefnFields::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> FieldDefnCollection::toString(const Arguments& args)
+Handle<Value> FeatureDefnFields::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("FieldDefnCollection"));
+	return scope.Close(String::New("FeatureDefnFields"));
 }
 
-Handle<Value> FieldDefnCollection::count(const Arguments& args)
+Handle<Value> FeatureDefnFields::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -86,7 +86,7 @@ Handle<Value> FieldDefnCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(feature_def->get()->GetFieldCount()));
 }
 
-Handle<Value> FieldDefnCollection::indexOf(const Arguments& args)
+Handle<Value> FeatureDefnFields::indexOf(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -102,7 +102,7 @@ Handle<Value> FieldDefnCollection::indexOf(const Arguments& args)
 	return scope.Close(Integer::New(feature_def->get()->GetFieldIndex(name.c_str())));
 }
 
-Handle<Value> FieldDefnCollection::get(const Arguments& args)
+Handle<Value> FeatureDefnFields::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -122,7 +122,7 @@ Handle<Value> FieldDefnCollection::get(const Arguments& args)
 	return scope.Close(FieldDefn::New(feature_def->get()->GetFieldDefn(field_index)));
 }
 
-Handle<Value> FieldDefnCollection::getNames(const Arguments& args)
+Handle<Value> FeatureDefnFields::getNames(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -143,7 +143,7 @@ Handle<Value> FieldDefnCollection::getNames(const Arguments& args)
 	return scope.Close(result);
 }
 
-Handle<Value> FieldDefnCollection::remove(const Arguments& args)
+Handle<Value> FeatureDefnFields::remove(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -168,7 +168,7 @@ Handle<Value> FieldDefnCollection::remove(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> FieldDefnCollection::add(const Arguments& args)
+Handle<Value> FeatureDefnFields::add(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -186,7 +186,7 @@ Handle<Value> FieldDefnCollection::add(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> FieldDefnCollection::reorder(const Arguments& args)
+Handle<Value> FeatureDefnFields::reorder(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -235,7 +235,7 @@ Handle<Value> FieldDefnCollection::reorder(const Arguments& args)
 }
 
 
-Handle<Value> FieldDefnCollection::featureDefnGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> FeatureDefnFields::featureDefnGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

@@ -40,13 +40,13 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 - `size : object`
 - `srs : SpatialReference //get and set`
-- `bands : RasterBandCollection`
+- `bands : DatasetBands`
 
 #### Proposed Properties
 
 - `driver : Driver`
 
-## RasterBandCollection
+## DatasetBands
 
 #### Methods
 

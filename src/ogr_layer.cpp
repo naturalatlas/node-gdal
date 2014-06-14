@@ -6,8 +6,8 @@
 #include "ogr_field_defn.hpp"
 #include "ogr_spatial_reference.hpp"
 #include "ogr_datasource.hpp"
-#include "collections/feature.hpp"
-#include "collections/layer_field_defn.hpp"
+#include "collections/layer_features.hpp"
+#include "collections/layer_fields.hpp"
 
 #include <stdlib.h>
 #include <sstream>
@@ -95,10 +95,10 @@ Handle<Value> Layer::New(const Arguments& args)
 		Layer *f = static_cast<Layer *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> features = FeatureCollection::New(args.This()); 
+		Handle<Value> features = LayerFeatures::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("features_"), features); 
 
-		Handle<Value> fields = LayerFieldDefnCollection::New(args.This()); 
+		Handle<Value> fields = LayerFields::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
 
 		return args.This();

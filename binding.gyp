@@ -35,12 +35,12 @@
 				"src/ogr_layer.cpp",
 				"src/ogr_coordinate_transformation.cpp",
 				"src/ogr_spatial_reference.cpp",
-				"src/collections/rasterband.cpp",
-				"src/collections/layer.cpp",
-				"src/collections/feature.cpp",
-				"src/collections/field.cpp",
-				"src/collections/layer_field_defn.cpp",
-				"src/collections/field_defn.cpp"
+				"src/collections/dataset_bands.cpp",
+				"src/collections/dataset_layers.cpp",
+				"src/collections/layer_features.cpp",
+				"src/collections/layer_fields.cpp",
+				"src/collections/feature_fields.cpp",
+				"src/collections/feature_defn_fields.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

@@ -5,7 +5,7 @@
 #include "gdal_driver.hpp"
 #include "ogr_common.hpp"
 #include "ogr_spatial_reference.hpp"
-#include "collections/rasterband.hpp"
+#include "collections/dataset_bands.hpp"
 
 Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset*> Dataset::cache;
@@ -93,7 +93,7 @@ Handle<Value> Dataset::New(const Arguments& args)
 		Dataset *f =  static_cast<Dataset *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> bands = RasterBandCollection::New(args.This()); 
+		Handle<Value> bands = DatasetBands::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("bands_"), bands); 
 		
 		return args.This();

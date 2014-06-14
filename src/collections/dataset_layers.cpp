@@ -1,17 +1,17 @@
 #include "../ogr_common.hpp"
 #include "../ogr_datasource.hpp"
 #include "../ogr_layer.hpp"
-#include "layer.hpp"
+#include "dataset_layers.hpp"
 
-Persistent<FunctionTemplate> LayerCollection::constructor;
+Persistent<FunctionTemplate> DatasetLayers::constructor;
 
-void LayerCollection::Initialize(Handle<Object> target)
+void DatasetLayers::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LayerCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(DatasetLayers::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("LayerCollection"));
+	constructor->SetClassName(String::NewSymbol("DatasetLayers"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
@@ -22,17 +22,17 @@ void LayerCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("LayerCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("DatasetLayers"), constructor->GetFunction());
 }
 
-LayerCollection::LayerCollection()
+DatasetLayers::DatasetLayers()
 	: ObjectWrap()
 {}
 
-LayerCollection::~LayerCollection() 
+DatasetLayers::~DatasetLayers() 
 {}
 
-Handle<Value> LayerCollection::New(const Arguments& args)
+Handle<Value> DatasetLayers::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -42,34 +42,34 @@ Handle<Value> LayerCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		LayerCollection *f =  static_cast<LayerCollection *>(ptr);
+		DatasetLayers *f =  static_cast<DatasetLayers *>(ptr);
 		f->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create LayerCollection directly");
+		return NODE_THROW("Cannot create DatasetLayers directly");
 	}
 }
 
-Handle<Value> LayerCollection::New(Handle<Value> ds_obj)
+Handle<Value> DatasetLayers::New(Handle<Value> ds_obj)
 {
 	HandleScope scope;
 
-	LayerCollection *wrapped = new LayerCollection();
+	DatasetLayers *wrapped = new DatasetLayers();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = LayerCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = DatasetLayers::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), ds_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> LayerCollection::toString(const Arguments& args)
+Handle<Value> DatasetLayers::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("LayerCollection"));
+	return scope.Close(String::New("DatasetLayers"));
 }
 
-Handle<Value> LayerCollection::get(const Arguments& args)
+Handle<Value> DatasetLayers::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -96,7 +96,7 @@ Handle<Value> LayerCollection::get(const Arguments& args)
 	return scope.Close(node_ogr::Layer::New(lyr, ds->get()));
 }
 
-Handle<Value> LayerCollection::create(const Arguments& args)
+Handle<Value> DatasetLayers::create(const Arguments& args)
 {
 	HandleScope scope;
 	std::string layer_name;
@@ -140,7 +140,7 @@ Handle<Value> LayerCollection::create(const Arguments& args)
 	}
 }
 
-Handle<Value> LayerCollection::count(const Arguments& args)
+Handle<Value> DatasetLayers::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -153,7 +153,7 @@ Handle<Value> LayerCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(ds->get()->GetLayerCount()));
 }
 
-Handle<Value> LayerCollection::copy(const Arguments& args)
+Handle<Value> DatasetLayers::copy(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -196,7 +196,7 @@ Handle<Value> LayerCollection::copy(const Arguments& args)
 }
 
 
-Handle<Value> LayerCollection::remove(const Arguments& args)
+Handle<Value> DatasetLayers::remove(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -216,7 +216,7 @@ Handle<Value> LayerCollection::remove(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> LayerCollection::dsGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> DatasetLayers::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

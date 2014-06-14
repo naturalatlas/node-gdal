@@ -1,21 +1,21 @@
 #include "../ogr_common.hpp"
 #include "../ogr_feature.hpp"
-#include "field.hpp"
+#include "feature_fields.hpp"
 
 // node
 #include <node_buffer.h>
 
-Persistent<FunctionTemplate> FieldCollection::constructor;
+Persistent<FunctionTemplate> FeatureFields::constructor;
 
 using namespace node_ogr;
 
-void FieldCollection::Initialize(Handle<Object> target)
+void FeatureFields::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FieldCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FeatureFields::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("FieldCollection"));
+	constructor->SetClassName(String::NewSymbol("FeatureFields"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toJSON", toJSON);
@@ -29,17 +29,17 @@ void FieldCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "feature", featureGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("FieldCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("FeatureFields"), constructor->GetFunction());
 }
 
-FieldCollection::FieldCollection()
+FeatureFields::FeatureFields()
 	: ObjectWrap()
 {}
 
-FieldCollection::~FieldCollection() 
+FeatureFields::~FeatureFields() 
 {}
 
-Handle<Value> FieldCollection::New(const Arguments& args)
+Handle<Value> FeatureFields::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -49,31 +49,31 @@ Handle<Value> FieldCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		FieldCollection *f =  static_cast<FieldCollection *>(ptr);
+		FeatureFields *f =  static_cast<FeatureFields *>(ptr);
 		f->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create FieldCollection directly");
+		return NODE_THROW("Cannot create FeatureFields directly");
 	}
 }
 
-Handle<Value> FieldCollection::New(Handle<Value> layer_obj)
+Handle<Value> FeatureFields::New(Handle<Value> layer_obj)
 {
 	HandleScope scope;
 
-	FieldCollection *wrapped = new FieldCollection();
+	FeatureFields *wrapped = new FeatureFields();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = FieldCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = FeatureFields::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> FieldCollection::toString(const Arguments& args)
+Handle<Value> FeatureFields::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("FieldCollection"));
+	return scope.Close(String::New("FeatureFields"));
 }
 
 
@@ -92,7 +92,7 @@ inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	return false;
 }
 
-Handle<Value> FieldCollection::set(const Arguments& args)
+Handle<Value> FeatureFields::set(const Arguments& args)
 {
 	HandleScope scope;
 	int field_index;
@@ -173,7 +173,7 @@ Handle<Value> FieldCollection::set(const Arguments& args)
 	}
 }
 
-Handle<Value> FieldCollection::reset(const Arguments& args)
+Handle<Value> FeatureFields::reset(const Arguments& args)
 {
 	HandleScope scope;
 	int field_index;
@@ -212,7 +212,7 @@ Handle<Value> FieldCollection::reset(const Arguments& args)
 	return scope.Close(Integer::New(n));
 }
 
-Handle<Value> FieldCollection::count(const Arguments& args)
+Handle<Value> FeatureFields::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -225,7 +225,7 @@ Handle<Value> FieldCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(f->get()->GetFieldCount()));
 }
 
-Handle<Value> FieldCollection::indexOf(const Arguments& args)
+Handle<Value> FeatureFields::indexOf(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -241,7 +241,7 @@ Handle<Value> FieldCollection::indexOf(const Arguments& args)
 	return scope.Close(Integer::New(f->get()->GetFieldIndex(name.c_str())));
 }
 
-Handle<Value> FieldCollection::toJSON(const Arguments& args)
+Handle<Value> FeatureFields::toJSON(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -264,7 +264,7 @@ Handle<Value> FieldCollection::toJSON(const Arguments& args)
 		} 
 
 		//get field value
-		Handle<Value> val = FieldCollection::get(f->get(), i);
+		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
 			return val; //get method threw an exception	
 		}
@@ -274,7 +274,7 @@ Handle<Value> FieldCollection::toJSON(const Arguments& args)
 	return scope.Close(obj);
 }
 
-Handle<Value> FieldCollection::toArray(const Arguments& args)
+Handle<Value> FeatureFields::toArray(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -289,7 +289,7 @@ Handle<Value> FieldCollection::toArray(const Arguments& args)
 
 	for(int i = 0; i < n; i++) {
 		//get field value
-		Handle<Value> val = FieldCollection::get(f->get(), i);
+		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
 			return val; //get method threw an exception	
 		}
@@ -300,7 +300,7 @@ Handle<Value> FieldCollection::toArray(const Arguments& args)
 }
 
 
-Handle<Value> FieldCollection::get(OGRFeature *f, int field_index)
+Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 {
 	//#throws : caller must check if return_val.IsEmpty() and bail out if true
 	HandleScope scope;
@@ -331,7 +331,7 @@ Handle<Value> FieldCollection::get(OGRFeature *f, int field_index)
 			return NODE_THROW("Unsupported field type");
 	}
 }
-Handle<Value> FieldCollection::get(const Arguments& args)
+Handle<Value> FeatureFields::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -348,14 +348,14 @@ Handle<Value> FieldCollection::get(const Arguments& args)
 	int field_index;
 	ARG_FIELD_ID(0, f->get(), field_index);
 
-	Handle<Value> result = FieldCollection::get(f->get(), field_index);
+	Handle<Value> result = FeatureFields::get(f->get(), field_index);
 	
 	//check if exception... not sure if this is needed
 	if(result.IsEmpty()) return result;
 	else return scope.Close(result);
 }
 
-Handle<Value> FieldCollection::getNames(const Arguments& args)
+Handle<Value> FeatureFields::getNames(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -382,7 +382,7 @@ Handle<Value> FieldCollection::getNames(const Arguments& args)
 	return scope.Close(result);
 }
 
-Handle<Value> FieldCollection::getFieldAsIntegerList(OGRFeature* feature, int field_index)
+Handle<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int field_index)
 {
 	HandleScope scope;
 	
@@ -400,7 +400,7 @@ Handle<Value> FieldCollection::getFieldAsIntegerList(OGRFeature* feature, int fi
 }
 
 
-Handle<Value> FieldCollection::getFieldAsDoubleList(OGRFeature* feature, int field_index)
+Handle<Value> FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int field_index)
 {
 	HandleScope scope;
 	
@@ -418,7 +418,7 @@ Handle<Value> FieldCollection::getFieldAsDoubleList(OGRFeature* feature, int fie
 }
 
 
-Handle<Value> FieldCollection::getFieldAsStringList(OGRFeature* feature, int field_index)
+Handle<Value> FeatureFields::getFieldAsStringList(OGRFeature* feature, int field_index)
 {
 	HandleScope scope;
 	char **values = feature->GetFieldAsStringList(field_index);
@@ -435,7 +435,7 @@ Handle<Value> FieldCollection::getFieldAsStringList(OGRFeature* feature, int fie
 }
 
 
-Handle<Value> FieldCollection::getFieldAsBinary(OGRFeature* feature, int field_index)
+Handle<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_index)
 {
 	HandleScope scope;
 	
@@ -454,7 +454,7 @@ Handle<Value> FieldCollection::getFieldAsBinary(OGRFeature* feature, int field_i
 }
 
 
-Handle<Value> FieldCollection::getFieldAsDateTime(OGRFeature* feature, int field_index)
+Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_index)
 {
 	HandleScope scope;
 
@@ -496,7 +496,7 @@ Handle<Value> FieldCollection::getFieldAsDateTime(OGRFeature* feature, int field
 	}
 }
 
-Handle<Value> FieldCollection::featureGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> FeatureFields::featureGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

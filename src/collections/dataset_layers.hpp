@@ -1,5 +1,5 @@
-#ifndef __NODE_GDAL_RASTERBAND_COLLECTION_H__
-#define __NODE_GDAL_RASTERBAND_COLLECTION_H__
+#ifndef __NODE_GDAL_LAYER_COLLECTION_H__
+#define __NODE_GDAL_LAYER_COLLECTION_H__
 
 // v8
 #include <v8.h>
@@ -14,7 +14,7 @@
 using namespace v8;
 using namespace node;
 
-class RasterBandCollection: public node::ObjectWrap {
+class DatasetLayers: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 
@@ -26,12 +26,14 @@ public:
 	static Handle<Value> get(const Arguments &args);
 	static Handle<Value> count(const Arguments &args);
 	static Handle<Value> create(const Arguments &args);
+	static Handle<Value> copy(const Arguments &args);
+	static Handle<Value> remove(const Arguments &args);
 
 	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
-	
-	RasterBandCollection();
+
+	DatasetLayers();
 private:
-	~RasterBandCollection();
+	~DatasetLayers();
 };
 
 #endif

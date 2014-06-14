@@ -4,7 +4,7 @@
 #include "ogr_datasource.hpp"
 #include "ogr_geometry.hpp"
 #include "ogr_driver.hpp"
-#include "collections/layer.hpp"
+#include "collections/dataset_layers.hpp"
 
 using namespace node_ogr;
 
@@ -102,7 +102,7 @@ Handle<Value> Datasource::New(const Arguments& args)
 		Datasource *f =  static_cast<Datasource *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> layers = LayerCollection::New(args.This()); 
+		Handle<Value> layers = DatasetLayers::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("layers_"), layers); 
 
 		return args.This();

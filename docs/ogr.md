@@ -83,9 +83,9 @@ Note: all methods throw errors if the datasource has already been explicitly des
 
 #### Properties
 
-- `layers : LayerCollection`
+- `layers : DatasetLayers`
 
-## LayerCollection 
+## DatasetLayers 
 
 #### Methods
 
@@ -119,10 +119,10 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 - `ds : Datasource`
 - `srs : SpatialReference //get`
-- `features : FeatureCollection`
-- `fields : FieldDefnCollection`
+- `features : LayerFeatures`
+- `fields : FeatureDefnFields`
 
-## FeatureCollection
+## LayerFeatures
 
 #### Methods
 
@@ -140,7 +140,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 - `layer : Layer`
 
-## FieldDefnCollection
+## FeatureDefnFields
 
 #### Methods
 
@@ -376,9 +376,9 @@ Note: all methods throw errors if the feature has already been explicitly destro
 
 #### Properties
 
-- `fields : FieldCollection`
+- `fields : FeatureFields`
 
-## FieldCollection
+## FeatureFields
 
 #### Methods 
 
@@ -442,7 +442,7 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 
 #### Properties
 
-- `fields : FieldDefnCollection`
+- `fields : FeatureDefnFields`
 
 ## CoordinateTransformation
 

@@ -14,9 +14,9 @@
 using namespace v8;
 using namespace node;
 
-// FeatureDefn.fields : FieldDefnCollection
+// FeatureDefn.fields : FeatureDefnFields
 
-class FieldDefnCollection: public node::ObjectWrap {
+class FeatureDefnFields: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 
@@ -38,9 +38,9 @@ public:
 
 	static Handle<Value> featureDefnGetter(Local<String> property, const AccessorInfo &info);
 
-	FieldDefnCollection();
+	FeatureDefnFields();
 private:
-	~FieldDefnCollection();
+	~FeatureDefnFields();
 };
 
 #endif

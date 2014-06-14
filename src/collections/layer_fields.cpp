@@ -1,19 +1,19 @@
 #include "../ogr_common.hpp"
 #include "../ogr_field_defn.hpp"
 #include "../ogr_layer.hpp"
-#include "layer_field_defn.hpp"
+#include "layer_fields.hpp"
 
-Persistent<FunctionTemplate> LayerFieldDefnCollection::constructor;
+Persistent<FunctionTemplate> LayerFields::constructor;
 
 using namespace node_ogr;
 
-void LayerFieldDefnCollection::Initialize(Handle<Object> target)
+void LayerFields::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LayerFieldDefnCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LayerFields::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("LayerFieldDefnCollection"));
+	constructor->SetClassName(String::NewSymbol("LayerFields"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
@@ -26,17 +26,17 @@ void LayerFieldDefnCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("LayerFieldDefnCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("LayerFields"), constructor->GetFunction());
 }
 
-LayerFieldDefnCollection::LayerFieldDefnCollection()
+LayerFields::LayerFields()
 	: ObjectWrap()
 {}
 
-LayerFieldDefnCollection::~LayerFieldDefnCollection() 
+LayerFields::~LayerFields() 
 {}
 
-Handle<Value> LayerFieldDefnCollection::New(const Arguments& args)
+Handle<Value> LayerFields::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -46,34 +46,34 @@ Handle<Value> LayerFieldDefnCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		LayerFieldDefnCollection *layer =  static_cast<LayerFieldDefnCollection *>(ptr);
+		LayerFields *layer =  static_cast<LayerFields *>(ptr);
 		layer->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create LayerFieldDefnCollection directly");
+		return NODE_THROW("Cannot create LayerFields directly");
 	}
 }
 
-Handle<Value> LayerFieldDefnCollection::New(Handle<Value> layer_obj)
+Handle<Value> LayerFields::New(Handle<Value> layer_obj)
 {
 	HandleScope scope;
 
-	LayerFieldDefnCollection *wrapped = new LayerFieldDefnCollection();
+	LayerFields *wrapped = new LayerFields();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = LayerFieldDefnCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = LayerFields::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> LayerFieldDefnCollection::toString(const Arguments& args)
+Handle<Value> LayerFields::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("LayerFieldDefnCollection"));
+	return scope.Close(String::New("LayerFields"));
 }
 
-Handle<Value> LayerFieldDefnCollection::count(const Arguments& args)
+Handle<Value> LayerFields::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -91,7 +91,7 @@ Handle<Value> LayerFieldDefnCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(def->GetFieldCount()));
 }
 
-Handle<Value> LayerFieldDefnCollection::indexOf(const Arguments& args)
+Handle<Value> LayerFields::indexOf(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -109,7 +109,7 @@ Handle<Value> LayerFieldDefnCollection::indexOf(const Arguments& args)
 	return scope.Close(Integer::New(layer->get()->FindFieldIndex(name.c_str(), exact)));
 }
 
-Handle<Value> LayerFieldDefnCollection::get(const Arguments& args)
+Handle<Value> LayerFields::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -134,7 +134,7 @@ Handle<Value> LayerFieldDefnCollection::get(const Arguments& args)
 	return scope.Close(FieldDefn::New(def->GetFieldDefn(field_index)));
 }
 
-Handle<Value> LayerFieldDefnCollection::getNames(const Arguments& args)
+Handle<Value> LayerFields::getNames(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -160,7 +160,7 @@ Handle<Value> LayerFieldDefnCollection::getNames(const Arguments& args)
 	return scope.Close(result);
 }
 
-Handle<Value> LayerFieldDefnCollection::remove(const Arguments& args)
+Handle<Value> LayerFields::remove(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -190,7 +190,7 @@ Handle<Value> LayerFieldDefnCollection::remove(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> LayerFieldDefnCollection::add(const Arguments& args)
+Handle<Value> LayerFields::add(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -213,7 +213,7 @@ Handle<Value> LayerFieldDefnCollection::add(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> LayerFieldDefnCollection::reorder(const Arguments& args)
+Handle<Value> LayerFields::reorder(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -266,7 +266,7 @@ Handle<Value> LayerFieldDefnCollection::reorder(const Arguments& args)
 	return Undefined();
 }
 
-Handle<Value> LayerFieldDefnCollection::layerGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> LayerFields::layerGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

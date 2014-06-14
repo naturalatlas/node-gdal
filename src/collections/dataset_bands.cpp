@@ -1,17 +1,17 @@
 #include "../gdal_common.hpp"
 #include "../gdal_dataset.hpp"
 #include "../gdal_rasterband.hpp"
-#include "rasterband.hpp"
+#include "dataset_bands.hpp"
 
-Persistent<FunctionTemplate> RasterBandCollection::constructor;
+Persistent<FunctionTemplate> DatasetBands::constructor;
 
-void RasterBandCollection::Initialize(Handle<Object> target)
+void DatasetBands::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(RasterBandCollection::New));
+	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(DatasetBands::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("RasterBandCollection"));
+	constructor->SetClassName(String::NewSymbol("DatasetBands"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
@@ -20,17 +20,17 @@ void RasterBandCollection::Initialize(Handle<Object> target)
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("RasterBandCollection"), constructor->GetFunction());
+	target->Set(String::NewSymbol("DatasetBands"), constructor->GetFunction());
 }
 
-RasterBandCollection::RasterBandCollection()
+DatasetBands::DatasetBands()
 	: ObjectWrap()
 {}
 
-RasterBandCollection::~RasterBandCollection() 
+DatasetBands::~DatasetBands() 
 {}
 
-Handle<Value> RasterBandCollection::New(const Arguments& args)
+Handle<Value> DatasetBands::New(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -40,34 +40,34 @@ Handle<Value> RasterBandCollection::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		RasterBandCollection *f =  static_cast<RasterBandCollection *>(ptr);
+		DatasetBands *f =  static_cast<DatasetBands *>(ptr);
 		f->Wrap(args.This());
 		return args.This();
 	} else {
-		return NODE_THROW("Cannot create RasterBandCollection directly");
+		return NODE_THROW("Cannot create DatasetBands directly");
 	}
 }
 
-Handle<Value> RasterBandCollection::New(Handle<Value> ds_obj)
+Handle<Value> DatasetBands::New(Handle<Value> ds_obj)
 {
 	HandleScope scope;
 
-	RasterBandCollection *wrapped = new RasterBandCollection();
+	DatasetBands *wrapped = new DatasetBands();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = RasterBandCollection::constructor->GetFunction()->NewInstance(1, &ext);
+	v8::Handle<v8::Object> obj = DatasetBands::constructor->GetFunction()->NewInstance(1, &ext);
 	obj->SetHiddenValue(String::NewSymbol("parent_"), ds_obj);
 
 	return scope.Close(obj);
 }
 
-Handle<Value> RasterBandCollection::toString(const Arguments& args)
+Handle<Value> DatasetBands::toString(const Arguments& args)
 {
 	HandleScope scope;
-	return scope.Close(String::New("RasterBandCollection"));
+	return scope.Close(String::New("DatasetBands"));
 }
 
-Handle<Value> RasterBandCollection::get(const Arguments& args)
+Handle<Value> DatasetBands::get(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -89,7 +89,7 @@ Handle<Value> RasterBandCollection::get(const Arguments& args)
 	return scope.Close(RasterBand::New(band));
 }
 
-Handle<Value> RasterBandCollection::create(const Arguments& args)
+Handle<Value> DatasetBands::create(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -126,7 +126,7 @@ Handle<Value> RasterBandCollection::create(const Arguments& args)
 	return scope.Close(RasterBand::New(ds->get()->GetRasterBand(ds->get()->GetRasterCount())));
 }
 
-Handle<Value> RasterBandCollection::count(const Arguments& args)
+Handle<Value> DatasetBands::count(const Arguments& args)
 {
 	HandleScope scope;
 
@@ -139,7 +139,7 @@ Handle<Value> RasterBandCollection::count(const Arguments& args)
 	return scope.Close(Integer::New(ds->get()->GetRasterCount()));
 }
 
-Handle<Value> RasterBandCollection::dsGetter(Local<String> property, const AccessorInfo &info)
+Handle<Value> DatasetBands::dsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));

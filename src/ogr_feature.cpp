@@ -5,7 +5,7 @@
 #include "ogr_geometry.hpp"
 #include "ogr_field_defn.hpp"
 #include "ogr_layer.hpp"
-#include "collections/field.hpp"
+#include "collections/feature_fields.hpp"
 
 using namespace node_ogr;
 
@@ -102,7 +102,7 @@ Handle<Value> Feature::New(const Arguments& args)
 		f = new Feature(ogr_f);
 	}
 
-	Handle<Value> fields = FieldCollection::New(args.This()); 
+	Handle<Value> fields = FeatureFields::New(args.This()); 
 	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
 
 	f->Wrap(args.This());

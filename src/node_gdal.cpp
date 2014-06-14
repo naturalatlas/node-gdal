@@ -21,12 +21,12 @@
 #include "ogr.hpp"
 
 //collections
-#include "collections/rasterband.hpp"
-#include "collections/layer.hpp"
-#include "collections/feature.hpp"
-#include "collections/field.hpp"
-#include "collections/layer_field_defn.hpp"
-#include "collections/field_defn.hpp"
+#include "collections/dataset_bands.hpp"
+#include "collections/dataset_layers.hpp"
+#include "collections/layer_features.hpp"
+#include "collections/feature_fields.hpp"
+#include "collections/layer_fields.hpp"
+#include "collections/feature_defn_fields.hpp"
 
 // std
 #include <string>
@@ -66,12 +66,12 @@ namespace node_gdal {
 			Dataset::Initialize(target);
 			RasterBand::Initialize(target);
 
-			RasterBandCollection::Initialize(target);
-			LayerCollection::Initialize(target);
-			FeatureCollection::Initialize(target);
-			FieldCollection::Initialize(target);
-			LayerFieldDefnCollection::Initialize(target);
-			FieldDefnCollection::Initialize(target);
+			DatasetBands::Initialize(target);
+			DatasetLayers::Initialize(target);
+			LayerFeatures::Initialize(target);
+			FeatureFields::Initialize(target);
+			LayerFields::Initialize(target);
+			FeatureDefnFields::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
