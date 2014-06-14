@@ -26,7 +26,9 @@ public:
 	static Handle<Value> toJSON(const Arguments& args);
 
 	static Handle<Value> get(const Arguments &args);
+	static Handle<Value> getNames(const Arguments &args);
 	static Handle<Value> set(const Arguments &args);
+	static Handle<Value> reset(const Arguments &args);
 	static Handle<Value> count(const Arguments &args);
 	static Handle<Value> indexOf(const Arguments &args);
 

@@ -4,6 +4,7 @@
 #include "ogr_feature_defn.hpp"
 #include "ogr_geometry.hpp"
 #include "ogr_field_defn.hpp"
+#include "ogr_layer.hpp"
 #include "collections/field.hpp"
 
 using namespace node_ogr;
@@ -79,9 +80,25 @@ Handle<Value> Feature::New(const Arguments& args)
 		f = static_cast<Feature *>(ptr);
 
 	} else {
-		FeatureDefn *def;
-		NODE_ARG_WRAPPED(0, "feature definition", FeatureDefn, def);
-		OGRFeature *ogr_f = new OGRFeature(def->get());
+
+		if (args.Length() < 1) {
+			return NODE_THROW("Constructor expects Layer or FeatureDefn object");
+		}
+
+		Handle<Object> obj = args[0]->ToObject();
+		OGRFeatureDefn *def;
+
+		if (Layer::constructor->HasInstance(obj)) {
+			Layer *layer = ObjectWrap::Unwrap<Layer>(obj);
+			def = layer->get()->GetLayerDefn();
+		} else if(FeatureDefn::constructor->HasInstance(obj)) {
+			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(obj);
+			def = feature_def->get();
+		} else {
+			return NODE_THROW("Constructor expects Layer or FeatureDefn object");
+		}
+
+		OGRFeature *ogr_f = new OGRFeature(def);
 		f = new Feature(ogr_f);
 	}
 

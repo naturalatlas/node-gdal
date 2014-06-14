@@ -144,15 +144,15 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 #### Methods
 
--`count() : integer`
--`add(FieldDefn def, bool approx = true) : void #throws`
--`remove(integer i) : void #throws`
--`remove(string field_name) : void #throws`
--`get(integer i) : FieldDefn #throws`
--`get(string field_name) : FieldDefn #throws`
--`getNames() : string[]`
--`indexOf(string field_name) : integer`
--`reorder(integer[] map) : void #throws`
+- `count() : integer`
+- `add(FieldDefn def, bool approx = true) : void #throws`
+- `remove(integer i) : void #throws`
+- `remove(string field_name) : void #throws`
+- `get(integer i) : FieldDefn #throws`
+- `get(string field_name) : FieldDefn #throws`
+- `getNames() : string[]`
+- `indexOf(string field_name) : integer`
+- `reorder(integer[] map) : void #throws`
 
 ## Driver
 
@@ -384,9 +384,12 @@ Note: all methods throw errors if the feature has already been explicitly destro
 
 - `count() : integer`
 - `get(integer i) : value`
+- `get(string name) : value`
+- `getNames() : string[]`
 - `set(integer i, value) : integer`
 - `set(Array values) : integer`
 - `set(object values) : integer`
+- `reset(object values) : integer`
 - `indexOf(string field_name) : integer`
 - `toJSON() : object`
 - `toArray() : Array`

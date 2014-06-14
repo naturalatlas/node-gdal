@@ -22,7 +22,9 @@ void FieldCollection::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toArray", toArray);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "reset", reset);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
 
 	ATTR(constructor, "feature", featureGetter, READ_ONLY_SETTER);
@@ -129,17 +131,22 @@ Handle<Value> FieldCollection::set(const Arguments& args)
 			
 			for (i = 0; i < n; i++) {
 				//iterate through field names from field defn,
-				//grabbing values from passed object
+				//grabbing values from passed object, if not undefined
 				 
 				OGRFieldDefn* field_def = f->get()->GetFieldDefnRef(i);
 				
 				const char* field_name = field_def->GetNameRef();
 				
 				field_index = f->get()->GetFieldIndex(field_name);
-				if(field_index == -1) continue;
+
+				//skip value if field name doesnt exist 
+				//both in the feature definition and the passed object
+				if (field_index == -1 || !values->HasOwnProperty(String::NewSymbol(field_name))) {
+					continue;
+				}
 
 				Handle<Value> val = values->Get(String::NewSymbol(field_name));
-				if(setField(f->get(), field_index, val)){
+				if (setField(f->get(), field_index, val)) {
 					return NODE_THROW("Unsupported type of field value");
 				}
 
@@ -164,6 +171,45 @@ Handle<Value> FieldCollection::set(const Arguments& args)
 	} else {
 		return NODE_THROW("Invalid number of arguments")
 	}
+}
+
+Handle<Value> FieldCollection::reset(const Arguments& args)
+{
+	HandleScope scope;
+	int field_index;
+	unsigned int i, n;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->get()) {
+		return NODE_THROW("Feature object already destroyed");
+	}
+	
+	Handle<Object> obj;
+	NODE_ARG_OBJECT(0, "fields", obj);
+
+	Handle<Object> values = Handle<Object>::Cast(args[0]);
+		
+	n = f->get()->GetFieldCount();
+	
+	for (i = 0; i < n; i++) {
+		//iterate through field names from field defn,
+		//grabbing values from passed object
+		 
+		OGRFieldDefn* field_def = f->get()->GetFieldDefnRef(i);
+		
+		const char* field_name = field_def->GetNameRef();
+		
+		field_index = f->get()->GetFieldIndex(field_name);
+		if(field_index == -1) continue;
+
+		Handle<Value> val = values->Get(String::NewSymbol(field_name));
+		if(setField(f->get(), field_index, val)){
+			return NODE_THROW("Unsupported type of field value");
+		}
+	}
+
+	return scope.Close(Integer::New(n));
 }
 
 Handle<Value> FieldCollection::count(const Arguments& args)
@@ -307,6 +353,33 @@ Handle<Value> FieldCollection::get(const Arguments& args)
 	//check if exception... not sure if this is needed
 	if(result.IsEmpty()) return result;
 	else return scope.Close(result);
+}
+
+Handle<Value> FieldCollection::getNames(const Arguments& args)
+{
+	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->get()) {
+		return NODE_THROW("Feature object already destroyed");
+	}
+
+	int n = f->get()->GetFieldCount();
+	Handle<Array> result = Array::New(n);
+
+	for(int i = 0; i < n; i++) {
+		
+		//get field name
+		OGRFieldDefn *field_def = f->get()->GetFieldDefnRef(i);
+		const char *field_name = field_def->GetNameRef();
+		if (!field_name) {
+			return NODE_THROW("Error getting field name");
+		}
+		result->Set(i, String::New(field_name));
+	}
+
+	return scope.Close(result);
 }
 
 Handle<Value> FieldCollection::getFieldAsIntegerList(OGRFeature* feature, int field_index)
