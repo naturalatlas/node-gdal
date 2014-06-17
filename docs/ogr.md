@@ -108,12 +108,8 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Methods 
 
 - `toString() : string`
-- `getGeomType() : integer`
-- `getName() : string`
 - `testCapability(string capability_name) : boolean`
 - `flush() #throws`
-- `getFIDColumn() : string`
-- `getGeometryColumn() : string`
 
 #### Properties
 
@@ -121,6 +117,10 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `srs : SpatialReference //get`
 - `features : LayerFeatures`
 - `fields : FeatureDefnFields`
+- `name : string`
+- `geomType : integer //wkbGeometryType`
+- `geomColumn : string`
+- `fidColumn : string`
 
 ## LayerFeatures
 
