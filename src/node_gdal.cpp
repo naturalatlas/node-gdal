@@ -64,6 +64,8 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, "getDriverCount", node_gdal::getDriverCount);
 			NODE_SET_METHOD(target, "getDriver", node_gdal::getDriver);
 			NODE_SET_METHOD(target, "close", node_gdal::close);
+			NODE_SET_METHOD(target, "setConfigOption", node_gdal::setConfigOption);
+			NODE_SET_METHOD(target, "getConfigOption", node_gdal::getConfigOption);
 
 			MajorObject::Initialize(target);
 			Driver::Initialize(target);

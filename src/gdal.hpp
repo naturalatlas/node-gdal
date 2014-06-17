@@ -122,6 +122,29 @@ namespace node_gdal {
 		return scope.Close(Driver::New(driver));
 	}
 
+	static Handle<Value> setConfigOption(const Arguments &args)
+	{
+		HandleScope scope;
+
+		std::string name;
+		std::string val;
+		NODE_ARG_STR(0, "name", name);
+		NODE_ARG_STR(1, "value", val);
+
+		CPLSetConfigOption(name.c_str(), val.c_str());
+
+		return Undefined();
+	}
+
+	static Handle<Value> getConfigOption(const Arguments &args)
+	{
+		HandleScope scope;
+
+		std::string name;
+		NODE_ARG_STR(0, "name", name);
+
+		return scope.Close(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
+	}
 }
 
 #endif
