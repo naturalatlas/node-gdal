@@ -13,42 +13,31 @@ describe('Open', function() {
 			ds = ogr.open(filename);
 		});
 		it('should be able to read layer count', function() {
-			assert.equal(ds.getLayerCount(), 1);
+			assert.equal(ds.layers.count(), 1);
 		});
 
 		describe('layer', function() {
 			var layer;
-			before(function() { layer = ds.getLayer(0); });
-			it('should exist', function() {
-				assert.ok(layer);
-				assert.instanceOf(layer, ogr.Layer);
+			before(function() { layer = ds.layers.get(0); });
+			it('should have all fields defined', function() {
+				assert.equal(layer.fields.count(), 8);
+				assert.deepEqual(layer.fields.getNames(), [
+					'path',
+					'name',
+					'type',
+					'long_name',
+					'fips_num',
+					'fips',
+					'state_fips',
+					'state_abbr'
+				]);
 			});
-			describe('definition', function() {
-				var defn;
-				before(function() {
-					defn = layer.getLayerDefn();
-				});
-				it('should exist', function() {
-					assert.ok(defn);
-					assert.instanceOf(defn, ogr.FeatureDefn);
-				});
-				it('should have all fields defined', function() {
-					assert.equal(defn.getFieldCount(), 8);
-					assert.equal(defn.getFieldDefn(0).getName(), 'path');
-					assert.equal(defn.getFieldDefn(1).getName(), 'name');
-					assert.equal(defn.getFieldDefn(2).getName(), 'type');
-					assert.equal(defn.getFieldDefn(3).getName(), 'long_name');
-					assert.equal(defn.getFieldDefn(4).getName(), 'fips_num');
-					assert.equal(defn.getFieldDefn(5).getName(), 'fips');
-					assert.equal(defn.getFieldDefn(6).getName(), 'state_fips');
-					assert.equal(defn.getFieldDefn(7).getName(), 'state_abbr');
-				});
-			});
+
 			describe('features', function() {
 				it('should be readable', function() {
-					assert.equal(layer.getFeatureCount(), 23);
-					var feature = layer.getFeature(0);
-					var fields = feature.getFields();
+					assert.equal(layer.features.count(), 23);
+					var feature = layer.features.get(0);
+					var fields = feature.fields.toJSON();
 
 					assert.deepEqual(fields, {
 						'fips': 'US56029',

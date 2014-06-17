@@ -13,37 +13,29 @@ describe('Open', function() {
 			ds = ogr.open(filename);
 		});
 		it('should be able to read layer count', function() {
-			assert.equal(ds.getLayerCount(), 1);
+			assert.equal(ds.layers.count(), 1);
 		});
 
 		describe('layer', function() {
 			var layer;
-			before(function() { layer = ds.getLayer(0); });
+			before(function() { layer = ds.layers.get(0); });
 			it('should exist', function() {
 				assert.ok(layer);
 				assert.instanceOf(layer, ogr.Layer);
 			});
-			describe('definition', function() {
-				var defn;
-				before(function() {
-					defn = layer.getLayerDefn();
-				});
-				it('should exist', function() {
-					assert.ok(defn);
-					assert.instanceOf(defn, ogr.FeatureDefn);
-				});
-				it('should have all fields defined', function() {
-					assert.equal(defn.getFieldCount(), 3);
-					assert.equal(defn.getFieldDefn(0).getName(), 'kind');
-					assert.equal(defn.getFieldDefn(1).getName(), 'name');
-					assert.equal(defn.getFieldDefn(2).getName(), 'state');
-				});
+			it('should have all fields defined', function() {
+				assert.equal(layer.fields.count(), 3);
+				assert.deepEqual(layer.fields.getNames(), [
+					'kind',
+					'name',
+					'state'
+				]);
 			});
 			describe('features', function() {
 				it('should be readable', function() {
-					assert.equal(layer.getFeatureCount(), 1);
-					var feature = layer.getFeature(0);
-					var fields = feature.getFields();
+					assert.equal(layer.features.count(), 1);
+					var feature = layer.features.get(0);
+					var fields = feature.fields.toJSON();
 
 					assert.deepEqual(fields, {
 						'kind': 'county',
