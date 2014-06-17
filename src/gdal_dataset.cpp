@@ -20,7 +20,6 @@ void Dataset::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Dataset"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getDriver", getDriver);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPCount", getGCPCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPProjection", getGCPProjection);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
@@ -35,6 +34,7 @@ void Dataset::Initialize(Handle<Object> target)
 	ATTR(constructor, "bands", bandsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, srsSetter);
+	ATTR(constructor, "driver", driverGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
 }
@@ -126,7 +126,6 @@ Handle<Value> Dataset::toString(const Arguments& args)
 	return scope.Close(String::New("Dataset"));
 }
 
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, SafeString, GetGCPProjection);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(Dataset, createMaskBand, Integer, CreateMaskBand, "flags");
@@ -344,6 +343,16 @@ Handle<Value> Dataset::srsGetter(Local<String> property, const AccessorInfo &inf
 	return scope.Close(node_ogr::SpatialReference::New(srs, true));
 }
 
+Handle<Value> Dataset::driverGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
+	return scope.Close(Driver::New(ds->this_->GetDriver()));
+}
 
 void Dataset::srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
 {

@@ -25,7 +25,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
 - `close() : void`
-- `getDriver() : Driver`
 - `getGCPCount() : integer`
 - `getGCPProjection() : string`
 - `createMaskBand(integer flags) : RasterBand`
@@ -41,9 +40,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `size : object`
 - `srs : SpatialReference //get and set`
 - `bands : DatasetBands`
-
-#### Proposed Properties
-
 - `driver : Driver`
 
 ## DatasetBands
@@ -74,8 +70,8 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 #### Properties
 
-- `LongName : string`
-- `ShortName : string`
+- `longName : string`
+- `shortName : string`
 
 ## RasterBand
 

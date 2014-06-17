@@ -26,7 +26,6 @@ public:
 	static Handle<Value> flushCache(const Arguments &args);
 	static Handle<Value> getGeoTransform(const Arguments &args);
 	static Handle<Value> setGeoTransform(const Arguments &args);
-	static Handle<Value> getDriver(const Arguments &args);
 	static Handle<Value> getFileList(const Arguments &args);
 	static Handle<Value> createMaskBand(const Arguments &args);
 	static Handle<Value> getGCPCount(const Arguments &args);
@@ -38,6 +37,8 @@ public:
 	static Handle<Value> bandsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> driverGetter(Local<String> property, const AccessorInfo &info);
+
 	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	static ObjectCache<GDALDataset*> cache;

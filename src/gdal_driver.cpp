@@ -22,8 +22,8 @@ void Driver::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "rename", rename);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "copyFiles", copyFiles);
 
-	ATTR(constructor, "ShortName", shortNameGetter, NULL);
-	ATTR(constructor, "LongName", longNameGetter, NULL);
+	ATTR(constructor, "shortName", shortNameGetter, NULL);
+	ATTR(constructor, "longName", longNameGetter, NULL);
 
 	target->Set(String::NewSymbol("Driver"), constructor->GetFunction());
 }
