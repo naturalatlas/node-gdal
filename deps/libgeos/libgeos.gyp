@@ -290,6 +290,13 @@
 			"include_dirs": [
 				"./geos/include"
 			],
+			"conditions": [
+				["OS == 'win'", {
+					"include_dirs": ["./arch/win"]
+				}, {
+					"include_dirs": ["./arch/unix"]
+				}]
+			],
 			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
 			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
@@ -300,13 +307,6 @@
 				"include_dirs": [
 					"./geos/include",
 					"./geos/capi"
-				],
-				"conditions": [
-					["OS == 'win'", {
-						"include_dirs": ["./arch/win"]
-					}, {
-						"include_dirs": ["./arch/unix"]
-					}]
 				],
 				"defines": []
 			}
