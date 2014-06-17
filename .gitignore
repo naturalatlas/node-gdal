@@ -6,4 +6,5 @@ node_modules
 /.project
 .DS_Store
 deps/libgdal/gdal.tar.gz
+deps/libgeos/geos.tar.bz2
 lib/binding

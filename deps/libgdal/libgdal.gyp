@@ -1,4 +1,7 @@
 {
+	"variables": {
+		"shared_geos%": "false"
+	},
 	"includes": [
 		"./common.gypi",
 		"./libgdal_formats.gypi"
@@ -222,6 +225,19 @@
 					"link_settings": {
 						"libraries": [
 							"-lws2_32.lib",
+						]
+					}
+				}],
+				["shared_geos == 'false'", {
+					"dependencies": [
+						"../libgeos/libgeos.gyp:libgeos"
+					]
+				}, {
+					"libraries": ["<!@(geos-config --libs)"],
+					"cflags_cc": ["<!@(geos-config --cflags)"],
+					"xcode_settings": {
+						"OTHER_CPLUSPLUSFLAGS":[
+							"<!@(geos-config --cflags)"
 						]
 					}
 				}]

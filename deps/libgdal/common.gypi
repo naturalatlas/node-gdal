@@ -22,6 +22,7 @@
 			"_LARGEFILE_SOURCE",
 			"_FILE_OFFSET_BITS=64",
 			"PAM_ENABLED=1",
+			"HAVE_GEOS=1",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
 		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
