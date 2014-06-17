@@ -18,8 +18,8 @@ describe('Open', function() {
 
 		describe('layer', function() {
 			var layer;
-			before(function() { layer = ds.layers.get(0); });
 			it('should exist', function() {
+				layer = ds.layers.get(0);
 				assert.ok(layer);
 				assert.instanceOf(layer, ogr.Layer);
 			});

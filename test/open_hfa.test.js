@@ -16,7 +16,7 @@ describe('Open', function() {
 		it('should be able to read raster size', function() {
 			assert.equal(ds.size.x,495);
 			assert.equal(ds.size.y,286);
-			assert.equal(ds.getRasterCount(),1);
+			assert.equal(ds.bands.count(),1);
 		});
 
 		it('should be able to read geotransform', function() {
@@ -37,7 +37,7 @@ describe('Open', function() {
 		});
 
 		it('should be able to read statistics', function() {
-			var band = ds.getRasterBand(1);
+			var band = ds.bands.get(1);
 			var expected_stats = {
 				min: 177,
 				max: 182,
