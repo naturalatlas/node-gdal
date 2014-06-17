@@ -101,21 +101,21 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `size : object`
 - `blockSize : object`
 - `overviews : RasterBandOverviews`
-- `unitType : string`
+- `unitType : string // R/W`
 - `dataType : integer //GDALDataType`
 - `minimum : Number`
 - `maximum : Number`
-- `offset : Number`
-- `scale : Number`
-- `noDataValue : Number`
+- `offset : Number // R/W`
+- `scale : Number // R/W`
+- `noDataValue : Number // R/W`
 - `readOnly : boolean`
 - `hasArbitraryOverviews : boolean`
-- `categoryNames : string[]`
+- `categoryNames : string[] // R/W`
 
 ## RasterBandOverviews
 
 #### Methods
 
 - `get(integer id) : RasterBand`
-- `getBySampeCount(integer min_samples) : RasterBand`
+- `getBySampleCount(integer min_samples) : RasterBand`
 - `count() : integer`
