@@ -28,8 +28,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getGCPCount() : integer`
 - `getGCPProjection() : string`
 - `createMaskBand(integer flags) : RasterBand`
-- `getGeoTransform() : Number[]`
-- `setGeoTransform(Number[] transform) #throws`
 - `getGCPs() : object[]`
 - `setGCPs() : void #throws`
 - `getFileList() : string[]`
@@ -41,6 +39,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `srs : SpatialReference //get and set`
 - `bands : DatasetBands`
 - `driver : Driver`
+- `geoTransform : Number[] //get and set`
 
 ## DatasetBands
 

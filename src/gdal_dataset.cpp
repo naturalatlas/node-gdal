@@ -23,8 +23,6 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPCount", getGCPCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPProjection", getGCPProjection);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeoTransform", getGeoTransform);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeoTransform", setGeoTransform);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPs", getGCPs);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGCPs", setGCPs);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFileList", getFileList);
@@ -35,6 +33,7 @@ void Dataset::Initialize(Handle<Object> target)
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, srsSetter);
 	ATTR(constructor, "driver", driverGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "geoTransform", geoTransformGetter, geoTransformSetter);
 
 	target->Set(String::NewSymbol("Dataset"), constructor->GetFunction());
 }
@@ -139,63 +138,6 @@ Handle<Value> Dataset::close(const Arguments& args)
 	}
 
 	ds->dispose();
-
-	return Undefined();
-}
-
-Handle<Value> Dataset::getGeoTransform(const Arguments& args)
-{
-	HandleScope scope;
-
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
-
-	double transform[6];
-	CPLErr err = ds->this_->GetGeoTransform(transform);
-	if (err) {
-		return NODE_THROW_CPLERR(err);
-	}
-
-	Handle<Array> result = Array::New(6);
-	result->Set(0, Number::New(transform[0]));
-	result->Set(1, Number::New(transform[1]));
-	result->Set(2, Number::New(transform[2]));
-	result->Set(3, Number::New(transform[3]));
-	result->Set(4, Number::New(transform[4]));
-	result->Set(5, Number::New(transform[5]));
-
-	return scope.Close(result);
-}
-
-Handle<Value> Dataset::setGeoTransform(const Arguments& args)
-{
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
-
-	Handle<Array> transform;
-	NODE_ARG_ARRAY(0, "transform", transform);
-
-	if (transform->Length() != 6) {
-		return NODE_THROW("Transform array must have 6 elements")
-	}
-
-		   double buffer[6];
-	for (int i = 0; i < 6; i++) {
-		Local<Value> val = transform->Get(i);
-		if (!val->IsNumber()) {
-			return NODE_THROW("Transform array must only contain numbers");
-		}
-		buffer[i] = val->NumberValue();
-	}
-
-	CPLErr err = ds->this_->SetGeoTransform(buffer);
-	if (err) {
-		return NODE_THROW_CPLERR(err);
-	}
 
 	return Undefined();
 }
@@ -343,6 +285,31 @@ Handle<Value> Dataset::srsGetter(Local<String> property, const AccessorInfo &inf
 	return scope.Close(node_ogr::SpatialReference::New(srs, true));
 }
 
+Handle<Value> Dataset::geoTransformGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
+	double transform[6];
+	CPLErr err = ds->this_->GetGeoTransform(transform);
+	if (err) {
+		return NODE_THROW_CPLERR(err);
+	}
+
+	Handle<Array> result = Array::New(6);
+	result->Set(0, Number::New(transform[0]));
+	result->Set(1, Number::New(transform[1]));
+	result->Set(2, Number::New(transform[2]));
+	result->Set(3, Number::New(transform[3]));
+	result->Set(4, Number::New(transform[4]));
+	result->Set(5, Number::New(transform[5]));
+
+	return scope.Close(result);
+}
+
 Handle<Value> Dataset::driverGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
@@ -384,6 +351,42 @@ void Dataset::srsSetter(Local<String> property, Local<Value> value, const Access
 
 	CPLErr err = ds->this_->SetProjection(wkt.c_str());
 	
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void Dataset::geoTransformSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(info.This());
+	if (!ds->this_) {
+		NODE_THROW("Dataset object has already been destroyed");
+		return;
+	}
+
+	if (!value->IsArray()) {
+		NODE_THROW("Transform must be an array");
+		return;
+	}
+	Handle<Array> transform = Handle<Array>::Cast(value);
+
+	if (transform->Length() != 6) {
+		NODE_THROW("Transform array must have 6 elements");
+		return;
+	}
+
+	double buffer[6];
+	for (int i = 0; i < 6; i++) {
+		Local<Value> val = transform->Get(i);
+		if (!val->IsNumber()) {
+			NODE_THROW("Transform array must only contain numbers");
+			return;
+		}
+		buffer[i] = val->NumberValue();
+	}
+
+	CPLErr err = ds->this_->SetGeoTransform(buffer);
 	if (err) {
 		NODE_THROW_CPLERR(err);
 	}
