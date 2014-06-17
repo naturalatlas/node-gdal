@@ -198,9 +198,6 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, clone, Geometry, clone);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, wkbSize, Integer, WkbSize);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getGeometryType, Integer, getGeometryType);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getGeometryName, SafeString, getGeometryName);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, exportToKML, SafeString, exportToKML);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, exportToGML, SafeString, exportToGML);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, exportToJSON, SafeString, exportToJson);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, convexHull, Geometry, ConvexHull);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, boundary, Geometry, Boundary);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, intersects, Boolean, Intersects, Geometry, "geometry to compare");
@@ -250,6 +247,54 @@ Handle<Value> Geometry::exportToWKT(const Arguments& args)
 
 	if (text) {
 		return scope.Close(SafeString::New(text));
+	}
+
+	return Undefined();
+}
+
+Handle<Value> Geometry::exportToKML(const Arguments& args)
+{
+	HandleScope scope;
+
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
+
+	char *text = geom->this_->exportToKML();
+	if (text) {
+		Handle<Value> result = String::New(text);
+		CPLFree(text);
+		return scope.Close(result);
+	}
+
+	return Undefined();
+}
+
+Handle<Value> Geometry::exportToGML(const Arguments& args)
+{
+	HandleScope scope;
+
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
+
+	char *text = geom->this_->exportToGML();
+	if (text) {
+		Handle<Value> result = String::New(text);
+		CPLFree(text);
+		return scope.Close(result);
+	}
+
+	return Undefined();
+}
+
+Handle<Value> Geometry::exportToJSON(const Arguments& args)
+{
+	HandleScope scope;
+
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
+
+	char *text = geom->this_->exportToJson();
+	if (text) {
+		Handle<Value> result = String::New(text);
+		CPLFree(text);
+		return scope.Close(result);
 	}
 
 	return Undefined();
