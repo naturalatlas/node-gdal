@@ -27,17 +27,12 @@ namespace node_ogr {
 		static Handle<Value> New(OGRGeometry *geom);
 		static Handle<Value> New(OGRGeometry *geom, bool owned);
 		static Handle<Value> toString(const Arguments &args);
-		static Handle<Value> getDimension(const Arguments &args);
-		static Handle<Value> getCoordinateDimension(const Arguments &args);
 		static Handle<Value> isEmpty(const Arguments &args);
 		static Handle<Value> isValid(const Arguments &args);
 		static Handle<Value> isSimple(const Arguments &args);
 		static Handle<Value> isRing(const Arguments &args);
 		static Handle<Value> clone(const Arguments &args);
 		static Handle<Value> empty(const Arguments &args);
-		static Handle<Value> wkbSize(const Arguments &args);
-		static Handle<Value> getGeometryType(const Arguments &args);
-		static Handle<Value> getGeometryName(const Arguments &args);
 		static Handle<Value> exportToKML(const Arguments &args);
 		static Handle<Value> exportToGML(const Arguments &args);
 		static Handle<Value> exportToJSON(const Arguments &args);
@@ -76,6 +71,12 @@ namespace node_ogr {
 		static Handle<Value> createFromWkt(const Arguments &args);
 
 		static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> wkbSizeGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> dimensionGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> coordinateDimensionGetter(Local<String> property, const AccessorInfo &info);
+
 		static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 		static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);

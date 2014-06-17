@@ -27,16 +27,12 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toGML", exportToGML);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toJSON", exportToJSON);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKT", exportToWKT);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getDimension", getDimension);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getCoordinateDimension", getCoordinateDimension);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isEmpty", isEmpty);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isValid", isValid);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isSimple", isSimple);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isRing", isRing);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "empty", empty);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryType", getGeometryType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryName", getGeometryName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "closeRings", closeRings);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "intersects", intersects);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);
@@ -64,9 +60,12 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "transform", transform);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "transformTo", transformTo);
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "wkbSize", wkbSize);	//change to getter
-
 	ATTR(constructor, "srs", srsGetter, srsSetter);
+	ATTR(constructor, "wkbSize", wkbSizeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "dimension", dimensionGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "coordinateDimension", coordinateDimensionGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "type", typeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "name", nameGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Geometry"), constructor->GetFunction());
 }
@@ -188,16 +187,11 @@ Handle<Value> Geometry::toString(const Arguments& args)
 NODE_WRAPPED_METHOD(Geometry, closeRings, closeRings);
 NODE_WRAPPED_METHOD(Geometry, empty, empty);
 NODE_WRAPPED_METHOD(Geometry, swapXY, swapXY);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getDimension, Integer, getDimension);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getCoordinateDimension, Integer, getCoordinateDimension);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isEmpty, Boolean, IsEmpty);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isValid, Boolean, IsValid);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isSimple, Boolean, IsSimple);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isRing, Boolean, IsRing);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, clone, Geometry, clone);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, wkbSize, Integer, WkbSize);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getGeometryType, Integer, getGeometryType);
-NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, getGeometryName, SafeString, getGeometryName);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, convexHull, Geometry, ConvexHull);
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, boundary, Geometry, Boundary);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, intersects, Boolean, Intersects, Geometry, "geometry to compare");
@@ -417,4 +411,39 @@ void Geometry::srsSetter(Local<String> property, Local<Value> value, const Acces
 	}
 
 	geom->this_->assignSpatialReference(srs);
+}
+
+Handle<Value> Geometry::nameGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(SafeString::New(geom->this_->getGeometryName()));
+}
+
+Handle<Value> Geometry::typeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(Integer::New(geom->this_->getGeometryType()));
+}
+
+Handle<Value> Geometry::wkbSizeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(Integer::New(geom->this_->WkbSize()));
+}
+
+Handle<Value> Geometry::dimensionGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(Integer::New(geom->this_->getDimension()));
+}
+
+Handle<Value> Geometry::coordinateDimensionGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
+	return scope.Close(Integer::New(geom->this_->getCoordinateDimension()));
 }

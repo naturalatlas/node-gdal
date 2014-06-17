@@ -178,21 +178,16 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 #### Methods
 
 - `toString() : string`
-- `getDimension() : integer`
-- `getCoordinateDimension() : integer`
+- `toKML() : string`
+- `toGML() : string`
+- `toJSON() : string`
+- `toWKT() : string`v
+- `empty() : void`
 - `isEmpty() : boolean`
 - `isValid() : boolean`
 - `isSimple() : boolean`
 - `isRing() : boolean`
 - `clone() : Geometry`
-- `empty() : void`
-- `wkbSize() : integer`
-- `getGeometryType() : integer`
-- `getGeometryName() : string`
-- `exportToKML() : string`
-- `exportToGML() : string`
-- `exportToJSON() : string`
-- `exportToWKT() : string`
 - `closeRings()`
 - `intersects(Geometry geom) : boolean`
 - `equals(Geometry geom) : boolean`
@@ -223,6 +218,11 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 #### Properties 
 
 - `srs : SpatialReference //get and set`
+- `type : integer // wkbGeometryType`
+- `name : string`
+- `wkbSize : integer`
+- `dimension : integer`
+- `coordinateDimension : integer`
 
 ## Point 
 
