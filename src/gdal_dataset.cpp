@@ -20,9 +20,6 @@ void Dataset::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Dataset"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterCount", getRasterCount);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterBand", getRasterBand);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "addBand", addBand);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getDriver", getDriver);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPCount", getGCPCount);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPProjection", getGCPProjection);
@@ -32,7 +29,7 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGCPs", getGCPs);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGCPs", setGCPs);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFileList", getFileList);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", flushCache);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "close", close);
 
 	ATTR(constructor, "bands", bandsGetter, READ_ONLY_SETTER);
@@ -129,7 +126,6 @@ Handle<Value> Dataset::toString(const Arguments& args)
 	return scope.Close(String::New("Dataset"));
 }
 
-NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getRasterCount, Integer, GetRasterCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getDriver, Driver, GetDriver);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPCount, Integer, GetGCPCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(Dataset, getGCPProjection, SafeString, GetGCPProjection);
@@ -146,62 +142,6 @@ Handle<Value> Dataset::close(const Arguments& args)
 	ds->dispose();
 
 	return Undefined();
-}
-
-Handle<Value> Dataset::getRasterBand(const Arguments& args)
-{
-	HandleScope scope;
-	GDALRasterBand *poBand;
-	int band_id;
-	NODE_ARG_INT(0, "band id", band_id);
-
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
-	poBand = ds->this_->GetRasterBand(band_id);
-
-	if (poBand == NULL) {
-		return NODE_THROW("Specified band not found");
-	}
-
-	return scope.Close(RasterBand::New(poBand));
-}
-
-Handle<Value> Dataset::addBand(const Arguments& args)
-{
-	HandleScope scope;
-
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
-	if (!ds->this_) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
-
-	GDALDataType type;
-	Handle<Array> band_options = Array::New(0);
-	char **options = NULL;
-
-	NODE_ARG_ENUM(0, "data type", GDALDataType, type);
-	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
-
-	if (band_options->Length() > 0) {
-		options = new char* [band_options->Length()];
-		for (unsigned int i = 0; i < band_options->Length(); ++i) {
-			options[i] = TOSTR(band_options->Get(i));
-		}
-	}
-
-	CPLErr err = ds->this_->AddBand(type, options);
-
-	if (options) {
-		delete [] options;
-	}
-
-	if (err) {
-		return NODE_THROW_CPLERR(err);
-	}
-
-	return scope.Close(RasterBand::New(ds->this_->GetRasterBand(ds->this_->GetRasterCount())));
 }
 
 Handle<Value> Dataset::getGeoTransform(const Arguments& args)

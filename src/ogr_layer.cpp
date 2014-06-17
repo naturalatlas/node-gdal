@@ -30,7 +30,7 @@ void Layer::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "syncToDisk", syncToDisk);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFIDColumn", getFIDColumn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryColumn", getGeometryColumn);
 

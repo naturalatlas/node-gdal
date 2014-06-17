@@ -44,6 +44,7 @@
 				"src/collections/geometry_collection_children.cpp",
 				"src/collections/polygon_rings.cpp",
 				"src/collections/linestring_points.cpp",
+				"src/collections/rasterband_overviews.cpp"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

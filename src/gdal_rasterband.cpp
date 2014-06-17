@@ -4,6 +4,10 @@
 #include "gdal_majorobject.hpp"
 #include "gdal_rasterband.hpp"
 #include "gdal_dataset.hpp"
+#include "collections/rasterband_overviews.hpp"
+
+#include <limits>
+#include <cmath>
 
 Persistent<FunctionTemplate> RasterBand::constructor;
 ObjectCache<GDALRasterBand*> RasterBand::cache;
@@ -18,44 +22,39 @@ void RasterBand::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("RasterBand"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getBand", getBand);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterDataType", getRasterDataType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getBlockSize", getBlockSize);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getAccess", getAccess);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "rasterIO", rasterIO);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "flushCache", flushCache);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getCategoryNames", getCategoryNames);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getNoDataValue", getNoDataValue);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getMinimum", getMinimum);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaximum", getMaximum);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getOffset", getOffset);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getScale", getScale);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getUnitType", getUnitType);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getColorTable", getColorTable);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", flushCache);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "fill", fill);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setCategoryNames", setCategoryNames);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setNoDataValue", setNoDataValue);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "setColorTable", setColorTable);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setOffset", setOffset);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setScale", setScale);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setUnitType", setUnitType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getStatistics", getStatistics);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "computeStatistics", computeStatistics);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setStatistics", setStatistics);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "hasArbitraryOverviews", hasArbitraryOverviews);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getOverviewCount", getOverviewCount);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getOverview", getOverview);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getRasterSampleOverview", getRasterSampleOverview);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "buildOverviews", buildOverviews);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getHistogram", getHistogram);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getDefaultHistogram", getDefaultHistogram);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "setDefaultHistogram", setDefaultHistogram);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "computeStatistics", computeStatistics);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaskBand", getMaskBand);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMaskFlags", getMaskFlags);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createMaskBand", createMaskBand);
+	
+	// unimplemented methods
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "buildOverviews", buildOverviews);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "rasterIO", rasterIO);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getColorTable", getColorTable);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "setColorTable", setColorTable);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getHistogram", getHistogram);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getDefaultHistogram", getDefaultHistogram);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "setDefaultHistogram", setDefaultHistogram);
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "id", idGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "overviews", overviewsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "blockSize", blockSizeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "minimum", minimumGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "maximum", maximumGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "readOnly", readOnlyGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "dataType", dataTypeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "hasArbitraryOverviews", hasArbitraryOverviewsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "unitType", unitTypeGetter, unitTypeSetter);
+	ATTR(constructor, "scale", scaleGetter, scaleSetter);
+	ATTR(constructor, "offset", offsetGetter, offsetSetter);
+	ATTR(constructor, "noDataValue", noDataValueGetter, noDataValueSetter);
+	ATTR(constructor, "categoryNames", categoryNamesGetter, categoryNamesSetter);
 
 	target->Set(String::NewSymbol("RasterBand"), constructor->GetFunction());
 }
@@ -117,6 +116,10 @@ Handle<Value> RasterBand::New(const Arguments& args)
 		void* ptr = ext->Value();
 		RasterBand *f = static_cast<RasterBand *>(ptr);
 		f->Wrap(args.This());
+
+		Handle<Value> overviews = RasterBandOverviews::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("overviews_"), overviews); 
+
 		return args.This();
 	} else {
 		return NODE_THROW("Cannot create band directly create with dataset instead");
@@ -163,103 +166,9 @@ Handle<Value> RasterBand::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD(RasterBand, flushCache, FlushCache);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getBand, Integer, GetBand);
-//NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getDataset, Dataset, GetDataset);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getRasterDataType, Integer, GetRasterDataType);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getAccess, Integer, GetAccess);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getNoDataValue, Number, GetNoDataValue);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMinimum, Number, GetMinimum);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaximum, Number, GetMaximum);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getOffset, Number, GetOffset);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getScale, Number, GetScale);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getUnitType, String, GetUnitType);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, hasArbitraryOverviews, Boolean, HasArbitraryOverviews);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getOverviewCount, Integer, GetOverviewCount);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskBand, RasterBand, GetMaskBand);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskFlags, Integer, GetMaskFlags);
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_DOUBLE_PARAM(RasterBand, setNoDataValue, SetNoDataValue, "no data value");
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_DOUBLE_PARAM(RasterBand, setOffset, SetOffset, "offset");
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_DOUBLE_PARAM(RasterBand, setScale, SetScale, "scale");
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(RasterBand, setUnitType, SetUnitType, "unit type");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(RasterBand, getOverview, RasterBand, GetOverview, "overview index");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(RasterBand, getRasterSampleOverview, RasterBand, GetRasterSampleOverview, "number of desired samples");
 NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(RasterBand, createMaskBand, CreateMaskBand, "number of desired samples");
-
-
-Handle<Value> RasterBand::getBlockSize(const Arguments& args)
-{
-	HandleScope scope;
-
-	int x, y;
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if (!band->this_) {
-		return NODE_THROW("RasterBand object has already been destroyed");
-	}
-	band->this_->GetBlockSize(&x, &y);
-
-	Local<Object> size = Object::New();
-	size->Set(String::NewSymbol("x"), Number::New(x));
-	size->Set(String::NewSymbol("y"), Number::New(y));
-
-	return scope.Close(size);
-}
-
-Handle<Value> RasterBand::getCategoryNames(const Arguments& args)
-{
-	HandleScope scope;
-
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if (!band->this_) {
-		return NODE_THROW("RasterBand object has already been destroyed");
-	}
-	char ** names = band->this_->GetCategoryNames();
-
-	Handle<Array> results = Array::New();
-
-	if (names) {
-		int i = 0;
-		while (names[i]) {
-			results->Set(i, String::New(names[i]));
-			i++;
-		}
-	}
-
-	return scope.Close(results);
-}
-
-Handle<Value> RasterBand::setCategoryNames(const Arguments& args)
-{
-	HandleScope scope;
-
-	Handle<Array> names;
-	NODE_ARG_ARRAY(0, "category names", names);
-
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
-	if (!band->this_) {
-		return NODE_THROW("RasterBand object has already been destroyed");
-	}
-
-	char **list = NULL;
-	if (names->Length() > 0) {
-		list = new char* [names->Length() + 1];
-		unsigned int i;
-		for (i = 0; i < names->Length(); i++) {
-			list[i] = TOSTR(names->Get(i));
-		}
-		list[i] = NULL;
-	}
-
-	int err = band->this_->SetCategoryNames(list);
-
-	if (list) {
-		delete [] list;
-	}
-
-	if (err) {
-		return NODE_THROW_CPLERR(err);
-	}
-	return Undefined();
-}
 
 Handle<Value> RasterBand::fill(const Arguments& args)
 {
@@ -364,6 +273,26 @@ Handle<Value> RasterBand::dsGetter(Local<String> property, const AccessorInfo &i
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
 }
+
+Handle<Value> RasterBand::overviewsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("overviews_")));
+}
+
+Handle<Value> RasterBand::idGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int id = band->this_->GetBand();
+
+	return id == 0 ? Null() : scope.Close(Integer::New(id));
+}
+
 Handle<Value> RasterBand::sizeGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
@@ -376,4 +305,282 @@ Handle<Value> RasterBand::sizeGetter(Local<String> property, const AccessorInfo 
 	result->Set(String::NewSymbol("x"), Integer::New(band->this_->GetXSize()));
 	result->Set(String::NewSymbol("y"), Integer::New(band->this_->GetYSize()));
 	return scope.Close(result);
+}
+
+Handle<Value> RasterBand::blockSizeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int x, y;
+	band->this_->GetBlockSize(&x, &y);
+
+	Local<Object> result = Object::New();
+	result->Set(String::NewSymbol("x"), Integer::New(x));
+	result->Set(String::NewSymbol("y"), Integer::New(y));
+	return scope.Close(result);
+}
+
+Handle<Value> RasterBand::minimumGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int success = 0;
+	double result = band->this_->GetMinimum(&success);
+	return scope.Close(Number::New(result));
+}
+
+Handle<Value> RasterBand::maximumGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int success = 0;
+	double result = band->this_->GetMaximum(&success);
+	return scope.Close(Number::New(result));
+}
+
+Handle<Value> RasterBand::offsetGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int success = 0;
+	double result = band->this_->GetOffset(&success);
+	return scope.Close(Number::New(result));
+}
+
+Handle<Value> RasterBand::scaleGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int success = 0;
+	double result = band->this_->GetScale(&success);
+	return scope.Close(Number::New(result));
+}
+
+Handle<Value> RasterBand::noDataValueGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	int success = 0;
+	double result = band->this_->GetNoDataValue(&success);
+
+
+	return scope.Close(success && !std::isnan(result) ? Number::New(result) : Null());
+}
+
+Handle<Value> RasterBand::unitTypeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	const char *result = band->this_->GetUnitType();
+	return scope.Close(SafeString::New(result));
+}
+
+Handle<Value> RasterBand::dataTypeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	GDALDataType result = band->this_->GetRasterDataType();
+	return scope.Close(Integer::New(result));
+}
+
+Handle<Value> RasterBand::readOnlyGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	GDALAccess result = band->this_->GetAccess();
+	return scope.Close(result == GA_Update ? False() : True());
+}
+
+Handle<Value> RasterBand::hasArbitraryOverviewsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	bool result = band->this_->HasArbitraryOverviews();
+	return scope.Close(Boolean::New(result));
+}
+
+
+Handle<Value> RasterBand::categoryNamesGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	char ** names = band->this_->GetCategoryNames();
+
+	Handle<Array> results = Array::New();
+
+	if (names) {
+		int i = 0;
+		while (names[i]) {
+			results->Set(i, String::New(names[i]));
+			i++;
+		}
+	}
+
+	return scope.Close(results);
+}
+
+void RasterBand::unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed");
+		return;
+	}
+
+	if (!value->IsString()) {
+		NODE_THROW("Unit type must be a string");
+		return;
+	}
+	const char *input = TOSTR(value);
+	CPLErr err = band->this_->SetUnitType(input);
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void RasterBand::noDataValueSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed"); 
+		return;
+	}
+	
+	double input;
+	
+	if (value->IsNull() || value -> IsUndefined()){
+		input = std::numeric_limits<double>::quiet_NaN();
+	} else if (value->IsNumber()) {
+		input = value->NumberValue();
+	} else {
+		NODE_THROW("No data value must be a number");
+		return;
+	}
+
+	CPLErr err = band->this_->SetNoDataValue(input);
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void RasterBand::scaleSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed");
+		return;
+	}
+
+	if (!value->IsNumber()) {
+		NODE_THROW("Scale must be a number");
+		return;
+	}
+	double input = value->NumberValue();
+	CPLErr err = band->this_->SetScale(input);
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void RasterBand::offsetSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed"); 
+		return;
+	}
+
+	if (!value->IsNumber()) {
+		NODE_THROW("Offset must be a number");
+		return;
+	}
+	double input = value->NumberValue();
+	CPLErr err = band->this_->SetOffset(input);
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void RasterBand::categoryNamesSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed"); 
+		return;
+	}
+
+	if(!value->IsArray()){
+		NODE_THROW("Category names must be an array"); 
+		return;
+	}
+	Handle<Array> names = Handle<Array>::Cast(value);
+
+	char **list = NULL;
+	if (names->Length() > 0) {
+		list = new char* [names->Length() + 1];
+		unsigned int i;
+		for (i = 0; i < names->Length(); i++) {
+			list[i] = TOSTR(names->Get(i));
+		}
+		list[i] = NULL;
+	}
+
+	int err = band->this_->SetCategoryNames(list);
+
+	if (list) {
+		delete [] list;
+	}
+
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
 }

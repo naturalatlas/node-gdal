@@ -30,6 +30,7 @@
 #include "collections/geometry_collection_children.hpp"
 #include "collections/polygon_rings.hpp"
 #include "collections/linestring_points.hpp"
+#include "collections/rasterband_overviews.hpp"
 
 // std
 #include <string>
@@ -78,6 +79,7 @@ namespace node_gdal {
 			GeometryCollectionChildren::Initialize(target);
 			PolygonRings::Initialize(target);
 			LineStringPoints::Initialize(target);
+			RasterBandOverviews::Initialize(target);
 
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));

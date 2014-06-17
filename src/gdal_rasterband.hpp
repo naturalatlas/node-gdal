@@ -23,46 +23,45 @@ public:
 	static Handle<Value> New(const Arguments &args);
 	static Handle<Value> New(GDALRasterBand *band);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getBand(const Arguments &args);
-	//static Handle<Value> getDataset(const Arguments &args);
-	static Handle<Value> getRasterDataType(const Arguments &args);
-	static Handle<Value> getBlockSize(const Arguments &args);
-	static Handle<Value> getAccess(const Arguments &args);
-	//static Handle<Value> rasterIO(const Arguments &args);
 	static Handle<Value> flushCache(const Arguments &args);
-	static Handle<Value> getCategoryNames(const Arguments &args);
-	static Handle<Value> getNoDataValue(const Arguments &args);
-	static Handle<Value> getMinimum(const Arguments &args);
-	static Handle<Value> getMaximum(const Arguments &args);
-	static Handle<Value> getOffset(const Arguments &args);
-	static Handle<Value> getScale(const Arguments &args);
-	static Handle<Value> getUnitType(const Arguments &args);
-	//static Handle<Value> getColorTable(const Arguments &args);
 	static Handle<Value> fill(const Arguments &args);
-	static Handle<Value> setCategoryNames(const Arguments &args);
-	static Handle<Value> setNoDataValue(const Arguments &args);
-	//static Handle<Value> setColorTable(const Arguments &args);
-	static Handle<Value> setOffset(const Arguments &args);
-	static Handle<Value> setScale(const Arguments &args);
-	static Handle<Value> setUnitType(const Arguments &args);
 	static Handle<Value> getStatistics(const Arguments &args);
 	static Handle<Value> computeStatistics(const Arguments &args);
 	static Handle<Value> setStatistics(const Arguments &args);
-	static Handle<Value> hasArbitraryOverviews(const Arguments &args);
-	static Handle<Value> getOverviewCount(const Arguments &args);
-	static Handle<Value> getOverview(const Arguments &args);
-	static Handle<Value> getRasterSampleOverview(const Arguments &args);
+	static Handle<Value> getMaskBand(const Arguments &args);
+	static Handle<Value> getMaskFlags(const Arguments &args);
+	static Handle<Value> createMaskBand(const Arguments &args);
+
+	// unimplemented methods
+	//static Handle<Value> getColorTable(const Arguments &args);
+	//static Handle<Value> setColorTable(const Arguments &args);
+	//static Handle<Value> rasterIO(const Arguments &args);
 	//static Handle<Value> buildOverviews(const Arguments &args);
 	//static Handle<Value> getHistogram(const Arguments &args);
 	//static Handle<Value> getDefaultHistogram(const Arguments &args);
 	//static Handle<Value> setDefaultHistogram(const Arguments &args);
-	static Handle<Value> getMaskBand(const Arguments &args);
-	static Handle<Value> getMaskFlags(const Arguments &args);
-	static Handle<Value> createMaskBand(const Arguments &args);
-	static Handle<Value> getMetadata(const Arguments &args);
 
 	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> idGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> overviewsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> blockSizeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> minimumGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> maximumGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> readOnlyGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> dataTypeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> hasArbitraryOverviewsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> unitTypeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> scaleGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> offsetGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> noDataValueGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> categoryNamesGetter(Local<String> property, const AccessorInfo &info);
+
+	static void unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void scaleSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void offsetSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void noDataValueSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void categoryNamesSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	static ObjectCache<GDALRasterBand*> cache;
 

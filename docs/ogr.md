@@ -79,7 +79,7 @@ Note: all methods throw errors if the datasource has already been explicitly des
 - `getDriver() : Driver`
 - `testCapability(string capability_name) : boolean`
 - `executeSQL(string sql_text, Geometry spatial_filter = null, string dialect = null) : Layer #throws // result sets are released when datasource is destroyed or V8 does GC on the layer`
-- `syncToDisk() #throws`
+- `flush() #throws`
 
 #### Properties
 
@@ -111,7 +111,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `getGeomType() : integer`
 - `getName() : string`
 - `testCapability(string capability_name) : boolean`
-- `syncToDisk() #throws`
+- `flush() #throws`
 - `getFIDColumn() : string`
 - `getGeometryColumn() : string`
 

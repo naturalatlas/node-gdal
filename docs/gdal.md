@@ -34,7 +34,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getGCPs() : object[]`
 - `setGCPs() : void #throws`
 - `getFileList() : string[]`
-- `flushCache() : void`
+- `flush() : void`
 
 #### Properties
 
@@ -85,33 +85,11 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 
 - `toString() : string`
 - `getMetadata(string domain = null) : object`
-- `getXSize() : integer`
-- `getYSize() : integer`
-- `getBand(integer i) : RasterBand`
-- `getRasterDataType() : integer`
-- `getBlockSize() : object`
-- `getAccess() : integer`
-- `flushCache() : void`
-- `getCategoryNames() : string[]`
-- `getNoDataValue() : Number`
-- `getMinimum() : Number`
-- `getMaximum() : Number`
-- `getOffset() : Number`
-- `getScale() : Number`
-- `getUnitType() : string`
+- `flush() : void`
 - `fill(number real_value, number imag_value = 0) : void #throws`
-- `setCategoryNames(string[] names) : void #throws`
-- `setNoDataValue(Number no_data_val) : void #throws`
-- `setOffset(Number offset) : void #throws`
-- `setScale(Number scale) : void #throws`
-- `setUnitType(string type) : void #throws`
 - `getStatistics(boolean allow_approx, boolean force) : object #throws`
 - `computeStatistics(boolean allow_approx) : object #throws`
 - `setStatistics(Number min, Number max, Number mean, Number std_dev) : void #throws`
-- `hasArbitraryOverviews() : boolean`
-- `getOverviewCount() : integer`
-- `getOverview(integer i) : RasterBand`
-- `getRasterSampleOverview(integer num_samples) : RasterBand`
 - `getMaskBand() : RasterBand`
 - `getMaskFlags() : integer`
 - `createMaskBand(integer num_samples) : void #throws`
@@ -119,15 +97,25 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 #### Properties
 
 - `ds : Dataset`
-
-#### Proposed Properties
-
+- `id : Integer`
 - `size : object`
-- `x_size : integer //width?`
-- `y_size : integer //height?`
-- `block_size : object`
-- `unit_type : string`
-- `scale : Number`
-- `offset : Number`
+- `blockSize : object`
+- `overviews : RasterBandOverviews`
+- `unitType : string`
+- `dataType : integer //GDALDataType`
 - `minimum : Number`
 - `maximum : Number`
+- `offset : Number`
+- `scale : Number`
+- `noDataValue : Number`
+- `readOnly : boolean`
+- `hasArbitraryOverviews : boolean`
+- `categoryNames : string[]`
+
+## RasterBandOverviews
+
+#### Methods
+
+- `get(integer id) : RasterBand`
+- `getBySampeCount(integer min_samples) : RasterBand`
+- `count() : integer`
