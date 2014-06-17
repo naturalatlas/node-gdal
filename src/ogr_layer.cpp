@@ -27,17 +27,17 @@ void Layer::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFIDColumn", getFIDColumn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometryColumn", getGeometryColumn);
 
 	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "features", featuresGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "name", nameGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "geomType", geomTypeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "geomColumn", geomColumnGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "fidColumn", fidColumnGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
 }
@@ -165,10 +165,6 @@ Handle<Value> Layer::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
-NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeomType, Integer, GetGeomType);
-NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getName, SafeString, GetName);
-NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getFIDColumn, SafeString, GetFIDColumn);
-NODE_WRAPPED_METHOD_WITH_RESULT(Layer, getGeometryColumn, SafeString, GetGeometryColumn);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
 
 /*
@@ -199,6 +195,46 @@ Handle<Value> Layer::srsGetter(Local<String> property, const AccessorInfo &info)
 		return NODE_THROW("Layer object has already been destroyed");
 	}
 	return scope.Close(SpatialReference::New(layer->this_->GetSpatialRef(), false));
+}
+
+Handle<Value> Layer::nameGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+	return scope.Close(SafeString::New(layer->this_->GetName()));
+}
+
+Handle<Value> Layer::geomColumnGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+	return scope.Close(SafeString::New(layer->this_->GetGeometryColumn()));
+}
+
+Handle<Value> Layer::fidColumnGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+	return scope.Close(SafeString::New(layer->this_->GetFIDColumn()));
+}
+
+Handle<Value> Layer::geomTypeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+	return scope.Close(Integer::New(layer->this_->GetGeomType()));
 }
 
 Handle<Value> Layer::featuresGetter(Local<String> property, const AccessorInfo &info)

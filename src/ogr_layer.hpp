@@ -38,6 +38,10 @@ namespace node_ogr {
 		static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
 		static Handle<Value> featuresGetter(Local<String> property, const AccessorInfo &info);
 		static Handle<Value> fieldsGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> fidColumnGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> geomColumnGetter(Local<String> property, const AccessorInfo &info);
+		static Handle<Value> geomTypeGetter(Local<String> property, const AccessorInfo &info);
 
 		static ObjectCache<OGRLayer*> cache;
 
