@@ -24,6 +24,7 @@
 			"PAM_ENABLED=1",
 			"OGR_ENABLED=1",
 			"HAVE_EXPAT=1",
+			"HAVE_GEOS=1",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
 		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],

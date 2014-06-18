@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/naturalatlas/node-gdal.png?branch=master)](https://travis-ci.org/naturalatlas/node-gdal)
 [![Build Status](https://ci.appveyor.com/api/projects/status/mo06c2r5opdwak95)](https://ci.appveyor.com/project/brianreavis/node-gdal)
 
-Read and write raster geospatial files straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [1.11.0](http://trac.osgeo.org/gdal/wiki/Release/1.11.0-News) comes bundled, so node-gdal will work straight out of the box.
+Read and write raster geospatial files straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [1.11.0](http://trac.osgeo.org/gdal/wiki/Release/1.11.0-News) with GEOS [3.4.2](http://trac.osgeo.org/geos/browser/tags/3.4.2/NEWS) comes bundled, so node-gdal will work straight out of the box.
 
 ```sh
 $ npm install gdal --save
