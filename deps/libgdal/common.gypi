@@ -1,5 +1,7 @@
 {
 	"variables": {
+		"shared_geos%": "false",
+		"deps_dir": "../",
 		"endianness": "<!(python -c \"import sys;print(sys.byteorder.upper())\")",
 	},
 	"target_defaults": {
@@ -27,6 +29,9 @@
 			"HAVE_GEOS=1",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
+		"dependencies": [
+			"<(deps_dir)/libexpat/libexpat.gyp:libexpat",
+		],
 		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
 		"cflags!": ["-fno-rtti", "-fno-exceptions"],
 		"conditions": [
@@ -43,6 +48,19 @@
 				"xcode_settings": {
 					"GCC_ENABLE_CPP_RTTI": "YES",
 					"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
+				}
+			}],
+			["shared_geos == 'false'", {
+				"dependencies": [
+					"<(deps_dir)/libgeos/libgeos.gyp:libgeos"
+				]
+			}, {
+				"libraries": ["<!@(geos-config --libs)"],
+				"cflags_cc": ["<!@(geos-config --cflags)"],
+				"xcode_settings": {
+					"OTHER_CPLUSPLUSFLAGS":[
+						"<!@(geos-config --cflags)"
+					]
 				}
 			}]
 		],
