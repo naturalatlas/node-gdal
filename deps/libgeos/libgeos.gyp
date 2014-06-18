@@ -288,6 +288,7 @@
 				"geos/src/operation/overlay/validate/OverlayResultValidator.cpp"
 			],
 			"include_dirs": [
+				"./arch/common",
 				"./geos/include"
 			],
 			"conditions": [
