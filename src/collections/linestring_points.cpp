@@ -154,12 +154,20 @@ Handle<Value> LineStringPoints::set(const Arguments& args)
 			geom->get()->setPoint(i, pt->get());
 		} else {
 			//set from object {x: 0, y: 5}
-			double x, y, z = 0;
+			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
-			NODE_DOUBLE_FROM_OBJ_OPT(obj, "z", z);
 
-			geom->get()->setPoint(i, x, y, z);
+			Handle<String> z_prop_name = String::NewSymbol("z");
+			if (obj->HasOwnProperty(z_prop_name)) {
+				Handle<Value> z_val = obj->Get(z_prop_name);
+				if (!z_val->IsNumber()) {
+					return NODE_THROW("z property must be number");
+				}
+				geom->get()->setPoint(i, x, y, z_val->NumberValue());
+			} else {
+				geom->get()->setPoint(i, x, y);
+			}
 		}
 	} else {
 		//set x, y, z from numeric arguments
@@ -205,12 +213,20 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 			geom->get()->addPoint(pt->get());
 		} else {
 			//set from object {x: 0, y: 5}
-			double x, y, z = 0;
+			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
-			NODE_DOUBLE_FROM_OBJ_OPT(obj, "z", z);
 
-			geom->get()->addPoint(x, y, z);
+			Handle<String> z_prop_name = String::NewSymbol("z");
+			if (obj->HasOwnProperty(z_prop_name)) {
+				Handle<Value> z_val = obj->Get(z_prop_name);
+				if (!z_val->IsNumber()) {
+					return NODE_THROW("z property must be number");
+				}
+				geom->get()->addPoint(x, y, z_val->NumberValue());
+			} else {
+				geom->get()->addPoint(x, y);
+			}
 		}
 	} else {
 		//set x, y, z from numeric arguments
