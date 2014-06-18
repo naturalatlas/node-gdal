@@ -65,7 +65,8 @@
 			"./gyp-formats/ogr_avc.gyp:libgdal_ogr_avc_frmt",
 			"./gyp-formats/ogr_geojson.gyp:libgdal_ogr_geojson_frmt",
 			"./gyp-formats/ogr_mem.gyp:libgdal_ogr_mem_frmt",
-			"./gyp-formats/ogr_mitab.gyp:libgdal_ogr_mitab_frmt"
+			"./gyp-formats/ogr_mitab.gyp:libgdal_ogr_mitab_frmt",
+			"./gyp-formats/ogr_kml.gyp:libgdal_ogr_kml_frmt"
 		],
 		"gdal_format_defs": [
 			"GDAL_FORMATS=gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg coasp tsx terragen blx til r northwood saga xyz hf2 kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib jpeg png ",
@@ -133,7 +134,8 @@
 			"AVC_ENABLED=1",
 			"GEOJSON_ENABLED=1",
 			"MEM_ENABLED=1",
-			"MITAB_ENABLED=1"
+			"MITAB_ENABLED=1",
+			"KML_ENABLED=1"
 		]
 	}
 }

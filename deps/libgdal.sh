@@ -74,7 +74,7 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	jpeg png
 	${OPT_GDAL_FORMATS}"
 
-OGR_FORMATS="shape vrt avc geojson mem mitab"
+OGR_FORMATS="shape vrt avc geojson mem mitab kml"
 
 mkdir -p $dir_formats_gyp
 
