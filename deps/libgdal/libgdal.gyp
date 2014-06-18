@@ -212,6 +212,7 @@
 				"./gdal/ogr/ogrsf_frmts/mem"
 			],
 			"dependencies": [
+				'../libexpat/libexpat.gyp:libexpat',
 				'<@(gdal_format_gyps)'
             ],
 			"defines": [
