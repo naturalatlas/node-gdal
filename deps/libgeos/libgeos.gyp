@@ -289,7 +289,8 @@
 			],
 			"include_dirs": [
 				"./arch/common",
-				"./geos/include"
+				"./geos/include",
+				"./geos/capi"
 			],
 			"conditions": [
 				["OS == 'win'", {
@@ -306,10 +307,18 @@
 			},
 			"direct_dependent_settings": {
 				"include_dirs": [
+					"./arch/common",
 					"./geos/include",
 					"./geos/capi"
 				],
-				"defines": []
+				"defines": [],
+				"conditions": [
+					["OS == 'win'", {
+						"include_dirs": ["./arch/win"]
+					}, {
+						"include_dirs": ["./arch/unix"]
+					}]
+				],
 			}
 		}
 	]
