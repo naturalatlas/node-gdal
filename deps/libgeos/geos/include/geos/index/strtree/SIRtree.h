@@ -66,7 +66,7 @@ public:
 	std::vector<void*>* query(double x1, double x2)
 	{
 		std::vector<void*>* results = new std::vector<void*>();
-		Interval interval(std::min(x1, x2), std::max(x1, x2));
+		Interval interval((std::min)(x1, x2), (std::max)(x1, x2));
 		AbstractSTRtree::query(&interval, *results);
 		return results;
 	}

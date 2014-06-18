@@ -1,0 +1,11 @@
+--- ./geos/src/operation/buffer/OffsetCurveSetBuilder.cpp	2014-06-18 15:00:42.000000000 -0600
++++ ./geos/src/operation/buffer/OffsetCurveSetBuilder_new.cpp	2014-06-18 15:00:28.000000000 -0600
+@@ -333,7 +333,7 @@
+ 		return isTriangleErodedCompletely(ringCoord, bufferDistance);
+ 
+   const Envelope* env = ring->getEnvelopeInternal();
+-  double envMinDimension = std::min(env->getHeight(), env->getWidth());
++  double envMinDimension = (std::min)(env->getHeight(), env->getWidth());
+   if (bufferDistance < 0.0 && 2 * std::abs(bufferDistance) > envMinDimension)
+       return true;
+ 

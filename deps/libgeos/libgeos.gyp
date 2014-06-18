@@ -115,6 +115,7 @@
 				"geos/src/noding/SingleInteriorIntersectionFinder.cpp",
 				"geos/src/operation/GeometryGraphOperation.cpp",
 				"geos/src/operation/IsSimpleOp.cpp",
+				"geos/src/planargraph/PlanarGraph_planargraph.cpp",
 				"geos/src/planargraph/DirectedEdgeStar_planargraph.cpp",
 				"geos/src/planargraph/DirectedEdge_planargraph.cpp",
 				"geos/src/planargraph/Edge_planargraph.cpp",

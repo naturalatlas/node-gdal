@@ -85,9 +85,9 @@ BufferOp::precisionScaleFactor(const Geometry *g,
 	int maxPrecisionDigits)
 {
   const Envelope *env=g->getEnvelopeInternal();
-  double envMax = std::max(
-    std::max(fabs(env->getMaxX()), fabs(env->getMinX())),
-    std::max(fabs(env->getMaxY()), fabs(env->getMinY()))
+  double envMax = (std::max)(
+    (std::max)(fabs(env->getMaxX()), fabs(env->getMinX())),
+    (std::max)(fabs(env->getMaxY()), fabs(env->getMinY()))
   );
 
   double expandByDistance = distance > 0.0 ? distance : 0.0;

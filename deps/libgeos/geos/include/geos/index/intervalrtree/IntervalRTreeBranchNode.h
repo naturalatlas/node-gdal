@@ -47,7 +47,7 @@ private:
 protected:
 public:
 	IntervalRTreeBranchNode( const IntervalRTreeNode * n1, const IntervalRTreeNode * n2)
-	:	IntervalRTreeNode( std::min( n1->getMin(), n2->getMin()), std::max( n1->getMax(), n2->getMax())),
+	:	IntervalRTreeNode( (std::min)( n1->getMin(), n2->getMin()), (std::max)( n1->getMax(), n2->getMax())),
 		node1( n1),
 		node2( n2)
 	{ }

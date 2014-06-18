@@ -1,0 +1,15 @@
+--- ./geos/src/operation/buffer/BufferOp.cpp	2014-06-18 14:52:39.000000000 -0600
++++ ./geos/src/operation/buffer/BufferOp_new.cpp	2014-06-18 14:51:05.000000000 -0600
+@@ -85,9 +85,9 @@
+ 	int maxPrecisionDigits)
+ {
+   const Envelope *env=g->getEnvelopeInternal();
+-  double envMax = std::max(
+-    std::max(fabs(env->getMaxX()), fabs(env->getMinX())),
+-    std::max(fabs(env->getMaxY()), fabs(env->getMinY()))
++  double envMax = (std::max)(
++    (std::max)(fabs(env->getMaxX()), fabs(env->getMinX())),
++    (std::max)(fabs(env->getMaxY()), fabs(env->getMinY()))
+   );
+ 
+   double expandByDistance = distance > 0.0 ? distance : 0.0;

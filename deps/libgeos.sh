@@ -110,4 +110,11 @@ mv $dir_geos/src/index/strtree/Interval.cpp $dir_geos/src/index/strtree/Interval
 mv $dir_geos/src/geomgraph/Edge.cpp $dir_geos/src/geomgraph/Edge_geomgraph.cpp
 mv $dir_geos/src/planargraph/Edge.cpp $dir_geos/src/planargraph/Edge_planargraph.cpp
 mv $dir_geos/src/geomgraph/PlanarGraph.cpp $dir_geos/src/geomgraph/PlanarGraph_geomgraph.cpp
-mv $dir_geos/src/planargraph/PlanarGraph.cpp $dir_geos/src/planargraph/PlanarGraph_planargraph.cppmv
+mv $dir_geos/src/planargraph/PlanarGraph.cpp $dir_geos/src/planargraph/PlanarGraph_planargraph.cpp
+
+# visual studio std::min/std::max error (C2589)
+# http://trac.osgeo.org/geos/ticket/616
+patch $dir_geos/src/operation/buffer/BufferOp.cpp < patches/BufferOp_minmax.diff
+patch $dir_geos/src/operation/buffer/OffsetCurveSetBuilder.cpp < patches/OffsetCurveSetBuilder_minmax.diff
+patch $dir_geos/include/geos/index/strtree/SIRtree.h < patches/SIRtree_minmax.diff
+patch $dir_geos/include/geos/index/intervalrtree/IntervalRTreeBranchNode.h < patches/IntervalRTreeBranchNode_minmax.diff

@@ -333,7 +333,7 @@ OffsetCurveSetBuilder::isErodedCompletely(const LinearRing *ring,
 		return isTriangleErodedCompletely(ringCoord, bufferDistance);
 
   const Envelope* env = ring->getEnvelopeInternal();
-  double envMinDimension = std::min(env->getHeight(), env->getWidth());
+  double envMinDimension = (std::min)(env->getHeight(), env->getWidth());
   if (bufferDistance < 0.0 && 2 * std::abs(bufferDistance) > envMinDimension)
       return true;
 
