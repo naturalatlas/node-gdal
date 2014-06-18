@@ -29,7 +29,7 @@ describe('Open', function() {
 				-3.28077925649814
 			];
 
-			var actual_geotransform = ds.getGeoTransform();
+			var actual_geotransform = ds.geoTransform;
 			var delta = .00001;
 			assert.closeTo(actual_geotransform[0], expected_geotransform[0], delta);
 			assert.closeTo(actual_geotransform[1], expected_geotransform[1], delta);
@@ -62,7 +62,7 @@ describe('Open', function() {
 
 		it('should be able to read block size', function() {
 			var band = ds.bands.get(1);
-			var size = band.getBlockSize();
+			var size = band.blockSize;
 			assert.equal(size.x, 1361);
 			assert.equal(size.y, 1);
 		});

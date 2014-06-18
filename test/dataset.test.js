@@ -7,6 +7,10 @@ var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
 describe('Dataset', function() {
+	var ds;
+	before(function() {
+		ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+	})
 	it('should be exposed', function() {
 		assert.ok(gdal.Dataset);
 	});
@@ -14,6 +18,12 @@ describe('Dataset', function() {
 		assert.throws(function() {
 			new gdal.Dataset();
 		}, /Cannot create dataset directly/);
+	});
+
+	describe('"bands" property', function() {
+		it('should exist', function() {
+			assert.instanceOf(ds.bands, gdal.DatasetBands);
+		});
 	});
 
 	describe('"srs" property', function() {
@@ -70,23 +80,6 @@ describe('Dataset', function() {
 					ds.size = {x: 0, y: 0}
 				}, /size is a read\-only property/);
 			});
-		});
-	});
-
-	describe('getRasterBand()', function() {
-		var ds;
-		before(function() {
-			ds = gdal.open(__dirname + "/data/sample.tif");
-		});
-
-		it('should throw when invalid band', function() {
-			assert.throws(function() {
-				ds.getRasterBand(2);
-			}, /band not found/);
-		});
-		it('should return RasterBand instance when valid band', function() {
-			var band = ds.getRasterBand(1);
-			assert.instanceOf(band, gdal.RasterBand);
 		});
 	});
 

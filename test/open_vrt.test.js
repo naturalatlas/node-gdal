@@ -29,7 +29,7 @@ describe('Open', function() {
 				-7.502071930145942
 			];
 
-			var actual_geotransform = ds.getGeoTransform();
+			var actual_geotransform = ds.geoTransform;
 			var delta = .00001;
 			assert.closeTo(actual_geotransform[0], expected_geotransform[0], delta);
 			assert.closeTo(actual_geotransform[1], expected_geotransform[1], delta);
