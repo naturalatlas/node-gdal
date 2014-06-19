@@ -11,7 +11,7 @@ describe('Driver', function() {
 			DMD_EXTENSION: "tif",
 			DCAP_CREATE: 'YES'
 		},
-		"VRT": {
+		"VRT:raster": {
 			DMD_LONGNAME: "Virtual Raster",
 			DMD_MIMETYPE: undefined,
 			DMD_EXTENSION: "vrt",
@@ -40,7 +40,9 @@ describe('Driver', function() {
 	Object.keys(expected).forEach(function(o) {
 		describe(o, function() {
 			it('should exist', function() {
-				var driver = gdal.getDriverByName(o);
+				var driver = gdal.drivers.get(o);
+				assert.ok(driver);
+
 				var metadata = driver.getMetadata();
 				var expected_meta = expected[o];
 				assert.equal(expected_meta.DMD_LONGNAME,metadata.DMD_LONGNAME);

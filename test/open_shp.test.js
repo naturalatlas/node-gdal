@@ -1,6 +1,6 @@
 'use strict';
 
-var ogr = require('../lib/gdal.js').ogr;
+var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
 
@@ -10,7 +10,7 @@ describe('Open', function() {
 
 		it('should not throw', function() {
 			filename = path.join(__dirname,"data/sample.shp");
-			ds = ogr.open(filename);
+			ds = gdal.open(filename);
 		});
 		it('should be able to read layer count', function() {
 			assert.equal(ds.layers.count(), 1);

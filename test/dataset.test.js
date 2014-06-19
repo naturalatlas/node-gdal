@@ -56,17 +56,17 @@ describe('Dataset', function() {
 					'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
 					'UNIT["Meter",1.0]]';
 
-				ds.srs = new gdal.ogr.SpatialReference.fromWKT(ref);
+				ds.srs = new gdal.SpatialReference.fromWKT(ref);
 				assert.equal(ds.srs.toWKT(), ref);
 			});
 		});
 	});
 
-	describe('"size" property', function() {
+	describe('"rasterSize" property', function() {
 		describe('getter', function() {
 			it('should return dataset dimensions', function() {
 				var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
-				assert.deepEqual(ds.size, {
+				assert.deepEqual(ds.rasterSize, {
 					x: 495,
 					y: 286
 				});
@@ -77,8 +77,8 @@ describe('Dataset', function() {
 			it('should throw', function() {
 				var ds = gdal.open(__dirname + "/data/sample.tif");
 				assert.throws(function() {
-					ds.size = {x: 0, y: 0}
-				}, /size is a read\-only property/);
+					ds.rasterSize = {x: 0, y: 0}
+				}, /rasterSize is a read\-only property/);
 			});
 		});
 	});

@@ -14,8 +14,8 @@ describe('Open', function() {
 		});
 
 		it('should be able to read raster size', function() {
-			assert.equal(ds.size.x,1951);
-			assert.equal(ds.size.y,3109);
+			assert.equal(ds.rasterSize.x,1951);
+			assert.equal(ds.rasterSize.y,3109);
 			assert.equal(ds.bands.count(),1);
 		});
 
