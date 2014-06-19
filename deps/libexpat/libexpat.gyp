@@ -44,6 +44,13 @@
 				"defines": [
 					"XML_STATIC=1",
 					"HAVE_EXPAT_CONFIG_H=1",
+				],
+				"conditions": [
+					["OS == 'win'", {
+						"include_dirs": ["./arch/win"]
+					}, {
+						"include_dirs": ["./arch/unix"]
+					}]
 				]
 			}
 		}
