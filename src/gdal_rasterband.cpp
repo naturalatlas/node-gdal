@@ -7,7 +7,7 @@
 #include "collections/rasterband_overviews.hpp"
 
 #include <limits>
-#include <cmath>
+#include <cpl_port.h>
 
 Persistent<FunctionTemplate> RasterBand::constructor;
 ObjectCache<GDALRasterBand*> RasterBand::cache;
@@ -388,7 +388,7 @@ Handle<Value> RasterBand::noDataValueGetter(Local<String> property, const Access
 	double result = band->this_->GetNoDataValue(&success);
 
 
-	return scope.Close(success && !std::isnan(result) ? Number::New(result) : Null());
+	return scope.Close(success && !CPLIsNan(result) ? Number::New(result) : Null());
 }
 
 Handle<Value> RasterBand::unitTypeGetter(Local<String> property, const AccessorInfo &info)
