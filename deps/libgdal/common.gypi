@@ -1,4 +1,7 @@
 {
+	"includes": [
+		"../../common.gypi"
+	],
 	"variables": {
 		"shared_geos%": "false",
 		"deps_dir": "../",

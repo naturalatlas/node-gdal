@@ -1,4 +1,7 @@
 {
+	"includes": [
+		"../../common.gypi"
+	],
 	"variables": {
 		"endianness": "<!(python -c \"import sys;print(sys.byteorder.upper())\")",
 	},
