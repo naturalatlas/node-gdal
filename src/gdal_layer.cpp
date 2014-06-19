@@ -135,7 +135,7 @@ Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent, bool result_set)
 	//add reference to datasource so datasource doesnt get GC'ed while layer is alive
 	if (parent) {
 		Handle<Value> ds;
-		#if GDAL_MAJOR > 2
+		#if GDAL_VERSION_MAJOR > 2
 			GDALDataset *raw_parent = parent->getDataset();
 			if (Dataset::dataset_cache.has(raw_parent)) {
 				ds = Dataset::dataset_cache.get(raw_parent);

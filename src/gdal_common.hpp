@@ -3,6 +3,7 @@
 #define __GDAL_COMMON_H__
 
 #include <v8.h>
+#include <gdal_version.h>
 
 //String::New(null) -> seg fault
 class SafeString {

@@ -18,7 +18,7 @@ void GDALDrivers::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
 
 	GDALAllRegister();
-	#if GDAL_MAJOR < 2
+	#if GDAL_VERSION_MAJOR < 2
 	OGRRegisterAll();
 	#endif
 
@@ -84,7 +84,7 @@ Handle<Value> GDALDrivers::get(const Arguments& args)
 		//with <2.0 require user to specify which driver to pick
 		std::string name = TOSTR(args[0]);
 
-		#if GDAL_MAJOR < 2
+		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") {
 			return NODE_THROW("Name \"VRT\" is ambiguous before GDAL 2.0. Use VRT:raster or VRT:vector instead");
 		}
@@ -95,7 +95,7 @@ Handle<Value> GDALDrivers::get(const Arguments& args)
 		#endif
 		
 		if(name == "VRT:vector") {
-			#if GDAL_MAJOR < 2
+			#if GDAL_VERSION_MAJOR < 2
 			ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName("VRT");
 			if(ogr_driver) {
 				return scope.Close(Driver::New(ogr_driver));
@@ -121,7 +121,7 @@ Handle<Value> GDALDrivers::get(const Arguments& args)
 			return scope.Close(Driver::New(gdal_driver));
 		}
 
-		#if GDAL_MAJOR < 2
+		#if GDAL_VERSION_MAJOR < 2
 		i -= GetGDALDriverManager()->GetDriverCount();
 		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(i);
 		if(ogr_driver) {
@@ -142,7 +142,7 @@ Handle<Value> GDALDrivers::getNames(const Arguments& args)
 	int i, ogr_count = 0;
 	std::string name;
 
-	#if GDAL_MAJOR < 2
+	#if GDAL_VERSION_MAJOR < 2
 		ogr_count = OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount();
 	#endif
 	
@@ -153,7 +153,7 @@ Handle<Value> GDALDrivers::getNames(const Arguments& args)
 	for (i = 0; i < gdal_count; ++i) {
 		GDALDriver *driver = GetGDALDriverManager()->GetDriver(i);
 		name = driver->GetDescription();
-		#if GDAL_MAJOR < 2
+		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") name = "VRT:raster";
 		#endif
 		driver_names->Set(i, SafeString::New(name.c_str()));
@@ -162,7 +162,7 @@ Handle<Value> GDALDrivers::getNames(const Arguments& args)
 	for (; i < n; ++i) {
 		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(i - gdal_count);
 		name = driver->GetName();
-		#if GDAL_MAJOR < 2
+		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") name = "VRT:vector";
 		#endif
 		driver_names->Set(i, SafeString::New(name.c_str()));

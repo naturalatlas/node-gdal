@@ -76,7 +76,7 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -113,7 +113,7 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -168,7 +168,7 @@ Handle<Value> DatasetLayers::count(const Arguments& args)
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -191,7 +191,7 @@ Handle<Value> DatasetLayers::copy(const Arguments& args)
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -244,7 +244,7 @@ Handle<Value> DatasetLayers::remove(const Arguments& args)
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();

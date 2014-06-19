@@ -47,9 +47,7 @@
 			"defines": [
 				"PLATFORM='<(OS)'",
 				"_LARGEFILE_SOURCE",
-				"_FILE_OFFSET_BITS=64",
-				"GDAL_MAJOR=1",
-				"GDAL_MINOR=11"
+				"_FILE_OFFSET_BITS=64"
 			],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"

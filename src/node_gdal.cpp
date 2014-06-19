@@ -112,11 +112,10 @@ namespace node_gdal {
 			GDALDrivers::Initialize(target);
 			target->Set(String::NewSymbol("drivers"), GDALDrivers::New());
 
-			Local<Object> versions = Object::New();
-			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
-			versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
-
-			target->Set(String::NewSymbol("versions"), versions);
+			// Local<Object> versions = Object::New();
+			// versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
+			// versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
+			// target->Set(String::NewSymbol("versions"), versions);
 
 			NODE_SET_METHOD(target, "quiet", QuietOutput);
 			NODE_SET_METHOD(target, "verbose", VerboseOutput);
@@ -210,6 +209,8 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, OFTDate);
 			NODE_DEFINE_CONSTANT(target, OFTTime);
 			NODE_DEFINE_CONSTANT(target, OFTDateTime);
+
+			target->Set(String::NewSymbol("version"), String::New(GDAL_RELEASE_NAME));
 
 			target->Set(String::NewSymbol("CreateDataSourceOption"), String::New(ODrCCreateDataSource));
 			target->Set(String::NewSymbol("DeleteDataSourceOption"), String::New(ODrCDeleteDataSource));

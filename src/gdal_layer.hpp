@@ -55,7 +55,7 @@ public:
 private:
 	~Layer();
 	OGRLayer *this_;
-	#if GDAL_MAJOR > 2
+	#if GDAL_VERSION_MAJOR > 2
 		GDALDataset *parent_ds;
 	#else
 		OGRDataSource *parent_ds;
