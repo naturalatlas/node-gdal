@@ -1,6 +1,6 @@
-#include "../ogr_common.hpp"
-#include "../ogr_datasource.hpp"
-#include "../ogr_layer.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_dataset.hpp"
+#include "../gdal_layer.hpp"
 #include "dataset_layers.hpp"
 
 Persistent<FunctionTemplate> DatasetLayers::constructor;
@@ -74,9 +74,19 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 	HandleScope scope;
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Datasource object already destroyed");
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	
+	#if GDAL_MAJOR > 2
+		GDALDataset *raw = ds->getDataset();
+	#else
+		OGRDataSource *raw = ds->getDatasource();
+		if(!ds->uses_ogr && raw) {
+			return Null();
+		}
+	#endif
+
+	if (!raw) {
+		return NODE_THROW("Dataset object already destroyed");
 	}
 
 	if(args.Length() < 1) {
@@ -86,29 +96,40 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 	OGRLayer *lyr;
 	
 	if(args[0]->IsString()) {
-		lyr = ds->get()->GetLayerByName(TOSTR(args[0]));
+		lyr = raw->GetLayerByName(TOSTR(args[0]));
 	} else if(args[0]->IsNumber()) {
-		lyr = ds->get()->GetLayer(args[0]->IntegerValue());
+		lyr = raw->GetLayer(args[0]->IntegerValue());
 	} else {
 		return NODE_THROW("method must be given integer or string")
 	}
 
-	return scope.Close(node_ogr::Layer::New(lyr, ds->get()));
+	return scope.Close(Layer::New(lyr, ds));
 }
 
 Handle<Value> DatasetLayers::create(const Arguments& args)
 {
 	HandleScope scope;
+
+	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+
+	#if GDAL_MAJOR > 2
+		GDALDataset *raw = ds->getDataset();
+	#else
+		OGRDataSource *raw = ds->getDatasource();
+		if(!ds->uses_ogr) {
+			return NODE_THROW("Dataset does not support creating layers");
+		}
+	#endif
+
+	if (!raw) {
+		return NODE_THROW("Dataset object already destroyed");
+	}
+
 	std::string layer_name;
 	std::string spatial_ref = "";
 	OGRwkbGeometryType geom_type = wkbUnknown;
 	Handle<Array> layer_options = Array::New(0);
-
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Datasource object already destroyed");
-	}
 
 	NODE_ARG_STR(0, "layer name", layer_name);
 	NODE_ARG_OPT_STR(1, "spatial reference", spatial_ref);
@@ -124,7 +145,7 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 		}
 	}
 
-	OGRLayer *layer = ds->get()->CreateLayer(layer_name.c_str(),
+	OGRLayer *layer = raw->CreateLayer(layer_name.c_str(),
 					  NULL,
 					  geom_type,
 					  options);
@@ -134,7 +155,7 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 	}
 
 	if (layer) {
-		return scope.Close(node_ogr::Layer::New(layer, ds->get(), false));
+		return scope.Close(Layer::New(layer, ds, false));
 	} else {
 		return NODE_THROW("Error creating layer");
 	}
@@ -145,12 +166,22 @@ Handle<Value> DatasetLayers::count(const Arguments& args)
 	HandleScope scope;
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Datasource object already destroyed");
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+
+	#if GDAL_MAJOR > 2
+		GDALDataset *raw = ds->getDataset();
+	#else
+		OGRDataSource *raw = ds->getDatasource();
+		if(!ds->uses_ogr && raw) {
+			return scope.Close(Integer::New(0));
+		}
+	#endif
+
+	if (!raw) {
+		return NODE_THROW("Dataset object already destroyed");
 	}
 	
-	return scope.Close(Integer::New(ds->get()->GetLayerCount()));
+	return scope.Close(Integer::New(raw->GetLayerCount()));
 }
 
 Handle<Value> DatasetLayers::copy(const Arguments& args)
@@ -158,16 +189,26 @@ Handle<Value> DatasetLayers::copy(const Arguments& args)
 	HandleScope scope;
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Datasource object already destroyed");
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+
+	#if GDAL_MAJOR > 2
+		GDALDataset *raw = ds->getDataset();
+	#else
+		OGRDataSource *raw = ds->getDatasource();
+		if(!ds->uses_ogr) {
+			return NODE_THROW("Dataset does not support copying layers");
+		}
+	#endif
+
+	if (!raw) {
+		return NODE_THROW("Dataset object already destroyed");
 	}
 
-	node_ogr::Layer *layer_to_copy;
+	Layer *layer_to_copy;
 	std::string new_name = "";
 	Handle<Array> layer_options = Array::New(0);
 
-	NODE_ARG_WRAPPED(0, "layer to copy", node_ogr::Layer, layer_to_copy);
+	NODE_ARG_WRAPPED(0, "layer to copy", Layer, layer_to_copy);
 	NODE_ARG_STR(1, "new layer name", new_name);
 	NODE_ARG_ARRAY_OPT(2, "layer creation options", layer_options);
 
@@ -180,7 +221,7 @@ Handle<Value> DatasetLayers::copy(const Arguments& args)
 		}
 	}
 
-	OGRLayer *layer = ds->get()->CopyLayer(layer_to_copy->get(),
+	OGRLayer *layer = raw->CopyLayer(layer_to_copy->get(),
 										   new_name.c_str(),
 										   options);
 
@@ -189,7 +230,7 @@ Handle<Value> DatasetLayers::copy(const Arguments& args)
 	}
 
 	if (layer) {
-		return scope.Close(node_ogr::Layer::New(layer, ds->get()));
+		return scope.Close(Layer::New(layer, ds));
 	} else {
 		return NODE_THROW("Error copying layer");
 	}
@@ -201,14 +242,25 @@ Handle<Value> DatasetLayers::remove(const Arguments& args)
 	HandleScope scope;
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
-	Datasource *ds = ObjectWrap::Unwrap<Datasource>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Datasource object already destroyed");
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	
+	#if GDAL_MAJOR > 2
+		GDALDataset *raw = ds->getDataset();
+	#else
+		OGRDataSource *raw = ds->getDatasource();
+		if(!ds->uses_ogr) {
+			return NODE_THROW("Dataset does not support removing layers");
+		}
+	#endif
+
+	if (!raw) {
+		return NODE_THROW("Dataset object already destroyed");
 	}
+
 	
 	int i;
 	NODE_ARG_INT(0, "layer index", i);
-	int err = ds->get()->DeleteLayer(i);
+	OGRErr err = raw->DeleteLayer(i);
 	if(err) {
 		return NODE_THROW_OGRERR(err);
 	}

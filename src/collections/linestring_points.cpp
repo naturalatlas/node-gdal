@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_geometry.hpp"
-#include "../ogr_point.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_geometry.hpp"
+#include "../gdal_point.hpp"
 #include "linestring_points.hpp"
 
 Persistent<FunctionTemplate> LineStringPoints::constructor;
-
-using namespace node_ogr;
 
 void LineStringPoints::Initialize(Handle<Object> target)
 {

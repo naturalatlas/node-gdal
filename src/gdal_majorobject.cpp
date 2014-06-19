@@ -13,7 +13,8 @@ void MajorObject::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("MajorObject"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMetadata", getMetadata);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getDescription", getDescription);
+
+	ATTR(constructor, "description", descriptionGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("MajorObject"), constructor->GetFunction());
 }
@@ -63,32 +64,47 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 	HandleScope scope;
 
 	std::string domain("");
-
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
 	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
 	if (!obj->this_) {
 		return NODE_THROW("MajorObject object has already been destroyed");
 	}
-	char **metadata = obj->this_->GetMetadata(domain.empty() ? NULL : domain.c_str());
 
-	if (!metadata) {
-		return Undefined();
-	}
+	return scope.Close(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
+}
+
+Handle<Value> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
+{
+	HandleScope scope;
+
+	char **metadata = obj->GetMetadata(domain);
 
 	Local<Object> result = Object::New();
 
-	int i = 0;
-	while (metadata[i]) {
-		char* val = strchr(metadata[i], '=');
-		if (val) {
-			*val = 0; //split string into key and value
-			result->Set(String::NewSymbol(metadata[i]), String::New(val+1));
+	if (metadata) {
+		int i = 0;
+		while (metadata[i]) {
+			char* val = strchr(metadata[i], '=');
+			if (val) {
+				*val = 0; //split string into key and value
+				result->Set(String::NewSymbol(metadata[i]), String::New(val+1));
+			}
+			i++;
 		}
-		i++;
 	}
 
 	return scope.Close(result);
 }
 
-NODE_WRAPPED_METHOD_WITH_RESULT(MajorObject, getDescription, SafeString, GetDescription);
+
+Handle<Value> MajorObject::descriptionGetter(Local<String> property, const AccessorInfo &info) {
+	HandleScope scope;
+
+	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(info.This());
+	if (!obj->this_) {
+		return NODE_THROW("MajorObject object has already been destroyed");
+	}
+
+	return scope.Close(SafeString::New(obj->this_->GetDescription()));
+}

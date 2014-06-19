@@ -73,20 +73,25 @@ Handle<Value> DatasetBands::get(const Arguments& args)
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
-
-	int band_id;
-	NODE_ARG_INT(0, "band id", band_id);
 	
-	GDALRasterBand *band = ds->get()->GetRasterBand(band_id);
+	if (ds->uses_ogr){
+		OGRDataSource* raw = ds->getDatasource();
+		if (!raw) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
+		return Null();
+	} else {
+		GDALDataset* raw = ds->getDataset();
+		if (!raw) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
+		int band_id;
+		NODE_ARG_INT(0, "band id", band_id);
+	
+		GDALRasterBand *band = raw->GetRasterBand(band_id);
 
-	if (band == NULL) {
-		return NODE_THROW("Specified band not found");
+		return scope.Close(RasterBand::New(band));
 	}
-
-	return scope.Close(RasterBand::New(band));
 }
 
 Handle<Value> DatasetBands::create(const Arguments& args)
@@ -95,7 +100,13 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	if (!ds->get()) {
+	
+	if (ds->uses_ogr){
+		return NODE_THROW("Dataset does not support getting creating bands");
+	} 
+
+	GDALDataset* raw = ds->getDataset();
+	if (!raw) {
 		return NODE_THROW("Dataset object has already been destroyed");
 	}
 
@@ -113,7 +124,7 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 		}
 	}
 
-	CPLErr err = ds->get()->AddBand(type, options);
+	CPLErr err = raw->AddBand(type, options);
 
 	if (options) {
 		delete [] options;
@@ -123,7 +134,7 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 		return NODE_THROW_CPLERR(err);
 	}
 
-	return scope.Close(RasterBand::New(ds->get()->GetRasterBand(ds->get()->GetRasterCount())));
+	return scope.Close(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount())));
 }
 
 Handle<Value> DatasetBands::count(const Arguments& args)
@@ -132,11 +143,20 @@ Handle<Value> DatasetBands::count(const Arguments& args)
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	if (!ds->get()) {
-		return NODE_THROW("Dataset object has already been destroyed");
-	}
 	
-	return scope.Close(Integer::New(ds->get()->GetRasterCount()));
+	if (ds->uses_ogr){
+		OGRDataSource* raw = ds->getDatasource();
+		if (!raw) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
+		return scope.Close(Integer::New(0));
+	} else {
+		GDALDataset* raw = ds->getDataset();
+		if (!raw) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
+		return scope.Close(Integer::New(raw->GetRasterCount()));
+	}
 }
 
 Handle<Value> DatasetBands::dsGetter(Local<String> property, const AccessorInfo &info)

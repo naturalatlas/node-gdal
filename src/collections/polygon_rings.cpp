@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_geometry.hpp"
-#include "../ogr_linearring.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_geometry.hpp"
+#include "../gdal_linearring.hpp"
 #include "polygon_rings.hpp"
 
 Persistent<FunctionTemplate> PolygonRings::constructor;
-
-using namespace node_ogr;
 
 void PolygonRings::Initialize(Handle<Object> target)
 {

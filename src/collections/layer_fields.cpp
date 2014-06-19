@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_field_defn.hpp"
-#include "../ogr_layer.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_field_defn.hpp"
+#include "../gdal_layer.hpp"
 #include "layer_fields.hpp"
 
 Persistent<FunctionTemplate> LayerFields::constructor;
-
-using namespace node_ogr;
 
 void LayerFields::Initialize(Handle<Object> target)
 {
@@ -22,6 +20,7 @@ void LayerFields::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
 
 	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);

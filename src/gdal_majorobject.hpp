@@ -21,7 +21,9 @@ public:
 	static Handle<Value> New(const Arguments &args);
 	static Handle<Value> New(GDALMajorObject *obj);
 	static Handle<Value> getMetadata(const Arguments &args);
-	static Handle<Value> getDescription(const Arguments &args);
+	static Handle<Value> getMetadata(GDALMajorObject *obj, const char *domain);
+	
+	static Handle<Value> descriptionGetter(Local<String> property, const AccessorInfo &info);
 
 	MajorObject();
 	MajorObject(GDALMajorObject *obj);

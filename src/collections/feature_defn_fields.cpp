@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_field_defn.hpp"
-#include "../ogr_feature_defn.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_field_defn.hpp"
+#include "../gdal_feature_defn.hpp"
 #include "feature_defn_fields.hpp"
 
 Persistent<FunctionTemplate> FeatureDefnFields::constructor;
-
-using namespace node_ogr;
 
 void FeatureDefnFields::Initialize(Handle<Object> target)
 {

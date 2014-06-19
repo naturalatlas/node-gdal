@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_layer.hpp"
-#include "../ogr_feature.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_layer.hpp"
+#include "../gdal_feature.hpp"
 #include "layer_features.hpp"
 
 Persistent<FunctionTemplate> LayerFeatures::constructor;
-
-using namespace node_ogr;
 
 void LayerFeatures::Initialize(Handle<Object> target)
 {

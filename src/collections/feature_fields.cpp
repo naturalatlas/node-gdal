@@ -1,13 +1,11 @@
-#include "../ogr_common.hpp"
-#include "../ogr_feature.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_feature.hpp"
 #include "feature_fields.hpp"
 
 // node
 #include <node_buffer.h>
 
 Persistent<FunctionTemplate> FeatureFields::constructor;
-
-using namespace node_ogr;
 
 void FeatureFields::Initialize(Handle<Object> target)
 {

@@ -22,7 +22,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("RasterBand"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", flushCache);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", flush);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "fill", fill);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getStatistics", getStatistics);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setStatistics", setStatistics);
@@ -148,8 +148,8 @@ Handle<Value> RasterBand::New(GDALRasterBand *raw)
 	GDALDataset *parent = raw->GetDataset();
 	if (parent) {
 		Handle<Value> ds;
-		if (Dataset::cache.has(parent)) {
-			ds = Dataset::cache.get(parent);
+		if (Dataset::dataset_cache.has(parent)) {
+			ds = Dataset::dataset_cache.get(parent);
 		} else {
 			ds = Dataset::New(parent); //this should never happen
 		}
@@ -165,7 +165,7 @@ Handle<Value> RasterBand::toString(const Arguments& args)
 	return scope.Close(String::New("RasterBand"));
 }
 
-NODE_WRAPPED_METHOD(RasterBand, flushCache, FlushCache);
+NODE_WRAPPED_METHOD(RasterBand, flush, FlushCache);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskBand, RasterBand, GetMaskBand);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskFlags, Integer, GetMaskFlags);
 NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(RasterBand, createMaskBand, CreateMaskBand, "number of desired samples");

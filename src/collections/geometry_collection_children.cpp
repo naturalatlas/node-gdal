@@ -1,11 +1,9 @@
-#include "../ogr_common.hpp"
-#include "../ogr_geometry.hpp"
-#include "../ogr_geometrycollection.hpp"
+#include "../gdal_common.hpp"
+#include "../gdal_geometry.hpp"
+#include "../gdal_geometrycollection.hpp"
 #include "geometry_collection_children.hpp"
 
 Persistent<FunctionTemplate> GeometryCollectionChildren::constructor;
-
-using namespace node_ogr;
 
 void GeometryCollectionChildren::Initialize(Handle<Object> target)
 {

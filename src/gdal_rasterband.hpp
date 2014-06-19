@@ -23,7 +23,7 @@ public:
 	static Handle<Value> New(const Arguments &args);
 	static Handle<Value> New(GDALRasterBand *band);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> flushCache(const Arguments &args);
+	static Handle<Value> flush(const Arguments &args);
 	static Handle<Value> fill(const Arguments &args);
 	static Handle<Value> getStatistics(const Arguments &args);
 	static Handle<Value> computeStatistics(const Arguments &args);

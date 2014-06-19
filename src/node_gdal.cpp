@@ -17,8 +17,21 @@
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
 
-// node-ogr
-#include "ogr.hpp"
+#include "gdal_layer.hpp"
+#include "gdal_feature_defn.hpp"
+#include "gdal_field_defn.hpp"
+#include "gdal_feature.hpp"
+#include "gdal_geometry.hpp"
+#include "gdal_spatial_reference.hpp"
+#include "gdal_coordinate_transformation.hpp"
+#include "gdal_point.hpp"
+#include "gdal_polygon.hpp"
+#include "gdal_linestring.hpp"
+#include "gdal_linearring.hpp"
+#include "gdal_geometrycollection.hpp"
+#include "gdal_multipoint.hpp"
+#include "gdal_multilinestring.hpp"
+#include "gdal_multipolygon.hpp"
 
 //collections
 #include "collections/dataset_bands.hpp"
@@ -31,6 +44,7 @@
 #include "collections/polygon_rings.hpp"
 #include "collections/linestring_points.hpp"
 #include "collections/rasterband_overviews.hpp"
+#include "collections/gdal_drivers.hpp"
 
 // std
 #include <string>
@@ -59,11 +73,6 @@ namespace node_gdal {
 		{
 
 			NODE_SET_METHOD(target, "open", node_gdal::open);
-			NODE_SET_METHOD(target, "openShared", node_gdal::openShared);
-			NODE_SET_METHOD(target, "getDriverByName", node_gdal::getDriverByName);
-			NODE_SET_METHOD(target, "getDriverCount", node_gdal::getDriverCount);
-			NODE_SET_METHOD(target, "getDriver", node_gdal::getDriver);
-			NODE_SET_METHOD(target, "close", node_gdal::close);
 			NODE_SET_METHOD(target, "setConfigOption", node_gdal::setConfigOption);
 			NODE_SET_METHOD(target, "getConfigOption", node_gdal::getConfigOption);
 
@@ -71,6 +80,22 @@ namespace node_gdal {
 			Driver::Initialize(target);
 			Dataset::Initialize(target);
 			RasterBand::Initialize(target);
+
+			Layer::Initialize(target);
+			Feature::Initialize(target);
+			FeatureDefn::Initialize(target);
+			FieldDefn::Initialize(target);
+			Geometry::Initialize(target);
+			Point::Initialize(target);
+			LineString::Initialize(target);
+			LinearRing::Initialize(target);
+			Polygon::Initialize(target);
+			GeometryCollection::Initialize(target);
+			MultiPoint::Initialize(target);
+			MultiLineString::Initialize(target);
+			MultiPolygon::Initialize(target);
+			SpatialReference::Initialize(target);
+			CoordinateTransformation::Initialize(target);
 
 			DatasetBands::Initialize(target);
 			DatasetLayers::Initialize(target);
@@ -83,6 +108,10 @@ namespace node_gdal {
 			LineStringPoints::Initialize(target);
 			RasterBandOverviews::Initialize(target);
 
+			//calls GDALRegisterAll()
+			GDALDrivers::Initialize(target);
+			target->Set(String::NewSymbol("drivers"), GDALDrivers::New());
+
 			Local<Object> versions = Object::New();
 			versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
 			versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
@@ -94,21 +123,6 @@ namespace node_gdal {
 
 			Local<Object> supports = Object::New();
 			target->Set(String::NewSymbol("supports"), supports);
-
-			GDALAllRegister();
-
-			GDALDriverManager  *reg = GetGDALDriverManager();
-
-			int driver_count = reg->GetDriverCount();
-
-			Local<Array> supported_drivers = Array::New(driver_count);
-
-			for (int i = 0; i < driver_count; ++i) {
-				GDALDriver *driver = reg->GetDriver(i);
-				supported_drivers->Set(Integer::New(static_cast<int>(i)), String::New(driver->GetDescription()));
-			}
-
-			target->Set(String::NewSymbol("drivers"), supported_drivers);
 
 			NODE_DEFINE_CONSTANT(target, CPLE_OpenFailed);
 			NODE_DEFINE_CONSTANT(target, CPLE_IllegalArg);
@@ -166,9 +180,39 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GCI_YCbCr_CrBand);
 			NODE_DEFINE_CONSTANT(target, GCI_Max);
 
-			Local<Object> ogr = Object::New();
-			target->Set(String::NewSymbol("ogr"), ogr);
-			::node_ogr::Init(ogr);
+			NODE_DEFINE_CONSTANT(target, wkbUnknown);
+			NODE_DEFINE_CONSTANT(target, wkbPoint);
+			NODE_DEFINE_CONSTANT(target, wkbLineString);
+			NODE_DEFINE_CONSTANT(target, wkbPolygon);
+			NODE_DEFINE_CONSTANT(target, wkbMultiPoint);
+			NODE_DEFINE_CONSTANT(target, wkbMultiLineString);
+			NODE_DEFINE_CONSTANT(target, wkbMultiPolygon);
+			NODE_DEFINE_CONSTANT(target, wkbGeometryCollection);
+			NODE_DEFINE_CONSTANT(target, wkbNone);
+			NODE_DEFINE_CONSTANT(target, wkbLinearRing);
+			NODE_DEFINE_CONSTANT(target, wkbPoint25D);
+			NODE_DEFINE_CONSTANT(target, wkbLineString25D);
+			NODE_DEFINE_CONSTANT(target, wkbPolygon25D);
+			NODE_DEFINE_CONSTANT(target, wkbMultiPoint25D);
+			NODE_DEFINE_CONSTANT(target, wkbMultiLineString25D);
+			NODE_DEFINE_CONSTANT(target, wkbMultiPolygon25D);
+			NODE_DEFINE_CONSTANT(target, wkbGeometryCollection25D);
+
+			NODE_DEFINE_CONSTANT(target, OFTInteger);
+			NODE_DEFINE_CONSTANT(target, OFTIntegerList);
+			NODE_DEFINE_CONSTANT(target, OFTReal);
+			NODE_DEFINE_CONSTANT(target, OFTRealList);
+			NODE_DEFINE_CONSTANT(target, OFTString);
+			NODE_DEFINE_CONSTANT(target, OFTStringList);
+			NODE_DEFINE_CONSTANT(target, OFTWideString);
+			NODE_DEFINE_CONSTANT(target, OFTWideStringList);
+			NODE_DEFINE_CONSTANT(target, OFTBinary);
+			NODE_DEFINE_CONSTANT(target, OFTDate);
+			NODE_DEFINE_CONSTANT(target, OFTTime);
+			NODE_DEFINE_CONSTANT(target, OFTDateTime);
+
+			target->Set(String::NewSymbol("CreateDataSourceOption"), String::New(ODrCCreateDataSource));
+			target->Set(String::NewSymbol("DeleteDataSourceOption"), String::New(ODrCDeleteDataSource));
 		}
 
 	}

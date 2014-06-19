@@ -4,44 +4,47 @@
 #include "gdal_dataset.hpp"
 
 Persistent<FunctionTemplate> Driver::constructor;
+ObjectCache<GDALDriver*> Driver::cache;
+ObjectCache<OGRSFDriver*> Driver::cache_ogr;
 
 void Driver::Initialize(Handle<Object> target)
 {
 	HandleScope scope;
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Driver::New));
-	constructor->Inherit(MajorObject::constructor);
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("Driver"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "open", open);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "createCopy", createCopy);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "deleteDataset", deleteDataset);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "quietDelete", quietDelete);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "rename", rename);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "copyFiles", copyFiles);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getMetadata", getMetadata);
 
-	ATTR(constructor, "shortName", shortNameGetter, NULL);
-	ATTR(constructor, "longName", longNameGetter, NULL);
+	ATTR(constructor, "description", descriptionGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Driver"), constructor->GetFunction());
 }
 
-Driver::Driver(GDALDriver *ds)
-	: ObjectWrap(), this_(ds)
+Driver::Driver(GDALDriver *driver)
+	: ObjectWrap(), uses_ogr(false), this_gdaldriver(driver), this_ogrdriver(0)
+{}
+
+Driver::Driver(OGRSFDriver *driver)
+	: ObjectWrap(), uses_ogr(true), this_gdaldriver(0), this_ogrdriver(driver)
 {}
 
 Driver::Driver()
-	: ObjectWrap(), this_(0)
+	: ObjectWrap(), uses_ogr(false), this_gdaldriver(0), this_ogrdriver(0)
 {
 }
 
 Driver::~Driver()
 {
 }
-
-
 
 Handle<Value> Driver::New(const Arguments& args)
 {
@@ -65,14 +68,40 @@ Handle<Value> Driver::New(const Arguments& args)
 
 Handle<Value> Driver::New(GDALDriver *driver)
 {
+	HandleScope scope;
+
 	if (!driver) {
 		return Null();
 	}
+	if (cache.has(driver)) {
+		return cache.get(driver);
+	}
 
-	v8::HandleScope scope;
 	Driver *wrapped = new Driver(driver);
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
 	v8::Handle<v8::Object> obj = Driver::constructor->GetFunction()->NewInstance(1, &ext);
+
+	cache.add(driver, obj);
+
+	return scope.Close(obj);
+}
+
+Handle<Value> Driver::New(OGRSFDriver *driver)
+{
+	HandleScope scope;
+
+	if (!driver) {
+		return Null();
+	}
+	if (cache_ogr.has(driver)) {
+		return cache_ogr.get(driver);
+	}
+
+	Driver *wrapped = new Driver(driver);
+	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
+	v8::Handle<v8::Object> obj = Driver::constructor->GetFunction()->NewInstance(1, &ext);
+
+	cache_ogr.add(driver, obj);
 
 	return scope.Close(obj);
 }
@@ -83,112 +112,194 @@ Handle<Value> Driver::toString(const Arguments& args)
 	return scope.Close(String::New("Driver"));
 }
 
-Handle<Value> Driver::shortNameGetter(Local<String> property, const AccessorInfo& info)
+Handle<Value> Driver::descriptionGetter(Local<String> property, const AccessorInfo& info)
 {
 	HandleScope scope;
 	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return scope.Close(SafeString::New(driver->this_->GetDescription()));
+	if (driver->uses_ogr) {
+		return scope.Close(SafeString::New(driver->getOGRSFDriver()->GetName()));
+	} else {
+		return scope.Close(SafeString::New(driver->getGDALDriver()->GetDescription()));
+	}
 }
 
-Handle<Value> Driver::longNameGetter(Local<String> property, const AccessorInfo& info)
+Handle<Value> Driver::deleteDataset(const Arguments& args)
 {
 	HandleScope scope;
-	Driver* driver = ObjectWrap::Unwrap<Driver>(info.This());
-	return scope.Close(SafeString::New(driver->this_->GetMetadataItem(GDAL_DMD_LONGNAME)));
-}
 
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Driver, deleteDataset, Delete, "dataset name");
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(Driver, quietDelete, QuietDelete, "dataset name");
+	std::string name("");
+	NODE_ARG_STR(0, "dataset name", name);
+
+	Driver* driver = ObjectWrap::Unwrap<Driver>(args.This());
+	if (driver->uses_ogr) {
+		OGRErr err = driver->getOGRSFDriver()->DeleteDataSource(name.c_str());
+		if (err) {
+			return NODE_THROW_OGRERR(err);
+		} 
+	} else {
+		CPLErr err = driver->getGDALDriver()->Delete(name.c_str());
+		if (err) {
+			return NODE_THROW_CPLERR(err);
+		} 
+	}
+	return Undefined();
+}
 
 Handle<Value> Driver::create(const Arguments& args)
 {
 	HandleScope scope;
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+
 	std::string filename;
-	unsigned int i, x_size, y_size, n_bands = 1;
+	unsigned int i, x_size = 0, y_size = 0, n_bands = 1;
 	GDALDataType type = GDT_Byte;
-	Handle<Array> dataset_options = Array::New(0);
+	Handle<Array> creation_options = Array::New(0);
+
 
 	NODE_ARG_STR(0, "filename", filename);
-	NODE_ARG_INT(1, "x size", x_size);
-	NODE_ARG_INT(2, "y size", y_size);
-	NODE_ARG_INT_OPT(3, "number of bands", n_bands);
-	NODE_ARG_ENUM_OPT(4, "data type", GDALDataType, type);
-	NODE_ARG_ARRAY_OPT(5, "dataset creation options", dataset_options);
+	
+	if(args.Length() < 3){
+		NODE_ARG_ARRAY_OPT(1, "creation options", creation_options);
+	} else {
+		NODE_ARG_INT(1, "x size", x_size);
+		NODE_ARG_INT(2, "y size", y_size);
+		NODE_ARG_INT_OPT(3, "number of bands", n_bands);
+		NODE_ARG_ENUM_OPT(4, "data type", GDALDataType, type);
+		NODE_ARG_ARRAY_OPT(5, "creation options", creation_options);
+	}
 
 	char **options = NULL;
-
-	if (dataset_options->Length() > 0) {
-		options = new char* [dataset_options->Length() + 1];
-		for (i = 0; i < dataset_options->Length(); ++i) {
-			options[i] = TOSTR(dataset_options->Get(i));
+	if (creation_options->Length() > 0) {
+		options = new char* [creation_options->Length() + 1];
+		for (i = 0; i < creation_options->Length(); ++i) {
+			options[i] = TOSTR(creation_options->Get(i));
 		}
 		options[i] = NULL;
 	}
 
-	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+	if(driver->uses_ogr){
+		OGRSFDriver *raw = driver->getOGRSFDriver();
+		OGRDataSource *ds = raw->CreateDataSource(filename.c_str(), options);
 
-	GDALDataset* dataset = driver->this_->Create(filename.c_str(), x_size, y_size, n_bands, type, options);
+		if (options) {
+			delete [] options;
+		}
 
-	if (options) {
-		delete [] options;
+		if (!ds) {
+			return NODE_THROW("Error creating dataset");
+		}
+
+		return scope.Close(Dataset::New(ds));
+	} else {
+		GDALDriver *raw = driver->getGDALDriver();
+		GDALDataset* ds = raw->Create(filename.c_str(), x_size, y_size, n_bands, type, options);
+
+		if (options) {
+			delete [] options;
+		}
+
+		if (!ds) {
+			return NODE_THROW("Error creating dataset");
+		}
+
+		return scope.Close(Dataset::New(ds));
 	}
 
-	if (!dataset) {
-		return NODE_THROW("Error creating dataset");
-	}
-
-	return scope.Close(Dataset::New(dataset));
 }
 Handle<Value> Driver::createCopy(const Arguments& args)
 {
 	HandleScope scope;
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+
 	std::string filename;
 	Dataset* src_dataset;
 	unsigned int i, strict = 0;
-	Handle<Array> dataset_options = Array::New(0);
+	Handle<Array> creation_options = Array::New(0);
 
 	NODE_ARG_STR(0, "filename", filename);
-	NODE_ARG_WRAPPED(1, "source dataset", Dataset, src_dataset);
-	NODE_ARG_BOOL_OPT(2, "strict", strict);
-	NODE_ARG_ARRAY_OPT(3, "dataset creation options", dataset_options);
-	//todo: add optional progress callback argument
+
+	//NODE_ARG_STR(1, "source dataset", src_dataset)
+	if(args.Length() < 2){
+		return NODE_THROW("source dataset must be provided");
+	}
+	Handle<Object> obj = args[1]->ToObject();
+	if (Dataset::constructor->HasInstance(obj)) {
+		src_dataset = ObjectWrap::Unwrap<Dataset>(obj);
+	} else {
+		return NODE_THROW("source dataset must be a Dataset object")
+	}	
+
+	NODE_ARG_ARRAY_OPT(2, "dataset creation options", creation_options);
 
 	char **options = NULL;
 
-	if (dataset_options->Length() > 0) {
-		options = new char* [dataset_options->Length()+1];
-		for (i = 0; i < dataset_options->Length(); ++i) {
-			options[i] = TOSTR(dataset_options->Get(i));
+	if (creation_options->Length() > 0) {
+		options = new char* [creation_options->Length()+1];
+		for (i = 0; i < creation_options->Length(); ++i) {
+			options[i] = TOSTR(creation_options->Get(i));
 		}
 		options[i] = NULL;
 	}
 
-	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+	if (driver->uses_ogr) {
+		OGRSFDriver *raw = driver->getOGRSFDriver();
+		OGRDataSource *raw_ds = src_dataset->getDatasource();
+		if(!src_dataset->uses_ogr) {
+			return NODE_THROW("Driver unable to copy dataset");
+		}
+		if (!raw_ds) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
 
-	GDALDataset* dataset = driver->this_->CreateCopy(filename.c_str(), src_dataset->get(), strict, options, NULL, NULL);
+		OGRDataSource *ds = raw->CopyDataSource(raw_ds, filename.c_str(), options);
 
-	if (options) {
-		delete [] options;
+		if (options) {
+			delete [] options;
+		}
+
+		if (!ds) {
+			return NODE_THROW("Error copying dataset.");
+		}
+
+		return scope.Close(Dataset::New(ds));
+	} else {
+		GDALDriver *raw = driver->getGDALDriver();
+		GDALDataset* raw_ds = src_dataset->getDataset();
+		if(src_dataset->uses_ogr) {
+			return NODE_THROW("Driver unable to copy dataset");
+		}
+		if(!raw_ds) {
+			return NODE_THROW("Dataset object has already been destroyed");
+		}
+		GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options, NULL, NULL);
+
+		if (options) {
+			delete [] options;
+		}
+
+		if (!ds) {
+			return NODE_THROW("Error copying dataset");
+		}
+
+		return scope.Close(Dataset::New(ds));
 	}
-
-	if (!dataset) {
-		return NODE_THROW("Error copying dataset");
-	}
-
-	return scope.Close(Dataset::New(dataset));
 }
 
 Handle<Value> Driver::copyFiles(const Arguments& args)
 {
+	HandleScope scope;
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 	std::string old_name;
 	std::string new_name;
+
+	if(driver->uses_ogr) {
+		return NODE_THROW("Driver unable to copy files");
+	}
 
 	NODE_ARG_STR(0, "new name", new_name);
 	NODE_ARG_STR(1, "old name", old_name);
 
-	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
-
-	CPLErr err = driver->this_->CopyFiles(new_name.c_str(), old_name.c_str());
+	CPLErr err = driver->getGDALDriver()->CopyFiles(new_name.c_str(), old_name.c_str());
 	if (err) {
 		return NODE_THROW_CPLERR(err);
 	}
@@ -199,19 +310,74 @@ Handle<Value> Driver::copyFiles(const Arguments& args)
 Handle<Value> Driver::rename(const Arguments& args)
 {
 	HandleScope scope;
-
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 	std::string old_name;
 	std::string new_name;
+
+	if(driver->uses_ogr) {
+		return NODE_THROW("Driver unable to rename files");
+	}
 
 	NODE_ARG_STR(0, "new name", new_name);
 	NODE_ARG_STR(1, "old name", old_name);
 
-	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
-
-	CPLErr err = driver->this_->Rename(new_name.c_str(), old_name.c_str());
+	CPLErr err = driver->getGDALDriver()->Rename(new_name.c_str(), old_name.c_str());
 	if (err) {
 		return NODE_THROW_CPLERR(err);
 	}
 
 	return Undefined();
+}
+
+Handle<Value> Driver::getMetadata(const Arguments& args)
+{
+	HandleScope scope;
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+	
+	if (driver->uses_ogr){
+		return scope.Close(Object::New());
+	}
+
+	GDALDriver* raw = driver->getGDALDriver();
+	std::string domain("");
+	NODE_ARG_OPT_STR(0, "domain", domain);
+
+	return scope.Close(MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str()));
+}
+
+Handle<Value> Driver::open(const Arguments& args)
+{
+	HandleScope scope;
+	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
+
+	std::string path;
+	std::string mode = "r";
+	GDALAccess access = GA_ReadOnly;
+
+	NODE_ARG_STR(0, "path", path);
+	NODE_ARG_OPT_STR(1, "mode", mode);
+
+	if (mode == "r+") {
+		access = GA_Update;
+	} else if (mode != "r") {
+		return NODE_THROW("Invalid open mode. Must be \"r\" or \"r+\"");
+	}
+
+	if (driver->uses_ogr){
+		OGRSFDriver *raw = driver->getOGRSFDriver();
+		OGRDataSource *ds = raw->Open(path.c_str(), static_cast<int>(access));
+		if (!ds) {
+			return NODE_THROW("Error opening dataset");
+		}
+		return scope.Close(Dataset::New(ds));
+	} else {
+		GDALDriver  *raw = driver->getGDALDriver();
+		GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
+		GDALDataset *ds = raw->pfnOpen(info);
+		delete info;
+		if (!ds) {
+			return NODE_THROW("Error opening dataset");
+		}
+		return scope.Close(Dataset::New(ds));
+	}
 }
