@@ -6,7 +6,7 @@
 		"default_configuration": "Release",
 		"cflags_cc!": ["-fno-exceptions"],
 		"cflags!": ["-fno-exceptions"],
-		"definitions": [
+		"defines": [
 			"NOGDI=1"
 		],
 		"xcode_settings": {
