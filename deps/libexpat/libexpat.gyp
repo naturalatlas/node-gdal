@@ -27,6 +27,7 @@
 				}]
 			],
 			"defines": [
+				"XML_STATIC=1",
 				"HAVE_EXPAT_CONFIG_H=1",
 				"CPU_<(endianness)_ENDIAN=1"
 			],

@@ -1,5 +1,7 @@
 /* expat_config.h.in.  Generated from configure.in by autoheader.  */
 
+#define XML_USE_MSC_EXTENSIONS 1
+
 /* 1234 = LIL_ENDIAN, 4321 = BIGENDIAN */
 #ifdef CPU_LITTLE_ENDIAN
 #define BYTEORDER 1234
