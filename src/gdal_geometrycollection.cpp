@@ -1,9 +1,12 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_geometrycollection.hpp"
 #include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> GeometryCollection::constructor;
 
@@ -128,3 +131,5 @@ Handle<Value> GeometryCollection::childrenGetter(Local<String> property, const A
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("children_")));
 }
+
+} // namespace node_gdal

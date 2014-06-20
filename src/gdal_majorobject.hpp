@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class MajorObject: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -36,4 +38,5 @@ private:
 	GDALMajorObject *this_;
 };
 
+}
 #endif

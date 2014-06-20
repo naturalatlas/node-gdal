@@ -2,6 +2,8 @@
 #include "../gdal_rasterband.hpp"
 #include "rasterband_overviews.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> RasterBandOverviews::constructor;
 
 void RasterBandOverviews::Initialize(Handle<Object> target)
@@ -116,3 +118,5 @@ Handle<Value> RasterBandOverviews::count(const Arguments& args)
 	
 	return scope.Close(Integer::New(band->get()->GetOverviewCount()));
 }
+
+} // namespace node_gdal

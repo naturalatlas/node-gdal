@@ -16,6 +16,8 @@ using namespace node;
 
 // GeometryCollection.children
 
+namespace node_gdal {
+
 class GeometryCollectionChildren: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -35,4 +37,5 @@ private:
 	~GeometryCollectionChildren();
 };
 
+}
 #endif

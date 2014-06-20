@@ -1,9 +1,12 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_polygon.hpp"
 #include "collections/polygon_rings.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> Polygon::constructor;
 
@@ -124,3 +127,5 @@ Handle<Value> Polygon::ringsGetter(Local<String> property, const AccessorInfo &i
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("rings_")));
 }
+
+} // namespace node_gdal

@@ -1,9 +1,14 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_geometrycollection.hpp"
+#include "gdal_multilinestring.hpp"
+#include "gdal_linestring.hpp"
 #include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> MultiLineString::constructor;
 
@@ -129,3 +134,5 @@ Handle<Value> MultiLineString::getGeometry(const Arguments& args)
 
 	return scope.Close(LineString::New(static_cast<OGRLineString*>(geom->this_->getGeometryRef(i)), false));
 }
+
+} // namespace node_gdal

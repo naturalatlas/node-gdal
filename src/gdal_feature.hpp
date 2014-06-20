@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class Feature: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -52,4 +54,5 @@ private:
 	//int size_;
 };
 
+}
 #endif

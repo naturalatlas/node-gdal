@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class FieldDefn: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -49,4 +51,5 @@ private:
 	bool owned_;
 };
 
+}
 #endif

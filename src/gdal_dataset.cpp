@@ -9,6 +9,8 @@
 #include "collections/dataset_bands.hpp"
 #include "collections/dataset_layers.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset*> Dataset::dataset_cache;
 ObjectCache<OGRDataSource*> Dataset::datasource_cache;
@@ -687,3 +689,5 @@ Handle<Value> Dataset::layersGetter(Local<String> property, const AccessorInfo &
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("layers_")));
 }
+
+} // namespace node_gdal

@@ -16,7 +16,6 @@
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
 
-
 using namespace v8;
 using namespace node;
 

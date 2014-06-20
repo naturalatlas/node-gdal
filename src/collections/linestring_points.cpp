@@ -1,7 +1,10 @@
 #include "../gdal_common.hpp"
 #include "../gdal_geometry.hpp"
+#include "../gdal_linestring.hpp"
 #include "../gdal_point.hpp"
 #include "linestring_points.hpp"
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> LineStringPoints::constructor;
 
@@ -247,3 +250,5 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 	
 	return Undefined();
 }
+
+} // namespace node_gdal

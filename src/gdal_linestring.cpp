@@ -1,9 +1,13 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_linestring.hpp"
+#include "gdal_point.hpp"
 #include "collections/linestring_points.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> LineString::constructor;
 
@@ -191,3 +195,5 @@ Handle<Value> LineString::pointsGetter(Local<String> property, const AccessorInf
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("points_")));
 }
+
+} // namespace node_gdal

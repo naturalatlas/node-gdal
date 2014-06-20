@@ -4,8 +4,18 @@
 #include "gdal_spatial_reference.hpp"
 #include "gdal_coordinate_transformation.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_geometrycollection.hpp"
+#include "gdal_point.hpp"
+#include "gdal_linestring.hpp"
+#include "gdal_linearring.hpp"
+#include "gdal_polygon.hpp"
+#include "gdal_multipoint.hpp"
+#include "gdal_multilinestring.hpp"
+#include "gdal_multipolygon.hpp"
 
 #include <sstream>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> Geometry::constructor;
 
@@ -445,3 +455,5 @@ Handle<Value> Geometry::coordinateDimensionGetter(Local<String> property, const 
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
 	return scope.Close(Integer::New(geom->this_->getCoordinateDimension()));
 }
+
+} // namespace node_gdal

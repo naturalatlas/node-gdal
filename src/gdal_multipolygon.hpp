@@ -10,10 +10,11 @@
 
 // ogr
 #include <ogrsf_frmts.h>
-#include "gdal_geometry.hpp"
 
 using namespace v8;
 using namespace node;
+
+namespace node_gdal {
 
 class MultiPolygon: public node::ObjectWrap {
 
@@ -42,4 +43,5 @@ private:
 	int size_;
 };
 
+}
 #endif

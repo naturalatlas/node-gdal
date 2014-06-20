@@ -1,9 +1,13 @@
-
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_geometrycollection.hpp"
+#include "gdal_multipolygon.hpp"
+#include "gdal_polygon.hpp"
 #include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> MultiPolygon::constructor;
 
@@ -130,3 +134,5 @@ Handle<Value> MultiPolygon::getGeometry(const Arguments& args)
 
 	return scope.Close(Polygon::New(static_cast<OGRPolygon*>(geom->this_->getGeometryRef(i)), false));
 }
+
+} // namespace node_gdal

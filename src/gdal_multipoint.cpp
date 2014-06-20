@@ -1,9 +1,14 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_geometrycollection.hpp"
+#include "gdal_multipoint.hpp"
+#include "gdal_point.hpp"
 #include "collections/geometry_collection_children.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> MultiPoint::constructor;
 
@@ -125,3 +130,5 @@ Handle<Value> MultiPoint::getGeometry(const Arguments& args)
 
 	return scope.Close(Point::New(static_cast<OGRPoint*>(geom->this_->getGeometryRef(i)), false));
 }
+
+} // namespace node_gdal

@@ -2,6 +2,8 @@
 #include "gdal_majorobject.hpp"
 #include "gdal_driver.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> MajorObject::constructor;
 
 void MajorObject::Initialize(Handle<Object> target)
@@ -108,3 +110,5 @@ Handle<Value> MajorObject::descriptionGetter(Local<String> property, const Acces
 
 	return scope.Close(SafeString::New(obj->this_->GetDescription()));
 }
+
+} // namespace node_gdal

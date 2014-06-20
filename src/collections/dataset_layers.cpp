@@ -3,6 +3,8 @@
 #include "../gdal_layer.hpp"
 #include "dataset_layers.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> DatasetLayers::constructor;
 
 void DatasetLayers::Initialize(Handle<Object> target)
@@ -273,3 +275,5 @@ Handle<Value> DatasetLayers::dsGetter(Local<String> property, const AccessorInfo
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }
+
+} // namespace node_gdal

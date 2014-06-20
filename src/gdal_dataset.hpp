@@ -22,6 +22,8 @@ using namespace node;
 // > GDAL 2.0 : a wrapper for GDALDataset
 // < GDAL 2.0 : a wrapper for either a GDALDataset or OGRDataSource that behaves like a 2.0 Dataset
 
+namespace node_gdal {
+
 class Dataset: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -72,4 +74,5 @@ private:
 	std::vector<OGRLayer*> result_sets;
 };
 
+}
 #endif

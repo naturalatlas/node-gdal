@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class Geometry: public node::ObjectWrap {
 	friend class Feature;
 
@@ -98,13 +100,5 @@ protected:
     geom->size_ = new_size;                                                             \
 }
 
-#include "gdal_point.hpp"
-#include "gdal_linestring.hpp"
-#include "gdal_linearring.hpp"
-#include "gdal_polygon.hpp"
-#include "gdal_geometrycollection.hpp"
-#include "gdal_multipoint.hpp"
-#include "gdal_multilinestring.hpp"
-#include "gdal_multipolygon.hpp"
-
+}
 #endif

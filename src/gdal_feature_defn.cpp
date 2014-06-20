@@ -4,6 +4,8 @@
 #include "gdal_field_defn.hpp"
 #include "collections/feature_defn_fields.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> FeatureDefn::constructor;
 
 void FeatureDefn::Initialize(Handle<Object> target)
@@ -175,3 +177,5 @@ void FeatureDefn::styleIgnoredSetter(Local<String> property, Local<Value> value,
 	}
 	def->this_->SetStyleIgnored(value->BooleanValue());
 }
+
+} // namespace node_gdal

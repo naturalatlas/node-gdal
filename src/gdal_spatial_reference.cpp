@@ -2,6 +2,8 @@
 #include "gdal_common.hpp"
 #include "gdal_spatial_reference.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> SpatialReference::constructor;
 ObjectCache<OGRSpatialReference*> SpatialReference::cache;
 
@@ -448,3 +450,5 @@ Handle<Value> SpatialReference::fromEPSGA(const Arguments& args)
 
 	return scope.Close(SpatialReference::New(srs, true));
 }
+
+} // namespace node_gdal

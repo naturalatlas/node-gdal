@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <sstream>
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> Layer::constructor;
 ObjectCache<OGRLayer*> Layer::cache;
 
@@ -255,3 +257,5 @@ Handle<Value> Layer::fieldsGetter(Local<String> property, const AccessorInfo &in
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
 }
+
+} // namespace node_gdal

@@ -3,6 +3,8 @@
 #include "../gdal_geometrycollection.hpp"
 #include "geometry_collection_children.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> GeometryCollectionChildren::constructor;
 
 void GeometryCollectionChildren::Initialize(Handle<Object> target)
@@ -124,3 +126,5 @@ Handle<Value> GeometryCollectionChildren::add(const Arguments& args)
 
 	return Undefined();
 }
+
+} // namespace node_gdal

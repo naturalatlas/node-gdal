@@ -16,6 +16,8 @@ using namespace node;
 
 // Polygon.rings
 
+namespace node_gdal {
+
 class PolygonRings: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -35,4 +37,5 @@ private:
 	~PolygonRings();
 };
 
+}
 #endif

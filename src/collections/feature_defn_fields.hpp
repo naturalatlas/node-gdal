@@ -16,6 +16,8 @@ using namespace node;
 
 // FeatureDefn.fields : FeatureDefnFields
 
+namespace node_gdal {
+
 class FeatureDefnFields: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -43,4 +45,5 @@ private:
 	~FeatureDefnFields();
 };
 
+}
 #endif

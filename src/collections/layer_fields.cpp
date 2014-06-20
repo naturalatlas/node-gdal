@@ -3,6 +3,8 @@
 #include "../gdal_layer.hpp"
 #include "layer_fields.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> LayerFields::constructor;
 
 void LayerFields::Initialize(Handle<Object> target)
@@ -273,3 +275,5 @@ Handle<Value> LayerFields::layerGetter(Local<String> property, const AccessorInf
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }
+
+} // namespace node_gdal

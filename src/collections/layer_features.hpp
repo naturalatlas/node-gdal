@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class LayerFeatures: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -38,4 +40,5 @@ private:
 	~LayerFeatures();
 };
 
+}
 #endif

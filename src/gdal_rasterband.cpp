@@ -9,6 +9,8 @@
 #include <limits>
 #include <cpl_port.h>
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> RasterBand::constructor;
 ObjectCache<GDALRasterBand*> RasterBand::cache;
 
@@ -584,3 +586,5 @@ void RasterBand::categoryNamesSetter(Local<String> property, Local<Value> value,
 		NODE_THROW_CPLERR(err);
 	}
 }
+
+} // namespace node_gdal

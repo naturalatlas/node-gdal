@@ -15,6 +15,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class SpatialReference: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -77,5 +79,5 @@ private:
 	bool owned_;
 };
 
-#define NODE_WRAPPED_SRS_EXPORT_METHOD
+}
 #endif

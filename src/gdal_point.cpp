@@ -1,8 +1,10 @@
-
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_point.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> Point::constructor;
 
@@ -189,3 +191,5 @@ void Point::zSetter(Local<String> property, Local<Value> value, const AccessorIn
 
 	((OGRPoint* )geom->this_)->setZ(z);
 }
+
+} // namespace node_gdal

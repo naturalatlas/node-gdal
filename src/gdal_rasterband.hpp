@@ -16,6 +16,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class RasterBand: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -77,4 +79,5 @@ private:
 	GDALRasterBand *this_;
 };
 
+}
 #endif

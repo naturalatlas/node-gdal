@@ -1,7 +1,10 @@
 #include "../gdal_common.hpp"
 #include "../gdal_geometry.hpp"
+#include "../gdal_polygon.hpp"
 #include "../gdal_linearring.hpp"
 #include "polygon_rings.hpp"
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> PolygonRings::constructor;
 
@@ -109,3 +112,5 @@ Handle<Value> PolygonRings::add(const Arguments& args)
 
 	return Undefined();
 }
+
+} // namespace node_gdal

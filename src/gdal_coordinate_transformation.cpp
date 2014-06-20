@@ -3,6 +3,8 @@
 #include "gdal_spatial_reference.hpp"
 #include "gdal_coordinate_transformation.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> CoordinateTransformation::constructor;
 
 void CoordinateTransformation::Initialize(Handle<Object> target)
@@ -124,3 +126,5 @@ Handle<Value> CoordinateTransformation::transformPoint(const Arguments& args)
 
 	return scope.Close(result);
 }
+
+} // namespace node_gdal

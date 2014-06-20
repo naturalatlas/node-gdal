@@ -22,6 +22,8 @@ using namespace node;
 // > GDAL 2.0 : a wrapper for GDALDriver
 // < GDAL 2.0 : a wrapper for either a GDALDriver or OGRSFDriver that behaves like a 2.0 Driver
 // 
+namespace node_gdal {
+
 class Driver: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -60,4 +62,5 @@ private:
 	OGRSFDriver *this_ogrdriver;
 };
 
+}
 #endif

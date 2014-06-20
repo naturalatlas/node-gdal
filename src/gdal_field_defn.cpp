@@ -2,6 +2,8 @@
 #include "gdal_common.hpp"
 #include "gdal_field_defn.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> FieldDefn::constructor;
 
 void FieldDefn::Initialize(Handle<Object> target)
@@ -218,3 +220,5 @@ void FieldDefn::ignoredSetter(Local<String> property, Local<Value> value, const 
 	}
 	def->this_->SetIgnored(value->BooleanValue());
 }
+
+} // namespace node_gdal

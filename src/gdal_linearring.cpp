@@ -1,9 +1,13 @@
 
 #include "gdal_common.hpp"
 #include "gdal_geometry.hpp"
+#include "gdal_linearring.hpp"
+#include "gdal_linestring.hpp"
 #include "collections/linestring_points.hpp"
 
 #include <stdlib.h>
+
+namespace node_gdal {
 
 Persistent<FunctionTemplate> LinearRing::constructor;
 
@@ -116,3 +120,5 @@ Handle<Value> LinearRing::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(LinearRing, getArea, Number, get_Area);
+
+} // namespace node_gdal

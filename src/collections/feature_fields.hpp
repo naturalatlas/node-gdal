@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class FeatureFields: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -46,4 +48,5 @@ private:
 	~FeatureFields();
 };
 
+}
 #endif

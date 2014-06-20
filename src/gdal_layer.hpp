@@ -17,6 +17,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class Layer: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -63,4 +65,5 @@ private:
 	bool is_result_set;
 };
 
+}
 #endif

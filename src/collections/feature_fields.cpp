@@ -5,6 +5,8 @@
 // node
 #include <node_buffer.h>
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> FeatureFields::constructor;
 
 void FeatureFields::Initialize(Handle<Object> target)
@@ -499,3 +501,5 @@ Handle<Value> FeatureFields::featureGetter(Local<String> property, const Accesso
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }
+
+} // namespace node_gdal

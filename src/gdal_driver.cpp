@@ -3,6 +3,8 @@
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> Driver::constructor;
 ObjectCache<GDALDriver*> Driver::cache;
 ObjectCache<OGRSFDriver*> Driver::cache_ogr;
@@ -381,3 +383,5 @@ Handle<Value> Driver::open(const Arguments& args)
 		return scope.Close(Dataset::New(ds));
 	}
 }
+
+} // namespace node_gdal

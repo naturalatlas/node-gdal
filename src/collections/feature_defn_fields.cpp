@@ -3,6 +3,8 @@
 #include "../gdal_feature_defn.hpp"
 #include "feature_defn_fields.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> FeatureDefnFields::constructor;
 
 void FeatureDefnFields::Initialize(Handle<Object> target)
@@ -238,3 +240,5 @@ Handle<Value> FeatureDefnFields::featureDefnGetter(Local<String> property, const
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }
+
+} // namespace node_gdal

@@ -21,6 +21,8 @@ using namespace node;
 // to create/modify fields instead of illegally
 // adding them directly to the layer definition  
 
+namespace node_gdal {
+
 class LayerFields: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -48,4 +50,5 @@ private:
 	~LayerFields();
 };
 
+}
 #endif

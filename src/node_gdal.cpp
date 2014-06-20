@@ -11,7 +11,6 @@
 
 // node-gdal
 #include "gdal_common.hpp"
-#include "gdal.hpp"
 #include "gdal_majorobject.hpp"
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
@@ -21,7 +20,6 @@
 #include "gdal_feature_defn.hpp"
 #include "gdal_field_defn.hpp"
 #include "gdal_feature.hpp"
-#include "gdal_geometry.hpp"
 #include "gdal_spatial_reference.hpp"
 #include "gdal_coordinate_transformation.hpp"
 #include "gdal_point.hpp"
@@ -32,6 +30,9 @@
 #include "gdal_multipoint.hpp"
 #include "gdal_multilinestring.hpp"
 #include "gdal_multipolygon.hpp"
+#include "gdal_geometry.hpp"
+
+#include "gdal.hpp"
 
 //collections
 #include "collections/dataset_bands.hpp"
@@ -72,9 +73,9 @@ namespace node_gdal {
 		static void Init(Handle<Object> target)
 		{
 
-			NODE_SET_METHOD(target, "open", node_gdal::open);
-			NODE_SET_METHOD(target, "setConfigOption", node_gdal::setConfigOption);
-			NODE_SET_METHOD(target, "getConfigOption", node_gdal::getConfigOption);
+			NODE_SET_METHOD(target, "open", open);
+			NODE_SET_METHOD(target, "setConfigOption", setConfigOption);
+			NODE_SET_METHOD(target, "getConfigOption", getConfigOption);
 
 			MajorObject::Initialize(target);
 			Driver::Initialize(target);

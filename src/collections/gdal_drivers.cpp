@@ -2,6 +2,8 @@
 #include "../gdal_driver.hpp"
 #include "gdal_drivers.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> GDALDrivers::constructor;
 
 void GDALDrivers::Initialize(Handle<Object> target)
@@ -179,3 +181,5 @@ Handle<Value> GDALDrivers::count(const Arguments& args)
 
 	return scope.Close(Integer::New(gdal_count + ogr_count));
 }
+
+} // namespace node_gdal

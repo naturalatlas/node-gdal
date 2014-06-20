@@ -16,6 +16,8 @@ using namespace node;
 
 // LineString.children
 
+namespace node_gdal {
+
 class LineStringPoints: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -37,4 +39,5 @@ private:
 	~LineStringPoints();
 };
 
+}
 #endif

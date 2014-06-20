@@ -7,6 +7,8 @@
 #include "gdal_layer.hpp"
 #include "collections/feature_fields.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> Feature::constructor;
 
 void Feature::Initialize(Handle<Object> target)
@@ -302,3 +304,5 @@ void Feature::fidSetter(Local<String> property, Local<Value> value, const Access
 	}
 	feature->this_->SetFID(value->IntegerValue());
 }
+
+} // namespace node_gdal

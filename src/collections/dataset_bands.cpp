@@ -3,6 +3,8 @@
 #include "../gdal_rasterband.hpp"
 #include "dataset_bands.hpp"
 
+namespace node_gdal {
+
 Persistent<FunctionTemplate> DatasetBands::constructor;
 
 void DatasetBands::Initialize(Handle<Object> target)
@@ -164,3 +166,5 @@ Handle<Value> DatasetBands::dsGetter(Local<String> property, const AccessorInfo 
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
 }
+
+} // namespace node_gdal

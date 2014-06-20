@@ -14,6 +14,8 @@
 using namespace v8;
 using namespace node;
 
+namespace node_gdal {
+
 class CoordinateTransformation: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
@@ -34,4 +36,5 @@ private:
 	OGRCoordinateTransformation *this_;
 };
 
+}
 #endif
