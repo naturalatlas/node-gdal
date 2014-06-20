@@ -1,116 +1,38 @@
-# Node.js GDAL Bindings
-
-## Globals
+## Node.js GDAL Bindings
 
 #### Methods
 
-- `open(string ds_name, bool update = false) : Dataset #throws` //todo: test giving integer and boolean to update arg
-- `openShared(string ds_name, bool update = false) : Dataset #throws`
-- `close(Dataset ds) : void`
-- `getDriver(integer driver_index) : Driver #throws`
-- `getDriverByName(string name) : Driver #throws`
-- `getDriverCount() : integer`
+- `open(string name, string mode = 'r', string[] drivers = null, string[] options = null)` : [Dataset](dataset.md)
+- `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, int datatype = 0, string[] options = null)` : [Dataset](dataset.md) 
+- `close(Dataset ds)` : void
+- `getConfigOption(string name)` : string
+- `setConfigOption(string name, string value)` : void
+- `quiet(string name, string value)` : void
+- `verbose(string name, string value)` : void
 
-#### Properties
+#### Drivers 
 
-- `ogr : object` ([details](ogr.md))
-- `drivers : string[]`
+- `drivers.count()` : int
+- `drivers.get(int id)` : [Driver](driver.md) *(throws)*
+- `drivers.get(string name)` : [Driver](driver.md) *(throws)*
+- `drivers.forEach(function iterator)` : void *(throws)*
 
-## Dataset
+#### Classes
 
-Note: all methods throw errors if the dataset has already been explicitly destroyed
-
-#### Methods
-
-- `toString() : string`
-- `getMetadata(string domain = null) : object`
-- `close() : void`
-- `getGCPCount() : integer`
-- `getGCPProjection() : string`
-- `createMaskBand(integer flags) : RasterBand`
-- `getGCPs() : object[]`
-- `setGCPs() : void #throws`
-- `getFileList() : string[]`
-- `flush() : void`
-
-#### Properties
-
-- `size : object`
-- `srs : SpatialReference //get and set`
-- `bands : DatasetBands`
-- `driver : Driver`
-- `geoTransform : Number[] //get and set`
-
-## DatasetBands
-
-#### Methods
-
-- `get(integer band_id) : RasterBand #throws`
-- `count() : Integer`
-- `create(integer gdal_data_type, string[] options) : RasterBand #throws`
-- `forEach(function iterator) : void`
-
-#### Properties
-
-- `ds : Dataset`
-
-## Driver
-
-#### Methods
-
-- `toString() : string`
-- `getMetadata(string domain = null) : object`
-- `create(string filename, integer x_size, integer y_size, int n_bands = 1, int gdal_data_type = GDT_Byte, string[] co): Dataset #throws`
-- `createCopy(string filename, Dataset src, boolean strict = false, string[] options = null): Dataset #throws`
-- `deleteDataset() : void #throws`
-- `quietDelete() : void #throws`
-- `rename(string new_name, string old_name): void #throws`
-- `copyFiles(string new_name, string old_name) : void #throws`
-
-#### Properties
-
-- `longName : string`
-- `shortName : string`
-
-## RasterBand
-
-Note: all methods throw errors if the band has been destroyed by the dataset
-
-#### Methods
-
-- `toString() : string`
-- `getMetadata(string domain = null) : object`
-- `flush() : void`
-- `fill(number real_value, number imag_value = 0) : void #throws`
-- `getStatistics(boolean allow_approx, boolean force) : object #throws`
-- `computeStatistics(boolean allow_approx) : object #throws`
-- `setStatistics(Number min, Number max, Number mean, Number std_dev) : void #throws`
-- `getMaskBand() : RasterBand`
-- `getMaskFlags() : integer`
-- `createMaskBand(integer num_samples) : void #throws`
-
-#### Properties
-
-- `ds : Dataset`
-- `id : Integer`
-- `size : object`
-- `blockSize : object`
-- `overviews : RasterBandOverviews`
-- `unitType : string // R/W`
-- `dataType : integer //GDALDataType`
-- `minimum : Number`
-- `maximum : Number`
-- `offset : Number // R/W`
-- `scale : Number // R/W`
-- `noDataValue : Number // R/W`
-- `readOnly : boolean`
-- `hasArbitraryOverviews : boolean`
-- `categoryNames : string[] // R/W`
-
-## RasterBandOverviews
-
-#### Methods
-
-- `get(integer id) : RasterBand`
-- `getBySampleCount(integer min_samples) : RasterBand`
-- `count() : integer`
+- [Dataset](dataset.md)
+- [Layer](layer.md)
+- [RasterBand](rasterband.md)
+- [Feature](feature.md)
+- [FeatureDefn](featuredefn.md)
+- [FieldDefn](fielddefn.md)
+- [Geometry](geometry.md)
+- [Point](point.md)
+- [LineString](linestring.md)
+- [LinearRing](linearring.md)
+- [Polygon](polygon.md)
+- [GeometryCollection](geometrycollection.md)
+- [MultiPoint](multipoint.md)
+- [MultiLineString](multilinestring.md)
+- [MultiPolygon](multipolygon.md)
+- [SpatialReference](spatialreference.md)
+- [CoordinateTransformation](coordinatetransformation.md)
