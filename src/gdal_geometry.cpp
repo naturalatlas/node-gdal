@@ -146,7 +146,7 @@ Handle<Value> Geometry::New(OGRGeometry *geom, bool owned)
 	case wkbMultiPoint         :
 		return scope.Close(MultiPoint::New(static_cast<OGRMultiPoint*>(geom), owned));
 	case wkbMultiLineString    :
-		return scope.Close(LineString::New(static_cast<OGRLineString*>(geom), owned));
+		return scope.Close(MultiLineString::New(static_cast<OGRMultiLineString*>(geom), owned));
 	case wkbMultiPolygon       :
 		return scope.Close(MultiPolygon::New(static_cast<OGRMultiPolygon*>(geom), owned));
 	default                    :
