@@ -202,7 +202,6 @@ describe('Geometry', function() {
 
 				var boundary = squareDonut.boundary();
 				assert.instanceOf(boundary, gdal.MultiLineString);
-				assert.equal(boundary.polygonize().toJSON(), 1);
 			});
 		});
 		describe('centroid()', function() {
@@ -230,6 +229,82 @@ describe('Geometry', function() {
 				var circle = point.buffer(1, 1000);
 				assert.instanceOf(circle, gdal.Polygon);
 				assert.closeTo(circle.getArea(), 3.1415, 0.0001);
+			});
+		});
+		describe('simplify()', function() {
+			it('should return simplified LineString', function() {
+				var line = new gdal.LineString();
+				line.points.add(0,0);
+				line.points.add(1,1);
+				line.points.add(10,10);
+				line.points.add(2,2);
+				line.points.add(5,5);
+
+				var simplified = line.simplify(0.1);
+				assert.instanceOf(simplified, gdal.LineString);
+				assert.equal(simplified.points.count(), 4);
+				assert.closeTo(simplified.points.get(0).x, 0, 0.001);
+				assert.closeTo(simplified.points.get(0).y, 0, 0.001);
+				assert.closeTo(simplified.points.get(1).x, 10, 0.001);
+				assert.closeTo(simplified.points.get(1).y, 10, 0.001);
+				assert.closeTo(simplified.points.get(2).x, 2, 0.001);
+				assert.closeTo(simplified.points.get(2).y, 2, 0.001);
+				assert.closeTo(simplified.points.get(3).x, 5, 0.001);
+				assert.closeTo(simplified.points.get(3).y, 5, 0.001);
+			});
+		});
+		describe('union()', function() {
+			it('should merge geometries', function() {
+				var ring1 = new gdal.LinearRing();
+				ring1.points.add({x: 0, y: 0});
+				ring1.points.add({x: 10, y: 0});
+				ring1.points.add({x: 10, y: 10});
+				ring1.points.add({x: 0, y: 10});
+				ring1.closeRings();
+
+				var square1 = new gdal.Polygon();
+				square1.rings.add(ring1);
+
+				var ring2 = new gdal.LinearRing();
+				ring2.points.add({x: 10, y: 0});
+				ring2.points.add({x: 20, y: 0});
+				ring2.points.add({x: 20, y: 10});
+				ring2.points.add({x: 10, y: 10});
+				ring2.closeRings();
+
+				var square2 = new gdal.Polygon();
+				square2.rings.add(ring2);
+
+				var result = square1.union(square2);
+				assert.instanceOf(result, gdal.Polygon);
+				assert.equal(result.getArea(), 200);
+			});
+		});
+		describe('intersection()', function() {
+			it('should return the intersection of two geometries', function() {
+				var ring1 = new gdal.LinearRing();
+				ring1.points.add({x: 0, y: 0});
+				ring1.points.add({x: 10, y: 0});
+				ring1.points.add({x: 10, y: 10});
+				ring1.points.add({x: 0, y: 10});
+				ring1.closeRings();
+
+				var square1 = new gdal.Polygon();
+				square1.rings.add(ring1);
+
+				var ring2 = new gdal.LinearRing();
+				ring2.points.add({x: 5, y: 0});
+				ring2.points.add({x: 20, y: 0});
+				ring2.points.add({x: 20, y: 10});
+				ring2.points.add({x: 5, y: 10});
+				ring2.closeRings();
+
+				var square2 = new gdal.Polygon();
+				square2.rings.add(ring2);
+
+				var result = square1.intersection(square2);
+				assert.instanceOf(result, gdal.Polygon);
+				assert.equal(result.getArea(), 50);
 			});
 		});
 	});
