@@ -100,12 +100,15 @@ Handle<Value> LayerFields::indexOf(const Arguments& args)
 		return NODE_THROW("Layer object already destroyed");
 	}
 
-	bool exact = false;
+	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
+	if (!def) {
+		return NODE_THROW("Layer has no layer definition set");
+	}
+
 	std::string name("");
 	NODE_ARG_STR(0, "field name", name);
-	NODE_ARG_BOOL_OPT(1, "exact match", exact);
 
-	return scope.Close(Integer::New(layer->get()->FindFieldIndex(name.c_str(), exact)));
+	return scope.Close(Integer::New(def->GetFieldIndex(name.c_str())));
 }
 
 Handle<Value> LayerFields::get(const Arguments& args)
