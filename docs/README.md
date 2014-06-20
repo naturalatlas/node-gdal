@@ -4,7 +4,6 @@
 
 - `open(string name, string mode = 'r', string[] drivers = null, string[] options = null)` : [Dataset](dataset.md)
 - `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, int datatype = 0, string[] options = null)` : [Dataset](dataset.md) 
-- `close(Dataset ds)` : void
 - `getConfigOption(string name)` : string
 - `setConfigOption(string name, string value)` : void
 - `quiet(string name, string value)` : void
