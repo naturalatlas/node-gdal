@@ -27,7 +27,7 @@ void FeatureFields::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "reset", reset);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
 
-	ATTR(constructor, "feature", featureGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "feature", featureGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("FeatureFields"), constructor->GetFunction());
 }

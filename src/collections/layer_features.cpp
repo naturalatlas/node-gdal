@@ -24,7 +24,7 @@ void LayerFeatures::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "next", next);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 
-	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "layer", layerGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("LayerFeatures"), constructor->GetFunction());
 }

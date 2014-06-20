@@ -25,7 +25,7 @@ void LayerFields::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
 
-	ATTR(constructor, "layer", layerGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "layer", layerGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("LayerFields"), constructor->GetFunction());
 }

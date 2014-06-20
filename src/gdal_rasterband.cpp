@@ -42,7 +42,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "getDefaultHistogram", getDefaultHistogram);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "setDefaultHistogram", setDefaultHistogram);
 
-	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "id", idGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "overviews", overviewsGetter, READ_ONLY_SETTER);

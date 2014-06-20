@@ -24,7 +24,7 @@ void FeatureDefnFields::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
 
-	ATTR(constructor, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("FeatureDefnFields"), constructor->GetFunction());
 }

@@ -22,7 +22,7 @@ void DatasetLayers::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
 
-	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("DatasetLayers"), constructor->GetFunction());
 }

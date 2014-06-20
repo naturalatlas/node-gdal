@@ -20,7 +20,7 @@ void DatasetBands::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 
-	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("DatasetBands"), constructor->GetFunction());
 }

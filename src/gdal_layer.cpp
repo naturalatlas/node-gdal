@@ -30,7 +30,7 @@ void Layer::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
 
-	ATTR(constructor, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "features", featuresGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
