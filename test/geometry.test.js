@@ -161,4 +161,76 @@ describe('Geometry', function() {
 			});
 		});
 	});
+
+	describe('calculation function', function() {
+		describe('equals()', function() {
+			it('should determine if geometries are identical', function() {
+				var point1 = new gdal.Point(3, 3);
+				var point2 = new gdal.Point(3, 3);
+				var point3 = new gdal.Point(5, 3);
+				assert.equal(point1.equals(point2), true);
+				assert.equal(point1.equals(point3), false);
+			});
+		});
+		describe('distance()', function() {
+			it('should return correct result', function() {
+				var point1 = new gdal.Point(0, 0);
+				var point2 = new gdal.Point(10, 10);
+				var distance_expected = Math.sqrt(10*10 + 10*10);
+				var distance_actual = point1.distance(point2);
+				assert.closeTo(distance_actual, distance_expected, 0.001);
+			});
+		});
+		describe('boundary()', function() {
+			it('should return geometry without inner rings', function() {
+				var outerRing = new gdal.LinearRing();
+				outerRing.points.add({x: 0, y: 0});
+				outerRing.points.add({x: 20, y: 0});
+				outerRing.points.add({x: 20, y: 10});
+				outerRing.points.add({x: 0, y: 10});
+				outerRing.closeRings();
+				var innerRing = new gdal.LinearRing();
+				innerRing.points.add({x: 1, y: 9});
+				innerRing.points.add({x: 19, y: 9});
+				innerRing.points.add({x: 19, y: 1});
+				innerRing.points.add({x: 1, y: 1});
+				innerRing.closeRings();
+
+				var squareDonut = new gdal.Polygon();
+				squareDonut.rings.add(outerRing);
+				squareDonut.rings.add(innerRing);
+
+				var boundary = squareDonut.boundary();
+				assert.instanceOf(boundary, gdal.MultiLineString);
+				assert.equal(boundary.polygonize().toJSON(), 1);
+			});
+		});
+		describe('centroid()', function() {
+			it('should return correct result', function() {
+				var ring = new gdal.LinearRing();
+				ring.points.add({x: 0, y: 0});
+				ring.points.add({x: 20, y: 0});
+				ring.points.add({x: 20, y: 10});
+				ring.points.add({x: 0, y: 10});
+				ring.closeRings();
+
+				var square = new gdal.Polygon();
+				square.rings.add(ring);
+
+				var centroid = square.centroid();
+
+				assert.instanceOf(centroid, gdal.Point);
+				assert.closeTo(centroid.x, 10, 0.0001);
+				assert.closeTo(centroid.y, 5, 0.0001);
+			});
+		});
+		describe('buffer()', function() {
+			it('should return correct result', function() {
+				var point = new gdal.Point(0, 0);
+				var circle = point.buffer(1, 1000);
+				assert.instanceOf(circle, gdal.Polygon);
+				assert.closeTo(circle.getArea(), 3.1415, 0.0001);
+			});
+		});
+	});
 });
