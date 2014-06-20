@@ -9,15 +9,15 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
 #### Methods
 
 - `toString()` : string
-- `getName()` : string
-- `setName(string name)` : void
-- `getType()` : int
-- `setType(OGRFieldType type)` : void
-- `getJustify()` : int
-- `setJustify(int justification)` : void
-- `getWidth()` : int
-- `setWidth(int width)` : void
-- `getPrecision()` : int
-- `setPrecision(int precision)` : void
-- `isIgnored()` : bool
-- `setIgnored(bool ignored)` : void
+
+#### Properties
+
+- `name` : string
+- `type` : int *([OGRFieldType](http://www.gdal.org/ogr__core_8h.html#a787194bea637faf12d61643124a7c9fc))*
+- `width` : int
+- `precision` : int
+- `justification` : int *(OGRJustification)*
+    + OJUndefined = 0
+    + OJLeft = 1
+    + OJRight = 2
+- `ignored` : bool

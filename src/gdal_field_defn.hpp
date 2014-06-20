@@ -22,19 +22,20 @@ public:
 	static Handle<Value> New(OGRFieldDefn *def);
 	static Handle<Value> New(OGRFieldDefn *def, bool owned);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> setName(const Arguments &args);
-	static Handle<Value> getName(const Arguments &args);
-	static Handle<Value> getType(const Arguments &args);
-	static Handle<Value> setType(const Arguments &args);
-	static Handle<Value> getJustify(const Arguments &args);
-	static Handle<Value> setJustify(const Arguments &args);
-	static Handle<Value> getWidth(const Arguments &args);
-	static Handle<Value> setWidth(const Arguments &args);
-	static Handle<Value> getPrecision(const Arguments &args);
-	static Handle<Value> setPrecision(const Arguments &args);
-	static Handle<Value> set(const Arguments &args);
-	static Handle<Value> isIgnored(const Arguments &args);
-	static Handle<Value> setIgnored(const Arguments &args);
+
+	static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> justificationGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> precisionGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> widthGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> ignoredGetter(Local<String> property, const AccessorInfo &info);
+
+	static void nameSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void typeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void justificationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void precisionSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void widthSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void ignoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	FieldDefn();
 	FieldDefn(OGRFieldDefn *def);

@@ -12,19 +12,12 @@ void FieldDefn::Initialize(Handle<Object> target)
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("FieldDefn"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setName", setName);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getType", getType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setType", setType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getJustify", getJustify);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setJustify", setJustify);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getWidth", getWidth);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setWidth", setWidth);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getPrecision", getPrecision);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setPrecision", setPrecision);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "isIgnored", isIgnored);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setIgnored", setIgnored);
+	ATTR(constructor, "name", nameGetter, nameSetter);
+	ATTR(constructor, "type", typeGetter, typeSetter);
+	ATTR(constructor, "justification", justificationGetter, justificationSetter);
+	ATTR(constructor, "width", widthGetter, widthSetter);
+	ATTR(constructor, "precision", precisionGetter, precisionSetter);
+	ATTR(constructor, "ignored", ignoredGetter, ignoredSetter);
 
 	target->Set(String::NewSymbol("FieldDefn"), constructor->GetFunction());
 }
@@ -117,15 +110,111 @@ Handle<Value> FieldDefn::toString(const Arguments& args)
 	return scope.Close(String::New("FieldDefn"));
 }
 
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, getName, SafeString, GetNameRef);
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, getType, Integer, GetType);
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, isIgnored, Boolean, IsIgnored);
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, getJustify, Integer, GetJustify);
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, getWidth, Integer, GetWidth);
-NODE_WRAPPED_METHOD_WITH_RESULT(FieldDefn, getPrecision, Integer, GetPrecision);
-NODE_WRAPPED_METHOD_WITH_1_ENUM_PARAM(FieldDefn, setJustify, SetJustify, OGRJustification, "justification");
-NODE_WRAPPED_METHOD_WITH_1_ENUM_PARAM(FieldDefn, setType, SetType, OGRFieldType, "field type");
-NODE_WRAPPED_METHOD_WITH_1_INTEGER_PARAM(FieldDefn, setPrecision, SetPrecision, "field precision");
-NODE_WRAPPED_METHOD_WITH_1_INTEGER_PARAM(FieldDefn, setWidth, SetWidth, "field width");
-NODE_WRAPPED_METHOD_WITH_1_BOOLEAN_PARAM(FieldDefn, setIgnored, SetIgnored, "is ignored");
-NODE_WRAPPED_METHOD_WITH_1_STRING_PARAM(FieldDefn, setName, SetName, "field name");
+
+Handle<Value> FieldDefn::nameGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(SafeString::New(def->this_->GetNameRef()));
+}
+
+Handle<Value> FieldDefn::typeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(Integer::New(def->this_->GetType()));
+}
+
+Handle<Value> FieldDefn::ignoredGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(Boolean::New(def->this_->IsIgnored()));
+}
+
+Handle<Value> FieldDefn::justificationGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(Integer::New(def->this_->GetJustify()));
+}
+
+Handle<Value> FieldDefn::widthGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(Integer::New(def->this_->GetWidth()));
+}
+
+Handle<Value> FieldDefn::precisionGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	return scope.Close(Integer::New(def->this_->GetPrecision()));
+}
+
+void FieldDefn::nameSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsString()){
+		NODE_THROW("Name must be string");
+		return;
+	}
+	def->this_->SetName(TOSTR(value));
+}
+
+void FieldDefn::typeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsInt32()){
+		NODE_THROW("type must be an integer");
+		return;
+	}
+	def->this_->SetType(OGRFieldType(value->IntegerValue()));
+}
+
+void FieldDefn::justificationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsInt32()){
+		NODE_THROW("justification must be an integer");
+		return;
+	}
+	def->this_->SetJustify(OGRJustification(value->IntegerValue()));
+}
+
+void FieldDefn::widthSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsInt32()){
+		NODE_THROW("width must be an integer");
+		return;
+	}
+	def->this_->SetWidth(value->IntegerValue());
+}
+
+void FieldDefn::precisionSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsInt32()){
+		NODE_THROW("precision must be an integer");
+		return;
+	}
+	def->this_->SetPrecision(value->IntegerValue());
+}
+
+void FieldDefn::ignoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
+	if(!value->IsBoolean()){
+		NODE_THROW("ignored must be a boolean");
+		return;
+	}
+	def->this_->SetIgnored(value->BooleanValue());
+}
