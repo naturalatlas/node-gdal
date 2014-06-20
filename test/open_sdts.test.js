@@ -5,10 +5,7 @@ var path = require('path');
 var assert = require('chai').assert;
 
 describe('Open', function() {
-	// skip test if driver doesn't exist (will likely be the case when testing against shared gdal)
-	var desc = gdal.drivers.get('SDTS') ? describe : describe.skip;
-
-	desc('SDTS (DDF)', function() {
+	describe('SDTS (DDF)', function() {
 		var filename, ds;
 
 		it('should not throw', function() {

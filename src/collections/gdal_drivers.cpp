@@ -31,7 +31,7 @@ GDALDrivers::GDALDrivers()
 	: ObjectWrap()
 {}
 
-GDALDrivers::~GDALDrivers() 
+GDALDrivers::~GDALDrivers()
 {}
 
 Handle<Value> GDALDrivers::New(const Arguments& args)
@@ -95,7 +95,7 @@ Handle<Value> GDALDrivers::get(const Arguments& args)
 			return scope.Close(Driver::New(ogr_driver));
 		}
 		#endif
-		
+
 		if(name == "VRT:vector") {
 			#if GDAL_VERSION_MAJOR < 2
 			ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName("VRT");
@@ -133,12 +133,12 @@ Handle<Value> GDALDrivers::get(const Arguments& args)
 	} else {
 		return NODE_THROW("Argument must be string or integer");
 	}
-		
-	return NODE_THROW("Error retrieving driver");
+
+	return scope.Close(Null());
 }
 
 Handle<Value> GDALDrivers::getNames(const Arguments& args)
-{	
+{
 	HandleScope scope;
 	int gdal_count = GetGDALDriverManager()->GetDriverCount();
 	int i, ogr_count = 0;
@@ -147,7 +147,7 @@ Handle<Value> GDALDrivers::getNames(const Arguments& args)
 	#if GDAL_VERSION_MAJOR < 2
 		ogr_count = OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount();
 	#endif
-	
+
 	int n = gdal_count + ogr_count;
 
 	Local<Array> driver_names = Array::New(n);
@@ -168,7 +168,7 @@ Handle<Value> GDALDrivers::getNames(const Arguments& args)
 		if(name == "VRT") name = "VRT:vector";
 		#endif
 		driver_names->Set(i, SafeString::New(name.c_str()));
-	} 
+	}
 	return scope.Close(driver_names);
 }
 
