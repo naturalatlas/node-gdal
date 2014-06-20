@@ -13,7 +13,7 @@ Note: all methods throw errors if the feature has already been explicitly destro
 - `setGeometry(Geometry geom)` : void *(throws)*
 - `setGeometryDirectly(Geometry geom)` : void *(throws, alias to setGeometry currently)*
 - `clone()` : [Feature](feature.md)
-- `equal(Feature f)` : bool
+- `equals(Feature f)` : bool
 - `getFieldDefn(int index)` : [FieldDefn](fielddefn.md) *(throws)*
 - `setFrom(Feature f, bool forgiving = true)` : void *(throws)*
 - `setFrom(Feature f, int[] index_map, bool forgiving = true)` : void *(throws)*

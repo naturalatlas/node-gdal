@@ -23,7 +23,7 @@ void Feature::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometry", setGeometry);
 	// NODE_SET_PROTOTYPE_METHOD(constructor, "stealGeometry", stealGeometry);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "equal", equal);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setFrom", setFrom);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
@@ -170,7 +170,7 @@ Handle<Value> Feature::getFieldDefn(const Arguments& args)
 //NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
 NODE_WRAPPED_METHOD_WITH_RESULT(Feature, clone, Feature, Clone);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
-NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equal, Boolean, Equal, Feature, "feature");
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equals, Boolean, Equal, Feature, "feature");
 
 Handle<Value> Feature::destroy(const Arguments& args)
 {

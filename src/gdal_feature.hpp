@@ -27,7 +27,7 @@ public:
 	static Handle<Value> setGeometry(const Arguments& args);
 //  static Handle<Value> stealGeometry(const Arguments& args);
 	static Handle<Value> clone(const Arguments& args);
-	static Handle<Value> equal(const Arguments& args);
+	static Handle<Value> equals(const Arguments& args);
 	static Handle<Value> getFieldDefn(const Arguments& args);
 	static Handle<Value> setFrom(const Arguments& args);
 	static Handle<Value> destroy(const Arguments& args);
