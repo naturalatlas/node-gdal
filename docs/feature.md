@@ -9,20 +9,20 @@ Note: all methods throw errors if the feature has already been explicitly destro
 #### Methods
 
 - `toString()` : string
-- `getDefn()` : [FeatureDefn](featuredefn.md)
 - `getGeometry()` : [Geometry](geometry.md) *(throws)*
 - `setGeometry(Geometry geom)` : void *(throws)*
 - `setGeometryDirectly(Geometry geom)` : void *(throws, alias to setGeometry currently)*
 - `clone()` : [Feature](feature.md)
 - `equal(Feature f)` : bool
 - `getFieldDefn(int index)` : [FieldDefn](fielddefn.md) *(throws)*
-- `getFID()` : int
-- `setFID(int fid)` : void
 - `setFrom(Feature f, bool forgiving = true)` : void *(throws)*
-- `setFrom(Feature f, int[] index_map, bool forgiving = true)` : void *(throws)
+- `setFrom(Feature f, int[] index_map, bool forgiving = true)` : void *(throws)*
 
 #### Properties
 
+
+- `fid` : int *(R/W)*
+- `defn` : [FeatureDefn](featuredefn.md)
 - `fields` : FeatureFields
 
 #### Fields

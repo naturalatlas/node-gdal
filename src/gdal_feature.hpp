@@ -22,7 +22,6 @@ public:
 	static Handle<Value> New(OGRFeature *feature);
 	static Handle<Value> New(OGRFeature *feature, bool owned);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getDefn(const Arguments &args);
 	static Handle<Value> getGeometry(const Arguments& args);
 	static Handle<Value> setGeometryDirectly(const Arguments& args);
 	static Handle<Value> setGeometry(const Arguments& args);
@@ -30,12 +29,14 @@ public:
 	static Handle<Value> clone(const Arguments& args);
 	static Handle<Value> equal(const Arguments& args);
 	static Handle<Value> getFieldDefn(const Arguments& args);
-	static Handle<Value> getFID(const Arguments& args);
-	static Handle<Value> setFID(const Arguments& args);
 	static Handle<Value> setFrom(const Arguments& args);
 	static Handle<Value> destroy(const Arguments& args);
 
 	static Handle<Value> fieldsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> fidGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> defnGetter(Local<String> property, const AccessorInfo &info);
+
+	static void fidSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	Feature();
 	Feature(OGRFeature *geom);

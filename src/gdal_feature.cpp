@@ -18,7 +18,6 @@ void Feature::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Feature"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getDefn", getDefn);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometryDirectly", setGeometryDirectly);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometry", setGeometry);
@@ -26,12 +25,12 @@ void Feature::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "equal", equal);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFID", getFID);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setFID", setFID);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setFrom", setFrom);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
 
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "defn", defnGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "fid", fidGetter, fidSetter);
 
 	target->Set(String::NewSymbol("Feature"), constructor->GetFunction());
 }
@@ -151,18 +150,6 @@ Handle<Value> Feature::getGeometry(const Arguments& args)
 	return scope.Close(Geometry::New(geom, false));
 }
 
-Handle<Value> Feature::getDefn(const Arguments& args)
-{
-	HandleScope scope;
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
-	}
-
-	return scope.Close(FeatureDefn::New(feature->this_->GetDefnRef(), false));
-}
-
 Handle<Value> Feature::getFieldDefn(const Arguments& args)
 {
 	HandleScope scope;
@@ -184,8 +171,6 @@ Handle<Value> Feature::getFieldDefn(const Arguments& args)
 NODE_WRAPPED_METHOD_WITH_RESULT(Feature, clone, Feature, Clone);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equal, Boolean, Equal, Feature, "feature");
-NODE_WRAPPED_METHOD_WITH_RESULT(Feature, getFID, Integer, GetFID);
-NODE_WRAPPED_METHOD_WITH_1_INTEGER_PARAM(Feature, setFID, SetFID, "feature identifier");
 
 Handle<Value> Feature::destroy(const Arguments& args)
 {
@@ -281,4 +266,39 @@ Handle<Value> Feature::fieldsGetter(Local<String> property, const AccessorInfo &
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
+}
+
+Handle<Value> Feature::fidGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	if (!feature->this_) {
+		return NODE_THROW("Feature object already destroyed");
+	}
+	return scope.Close(Integer::New(feature->this_->GetFID()));
+}
+
+Handle<Value> Feature::defnGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	if (!feature->this_) {
+		return NODE_THROW("Feature object already destroyed");
+	}
+	return scope.Close(FeatureDefn::New(feature->this_->GetDefnRef(), false));
+}
+
+void Feature::fidSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	if (!feature->this_) {
+		NODE_THROW("Feature object already destroyed");
+		return;
+	}
+	if(!value->IsInt32()){
+		NODE_THROW("fid must be an integer");
+		return;
+	}
+	feature->this_->SetFID(value->IntegerValue());
 }
