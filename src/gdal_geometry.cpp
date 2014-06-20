@@ -17,8 +17,8 @@ void Geometry::Initialize(Handle<Object> target)
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("Geometry"));
 
-	NODE_SET_METHOD(constructor, "create", Geometry::create);
-	NODE_SET_METHOD(constructor, "createFromWkt", Geometry::createFromWkt);
+	NODE_SET_METHOD(constructor, "fromWkbType", Geometry::create);
+	NODE_SET_METHOD(constructor, "fromWkt", Geometry::createFromWkt);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toKML", exportToKML);

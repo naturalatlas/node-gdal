@@ -4,8 +4,8 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 
 #### Static methods
 
-- `create(wkbGeometryType type)` : [Geometry](geometry.md)
-- `createFromWKT(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
+- `fromWkbType(wkbGeometryType type)` : [Geometry](geometry.md)
+- `fromWkt(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
 
 #### Methods
 
