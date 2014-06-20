@@ -205,13 +205,13 @@ Handle<Value> RasterBand::getStatistics(const Arguments& args)
 	if (!band->this_) {
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
-	int err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
-
+	
+	CPLErr err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
 	if (err) {
 		if (!force && err == CE_Warning) {
 			return NODE_THROW("Statistics cannot be efficiently computed without scanning raster");
 		}
-		return NODE_THROW("Error getting statistics");
+		return NODE_THROW_CPLERR(err);
 	}
 
 	Local<Object> result = Object::New();
@@ -235,8 +235,9 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 
-	if (band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL)) {
-		return NODE_THROW("Error computing statistics");
+	CPLErr err = band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL)
+	if (err) {
+		return NODE_THROW_CPLERR(err);
 	}
 
 	Local<Object> result = Object::New();
@@ -263,7 +264,7 @@ Handle<Value> RasterBand::setStatistics(const Arguments& args)
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 
-	int err = band->this_->SetStatistics(min, max, mean, std_dev);
+	CPLErr err = band->this_->SetStatistics(min, max, mean, std_dev);
 
 	if (err) {
 		return NODE_THROW_CPLERR(err);
