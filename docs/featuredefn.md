@@ -5,17 +5,14 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 #### Methods
 
 - `toString()` : string
-- `getName()` : string
-- `getGeomType()` : int
-- `setGeomType(wkbGeometryType type)` : void
 - `clone()` : [FeatureDefn](featuredefn.md)
-- `isGeometryIgnored()` : bool
-- `setGeometryIgnored(bool ignore)` : void
-- `isStyleIgnored()` : bool
-- `setStyleIgnored(bool ignore)` : void
 
 #### Properties
 
+- `name` : string
+- `geomType` : int *(OGRwkbGeometryType)*
+- `geomIgnored` : bool
+- `styleIgnored` : bool
 - `fields` : FeatureDefnFields
 
 #### Fields

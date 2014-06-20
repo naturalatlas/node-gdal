@@ -22,16 +22,17 @@ public:
 	static Handle<Value> New(OGRFeatureDefn *def);
 	static Handle<Value> New(OGRFeatureDefn *def, bool owned);
 	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getName(const Arguments &args);
-	static Handle<Value> getGeomType(const Arguments &args);
-	static Handle<Value> setGeomType(const Arguments &args);
 	static Handle<Value> clone(const Arguments &args);
-	static Handle<Value> isGeometryIgnored(const Arguments &args);
-	static Handle<Value> setGeometryIgnored(const Arguments &args);
-	static Handle<Value> isStyleIgnored(const Arguments &args);
-	static Handle<Value> setStyleIgnored(const Arguments &args);
 
 	static Handle<Value> fieldsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> geomTypeGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> geomIgnoredGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> styleIgnoredGetter(Local<String> property, const AccessorInfo &info);
+	
+	static void geomTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void geomIgnoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void styleIgnoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	FeatureDefn();
 	FeatureDefn(OGRFeatureDefn *def);

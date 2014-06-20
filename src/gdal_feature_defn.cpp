@@ -15,18 +15,13 @@ void FeatureDefn::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("FeatureDefn"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getName", getName);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeomType", getGeomType);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeomType", setGeomType);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "isGeometryIgnored", isGeometryIgnored);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometryIgnored", setGeometryIgnored);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "isStyleIgnored", isStyleIgnored);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setStyleIgnored", setStyleIgnored);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 
+	ATTR(constructor, "name", nameGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "styleIgnored", styleIgnoredGetter, styleIgnoredSetter);
+	ATTR(constructor, "geomIgnored", geomIgnoredGetter, geomIgnoredSetter);
+	ATTR(constructor, "geomType", geomTypeGetter, geomTypeSetter);
 	
 	target->Set(String::NewSymbol("FeatureDefn"), constructor->GetFunction());
 }
@@ -112,17 +107,71 @@ Handle<Value> FeatureDefn::toString(const Arguments& args)
 }
 
 
-NODE_WRAPPED_METHOD_WITH_RESULT(FeatureDefn, getName, SafeString, GetName);
-NODE_WRAPPED_METHOD_WITH_RESULT(FeatureDefn, getGeomType, Integer, GetGeomType);
 NODE_WRAPPED_METHOD_WITH_RESULT(FeatureDefn, clone, FeatureDefn, Clone);
-NODE_WRAPPED_METHOD_WITH_RESULT(FeatureDefn, isGeometryIgnored, Boolean, IsGeometryIgnored);
-NODE_WRAPPED_METHOD_WITH_RESULT(FeatureDefn, isStyleIgnored, Boolean, IsStyleIgnored);
-NODE_WRAPPED_METHOD_WITH_1_ENUM_PARAM(FeatureDefn, setGeomType, SetGeomType, OGRwkbGeometryType, "geometry type");
-NODE_WRAPPED_METHOD_WITH_1_BOOLEAN_PARAM(FeatureDefn, setGeometryIgnored, SetGeometryIgnored, "ignore");
-NODE_WRAPPED_METHOD_WITH_1_BOOLEAN_PARAM(FeatureDefn, setStyleIgnored, SetStyleIgnored, "ignore");
+
+Handle<Value> FeatureDefn::nameGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	return scope.Close(SafeString::New(def->this_->GetName()));
+}
+
+Handle<Value> FeatureDefn::geomTypeGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	return scope.Close(Integer::New(def->this_->GetGeomType()));
+}
+
+Handle<Value> FeatureDefn::geomIgnoredGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	return scope.Close(Boolean::New(def->this_->IsGeometryIgnored()));
+}
+
+Handle<Value> FeatureDefn::styleIgnoredGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	return scope.Close(Boolean::New(def->this_->IsStyleIgnored()));
+}
 
 Handle<Value> FeatureDefn::fieldsGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
+}
+
+void FeatureDefn::geomTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	if(!value->IsInt32()){
+		NODE_THROW("geomType must be an integer");
+		return;
+	}
+	def->this_->SetGeomType(OGRwkbGeometryType(value->IntegerValue()));
+}
+
+void FeatureDefn::geomIgnoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	if(!value->IsBoolean()){
+		NODE_THROW("geomIgnored must be a boolean");
+		return;
+	}
+	def->this_->SetGeometryIgnored(value->BooleanValue());
+}
+
+void FeatureDefn::styleIgnoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	FeatureDefn *def = ObjectWrap::Unwrap<FeatureDefn>(info.This());
+	if(!value->IsBoolean()){
+		NODE_THROW("styleIgnored must be a boolean");
+		return;
+	}
+	def->this_->SetStyleIgnored(value->BooleanValue());
 }
