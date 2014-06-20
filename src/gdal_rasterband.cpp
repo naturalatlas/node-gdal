@@ -57,6 +57,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	ATTR(constructor, "offset", offsetGetter, offsetSetter);
 	ATTR(constructor, "noDataValue", noDataValueGetter, noDataValueSetter);
 	ATTR(constructor, "categoryNames", categoryNamesGetter, categoryNamesSetter);
+	ATTR(constructor, "colorInterpretation", colorInterpretationGetter, colorInterpretationSetter);
 
 	target->Set(String::NewSymbol("RasterBand"), constructor->GetFunction());
 }
@@ -441,7 +442,6 @@ Handle<Value> RasterBand::hasArbitraryOverviewsGetter(Local<String> property, co
 	return scope.Close(Boolean::New(result));
 }
 
-
 Handle<Value> RasterBand::categoryNamesGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
@@ -463,6 +463,17 @@ Handle<Value> RasterBand::categoryNamesGetter(Local<String> property, const Acce
 	}
 
 	return scope.Close(results);
+}
+
+Handle<Value> RasterBand::colorInterpretationGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	return scope.Close(SafeString::New(GDALGetColorInterpretationName(band->this_->GetColorInterpretation())));
 }
 
 void RasterBand::unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
@@ -582,6 +593,30 @@ void RasterBand::categoryNamesSetter(Local<String> property, Local<Value> value,
 		delete [] list;
 	}
 
+	if (err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+void RasterBand::colorInterpretationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+{
+	HandleScope scope;
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(info.This());
+	if (!band->this_) {
+		NODE_THROW("RasterBand object has already been destroyed");
+		return;
+	}
+
+	GDALColorInterp ci = GCI_Undefined;
+	
+	if (value->IsString()) {
+		ci = GDALGetColorInterpretationByName(TOSTR(value));
+	} else if(!value->IsNull() && !value->IsUndefined()) {
+		NODE_THROW("color interpretation must be a string");
+		return;
+	}
+
+	CPLErr err = band->this_->SetColorInterpretation(ci);
 	if (err) {
 		NODE_THROW_CPLERR(err);
 	}

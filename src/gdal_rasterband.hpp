@@ -58,12 +58,14 @@ public:
 	static Handle<Value> offsetGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> noDataValueGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> categoryNamesGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> colorInterpretationGetter(Local<String> property, const AccessorInfo &info);
 
 	static void unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static void scaleSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static void offsetSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static void noDataValueSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static void categoryNamesSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static void colorInterpretationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	static ObjectCache<GDALRasterBand*> cache;
 

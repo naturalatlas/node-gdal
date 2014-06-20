@@ -33,6 +33,21 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `hasArbitraryOverviews` : bool
 - `categoryNames` : string[] *(settable)*
 - `overviews` : RasterBandOverviews
+- `colorInterpretation` : string
+    + `"Undefined"`
+    + `"Gray"`
+    + `"Palette"`
+    + `"Red"`
+    + `"Green"`
+    + `"Blue"`
+    + `"Alpha"`
+    + `"Hue"`
+    + `"Saturation"`
+    + `"Lightness"`
+    + `"Cyan"`
+    + `"Magenta"`
+    + `"Yellow"`
+    + `"Black"`
 
 #### Overviews
 
