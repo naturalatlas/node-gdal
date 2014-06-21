@@ -66,7 +66,7 @@ namespace node_gdal {
 
 		static Handle<Value> VerboseOutput(const Arguments &args)
 		{
-			CPLSetErrorHandler(NULL);
+			CPLSetErrorHandler(CPLDefaultErrorHandler);
 			return Undefined();
 		}
 

@@ -235,7 +235,7 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 
-	CPLErr err = band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL)
+	CPLErr err = band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL);
 	if (err) {
 		return NODE_THROW_CPLERR(err);
 	}
