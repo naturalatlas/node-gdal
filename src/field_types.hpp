@@ -27,7 +27,7 @@ inline const char * getFieldTypeName(OGRFieldType type)
 
 inline int getFieldTypeByName(std::string name)
 {
-	for (int i = 0; i < OFTMaxType; i++) {
+	for (int i = 0; i <= OFTMaxType; i++) {
 		if(name == FIELD_TYPES[i]) return i;
 	}
 	return -1; 
