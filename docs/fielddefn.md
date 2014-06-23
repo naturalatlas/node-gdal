@@ -4,7 +4,7 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
 
 #### Constructor
 
-- `FieldDefn(string field_name, OGRFieldType type)`
+- `FieldDefn(string field_name, string type)`
 
 #### Methods
 
@@ -13,7 +13,17 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
 #### Properties
 
 - `name` : string
-- `type` : int *([OGRFieldType](http://www.gdal.org/ogr__core_8h.html#a787194bea637faf12d61643124a7c9fc))*
+- `type` : string
+    + `'integer'`
+    + `'integer[]'`
+    + `'real'`
+    + `'real[]'`
+    + `'string'`
+    + `'string[]'`
+    + `'binary'`
+    + `'date'`
+    + `'time'`
+    + `'dateTime'`
 - `width` : int
 - `precision` : int
 - `justification` : int *(OGRJustification)*
