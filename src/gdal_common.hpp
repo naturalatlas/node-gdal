@@ -4,6 +4,7 @@
 
 #include <v8.h>
 #include <gdal_version.h>
+#include <cpl_error.h>
 
 //String::New(null) -> seg fault
 class SafeString {
@@ -19,6 +20,11 @@ public:
 
 inline const char* getOGRErrMsg(int err)
 {
+  if(err == 6) {
+    //get more descriptive error
+    //TODO: test if all OGRErr failures report an error msg
+    return CPLGetLastErrorMsg();
+  }
   switch(err) {
   case 0:
     return "No error";

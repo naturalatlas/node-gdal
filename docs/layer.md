@@ -35,7 +35,6 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 
 - `fields.count()` : int
 - `fields.add(FieldDefn def, bool approx = true)` : void *(throws)*
-- `fields.create(string name, string type)` : [FieldDefn](fielddefn.md) *(throws)*
 - `fields.fromJSON(object json)` : void *(throws)*
 - `fields.remove(int i)` : void *(throws)*
 - `fields.remove(string field_name)` : void *(throws)*
