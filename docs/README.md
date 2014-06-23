@@ -6,14 +6,15 @@
 - `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, int datatype = 0, string[] options = null)` : [Dataset](dataset.md) 
 - `getConfigOption(string name)` : string
 - `setConfigOption(string name, string value)` : void
-- `quiet(string name, string value)` : void
-- `verbose(string name, string value)` : void
+- `quiet()` : void
+- `verbose()` : void
 
 #### Drivers 
 
 - `drivers.count()` : int
 - `drivers.get(int id)` : [Driver](driver.md) *(throws)*
 - `drivers.get(string name)` : [Driver](driver.md) *(throws)*
+- `drivers.getNames()` : string[]
 - `drivers.forEach(function iterator)` : void *(throws)*
 
 #### Classes
