@@ -20,7 +20,7 @@ before_install:
   - npm --version
 
 install:
-  - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Linux' ]]; then sudo apt-get -qq install libgdal1-dev; fi;
+  - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Linux' ]]; then sudo apt-get -qq update; sudo apt-get -qq install libgdal1-dev; fi;
   - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Darwin' ]]; then brew install gdal; fi;
   - if [[ ${TARGET} == 'SHARED' ]]; then npm install --build-from-source --shared_gdal; fi;
   - if [[ ${TARGET} == 'STATIC' ]]; then npm install --build-from-source; fi;
