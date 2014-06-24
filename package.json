@@ -44,7 +44,7 @@
     "node-pre-gyp": "~0.5.17"
   },
   "devDependencies": {
-    "mocha": "~1.19.0",
+    "mocha": "~1.x",
     "chai": "~1.9.1",
     "aws-sdk": "~2.0.1"
   },

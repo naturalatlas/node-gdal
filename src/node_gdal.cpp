@@ -33,6 +33,7 @@
 #include "gdal_geometry.hpp"
 
 #include "gdal.hpp"
+#include "field_types.hpp"
 
 //collections
 #include "collections/dataset_bands.hpp"
@@ -197,18 +198,18 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, wkbMultiPolygon25D);
 			NODE_DEFINE_CONSTANT(target, wkbGeometryCollection25D);
 
-			NODE_DEFINE_CONSTANT(target, OFTInteger);
-			NODE_DEFINE_CONSTANT(target, OFTIntegerList);
-			NODE_DEFINE_CONSTANT(target, OFTReal);
-			NODE_DEFINE_CONSTANT(target, OFTRealList);
-			NODE_DEFINE_CONSTANT(target, OFTString);
-			NODE_DEFINE_CONSTANT(target, OFTStringList);
-			NODE_DEFINE_CONSTANT(target, OFTWideString);
-			NODE_DEFINE_CONSTANT(target, OFTWideStringList);
-			NODE_DEFINE_CONSTANT(target, OFTBinary);
-			NODE_DEFINE_CONSTANT(target, OFTDate);
-			NODE_DEFINE_CONSTANT(target, OFTTime);
-			NODE_DEFINE_CONSTANT(target, OFTDateTime);
+			target->Set(String::NewSymbol("OFTInteger"), String::New(getFieldTypeName(OFTInteger)));
+			target->Set(String::NewSymbol("OFTIntegerList"), String::New(getFieldTypeName(OFTIntegerList)));
+			target->Set(String::NewSymbol("OFTReal"), String::New(getFieldTypeName(OFTReal)));
+			target->Set(String::NewSymbol("OFTRealList"), String::New(getFieldTypeName(OFTRealList)));
+			target->Set(String::NewSymbol("OFTString"), String::New(getFieldTypeName(OFTString)));
+			target->Set(String::NewSymbol("OFTStringList"), String::New(getFieldTypeName(OFTStringList)));
+			target->Set(String::NewSymbol("OFTWideString"), String::New(getFieldTypeName(OFTWideString)));
+			target->Set(String::NewSymbol("OFTWideStringList"), String::New(getFieldTypeName(OFTWideStringList)));
+			target->Set(String::NewSymbol("OFTBinary"), String::New(getFieldTypeName(OFTBinary)));
+			target->Set(String::NewSymbol("OFTDate"), String::New(getFieldTypeName(OFTDate)));
+			target->Set(String::NewSymbol("OFTTime"), String::New(getFieldTypeName(OFTTime)));
+			target->Set(String::NewSymbol("OFTDateTime"), String::New(getFieldTypeName(OFTDateTime)));
 
 			target->Set(String::NewSymbol("version"), String::New(GDAL_RELEASE_NAME));
 
