@@ -44,7 +44,7 @@
     "node-pre-gyp": "~0.5.13"
   },
   "devDependencies": {
-    "mocha": "~1.19.0",
+    "mocha": "~1.x",
     "chai": "~1.9.1"
   },
   "bundledDependencies": [
