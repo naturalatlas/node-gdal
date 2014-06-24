@@ -193,6 +193,28 @@ Handle<Value> RasterBand::fill(const Arguments& args)
 	return Undefined();
 }
 
+// --- Custom error handling to handle VRT errors --- 
+// see: https://github.com/mapbox/mapnik-omnivore/issues/10
+
+std::string stats_file_err = "";
+CPLErrorHandler last_err_handler;
+void statisticsErrorHandler(CPLErr eErrClass, int err_no, const char *msg) {
+	if(err_no == CPLE_OpenFailed) {
+		stats_file_err = msg;
+	}
+	if(last_err_handler) {
+		last_err_handler(eErrClass, err_no, msg);
+	}
+}
+void pushStatsErrorHandler() {
+	last_err_handler = CPLSetErrorHandler(statisticsErrorHandler);
+}
+void popStatsErrorHandler() {
+	if(!last_err_handler) return;
+	CPLSetErrorHandler(last_err_handler);
+}
+	
+
 Handle<Value> RasterBand::getStatistics(const Arguments& args)
 {
 	HandleScope scope;
@@ -206,8 +228,12 @@ Handle<Value> RasterBand::getStatistics(const Arguments& args)
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 	
+	pushStatsErrorHandler();
 	CPLErr err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
-	if (err) {
+	popStatsErrorHandler();
+	if (!stats_file_err.empty()){
+		NODE_THROW(stats_file_err.c_str());
+	} else if (err) {
 		if (!force && err == CE_Warning) {
 			return NODE_THROW("Statistics cannot be efficiently computed without scanning raster");
 		}
@@ -235,8 +261,12 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 
+	pushStatsErrorHandler();
 	CPLErr err = band->this_->ComputeStatistics(approx, &min, &max, &mean, &std_dev, NULL, NULL);
-	if (err) {
+	popStatsErrorHandler();
+	if (!stats_file_err.empty()){
+		NODE_THROW(stats_file_err.c_str());
+	} else if (err) {
 		return NODE_THROW_CPLERR(err);
 	}
 
