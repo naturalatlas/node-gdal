@@ -1,6 +1,7 @@
 
 #include "gdal_common.hpp"
 #include "gdal_field_defn.hpp"
+#include "field_types.hpp"
 
 namespace node_gdal {
 
@@ -61,12 +62,17 @@ Handle<Value> FieldDefn::New(const Arguments& args)
 		return args.This();
 	} else {
 		std::string field_name("");
-		OGRFieldType field_type(OFTString);
+		std::string type_name("string");
 
 		NODE_ARG_STR(0, "field name", field_name);
-		NODE_ARG_ENUM(1, "field type", OGRFieldType, field_type);
+		NODE_ARG_STR(1, "field type", type_name);
 
-		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), field_type));
+		int field_type = getFieldTypeByName(type_name);
+		if (field_type < 0) {
+			return NODE_THROW("Unrecognized field type");
+		}
+
+		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), static_cast<OGRFieldType>(field_type)));
 		def->owned_ = true;
 		def->Wrap(args.This());
 	}
@@ -124,7 +130,7 @@ Handle<Value> FieldDefn::typeGetter(Local<String> property, const AccessorInfo &
 {
 	HandleScope scope;
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
-	return scope.Close(Integer::New(def->this_->GetType()));
+	return scope.Close(SafeString::New(getFieldTypeName(def->this_->GetType())));
 }
 
 Handle<Value> FieldDefn::ignoredGetter(Local<String> property, const AccessorInfo &info)
@@ -170,11 +176,18 @@ void FieldDefn::typeSetter(Local<String> property, Local<Value> value, const Acc
 {
 	HandleScope scope;
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
-	if(!value->IsInt32()){
-		NODE_THROW("type must be an integer");
+	if(!value->IsString()){
+		NODE_THROW("type must be a string");
 		return;
 	}
-	def->this_->SetType(OGRFieldType(value->IntegerValue()));
+	std::string name = TOSTR(value);
+	int type = getFieldTypeByName(name);
+	if(type < 0){
+		NODE_THROW("Unrecognized field type");
+	} else {
+		def->this_->SetType(OGRFieldType(type));
+	}
+	
 }
 
 void FieldDefn::justificationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
