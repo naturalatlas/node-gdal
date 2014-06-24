@@ -9,8 +9,8 @@ env:
     - NODE_NVM_VERSION="0.10" TARGET=SHARED
     - NODE_NVM_VERSION="0.8" TARGET=SHARED
   global:
-    secure: JknbqPRFci/F+TqK4+xtLXyiRCORO3i5QlJlj1hna9jE1QuWHitDhoN/cFSYluGq3Ul0rIgE419mal8fIzSiXCgNGMpEkg0qDDDYJhQrybc0T7QQVt7DjAY1IS/ybj/OJuTyt77rpeA0QdW6f9rYBO/nvDf27tJJhC0RpVh3m08=
-    secure: NHHQIv0bNEPYcwuo1VixLGylSH9+zDb+ioqGdllqiXA3lIOZM1pjVUQ0v/K2sl3/c9g0PJaTL77cUDqfF1j+7zCRaYUx9DYyT3XEo3qfYPkjCqsELHlkASHN5u6okKR1YC7eURkwtNmR1N55bdq7JDYDFDfaXSdr2KT+UITMsaM=
+    - secure: JknbqPRFci/F+TqK4+xtLXyiRCORO3i5QlJlj1hna9jE1QuWHitDhoN/cFSYluGq3Ul0rIgE419mal8fIzSiXCgNGMpEkg0qDDDYJhQrybc0T7QQVt7DjAY1IS/ybj/OJuTyt77rpeA0QdW6f9rYBO/nvDf27tJJhC0RpVh3m08=
+    - secure: NHHQIv0bNEPYcwuo1VixLGylSH9+zDb+ioqGdllqiXA3lIOZM1pjVUQ0v/K2sl3/c9g0PJaTL77cUDqfF1j+7zCRaYUx9DYyT3XEo3qfYPkjCqsELHlkASHN5u6okKR1YC7eURkwtNmR1N55bdq7JDYDFDfaXSdr2KT+UITMsaM=
 
 before_install:
   - git clone https://github.com/creationix/nvm.git ../.nvm && source ../.nvm/nvm.sh
