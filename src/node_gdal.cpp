@@ -148,20 +148,7 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Read);
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
-			NODE_DEFINE_CONSTANT(target, GDT_Unknown);
-			NODE_DEFINE_CONSTANT(target, GDT_Byte);
-			NODE_DEFINE_CONSTANT(target, GDT_UInt16);
-			NODE_DEFINE_CONSTANT(target, GDT_Int16);
-			NODE_DEFINE_CONSTANT(target, GDT_UInt32);
-			NODE_DEFINE_CONSTANT(target, GDT_Int32);
-			NODE_DEFINE_CONSTANT(target, GDT_Float32);
-			NODE_DEFINE_CONSTANT(target, GDT_Float64);
-			NODE_DEFINE_CONSTANT(target, GDT_CInt16);
-			NODE_DEFINE_CONSTANT(target, GDT_CInt32);
-			NODE_DEFINE_CONSTANT(target, GDT_CFloat32);
-			NODE_DEFINE_CONSTANT(target, GDT_CFloat64);
-
-			target->Set(String::NewSymbol("GCI_Undefined"), String::New(GDALGetColorInterpretationName(GCI_Undefined)));
+			target->Set(String::NewSymbol("GCI_Undefined"), Undefined());
 			target->Set(String::NewSymbol("GCI_GrayIndex"), String::New(GDALGetColorInterpretationName(GCI_GrayIndex)));
 			target->Set(String::NewSymbol("GCI_PaletteIndex"), String::New(GDALGetColorInterpretationName(GCI_PaletteIndex)));
 			target->Set(String::NewSymbol("GCI_RedBand"), String::New(GDALGetColorInterpretationName(GCI_RedBand)));
@@ -178,8 +165,42 @@ namespace node_gdal {
 			target->Set(String::NewSymbol("GCI_YCbCr_YBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
 			target->Set(String::NewSymbol("GCI_YCbCr_CbBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
 			target->Set(String::NewSymbol("GCI_YCbCr_CrBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
-			target->Set(String::NewSymbol("GCI_Max"), String::New(GDALGetColorInterpretationName(GCI_Max)));
+			
+			target->Set(String::NewSymbol("GDT_Unknown"), Undefined());
+			target->Set(String::NewSymbol("GDT_Byte"), String::New(GDALGetDataTypeName(GDT_Byte)));
+			target->Set(String::NewSymbol("GDT_UInt16"), String::New(GDALGetDataTypeName(GDT_UInt16)));
+			target->Set(String::NewSymbol("GDT_Int16"), String::New(GDALGetDataTypeName(GDT_Int16)));
+			target->Set(String::NewSymbol("GDT_UInt32"), String::New(GDALGetDataTypeName(GDT_UInt32)));
+			target->Set(String::NewSymbol("GDT_Int32"), String::New(GDALGetDataTypeName(GDT_Int32)));
+			target->Set(String::NewSymbol("GDT_Float32"), String::New(GDALGetDataTypeName(GDT_Float32)));
+			target->Set(String::NewSymbol("GDT_Float64"), String::New(GDALGetDataTypeName(GDT_Float64)));
+			target->Set(String::NewSymbol("GDT_CInt16"), String::New(GDALGetDataTypeName(GDT_CInt16)));
+			target->Set(String::NewSymbol("GDT_CInt32"), String::New(GDALGetDataTypeName(GDT_CInt32)));
+			target->Set(String::NewSymbol("GDT_CFloat32"), String::New(GDALGetDataTypeName(GDT_CFloat32)));
+			target->Set(String::NewSymbol("GDT_CFloat64"), String::New(GDALGetDataTypeName(GDT_CFloat64)));
 
+			target->Set(String::NewSymbol("OJUndefined"), Undefined());
+			target->Set(String::NewSymbol("OJLeft"), String::New("Left"));
+			target->Set(String::NewSymbol("OJRight"), String::New("Right"));
+
+			target->Set(String::NewSymbol("GCI_Undefined"), Undefined());
+			target->Set(String::NewSymbol("GCI_GrayIndex"), String::New(GDALGetColorInterpretationName(GCI_GrayIndex)));
+			target->Set(String::NewSymbol("GCI_PaletteIndex"), String::New(GDALGetColorInterpretationName(GCI_PaletteIndex)));
+			target->Set(String::NewSymbol("GCI_RedBand"), String::New(GDALGetColorInterpretationName(GCI_RedBand)));
+			target->Set(String::NewSymbol("GCI_GreenBand"), String::New(GDALGetColorInterpretationName(GCI_GreenBand)));
+			target->Set(String::NewSymbol("GCI_BlueBand"), String::New(GDALGetColorInterpretationName(GCI_BlueBand)));
+			target->Set(String::NewSymbol("GCI_AlphaBand"), String::New(GDALGetColorInterpretationName(GCI_AlphaBand)));
+			target->Set(String::NewSymbol("GCI_HueBand"), String::New(GDALGetColorInterpretationName(GCI_HueBand)));
+			target->Set(String::NewSymbol("GCI_SaturationBand"), String::New(GDALGetColorInterpretationName(GCI_SaturationBand)));
+			target->Set(String::NewSymbol("GCI_LightnessBand"), String::New(GDALGetColorInterpretationName(GCI_LightnessBand)));
+			target->Set(String::NewSymbol("GCI_CyanBand"), String::New(GDALGetColorInterpretationName(GCI_CyanBand)));
+			target->Set(String::NewSymbol("GCI_MagentaBand"), String::New(GDALGetColorInterpretationName(GCI_MagentaBand)));
+			target->Set(String::NewSymbol("GCI_YellowBand"), String::New(GDALGetColorInterpretationName(GCI_YellowBand)));
+			target->Set(String::NewSymbol("GCI_BlackBand"), String::New(GDALGetColorInterpretationName(GCI_BlackBand)));
+			target->Set(String::NewSymbol("GCI_YCbCr_YBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
+			target->Set(String::NewSymbol("GCI_YCbCr_CbBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
+			target->Set(String::NewSymbol("GCI_YCbCr_CrBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
+			
 			NODE_DEFINE_CONSTANT(target, wkbUnknown);
 			NODE_DEFINE_CONSTANT(target, wkbPoint);
 			NODE_DEFINE_CONSTANT(target, wkbLineString);

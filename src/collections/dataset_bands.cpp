@@ -116,7 +116,18 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 	Handle<Array> band_options = Array::New(0);
 	char **options = NULL;
 
-	NODE_ARG_ENUM(0, "data type", GDALDataType, type);
+	//NODE_ARG_ENUM(0, "data type", GDALDataType, type);
+	if(args.Length() < 1) {
+		return NODE_THROW("data type argument needed");
+	}
+	if(args[0]->IsString()){
+		type = GDALGetDataTypeByName(TOSTR(args[0]));
+	} else if (args[0]->IsNull() || args[0]->IsUndefined()) {
+		type = GDT_Unknown;
+	} else {
+		return NODE_THROW("data type must be string or undefined");
+	}
+
 	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
 
 	if (band_options->Length() > 0) {

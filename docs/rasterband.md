@@ -23,7 +23,18 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `size` : object
 - `blockSize` : object
 - `unitType` : string *(settable)*
-- `dataType` : int //GDALDataType
+- `dataType` : string
+    + `'Byte'`
+    + `'UInt16'`
+    + `'Int16'`
+    + `'UInt32'`
+    + `'Int32'`
+    + `'Float32'`
+    + `'Float64'`
+    + `'CInt16'`
+    + `'CInt32'`
+    + `'CFloat32'`
+    + `'CFloat64'`
 - `minimum` : Number
 - `maximum` : Number
 - `offset` : Number *(settable)*

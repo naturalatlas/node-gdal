@@ -445,8 +445,10 @@ Handle<Value> RasterBand::dataTypeGetter(Local<String> property, const AccessorI
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
 
-	GDALDataType result = band->this_->GetRasterDataType();
-	return scope.Close(Integer::New(result));
+	GDALDataType type = band->this_->GetRasterDataType();
+	
+	if(type == GDT_Unknown) return Undefined();
+	return scope.Close(SafeString::New(GDALGetDataTypeName(type)));
 }
 
 Handle<Value> RasterBand::readOnlyGetter(Local<String> property, const AccessorInfo &info)
@@ -503,8 +505,9 @@ Handle<Value> RasterBand::colorInterpretationGetter(Local<String> property, cons
 	if (!band->this_) {
 		return NODE_THROW("RasterBand object has already been destroyed");
 	}
-
-	return scope.Close(SafeString::New(GDALGetColorInterpretationName(band->this_->GetColorInterpretation())));
+	GDALColorInterp interp = band->this_->GetColorInterpretation();
+	if(interp == GCI_Undefined) return Undefined();
+	else return scope.Close(SafeString::New(GDALGetColorInterpretationName(interp)));
 }
 
 void RasterBand::unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
@@ -643,7 +646,7 @@ void RasterBand::colorInterpretationSetter(Local<String> property, Local<Value> 
 	if (value->IsString()) {
 		ci = GDALGetColorInterpretationByName(TOSTR(value));
 	} else if(!value->IsNull() && !value->IsUndefined()) {
-		NODE_THROW("color interpretation must be a string");
+		NODE_THROW("color interpretation must be a string or undefined");
 		return;
 	}
 

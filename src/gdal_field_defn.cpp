@@ -144,7 +144,10 @@ Handle<Value> FieldDefn::justificationGetter(Local<String> property, const Acces
 {
 	HandleScope scope;
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
-	return scope.Close(Integer::New(def->this_->GetJustify()));
+	OGRJustification justification = def->this_->GetJustify();
+	if (justification == OJRight) return scope.Close(String::New("Right"));
+	if (justification == OJLeft)  return scope.Close(String::New("Left"));
+	return scope.Close(Undefined());
 }
 
 Handle<Value> FieldDefn::widthGetter(Local<String> property, const AccessorInfo &info)
@@ -194,11 +197,29 @@ void FieldDefn::justificationSetter(Local<String> property, Local<Value> value, 
 {
 	HandleScope scope;
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(info.This());
-	if(!value->IsInt32()){
-		NODE_THROW("justification must be an integer");
+	
+
+	OGRJustification justification;
+	std::string str = TOSTR(value);
+	if(value->IsString()){
+		if(str == "Left") {
+			justification = OJLeft;
+		} else if (str == "Right") {
+			justification = OJRight;
+		} else if (str == "Undefined") {
+			justification = OJUndefined; 
+		} else {
+			NODE_THROW("Unrecognized justification");
+			return;
+		}
+	} else if (value->IsNull() || value->IsUndefined()){
+		justification = OJUndefined;
+	} else {
+		NODE_THROW("justification must be a string or undefined");
 		return;
 	}
-	def->this_->SetJustify(OGRJustification(value->IntegerValue()));
+	
+	def->this_->SetJustify(justification);
 }
 
 void FieldDefn::widthSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
