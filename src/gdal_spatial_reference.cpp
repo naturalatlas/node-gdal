@@ -172,8 +172,6 @@ NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphToESRI, morphToESR
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphFromESRI, morphFromESRI);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsLatLong, Boolean, EPSGTreatsAsLatLong);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsNorthingEasting, Boolean, EPSGTreatsAsNorthingEasting);
-NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, getLinearUnits, Number, GetLinearUnits);
-NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, getAngularUnits, Number, GetAngularUnits);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeocentric, Boolean, IsGeocentric);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isProjected, Boolean, IsProjected);
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isLocal, Boolean, IsLocal);
@@ -449,6 +447,40 @@ Handle<Value> SpatialReference::fromEPSGA(const Arguments& args)
 	}
 
 	return scope.Close(SpatialReference::New(srs, true));
+}
+
+Handle<Value> SpatialReference::getLinearUnits(const Arguments& args)
+{
+	HandleScope scope;
+
+	SpatialReference *srs = ObjectWrap::Unwrap<SpatialReference>(args.This());
+
+
+	char* unit_name;
+	double units = srs->this_->GetLinearUnits(&unit_name);
+
+	Handle<Object> result = Object::New();
+	result->Set(String::NewSymbol("value"), Number::New(units));
+	result->Set(String::NewSymbol("units"), SafeString::New(unit_name));
+
+	return scope.Close(result);
+}
+
+Handle<Value> SpatialReference::getAngularUnits(const Arguments& args)
+{
+	HandleScope scope;
+
+	SpatialReference *srs = ObjectWrap::Unwrap<SpatialReference>(args.This());
+
+
+	char* unit_name;
+	double units = srs->this_->GetAngularUnits(&unit_name);
+
+	Handle<Object> result = Object::New();
+	result->Set(String::NewSymbol("value"), Number::New(units));
+	result->Set(String::NewSymbol("units"), SafeString::New(unit_name));
+
+	return scope.Close(result);
 }
 
 } // namespace node_gdal
