@@ -148,24 +148,6 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Read);
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
-			target->Set(String::NewSymbol("GCI_Undefined"), Undefined());
-			target->Set(String::NewSymbol("GCI_GrayIndex"), String::New(GDALGetColorInterpretationName(GCI_GrayIndex)));
-			target->Set(String::NewSymbol("GCI_PaletteIndex"), String::New(GDALGetColorInterpretationName(GCI_PaletteIndex)));
-			target->Set(String::NewSymbol("GCI_RedBand"), String::New(GDALGetColorInterpretationName(GCI_RedBand)));
-			target->Set(String::NewSymbol("GCI_GreenBand"), String::New(GDALGetColorInterpretationName(GCI_GreenBand)));
-			target->Set(String::NewSymbol("GCI_BlueBand"), String::New(GDALGetColorInterpretationName(GCI_BlueBand)));
-			target->Set(String::NewSymbol("GCI_AlphaBand"), String::New(GDALGetColorInterpretationName(GCI_AlphaBand)));
-			target->Set(String::NewSymbol("GCI_HueBand"), String::New(GDALGetColorInterpretationName(GCI_HueBand)));
-			target->Set(String::NewSymbol("GCI_SaturationBand"), String::New(GDALGetColorInterpretationName(GCI_SaturationBand)));
-			target->Set(String::NewSymbol("GCI_LightnessBand"), String::New(GDALGetColorInterpretationName(GCI_LightnessBand)));
-			target->Set(String::NewSymbol("GCI_CyanBand"), String::New(GDALGetColorInterpretationName(GCI_CyanBand)));
-			target->Set(String::NewSymbol("GCI_MagentaBand"), String::New(GDALGetColorInterpretationName(GCI_MagentaBand)));
-			target->Set(String::NewSymbol("GCI_YellowBand"), String::New(GDALGetColorInterpretationName(GCI_YellowBand)));
-			target->Set(String::NewSymbol("GCI_BlackBand"), String::New(GDALGetColorInterpretationName(GCI_BlackBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_YBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_CbBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_CrBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
-			
 			target->Set(String::NewSymbol("GDT_Unknown"), Undefined());
 			target->Set(String::NewSymbol("GDT_Byte"), String::New(GDALGetDataTypeName(GDT_Byte)));
 			target->Set(String::NewSymbol("GDT_UInt16"), String::New(GDALGetDataTypeName(GDT_UInt16)));
