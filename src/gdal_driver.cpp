@@ -336,15 +336,23 @@ Handle<Value> Driver::getMetadata(const Arguments& args)
 	HandleScope scope;
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 	
-	if (driver->uses_ogr){
-		return scope.Close(Object::New());
-	}
+	Handle<Object> result; 
 
-	GDALDriver* raw = driver->getGDALDriver();
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
-	return scope.Close(MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str()));
+	if (driver->uses_ogr){
+		result = Object::New();
+		result->Set(String::NewSymbol("DCAP_VECTOR"), String::New("YES"));
+		return scope.Close(result);
+	}
+
+	GDALDriver* raw = driver->getGDALDriver();
+	result = MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str());
+	#if GDAL_MAJOR < 2
+		result->Set(String::NewSymbol("DCAP_RASTER"), String::New("YES"));
+	#endif
+	return scope.Close(result);
 }
 
 Handle<Value> Driver::open(const Arguments& args)
