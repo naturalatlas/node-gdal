@@ -53,6 +53,8 @@ inline const char* getOGRErrMsg(int err)
 
 #define NODE_THROW_CPLERR(err) ThrowException(Exception::Error(String::New(CPLGetLastErrorMsg())));
 
+#define NODE_THROW_LAST_CPLERR NODE_THROW_CPLERR
+
 #define NODE_THROW_OGRERR(err) ThrowException(Exception::Error(String::New(getOGRErrMsg(err))));
 
 #define ATTR(t, name, get, set)                                         \
