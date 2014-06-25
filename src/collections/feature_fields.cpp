@@ -1,9 +1,7 @@
 #include "../gdal_common.hpp"
 #include "../gdal_feature.hpp"
+#include "../fast_buffer.hpp"
 #include "feature_fields.hpp"
-
-// node
-#include <node_buffer.h>
 
 namespace node_gdal {
 
@@ -441,13 +439,10 @@ Handle<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_ind
 	
 	int count_of_bytes = 0;
 
-	GByte *values = feature->GetFieldAsBinary(field_index, &count_of_bytes);
+	unsigned char *data = (unsigned char*) feature->GetFieldAsBinary(field_index, &count_of_bytes);
 
 	if (count_of_bytes > 0) {
-		char *data = new char[count_of_bytes];
-		memcpy(data, values, count_of_bytes);
-		Local<Buffer> return_buffer = Buffer::New(data, count_of_bytes);
-		return scope.Close(return_buffer->handle_);
+		return scope.Close(FastBuffer::New(data, count_of_bytes));
 	}
 
 	return Undefined();

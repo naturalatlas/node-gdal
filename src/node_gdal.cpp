@@ -184,6 +184,11 @@ namespace node_gdal {
 			target->Set(String::NewSymbol("GCI_YCbCr_CbBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
 			target->Set(String::NewSymbol("GCI_YCbCr_CrBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
 			
+			target->Set(String::NewSymbol("wkbVariantOgc"), String::New("OGC"));
+			target->Set(String::NewSymbol("wkbVariantIso"), String::New("ISO"));
+			target->Set(String::NewSymbol("wkbXDR"), String::New("MSB"));
+			target->Set(String::NewSymbol("wkbNDR"), String::New("LSB"));
+
 			NODE_DEFINE_CONSTANT(target, wkbUnknown);
 			NODE_DEFINE_CONSTANT(target, wkbPoint);
 			NODE_DEFINE_CONSTANT(target, wkbLineString);

@@ -4,8 +4,9 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 
 #### Static methods
 
-- `fromWkbType(wkbGeometryType type)` : [Geometry](geometry.md)
-- `fromWkt(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
+- `fromWKBType(wkbGeometryType type)` : [Geometry](geometry.md)
+- `fromWKT(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
+- `fromWKB(Buffer data, SpatialReference srs = null)` : [Geometry](geometry.md)
 
 #### Methods
 
@@ -14,6 +15,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `toGML()` : string
 - `toJSON()` : string
 - `toWKT()` : string
+- `toWKB(string byte_order = 'MSB', string variant = 'OGC')` : string
 - `empty()` : void
 - `isEmpty()` : boolean
 - `isValid()` : boolean
