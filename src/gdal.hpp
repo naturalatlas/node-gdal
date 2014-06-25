@@ -74,6 +74,23 @@ namespace node_gdal {
 
 		return scope.Close(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
 	}
+
+	static Handle<Value> decToDMS(const Arguments &args){
+		HandleScope scope;
+
+		double angle;
+		std::string axis;
+		int precision = 2;
+		NODE_ARG_DOUBLE(0, "angle", angle);
+		NODE_ARG_STR(1, "axis", axis);
+		NODE_ARG_INT_OPT(2, "precision", precision);
+
+		if(axis != "Lat" && axis != "Long") {
+			return NODE_THROW("Axis must be 'Lat' or 'Long'");
+		}
+
+		return scope.Close(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));		
+	}
 }
 
 #endif

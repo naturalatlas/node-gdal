@@ -8,6 +8,8 @@
 - `setConfigOption(string name, string value)` : void
 - `quiet()` : void
 - `verbose()` : void
+- `decToDMS(number angle, string axis, int precision = 2) : string`
+    + axis: `'Lat'` or `'Long'`
 
 #### Drivers 
 

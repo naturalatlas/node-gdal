@@ -77,6 +77,7 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, "open", open);
 			NODE_SET_METHOD(target, "setConfigOption", setConfigOption);
 			NODE_SET_METHOD(target, "getConfigOption", getConfigOption);
+			NODE_SET_METHOD(target, "decToDMS", decToDMS);
 
 			MajorObject::Initialize(target);
 			Driver::Initialize(target);
