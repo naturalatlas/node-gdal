@@ -9,6 +9,7 @@
 #include <node_object_wrap.h>
 
 // ogr
+#include <ogr_core.h>
 #include <ogrsf_frmts.h>
 
 using namespace v8;
