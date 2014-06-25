@@ -15,7 +15,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `toGML()` : string
 - `toJSON()` : string
 - `toWKT()` : string
-- `toWKB(string byte_order = 'MSB', string variant = 'OGC')` : string
+- `toWKB(string byte_order = 'MSB', string variant = 'OGC')` : Buffer
 - `empty()` : void
 - `isEmpty()` : boolean
 - `isValid()` : boolean

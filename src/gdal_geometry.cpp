@@ -460,7 +460,6 @@ Handle<Value> Geometry::createFromWkb(const Arguments &args)
 	std::string obj_type = TOSTR(wkb_obj->GetConstructorName());
 
 	if(obj_type != "Buffer"){
-		puts(obj_type.c_str());
 		return NODE_THROW("Argument must be a buffer object");
 	}
 
