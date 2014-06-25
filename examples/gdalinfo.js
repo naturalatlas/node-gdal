@@ -9,7 +9,14 @@ if (!filename) {
 
 var ds     = gdal.open(filename);
 
-console.log('Driver: ' + ds.driver.description);
+var driver          = ds.driver;
+var driver_metadata = driver.getMetadata();
+if (driver_metadata['DCAP_RASTER'] != 'YES') {
+	console.error('Source file is not a raster');
+	process.exit(1);
+}
+
+console.log('Driver: ' + driver.description);
 
 //-- raster dimensions --
 var size = ds.rasterSize;
