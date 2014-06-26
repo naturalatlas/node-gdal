@@ -18,6 +18,7 @@
 #include <node_buffer.h>
 #include <sstream>
 #include <stdlib.h>
+#include <ogr_core.h>
 
 namespace node_gdal {
 
