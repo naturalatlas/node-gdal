@@ -269,7 +269,10 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 	HandleScope scope;
 
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-
+	
+	int size = geom->this_->WkbSize();
+	unsigned char *data = (unsigned char*) malloc(size);
+	
 	//byte order 
 	OGRwkbByteOrder byte_order;
 	std::string order = "MSB";
@@ -282,6 +285,7 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 		return NODE_THROW("byte order must be 'MSB' or 'LSB'");
 	}
 
+	#if GDAL_VERSION_NUM > 1100000 
 	//wkb variant
 	OGRwkbVariant wkb_variant;
 	std::string variant = "OGC";
@@ -293,14 +297,14 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 	} else {
 		return NODE_THROW("byte order must be 'OGC' or 'ISO'");
 	}
-
-
-	//export to wkb and fill buffer
-	//TODO: avoid extra memcpy in FastBuffer::New and have exportToWkb write directly into buffer
-	int size = geom->this_->WkbSize();
-	unsigned char *data = (unsigned char*) malloc(size);
 	OGRErr err = geom->this_->exportToWkb(byte_order, data, wkb_variant);
-	
+	#else
+	OGRErr err = geom->this_->exportToWkb(byte_order, data);
+	#endif
+
+	//^^ export to wkb and fill buffer ^^
+	//TODO: avoid extra memcpy in FastBuffer::New and have exportToWkb write directly into buffer
+
 	if (err) {
 		free(data);
 		return NODE_THROW_OGRERR(err);
