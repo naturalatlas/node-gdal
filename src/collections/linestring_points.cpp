@@ -212,6 +212,38 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 			//set from Point object
 			Point* pt = ObjectWrap::Unwrap<Point>(obj);
 			geom->get()->addPoint(pt->get());
+		} else if (args[0]->IsArray()) {
+			//set from array of points
+			Handle<Array> array = Handle<Array>::Cast(args[0]);
+			int length = array->Length();
+			for (int i = 0; i < length; i++){
+				Handle<Value> element = array->Get(i);
+				if(!element->IsObject()) {
+					return NODE_THROW("All points must be Point objects or objects");
+				}
+				Handle<Object> element_obj = element->ToObject();
+				if(Point::constructor->HasInstance(element_obj)){
+					//set from Point object
+					Point* pt = ObjectWrap::Unwrap<Point>(element_obj);
+					geom->get()->addPoint(pt->get());
+				} else {
+					//set from object {x: 0, y: 5}
+					double x, y;
+					NODE_DOUBLE_FROM_OBJ(element_obj, "x", x);
+					NODE_DOUBLE_FROM_OBJ(element_obj, "y", y);
+
+					Handle<String> z_prop_name = String::NewSymbol("z");
+					if (element_obj->HasOwnProperty(z_prop_name)) {
+						Handle<Value> z_val = element_obj->Get(z_prop_name);
+						if (!z_val->IsNumber()) {
+							return NODE_THROW("z property must be number");
+						}
+						geom->get()->addPoint(x, y, z_val->NumberValue());
+					} else {
+						geom->get()->addPoint(x, y);
+					}
+				}
+			}
 		} else {
 			//set from object {x: 0, y: 5}
 			double x, y;

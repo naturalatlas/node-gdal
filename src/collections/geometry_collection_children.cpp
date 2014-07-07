@@ -117,11 +117,35 @@ Handle<Value> GeometryCollectionChildren::add(const Arguments& args)
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
 	
 	Geometry *child;
-	NODE_ARG_WRAPPED(0, "child", Geometry, child);
 
-	OGRErr err = geom->get()->addGeometry(child->get());
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if (args.Length() < 1) {
+		return NODE_THROW("child(ren) must be given");
+	}
+	Local<Object> obj = args[0]->ToObject();
+	if (args[0]->IsArray()){
+		//set from array of geometry objects
+		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		int length = array->Length();
+		for (int i = 0; i < length; i++){
+			Handle<Object> element = array->Get(i)->ToObject();
+			if(Geometry::constructor->HasInstance(element)){
+				child = ObjectWrap::Unwrap<Geometry>(obj);
+				OGRErr err = geom->get()->addGeometry(child->get());
+				if (err) {
+					return NODE_THROW_OGRERR(err);
+				}
+			} else {
+				return NODE_THROW("All array elements must be geometry object")
+			}
+		}
+	} else if (Geometry::constructor->HasInstance(obj)){
+		child = ObjectWrap::Unwrap<Geometry>(obj);
+		OGRErr err = geom->get()->addGeometry(child->get());
+		if (err) {
+			return NODE_THROW_OGRERR(err);
+		}
+	} else {
+		return NODE_THROW("child must be a geometry object or array of geometry objects")
 	}
 
 	return Undefined();
