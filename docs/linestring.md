@@ -28,3 +28,5 @@ Inherits all methods and properties from [Geometry](geometry.md)
 - `points.resize(integer pt_count)` : void
 - `points.reverse()` : void
 - `points.forEach(function iterator)` : void
+- `points.concat(Points[] array)` : LineStringPoints
+- `points.toArray()` : [Point](point.md)[]

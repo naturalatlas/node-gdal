@@ -20,3 +20,5 @@ Inherits all methods and properties from [Geometry](geometry.md)
 - `rings.add(LinearRing ring)` : [LinearRing](linearring.md)
 - `rings.count()` : integer
 - `rings.forEach(function iterator)` : void
+- `rings.concat(LinearRing[] array)` : PolygonRings
+- `rings.toArray()` : [LinearRing](linearring.md)[]

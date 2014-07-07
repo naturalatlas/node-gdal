@@ -21,3 +21,5 @@ Inherits all methods and properties from [Geometry](geometry.md)
 - `children.get(integer i)` : [Geometry](geometry.md)
 - `children.count()` : integer
 - `children.forEach(function iterator)` : void
+- `children.concat(Geometry[] array)` : GeometryCollectionChildren
+- `children.toArray()` : Geometry[]
