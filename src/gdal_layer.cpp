@@ -95,11 +95,11 @@ Handle<Value> Layer::New(const Arguments& args)
 		Layer *f = static_cast<Layer *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> features = LayerFeatures::New(args.This()); 
-		args.This()->SetHiddenValue(String::NewSymbol("features_"), features); 
+		Handle<Value> features = LayerFeatures::New(args.This());
+		args.This()->SetHiddenValue(String::NewSymbol("features_"), features);
 
-		Handle<Value> fields = LayerFields::New(args.This()); 
-		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
+		Handle<Value> fields = LayerFields::New(args.This());
+		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
 
 		return args.This();
 	} else {
@@ -142,7 +142,7 @@ Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent, bool result_set)
 			if (Dataset::dataset_cache.has(raw_parent)) {
 				ds = Dataset::dataset_cache.get(raw_parent);
 			}
-		#else 
+		#else
 			OGRDataSource *raw_parent = parent->getDatasource();
 			if (Dataset::datasource_cache.has(raw_parent)) {
 				ds = Dataset::datasource_cache.get(raw_parent);
@@ -188,7 +188,7 @@ Handle<Value> Layer::getExtent(const Arguments& args)
 	}
 
 	bool force = true;
-	NODE_ARG_BOOL_OPT(0, 'force', force);
+	NODE_ARG_BOOL_OPT(0, "force", force);
 
 	OGREnvelope *envelope = new OGREnvelope();
 	OGRErr err = layer->this_->GetExtent(envelope, force);
