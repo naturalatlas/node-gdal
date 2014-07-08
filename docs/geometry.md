@@ -44,8 +44,8 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `simplifyPreserveTopology(Number tolerance)` : void
 - `segmentize(Number segment_length)` : void
 - `swapXY()` : void
-- `getEnvelope()` : object
-- `getEnvelope3D()` : object
+- `getEnvelope()` : [Envelope](envelope.md) 
+- `getEnvelope3D()` : [Envelope3D](envelope3d.md) 
 - `transform(CoordinateTransformation transform)` : void *(throws)*
 - `transformTo(SpatialReference srs)` : void *(throws)*
 
