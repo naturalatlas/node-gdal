@@ -13,7 +13,12 @@
 #include "gdal_multilinestring.hpp"
 #include "gdal_multipolygon.hpp"
 
+#include "fast_buffer.hpp"
+
+#include <node_buffer.h>
 #include <sstream>
+#include <stdlib.h>
+#include <ogr_core.h>
 
 namespace node_gdal {
 
@@ -27,14 +32,16 @@ void Geometry::Initialize(Handle<Object> target)
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("Geometry"));
 
-	NODE_SET_METHOD(constructor, "fromWkbType", Geometry::create);
-	NODE_SET_METHOD(constructor, "fromWkt", Geometry::createFromWkt);
+	NODE_SET_METHOD(constructor, "fromWKBType", Geometry::create);
+	NODE_SET_METHOD(constructor, "fromWKT", Geometry::createFromWkt);
+	NODE_SET_METHOD(constructor, "fromWKB", Geometry::createFromWkb);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toKML", exportToKML);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toGML", exportToGML);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toJSON", exportToJSON);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKT", exportToWKT);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "toWKB", exportToWKB);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isEmpty", isEmpty);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isValid", isValid);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "isSimple", isSimple);
@@ -245,13 +252,69 @@ Handle<Value> Geometry::exportToWKT(const Arguments& args)
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
 
 	char *text = NULL;
-	geom->this_->exportToWkt(&text);
+	OGRErr err = geom->this_->exportToWkt(&text);
 
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
 	if (text) {
 		return scope.Close(SafeString::New(text));
 	}
 
 	return Undefined();
+}
+
+Handle<Value> Geometry::exportToWKB(const Arguments& args)
+{
+	HandleScope scope;
+
+	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
+	
+	int size = geom->this_->WkbSize();
+	unsigned char *data = (unsigned char*) malloc(size);
+	
+	//byte order 
+	OGRwkbByteOrder byte_order;
+	std::string order = "MSB";
+	NODE_ARG_OPT_STR(0, "byte order", order);
+	if (order == "MSB") {
+		byte_order = wkbXDR;
+	} else if (order == "LSB") {
+		byte_order = wkbNDR;
+	} else {
+		return NODE_THROW("byte order must be 'MSB' or 'LSB'");
+	}
+
+	#if GDAL_VERSION_NUM > 1100000 
+	//wkb variant
+	OGRwkbVariant wkb_variant;
+	std::string variant = "OGC";
+	NODE_ARG_OPT_STR(1, "wkb variant", variant);
+	if (variant == "OGC") {
+		wkb_variant = wkbVariantOgc;
+	} else if (order == "ISO") {
+		wkb_variant = wkbVariantIso;
+	} else {
+		return NODE_THROW("byte order must be 'OGC' or 'ISO'");
+	}
+	OGRErr err = geom->this_->exportToWkb(byte_order, data, wkb_variant);
+	#else
+	OGRErr err = geom->this_->exportToWkb(byte_order, data);
+	#endif
+
+	//^^ export to wkb and fill buffer ^^
+	//TODO: avoid extra memcpy in FastBuffer::New and have exportToWkb write directly into buffer
+
+	if (err) {
+		free(data);
+		return NODE_THROW_OGRERR(err);
+	}
+
+	Handle<Value> result = FastBuffer::New(data, size);
+	free(data);
+
+	return scope.Close(result);
+	
 }
 
 Handle<Value> Geometry::exportToKML(const Arguments& args)
@@ -380,8 +443,43 @@ Handle<Value> Geometry::createFromWkt(const Arguments &args)
 		ogr_srs = srs->get();
 	}
 
-	if (OGRGeometryFactory::createFromWkt(&wkt, ogr_srs, &geom)) {
-		return NODE_THROW("Error creating geometry");
+	OGRErr err = OGRGeometryFactory::createFromWkt(&wkt, ogr_srs, &geom);
+	if (err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	return scope.Close(Geometry::New(geom, true));
+}
+
+Handle<Value> Geometry::createFromWkb(const Arguments &args)
+{
+	HandleScope scope;
+
+	std::string wkb_string;
+	SpatialReference *srs = NULL;
+
+	Handle<Object> wkb_obj; 
+	NODE_ARG_OBJECT(0, "wkb", wkb_obj);
+	NODE_ARG_WRAPPED_OPT(1, "srs", SpatialReference, srs);
+
+	std::string obj_type = TOSTR(wkb_obj->GetConstructorName());
+
+	if(obj_type != "Buffer"){
+		return NODE_THROW("Argument must be a buffer object");
+	}
+
+	unsigned char* data = (unsigned char *) Buffer::Data(wkb_obj);
+	size_t length = Buffer::Length(wkb_obj);
+
+	OGRGeometry *geom = NULL;
+	OGRSpatialReference *ogr_srs = NULL;
+	if (srs) {
+		ogr_srs = srs->get();
+	}
+
+	OGRErr err = OGRGeometryFactory::createFromWkb(data, ogr_srs, &geom, length);
+	if (err) {
+		return NODE_THROW_OGRERR(err);
 	}
 
 	return scope.Close(Geometry::New(geom, true));

@@ -26,7 +26,7 @@ void Layer::Initialize(Handle<Object> target)
 	constructor->SetClassName(String::NewSymbol("Layer"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getLayerDefn", getLayerDefn);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getExtent", getExtent);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
 
@@ -95,11 +95,11 @@ Handle<Value> Layer::New(const Arguments& args)
 		Layer *f = static_cast<Layer *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> features = LayerFeatures::New(args.This()); 
-		args.This()->SetHiddenValue(String::NewSymbol("features_"), features); 
+		Handle<Value> features = LayerFeatures::New(args.This());
+		args.This()->SetHiddenValue(String::NewSymbol("features_"), features);
 
-		Handle<Value> fields = LayerFields::New(args.This()); 
-		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
+		Handle<Value> fields = LayerFields::New(args.This());
+		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
 
 		return args.This();
 	} else {
@@ -142,7 +142,7 @@ Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent, bool result_set)
 			if (Dataset::dataset_cache.has(raw_parent)) {
 				ds = Dataset::dataset_cache.get(raw_parent);
 			}
-		#else 
+		#else
 			OGRDataSource *raw_parent = parent->getDatasource();
 			if (Dataset::datasource_cache.has(raw_parent)) {
 				ds = Dataset::datasource_cache.get(raw_parent);
@@ -175,6 +175,37 @@ Handle<Value> Layer::toString(const Arguments& args)
 
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
+
+Handle<Value> Layer::getExtent(const Arguments& args)
+{
+	//returns object containing boundaries until complete OGREnvelope binding is built
+
+	HandleScope scope;
+
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+
+	bool force = true;
+	NODE_ARG_BOOL_OPT(0, "force", force);
+
+	OGREnvelope *envelope = new OGREnvelope();
+	OGRErr err = layer->this_->GetExtent(envelope, force);
+	if(err) {
+		return NODE_THROW_OGRERR(err);
+	}
+
+	Local<Object> obj = Object::New();
+	obj->Set(String::NewSymbol("minX"), Number::New(envelope->MinX));
+	obj->Set(String::NewSymbol("maxX"), Number::New(envelope->MaxX));
+	obj->Set(String::NewSymbol("minY"), Number::New(envelope->MinY));
+	obj->Set(String::NewSymbol("maxY"), Number::New(envelope->MaxY));
+
+	delete envelope;
+
+	return scope.Close(obj);
+}
 
 /*
 Handle<Value> Layer::getLayerDefn(const Arguments& args)

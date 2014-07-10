@@ -8,6 +8,8 @@
 - `setConfigOption(string name, string value)` : void
 - `quiet()` : void
 - `verbose()` : void
+- `decToDMS(number angle, string axis, int precision = 2)` : string
+    + axis: `'Lat'` or `'Long'`
 
 #### Drivers 
 
@@ -36,3 +38,6 @@
     - [MultiPolygon](multipolygon.md)
 - [SpatialReference](spatialreference.md)
 - [CoordinateTransformation](coordinatetransformation.md)
+- [Envelope](envelope.md)
+- [Envelope3D](envelope3d.md)
+

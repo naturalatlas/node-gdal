@@ -36,8 +36,12 @@ Note: all spatial references owned by features, layers, etc are cloned to avoid 
 - `morphFromESRI()` : void *(throws)*
 - `EPSGTreatsAsLatLong()` : bool
 - `EPSGTreatsAsNorthingEasting()` : bool
-- `getLinearUnits()` : Number
-- `getAngularUnits()` : Number
+- `getLinearUnits()` : object
+    + value
+    + units
+- `getAngularUnits()` : object
+    + value
+    + units
 - `isGeocentric()` : bool
 - `isProjected()` : bool
 - `isLocal()` : bool

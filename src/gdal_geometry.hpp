@@ -37,6 +37,7 @@ public:
 	static Handle<Value> exportToGML(const Arguments &args);
 	static Handle<Value> exportToJSON(const Arguments &args);
 	static Handle<Value> exportToWKT(const Arguments &args);
+	static Handle<Value> exportToWKB(const Arguments &args);
 	static Handle<Value> closeRings(const Arguments &args);
 	static Handle<Value> segmentize(const Arguments &args);
 	static Handle<Value> intersects(const Arguments &args);
@@ -69,6 +70,7 @@ public:
 	//static constructor methods
 	static Handle<Value> create(const Arguments &args);
 	static Handle<Value> createFromWkt(const Arguments &args);
+	static Handle<Value> createFromWkb(const Arguments &args);
 
 	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);

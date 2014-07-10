@@ -28,7 +28,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 - `bands.get(int band_id)` : [RasterBand](rasterband.md) *(throws, 1 based)*
 - `bands.count()` : int
-- `bands.create(int gdal_data_type, string[] options)` : [RasterBand](rasterband.md) *(throws)*
+- `bands.create(string gdal_data_type, string[] options)` : [RasterBand](rasterband.md) *(throws)*
 - `bands.forEach(function iterator)` : void
 
 #### Layers

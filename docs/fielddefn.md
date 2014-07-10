@@ -26,8 +26,7 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
     + `'dateTime'`
 - `width` : int
 - `precision` : int
-- `justification` : int *(OGRJustification)*
-    + OJUndefined = 0
-    + OJLeft = 1
-    + OJRight = 2
+- `justification` : string
+    + `'Left'`
+    + `'Right'`
 - `ignored` : bool

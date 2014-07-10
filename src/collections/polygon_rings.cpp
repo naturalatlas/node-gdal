@@ -106,9 +106,30 @@ Handle<Value> PolygonRings::add(const Arguments& args)
 	Polygon *geom = ObjectWrap::Unwrap<Polygon>(parent);
 	
 	LinearRing *ring;
-	NODE_ARG_WRAPPED(0, "ring", LinearRing, ring);
 
-	geom->get()->addRing(ring->get());
+	if (args.Length() < 1) {
+		return NODE_THROW("ring(s) must be given");
+	}
+	Local<Object> obj = args[0]->ToObject();
+	if (args[0]->IsArray()){
+		//set from array of geometry objects
+		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		int length = array->Length();
+		for (int i = 0; i < length; i++){
+			Handle<Object> element = array->Get(i)->ToObject();
+			if(LinearRing::constructor->HasInstance(element)){
+				ring = ObjectWrap::Unwrap<LinearRing>(obj);
+				geom->get()->addRing(ring->get());
+			} else {
+				return NODE_THROW("All array elements must be LinearRings")
+			}
+		}
+	} else if (LinearRing::constructor->HasInstance(obj)){
+		ring = ObjectWrap::Unwrap<LinearRing>(obj);
+		geom->get()->addRing(ring->get());
+	} else {
+		return NODE_THROW("ring(s) must be a LinearRing or array of LinearRings")
+	}
 
 	return Undefined();
 }

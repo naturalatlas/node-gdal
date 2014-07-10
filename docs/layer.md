@@ -7,6 +7,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `toString()` : string
 - `testCapability(string capability_name)` : bool
 - `flush() *(throws)*`
+- `getExtent(boolean force = true)` : [Envelope](envelope.md) *(throws)*
 
 #### Properties
 

@@ -4,8 +4,9 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 
 #### Static methods
 
-- `fromWkbType(wkbGeometryType type)` : [Geometry](geometry.md)
-- `fromWkt(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
+- `fromWKBType(wkbGeometryType type)` : [Geometry](geometry.md)
+- `fromWKT(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
+- `fromWKB(Buffer data, SpatialReference srs = null)` : [Geometry](geometry.md)
 
 #### Methods
 
@@ -14,6 +15,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `toGML()` : string
 - `toJSON()` : string
 - `toWKT()` : string
+- `toWKB(string byte_order = 'MSB', string variant = 'OGC')` : Buffer
 - `empty()` : void
 - `isEmpty()` : boolean
 - `isValid()` : boolean
@@ -42,8 +44,8 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 - `simplifyPreserveTopology(Number tolerance)` : void
 - `segmentize(Number segment_length)` : void
 - `swapXY()` : void
-- `getEnvelope()` : object
-- `getEnvelope3D()` : object
+- `getEnvelope()` : [Envelope](envelope.md) 
+- `getEnvelope3D()` : [Envelope3D](envelope3d.md) 
 - `transform(CoordinateTransformation transform)` : void *(throws)*
 - `transformTo(SpatialReference srs)` : void *(throws)*
 

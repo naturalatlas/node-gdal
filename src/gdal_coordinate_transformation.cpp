@@ -58,6 +58,9 @@ Handle<Value> CoordinateTransformation::New(const Arguments& args)
 		NODE_ARG_WRAPPED(0, "source", SpatialReference, source);
 		NODE_ARG_WRAPPED(1, "target", SpatialReference, target);
 		OGRCoordinateTransformation * transform = OGRCreateCoordinateTransformation(source->get(), target->get());
+		if (!transform) {
+			return NODE_THROW_LAST_CPLERR();
+		}
 		f = new CoordinateTransformation(transform);
 	}
 

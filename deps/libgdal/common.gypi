@@ -29,11 +29,14 @@
 			"PAM_ENABLED=1",
 			"OGR_ENABLED=1",
 			"HAVE_EXPAT=1",
+			"HAVE_LIBPROJ=1",
 			"HAVE_GEOS=1",
+			"PROJ_STATIC=1",
 			"CPU_<(endianness)_ENDIAN=1"
 		],
 		"dependencies": [
 			"<(deps_dir)/libexpat/libexpat.gyp:libexpat",
+			"<(deps_dir)/libproj/libproj.gyp:libproj"
 		],
 		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
 		"cflags!": ["-fno-rtti", "-fno-exceptions"],

@@ -27,13 +27,9 @@ public:
 	static Handle<Value> New(OGRLayer *raw, Dataset *parent);
 	static Handle<Value> New(OGRLayer *raw, Dataset *parent, bool result_set);
 	static Handle<Value> toString(const Arguments &args);
-	//static Handle<Value> getLayerDefn(const Arguments &args);
-	static Handle<Value> getGeomType(const Arguments &args);
-	static Handle<Value> getName(const Arguments &args);
+	static Handle<Value> getExtent(const Arguments &args);
 	static Handle<Value> testCapability(const Arguments &args);
 	static Handle<Value> syncToDisk(const Arguments &args);
-	static Handle<Value> getFIDColumn(const Arguments &args);
-	static Handle<Value> getGeometryColumn(const Arguments &args);
 
 	static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);

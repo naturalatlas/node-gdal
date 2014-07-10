@@ -2,6 +2,8 @@
 #include "gdal_majorobject.hpp"
 #include "gdal_driver.hpp"
 
+#include <stdlib.h>
+
 namespace node_gdal {
 
 Persistent<FunctionTemplate> MajorObject::constructor;
@@ -76,7 +78,7 @@ Handle<Value> MajorObject::getMetadata(const Arguments& args)
 	return scope.Close(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
 }
 
-Handle<Value> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
+Handle<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
 {
 	HandleScope scope;
 
@@ -87,10 +89,12 @@ Handle<Value> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
 	if (metadata) {
 		int i = 0;
 		while (metadata[i]) {
-			char* val = strchr(metadata[i], '=');
-			if (val) {
-				*val = 0; //split string into key and value
-				result->Set(String::NewSymbol(metadata[i]), String::New(val+1));
+			std::string pair = metadata[i];
+			std::size_t i_equal = pair.find_first_of('=');
+			if (i_equal != std::string::npos) {
+				std::string key = pair.substr(0, i_equal);
+				std::string val = pair.substr(i_equal+1);
+				result->Set(String::NewSymbol(key.c_str()), String::New(val.c_str()));
 			}
 			i++;
 		}

@@ -17,7 +17,9 @@ Inherits all methods and properties from [Geometry](geometry.md)
 
 #### Children
 
-- `children.add(Geometry geom)` : void *(throws)*
+- `children.add(Geometry child)` : void *(throws)*
+- `children.add(Geometry[] children)` : void *(throws)*
 - `children.get(integer i)` : [Geometry](geometry.md)
 - `children.count()` : integer
 - `children.forEach(function iterator)` : void
+- `children.toArray()` : Geometry[]

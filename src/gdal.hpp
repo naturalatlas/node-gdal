@@ -57,10 +57,20 @@ namespace node_gdal {
 
 		std::string name;
 		std::string val;
-		NODE_ARG_STR(0, "name", name);
-		NODE_ARG_STR(1, "value", val);
 
-		CPLSetConfigOption(name.c_str(), val.c_str());
+		NODE_ARG_STR(0, "name", name);
+
+		if (args.Length() < 2) {
+			return NODE_THROW("string or null value must be provided");
+		}
+		if(args[1]->IsString()){
+			val = TOSTR(args[1]);
+			CPLSetConfigOption(name.c_str(), val.c_str());
+		} else if(args[1]->IsNull() || args[1]->IsUndefined()) {
+			CPLSetConfigOption(name.c_str(), NULL);
+		} else {
+			return NODE_THROW("value must be a string or null");
+		}
 
 		return Undefined();
 	}
@@ -73,6 +83,23 @@ namespace node_gdal {
 		NODE_ARG_STR(0, "name", name);
 
 		return scope.Close(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
+	}
+
+	static Handle<Value> decToDMS(const Arguments &args){
+		HandleScope scope;
+
+		double angle;
+		std::string axis;
+		int precision = 2;
+		NODE_ARG_DOUBLE(0, "angle", angle);
+		NODE_ARG_STR(1, "axis", axis);
+		NODE_ARG_INT_OPT(2, "precision", precision);
+
+		if(axis != "Lat" && axis != "Long") {
+			return NODE_THROW("Axis must be 'Lat' or 'Long'");
+		}
+
+		return scope.Close(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));		
 	}
 }
 
