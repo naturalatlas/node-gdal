@@ -31,7 +31,7 @@ install:
   - npm test
 
 script:
-  - node-pre-gyp package testpackage
+  - ./node_modules/.bin/node-pre-gyp package testpackage
   - npm test
   # note: currently publishing per-commit, but will stop this once we tag a stable release
-  - if [[ ${TARGET} == 'STATIC' ]]; then node-pre-gyp unpublish publish; fi
+  - if [[ ${TARGET} == 'STATIC' ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; fi
