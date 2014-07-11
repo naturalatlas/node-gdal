@@ -19,7 +19,6 @@
 #include <sstream>
 #include <stdlib.h>
 #include <ogr_core.h>
-#include <ogr_geometry.h>
 
 namespace node_gdal {
 
