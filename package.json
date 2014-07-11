@@ -46,7 +46,7 @@
   "devDependencies": {
     "mocha": "~1.x",
     "chai": "~1.9.1",
-    "aws-sdk": "2.0.5"
+    "aws-sdk": "https://github.com/mapbox/aws-sdk-js/archive/versions.tar.gz"
   },
   "bundledDependencies": [
     "node-pre-gyp"
