@@ -17,6 +17,9 @@ env:
     - secure: NHHQIv0bNEPYcwuo1VixLGylSH9+zDb+ioqGdllqiXA3lIOZM1pjVUQ0v/K2sl3/c9g0PJaTL77cUDqfF1j+7zCRaYUx9DYyT3XEo3qfYPkjCqsELHlkASHN5u6okKR1YC7eURkwtNmR1N55bdq7JDYDFDfaXSdr2KT+UITMsaM=
 
 before_install:
+  - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+  - PUBLISH_BINARY=false
+  - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE"; then PUBLISH_BINARY=true; fi;
   - git clone https://github.com/creationix/nvm.git ../.nvm && source ../.nvm/nvm.sh
   - nvm install $NODE_NVM_VERSION
   - nvm use $NODE_NVM_VERSION
@@ -33,5 +36,4 @@ install:
 script:
   - ./node_modules/.bin/node-pre-gyp package testpackage
   - npm test
-  # note: currently publishing per-commit, but will stop this once we tag a stable release
-  - if [[ ${TARGET} == 'STATIC' ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; fi
+  - if [[ ${TARGET} == 'STATIC' && ${PUBLISH_BINARY} == 'true' ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; fi
