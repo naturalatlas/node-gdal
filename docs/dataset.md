@@ -37,6 +37,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `layers.get(string name)` : [Layer](layer.md) *(throws)*
 - `layers.count()` : int
 - `layers.create(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null)` : [Layer](layer.md) *(throws)*
+- `layers.create(string name, SpatialReference srs = null, Function geometry_constructor, string[] options = null)` : [Layer](layer.md) *(throws)*
 - `layers.copy (string src_lyr_name, string dst_lyr_name, string[] options = null)` : [Layer](layer.md) *(throws)*
 - `layers.remove (int layer_id)` : void *(throws)*
 - `layers.forEach(function iterator)` : void

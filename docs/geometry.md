@@ -4,9 +4,14 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 
 #### Static methods
 
+- `getConstructor(wkbGeometryType type)` : Function
 - `fromWKBType(wkbGeometryType type)` : [Geometry](geometry.md)
 - `fromWKT(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
 - `fromWKB(Buffer data, SpatialReference srs = null)` : [Geometry](geometry.md)
+
+#### Static Properties
+
+- `wkbType` : integer
 
 #### Methods
 
@@ -52,7 +57,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 #### Properties 
 
 - `srs` : [SpatialReference](spatialreference.md) //get and set
-- `type` : integer // wkbGeometryType
+- `wkbType` : integer // wkbGeometryType
 - `name` : string
 - `wkbSize` : integer
 - `dimension` : integer

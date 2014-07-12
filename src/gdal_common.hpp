@@ -240,7 +240,7 @@ public:
   if (args.Length() > num) {                                                                                     \
     if (args[num]->IsInt32()) {                                                                                  \
       var = static_cast<int>(args[num]->IntegerValue());                                                         \
-    } else {                                                                                                     \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an integer").c_str()))); \
     }                                                                                                            \
   }
@@ -250,7 +250,7 @@ public:
   if (args.Length() > num) {                                                                                     \
     if (args[num]->IsInt32()) {                                                                                  \
       var = static_cast<enum_type>(args[num]->IntegerValue());                                                   \
-    } else {                                                                                                     \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an integer").c_str()))); \
     }                                                                                                            \
   }
@@ -260,7 +260,7 @@ public:
   if (args.Length() > num) {                                                                                     \
     if (args[num]->IsBoolean()) {                                                                                \
       var = static_cast<bool>(args[num]->BooleanValue());                                                        \
-    } else {                                                                                                     \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an boolean").c_str()))); \
     }                                                                                                            \
   }
@@ -270,7 +270,7 @@ public:
   if (args.Length() > num) {                                                                                    \
     if (args[num]->IsString()) {                                                                                \
       var = TOSTR(args[num]);                                                                                   \
-    } else {                                                                                                    \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                              \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an string").c_str()))); \
     }                                                                                                           \
   }
@@ -280,16 +280,16 @@ public:
   if (args.Length() > num) {                                                                                   \
     if (args[num]->IsNumber()) {                                                                               \
       var = static_cast<double>(args[num]->NumberValue());                                                     \
-    } else {                                                                                                   \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                             \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be a number").c_str()))); \
     }                                                                                                          \
   }
 
 
 #define NODE_ARG_WRAPPED_OPT(num, name, type, var)                                                                                         \
-  if (args.Length() > num) {                                                                                                               \
+  if (args.Length() > num && !args[num]->IsNull() && !args[num]->IsUndefined()) {                                                          \
     Local<Object> var##_obj = args[num]->ToObject();                                                                                       \
-    if (var##_obj->IsNull() || var##_obj->IsUndefined() || !type::constructor->HasInstance(var##_obj)) {                                   \
+    if (!type::constructor->HasInstance(var##_obj)) {                                                                                      \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#type)).c_str()))); \
     }                                                                                                                                      \
     var = ObjectWrap::Unwrap<type>(var##_obj);                                                                                             \
@@ -301,7 +301,7 @@ public:
   if (args.Length() > num) {                                                                                   \
     if (args[num]->IsArray()) {                                                                                \
       var = Handle<Array>::Cast(args[num]);                                                                    \
-    } else {                                                                                                   \
+    } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                             \
       return ThrowException(Exception::Error(String::New((std::string(name) + " must be an array").c_str()))); \
     }                                                                                                          \
   }

@@ -35,6 +35,7 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(constructor, "fromWKBType", Geometry::create);
 	NODE_SET_METHOD(constructor, "fromWKT", Geometry::createFromWkt);
 	NODE_SET_METHOD(constructor, "fromWKB", Geometry::createFromWkb);
+	NODE_SET_METHOD(constructor, "getConstructor", Geometry::getConstructor);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toKML", exportToKML);
@@ -79,7 +80,7 @@ void Geometry::Initialize(Handle<Object> target)
 	ATTR(constructor, "wkbSize", wkbSizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "dimension", dimensionGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "coordinateDimension", coordinateDimensionGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "type", typeGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "wkbType", typeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "name", nameGetter, READ_ONLY_SETTER);
 
 	target->Set(String::NewSymbol("Geometry"), constructor->GetFunction());
@@ -552,6 +553,27 @@ Handle<Value> Geometry::coordinateDimensionGetter(Local<String> property, const 
 	HandleScope scope;
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
 	return scope.Close(Integer::New(geom->this_->getCoordinateDimension()));
+}
+
+Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
+	switch (type) {
+		case wkbPoint:              return Point::constructor->GetFunction();
+		case wkbLineString:         return LineString::constructor->GetFunction();
+		case wkbLinearRing:         return LinearRing::constructor->GetFunction();
+		case wkbPolygon:            return Polygon::constructor->GetFunction();
+		case wkbGeometryCollection: return GeometryCollection::constructor->GetFunction();
+		case wkbMultiPoint:         return MultiPoint::constructor->GetFunction();
+		case wkbMultiLineString:    return MultiLineString::constructor->GetFunction();
+		case wkbMultiPolygon:       return MultiPolygon::constructor->GetFunction();
+		default:                    return Null();
+	}
+}
+
+Handle<Value> Geometry::getConstructor(const Arguments &args){
+	HandleScope scope;
+	OGRwkbGeometryType type;
+	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);
+	return scope.Close(getConstructor(type));
 }
 
 } // namespace node_gdal

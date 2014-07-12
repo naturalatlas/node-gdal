@@ -71,6 +71,7 @@ public:
 	static Handle<Value> create(const Arguments &args);
 	static Handle<Value> createFromWkt(const Arguments &args);
 	static Handle<Value> createFromWkb(const Arguments &args);
+	static Handle<Value> getConstructor(const Arguments &args);
 
 	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);
@@ -82,6 +83,7 @@ public:
 	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
+	static Handle<Value> getConstructor(OGRwkbGeometryType type);
 
 	Geometry();
 	Geometry(OGRGeometry *geom);
