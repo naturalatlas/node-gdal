@@ -20,7 +20,7 @@ using namespace v8;
 using namespace node;
 
 namespace node_gdal {
-	
+
 	static Handle<Value> open(const Arguments &args)
 	{
 		HandleScope scope;
@@ -95,11 +95,14 @@ namespace node_gdal {
 		NODE_ARG_STR(1, "axis", axis);
 		NODE_ARG_INT_OPT(2, "precision", precision);
 
-		if(axis != "Lat" && axis != "Long") {
-			return NODE_THROW("Axis must be 'Lat' or 'Long'");
+		if (axis.length() > 0) {
+			axis[0] = std::toupper(axis[0]);
+		}
+		if (axis != "Lat" && axis != "Long") {
+			return NODE_THROW("Axis must be 'lat' or 'long'");
 		}
 
-		return scope.Close(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));		
+		return scope.Close(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));
 	}
 }
 

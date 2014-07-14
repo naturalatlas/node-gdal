@@ -9,7 +9,7 @@
 - `quiet()` : void
 - `verbose()` : void
 - `decToDMS(number angle, string axis, int precision = 2)` : string
-    + axis: `'Lat'` or `'Long'`
+    + axis: `'lat'` or `'long'`
 
 #### Drivers 
 
