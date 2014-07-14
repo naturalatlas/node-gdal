@@ -4,8 +4,8 @@ environment:
     - nodejs_version: "0.10.28"
 
 platform:
-  - x64
   - x86
+#  - x64
 
 install:
   - SET PATH=C:\Python27;%PATH%

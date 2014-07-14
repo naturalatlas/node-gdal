@@ -198,7 +198,7 @@ Handle<Value> RasterBand::fill(const Arguments& args)
 
 std::string stats_file_err = "";
 CPLErrorHandler last_err_handler;
-void statisticsErrorHandler(CPLErr eErrClass, int err_no, const char *msg) {
+void CPL_STDCALL statisticsErrorHandler(CPLErr eErrClass, int err_no, const char *msg) {
 	if(err_no == CPLE_OpenFailed) {
 		stats_file_err = msg;
 	}
