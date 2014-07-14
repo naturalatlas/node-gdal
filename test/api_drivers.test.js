@@ -3,7 +3,7 @@
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
-describe('Drivers', function() {
+describe('gdal.drivers', function() {
 
 	describe('get()', function() {
 		it('should return Driver instance', function() {
@@ -12,9 +12,8 @@ describe('Drivers', function() {
 		it('should return null when not found', function() {
 			assert.equal(gdal.drivers.get('awfag'), null);
 		});
-	});
 
-	describe('(raster)', function() {
+		// raster drivers
 		var expected = {
 			"GTiff": {
 				DMD_LONGNAME: "GeoTIFF",
@@ -49,29 +48,26 @@ describe('Drivers', function() {
 		};
 
 		Object.keys(expected).forEach(function(o) {
-			describe(o, function() {
-				it('should exist', function() {
-					var driver = gdal.drivers.get(o);
-					assert.ok(driver);
+			it('should support "' + o + '" driver', function() {
+				var driver = gdal.drivers.get(o);
+				assert.ok(driver);
 
-					var metadata = driver.getMetadata();
-					var expected_meta = expected[o];
-					assert.equal(expected_meta.DMD_LONGNAME,metadata.DMD_LONGNAME);
-					assert.equal(expected_meta.DMD_MIMETYPE,metadata.DMD_MIMETYPE);
-					assert.equal(expected_meta.DMD_EXTENSION,metadata.DMD_EXTENSION);
-					assert.equal(expected_meta.DCAP_CREATE,metadata.DCAP_CREATE);
-				});
+				var metadata = driver.getMetadata();
+				var expected_meta = expected[o];
+				assert.equal(expected_meta.DMD_LONGNAME,metadata.DMD_LONGNAME);
+				assert.equal(expected_meta.DMD_MIMETYPE,metadata.DMD_MIMETYPE);
+				assert.equal(expected_meta.DMD_EXTENSION,metadata.DMD_EXTENSION);
+				assert.equal(expected_meta.DCAP_CREATE,metadata.DCAP_CREATE);
 			});
 		});
-	});
 
-	describe('(vector)', function() {
+		// vector drivers
 		var drivers = [
 			"GEOJSON", "VRT:vector", "ESRI Shapefile"
 		];
 
 		drivers.forEach(function(o) {
-			describe(o + ' (OGR)', function() {
+			it('should support "' + o + '" (ogr) driver', function() {
 				it('should exist', function() {
 					assert.ok(gdal.drivers.get(o));
 				});

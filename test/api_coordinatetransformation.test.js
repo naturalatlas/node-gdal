@@ -3,7 +3,7 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 
-describe('CoordinateTransformation', function() {
+describe('gdal.CoordinateTransformation', function() {
 	it('should be exposed', function() {
 		assert.ok(gdal.CoordinateTransformation);
 	});

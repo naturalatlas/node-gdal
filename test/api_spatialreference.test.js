@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 // http://epsg.io/
 // http://spatialreference.org/ref/
 
-describe('SpatialReference', function() {
+describe('gdal.SpatialReference', function() {
 	it('should be exposed', function() {
 		assert.ok(gdal.SpatialReference);
 	});
