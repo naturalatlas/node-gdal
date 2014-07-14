@@ -4,14 +4,16 @@ environment:
     - nodejs_version: "0.10.28"
 
 platform:
-  - x64
   - x86
+#  - x64
 
 install:
+  - SET PATH=C:\Python27;%PATH%
+  - CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
   - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
   - node --version
   - npm --version
-  - npm install --build-from-source
+  - npm install --build-from-source --msvs_version=2013
   - npm test
 
 build: OFF

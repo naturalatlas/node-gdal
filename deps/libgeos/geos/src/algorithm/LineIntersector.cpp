@@ -32,7 +32,9 @@
 #include <string>
 #include <cmath> // for fabs()
 #include <cassert> 
-
+#if defined(_MSC_VER)
+#include <algorithm>
+#endif
 
 #ifndef GEOS_DEBUG
 #define GEOS_DEBUG 0
