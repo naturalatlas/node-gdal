@@ -16,8 +16,8 @@
   "binary": {
     "module_name": "gdal",
     "module_path": "./lib/binding/",
-    "remote_path": "v{version}",
-    "host": "https://node-gdal.s3-us-west-1.amazonaws.com",
+    "remote_path": "./{module_name}/v{version}",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
   },
   "repository": {
@@ -41,11 +41,12 @@
     "install": "node-pre-gyp install --fallback-to-build"
   },
   "dependencies": {
-    "node-pre-gyp": "~0.5.13"
+    "node-pre-gyp": "~0.5.17"
   },
   "devDependencies": {
     "mocha": "~1.x",
-    "chai": "~1.9.1"
+    "chai": "~1.9.1",
+    "aws-sdk": "~2.0.7"
   },
   "bundledDependencies": [
     "node-pre-gyp"
