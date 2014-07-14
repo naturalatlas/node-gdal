@@ -203,15 +203,40 @@ Handle<Value> LayerFields::add(const Arguments& args)
 	if (!layer->get()) {
 		return NODE_THROW("Layer object already destroyed");
 	}
-	
+	if(args.Length() < 1){
+		return NODE_THROW("field definition(s) must be given");
+	}
+
 	FieldDefn *field_def;
+	int err;
 	bool approx = true;
-	NODE_ARG_WRAPPED(0, "field definition", FieldDefn, field_def);
 	NODE_ARG_BOOL_OPT(1, "approx", approx);
 
-	int err = layer->get()->CreateField(field_def->get(), approx);
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	Local<Object> obj = args[0]->ToObject();
+
+	if(args[0]->IsArray()){
+		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		int n = array->Length();
+		for(int i = 0; i < n; i++){
+			Local<Object> element = array->Get(i)->ToObject();
+			if (FieldDefn::constructor->HasInstance(element)) {
+				field_def = ObjectWrap::Unwrap<FieldDefn>(element);
+				err = layer->get()->CreateField(field_def->get(), approx);
+				if (err) {
+					return NODE_THROW_OGRERR(err);
+				}
+			} else {
+				return NODE_THROW("All array elements must be FieldDefn objects");
+			}
+		}
+	} else if(FieldDefn::constructor->HasInstance(obj)) {
+		field_def = ObjectWrap::Unwrap<FieldDefn>(obj);
+		err = layer->get()->CreateField(field_def->get(), approx);
+		if (err) {
+			return NODE_THROW_OGRERR(err);
+		}
+	} else {
+		return NODE_THROW("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
 	}
 
 	return Undefined();
