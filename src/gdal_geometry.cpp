@@ -150,25 +150,28 @@ Handle<Value> Geometry::New(OGRGeometry *geom, bool owned)
 		return Null();
 	}
 
-	switch(getGeometryType_fixed(geom)) {
-	case wkbPoint              :
-		return scope.Close(Point::New(static_cast<OGRPoint*>(geom), owned));
-	case wkbLineString         :
-		return scope.Close(LineString::New(static_cast<OGRLineString*>(geom), owned));
-	case wkbLinearRing         :
-		return scope.Close(LinearRing::New(static_cast<OGRLinearRing*>(geom), owned));
-	case wkbPolygon            :
-		return scope.Close(Polygon::New(static_cast<OGRPolygon*>(geom), owned));
-	case wkbGeometryCollection :
-		return scope.Close(GeometryCollection::New(static_cast<OGRGeometryCollection*>(geom), owned));
-	case wkbMultiPoint         :
-		return scope.Close(MultiPoint::New(static_cast<OGRMultiPoint*>(geom), owned));
-	case wkbMultiLineString    :
-		return scope.Close(MultiLineString::New(static_cast<OGRMultiLineString*>(geom), owned));
-	case wkbMultiPolygon       :
-		return scope.Close(MultiPolygon::New(static_cast<OGRMultiPolygon*>(geom), owned));
-	default                    :
-		return NODE_THROW("Tried to create unsupported geometry type");
+	OGRwkbGeometryType type = getGeometryType_fixed(geom);
+	type = wkbFlatten(type);
+
+	switch (type) {
+		case wkbPoint:
+			return scope.Close(Point::New(static_cast<OGRPoint*>(geom), owned));
+		case wkbLineString:
+			return scope.Close(LineString::New(static_cast<OGRLineString*>(geom), owned));
+		case wkbLinearRing:
+			return scope.Close(LinearRing::New(static_cast<OGRLinearRing*>(geom), owned));
+		case wkbPolygon:
+			return scope.Close(Polygon::New(static_cast<OGRPolygon*>(geom), owned));
+		case wkbGeometryCollection:
+			return scope.Close(GeometryCollection::New(static_cast<OGRGeometryCollection*>(geom), owned));
+		case wkbMultiPoint:
+			return scope.Close(MultiPoint::New(static_cast<OGRMultiPoint*>(geom), owned));
+		case wkbMultiLineString:
+			return scope.Close(MultiLineString::New(static_cast<OGRMultiLineString*>(geom), owned));
+		case wkbMultiPolygon:
+			return scope.Close(MultiPolygon::New(static_cast<OGRMultiPolygon*>(geom), owned));
+		default:
+			return NODE_THROW("Tried to create unsupported geometry type");
 	}
 }
 
@@ -179,12 +182,10 @@ OGRwkbGeometryType Geometry::getGeometryType_fixed(OGRGeometry* geom)
 
 	//http://trac.osgeo.org/gdal/ticket/1755
 
-	OGRwkbGeometryType type =  wkbFlatten(geom->getGeometryType());
+	OGRwkbGeometryType type = geom->getGeometryType();
 
-	if (type == wkbLineString) {
-		if (std::string(geom->getGeometryName()) == "LINEARRING") {
-			return wkbLinearRing;
-		}
+	if (std::string(geom->getGeometryName()) == "LINEARRING") {
+		type = (OGRwkbGeometryType) (wkbLinearRing | (type & wkb25DBit));
 	}
 
 	return type;
@@ -556,6 +557,7 @@ Handle<Value> Geometry::coordinateDimensionGetter(Local<String> property, const 
 }
 
 Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
+	type = wkbFlatten(type);
 	switch (type) {
 		case wkbPoint:              return Point::constructor->GetFunction();
 		case wkbLineString:         return LineString::constructor->GetFunction();

@@ -189,23 +189,28 @@ namespace node_gdal {
 			target->Set(String::NewSymbol("wkbXDR"), String::New("MSB"));
 			target->Set(String::NewSymbol("wkbNDR"), String::New("LSB"));
 
-			NODE_DEFINE_CONSTANT(target, wkbUnknown);
-			NODE_DEFINE_CONSTANT(target, wkbPoint);
-			NODE_DEFINE_CONSTANT(target, wkbLineString);
-			NODE_DEFINE_CONSTANT(target, wkbPolygon);
-			NODE_DEFINE_CONSTANT(target, wkbMultiPoint);
-			NODE_DEFINE_CONSTANT(target, wkbMultiLineString);
-			NODE_DEFINE_CONSTANT(target, wkbMultiPolygon);
-			NODE_DEFINE_CONSTANT(target, wkbGeometryCollection);
-			NODE_DEFINE_CONSTANT(target, wkbNone);
-			NODE_DEFINE_CONSTANT(target, wkbLinearRing);
-			NODE_DEFINE_CONSTANT(target, wkbPoint25D);
-			NODE_DEFINE_CONSTANT(target, wkbLineString25D);
-			NODE_DEFINE_CONSTANT(target, wkbPolygon25D);
-			NODE_DEFINE_CONSTANT(target, wkbMultiPoint25D);
-			NODE_DEFINE_CONSTANT(target, wkbMultiLineString25D);
-			NODE_DEFINE_CONSTANT(target, wkbMultiPolygon25D);
-			NODE_DEFINE_CONSTANT(target, wkbGeometryCollection25D);
+			target->Set(String::NewSymbol("wkb25DBit"), Integer::New(wkb25DBit));
+
+			int wkbLinearRing25D = wkbLinearRing | wkb25DBit;
+
+			target->Set(String::NewSymbol("wkbUnknown"), Integer::New(wkbUnknown));
+			target->Set(String::NewSymbol("wkbPoint"), Integer::New(wkbPoint));
+			target->Set(String::NewSymbol("wkbLineString"), Integer::New(wkbLineString));
+			target->Set(String::NewSymbol("wkbPolygon"), Integer::New(wkbPolygon));
+			target->Set(String::NewSymbol("wkbMultiPoint"), Integer::New(wkbMultiPoint));
+			target->Set(String::NewSymbol("wkbMultiLineString"), Integer::New(wkbMultiLineString));
+			target->Set(String::NewSymbol("wkbMultiPolygon"), Integer::New(wkbMultiPolygon));
+			target->Set(String::NewSymbol("wkbGeometryCollection"), Integer::New(wkbGeometryCollection));
+			target->Set(String::NewSymbol("wkbNone"), Integer::New(wkbNone));
+			target->Set(String::NewSymbol("wkbLinearRing"), Integer::New(wkbLinearRing));
+			target->Set(String::NewSymbol("wkbPoint25D"), Integer::New(wkbPoint25D));
+			target->Set(String::NewSymbol("wkbLineString25D"), Integer::New(wkbLineString25D));
+			target->Set(String::NewSymbol("wkbPolygon25D"), Integer::New(wkbPolygon25D));
+			target->Set(String::NewSymbol("wkbMultiPoint25D"), Integer::New(wkbMultiPoint25D));
+			target->Set(String::NewSymbol("wkbMultiLineString25D"), Integer::New(wkbMultiLineString25D));
+			target->Set(String::NewSymbol("wkbMultiPolygon25D"), Integer::New(wkbMultiPolygon25D));
+			target->Set(String::NewSymbol("wkbGeometryCollection25D"), Integer::New(wkbGeometryCollection25D));
+			target->Set(String::NewSymbol("wkbLinearRing25D"), Integer::New(wkbLinearRing25D));
 
 			target->Set(String::NewSymbol("OFTInteger"), String::New(getFieldTypeName(OFTInteger)));
 			target->Set(String::NewSymbol("OFTIntegerList"), String::New(getFieldTypeName(OFTIntegerList)));
