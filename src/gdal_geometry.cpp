@@ -270,11 +270,11 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 	HandleScope scope;
 
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	
+
 	int size = geom->this_->WkbSize();
 	unsigned char *data = (unsigned char*) malloc(size);
-	
-	//byte order 
+
+	//byte order
 	OGRwkbByteOrder byte_order;
 	std::string order = "MSB";
 	NODE_ARG_OPT_STR(0, "byte order", order);
@@ -286,7 +286,7 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 		return NODE_THROW("byte order must be 'MSB' or 'LSB'");
 	}
 
-	#if GDAL_VERSION_NUM > 1100000 
+	#if GDAL_VERSION_NUM > 1100000
 	//wkb variant
 	OGRwkbVariant wkb_variant;
 	std::string variant = "OGC";
@@ -315,7 +315,7 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 	free(data);
 
 	return scope.Close(result);
-	
+
 }
 
 Handle<Value> Geometry::exportToKML(const Arguments& args)
@@ -459,7 +459,7 @@ Handle<Value> Geometry::createFromWkb(const Arguments &args)
 	std::string wkb_string;
 	SpatialReference *srs = NULL;
 
-	Handle<Object> wkb_obj; 
+	Handle<Object> wkb_obj;
 	NODE_ARG_OBJECT(0, "wkb", wkb_obj);
 	NODE_ARG_WRAPPED_OPT(1, "srs", SpatialReference, srs);
 
@@ -531,7 +531,7 @@ Handle<Value> Geometry::typeGetter(Local<String> property, const AccessorInfo &i
 {
 	HandleScope scope;
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
-	return scope.Close(Integer::New(geom->this_->getGeometryType()));
+	return scope.Close(Integer::New(getGeometryType_fixed(geom->this_)));
 }
 
 Handle<Value> Geometry::wkbSizeGetter(Local<String> property, const AccessorInfo &info)

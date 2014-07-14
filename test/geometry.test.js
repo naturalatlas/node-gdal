@@ -3,45 +3,89 @@ var assert = require('chai').assert;
 var WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
 
 describe('Geometry', function() {
-	describe('toJSON()', function() {
-		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
-			assert.deepEqual(JSON.parse(point2d.toJSON()), {
-				type: 'Point',
-				coordinates: [1, 2]
+	describe('static', function() {
+		describe('toJSON()', function() {
+			it('should return valid result', function() {
+				var point2d = new gdal.Point(1,2);
+				assert.deepEqual(JSON.parse(point2d.toJSON()), {
+					type: 'Point',
+					coordinates: [1, 2]
+				});
+				var point3d = new gdal.Point(1,2,3);
+				assert.deepEqual(JSON.parse(point3d.toJSON()), {
+					type: 'Point',
+					coordinates: [1, 2, 3]
+				});
 			});
-			var point3d = new gdal.Point(1,2,3);
-			assert.deepEqual(JSON.parse(point3d.toJSON()), {
-				type: 'Point',
-				coordinates: [1, 2, 3]
+		});
+		describe('toKML()', function() {
+			it('should return valid result', function() {
+				var point2d = new gdal.Point(1,2);
+				assert.equal(point2d.toKML(), '<Point><coordinates>1,2</coordinates></Point>');
+				var point3d = new gdal.Point(1,2,3);
+				assert.equal(point3d.toKML(), '<Point><coordinates>1,2,3</coordinates></Point>');
 			});
 		});
-	});
-	describe('toKML()', function() {
-		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
-			assert.equal(point2d.toKML(), '<Point><coordinates>1,2</coordinates></Point>');
-			var point3d = new gdal.Point(1,2,3);
-			assert.equal(point3d.toKML(), '<Point><coordinates>1,2,3</coordinates></Point>');
+		describe('toWKT()', function() {
+			it('should return valid result', function() {
+				var point2d = new gdal.Point(1,2);
+				assert.equal(point2d.toWKT(), 'POINT (1 2)');
+				var point3d = new gdal.Point(1,2,3);
+				assert.equal(point3d.toWKT(), 'POINT (1 2 3)');
+			});
 		});
-	});
-	describe('toWKT()', function() {
-		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
-			assert.equal(point2d.toWKT(), 'POINT (1 2)');
-			var point3d = new gdal.Point(1,2,3);
-			assert.equal(point3d.toWKT(), 'POINT (1 2 3)');
+		describe('toGML()', function() {
+			it('should return valid result', function() {
+				var point2d = new gdal.Point(1,2);
+				assert.equal(point2d.toGML(), '<gml:Point><gml:coordinates>1,2</gml:coordinates></gml:Point>');
+				var point3d = new gdal.Point(1,2,3);
+				assert.equal(point3d.toGML(), '<gml:Point><gml:coordinates>1,2,3</gml:coordinates></gml:Point>');
+			});
 		});
-	});
-	describe('toGML()', function() {
-		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
-			assert.equal(point2d.toGML(), '<gml:Point><gml:coordinates>1,2</gml:coordinates></gml:Point>');
-			var point3d = new gdal.Point(1,2,3);
-			assert.equal(point3d.toGML(), '<gml:Point><gml:coordinates>1,2,3</gml:coordinates></gml:Point>');
+		describe('getConstructor()', function() {
+			//  wkbUnknown = 0, wkbPoint = 1, wkbLineString = 2, wkbPolygon = 3,
+			//  wkbMultiPoint = 4, wkbMultiLineString = 5, wkbMultiPolygon = 6, wkbGeometryCollection = 7,
+			//  wkbNone = 100, wkbLinearRing = 101, wkbPoint25D = 0x80000001, wkbLineString25D = 0x80000002,
+			//  wkbPolygon25D = 0x80000003, wkbMultiPoint25D = 0x80000004, wkbMultiLineString25D = 0x80000005, wkbMultiPolygon25D = 0x80000006,
+			//  wkbGeometryCollection25D = 0x80000007
+			it('should return proper constructor from wkbType', function() {
+				assert.isNull(gdal.Geometry.getConstructor(0));
+				assert.equal(gdal.Geometry.getConstructor(1), gdal.Point);
+				assert.equal(gdal.Geometry.getConstructor(2), gdal.LineString);
+				assert.equal(gdal.Geometry.getConstructor(3), gdal.Polygon);
+				assert.equal(gdal.Geometry.getConstructor(4), gdal.MultiPoint);
+				assert.equal(gdal.Geometry.getConstructor(5), gdal.MultiLineString);
+				assert.equal(gdal.Geometry.getConstructor(6), gdal.MultiPolygon);
+				assert.equal(gdal.Geometry.getConstructor(7), gdal.GeometryCollection);
+				assert.equal(gdal.Geometry.getConstructor(101), gdal.LinearRing);
+			});
+		});
+		describe('"wkbType" property', function() {
+			it('should be set', function() {
+				assert.equal(gdal.Point.wkbType, 1);
+				assert.equal(gdal.LineString.wkbType, 2);
+				assert.equal(gdal.Polygon.wkbType, 3);
+				assert.equal(gdal.MultiPoint.wkbType, 4);
+				assert.equal(gdal.MultiLineString.wkbType, 5);
+				assert.equal(gdal.MultiPolygon.wkbType, 6);
+				assert.equal(gdal.GeometryCollection.wkbType, 7);
+				assert.equal(gdal.LinearRing.wkbType, 101);
+			});
 		});
 	});
 
+	describe('"wkbType" property', function() {
+		it('should be set', function() {
+			assert.equal((new gdal.Point()).wkbType, 1);
+			assert.equal((new gdal.LineString()).wkbType, 2);
+			assert.equal((new gdal.Polygon()).wkbType, 3);
+			assert.equal((new gdal.MultiPoint()).wkbType, 4);
+			assert.equal((new gdal.MultiLineString()).wkbType, 5);
+			assert.equal((new gdal.MultiPolygon()).wkbType, 6);
+			assert.equal((new gdal.GeometryCollection()).wkbType, 7);
+			assert.equal((new gdal.LinearRing()).wkbType, 101);
+		});
+	});
 	describe('"srs" property', function() {
 		it('should be able to be get', function() {
 			var point = new gdal.Point(0,0);
