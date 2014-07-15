@@ -34,7 +34,7 @@ LayerFields::LayerFields()
 	: ObjectWrap()
 {}
 
-LayerFields::~LayerFields() 
+LayerFields::~LayerFields()
 {}
 
 Handle<Value> LayerFields::New(const Arguments& args)
@@ -131,7 +131,7 @@ Handle<Value> LayerFields::get(const Arguments& args)
 	if (!def) {
 		return NODE_THROW("Layer has no layer definition set");
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, def, field_index);
 
@@ -153,7 +153,7 @@ Handle<Value> LayerFields::getNames(const Arguments& args)
 		return NODE_THROW("Layer has no layer definition set");
 	}
 
-	int n = def->GetFieldCount();	
+	int n = def->GetFieldCount();
 	Handle<Array> result = Array::New(n);
 
 	for (int i = 0; i < n;  i++) {
@@ -182,7 +182,7 @@ Handle<Value> LayerFields::remove(const Arguments& args)
 	if (!def) {
 		return NODE_THROW("Layer has no layer definition set");
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, def, field_index);
 
@@ -203,7 +203,7 @@ Handle<Value> LayerFields::add(const Arguments& args)
 	if (!layer->get()) {
 		return NODE_THROW("Layer object already destroyed");
 	}
-	if(args.Length() < 1){
+	if (args.Length() < 1) {
 		return NODE_THROW("field definition(s) must be given");
 	}
 
@@ -214,10 +214,10 @@ Handle<Value> LayerFields::add(const Arguments& args)
 
 	Local<Object> obj = args[0]->ToObject();
 
-	if(args[0]->IsArray()){
+	if (args[0]->IsArray()) {
 		Handle<Array> array = Handle<Array>::Cast(args[0]);
 		int n = array->Length();
-		for(int i = 0; i < n; i++){
+		for (int i = 0; i < n; i++) {
 			Local<Object> element = array->Get(i)->ToObject();
 			if (FieldDefn::constructor->HasInstance(element)) {
 				field_def = ObjectWrap::Unwrap<FieldDefn>(element);
@@ -229,7 +229,7 @@ Handle<Value> LayerFields::add(const Arguments& args)
 				return NODE_THROW("All array elements must be FieldDefn objects");
 			}
 		}
-	} else if(FieldDefn::constructor->HasInstance(obj)) {
+	} else if (FieldDefn::constructor->HasInstance(obj)) {
 		field_def = ObjectWrap::Unwrap<FieldDefn>(obj);
 		err = layer->get()->CreateField(field_def->get(), approx);
 		if (err) {
@@ -251,7 +251,7 @@ Handle<Value> LayerFields::reorder(const Arguments& args)
 	if (!layer->get()) {
 		return NODE_THROW("Layer object already destroyed");
 	}
-	
+
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
 		return NODE_THROW("Layer has no layer definition set");
@@ -266,25 +266,25 @@ Handle<Value> LayerFields::reorder(const Arguments& args)
 	if ((int)field_map->Length() != n) {
 		return NODE_THROW("Array length must match field count");
 	}
-	
+
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i < n; i++) {
 		Handle<Value> val = field_map->Get(i);
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
-			return NODE_THROW("Array must only contain integers"); 
+			return NODE_THROW("Array must only contain integers");
 		}
-		
+
 		int key = val->IntegerValue();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
 			return NODE_THROW("Values must be between 0 and field count - 1");
 		}
-		
+
 		field_map_array[i] = key;
 	}
-	
+
 	err = layer->get()->ReorderFields(field_map_array);
 
 	delete [] field_map_array;

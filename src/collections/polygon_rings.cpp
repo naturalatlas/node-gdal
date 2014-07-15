@@ -28,7 +28,7 @@ PolygonRings::PolygonRings()
 	: ObjectWrap()
 {}
 
-PolygonRings::~PolygonRings() 
+PolygonRings::~PolygonRings()
 {}
 
 Handle<Value> PolygonRings::New(const Arguments& args)
@@ -87,7 +87,7 @@ Handle<Value> PolygonRings::get(const Arguments& args)
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Polygon *geom = ObjectWrap::Unwrap<Polygon>(parent);
-	
+
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
@@ -104,7 +104,7 @@ Handle<Value> PolygonRings::add(const Arguments& args)
 
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	Polygon *geom = ObjectWrap::Unwrap<Polygon>(parent);
-	
+
 	LinearRing *ring;
 
 	if (args.Length() < 1) {
@@ -117,8 +117,8 @@ Handle<Value> PolygonRings::add(const Arguments& args)
 		int length = array->Length();
 		for (int i = 0; i < length; i++){
 			Handle<Object> element = array->Get(i)->ToObject();
-			if(LinearRing::constructor->HasInstance(element)){
-				ring = ObjectWrap::Unwrap<LinearRing>(obj);
+			if (LinearRing::constructor->HasInstance(element)){
+				ring = ObjectWrap::Unwrap<LinearRing>(element);
 				geom->get()->addRing(ring->get());
 			} else {
 				return NODE_THROW("All array elements must be LinearRings")
