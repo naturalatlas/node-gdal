@@ -12,11 +12,11 @@ install:
   - SET PATH=C:\Python27;%PATH%
   - CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
   - ps: Start-FileDownload "https://mapnik.s3.amazonaws.com/dist/dev/libgdal_win_$env:PLATFORM.7z"
-  - 7z e libgdal_win_%PLATFORM%.7z
+  - 7z x libgdal_win_%PLATFORM%.7z
   - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
   - node --version
   - npm --version
-  - npm install --build-from-source --msvs_version=2013 --shared_gdal=C:/projects/node-gdal/libgdal.lib
+  - npm install --build-from-source --msvs_version=2013 --shared_gdal=c:/projects/node-gdal/deplibs/
   - npm test
 
 build: OFF

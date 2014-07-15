@@ -61,7 +61,10 @@
 				}, {
 					"conditions": [
 						['OS == "win"', {
-							"libraries": ["<(shared_gdal)"],
+							"libraries": [
+								'<!@(find <(shared_gdal) -name "*.lib")',
+								"-lws2_32.lib"
+							],
 							"include_dirs": [
 								"deps/libgdal/arch/win",
 								"deps/libgdal/gdal",
