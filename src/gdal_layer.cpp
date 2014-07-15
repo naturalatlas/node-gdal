@@ -193,7 +193,7 @@ Handle<Value> Layer::getExtent(const Arguments& args)
 	OGREnvelope *envelope = new OGREnvelope();
 	OGRErr err = layer->this_->GetExtent(envelope, force);
 	if(err) {
-		return NODE_THROW_OGRERR(err);
+		return NODE_THROW("Can't get layer extent without computing it");
 	}
 
 	Local<Object> obj = Object::New();
