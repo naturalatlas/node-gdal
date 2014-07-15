@@ -31,7 +31,7 @@ LineStringPoints::LineStringPoints()
 	: ObjectWrap()
 {}
 
-LineStringPoints::~LineStringPoints() 
+LineStringPoints::~LineStringPoints()
 {}
 
 Handle<Value> LineStringPoints::New(const Arguments& args)
@@ -119,7 +119,7 @@ Handle<Value> LineStringPoints::get(const Arguments& args)
 
 	NODE_ARG_INT(0, "index", i);
 	if(i < 0 || i >= geom->get()->getNumPoints()) {
-		return NODE_THROW("Point index out of range");
+		return scope.Close(Null());
 	}
 
 	geom->get()->getPoint(i, pt);
@@ -279,7 +279,7 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 			geom->get()->addPoint(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue());
 		}
 	}
-	
+
 	return Undefined();
 }
 
