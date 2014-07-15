@@ -60,18 +60,37 @@
 					]
 				}, {
 					"conditions": [
-						["runtime_link == 'static'", {
-							"libraries": ["<!@(gdal-config --dep-libs)"]
+						['OS == "win"', {
+							"libraries": ["<(shared_gdal)"],
+							"include_dirs": [
+								"deps/libgdal/arch/win",
+								"deps/libgdal/gdal",
+								"deps/libgdal/gdal/alg",
+								"deps/libgdal/gdal/gcore",
+								"deps/libgdal/gdal/port",
+								"deps/libgdal/gdal/bridge",
+								"deps/libgdal/gdal/frmts",
+								"deps/libgdal/gdal/frmts/zlib",
+								"deps/libgdal/gdal/ogr",
+								"deps/libgdal/gdal/ogr/ogrsf_frmts",
+								"deps/libgdal/gdal/ogr/ogrsf_frmts/mem"
+							],
 						}, {
-							"libraries": ["<!@(gdal-config --libs)"]
+							"conditions": [
+								["runtime_link == 'static'", {
+									"libraries": ["<!@(gdal-config --dep-libs)"]
+								}, {
+									"libraries": ["<!@(gdal-config --libs)"]
+								}]
+							],
+							"cflags_cc": ["<!@(gdal-config --cflags)"],
+							"xcode_settings": {
+								"OTHER_CPLUSPLUSFLAGS":[
+									"<!@(gdal-config --cflags)"
+								]
+							}
 						}]
-					],
-					"cflags_cc": ["<!@(gdal-config --cflags)"],
-					"xcode_settings": {
-						"OTHER_CPLUSPLUSFLAGS":[
-							"<!@(gdal-config --cflags)"
-						]
-					}
+					]
 				}]
 			]
 		},
