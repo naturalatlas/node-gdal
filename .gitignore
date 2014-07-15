@@ -1,5 +1,12 @@
 .lock-wscript
 build/
+*.lib
+*.obj
+*.tlog
+*.sln
+*.vcxproj*
+*.pdb
+*.log
 test/data/**/*.aux*
 test/data/**/*.tmp*
 node_modules
