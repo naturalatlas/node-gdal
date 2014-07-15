@@ -2,6 +2,9 @@ var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 
 describe('gdal.LineString', function() {
+	it('should be instantiable', function() {
+		new gdal.LineString();
+	});
 	it('should inherit from Geometry', function() {
 		assert.instanceOf(new gdal.LineString(), gdal.LineString);
 		assert.instanceOf(new gdal.LineString(), gdal.Geometry);
