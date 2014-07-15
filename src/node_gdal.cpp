@@ -144,6 +144,29 @@ namespace node_gdal {
 			target->Set(String::NewSymbol("DCAP_CREATECOPY"), String::New(GDAL_DCAP_CREATECOPY));
 			target->Set(String::NewSymbol("DCAP_VIRTUALIO"), String::New(GDAL_DCAP_VIRTUALIO));
 
+			target->Set(String::NewSymbol("OLCRandomRead"), String::New(OLCRandomRead));
+			target->Set(String::NewSymbol("OLCSequentialWrite"), String::New(OLCSequentialWrite));
+			target->Set(String::NewSymbol("OLCRandomWrite"), String::New(OLCRandomWrite));
+			target->Set(String::NewSymbol("OLCFastSpatialFilter"), String::New(OLCFastSpatialFilter));
+			target->Set(String::NewSymbol("OLCFastFeatureCount"), String::New(OLCFastFeatureCount));
+			target->Set(String::NewSymbol("OLCFastGetExtent"), String::New(OLCFastGetExtent));
+			target->Set(String::NewSymbol("OLCCreateField"), String::New(OLCCreateField));
+			target->Set(String::NewSymbol("OLCDeleteField"), String::New(OLCDeleteField));
+			target->Set(String::NewSymbol("OLCReorderFields"), String::New(OLCReorderFields));
+			target->Set(String::NewSymbol("OLCAlterFieldDefn"), String::New(OLCAlterFieldDefn));
+			target->Set(String::NewSymbol("OLCTransactions"), String::New(OLCTransactions));
+			target->Set(String::NewSymbol("OLCDeleteFeature"), String::New(OLCDeleteFeature));
+			target->Set(String::NewSymbol("OLCFastSetNextByIndex"), String::New(OLCFastSetNextByIndex));
+			target->Set(String::NewSymbol("OLCStringsAsUTF8"), String::New(OLCStringsAsUTF8));
+			target->Set(String::NewSymbol("OLCIgnoreFields"), String::New(OLCIgnoreFields));
+			target->Set(String::NewSymbol("OLCCreateGeomField"), String::New(OLCCreateGeomField));
+			target->Set(String::NewSymbol("ODsCCreateLayer"), String::New(ODsCCreateLayer));
+			target->Set(String::NewSymbol("ODsCDeleteLayer"), String::New(ODsCDeleteLayer));
+			target->Set(String::NewSymbol("ODsCCreateGeomFieldAfterCreateLayer"), String::New(ODsCCreateGeomFieldAfterCreateLayer));
+			target->Set(String::NewSymbol("ODrCCreateDataSource"), String::New(ODrCCreateDataSource));
+			target->Set(String::NewSymbol("ODrCDeleteDataSource"), String::New(ODrCDeleteDataSource));
+
+
 			NODE_DEFINE_CONSTANT(target, GA_ReadOnly);
 			NODE_DEFINE_CONSTANT(target, GA_Update);
 			NODE_DEFINE_CONSTANT(target, GF_Read);
