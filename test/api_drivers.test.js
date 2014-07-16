@@ -5,8 +5,31 @@ var gdal = require('../lib/gdal.js');
 
 describe('gdal.drivers', function() {
 
+	describe('count()', function() {
+		it('should return the number of drivers', function() {
+			assert.isNumber(gdal.drivers.count());
+		});
+	});
+
+	describe('getNames()', function() {
+		it('should return array of strings', function() {
+			var result = gdal.drivers.getNames();
+			assert.isArray(result);
+			result.forEach(function(driver) {
+				assert.isString(driver);
+			});
+		});
+		it('should return array the same length as driver count', function() {
+			var count = gdal.drivers.count();
+			assert.lengthOf(gdal.drivers.getNames(), count);
+		});
+	});
+
 	describe('get()', function() {
-		it('should return Driver instance', function() {
+		it('should support numeric argument', function() {
+			assert.instanceOf(gdal.drivers.get(0), gdal.Driver);
+		});
+		it('should support string argument', function() {
 			assert.instanceOf(gdal.drivers.get('GTiff'), gdal.Driver);
 		});
 		it('should return null when not found', function() {
@@ -72,6 +95,30 @@ describe('gdal.drivers', function() {
 					assert.ok(gdal.drivers.get(o));
 				});
 			});
+		});
+	});
+
+	describe('forEach()', function() {
+		it('should iterate through all Driver objects', function() {
+			var n = gdal.drivers.count();
+			var i = 0;
+			gdal.drivers.forEach(function(driver) {
+				assert.instanceOf(driver, gdal.Driver);
+				assert.equal(driver, gdal.drivers.get(i++));
+			});
+			assert.equal(i, n);
+		});
+		it('should stop when false is returned from callback', function() {
+			var i = 0;
+			gdal.drivers.forEach(function() { if (++i === 1) return false; });
+			assert.equal(i, 1);
+		});
+		it('should always start from beginning', function() {
+			var n = gdal.drivers.count();
+			var i = 0, j = 0;
+			gdal.drivers.forEach(function() { if (i++ === 1) return false; });
+			gdal.drivers.forEach(function() { j++; });
+			assert.equal(j, n);
 		});
 	});
 });
