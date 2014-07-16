@@ -9,7 +9,7 @@ describe('Open', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname,"data/sample.shp");
+			filename = path.join(__dirname, "data/shp/sample.shp");
 			ds = gdal.open(filename);
 		});
 		it('should be able to read layer count', function() {

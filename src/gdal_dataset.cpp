@@ -74,6 +74,8 @@ void Dataset::dispose()
 	Layer *lyr_wrapped;
 	
 	if (this_dataset) {
+		dataset_cache.erase(this_dataset);
+
 		//dispose of all wrapped child bands
 		int n = this_dataset->GetRasterCount();
 		for(int i = 1; i <= n; i++) {
@@ -90,6 +92,8 @@ void Dataset::dispose()
 		this_dataset = NULL;
 	} 
 	if (this_datasource) {
+		datasource_cache.erase(this_datasource);
+
 		//dispose of all wrapped child layers
 		int n = this_datasource->GetLayerCount();
 		for(int i = 0; i < n; i++) {

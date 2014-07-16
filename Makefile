@@ -10,7 +10,8 @@ clean: clean-test
 
 clean-test:
 	@rm -f ./test/**/*.aux.xml
-	@rm -f ./test/**/*.tmp*
+	@rm -rf ./test/**/*.tmp*
+	@rm -rf ./test/data/**/*.tmp*
 
 format-code:
 	astyle \

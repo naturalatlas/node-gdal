@@ -65,6 +65,8 @@ Layer::~Layer()
 void Layer::dispose()
 {
 	if (this_) {
+		cache.erase(this_);
+
 		if (is_result_set && parent_ds && this_) {
 
 #ifdef VERBOSE_GC

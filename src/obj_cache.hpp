@@ -30,6 +30,7 @@ public:
 
 	//check if native pointer has been wrapped, or if an alias wraps it
 	bool has(K key);
+	void erase(K key);
 
 	//check if native pointer has been added as an alias
 	bool hasAlias(K alias);
@@ -39,7 +40,6 @@ public:
 
 private:
 	static void WeakCallback(v8::Persistent<v8::Value> object, void *parameter);
-	void erase(K key);
 	std::map<K, v8::Persistent<v8::Object> > cache;
 	std::map<K, K> aliases;
 };
