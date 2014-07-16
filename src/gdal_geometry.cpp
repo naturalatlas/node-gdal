@@ -1,4 +1,3 @@
-
 #include "gdal_common.hpp"
 
 #include "gdal_spatial_reference.hpp"
@@ -287,7 +286,7 @@ Handle<Value> Geometry::exportToWKB(const Arguments& args)
 		return NODE_THROW("byte order must be 'MSB' or 'LSB'");
 	}
 
-	#if GDAL_VERSION_NUM > 1100000
+	#if GDAL_VERSION_MAJOR > 1 || (GDAL_VERSION_MINOR > 10)
 	//wkb variant
 	OGRwkbVariant wkb_variant;
 	std::string variant = "OGC";
