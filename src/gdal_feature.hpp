@@ -41,7 +41,7 @@ public:
 	static void fidSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
 
 	Feature();
-	Feature(OGRFeature *geom);
+	Feature(OGRFeature *feature);
 	inline OGRFeature *get() {
 		return this_;
 	}

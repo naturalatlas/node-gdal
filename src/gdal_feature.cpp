@@ -37,9 +37,9 @@ void Feature::Initialize(Handle<Object> target)
 	target->Set(String::NewSymbol("Feature"), constructor->GetFunction());
 }
 
-Feature::Feature(OGRFeature *layer)
+Feature::Feature(OGRFeature *feature)
 	: ObjectWrap(),
-	  this_(layer),
+	  this_(feature),
 	  owned_(true)
 {}
 
@@ -89,9 +89,15 @@ Handle<Value> Feature::New(const Arguments& args)
 
 		if (Layer::constructor->HasInstance(obj)) {
 			Layer *layer = ObjectWrap::Unwrap<Layer>(obj);
+			if (!layer->get()) {
+				return NODE_THROW("Layer object already destroyed");
+			}
 			def = layer->get()->GetLayerDefn();
 		} else if(FeatureDefn::constructor->HasInstance(obj)) {
 			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(obj);
+			if (!feature_def->get()) {
+				return NODE_THROW("FeatureDefn object already destroyed");
+			}
 			def = feature_def->get();
 		} else {
 			return NODE_THROW("Constructor expects Layer or FeatureDefn object");

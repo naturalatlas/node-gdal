@@ -348,16 +348,14 @@ describe('gdal.Layer', function() {
 						assert.equal(layer.features.count(), 1);
 					});
 				});
-				// TODO: FIX SEGFAULT
-				it.skip('should throw error if layer doesnt support creating features', function() {
+				it('should throw error if layer doesnt support creating features', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
 							layer.features.add(new gdal.Feature(layer));
 						});
 					});
 				});
-				// TODO: FIX SEGFAULT
-				it.skip('should throw error if dataset is destroyed', function() {
+				it('should throw error if dataset is destroyed', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
@@ -409,8 +407,7 @@ describe('gdal.Layer', function() {
 						assert.equal(layer.features.get(1).fields.get('status'), 'changed');
 					});
 				});
-				// TODO: FIX SEGFAULT
-				it.skip('should throw error if dataset is destroyed', function() {
+				it('should throw error if dataset is destroyed', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {

@@ -79,11 +79,14 @@ SpatialReference::~SpatialReference()
 
 void SpatialReference::dispose()
 {
-	if (owned_ && this_) {
-		//Decrements the reference count by one, and destroy if zero.
-		this_->Release();
+	if (this_) {
+		cache.erase(this_);
+		if (owned_) {
+			//Decrements the reference count by one, and destroy if zero.
+			this_->Release();
+		}
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> SpatialReference::New(const Arguments& args)
