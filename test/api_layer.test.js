@@ -3,8 +3,6 @@ var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
-// TODO: add test for consecutive open/close of same file
-
 describe('gdal.Layer', function() {
 	describe('instance', function() {
 		var prepare_dataset_layer_test = function() {
@@ -58,10 +56,10 @@ describe('gdal.Layer', function() {
 				});
 				it('should throw error if dataset is destroyed', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
-						layer.ds.close();
+						dataset.close();
 						assert.throws(function() {
 							console.log(layer.ds);
-						});
+						}, /already been destroyed/);
 					});
 				});
 			});
@@ -101,7 +99,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							console.log(layer.srs);
-						});
+						}, /already been destroyed/);
 					});
 				});
 			});
@@ -155,7 +153,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							console.log(layer.geomType);
-						});
+						}, /already been destroyed/);
 					});
 				});
 			});
@@ -186,7 +184,7 @@ describe('gdal.Layer', function() {
 					dataset.close();
 					assert.throws(function() {
 						layer.testCapability(gdal.OLCCreateField);
-					});
+					}, /already been destroyed/);
 				});
 			});
 		});
@@ -221,7 +219,7 @@ describe('gdal.Layer', function() {
 					dataset.close();
 					assert.throws(function() {
 						layer.getExtent();
-					});
+					}, /already been destroyed/);
 				});
 			});
 		});
@@ -254,7 +252,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.count();
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -265,12 +263,18 @@ describe('gdal.Layer', function() {
 						assert.instanceOf(feature, gdal.Feature);
 					});
 				});
+				it('should return null if index doesn\'t exist', function() {
+					prepare_dataset_layer_test('r', function(dataset, layer) {
+						var feature = layer.features.get(99);
+						assert.isNull(feature);
+					});
+				});
 				it('should throw error if dataset is destroyed', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.get(0);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -298,7 +302,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.next();
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -316,7 +320,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.first();
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -336,7 +340,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.forEach(function(){});
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -352,7 +356,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
 							layer.features.add(new gdal.Feature(layer));
-						});
+						}, /read\-only/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -361,7 +365,7 @@ describe('gdal.Layer', function() {
 						assert.throws(function() {
 							var feature = new gdal.Feature(layer);
 							layer.features.add(feature);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -407,6 +411,13 @@ describe('gdal.Layer', function() {
 						assert.equal(layer.features.get(1).fields.get('status'), 'changed');
 					});
 				});
+				it('should throw error if layer doesnt support changing features', function() {
+					prepare_dataset_layer_test('r', function(dataset, layer) {
+						assert.throws(function() {
+							layer.features.set(1, new gdal.Feature(layer));
+						}, /read\-only/);
+					});
+				});
 				it('should throw error if dataset is destroyed', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						dataset.close();
@@ -432,7 +443,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
 							layer.features.remove(1);
-						});
+						}, /read\-only/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -440,7 +451,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.features.remove(1);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -474,7 +485,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.count();
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -502,7 +513,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.get(4);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -533,7 +544,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.forEach(function(field){});
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -558,7 +569,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.getNames();
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -574,7 +585,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.indexOf('fips_num');
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -598,7 +609,7 @@ describe('gdal.Layer', function() {
 						prepare_dataset_layer_test('w', function(dataset, layer) {
 							assert.throws(function() {
 								layer.fields.add(new gdal.FieldDefn('some_long_name_over_10_chars', gdal.OFTString), false);
-							});
+							}, /Failed to add/);
 						});
 					});
 				});
@@ -621,7 +632,7 @@ describe('gdal.Layer', function() {
 						prepare_dataset_layer_test('w', function(dataset, layer) {
 							assert.throws(function() {
 								layer.fields.add([new gdal.FieldDefn('some_long_name_over_10_chars', gdal.OFTString)], false);
-							});
+							}, /Failed to add/);
 						});
 					});
 				});
@@ -629,7 +640,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
 							layer.fields.add(new gdal.FieldDefn('field0', gdal.OFTString));
-						});
+						}, /read\-only/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -637,7 +648,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.add(new gdal.FieldDefn('field0', gdal.OFTString));
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -669,7 +680,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						assert.throws(function() {
 							layer.fields.fromJSON({some_really_long_name: "test"});
-						});
+						}, /Failed to add/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -677,7 +688,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.fromJSON({name: "test"});
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -712,7 +723,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
 							layer.fields.remove(0);
-						});
+						}, /read\-only/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -721,7 +732,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.remove(0);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
@@ -744,8 +755,8 @@ describe('gdal.Layer', function() {
 				it('should throw an error if layer doesnt support reordering fields', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
-							layer.fields.reorder([2,0,1]);
-						});
+							layer.fields.reorder([2,0,1,3,4,5,6,7]);
+						}, /read\-only/);
 					});
 				});
 				it('should throw error if dataset is destroyed', function() {
@@ -756,7 +767,7 @@ describe('gdal.Layer', function() {
 						dataset.close();
 						assert.throws(function() {
 							layer.fields.reorder([2,0,1]);
-						});
+						}, /already destroyed/);
 					});
 				});
 			});
