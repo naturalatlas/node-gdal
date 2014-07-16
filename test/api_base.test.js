@@ -9,6 +9,21 @@ describe('gdal', function() {
 			assert.match(gdal.version, /^\d+\.\d+\.\d+$/);
 		});
 	});
+	describe('"config" property', function() {
+		describe('get()', function() {
+			it('should not throw', function() {
+				gdal.config.get('CPL_LOG');
+			});
+		});
+		describe('set()', function() {
+			it('should set option', function() {
+				gdal.config.set('CPL_DEBUG', 'ON');
+				assert.equal(gdal.config.get('CPL_DEBUG'), 'ON');
+				gdal.config.set('CPL_DEBUG', null);
+				assert.isNull(gdal.config.get('CPL_DEBUG'));
+			});
+		});
+	});
 	describe('decToDMS()', function() {
 		it('should throw when axis not provided', function() {
 			assert.throws(function() {
