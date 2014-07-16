@@ -4,12 +4,15 @@
 
 - `open(string name, string mode = 'r', string[] drivers = null, string[] options = null)` : [Dataset](dataset.md)
 - `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, int datatype = 0, string[] options = null)` : [Dataset](dataset.md) 
-- `getConfigOption(string name)` : string
-- `setConfigOption(string name, string value)` : void
 - `quiet()` : void
 - `verbose()` : void
 - `decToDMS(number angle, string axis, int precision = 2)` : string
     + axis: `'lat'` or `'long'`
+
+#### Configuration
+
+- `config.get(string name)` : string
+- `config.set(string name, string value)` : void
 
 #### Drivers 
 

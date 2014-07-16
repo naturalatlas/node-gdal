@@ -18,7 +18,7 @@ $ npm install --shared_gdal
 ### Usage
 
 ```js
-var gdal = require('gdal');
+var gdal = require("gdal");
 var dataset = gdal.open("./examples/sample.tif", "r", "GTiff");
 
 console.log("number of bands: " + dataset.bands.count());
@@ -30,9 +30,6 @@ console.log("geotransform: " + dataset.geoTransform);
 ### Links
 
 - [**Documentation**](docs/)
-  - [Methods](docs/#methods)
-  - [Drivers](docs/#drivers)
-  - [Classes](docs/#classes)
 - [**Examples**](examples/)
 
 ### Test
@@ -40,7 +37,6 @@ console.log("geotransform: " + dataset.geoTransform);
 ```sh
 $ npm test
 ```
-
 
 ## License
 
