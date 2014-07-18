@@ -5,7 +5,7 @@ environment:
 
 platform:
   - x86
-#  - x64
+  - x64
 
 install:
   - SET PATH=C:\Program Files\7-Zip;%PATH%
