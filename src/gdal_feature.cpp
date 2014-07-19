@@ -21,14 +21,18 @@ void Feature::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometryDirectly", setGeometryDirectly);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometryDirectly", setGeometryDirectly);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometry", setGeometry);
 	// NODE_SET_PROTOTYPE_METHOD(constructor, "stealGeometry", stealGeometry);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn); (use defn.fields.get() instead)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "setFrom", setFrom);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
+
+	//Note: We should let node GC handle destroying features when they arent being used
+	//TODO: Give node more info on the amount of memory a feature is using
+	//      V8::AdjustAmountOfExternalAllocatedMemory()  
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy); 
 
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "defn", defnGetter, READ_ONLY_SETTER);

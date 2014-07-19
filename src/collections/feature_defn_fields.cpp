@@ -22,6 +22,7 @@ void FeatureDefnFields::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
 
 	ATTR_DONT_ENUM(constructor, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
@@ -54,7 +55,7 @@ Handle<Value> FeatureDefnFields::New(const Arguments& args)
 	}
 }
 
-Handle<Value> FeatureDefnFields::New(Handle<Value> layer_obj)
+Handle<Value> FeatureDefnFields::New(Handle<Value> feature_defn)
 {
 	HandleScope scope;
 
@@ -62,7 +63,7 @@ Handle<Value> FeatureDefnFields::New(Handle<Value> layer_obj)
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
 	v8::Handle<v8::Object> obj = FeatureDefnFields::constructor->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
+	obj->SetHiddenValue(String::NewSymbol("parent_"), feature_defn);
 
 	return scope.Close(obj);
 }
@@ -177,11 +178,32 @@ Handle<Value> FeatureDefnFields::add(const Arguments& args)
 	if (!feature_def->get()) {
 		return NODE_THROW("FeatureDefn object already destroyed");
 	}
-	
-	FieldDefn *field_def;
-	NODE_ARG_WRAPPED(0, "field definition", FieldDefn, field_def);
+	if (args.Length() < 1) {
+		return NODE_THROW("field definition(s) must be given");
+	}
 
-	feature_def->get()->AddFieldDefn(field_def->get());
+	FieldDefn *field_def;
+	
+	Local<Object> obj = args[0]->ToObject();
+
+	if (args[0]->IsArray()) {
+		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		int n = array->Length();
+		for (int i = 0; i < n; i++) {
+			Local<Object> element = array->Get(i)->ToObject();
+			if (FieldDefn::constructor->HasInstance(element)) {
+				field_def = ObjectWrap::Unwrap<FieldDefn>(element);
+				feature_def->get()->AddFieldDefn(field_def->get());
+			} else {
+				return NODE_THROW("All array elements must be FieldDefn objects");
+			}
+		}
+	} else if (FieldDefn::constructor->HasInstance(obj)) {
+		field_def = ObjectWrap::Unwrap<FieldDefn>(obj);
+		feature_def->get()->AddFieldDefn(field_def->get());
+	} else {
+		return NODE_THROW("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
+	}
 
 	return Undefined();
 }

@@ -183,13 +183,21 @@ Handle<Value> FeatureFields::reset(const Arguments& args)
 		return NODE_THROW("Feature object already destroyed");
 	}
 	
-	Handle<Object> obj;
-	NODE_ARG_OBJECT(0, "fields", obj);
+	n = f->get()->GetFieldCount();
+
+	if (args.Length() == 0) {
+		for (i = 0; i < n; i++) {
+			f->get()->UnsetField(i);
+		}
+		return scope.Close(Integer::New(n));
+	}
+
+	if (!args[0]->IsObject()) {
+		return NODE_THROW("fields must be an object");
+	}
 
 	Handle<Object> values = Handle<Object>::Cast(args[0]);
-		
-	n = f->get()->GetFieldCount();
-	
+
 	for (i = 0; i < n; i++) {
 		//iterate through field names from field defn,
 		//grabbing values from passed object

@@ -5,16 +5,14 @@ Note: all methods throw errors if the feature has already been explicitly destro
 #### Constructor
 
 - `Feature(FeatureDefn defn)`
+- `Feature(Layer layer)`
 
 #### Methods
 
 - `toString()` : string
 - `getGeometry()` : [Geometry](geometry.md) *(throws)*
 - `setGeometry(Geometry geom)` : void *(throws)*
-- `setGeometryDirectly(Geometry geom)` : void *(throws, alias to setGeometry currently)*
 - `clone()` : [Feature](feature.md)
-- `equals(Feature f)` : bool
-- `getFieldDefn(int index)` : [FieldDefn](fielddefn.md) *(throws)*
 - `setFrom(Feature f, bool forgiving = true)` : void *(throws)*
 - `setFrom(Feature f, int[] index_map, bool forgiving = true)` : void *(throws)*
 
@@ -34,6 +32,7 @@ Note: all methods throw errors if the feature has already been explicitly destro
 - `fields.set(int i, value)` : int
 - `fields.set(Array values)` : int
 - `fields.set(object values)` : int
+- `fields.reset()` : int
 - `fields.reset(object values)` : int
 - `fields.indexOf(string field_name)` : int
 - `fields.toJSON()` : object

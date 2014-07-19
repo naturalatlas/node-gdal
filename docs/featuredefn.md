@@ -2,6 +2,10 @@
 
 Note: all feature definitions owned by layers are cloned to avoid segfaults when layers are destroyed and to avoid modifying read-only feature definitions.
 
+#### Constructor
+
+- `FeatureDefn()`
+
 #### Methods
 
 - `toString()` : string
@@ -18,7 +22,7 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 #### Fields
 
 - `fields.count()` : int
-- `fields.add(FieldDefn def, bool approx = true)` : void *(throws)*
+- `fields.add(FieldDefn def, bool approx = true)` : void
 - `fields.remove(int i)` : void *(throws)*
 - `fields.remove(string field_name)` : void *(throws)*
 - `fields.get(int i)` : [FieldDefn](fielddefn.md) *(throws)*
