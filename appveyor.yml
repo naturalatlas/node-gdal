@@ -1,7 +1,8 @@
 environment:
   matrix:
     - nodejs_version: "0.8.26"
-    - nodejs_version: "0.10.28"
+    - nodejs_version: "0.10.29"
+    - nodejs_version: "0.11.13"
 
 platform:
   - x86
@@ -10,8 +11,9 @@ platform:
 install:
   - SET PATH=C:\Program Files\7-Zip;%PATH%
   - SET PATH=C:\Python27;%PATH%
-  - IF "%PLATFORM%"=="x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
-  - IF "%PLATFORM%"=="x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
+#  - IF "%PLATFORM%"=="x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+#  - IF "%PLATFORM%"=="x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
+  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
   - ps: Start-FileDownload "https://mapnik.s3.amazonaws.com/dist/dev/libgdal_win_$env:PLATFORM.7z"
   - 7z x libgdal_win_%PLATFORM%.7z
   - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
