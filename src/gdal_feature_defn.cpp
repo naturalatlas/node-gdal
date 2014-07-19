@@ -28,9 +28,9 @@ void FeatureDefn::Initialize(Handle<Object> target)
 	target->Set(String::NewSymbol("FeatureDefn"), constructor->GetFunction());
 }
 
-FeatureDefn::FeatureDefn(OGRFeatureDefn *layer)
+FeatureDefn::FeatureDefn(OGRFeatureDefn *def)
 	: ObjectWrap(),
-	  this_(layer),
+	  this_(def),
 	  owned_(true)
 {}
 
@@ -52,6 +52,7 @@ FeatureDefn::~FeatureDefn()
 Handle<Value> FeatureDefn::New(const Arguments& args)
 {
 	HandleScope scope;
+	FeatureDefn *f;
 
 	if (!args.IsConstructCall()) {
 		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
@@ -60,13 +61,18 @@ Handle<Value> FeatureDefn::New(const Arguments& args)
 	if (args[0]->IsExternal()) {
 		Local<External> ext = Local<External>::Cast(args[0]);
 		void* ptr = ext->Value();
-		FeatureDefn *f = static_cast<FeatureDefn *>(ptr);
-		f->Wrap(args.This());
+		f = static_cast<FeatureDefn *>(ptr);
+	} else {
+		if (args.Length() != 0) {
+			return NODE_THROW("FeatureDefn constructor doesn't take any arguments");
+		}
+		f = new FeatureDefn(new OGRFeatureDefn());
 	}
 
 	Handle<Value> fields = FeatureDefnFields::New(args.This()); 
 	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
-
+	
+	f->Wrap(args.This());
 	return args.This();
 }
 
@@ -88,6 +94,9 @@ Handle<Value> FeatureDefn::New(OGRFeatureDefn *def, bool owned)
 	// + no need to track when a layer is destroyed
 	// + no need to throw errors when a method trys to modify an owned read-only featuredefn
 	// - is slower
+	
+	//TODO: cloning maybe unnecessary if reference counting is done right. 
+	//      def->Reference(); def->Release(); 
 
 	if (!owned) {
 		def = def->Clone();
