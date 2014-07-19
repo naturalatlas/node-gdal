@@ -1,0 +1,15 @@
+--- libgdal/gdal/gcore/gdalexif_old.cpp	2014-07-19 14:28:59.000000000 -0600
++++ libgdal/gdal/gcore/gdalexif.cpp	2014-07-19 10:48:46.000000000 -0600
+@@ -194,6 +194,7 @@
+ /*                                                                      */
+ /*      Extract all entry from a IFD                                    */
+ /************************************************************************/
++#pragma optimize("", off)
+ CPLErr EXIFExtractMetadata(char**& papszMetadata,
+                            void *fpInL, int nOffset,
+                            int bSwabflag, int nTIFFHEADER,
+@@ -454,3 +455,4 @@
+ 
+     return CE_None;
+ }
++#pragma optimize("", on)

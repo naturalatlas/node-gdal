@@ -40,9 +40,7 @@
 #include <cassert>
 #include <cmath>
 #include <iomanip>
-#if defined(_MSC_VER)
 #include <algorithm>
-#endif
 
 using namespace std;
 using namespace geos::geom;

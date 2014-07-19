@@ -7,6 +7,7 @@ build/
 *.vcxproj*
 *.pdb
 *.log
+*.orig
 test/data/**/*.aux*
 test/data/**/*.tmp*
 node_modules
