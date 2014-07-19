@@ -102,6 +102,15 @@ describe('gdal.Layer', function() {
 						}, /already been destroyed/);
 					});
 				});
+				it('fetched srs should not be destroyed when dataset is destroyed', function() {
+					prepare_dataset_layer_test('r', function(dataset, layer) {
+						var srs = layer.srs;
+						dataset.close();
+						assert.doesNotThrow(function() {
+							console.log(srs.toWKT());
+						});
+					});
+				});
 			});
 			describe('setter', function() {
 				it('should throw error', function() {
