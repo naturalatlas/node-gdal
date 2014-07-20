@@ -34,6 +34,7 @@
 
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 
 #ifndef GEOS_INLINE
 # include <geos/geom/LineSegment.inl>

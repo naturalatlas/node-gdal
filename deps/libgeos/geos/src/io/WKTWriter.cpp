@@ -40,6 +40,7 @@
 #include <cassert>
 #include <cmath>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 using namespace geos::geom;
