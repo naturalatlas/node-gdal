@@ -96,7 +96,7 @@ namespace node_gdal {
 		NODE_ARG_INT_OPT(2, "precision", precision);
 
 		if (axis.length() > 0) {
-			axis[0] = std::toupper(axis[0]);
+			axis[0] = toupper(axis[0]);
 		}
 		if (axis != "Lat" && axis != "Long") {
 			return NODE_THROW("Axis must be 'lat' or 'long'");
