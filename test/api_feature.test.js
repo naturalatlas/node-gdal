@@ -350,5 +350,21 @@ describe('gdal.Feature', function() {
 				assert.equal(pt.y, 10);
 			});
 		});
+		describe('setFrom()', function(){
+			it('should set fields and geometry from other feature', function(){
+				var feature1 = new gdal.Feature(defn);
+				var feature2 = new gdal.Feature(defn);
+				feature1.setGeometry(new gdal.Point(5, 10));
+				feature1.fields.set([5, 'test', 3.14]);
+				feature2.setFrom(feature1);
+
+				var pt = feature2.getGeometry();
+				assert.equal(pt.x, 5);
+				assert.equal(pt.y, 10);
+				assert.equal(feature2.fields.get(0), 5);
+				assert.equal(feature2.fields.get(1), 'test');
+				assert.closeTo(feature2.fields.get(2), 3.14, 0.0001);
+			});
+		});
 	});
 });
