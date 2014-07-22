@@ -48,6 +48,7 @@
 				}
 			},
 			"Release": {
+				'defines': [ 'NDEBUG' ],
 				"xcode_settings": {
 					"GCC_OPTIMIZATION_LEVEL": "s",
 					"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",
@@ -60,7 +61,8 @@
 				"msvs_settings": {
 					"VCCLCompilerTool": {
 						"ExceptionHandling": 2, # /EHsc
-						"RuntimeTypeInfo": "true"
+						"RuntimeTypeInfo": "true",
+						"RuntimeLibrary": "2", # 0:/MT, 1:/MTd, 2:/MD, 3:/MDd, 
 					}
 				}
 			}

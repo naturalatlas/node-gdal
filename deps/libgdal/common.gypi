@@ -42,7 +42,10 @@
 		"cflags!": ["-fno-rtti", "-fno-exceptions"],
 		"conditions": [
 			["OS == 'win'", {
-				"include_dirs": ["./arch/win"]
+				"include_dirs": ["./arch/win"],
+				"VCCLCompilerTool": {
+					"RuntimeLibrary": "0", # 0:/MT, 1:/MTd, 2:/MD, 3:/MDd, 
+				}
 			}],
 			["OS == 'freebsd'", {
 				"include_dirs": ["./arch/bsd"]

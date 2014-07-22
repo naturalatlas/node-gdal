@@ -1,5 +1,7 @@
 .lock-wscript
 build/
+find.exe
+msys-1.0.dll
 *.lib
 *.obj
 *.tlog
