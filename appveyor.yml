@@ -1,4 +1,8 @@
 environment:
+  AWS_ACCESS_KEY_ID:
+    secure: NQm//oI1+p9jLP5pkT7/FP4bmssn2/MwsiWlTscNEPc=
+  AWS_SECRET_ACCESS_KEY:
+    secure: DnAtyHwtPDeRgk28JdsGZALFhpYH3wmdJ5nQwrh1khRSK3KZLjkz8Qk9gGw+BuiV
   matrix:
     - nodejs_version: "0.8.26"
     - nodejs_version: "0.10.29"
@@ -23,6 +27,10 @@ install:
   - npm install node-gyp
   - npm install --build-from-source --msvs_version=2013 --shared_gdal=c:/projects/node-gdal/deplibs/
   - npm test
+  - node_modules\.bin\node-pre-gyp package
+  - SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
+  - ECHO commit message %CM%
+  - if not "%CM%" == "%CM:[publish binary]=%" node_modules\.bin\node-pre-gyp publish
 
 build: OFF
 test: OFF
