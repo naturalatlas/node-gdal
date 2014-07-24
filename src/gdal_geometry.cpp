@@ -34,6 +34,7 @@ void Geometry::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(constructor, "fromWKBType", Geometry::create);
 	NODE_SET_METHOD(constructor, "fromWKT", Geometry::createFromWkt);
 	NODE_SET_METHOD(constructor, "fromWKB", Geometry::createFromWkb);
+	NODE_SET_METHOD(constructor, "typeToName", Geometry::typeToName);
 	NODE_SET_METHOD(constructor, "getConstructor", Geometry::getConstructor);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
@@ -575,6 +576,13 @@ Handle<Value> Geometry::getConstructor(const Arguments &args){
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);
 	return scope.Close(getConstructor(type));
+}
+
+Handle<Value> Geometry::typeToName(const Arguments &args){
+	HandleScope scope;
+	OGRwkbGeometryType type;
+	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);
+	return scope.Close(SafeString::New(OGRGeometryTypeToName(type)));
 }
 
 } // namespace node_gdal

@@ -71,6 +71,7 @@ public:
 	static Handle<Value> create(const Arguments &args);
 	static Handle<Value> createFromWkt(const Arguments &args);
 	static Handle<Value> createFromWkb(const Arguments &args);
+	static Handle<Value> typeToName(const Arguments &args);
 	static Handle<Value> getConstructor(const Arguments &args);
 
 	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
