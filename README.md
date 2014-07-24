@@ -35,6 +35,7 @@ $ npm install --shared_gdal
         - [MultiPolygon](docs/multipolygon.md)
     - [SpatialReference](docs/spatialreference.md)
     - [CoordinateTransformation](docs/coordinatetransformation.md)
+    - [Driver](docs/driver.md)
     - [Envelope](docs/envelope.md)
     - [Envelope3D](docs/envelope3d.md)
 - [**Examples**](examples/)

@@ -41,6 +41,7 @@
     - [MultiPolygon](multipolygon.md)
 - [SpatialReference](spatialreference.md)
 - [CoordinateTransformation](coordinatetransformation.md)
+- [Driver](driver.md)
 - [Envelope](envelope.md)
 - [Envelope3D](envelope3d.md)
 
