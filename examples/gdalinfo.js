@@ -11,7 +11,7 @@ var ds = gdal.open(filename);
 
 var driver = ds.driver;
 var driver_metadata = driver.getMetadata();
-if (driver_metadata['DCAP_RASTER'] != 'YES') {
+if (driver_metadata['DCAP_RASTER'] !== 'YES') {
 	console.error('Source file is not a raster');
 	process.exit(1);
 }

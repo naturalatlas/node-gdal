@@ -1,6 +1,6 @@
 var gdal = require('../lib/gdal.js');
 var path = require('path');
-var filename = path.resolve(__dirname, '../test/data/sample.tif';
+var filename = path.resolve(__dirname, '../test/data/sample.tif');
 var dataset = gdal.open(filename);
 
 console.log('number of bands:', dataset.bands.count());
