@@ -15,7 +15,31 @@ To link against shared libgdal, install using:
 $ npm install --shared_gdal
 ```
 
-### Usage
+### Links
+
+- [**Documentation**](docs/)
+    - [Dataset](docs/dataset.md)
+    - [Layer](docs/layer.md)
+    - [RasterBand](docs/rasterband.md)
+    - [Feature](docs/feature.md)
+    - [FeatureDefn](docs/featuredefn.md)
+    - [FieldDefn](docs/fielddefn.md)
+    - [Geometry](docs/geometry.md)
+        - [Point](docs/point.md)
+        - [LineString](docs/linestring.md)
+        - [LinearRing](docs/linearring.md)
+        - [Polygon](docs/polygon.md)
+        - [GeometryCollection](docs/geometrycollection.md)
+        - [MultiPoint](docs/multipoint.md)
+        - [MultiLineString](docs/multilinestring.md)
+        - [MultiPolygon](docs/multipolygon.md)
+    - [SpatialReference](docs/spatialreference.md)
+    - [CoordinateTransformation](docs/coordinatetransformation.md)
+    - [Envelope](docs/envelope.md)
+    - [Envelope3D](docs/envelope3d.md)
+- [**Examples**](examples/)
+
+### Sample Usage
 
 ```js
 var gdal = require("gdal");
@@ -27,12 +51,11 @@ console.log("height: " + dataset.rasterSize.y);
 console.log("geotransform: " + dataset.geoTransform);
 ```
 
-### Links
+## Contributors
 
-- [**Documentation**](docs/)
-- [**Examples**](examples/)
+This binding is a collaboration between [Natural Atlas](https://github.com/naturalatlas) and [Mapbox](https://github.com/mapbox). Its contributors are [Brandon Reavis](https://github.com/brandonreavis), [Brian Reavis](https://github.com/brianreavis), [Dane Springmeyer](https://github.com/springmeyer), [Zac McCormick](https://github.com/zhm), and [others](https://github.com/naturalatlas/node-gdal/graphs/contributors).
 
-### Test
+Before submitting pull requests, please update the [tests](test) and make sure they all pass.
 
 ```sh
 $ make test
