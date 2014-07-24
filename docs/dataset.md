@@ -10,14 +10,18 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getGCPProjection()` : string
 - `getGCPs()` : object[]
 - `setGCPs()` : void *(throws)*
+- `executeSQL(string statement, Geometry spatial_filter = null, string dialect = null) : [Layer](layer.md)
 - `getFileList()` : string[]
+	+ *In GDAL versions < 2.0 it will return an empty array for vector datasets*
 - `flush()` : void
 - `getMetadata(string domain = null)` : object
 
 #### Properties
 
 - `description` : string
-- `size` : object
+- `rasterSize` : object
+	- `x` : integer
+	- `y` : integer
 - `srs` : [SpatialReference](spatialreference.md) *(settable)*
 - `driver` : [Driver](driver.md)
 - `geoTransform` : Number[] *(settable)*
@@ -28,7 +32,6 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 
 - `bands.get(int band_id)` : [RasterBand](rasterband.md) *(throws, 1 based)*
 - `bands.count()` : int
-- `bands.create(string gdal_data_type, string[] options)` : [RasterBand](rasterband.md) *(throws)*
 - `bands.forEach(function iterator)` : void
 
 #### Layers

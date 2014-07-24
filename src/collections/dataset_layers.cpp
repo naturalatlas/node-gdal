@@ -1,6 +1,7 @@
 #include "../gdal_common.hpp"
 #include "../gdal_dataset.hpp"
 #include "../gdal_layer.hpp"
+#include "../gdal_spatial_reference.hpp"
 #include "dataset_layers.hpp"
 
 namespace node_gdal {
@@ -82,7 +83,7 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
-		if(!ds->uses_ogr && raw) {
+		if(!ds->uses_ogr && ds->getDataset()) {
 			return Null();
 		}
 	#endif
@@ -129,12 +130,12 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 	}
 
 	std::string layer_name;
-	std::string spatial_ref = "";
+	SpatialReference *spatial_ref = NULL;
 	OGRwkbGeometryType geom_type = wkbUnknown;
 	Handle<Array> layer_options = Array::New(0);
 
 	NODE_ARG_STR(0, "layer name", layer_name);
-	NODE_ARG_OPT_STR(1, "spatial reference", spatial_ref);
+	NODE_ARG_WRAPPED_OPT(1, "spatial reference", SpatialReference, spatial_ref);
 	NODE_ARG_ENUM_OPT(2, "geometry type", OGRwkbGeometryType, geom_type);
 	NODE_ARG_ARRAY_OPT(3, "layer creation options", layer_options);
 
@@ -147,8 +148,11 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 		}
 	}
 
+	OGRSpatialReference *srs = NULL;
+	if(spatial_ref) srs = spatial_ref->get();
+
 	OGRLayer *layer = raw->CreateLayer(layer_name.c_str(),
-					  NULL,
+					  srs,
 					  geom_type,
 					  options);
 
@@ -174,7 +178,7 @@ Handle<Value> DatasetLayers::count(const Arguments& args)
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
-		if(!ds->uses_ogr && raw) {
+		if(!ds->uses_ogr && ds->getDataset()) {
 			return scope.Close(Integer::New(0));
 		}
 	#endif

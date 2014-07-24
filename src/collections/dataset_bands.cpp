@@ -17,7 +17,7 @@ void DatasetBands::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "create", create);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
 
 	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);

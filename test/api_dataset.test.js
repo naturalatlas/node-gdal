@@ -6,6 +6,15 @@ var path = require('path');
 var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
+var NAD83_WKT = 'PROJCS["NAD_1983_UTM_Zone_10N",' +
+			    'GEOGCS["GCS_North_American_1983",' +
+			    'DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],' +
+			    'PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],' +
+			    'PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],' +
+			    'PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-123.0],' +
+			    'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
+			    'UNIT["Meter",1.0]]';
+
 describe('gdal.Dataset', function() {
 	var ds;
 	before(function() {
@@ -25,17 +34,214 @@ describe('gdal.Dataset', function() {
 			it('should exist', function() {
 				assert.instanceOf(ds.bands, gdal.DatasetBands);
 			});
+			describe('count()', function() {
+				it('should return number', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.equal(ds.bands.count(), 1);
+				});
+				it('should be 0 for vector datasets', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.equal(ds.bands.count(), 0);
+				});
+				it('should throw if dataset is closed', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					ds.close();
+					assert.throws(function(){
+						ds.bands.count();
+					});
+				});
+			});
+			describe('get()', function() {
+				it('should return RasterBand', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.instanceOf(ds.bands.get(1), gdal.RasterBand);
+				});
+				it('should return null if band id is out of range', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.isNull(ds.bands.get(0));
+				});
+				it('should throw if dataset is closed', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					ds.close();
+					assert.throws(function(){
+						ds.bands.get(1);
+					});
+				});
+			});
+			describe('forEach()', function() {
+				it('should call callback for each RasterBand', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					var expected_ids = [1];
+					var ids = [];
+					ds.bands.forEach(function(band){
+						assert.instanceOf(band, gdal.RasterBand);
+						ids.push(band.id);
+					});
+					assert.deepEqual(ids, expected_ids); 
+				});
+				it('should throw if dataset is closed', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					ds.close();
+					assert.throws(function(){
+						ds.bands.forEach(function(band){});
+					});
+				});
+			});
 		});
-
+		describe('"layers" property', function() {
+			it('should exist', function() {
+				assert.instanceOf(ds.layers, gdal.DatasetLayers);
+			});
+			describe('count()', function() {
+				it('should return number', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.equal(ds.layers.count(), 1);
+				});
+				it('should be 0 for raster datasets', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.equal(ds.layers.count(), 0);
+				});
+				it('should throw if dataset is closed', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					ds.close();
+					assert.throws(function(){
+						ds.layers.count();
+					});
+				});
+			});
+			describe('get()', function() {
+				describe('w/id argument', function(){
+					it('should return Layer', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						assert.instanceOf(ds.layers.get(0), gdal.Layer);
+					});
+					it('should return null if layer id is out of range', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						assert.isNull(ds.layers.get(5));
+					});
+					it('should throw if dataset is closed', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						ds.close();
+						assert.throws(function(){
+							ds.layers.get(0);
+						});
+					});
+				});
+				describe('w/name argument', function(){
+					it('should return Layer', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						assert.instanceOf(ds.layers.get('sample'), gdal.Layer);
+					});
+					it('should return null if layer name doesnt exist', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						assert.isNull(ds.layers.get('bogus'));
+					});
+					it('should throw if dataset is closed', function() {
+						var ds = gdal.open(__dirname + "/data/sample.shp");
+						ds.close();
+						assert.throws(function(){
+							ds.layers.get('sample');
+						});
+					});
+				});
+			});
+			describe('forEach()', function() {
+				it('should call callback for each Layer', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var expected_names = ['sample'];
+					var names = [];
+					ds.layers.forEach(function(layer){
+						assert.instanceOf(layer, gdal.Layer);
+						names.push(layer.name);
+					});
+					assert.deepEqual(names, expected_names); 
+				});
+				it('should throw if dataset is closed', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					ds.close();
+					assert.throws(function(){
+						ds.layers.forEach(function(layer){});
+					});
+				});
+			});
+			describe('create()', function() {
+				it('should return Layer', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var srs = gdal.SpatialReference.fromEPSG(4326);
+					console.log(srs);
+					console.log(srs instanceof gdal.SpatialReference);
+					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint); 
+					assert.instanceOf(lyr, gdal.Layer);
+					assert.equal(lyr.geomType, gdal.wkbPoint);
+				});
+				it('should set spatial reference of created layer', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var srs = gdal.SpatialReference.fromEPSG(4326);
+					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint); 
+					assert.instanceOf(lyr.srs, gdal.SpatialReference);
+				});
+				it('should accept null for srs', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var lyr = ds.layers.create('layer_name', null, gdal.wkbPoint); 
+					assert.instanceOf(lyr, gdal.Layer);
+				});
+				it('should accept Geometry constructor for geom_type', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var lyr = ds.layers.create('layer_name', null, gdal.Point); 
+					assert.instanceOf(lyr, gdal.Layer);
+					assert.equal(lyr.geomType, gdal.wkbPoint);
+				});
+				it('should throw if bad geometry type is given', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					assert.throws(function(){
+						ds.layers.create('layer_name', null, console.log); 
+					});
+					assert.throws(function(){
+						ds.layers.create('layer_name', null, 16819189); 
+					});
+				});
+				it('should error if dataset doesnt support creating layers', function() {
+					ds = gdal.open(fileUtils.clone(__dirname + "/data/park.geo.json"), 'r');
+					assert.throws(function(){
+						ds.layers.create('layer_name', null, gdal.wkbPoint);
+					});
+				});
+				it('should throw if dataset is closed', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					ds.close();
+					assert.throws(function(){
+						ds.layers.create('layer_name', null, gdal.wkbPoint);
+					});
+				});
+			});
+		});
 		describe('"srs" property', function() {
 			describe('getter', function() {
 				it('should return SpatialReference', function() {
-					var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+					var ds;
+					ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
 					assert.equal(ds.srs.toWKT(), 'PROJCS["WGS_1984_Albers",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9108"]],AUTHORITY["EPSG","4326"]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["standard_parallel_1",40],PARAMETER["standard_parallel_2",42],PARAMETER["latitude_of_center",39],PARAMETER["longitude_of_center",-78],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["meters",1]]');
 				});
 				it('should return null when dataset doesn\'t have projection', function() {
-					var ds = gdal.open(__dirname + "/data/blank.jpg");
+					var ds;
+					ds = gdal.open(__dirname + "/data/blank.jpg");
 					assert.isNull(ds.srs);
+
+					ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.isNull(ds.srs);
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+					ds.close();
+					assert.throws(function(err){
+						console.log(ds.srs);
+					});
 				});
 			});
 			describe('setter', function() {
@@ -48,17 +254,22 @@ describe('gdal.Dataset', function() {
 				it('should set projection', function() {
 					var ds = gdal.open(fileUtils.clone(__dirname + "/data/dem_azimuth50_pa.img"));
 
-					var ref = 'PROJCS["NAD_1983_UTM_Zone_10N",' +
-						'GEOGCS["GCS_North_American_1983",' +
-						'DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],' +
-						'PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],' +
-						'PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],' +
-						'PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-123.0],' +
-						'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
-						'UNIT["Meter",1.0]]';
+					ds.srs = gdal.SpatialReference.fromWKT(NAD83_WKT);
+					assert.equal(ds.srs.toWKT(), NAD83_WKT);
+				});
+				it('should throw error if dataset doesnt support setting srs', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.throws(function(err){
+						ds.srs = gdal.SpatialReference.fromWKT(NAD83_WKT);
+					});
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname + "/data/dem_azimuth50_pa.img"));
+					ds.close();
 
-					ds.srs = new gdal.SpatialReference.fromWKT(ref);
-					assert.equal(ds.srs.toWKT(), ref);
+					assert.throws(function(){
+						ds.srs = gdal.SpatialReference.fromWKT(NAD83_WKT);
+					});
 				});
 			});
 		});
@@ -72,7 +283,17 @@ describe('gdal.Dataset', function() {
 						y: 286
 					});
 				});
-
+				it('should return null if dataset isnt a raster', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.isNull(ds.rasterSize);
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+					ds.close();
+					assert.throws(function(){
+						console.log(ds.rasterSize);
+					});
+				});
 			});
 			describe('setter', function() {
 				it('should throw', function() {
@@ -80,6 +301,169 @@ describe('gdal.Dataset', function() {
 					assert.throws(function() {
 						ds.rasterSize = {x: 0, y: 0}
 					}, /rasterSize is a read\-only property/);
+				});
+			});
+		});
+
+		describe('"driver" property', function() {
+			describe('getter', function() {
+				it('should return Driver instance', function() {
+					var ds;
+					ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.instanceOf(ds.driver, gdal.Driver);
+					assert.equal(ds.driver.description, 'GTiff');
+
+					ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.instanceOf(ds.driver, gdal.Driver);
+					assert.equal(ds.driver.description, 'ESRI Shapefile');
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+					ds.close();
+					assert.throws(function(){
+						console.log(ds.driver);
+					});
+				});
+			});
+			describe('setter', function() {
+				it('should throw', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					assert.throws(function() {
+						ds.driver = null;
+					});
+				});
+			});
+		});
+
+		describe('"geoTransform" property', function() {
+			describe('getter', function() {
+				it('should return array', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					var expected_geotransform = [
+						-1134675.2952829634,
+						7.502071930146189,
+						0,
+						2485710.4658232867,
+						0,
+						-7.502071930145942
+					];
+
+					var actual_geotransform = ds.geoTransform;
+					var delta = .00001;
+					assert.closeTo(actual_geotransform[0], expected_geotransform[0], delta);
+					assert.closeTo(actual_geotransform[1], expected_geotransform[1], delta);
+					assert.closeTo(actual_geotransform[2], expected_geotransform[2], delta);
+					assert.closeTo(actual_geotransform[3], expected_geotransform[3], delta);
+					assert.closeTo(actual_geotransform[4], expected_geotransform[4], delta);
+					assert.closeTo(actual_geotransform[5], expected_geotransform[5], delta);
+				});
+				it('should return null if dataset doesnt have geotransform', function() {
+					var ds = gdal.open(__dirname + "/data/sample.shp");
+					assert.isNull(ds.geoTransform);
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
+					ds.close();
+					assert.throws(function(){
+						console.log(ds.geoTransform);
+					});
+				});
+			});
+			describe('setter', function() {
+				it('should set geotransform', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname + "/data/sample.vrt"));
+
+					var transform = [0, 2, 0, 0, 0, 2];
+					ds.geoTransform = transform;
+					assert.deepEqual(ds.geoTransform, transform);
+				});
+				it('should throw if dataset doesnt support setting geotransform', function() {
+					var ds;
+					var transform = [0, 2, 0, 0, 0, 2];
+
+					ds = gdal.open(fileUtils.clone(__dirname + "/data/park.geo.json"));
+					assert.throws(function(){
+						ds.geoTransform = transform;
+					});
+
+					ds = gdal.open(fileUtils.clone(__dirname + "/data/sample.tif"));
+					assert.throws(function(){
+						ds.geoTransform = transform;
+					});
+				});
+				it('should throw if dataset is already closed', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname + "/data/sample.vrt"));
+					ds.close();
+
+					var transform = [0, 2, 0, 0, 0, 2];
+					assert.throws(function(){
+						ds.geoTransform = transform;
+					});
+				});
+				it('should throw if geotransform is invalid', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname + "/data/sample.vrt"));
+					assert.throws(function(){
+						ds.geoTransform = [0, 1, 'bad_value', 0, 0, 1];
+					});
+					assert.throws(function(){
+						ds.geoTransform = [0, 1];
+					});
+				});
+			});
+		});
+		describe('executeSQL()', function() {
+			it('should return Layer', function() {
+				var ds = gdal.open(__dirname + "/data/sample.shp");
+				var result_set = ds.executeSQL('SELECT name FROM sample');
+
+				assert.instanceOf(result_set, gdal.Layer);
+				assert.deepEqual(result_set.fields.getNames(), ['name']);
+			});
+			it('should destroy result set when dataset is closed', function() {
+				var ds = gdal.open(__dirname + "/data/sample.shp");
+				var result_set = ds.executeSQL('SELECT name FROM sample');
+				ds.close();
+				assert.throws(function() {
+					result_set.fields.getNames();
+				});
+			});
+			it('should throw if dataset already closed', function() {
+				var ds = gdal.open(__dirname + "/data/sample.vrt");
+				ds.close();
+				assert.throws(function() {
+					 ds.executeSQL('SELECT name FROM sample');
+				});
+			});
+		});
+		describe('getFileList()', function() {
+			it('should return list of filenames', function() {
+				var ds = gdal.open(__dirname + "/data/sample.vrt");
+				var expected_filenames = [
+					ds.description,
+					__dirname + '/data/sample.tif'
+				];
+				assert.deepEqual(ds.getFileList(), expected_filenames);
+			});
+			it('should throw if dataset already closed', function() {
+				var ds = gdal.open(__dirname + "/data/sample.vrt");
+				ds.close();
+				assert.throws(function(){
+					ds.getFileList();
+				});
+			});
+		});
+		describe('getMetadata()', function() {
+			it('should return object', function() {
+				var ds = gdal.open(__dirname + "/data/sample.tif");
+				var metadata = ds.getMetadata();
+				assert.isObject(metadata);
+				assert.equal(metadata['AREA_OR_POINT'], 'Area');
+			});
+			it('should throw if dataset already closed', function() {
+				var ds = gdal.open(__dirname + "/data/sample.tif");
+				ds.close();
+				assert.throws(function(){
+					ds.getMetadata();
 				});
 			});
 		});
