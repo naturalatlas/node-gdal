@@ -44,8 +44,12 @@
 			["OS == 'win'", {
 				"include_dirs": ["./arch/win"],
 				"VCCLCompilerTool": {
-					"RuntimeLibrary": "0", # 0:/MT, 1:/MTd, 2:/MD, 3:/MDd, 
-				}
+					"RuntimeLibrary": "0", # 0:/MT, 1:/MTd, 2:/MD, 3:/MDd
+					"DebugInformationFormat": "0"
+				},
+				"VCLinkerTool": {
+					"GenerateDebugInformation": "false",
+				},
 			}],
 			["OS == 'freebsd'", {
 				"include_dirs": ["./arch/bsd"]
