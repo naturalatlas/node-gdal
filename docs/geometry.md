@@ -5,8 +5,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 #### Static methods
 
 - `getConstructor(wkbGeometryType type)` : Function
-- `typeToName(wkbGeometryType type)` : string
-- `fromWKBType(wkbGeometryType type)` : [Geometry](geometry.md)
+- `getName(wkbGeometryType type)` : string
 - `fromWKT(string wkt, SpatialReference srs = null)` : [Geometry](geometry.md)
 - `fromWKB(Buffer data, SpatialReference srs = null)` : [Geometry](geometry.md)
 

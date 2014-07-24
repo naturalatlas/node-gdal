@@ -31,10 +31,10 @@ void Geometry::Initialize(Handle<Object> target)
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor->SetClassName(String::NewSymbol("Geometry"));
 
-	NODE_SET_METHOD(constructor, "fromWKBType", Geometry::create);
+	//NODE_SET_METHOD(constructor, "fromWKBType", Geometry::create);
 	NODE_SET_METHOD(constructor, "fromWKT", Geometry::createFromWkt);
 	NODE_SET_METHOD(constructor, "fromWKB", Geometry::createFromWkb);
-	NODE_SET_METHOD(constructor, "typeToName", Geometry::typeToName);
+	NODE_SET_METHOD(constructor, "getName", Geometry::getName);
 	NODE_SET_METHOD(constructor, "getConstructor", Geometry::getConstructor);
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
@@ -125,11 +125,11 @@ Handle<Value> Geometry::New(const Arguments& args)
 		f = static_cast<Geometry *>(ptr);
 
 	} else {
-		return NODE_THROW("Geometry doesnt have a constructor, use Geometry.createFromWkt(), Geometry.create() or type-specific constructor. ie. new ogr.Point()");
-		OGRwkbGeometryType geometry_type;
-		NODE_ARG_ENUM(0, "geometry type", OGRwkbGeometryType, geometry_type);
-		OGRGeometry *geom = OGRGeometryFactory::createGeometry(geometry_type);
-		f = new Geometry(geom);
+		return NODE_THROW("Geometry doesnt have a constructor, use Geometry.fromWKT(), Geometry.fromWKB() or type-specific constructor. ie. new ogr.Point()");
+		//OGRwkbGeometryType geometry_type;
+		//NODE_ARG_ENUM(0, "geometry type", OGRwkbGeometryType, geometry_type);
+		//OGRGeometry *geom = OGRGeometryFactory::createGeometry(geometry_type);
+		//f = new Geometry(geom);
 	}
 
 	f->Wrap(args.This());
@@ -578,7 +578,7 @@ Handle<Value> Geometry::getConstructor(const Arguments &args){
 	return scope.Close(getConstructor(type));
 }
 
-Handle<Value> Geometry::typeToName(const Arguments &args){
+Handle<Value> Geometry::getName(const Arguments &args){
 	HandleScope scope;
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);
