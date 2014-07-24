@@ -1,6 +1,4 @@
-.PHONY: clean clean-test build rebuild release test test-concurrent
-
-NODE_PATH:=$(shell pwd)/lib
+.PHONY: clean clean-test build rebuild release test test-concurrent format-code
 
 all: build
 

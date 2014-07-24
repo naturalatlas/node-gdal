@@ -213,7 +213,7 @@
 			],
 			"dependencies": [
 				'<@(gdal_format_gyps)'
-            ],
+			],
 			"defines": [
 				'<@(gdal_format_defs)'
 			],

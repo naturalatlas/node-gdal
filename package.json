@@ -1,17 +1,22 @@
 {
   "name": "gdal",
   "version": "0.0.1",
-  "description": "Native GDAL bindings",
+  "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
   "url": "http://github.com/naturalatlas/node-gdal",
   "main": "./lib/gdal.js",
   "keywords": [
+    "gdal",
+    "libgdal",
     "gis",
     "geo",
+    "geos",
     "geography",
     "geospatial",
     "raster",
-    "gdal",
-    "libgdal"
+    "vector",
+    "gtiff",
+    "geojson",
+    "mapping"
   ],
   "binary": {
     "module_name": "gdal",

@@ -4,8 +4,8 @@ compiler:
   - gcc
 
 os:
-- linux
-- osx
+  - linux
+  - osx
 
 env:
   matrix:

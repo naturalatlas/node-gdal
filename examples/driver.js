@@ -1,6 +1,6 @@
-var gdal = require('../lib/index.js');
+var gdal = require('../lib/gdal.js');
 
-var driver = gdal.getDriverByName("GTiff");
+var driver = gdal.drivers.get('GTiff');
 var metadata = driver.getMetadata();
 
 console.log(metadata);
