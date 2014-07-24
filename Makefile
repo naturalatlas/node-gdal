@@ -32,8 +32,8 @@ rebuild:
 	@make clean
 	@make
 
-test: clean-test
-	npm test
+test: clean-test build
+	./node_modules/.bin/mocha test -R list
 	@make clean-test
 
 test-concurrent: clean-test

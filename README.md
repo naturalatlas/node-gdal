@@ -35,7 +35,7 @@ console.log("geotransform: " + dataset.geoTransform);
 ### Test
 
 ```sh
-$ npm test
+$ make test
 ```
 
 ## License
