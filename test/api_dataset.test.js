@@ -40,7 +40,7 @@ describe('gdal.Dataset', function() {
 					assert.equal(ds.bands.count(), 1);
 				});
 				it('should be 0 for vector datasets', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.equal(ds.bands.count(), 0);
 				});
 				it('should throw if dataset is closed', function() {
@@ -77,7 +77,7 @@ describe('gdal.Dataset', function() {
 						assert.instanceOf(band, gdal.RasterBand);
 						ids.push(band.id);
 					});
-					assert.deepEqual(ids, expected_ids); 
+					assert.deepEqual(ids, expected_ids);
 				});
 				it('should throw if dataset is closed', function() {
 					var ds = gdal.open(__dirname + "/data/sample.tif");
@@ -94,7 +94,7 @@ describe('gdal.Dataset', function() {
 			});
 			describe('count()', function() {
 				it('should return number', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.equal(ds.layers.count(), 1);
 				});
 				it('should be 0 for raster datasets', function() {
@@ -102,7 +102,7 @@ describe('gdal.Dataset', function() {
 					assert.equal(ds.layers.count(), 0);
 				});
 				it('should throw if dataset is closed', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					ds.close();
 					assert.throws(function(){
 						ds.layers.count();
@@ -112,15 +112,15 @@ describe('gdal.Dataset', function() {
 			describe('get()', function() {
 				describe('w/id argument', function(){
 					it('should return Layer', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						assert.instanceOf(ds.layers.get(0), gdal.Layer);
 					});
 					it('should return null if layer id is out of range', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						assert.isNull(ds.layers.get(5));
 					});
 					it('should throw if dataset is closed', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						ds.close();
 						assert.throws(function(){
 							ds.layers.get(0);
@@ -129,15 +129,15 @@ describe('gdal.Dataset', function() {
 				});
 				describe('w/name argument', function(){
 					it('should return Layer', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						assert.instanceOf(ds.layers.get('sample'), gdal.Layer);
 					});
 					it('should return null if layer name doesnt exist', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						assert.isNull(ds.layers.get('bogus'));
 					});
 					it('should throw if dataset is closed', function() {
-						var ds = gdal.open(__dirname + "/data/sample.shp");
+						var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 						ds.close();
 						assert.throws(function(){
 							ds.layers.get('sample');
@@ -147,17 +147,17 @@ describe('gdal.Dataset', function() {
 			});
 			describe('forEach()', function() {
 				it('should call callback for each Layer', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					var expected_names = ['sample'];
 					var names = [];
 					ds.layers.forEach(function(layer){
 						assert.instanceOf(layer, gdal.Layer);
 						names.push(layer.name);
 					});
-					assert.deepEqual(names, expected_names); 
+					assert.deepEqual(names, expected_names);
 				});
 				it('should throw if dataset is closed', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					ds.close();
 					assert.throws(function(){
 						ds.layers.forEach(function(layer){});
@@ -169,9 +169,7 @@ describe('gdal.Dataset', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
 					var srs = gdal.SpatialReference.fromEPSG(4326);
-					console.log(srs);
-					console.log(srs instanceof gdal.SpatialReference);
-					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint); 
+					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint);
 					assert.instanceOf(lyr, gdal.Layer);
 					assert.equal(lyr.geomType, gdal.wkbPoint);
 				});
@@ -179,19 +177,19 @@ describe('gdal.Dataset', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
 					var srs = gdal.SpatialReference.fromEPSG(4326);
-					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint); 
+					var lyr = ds.layers.create('layer_name', srs, gdal.wkbPoint);
 					assert.instanceOf(lyr.srs, gdal.SpatialReference);
 				});
 				it('should accept null for srs', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
-					var lyr = ds.layers.create('layer_name', null, gdal.wkbPoint); 
+					var lyr = ds.layers.create('layer_name', null, gdal.wkbPoint);
 					assert.instanceOf(lyr, gdal.Layer);
 				});
 				it('should accept Geometry constructor for geom_type', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
-					var lyr = ds.layers.create('layer_name', null, gdal.Point); 
+					var lyr = ds.layers.create('layer_name', null, gdal.Point);
 					assert.instanceOf(lyr, gdal.Layer);
 					assert.equal(lyr.geomType, gdal.wkbPoint);
 				});
@@ -199,10 +197,10 @@ describe('gdal.Dataset', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
 					assert.throws(function(){
-						ds.layers.create('layer_name', null, console.log); 
+						ds.layers.create('layer_name', null, console.log);
 					});
 					assert.throws(function(){
-						ds.layers.create('layer_name', null, 16819189); 
+						ds.layers.create('layer_name', null, 16819189);
 					});
 				});
 				it('should error if dataset doesnt support creating layers', function() {
@@ -233,7 +231,7 @@ describe('gdal.Dataset', function() {
 					ds = gdal.open(__dirname + "/data/blank.jpg");
 					assert.isNull(ds.srs);
 
-					ds = gdal.open(__dirname + "/data/sample.shp");
+					ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.isNull(ds.srs);
 				});
 				it('should throw if dataset is already closed', function() {
@@ -258,7 +256,7 @@ describe('gdal.Dataset', function() {
 					assert.equal(ds.srs.toWKT(), NAD83_WKT);
 				});
 				it('should throw error if dataset doesnt support setting srs', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.throws(function(err){
 						ds.srs = gdal.SpatialReference.fromWKT(NAD83_WKT);
 					});
@@ -284,7 +282,7 @@ describe('gdal.Dataset', function() {
 					});
 				});
 				it('should return null if dataset isnt a raster', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.isNull(ds.rasterSize);
 				});
 				it('should throw if dataset is already closed', function() {
@@ -313,7 +311,7 @@ describe('gdal.Dataset', function() {
 					assert.instanceOf(ds.driver, gdal.Driver);
 					assert.equal(ds.driver.description, 'GTiff');
 
-					ds = gdal.open(__dirname + "/data/sample.shp");
+					ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.instanceOf(ds.driver, gdal.Driver);
 					assert.equal(ds.driver.description, 'ESRI Shapefile');
 				});
@@ -358,7 +356,7 @@ describe('gdal.Dataset', function() {
 					assert.closeTo(actual_geotransform[5], expected_geotransform[5], delta);
 				});
 				it('should return null if dataset doesnt have geotransform', function() {
-					var ds = gdal.open(__dirname + "/data/sample.shp");
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					assert.isNull(ds.geoTransform);
 				});
 				it('should throw if dataset is already closed', function() {
@@ -413,14 +411,14 @@ describe('gdal.Dataset', function() {
 		});
 		describe('executeSQL()', function() {
 			it('should return Layer', function() {
-				var ds = gdal.open(__dirname + "/data/sample.shp");
+				var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 				var result_set = ds.executeSQL('SELECT name FROM sample');
 
 				assert.instanceOf(result_set, gdal.Layer);
 				assert.deepEqual(result_set.fields.getNames(), ['name']);
 			});
 			it('should destroy result set when dataset is closed', function() {
-				var ds = gdal.open(__dirname + "/data/sample.shp");
+				var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 				var result_set = ds.executeSQL('SELECT name FROM sample');
 				ds.close();
 				assert.throws(function() {
