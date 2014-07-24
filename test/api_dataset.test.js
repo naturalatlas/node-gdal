@@ -435,10 +435,10 @@ describe('gdal.Dataset', function() {
 		});
 		describe('getFileList()', function() {
 			it('should return list of filenames', function() {
-				var ds = gdal.open(__dirname + "/data/sample.vrt");
+				var ds = gdal.open(path.join(__dirname,'data','sample.vrt'));
 				var expected_filenames = [
 					ds.description,
-					__dirname + '/data/sample.tif'
+					path.join(__dirname,'data','sample.tif')
 				];
 				assert.deepEqual(ds.getFileList(), expected_filenames);
 			});
