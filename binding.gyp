@@ -63,7 +63,10 @@
 						['OS == "win"', {
 							"libraries": [
 								'<!@(find <(shared_gdal) -name "*.lib")',
-								"-lws2_32.lib"
+								"-lsecur32.lib",
+								"-lws2_32.lib",
+								"-lodbccp32.lib",
+								"-lodbc32.lib"
 							],
 							"include_dirs": [
 								"deps/libgdal/arch/win",
@@ -108,6 +111,18 @@
 					],
 					"destination": "<(module_path)"
 				}
+			],
+			"conditions": [
+				["shared_gdal != 'false' and OS == 'win'", {
+					"copies": [
+						{
+							"files": [
+								"<(shared_gdal)/libexpat.dll"
+							],
+							"destination": "<(module_path)"
+						}
+					]
+				}]
 			]
 		}
 	]
