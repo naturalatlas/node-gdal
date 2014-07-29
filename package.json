@@ -41,7 +41,6 @@
     }
   ],
   "scripts": {
-    "pretest": "npm install --dev",
     "test": "mocha test -R tap --no-colors",
     "install": "node-pre-gyp install --fallback-to-build"
   },
