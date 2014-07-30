@@ -1,8 +1,8 @@
 environment:
   AWS_ACCESS_KEY_ID:
-    secure: NQm//oI1+p9jLP5pkT7/FP4bmssn2/MwsiWlTscNEPc=
+    secure: ihP9C8AMdicFGeffdKqgNG1O4n68jDHQPAZCB/IfuZg=
   AWS_SECRET_ACCESS_KEY:
-    secure: DnAtyHwtPDeRgk28JdsGZALFhpYH3wmdJ5nQwrh1khRSK3KZLjkz8Qk9gGw+BuiV
+    secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
     - nodejs_version: "0.8.26"
     - nodejs_version: "0.10.29"

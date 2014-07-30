@@ -13,8 +13,8 @@ env:
     - NODE_NVM_VERSION="0.10" TARGET=SHARED
     - NODE_NVM_VERSION="0.8" TARGET=SHARED
   global:
-    - secure: JknbqPRFci/F+TqK4+xtLXyiRCORO3i5QlJlj1hna9jE1QuWHitDhoN/cFSYluGq3Ul0rIgE419mal8fIzSiXCgNGMpEkg0qDDDYJhQrybc0T7QQVt7DjAY1IS/ybj/OJuTyt77rpeA0QdW6f9rYBO/nvDf27tJJhC0RpVh3m08=
-    - secure: NHHQIv0bNEPYcwuo1VixLGylSH9+zDb+ioqGdllqiXA3lIOZM1pjVUQ0v/K2sl3/c9g0PJaTL77cUDqfF1j+7zCRaYUx9DYyT3XEo3qfYPkjCqsELHlkASHN5u6okKR1YC7eURkwtNmR1N55bdq7JDYDFDfaXSdr2KT+UITMsaM=
+    - secure: fA75GkGowk342k8WjZpVQkcUXdLKRLVcu+U2paoTOmkh+6yINtFyZEppTQHjSb7dvQg+qk1MXz/2q7fVRMvYjDFNJmtZhLn6g0hPeTROm97HdS6bP15iFJ3KbNmTbZ++7alFJn7/GQu+dNm5wPNu7N2thLOWEQOR3qgcKvsiOTw=
+    - secure: cctaCGyRabvyBWUnlFhoP4JfgoaTmRHTkCYw0PfIIZ4vCGcQiTT7uoYA5QjOTD0mzGWdo3N7MksAiratkWzxCwRHVzpCJnpWco2sREeJ3m5QgxXxWLtxZtcOuIv3QaGKE7p9wMYITxS79RSIlEEfVW35qPjYAyL536e4ek+4cM0=
 
 before_install:
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
