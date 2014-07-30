@@ -25,6 +25,7 @@ install:
   - npm --version
   # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2013
   - npm install node-gyp
+  - npm install https://github.com/visionmedia/mocha/archive/fix/333.tar.gz
   - npm install --build-from-source --msvs_version=2013 --shared_gdal=c:/projects/node-gdal/libs/
   - npm test
   - node_modules\.bin\node-pre-gyp package
