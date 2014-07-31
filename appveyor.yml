@@ -23,7 +23,9 @@ install:
   - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
   - node --version
   - npm --version
-  - npm update -g npm
+  - npm install npm -g
+  - DEL /F /Q C:\Program Files\nodejs\npm
+  - DEL /F /Q C:\Program Files\nodejs\npm.cmd
   - npm --version
   # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2013
   - npm install node-gyp
