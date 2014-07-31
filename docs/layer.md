@@ -8,6 +8,10 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `testCapability(string capability_name)` : bool
 - `flush() *(throws)*`
 - `getExtent(boolean force = true)` : [Envelope](envelope.md) *(throws)*
+- `getSpatialFilter()` : [Geometry](geometry.md)
+- `setSpatialFilter(Geometry filter)` : void
+- `setSpatialFilter(Number minX, Number minY, Number maxX, Number maxY)` : void
+- `setAttributeFilter(string filter)` : void *(throws)*
 
 #### Properties
 

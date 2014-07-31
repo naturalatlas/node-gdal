@@ -28,6 +28,9 @@ public:
 	static Handle<Value> New(OGRLayer *raw, Dataset *parent, bool result_set);
 	static Handle<Value> toString(const Arguments &args);
 	static Handle<Value> getExtent(const Arguments &args);
+	static Handle<Value> setAttributeFilter(const Arguments &args);
+	static Handle<Value> setSpatialFilter(const Arguments &args);
+	static Handle<Value> getSpatialFilter(const Arguments &args);
 	static Handle<Value> testCapability(const Arguments &args);
 	static Handle<Value> syncToDisk(const Arguments &args);
 

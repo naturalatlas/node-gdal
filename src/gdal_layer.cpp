@@ -6,6 +6,7 @@
 #include "gdal_field_defn.hpp"
 #include "gdal_spatial_reference.hpp"
 #include "gdal_dataset.hpp"
+#include "gdal_geometry.hpp"
 #include "collections/layer_features.hpp"
 #include "collections/layer_fields.hpp"
 
@@ -27,6 +28,9 @@ void Layer::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getExtent", getExtent);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "setAttributeFilter", setAttributeFilter);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "setSpatialFilter", setSpatialFilter);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialFilter", getSpatialFilter);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
 
@@ -180,8 +184,6 @@ NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, T
 
 Handle<Value> Layer::getExtent(const Arguments& args)
 {
-	//returns object containing boundaries until complete OGREnvelope binding is built
-
 	HandleScope scope;
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
@@ -209,6 +211,74 @@ Handle<Value> Layer::getExtent(const Arguments& args)
 	return scope.Close(obj);
 }
 
+Handle<Value> Layer::getSpatialFilter(const Arguments& args)
+{
+	HandleScope scope;
+
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+
+	return scope.Close(Geometry::New(layer->this_->GetSpatialFilter(), false));
+}
+
+Handle<Value> Layer::setSpatialFilter(const Arguments& args)
+{
+	HandleScope scope;
+
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+
+	if(args.Length() == 1) {
+		Geometry *filter = NULL;
+		NODE_ARG_WRAPPED_OPT(0, "filter", Geometry, filter);
+		
+		if(filter) {
+			layer->this_->SetSpatialFilter(filter->get());
+		} else {
+			layer->this_->SetSpatialFilter(NULL);
+		}
+	} else if(args.Length() == 4) {
+		double minX, minY, maxX, maxY;
+		NODE_ARG_DOUBLE(0, "minX", minX);
+		NODE_ARG_DOUBLE(1, "minY", minY);
+		NODE_ARG_DOUBLE(2, "maxX", maxX);
+		NODE_ARG_DOUBLE(3, "maxY", maxY);
+
+		layer->this_->SetSpatialFilterRect(minX, minY, maxX, maxY);
+	} else {
+		return NODE_THROW("Invalid number of arguments");
+	}
+
+	return Undefined();
+}
+
+Handle<Value> Layer::setAttributeFilter(const Arguments& args)
+{
+	HandleScope scope;
+
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	if (!layer->this_) {
+		return NODE_THROW("Layer object has already been destroyed");
+	}
+
+	std::string filter = "";
+	NODE_ARG_OPT_STR(0, "filter", filter);
+
+	OGRErr err;
+	if(filter.empty()){
+		err = layer->this_->SetAttributeFilter(NULL);
+	} else {
+		err = layer->this_->SetAttributeFilter(filter.c_str());
+	}
+
+	if(err) return NODE_THROW_OGRERR(err);
+	
+	return Undefined();
+}
 /*
 Handle<Value> Layer::getLayerDefn(const Arguments& args)
 {

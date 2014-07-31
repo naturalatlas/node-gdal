@@ -235,6 +235,110 @@ describe('gdal.Layer', function() {
 			});
 		});
 
+		describe('setSpatialFilter()', function() {
+			it("should accept 4 numbers", function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var count_before = layer.features.count();
+					layer.setSpatialFilter(-111, 41, -104, 43);
+					var count_after  = layer.features.count();
+
+					assert.isTrue(count_after < count_before, 'feature count has decreased');
+				});
+			});
+			it("should accept Geometry", function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var count_before = layer.features.count();
+					var filter = new gdal.Polygon();
+					var ring   = new gdal.LinearRing();
+					ring.points.add(-111, 41);
+					ring.points.add(-104, 41);
+					ring.points.add(-104, 43);
+					ring.points.add(-111, 43);
+					ring.points.add(-111, 41);
+					filter.rings.add(ring);
+					layer.setSpatialFilter(filter);
+					var count_after = layer.features.count();
+
+					assert.isTrue(count_after < count_before, 'feature count has decreased');
+				});
+			});
+			it('should clear the spatial filter if passed null', function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var count_before = layer.features.count();
+					layer.setSpatialFilter(-111, 41, -104, 43);
+					layer.setSpatialFilter(null);
+					var count_after  = layer.features.count();
+
+					assert.equal(count_before, count_after);
+				});
+			});
+			it('should throw error if dataset is destroyed', function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					dataset.close();
+					assert.throws(function() {
+						layer.setSpatialFilter(-111, 41, -104, 43);
+					}, /already been destroyed/);
+				});
+			});
+		});
+
+		describe('getSpatialFilter()', function() {
+			it("should return Geometry", function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var filter = new gdal.Polygon();
+					var ring   = new gdal.LinearRing();
+					ring.points.add(-111, 41);
+					ring.points.add(-104, 41);
+					ring.points.add(-104, 43);
+					ring.points.add(-111, 43);
+					ring.points.add(-111, 41);
+					filter.rings.add(ring);
+					layer.setSpatialFilter(filter);
+
+					var result = layer.getSpatialFilter();
+					assert.instanceOf(result, gdal.Polygon);
+				});
+			});
+			it('should throw error if dataset is destroyed', function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					dataset.close();
+					assert.throws(function() {
+						layer.getSpatialFilter();
+					}, /already been destroyed/);
+				});
+			});
+		});
+
+		describe('setAttributeFilter()', function() {
+			it("should filter layer by expression", function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var count_before = layer.features.count();
+					layer.setAttributeFilter("name = 'Park'");
+					var count_after  = layer.features.count();
+
+					assert.isTrue(count_after < count_before, 'feature count has decreased');
+				});
+			});
+			it('should clear the attribute filter if passed null', function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					var count_before = layer.features.count();
+					layer.setAttributeFilter("name = 'Park'");
+					layer.setAttributeFilter(null);
+					var count_after  = layer.features.count();
+
+					assert.equal(count_before, count_after);
+				});
+			});
+			it('should throw error if dataset is destroyed', function() {
+				prepare_dataset_layer_test('r', function(dataset, layer) {
+					dataset.close();
+					assert.throws(function() {
+						layer.setAttributeFilter("name = 'Park'");
+					}, /already been destroyed/);
+				});
+			});
+		});
+
 		describe('"features" property', function() {
 			describe('getter', function() {
 				it('should return LayerFeatures', function() {

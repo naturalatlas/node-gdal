@@ -185,6 +185,9 @@ Handle<Value> LayerFeatures::set(const Arguments& args)
 		return NODE_THROW("Invalid number of arguments");
 	}
 
+	if(!f->get()){
+		return NODE_THROW("Feature already destroyed");
+	}
 	err = layer->get()->SetFeature(f->get());
 	if (err) {
 		return NODE_THROW_OGRERR(err);
