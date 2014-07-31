@@ -41,7 +41,7 @@
     }
   ],
   "scripts": {
-    "test": "mocha test -R tap --no-colors",
+    "test": "mocha test -R tap --trace-gc --timeout 15000 --no-colors",
     "install": "node-pre-gyp install --fallback-to-build"
   },
   "dependencies": {
