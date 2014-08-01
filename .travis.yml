@@ -19,7 +19,7 @@ env:
 before_install:
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - PUBLISH_BINARY=false
-  - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE"; then PUBLISH_BINARY=true; fi;
+  - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then PUBLISH_BINARY=true; fi;
   - git clone https://github.com/creationix/nvm.git ../.nvm && source ../.nvm/nvm.sh
   - nvm install $NODE_NVM_VERSION
   - nvm use $NODE_NVM_VERSION
