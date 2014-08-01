@@ -88,17 +88,16 @@ Handle<Value> Feature::New(const Arguments& args)
 			return NODE_THROW("Constructor expects Layer or FeatureDefn object");
 		}
 
-		Handle<Object> obj = args[0]->ToObject();
 		OGRFeatureDefn *def;
 
-		if (Layer::constructor->HasInstance(obj)) {
-			Layer *layer = ObjectWrap::Unwrap<Layer>(obj);
+		if (IS_WRAPPED(args[0], Layer)) {
+			Layer *layer = ObjectWrap::Unwrap<Layer>(args[0]->ToObject());
 			if (!layer->get()) {
 				return NODE_THROW("Layer object already destroyed");
 			}
 			def = layer->get()->GetLayerDefn();
-		} else if(FeatureDefn::constructor->HasInstance(obj)) {
-			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(obj);
+		} else if(IS_WRAPPED(args[0], FeatureDefn)) {
+			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(args[0]->ToObject());
 			if (!feature_def->get()) {
 				return NODE_THROW("FeatureDefn object already destroyed");
 			}

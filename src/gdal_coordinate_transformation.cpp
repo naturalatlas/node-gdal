@@ -99,7 +99,7 @@ Handle<Value> CoordinateTransformation::transformPoint(const Arguments& args)
 
 	double x, y, z = 0;
 
-	if (args.Length() == 1) {
+	if (args.Length() == 1 && args[0]->IsObject()) {
 		Local<Object> obj = args[0]->ToObject();
 		Local<Value> arg_x = obj->Get(String::NewSymbol("x"));
 		Local<Value> arg_y = obj->Get(String::NewSymbol("y"));

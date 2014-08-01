@@ -510,7 +510,7 @@ void Geometry::srsSetter(Local<String> property, Local<Value> value, const Acces
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(info.This());
 
 	OGRSpatialReference *srs = NULL;
-	if (SpatialReference::constructor->HasInstance(value)) {
+	if (IS_WRAPPED(value, SpatialReference)) {
 		SpatialReference *srs_obj = ObjectWrap::Unwrap<SpatialReference>(value->ToObject());
 		srs = srs_obj->get();
 	} else if (!value->IsNull() && !value->IsUndefined()) {
