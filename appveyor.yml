@@ -37,7 +37,7 @@ install:
   - ECHO pull request %APPVEYOR_PULL_REQUEST_NUMBER%
   - ECHO branch %APPVEYOR_REPO_BRANCH%
   - SET "IS_PR="&FOR /f "delims=0123456789" %%i IN ("%APPVEYOR_PULL_REQUEST_NUMBER%") DO SET IS_PR=%%i
-  - IF NOT "%CM%" == "%CM:[publish binary]=%" (IF NOT DEFINED IS_PR (IF "%APPVEYOR_REPO_BRANCH%" == "master" node_modules\.bin\node-pre-gyp publish))
+  - IF NOT "%CM%" == "%CM:[publish binary]=%" (IF NOT DEFINED IS_PR (IF "%APPVEYOR_REPO_BRANCH%" == "master" node_modules\.bin\node-pre-gyp unpublish publish))
 
 build: OFF
 test: OFF
