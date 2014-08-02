@@ -12,7 +12,7 @@ $ npm install gdal --save
 To link against shared libgdal, install using:
 
 ```sh
-$ npm install --shared_gdal
+$ npm install gdal --build-from-source --shared_gdal
 ```
 
 ### Links
