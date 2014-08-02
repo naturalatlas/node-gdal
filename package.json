@@ -1,6 +1,6 @@
 {
   "name": "gdal",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
   "url": "http://github.com/naturalatlas/node-gdal",
   "main": "./lib/gdal.js",
@@ -41,7 +41,7 @@
     }
   ],
   "scripts": {
-    "test": "mocha test -R tap --no-colors",
+    "test": "mocha test -R tap --trace-gc --timeout 600000 --no-colors",
     "install": "node-pre-gyp install --fallback-to-build"
   },
   "dependencies": {

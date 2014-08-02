@@ -80,7 +80,7 @@ SpatialReference::~SpatialReference()
 void SpatialReference::dispose()
 {
 	if (this_) {
-		cache.erase(this_);
+		//cache.erase(this_); //this will happen automatically with the weak callback
 		if (owned_) {
 			//Decrements the reference count by one, and destroy if zero.
 			this_->Release();
@@ -155,8 +155,7 @@ Handle<Value> SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
 	v8::Handle<v8::Object> obj = SpatialReference::constructor->GetFunction()->NewInstance(1, &ext);
 
-	cache.add(cloned_srs, obj);
-	cache.addAlias(cloned_srs, raw); //fetch the srs copy from cache, rather than recloning
+	cache.add(cloned_srs, raw, obj);
 
 	return scope.Close(obj);
 }

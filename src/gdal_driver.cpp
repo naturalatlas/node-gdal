@@ -224,9 +224,8 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 	if(args.Length() < 2){
 		return NODE_THROW("source dataset must be provided");
 	}
-	Handle<Object> obj = args[1]->ToObject();
-	if (Dataset::constructor->HasInstance(obj)) {
-		src_dataset = ObjectWrap::Unwrap<Dataset>(obj);
+	if (IS_WRAPPED(args[1], Dataset)) {
+		src_dataset = ObjectWrap::Unwrap<Dataset>(args[1]->ToObject());
 	} else {
 		return NODE_THROW("source dataset must be a Dataset object")
 	}	

@@ -615,7 +615,7 @@ void Dataset::srsSetter(Local<String> property, Local<Value> value, const Access
 	}
 
 	std::string wkt("");
-	if (SpatialReference::constructor->HasInstance(value)) {
+	if (IS_WRAPPED(value, SpatialReference)) {
 		
 		SpatialReference *srs_obj = ObjectWrap::Unwrap<SpatialReference>(value->ToObject());
 		OGRSpatialReference *srs = srs_obj->get();

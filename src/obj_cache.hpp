@@ -11,6 +11,13 @@
 
 #include <map>
 
+template <typename K>
+struct ObjectCacheItem {
+	v8::Persistent<v8::Object> handle;
+	K key;
+	K alias;
+};
+
 // a class for maintaining a map of native pointers and persistent JS handles
 // objects are removed from cache and their destructor is called when they go out of scope
 
@@ -19,10 +26,7 @@ class ObjectCache {
 public:
 	//map a native pointer to a handle to the V8 obj that wraps it
 	void add(K key, v8::Handle<v8::Object> obj);
-
-	//add an alias for a native pointer
-	//- useful for mapping a clone and an original to the same V8 obj
-	void addAlias(K key, K alias);
+	void add(K key, K alias, v8::Handle<v8::Object> obj);
 
 	//fetch the V8 obj that wraps the native pointer (or alias)
 	//call has() before calling to get() to ensure handle exists
@@ -32,21 +36,20 @@ public:
 	bool has(K key);
 	void erase(K key);
 
-	//check if native pointer has been added as an alias
-	bool hasAlias(K alias);
-
 	ObjectCache();
 	~ObjectCache();
 
 private:
+	ObjectCacheItem<K> getItem(K key);
+	void erase(ObjectCacheItem<K> key);
 	static void WeakCallback(v8::Persistent<v8::Value> object, void *parameter);
-	std::map<K, v8::Persistent<v8::Object> > cache;
+	std::map<K, ObjectCacheItem<K> > cache;
 	std::map<K, K> aliases;
 };
 
 template <typename K>
 struct CallbackParameters {
-	K key;
+	ObjectCacheItem<K> item;
 	ObjectCache<K> *cache;
 };
 
@@ -62,54 +65,73 @@ ObjectCache<K>::~ObjectCache()
 }
 
 template <typename K>
-void ObjectCache<K>::add(K key, v8::Handle<v8::Object> obj)
+void ObjectCache<K>::add(K key, K alias, v8::Handle<v8::Object> obj)
 {
-	//create persistent handle
-	v8::Persistent<v8::Object> ptr = v8::Persistent<v8::Object>::New(obj);
+	ObjectCacheItem<K> item;
+	item.key    = key;
+	item.alias  = alias;
+	item.handle = v8::Persistent<v8::Object>::New(obj);
 
-	CallbackParameters<K>* params = (CallbackParameters<K>*) malloc(sizeof(CallbackParameters<K>)) ;
-	params->key = key;
+	CallbackParameters<K> *params = (CallbackParameters<K>*) malloc(sizeof(CallbackParameters<K>)) ;
+	params->item  = item;
 	params->cache = this;
 
-	ptr.MakeWeak(params, ObjectCache::WeakCallback);
+	item.handle.MakeWeak(params, ObjectCache::WeakCallback);
 
 	//add it to the map
-	cache[key] = ptr;
+	cache[key] = item;
+	if(alias) {
+		aliases[alias] = key;
+	}
 }
 
+
 template <typename K>
-void ObjectCache<K>::addAlias(K key, K alias)
+void ObjectCache<K>::add(K key, v8::Handle<v8::Object> obj)
 {
-	aliases[alias] = key;
+	add(key, NULL, obj);
 }
 
 template <typename K>
 bool ObjectCache<K>::has(K key)
 {
-	return cache.count(key) > 0 || hasAlias(key);
-}
-
-template <typename K>
-bool ObjectCache<K>::hasAlias(K alias)
-{
-	return aliases.count(alias) > 0;
+	return cache.count(key) > 0 || aliases.count(key) > 0;
 }
 
 template <typename K>
 v8::Handle<v8::Object> ObjectCache<K>::get(K key)
 {
+	return getItem(key).handle;
+}
+
+template <typename K>
+ObjectCacheItem<K> ObjectCache<K>::getItem(K key)
+{
 	//return handle to existing object if already wrapped
 	//check by calling has() first
-	if (hasAlias(key)) {
+	if (aliases.count(key) > 0) {
 		key = aliases[key];
 	}
 	return cache[key];
 }
 
+
 template <typename K>
 void ObjectCache<K>::erase(K key)
 {
-	cache.erase(key);
+	if(has(key)){
+		erase(getItem(key));
+	}
+}
+
+template <typename K>
+void ObjectCache<K>::erase(ObjectCacheItem<K> item)
+{
+
+	cache.erase(item.key);
+	if(item.alias){
+		aliases.erase(item.alias);
+	}
 }
 
 template <typename K>
@@ -119,7 +141,7 @@ void ObjectCache<K>::WeakCallback(v8::Persistent<v8::Value> object, void *parame
 	CallbackParameters<K> *params = (CallbackParameters<K>*) parameter;
 
 	//remove it from the map
-	params->cache->erase(params->key);
+	params->cache->erase(params->item);
 
 	//clear the reference to it
 	object.Dispose();

@@ -212,15 +212,13 @@ Handle<Value> LayerFields::add(const Arguments& args)
 	bool approx = true;
 	NODE_ARG_BOOL_OPT(1, "approx", approx);
 
-	Local<Object> obj = args[0]->ToObject();
-
 	if (args[0]->IsArray()) {
 		Handle<Array> array = Handle<Array>::Cast(args[0]);
 		int n = array->Length();
 		for (int i = 0; i < n; i++) {
-			Local<Object> element = array->Get(i)->ToObject();
-			if (FieldDefn::constructor->HasInstance(element)) {
-				field_def = ObjectWrap::Unwrap<FieldDefn>(element);
+			Handle<Value> element = array->Get(i);
+			if (IS_WRAPPED(element, FieldDefn)) {
+				field_def = ObjectWrap::Unwrap<FieldDefn>(element->ToObject());
 				err = layer->get()->CreateField(field_def->get(), approx);
 				if (err) {
 					return NODE_THROW_OGRERR(err);
@@ -229,8 +227,8 @@ Handle<Value> LayerFields::add(const Arguments& args)
 				return NODE_THROW("All array elements must be FieldDefn objects");
 			}
 		}
-	} else if (FieldDefn::constructor->HasInstance(obj)) {
-		field_def = ObjectWrap::Unwrap<FieldDefn>(obj);
+	} else if (IS_WRAPPED(args[0], FieldDefn)) {
+		field_def = ObjectWrap::Unwrap<FieldDefn>(args[0]->ToObject());
 		err = layer->get()->CreateField(field_def->get(), approx);
 		if (err) {
 			return NODE_THROW_OGRERR(err);

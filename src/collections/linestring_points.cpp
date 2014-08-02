@@ -148,12 +148,12 @@ Handle<Value> LineStringPoints::set(const Arguments& args)
 		if(!args[1]->IsObject()) {
 			return NODE_THROW("Point or object expected for second argument");
 		}
-		Handle<Object> obj = args[1]->ToObject();
-		if(Point::constructor->HasInstance(obj)){
+		if(IS_WRAPPED(args[1], Point)){
 			//set from Point object
-			Point* pt = ObjectWrap::Unwrap<Point>(obj);
+			Point* pt = ObjectWrap::Unwrap<Point>(args[1]->ToObject());
 			geom->get()->setPoint(i, pt->get());
 		} else {
+			Handle<Object> obj = args[1]->ToObject();
 			//set from object {x: 0, y: 5}
 			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
@@ -205,12 +205,11 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 		return NODE_THROW("Point must be given");
 	} else if(n == 1) {
 		if(!args[0]->IsObject()) {
-			return NODE_THROW("Point or object expected for second argument");
+			return NODE_THROW("Point, object, or array of points expected");
 		}
-		Handle<Object> obj = args[0]->ToObject();
-		if(Point::constructor->HasInstance(obj)){
+		if(IS_WRAPPED(args[0], Point)){
 			//set from Point object
-			Point* pt = ObjectWrap::Unwrap<Point>(obj);
+			Point* pt = ObjectWrap::Unwrap<Point>(args[0]->ToObject());
 			geom->get()->addPoint(pt->get());
 		} else if (args[0]->IsArray()) {
 			//set from array of points
@@ -222,7 +221,7 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 					return NODE_THROW("All points must be Point objects or objects");
 				}
 				Handle<Object> element_obj = element->ToObject();
-				if(Point::constructor->HasInstance(element_obj)){
+				if(IS_WRAPPED(element_obj, Point)){
 					//set from Point object
 					Point* pt = ObjectWrap::Unwrap<Point>(element_obj);
 					geom->get()->addPoint(pt->get());
@@ -246,6 +245,7 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 			}
 		} else {
 			//set from object {x: 0, y: 5}
+			Handle<Object> obj = args[0]->ToObject();
 			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
