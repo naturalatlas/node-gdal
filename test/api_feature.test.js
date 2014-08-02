@@ -4,6 +4,8 @@ var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
 describe('gdal.Feature', function() {
+	afterEach(gc);
+
 	var ds, lyr, defn, fields, feature;
 	before(function(){
 		ds  = gdal.open('', 'w', 'Memory');
@@ -17,7 +19,7 @@ describe('gdal.Feature', function() {
 		defn.fields.add(fields);
 		lyr.fields.add(fields);
 	});
-	
+
 	describe('constructor', function() {
 		describe('w/Layer', function() {
 			it('should create instance', function(){
@@ -312,7 +314,7 @@ describe('gdal.Feature', function() {
 				});
 			});
 		});
-		
+
 		describe('clone()', function(){
 			it('should return new Feature', function(){
 				var feature = new gdal.Feature(defn);
@@ -330,7 +332,7 @@ describe('gdal.Feature', function() {
 				assert.equal(pt.x, 5);
 				assert.equal(pt.y, 10);
 			});
-			/* 
+			/*
 			// http://gdal.org/1.11/ogr/classOGRFeature.html#af1181ade837a52129ea25b46dd50cf30
 			// "checking for geometry type not yet implemented"
 			it('should throw error if wrong geometry type', function(){

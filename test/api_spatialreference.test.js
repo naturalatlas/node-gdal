@@ -8,6 +8,8 @@ var assert = require('chai').assert;
 // http://spatialreference.org/ref/
 
 describe('gdal.SpatialReference', function() {
+	afterEach(gc);
+
 	it('should be exposed', function() {
 		assert.ok(gdal.SpatialReference);
 	});

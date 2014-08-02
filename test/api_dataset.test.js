@@ -16,6 +16,8 @@ var NAD83_WKT = 'PROJCS["NAD_1983_UTM_Zone_10N",' +
 			    'UNIT["Meter",1.0]]';
 
 describe('gdal.Dataset', function() {
+	afterEach(gc);
+
 	var ds;
 	before(function() {
 		ds = gdal.open(__dirname + "/data/dem_azimuth50_pa.img");
