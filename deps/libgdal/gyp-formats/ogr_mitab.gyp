@@ -35,7 +35,7 @@
 				"../gdal/ogr/ogrsf_frmts/mitab/mitab_utils.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/mitab"
+				"../gdal/ogr/ogrsf_frmts/mitab"
 			]
 		}
 	]

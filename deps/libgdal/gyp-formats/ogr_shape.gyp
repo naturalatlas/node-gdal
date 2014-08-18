@@ -18,7 +18,7 @@
 				"../gdal/ogr/ogrsf_frmts/shape/shptree.c"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/shape"
+				"../gdal/ogr/ogrsf_frmts/shape"
 			]
 		}
 	]

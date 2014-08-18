@@ -16,7 +16,7 @@
 				"../gdal/ogr/ogrsf_frmts/kml/ogrkmllayer.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/kml"
+				"../gdal/ogr/ogrsf_frmts/kml"
 			]
 		}
 	]
