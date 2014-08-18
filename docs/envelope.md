@@ -13,6 +13,7 @@
 - `intersect(Envelope envelope)` : void
 - `merge(Envelope envelope)` : void
 - `merge(Number x, Number y)` : void
+- `toPolygon()` : [Polygon](polygon.md)
 
 #### Properties
 

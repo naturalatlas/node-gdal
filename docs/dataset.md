@@ -10,7 +10,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getGCPProjection()` : string
 - `getGCPs()` : object[]
 - `setGCPs()` : void *(throws)*
-- `executeSQL(string statement, Geometry spatial_filter = null, string dialect = null) : [Layer](layer.md)
+- `executeSQL(string statement, Geometry spatial_filter = null, string dialect = null)` : [Layer](layer.md)
 - `getFileList()` : string[]
 	+ *In GDAL versions < 2.0 it will return an empty array for vector datasets*
 - `flush()` : void
@@ -42,5 +42,5 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `layers.create(string name, SpatialReference srs = null, OGRwkbGeometryType type = wkbUnknown, string[] options = null)` : [Layer](layer.md) *(throws)*
 - `layers.create(string name, SpatialReference srs = null, Function geometry_constructor, string[] options = null)` : [Layer](layer.md) *(throws)*
 - `layers.copy (string src_lyr_name, string dst_lyr_name, string[] options = null)` : [Layer](layer.md) *(throws)*
-- `layers.remove (int layer_id)` : void *(throws)*
+- `layers.remove(int layer_id)` : void *(throws)*
 - `layers.forEach(function iterator)` : void

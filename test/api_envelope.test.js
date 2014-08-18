@@ -106,5 +106,17 @@ describe('gdal.Envelope', function() {
 				assert.equal(envelopeA.maxY, 1);
 			});
 		});
+		describe('toPolygon()', function() {
+			it('should return Polygon', function() {
+				var envelope = new gdal.Envelope({minX: -1, maxX: 1, minY: -2, maxY: 2});
+				var polygon  = envelope.toPolygon();
+				envelope = polygon.getEnvelope();
+				assert.instanceOf(polygon, gdal.Polygon);
+				assert.equal(envelope.minX, -1);
+				assert.equal(envelope.maxX, 1);
+				assert.equal(envelope.minY, -2);
+				assert.equal(envelope.maxY, 2);
+			});
+		});
 	});
 });
