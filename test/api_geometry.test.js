@@ -3,6 +3,8 @@ var assert = require('chai').assert;
 var WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
 
 describe('gdal.Geometry', function() {
+	afterEach(gc);
+
 	describe('toJSON()', function() {
 		it('should return valid result', function() {
 			var point2d = new gdal.Point(1,2);

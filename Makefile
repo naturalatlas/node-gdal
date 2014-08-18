@@ -31,7 +31,7 @@ rebuild:
 	@make
 
 test: clean-test build
-	./node_modules/.bin/mocha test -R list
+	./node_modules/.bin/mocha test -R list -gc
 	@make clean-test
 
 test-concurrent: clean-test

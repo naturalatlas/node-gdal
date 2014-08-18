@@ -67,6 +67,7 @@ Handle<Value> FeatureDefn::New(const Arguments& args)
 			return NODE_THROW("FeatureDefn constructor doesn't take any arguments");
 		}
 		f = new FeatureDefn(new OGRFeatureDefn());
+		f->this_->Reference();
 	}
 
 	Handle<Value> fields = FeatureDefnFields::New(args.This()); 
@@ -104,6 +105,7 @@ Handle<Value> FeatureDefn::New(OGRFeatureDefn *def, bool owned)
 
 	FeatureDefn *wrapped = new FeatureDefn(def);
 	wrapped->owned_ = true;
+	def->Reference();
 
 	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
 	v8::Handle<v8::Object> obj = FeatureDefn::constructor->GetFunction()->NewInstance(1, &ext);

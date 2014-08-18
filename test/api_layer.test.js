@@ -4,6 +4,8 @@ var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
 describe('gdal.Layer', function() {
+	afterEach(gc);
+
 	describe('instance', function() {
 		var prepare_dataset_layer_test = function() {
 			var ds, layer, mode, options, callback, err, file, dir;

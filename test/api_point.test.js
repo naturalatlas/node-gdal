@@ -2,6 +2,8 @@ var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 
 describe('gdal.Point', function() {
+	afterEach(gc);
+
 	var point2d;
 	var point3d;
 	before(function() {

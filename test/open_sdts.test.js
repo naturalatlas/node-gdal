@@ -5,6 +5,8 @@ var path = require('path');
 var assert = require('chai').assert;
 
 describe('Open', function() {
+	afterEach(gc);
+
 	describe.skip('SDTS (DDF)', function() {
 		var filename, ds;
 

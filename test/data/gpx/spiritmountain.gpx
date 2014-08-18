@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" creator="eTrex 20" version="1.1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">
+	<metadata>
+		<link href="http://www.garmin.com">
+			<text>Garmin International</text>
+		</link>
+		<time>2014-05-27T17:25:13Z</time>
+	</metadata>
+	<wpt lat="44.503662" lon="-109.138158">
+		<ele>1975.311646</ele>
+		<time>2014-05-27T17:25:13Z</time>
+		<name>005</name>
+		<cmt>PARK</cmt>
+		<sym>Flag, Blue</sym>
+	</wpt>
+	<wpt lat="44.504226" lon="-109.143739">
+		<ele>1938.593384</ele>
+		<time>2014-05-27T17:38:40Z</time>
+		<name>006</name>
+		<cmt>CAVE</cmt>
+		<sym>Flag, Blue</sym>
+	</wpt>
+</gpx>
