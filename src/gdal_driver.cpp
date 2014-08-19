@@ -155,6 +155,7 @@ Handle<Value> Driver::create(const Arguments& args)
 	std::string filename;
 	unsigned int i, x_size = 0, y_size = 0, n_bands = 1;
 	GDALDataType type = GDT_Byte;
+	std::string type_name = "";
 	Handle<Array> creation_options = Array::New(0);
 
 
@@ -166,8 +167,11 @@ Handle<Value> Driver::create(const Arguments& args)
 		NODE_ARG_INT(1, "x size", x_size);
 		NODE_ARG_INT(2, "y size", y_size);
 		NODE_ARG_INT_OPT(3, "number of bands", n_bands);
-		NODE_ARG_ENUM_OPT(4, "data type", GDALDataType, type);
-		NODE_ARG_ARRAY_OPT(5, "creation options", creation_options);
+		NODE_ARG_OPT_STR(4, "data type", type_name);
+		NODE_ARG_ARRAY_OPT(5, "creation options", creation_options);	
+		if(!type_name.empty()) {
+			type = GDALGetDataTypeByName(type_name.c_str());
+		}
 	}
 
 	char **options = NULL;

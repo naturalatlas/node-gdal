@@ -17,7 +17,7 @@ void RasterBandOverviews::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getBySampleCount", get);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "getBySampleCount", getBySampleCount);
 
 	target->Set(String::NewSymbol("RasterBandOverviews"), constructor->GetFunction());
 }

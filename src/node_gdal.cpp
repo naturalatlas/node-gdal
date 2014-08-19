@@ -46,6 +46,7 @@
 #include "collections/polygon_rings.hpp"
 #include "collections/linestring_points.hpp"
 #include "collections/rasterband_overviews.hpp"
+#include "collections/rasterband_pixels.hpp"
 #include "collections/gdal_drivers.hpp"
 
 // std
@@ -110,6 +111,7 @@ namespace node_gdal {
 			PolygonRings::Initialize(target);
 			LineStringPoints::Initialize(target);
 			RasterBandOverviews::Initialize(target);
+			RasterBandPixels::Initialize(target);
 
 			//calls GDALRegisterAll()
 			GDALDrivers::Initialize(target);

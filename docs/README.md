@@ -3,7 +3,7 @@
 #### Methods
 
 - `open(string name, string mode = 'r', string[] drivers = null, string[] options = null)` : [Dataset](dataset.md)
-- `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, int datatype = 0, string[] options = null)` : [Dataset](dataset.md) 
+- `open(string name, string mode = 'r', string[] drivers = null, int x_size = 0, int y_size = 0, int n_bands = 0, GDALDatatype datatype = gdal.GDT_Byte, string[] options = null)` : [Dataset](dataset.md) 
 - `quiet()` : void
 - `verbose()` : void
 - `decToDMS(number angle, string axis, int precision = 2)` : string

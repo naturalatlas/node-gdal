@@ -5,6 +5,7 @@
 #include "gdal_rasterband.hpp"
 #include "gdal_dataset.hpp"
 #include "collections/rasterband_overviews.hpp"
+#include "collections/rasterband_pixels.hpp"
 
 #include <limits>
 #include <cpl_port.h>
@@ -46,6 +47,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	ATTR(constructor, "id", idGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "size", sizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "overviews", overviewsGetter, READ_ONLY_SETTER);
+	ATTR(constructor, "pixels", pixelsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "blockSize", blockSizeGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "minimum", minimumGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "maximum", maximumGetter, READ_ONLY_SETTER);
@@ -122,6 +124,8 @@ Handle<Value> RasterBand::New(const Arguments& args)
 
 		Handle<Value> overviews = RasterBandOverviews::New(args.This()); 
 		args.This()->SetHiddenValue(String::NewSymbol("overviews_"), overviews); 
+		Handle<Value> pixels = RasterBandPixels::New(args.This()); 
+		args.This()->SetHiddenValue(String::NewSymbol("pixels_"), pixels); 
 
 		return args.This();
 	} else {
@@ -312,6 +316,12 @@ Handle<Value> RasterBand::overviewsGetter(Local<String> property, const Accessor
 {
 	HandleScope scope;
 	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("overviews_")));
+}
+
+Handle<Value> RasterBand::pixelsGetter(Local<String> property, const AccessorInfo &info)
+{
+	HandleScope scope;
+	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("pixels_")));
 }
 
 Handle<Value> RasterBand::idGetter(Local<String> property, const AccessorInfo &info)

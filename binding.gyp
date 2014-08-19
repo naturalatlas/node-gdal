@@ -12,6 +12,7 @@
 			"product_extension": "node",
 			"sources": [
 				"src/fast_buffer.cpp",
+				"src/typed_array.cpp",
 				"src/node_gdal.cpp",
 				"src/gdal_common.cpp",
 				"src/gdal_dataset.cpp",
@@ -43,6 +44,7 @@
 				"src/collections/polygon_rings.cpp",
 				"src/collections/linestring_points.cpp",
 				"src/collections/rasterband_overviews.cpp",
+				"src/collections/rasterband_pixels.cpp",
 				"src/collections/gdal_drivers.cpp"
 			],
 			"defines": [

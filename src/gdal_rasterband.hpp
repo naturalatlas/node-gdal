@@ -47,6 +47,7 @@ public:
 	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> idGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> overviewsGetter(Local<String> property, const AccessorInfo &info);
+	static Handle<Value> pixelsGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> blockSizeGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> minimumGetter(Local<String> property, const AccessorInfo &info);
 	static Handle<Value> maximumGetter(Local<String> property, const AccessorInfo &info);

@@ -65,3 +65,25 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `overviews.get(int id)` : [RasterBand](rasterband.md)
 - `overviews.getBySampleCount(int min_samples)` : [RasterBand](rasterband.md)
 - `overviews.count()` : int
+
+#### Pixels
+
+- `pixels.get(x, y)` : Number
+- `pixels.set(x, y, value)` : void
+- `pixels.read(x, y, width, height, [buffer_width], [buffer_height], [type])` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) 
+     + `x` : integer
+     + `y` : integer
+     + `width` : integer
+     + `height` : integer
+     + `buffer_width` : integer
+     + `buffer_height` : integer
+     + `type` : [GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4)
+- `pixels.write(data, x, y, width, height, [buffer_width], [buffer_height], [type])` : void
+     + `data` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) 
+     + `x` : integer
+     + `y` : integer
+     + `width` : integer
+     + `height` : integer
+     + `buffer_width` : integer
+     + `buffer_height` : integer
+     + `type` : [GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4)
