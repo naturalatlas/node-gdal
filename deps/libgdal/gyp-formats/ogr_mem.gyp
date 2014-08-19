@@ -12,7 +12,7 @@
 				"../gdal/ogr/ogrsf_frmts/mem/ogrmemlayer.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/mem"
+				"../gdal/ogr/ogrsf_frmts/mem"
 			]
 		}
 	]

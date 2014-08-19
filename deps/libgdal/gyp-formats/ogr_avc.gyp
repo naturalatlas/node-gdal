@@ -26,8 +26,13 @@
 				"../gdal/ogr/ogrsf_frmts/avc/ogravclayer.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/avc"
-			]
+				"../gdal/ogr/ogrsf_frmts/avc"
+			],
+			"direct_dependent_settings": {
+				"defines": [
+					"AVCBIN_ENABLED=1"
+				]
+			}
 		}
 	]
 }

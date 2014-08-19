@@ -27,8 +27,8 @@
 				"../gdal/ogr/ogrsf_frmts/geojson/ogrtopojsonreader.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/geojson",
-				"./gdal/ogr/ogrsf_frmts/geojson/libjson"
+				"../gdal/ogr/ogrsf_frmts/geojson",
+				"../gdal/ogr/ogrsf_frmts/geojson/libjson"
 			]
 		}
 	]

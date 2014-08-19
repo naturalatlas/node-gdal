@@ -12,7 +12,7 @@
 				"../gdal/ogr/ogrsf_frmts/gpx/ogrgpxlayer.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/gpx"
+				"../gdal/ogr/ogrsf_frmts/gpx"
 			]
 		}
 	]

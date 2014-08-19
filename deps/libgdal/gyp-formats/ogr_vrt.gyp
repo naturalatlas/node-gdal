@@ -12,7 +12,7 @@
 				"../gdal/ogr/ogrsf_frmts/vrt/ogrvrtlayer.cpp"
 			],
 			"include_dirs": [
-				"./gdal/ogr/ogrsf_frmts/vrt"
+				"../gdal/ogr/ogrsf_frmts/vrt"
 			]
 		}
 	]
