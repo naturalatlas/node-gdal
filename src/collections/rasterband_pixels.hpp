@@ -29,6 +29,8 @@ public:
 	static Handle<Value> set(const Arguments &args);
 	static Handle<Value> read(const Arguments &args);
 	static Handle<Value> write(const Arguments &args);
+	static Handle<Value> readBlock(const Arguments &args);
+	static Handle<Value> writeBlock(const Arguments &args);
 	
 	RasterBandPixels();
 private:
