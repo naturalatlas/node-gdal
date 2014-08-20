@@ -126,16 +126,26 @@ Handle<Value> RasterBandPixels::read(const Arguments& args)
 	}
 
 	int x, y, w, h;
+	int buffer_w, buffer_h;
+	int bytes_per_pixel;
+	int pixel_space, line_space;
+	int size, length, min_size, min_length;
+	void *data;
+	Handle<Value>  array;
+	Handle<Object> passed_array;
+	GDALDataType type;
+
+
 	NODE_ARG_INT(0, "x_offset", x);
 	NODE_ARG_INT(1, "y_offset", y);
 	NODE_ARG_INT(2, "x_size", w);
 	NODE_ARG_INT(3, "y_size", h);
 
 	std::string type_name = "";
-	GDALDataType type = band->get()->GetRasterDataType();
-	
-	int buffer_w = w, buffer_h = h;
 
+	buffer_w = w;
+	buffer_h = h;
+	type     = band->get()->GetRasterDataType();
 	NODE_ARG_INT_OPT(5, "buffer_x_size", buffer_w);
 	NODE_ARG_INT_OPT(6, "buffer_y_size", buffer_h);
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
@@ -143,35 +153,45 @@ Handle<Value> RasterBandPixels::read(const Arguments& args)
 		type = GDALGetDataTypeByName(type_name.c_str());
 	}
 
-	int length = buffer_w * buffer_h;
-	Handle<Value> array;
-
 	if(args.Length() >= 5 && !args[4]->IsUndefined() && !args[4]->IsNull()) {
-		Handle<Object> obj;
-		NODE_ARG_OBJECT(4, "data", obj);
-		type = TypedArray::Identify(obj);
-		if(type == GDT_Unknown) {
-			return NODE_THROW("Invalid array");
-		}
-		if(TypedArray::Length(obj) < length) {
- 			return NODE_THROW("Invalid array length");
- 		}
- 		array = obj;
-	} else {
+		NODE_ARG_OBJECT(4, "data", passed_array);
+		type = TypedArray::Identify(passed_array);
+		if(type == GDT_Unknown) return NODE_THROW("Invalid array");
+	}
+
+	bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
+	pixel_space = bytes_per_pixel;
+	NODE_ARG_INT_OPT(8, "pixel_space", pixel_space);
+	line_space = pixel_space * buffer_w;
+	NODE_ARG_INT_OPT(9, "line_space", line_space);
+
+	if(pixel_space < bytes_per_pixel) {
+		return NODE_THROW("pixel_space must be greater than or equal to size of data_type");
+	}
+	if(line_space < pixel_space * buffer_w) {
+		return NODE_THROW("line_space must be greater than or equal to pixel_space * buffer_w");
+	}
+
+	size       = line_space * buffer_h; //bytes
+	min_size   = size - (pixel_space - bytes_per_pixel); //subtract away padding on last pixel that wont be written
+	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+
+	//create array if no array was passed 
+	if(passed_array.IsEmpty()){
 		array = TypedArray::New(type, length);
 		if(array.IsEmpty() || !array->IsObject()) {
 			return array; //TypedArray::New threw an error
 		}
+		data = TypedArray::Data(array->ToObject());
+	} else {
+		array = passed_array;
+		if(TypedArray::Length(passed_array) < min_length) {
+ 			return NODE_THROW("Invalid array length");
+ 		}
+ 		data = TypedArray::Data(passed_array);
 	}
-
-	int bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
-	int pixel_space = bytes_per_pixel;
-	int line_space  = bytes_per_pixel * buffer_w;
-	NODE_ARG_INT_OPT(7, "pixel_space", pixel_space);
-	NODE_ARG_INT_OPT(8, "line_space", line_space);
-
-	void* data = TypedArray::Data(array->ToObject());
-
+	
 	CPLErr err = band->get()->RasterIO(GF_Read, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) return NODE_THROW_CPLERR(err);
 
@@ -189,34 +209,51 @@ Handle<Value> RasterBandPixels::write(const Arguments& args)
 	}
 
 	int x, y, w, h;
-	NODE_ARG_INT(1, "x_offset", x);
-	NODE_ARG_INT(2, "y_offset", y);
-	NODE_ARG_INT(3, "x_size", w);
-	NODE_ARG_INT(4, "y_size", h);
+	int buffer_w, buffer_h;
+	int bytes_per_pixel;
+	int pixel_space, line_space;
+	int size, min_size, min_length;
+	void *data;
+	Handle<Object> passed_array;
+	GDALDataType type;
 
-	Handle<Object> obj;
-	NODE_ARG_OBJECT(5, "data", obj);
+	NODE_ARG_INT(0, "x_offset", x);
+	NODE_ARG_INT(1, "y_offset", y);
+	NODE_ARG_INT(2, "x_size", w);
+	NODE_ARG_INT(3, "y_size", h);
+	NODE_ARG_OBJECT(4, "data", passed_array);
 
-	int buffer_w = w, buffer_h = h;
-	NODE_ARG_INT_OPT(6, "buffer_x_size", buffer_w);
-	NODE_ARG_INT_OPT(7, "buffer_y_size", buffer_h);
+	buffer_w = w;
+	buffer_h = h;
+	NODE_ARG_INT_OPT(5, "buffer_x_size", buffer_w);
+	NODE_ARG_INT_OPT(6, "buffer_y_size", buffer_h);
 
-	GDALDataType type = TypedArray::Identify(obj);
-	int length        = TypedArray::Length(obj);
+	type = TypedArray::Identify(passed_array);
 	if(type == GDT_Unknown) {
 		return NODE_THROW("Invalid array");
 	}
-	if(length != buffer_w*buffer_h) {
-		return NODE_THROW("Mismatch between array length and buffer_x_size, buffer_y_size arguments");
+
+	bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
+	pixel_space = bytes_per_pixel;
+	NODE_ARG_INT_OPT(7, "pixel_space", pixel_space);
+	line_space = pixel_space * buffer_w;
+	NODE_ARG_INT_OPT(8, "line_space", line_space);
+
+	size       = line_space * buffer_h; //bytes
+	min_size   = size - (pixel_space - bytes_per_pixel); //subtract away padding on last pixel that wont be read
+	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+
+	if(pixel_space < bytes_per_pixel) {
+		return NODE_THROW("pixel_space must be greater than or equal to size of data_type");
+	}
+	if(line_space < pixel_space * buffer_w) {
+		return NODE_THROW("line_space must be greater than or equal to pixel_space * buffer_w");
+	}
+	if(TypedArray::Length(passed_array) < min_length) {
+		return NODE_THROW("Invalid array length");
 	}
 
-	int bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
-	int pixel_space = bytes_per_pixel;
-	int line_space  = bytes_per_pixel * buffer_w;
-	NODE_ARG_INT_OPT(8, "pixel_space", pixel_space);
-	NODE_ARG_INT_OPT(9, "line_space", line_space);
-
-	void* data = TypedArray::Data(obj);
+	data = TypedArray::Data(passed_array);
 
 	CPLErr err = band->get()->RasterIO(GF_Write, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) return NODE_THROW_CPLERR(err);
