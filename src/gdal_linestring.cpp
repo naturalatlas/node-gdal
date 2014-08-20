@@ -37,7 +37,9 @@ LineString::LineString(OGRLineString *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created LineString [%p]", geom);
+}
 
 LineString::LineString()
 	: ObjectWrap(),
@@ -50,11 +52,15 @@ LineString::LineString()
 
 LineString::~LineString()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing LineString [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed LineString [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> LineString::New(const Arguments& args)

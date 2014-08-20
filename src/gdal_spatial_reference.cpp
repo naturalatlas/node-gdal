@@ -63,6 +63,7 @@ SpatialReference::SpatialReference(OGRSpatialReference *srs)
 	  this_(srs),
 	  owned_(false)
 {
+	LOG("Created SpatialReference [%p]", srs);
 }
 
 SpatialReference::SpatialReference()
@@ -80,11 +81,13 @@ SpatialReference::~SpatialReference()
 void SpatialReference::dispose()
 {
 	if (this_) {
-		//cache.erase(this_); //this will happen automatically with the weak callback
+		LOG("Disposing SpatialReference [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		cache.erase(this_);
 		if (owned_) {
 			//Decrements the reference count by one, and destroy if zero.
 			this_->Release();
 		}
+		LOG("Disposed SpatialReference [%p]", this_);
 		this_ = NULL;
 	}
 }

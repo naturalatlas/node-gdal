@@ -11,6 +11,8 @@
 
 #include <map>
 
+#include "gdal_common.hpp"
+
 template <typename K>
 struct ObjectCacheItem {
 	v8::Persistent<v8::Object> handle;
@@ -128,8 +130,10 @@ template <typename K>
 void ObjectCache<K>::erase(ObjectCacheItem<K> item)
 {
 
+	LOG("ObjectCache erasing [%p]", item.key);
 	cache.erase(item.key);
 	if(item.alias){
+		LOG("ObjectCache erasing alias [%p]", item.alias);
 		aliases.erase(item.alias);
 	}
 }
@@ -141,7 +145,8 @@ void ObjectCache<K>::WeakCallback(v8::Persistent<v8::Value> object, void *parame
 	CallbackParameters<K> *params = (CallbackParameters<K>*) parameter;
 
 	//remove it from the map
-	params->cache->erase(params->item);
+	LOG("ObjectCache Weak Callback [%p]", params->item.key);
+	//params->cache->erase(params->item);
 
 	//clear the reference to it
 	object.Dispose();

@@ -33,7 +33,9 @@ GeometryCollection::GeometryCollection(OGRGeometryCollection *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created GeometryCollection [%p]", geom);
+}
 
 GeometryCollection::GeometryCollection()
 	: ObjectWrap(),
@@ -46,11 +48,15 @@ GeometryCollection::GeometryCollection()
 
 GeometryCollection::~GeometryCollection()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing GeometryCollection [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed GeometryCollection [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> GeometryCollection::New(const Arguments& args)

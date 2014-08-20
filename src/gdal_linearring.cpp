@@ -31,7 +31,9 @@ LinearRing::LinearRing(OGRLinearRing *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created LinearRing [%p]", geom);
+}
 
 LinearRing::LinearRing()
 	: ObjectWrap(),
@@ -44,11 +46,15 @@ LinearRing::LinearRing()
 
 LinearRing::~LinearRing()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing LinearRing [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed LinearRing [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> LinearRing::New(const Arguments& args)

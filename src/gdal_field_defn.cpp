@@ -25,11 +25,13 @@ void FieldDefn::Initialize(Handle<Object> target)
 	target->Set(String::NewSymbol("FieldDefn"), constructor->GetFunction());
 }
 
-FieldDefn::FieldDefn(OGRFieldDefn *layer)
+FieldDefn::FieldDefn(OGRFieldDefn *def)
 	: ObjectWrap(),
-	  this_(layer),
+	  this_(def),
 	  owned_(false)
-{}
+{
+	LOG("Created FieldDefn [%p]", def);
+}
 
 FieldDefn::FieldDefn()
 	: ObjectWrap(),
@@ -40,10 +42,12 @@ FieldDefn::FieldDefn()
 
 FieldDefn::~FieldDefn()
 {
-	if (owned_ && this_) {
-		delete this_;
+	if(this_){
+		LOG("Disposing FieldDefn [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if(owned_) delete this_;
+		LOG("Disposed FieldDefn [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> FieldDefn::New(const Arguments& args)
@@ -172,7 +176,8 @@ void FieldDefn::nameSetter(Local<String> property, Local<Value> value, const Acc
 		NODE_THROW("Name must be string");
 		return;
 	}
-	def->this_->SetName(TOSTR(value));
+	std::string name = TOSTR(value);
+	def->this_->SetName(name.c_str());
 }
 
 void FieldDefn::typeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)

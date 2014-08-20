@@ -99,7 +99,8 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 	OGRLayer *lyr;
 	
 	if(args[0]->IsString()) {
-		lyr = raw->GetLayerByName(TOSTR(args[0]));
+		std::string layer_name = TOSTR(args[0]);
+		lyr = raw->GetLayerByName(layer_name.c_str());
 	} else if(args[0]->IsNumber()) {
 		lyr = raw->GetLayer(args[0]->IntegerValue());
 	} else {
@@ -140,11 +141,14 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 	NODE_ARG_ARRAY_OPT(3, "layer creation options", layer_options);
 
 	char **options = NULL;
+	std::string *options_str = NULL;
 
 	if (layer_options->Length() > 0) {
 		options = new char* [layer_options->Length()];
+		options_str = new std::string [layer_options->Length()];
 		for (unsigned int i = 0; i < layer_options->Length(); ++i) {
-			options[i] = TOSTR(layer_options->Get(i));
+			options_str[i] = TOSTR(layer_options->Get(i));
+			options[i] = (char*) options_str[i].c_str();
 		}
 	}
 
@@ -156,9 +160,8 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 					  geom_type,
 					  options);
 
-	if (options) {
-		delete [] options;
-	}
+	if(options)	    delete [] options;
+	if(options_str)	delete [] options_str;
 
 	if (layer) {
 		return scope.Close(Layer::New(layer, ds, false));

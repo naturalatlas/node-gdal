@@ -32,7 +32,9 @@ MultiPoint::MultiPoint(OGRMultiPoint *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created MultiPoint [%p]", geom);
+}
 
 MultiPoint::MultiPoint()
 	: ObjectWrap(),
@@ -45,11 +47,15 @@ MultiPoint::MultiPoint()
 
 MultiPoint::~MultiPoint()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing MultiPoint [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed MultiPoint [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> MultiPoint::New(const Arguments& args)

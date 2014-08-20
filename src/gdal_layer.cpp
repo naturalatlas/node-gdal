@@ -51,7 +51,9 @@ Layer::Layer(OGRLayer *layer)
 	  this_(layer),
 	  parent_ds(0),
 	  is_result_set(false)
-{}
+{
+	LOG("Created layer [%p]", layer);
+}
 
 Layer::Layer()
 	: ObjectWrap(),
@@ -69,20 +71,16 @@ Layer::~Layer()
 void Layer::dispose()
 {
 	if (this_) {
+
+		LOG("Disposing layer [%p]", this_);
+
 		cache.erase(this_);
-
 		if (is_result_set && parent_ds && this_) {
-
-#ifdef VERBOSE_GC
-			printf("Releasing result set [%p] from datasource [%p]\n", this_, parent_ds);
-#endif
-
+			LOG("Releasing result set [%p] from datasource [%p]", this_, parent_ds);
 			parent_ds->ReleaseResultSet(this_);
 		}
 
-#ifdef VERBOSE_GC
-		printf("Disposing layer [%p]\n", this_);
-#endif
+		LOG("Disposed layer [%p]", this_);
 		this_ = NULL;
 	}
 };

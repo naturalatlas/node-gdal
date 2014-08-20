@@ -66,7 +66,9 @@ void RasterBand::Initialize(Handle<Object> target)
 
 RasterBand::RasterBand(GDALRasterBand *band)
 	: ObjectWrap(), this_(band)
-{}
+{
+	LOG("Created band [%p] (dataset = %p)", band, band->GetDataset());
+}
 
 RasterBand::RasterBand()
 	: ObjectWrap(), this_(0)
@@ -84,6 +86,10 @@ void RasterBand::dispose()
 	RasterBand *band_wrapped;
 
 	if (this_) {
+		LOG("Disposing band [%p]", this_);
+
+		cache.erase(this_);
+
 		//dispose of all wrapped overview bands
 		int n = this_->GetOverviewCount();
 		for(int i = 0; i < n; i++) {
@@ -100,9 +106,9 @@ void RasterBand::dispose()
 			band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
 			band_wrapped->dispose();
 		}
-#ifdef VERBOSE_GC
-		printf("Disposing band [%p]\n", this_);
-#endif
+
+		LOG("Disposed band [%p]", this_);
+
 		this_ = NULL;
 	}
 }
@@ -533,8 +539,8 @@ void RasterBand::unitTypeSetter(Local<String> property, Local<Value> value, cons
 		NODE_THROW("Unit type must be a string");
 		return;
 	}
-	const char *input = TOSTR(value);
-	CPLErr err = band->this_->SetUnitType(input);
+	std::string input = TOSTR(value);
+	CPLErr err = band->this_->SetUnitType(input.c_str());
 	if (err) {
 		NODE_THROW_CPLERR(err);
 	}
@@ -654,7 +660,8 @@ void RasterBand::colorInterpretationSetter(Local<String> property, Local<Value> 
 	GDALColorInterp ci = GCI_Undefined;
 	
 	if (value->IsString()) {
-		ci = GDALGetColorInterpretationByName(TOSTR(value));
+		std::string name = TOSTR(value);
+		ci = GDALGetColorInterpretationByName(name.c_str());
 	} else if(!value->IsNull() && !value->IsUndefined()) {
 		NODE_THROW("color interpretation must be a string or undefined");
 		return;

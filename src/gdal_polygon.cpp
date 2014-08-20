@@ -32,7 +32,9 @@ Polygon::Polygon(OGRPolygon *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created Polygon [%p]", geom);
+}
 
 Polygon::Polygon()
 	: ObjectWrap(),
@@ -45,11 +47,15 @@ Polygon::Polygon()
 
 Polygon::~Polygon()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing Polygon [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed Polygon [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> Polygon::New(const Arguments& args)

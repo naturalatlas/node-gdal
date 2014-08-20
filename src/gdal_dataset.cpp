@@ -51,7 +51,9 @@ Dataset::Dataset(GDALDataset *ds)
 	  this_dataset(ds),
 	  this_datasource(0),
 	  result_sets()
-{}
+{
+	LOG("Created Dataset [%p]", ds);
+}
 
 Dataset::Dataset(OGRDataSource *ds)
 	: ObjectWrap(),
@@ -59,7 +61,9 @@ Dataset::Dataset(OGRDataSource *ds)
 	  this_dataset(0),
 	  this_datasource(ds),
 	  result_sets()
-{}
+{
+	LOG("Created Datasource [%p]", ds);
+}
 
 Dataset::~Dataset()
 {
@@ -74,6 +78,8 @@ void Dataset::dispose()
 	Layer *lyr_wrapped;
 	
 	if (this_dataset) {
+		LOG("Disposing Dataset [%p]", this_dataset);
+
 		dataset_cache.erase(this_dataset);
 
 		//dispose of all wrapped child bands
@@ -85,13 +91,16 @@ void Dataset::dispose()
 				band_wrapped->dispose();
 			}
 		}
-#ifdef VERBOSE_GC
-		printf("Disposing dataset [%p]\n", this_dataset);
-#endif
+
 		GDALClose(this_dataset);
+
+		LOG("Disposed Dataset [%p]", this_dataset);
+
 		this_dataset = NULL;
 	} 
 	if (this_datasource) {
+		LOG("Disposing Datasource [%p]", this_datasource);
+		
 		datasource_cache.erase(this_datasource);
 
 		//dispose of all wrapped child layers
@@ -115,10 +124,10 @@ void Dataset::dispose()
 		}
 		result_sets.clear();
 
-#ifdef VERBOSE_GC
-		printf("Disposing datasource [%p]\n", this_datasource);
-#endif
 		OGRDataSource::DestroyDataSource(this_datasource);
+
+		LOG("Disposed Datasource [%p]", this_datasource);
+
 		this_datasource = NULL;
 	}
 }

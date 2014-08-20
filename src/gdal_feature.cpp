@@ -45,7 +45,9 @@ Feature::Feature(OGRFeature *feature)
 	: ObjectWrap(),
 	  this_(feature),
 	  owned_(true)
-{}
+{
+	LOG("Created Feature[%p]", feature);
+}
 
 Feature::Feature()
 	: ObjectWrap(),
@@ -60,11 +62,13 @@ Feature::~Feature()
 }
 
 void Feature::dispose()
-{
-	if (owned_ && this_) {
-		OGRFeature::DestroyFeature(this_);
+{	
+	if(this_) {
+		LOG("Disposing Feature [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if(owned_) OGRFeature::DestroyFeature(this_);
+		LOG("Disposed Feature [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 
