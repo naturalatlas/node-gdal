@@ -33,7 +33,9 @@ MultiLineString::MultiLineString(OGRMultiLineString *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created MultiLineString [%p]", geom);
+}
 
 MultiLineString::MultiLineString()
 	: ObjectWrap(),
@@ -46,11 +48,15 @@ MultiLineString::MultiLineString()
 
 MultiLineString::~MultiLineString()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing GeometryCollection [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed GeometryCollection [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> MultiLineString::New(const Arguments& args)

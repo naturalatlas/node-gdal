@@ -32,7 +32,9 @@ FeatureDefn::FeatureDefn(OGRFeatureDefn *def)
 	: ObjectWrap(),
 	  this_(def),
 	  owned_(true)
-{}
+{
+	LOG("Created FeatureDefn [%p]", def);
+}
 
 FeatureDefn::FeatureDefn()
 	: ObjectWrap(),
@@ -43,10 +45,12 @@ FeatureDefn::FeatureDefn()
 
 FeatureDefn::~FeatureDefn()
 {
-	if (owned_ && this_) {
-		this_->Release();
+	if(this_) {
+		LOG("Disposing FeatureDefn [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if(owned_) this_->Release();
+		this_ = NULL;
+		LOG("Disposed FeatureDefn [%p]", this_);
 	}
-	this_ = NULL;
 }
 
 Handle<Value> FeatureDefn::New(const Arguments& args)

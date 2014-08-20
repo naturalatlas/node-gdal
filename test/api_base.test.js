@@ -2,6 +2,15 @@
 
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
+var fs = require('fs');
+
+gdal.startLogging(__dirname + "/log.txt");
+
+var SegfaultHandler;
+try {
+	SegfaultHandler = require('segfault-handler');
+	SegfaultHandler.registerHandler();
+} catch (err) {}
 
 describe('gdal', function() {
 	afterEach(gc);

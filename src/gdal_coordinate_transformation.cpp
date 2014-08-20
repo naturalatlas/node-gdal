@@ -24,7 +24,9 @@ void CoordinateTransformation::Initialize(Handle<Object> target)
 CoordinateTransformation::CoordinateTransformation(OGRCoordinateTransformation *transform)
 	: ObjectWrap(),
 	  this_(transform)
-{}
+{
+	LOG("Created CoordinateTransformation [%p]", transform);
+}
 
 CoordinateTransformation::CoordinateTransformation()
 	: ObjectWrap(),
@@ -35,9 +37,11 @@ CoordinateTransformation::CoordinateTransformation()
 CoordinateTransformation::~CoordinateTransformation()
 {
 	if (this_) {
+		LOG("Disposing CoordinateTransformation [%p]", this_);
 		OGRCoordinateTransformation::DestroyCT(this_);
+		LOG("Disposed CoordinateTransformation [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> CoordinateTransformation::New(const Arguments& args)

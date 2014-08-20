@@ -5,6 +5,14 @@
 #include <v8.h>
 #include <gdal_version.h>
 #include <cpl_error.h>
+#include <stdio.h>
+
+extern FILE *log_file;
+#ifdef ENABLE_LOGGING
+#define LOG(fmt, ...) if(log_file) { fprintf(log_file, fmt"\n", __VA_ARGS__); fflush(log_file); }
+#else 
+#define LOG(fmt, ...)
+#endif
 
 //String::New(null) -> seg fault
 class SafeString {
@@ -141,7 +149,8 @@ public:
 
 #define ARG_FIELD_ID(num, f, var) {                                    \
   if (args[num]->IsString()) {                                         \
-    var = f->GetFieldIndex(TOSTR(args[num]));                          \
+    std::string field_name = TOSTR(args[num]);                         \
+    var = f->GetFieldIndex(field_name.c_str());                        \
     if (field_index == -1) {                                           \
       return NODE_THROW("Specified field name does not exist");        \
     }                                                                  \

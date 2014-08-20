@@ -33,7 +33,9 @@ MultiPolygon::MultiPolygon(OGRMultiPolygon *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created MultiPolygon [%p]", geom);
+}
 
 MultiPolygon::MultiPolygon()
 	: ObjectWrap(),
@@ -46,11 +48,15 @@ MultiPolygon::MultiPolygon()
 
 MultiPolygon::~MultiPolygon()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing MultiPolygon [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed MultiPolygon [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> MultiPolygon::New(const Arguments& args)

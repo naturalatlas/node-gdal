@@ -115,13 +115,15 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 	GDALDataType type;
 	Handle<Array> band_options = Array::New(0);
 	char **options = NULL;
+	std::string *options_str = NULL;
 
 	//NODE_ARG_ENUM(0, "data type", GDALDataType, type);
 	if(args.Length() < 1) {
 		return NODE_THROW("data type argument needed");
 	}
 	if(args[0]->IsString()){
-		type = GDALGetDataTypeByName(TOSTR(args[0]));
+		std::string type_name = TOSTR(args[0]);
+		type = GDALGetDataTypeByName(type_name.c_str());
 	} else if (args[0]->IsNull() || args[0]->IsUndefined()) {
 		type = GDT_Unknown;
 	} else {
@@ -131,17 +133,18 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
 
 	if (band_options->Length() > 0) {
-		options = new char* [band_options->Length()];
+		options     = new char* [band_options->Length()];
+		options_str = new std::string [band_options->Length()];
 		for (unsigned int i = 0; i < band_options->Length(); ++i) {
-			options[i] = TOSTR(band_options->Get(i));
+			options_str[i] = TOSTR(band_options->Get(i));
+			options[i] = (char*) options_str[i].c_str();
 		}
 	}
 
 	CPLErr err = raw->AddBand(type, options);
 
-	if (options) {
-		delete [] options;
-	}
+	if(options)	    delete [] options;
+	if(options_str)	delete [] options_str;
 
 	if (err) {
 		return NODE_THROW_CPLERR(err);

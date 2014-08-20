@@ -91,7 +91,9 @@ Geometry::Geometry(OGRGeometry *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created Geometry [%p]", geom);
+}
 
 Geometry::Geometry()
 	: ObjectWrap(),
@@ -103,11 +105,15 @@ Geometry::Geometry()
 
 Geometry::~Geometry()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing Geometry [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed Geometry [%p]", this_)
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> Geometry::New(const Arguments& args)

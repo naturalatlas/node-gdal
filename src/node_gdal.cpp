@@ -71,6 +71,37 @@ namespace node_gdal {
 			return Undefined();
 		}
 
+		FILE *log_file = NULL;
+
+		static Handle<Value> StartLogging(const Arguments &args)
+		{
+			#ifdef ENABLE_LOGGING
+			std::string filename = "";
+			NODE_ARG_STR(0, "filename", filename);
+			if(filename.empty()) {
+				return NODE_THROW("Invalid filename");
+			}
+			if(log_file) fclose(log_file);
+			log_file = fopen(filename.c_str(), "w");
+			if(!log_file) 
+				return NODE_THROW("Error creating log file");
+			#endif
+
+			return Undefined();
+		}
+
+		static Handle<Value> StopLogging(const Arguments &args)
+		{
+			#ifdef ENABLE_LOGGING
+			if(log_file) {
+				fclose(log_file);
+				log_file = NULL;
+			}
+			#endif
+
+			return Undefined();
+		}
+
 		static void Init(Handle<Object> target)
 		{
 
@@ -122,6 +153,8 @@ namespace node_gdal {
 
 			NODE_SET_METHOD(target, "quiet", QuietOutput);
 			NODE_SET_METHOD(target, "verbose", VerboseOutput);
+			NODE_SET_METHOD(target, "startLogging", StartLogging);
+			NODE_SET_METHOD(target, "stopLogging", StopLogging);
 
 			Local<Object> supports = Object::New();
 			target->Set(String::NewSymbol("supports"), supports);

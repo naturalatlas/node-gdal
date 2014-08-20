@@ -32,7 +32,9 @@ Point::Point(OGRPoint *geom)
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
-{}
+{
+	LOG("Created Point [%p]", geom);
+}
 
 Point::Point()
 	: ObjectWrap(),
@@ -45,11 +47,15 @@ Point::Point()
 
 Point::~Point()
 {
-	if (owned_ && this_) {
-		OGRGeometryFactory::destroyGeometry(this_);
-		V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+	if(this_) {
+		LOG("Disposing Point [%p] (%s)", this_, owned_ ? "owned" : "unowned");
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+		}
+		LOG("Disposed Point [%p]", this_);
+		this_ = NULL;
 	}
-	this_ = NULL;
 }
 
 Handle<Value> Point::New(const Arguments& args)

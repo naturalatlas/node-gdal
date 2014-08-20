@@ -33,11 +33,15 @@ void Driver::Initialize(Handle<Object> target)
 
 Driver::Driver(GDALDriver *driver)
 	: ObjectWrap(), uses_ogr(false), this_gdaldriver(driver), this_ogrdriver(0)
-{}
+{
+	LOG("Created GDAL Driver [%p]", driver);
+}
 
 Driver::Driver(OGRSFDriver *driver)
 	: ObjectWrap(), uses_ogr(true), this_gdaldriver(0), this_ogrdriver(driver)
-{}
+{
+	LOG("Created OGR Driver [%p]", driver);
+}
 
 Driver::Driver()
 	: ObjectWrap(), uses_ogr(false), this_gdaldriver(0), this_ogrdriver(0)
@@ -46,6 +50,22 @@ Driver::Driver()
 
 Driver::~Driver()
 {
+	if(uses_ogr) {
+		LOG("Disposing OGR Driver [%p]", this_ogrdriver);
+		if(this_ogrdriver) {
+			cache_ogr.erase(this_ogrdriver);
+			this_ogrdriver = NULL;
+		}
+		LOG("Disposed OGR Driver [%p]", this_ogrdriver);
+	} else {
+		LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
+		if(this_gdaldriver) {
+			cache.erase(this_gdaldriver);
+			this_gdaldriver = NULL;
+		}
+		LOG("Disposed GDAL Driver [%p]", this_gdaldriver);
+	}
+
 }
 
 Handle<Value> Driver::New(const Arguments& args)
@@ -171,10 +191,13 @@ Handle<Value> Driver::create(const Arguments& args)
 	}
 
 	char **options = NULL;
+	std::string *options_str;
 	if (creation_options->Length() > 0) {
 		options = new char* [creation_options->Length() + 1];
+		options_str = new std::string [creation_options->Length() + 1];
 		for (i = 0; i < creation_options->Length(); ++i) {
-			options[i] = TOSTR(creation_options->Get(i));
+			options_str[i] = TOSTR(creation_options->Get(i));
+			options[i]     = (char*) options_str[i].c_str();
 		}
 		options[i] = NULL;
 	}
@@ -185,6 +208,7 @@ Handle<Value> Driver::create(const Arguments& args)
 
 		if (options) {
 			delete [] options;
+			delete [] options_str;
 		}
 
 		if (!ds) {
@@ -198,6 +222,7 @@ Handle<Value> Driver::create(const Arguments& args)
 
 		if (options) {
 			delete [] options;
+			delete [] options_str;
 		}
 
 		if (!ds) {
@@ -233,11 +258,14 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 	NODE_ARG_ARRAY_OPT(2, "dataset creation options", creation_options);
 
 	char **options = NULL;
+	std::string *options_str = NULL;
 
 	if (creation_options->Length() > 0) {
 		options = new char* [creation_options->Length()+1];
+		options_str = new std::string [creation_options->Length()+1];
 		for (i = 0; i < creation_options->Length(); ++i) {
-			options[i] = TOSTR(creation_options->Get(i));
+			options_str[i] = TOSTR(creation_options->Get(i));
+			options[i]     = (char*) options_str[i].c_str();
 		}
 		options[i] = NULL;
 	}
@@ -254,9 +282,8 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 
 		OGRDataSource *ds = raw->CopyDataSource(raw_ds, filename.c_str(), options);
 
-		if (options) {
-			delete [] options;
-		}
+		if(options)	    delete [] options;
+		if(options_str)	delete [] options_str;
 
 		if (!ds) {
 			return NODE_THROW("Error copying dataset.");
@@ -274,9 +301,8 @@ Handle<Value> Driver::createCopy(const Arguments& args)
 		}
 		GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options, NULL, NULL);
 
-		if (options) {
-			delete [] options;
-		}
+		if(options)	    delete [] options;
+		if(options_str)	delete [] options_str;
 
 		if (!ds) {
 			return NODE_THROW("Error copying dataset");
