@@ -43,7 +43,8 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `readOnly` : bool
 - `hasArbitraryOverviews` : bool
 - `categoryNames` : string[] *(settable)*
-- `overviews` : RasterBandOverviews
+- `overviews` : [RasterBandOverviews](#overviews)
+- `pixels` : [RasterBandPixels](#pixels)
 - `colorInterpretation` : string
     + `"Undefined"`
     + `"Gray"`
