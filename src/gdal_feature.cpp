@@ -31,8 +31,8 @@ void Feature::Initialize(Handle<Object> target)
 
 	//Note: We should let node GC handle destroying features when they arent being used
 	//TODO: Give node more info on the amount of memory a feature is using
-	//      V8::AdjustAmountOfExternalAllocatedMemory()  
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy); 
+	//      V8::AdjustAmountOfExternalAllocatedMemory()
+	//NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
 
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "defn", defnGetter, READ_ONLY_SETTER);
@@ -62,7 +62,7 @@ Feature::~Feature()
 }
 
 void Feature::dispose()
-{	
+{
 	if(this_) {
 		LOG("Disposing Feature [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if(owned_) OGRFeature::DestroyFeature(this_);
@@ -114,8 +114,8 @@ Handle<Value> Feature::New(const Arguments& args)
 		f = new Feature(ogr_f);
 	}
 
-	Handle<Value> fields = FeatureFields::New(args.This()); 
-	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields); 
+	Handle<Value> fields = FeatureFields::New(args.This());
+	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
 
 	f->Wrap(args.This());
 	return args.This();
@@ -230,7 +230,7 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 	Feature *other_feature;
 	bool forgiving = true;
 	Handle<Array> index_map;
-	OGRErr err;
+	OGRErr err = 0;
 
 	NODE_ARG_WRAPPED(0, "feature", Feature, other_feature);
 
@@ -243,7 +243,7 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 		NODE_ARG_BOOL_OPT(1, "forgiving", forgiving);
 
 		err = feature->this_->SetFrom(other_feature->this_, forgiving ? TRUE : FALSE);
-	} else if (args.Length() > 2) {
+	} else {
 		NODE_ARG_ARRAY(1, "index map", index_map);
 		NODE_ARG_BOOL_OPT(2, "forgiving", forgiving);
 

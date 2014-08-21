@@ -7,10 +7,9 @@
 #include <cpl_error.h>
 #include <stdio.h>
 
-extern FILE *log_file;
 #ifdef ENABLE_LOGGING
 #define LOG(fmt, ...) if(log_file) { fprintf(log_file, fmt"\n", __VA_ARGS__); fflush(log_file); }
-#else 
+#else
 #define LOG(fmt, ...)
 #endif
 

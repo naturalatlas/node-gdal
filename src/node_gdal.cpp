@@ -79,13 +79,14 @@ namespace node_gdal {
 			#ifdef ENABLE_LOGGING
 			std::string filename = "";
 			NODE_ARG_STR(0, "filename", filename);
-			if(filename.empty()) {
+			if (filename.empty()) {
 				return NODE_THROW("Invalid filename");
 			}
-			if(log_file) fclose(log_file);
+			if (log_file) fclose(log_file);
 			log_file = fopen(filename.c_str(), "w");
-			if(!log_file) 
+			if (!log_file) {
 				return NODE_THROW("Error creating log file");
+			}
 			#endif
 
 			return Undefined();
@@ -94,7 +95,7 @@ namespace node_gdal {
 		static Handle<Value> StopLogging(const Arguments &args)
 		{
 			#ifdef ENABLE_LOGGING
-			if(log_file) {
+			if (log_file) {
 				fclose(log_file);
 				log_file = NULL;
 			}
