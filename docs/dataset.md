@@ -10,6 +10,9 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `getGCPProjection()` : string
 - `getGCPs()` : object[]
 - `setGCPs()` : void *(throws)*
+- `buildOverviews(string resampling, int[] overviews, int[] [bands])` : void *(throws)*
+	- `resampling` : string
+		- `"NEAREST"`, `"GAUSS"`, `"CUBIC"`, `"AVERAGE"`, `"MODE"`, `"AVERAGE_MAGPHASE"` or `"NONE"`
 - `executeSQL(string statement, Geometry spatial_filter = null, string dialect = null)` : [Layer](layer.md)
 - `getFileList()` : string[]
 	+ *In GDAL versions < 2.0 it will return an empty array for vector datasets*
@@ -25,8 +28,8 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 - `srs` : [SpatialReference](spatialreference.md) *(settable)*
 - `driver` : [Driver](driver.md)
 - `geoTransform` : Number[] *(settable)*
-- `bands` : DatasetBands
-- `layers` : DatasetLayers
+- `bands` : [DatasetBands](#bands)
+- `layers` : [DatasetLayers](#layers)
 
 #### Bands
 

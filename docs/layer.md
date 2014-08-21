@@ -21,8 +21,8 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 - `geomType` : int *(wkbGeometryType)*
 - `geomColumn` : string
 - `fidColumn` : string
-- `features` : LayerFeatures
-- `fields` : LayerFields
+- `features` : [LayerFeatures](#features)
+- `fields` : [LayerFields](#fields)
 
 #### Features
 

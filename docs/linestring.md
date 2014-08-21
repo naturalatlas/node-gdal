@@ -13,7 +13,7 @@ Inherits all methods and properties from [Geometry](geometry.md)
 
 #### Properties
 
-- `points` : LineStringPoints
+- `points` : [LineStringPoints](#points)
 
 #### Points
 

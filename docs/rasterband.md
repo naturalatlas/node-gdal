@@ -66,6 +66,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `overviews.get(int id)` : [RasterBand](rasterband.md)
 - `overviews.getBySampleCount(int min_samples)` : [RasterBand](rasterband.md)
 - `overviews.count()` : int
+- `overviews.forEach(function iterator)` : void
 
 #### Pixels
 

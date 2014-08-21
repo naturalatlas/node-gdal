@@ -21,7 +21,7 @@ Note: all methods throw errors if the feature has already been explicitly destro
 
 - `fid` : int *(R/W)*
 - `defn` : [FeatureDefn](featuredefn.md)
-- `fields` : FeatureFields
+- `fields` : [FeatureFields](#fields)
 
 #### Fields
 

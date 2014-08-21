@@ -12,7 +12,7 @@ Inherits all methods and properties from [Geometry](geometry.md)
 
 #### Properties
 
-- `rings` : PolygonRings
+- `rings` : [PolygonRings](#rings)
 
 #### Rings
 

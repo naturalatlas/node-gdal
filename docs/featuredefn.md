@@ -17,7 +17,7 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 - `geomType` : int *(OGRwkbGeometryType)*
 - `geomIgnored` : bool
 - `styleIgnored` : bool
-- `fields` : FeatureDefnFields
+- `fields` : [FeatureDefnFields](#fields)
 
 #### Fields
 
