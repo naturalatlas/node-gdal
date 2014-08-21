@@ -1,8 +1,15 @@
-.PHONY: clean clean-test build rebuild release test test-concurrent format-code
+.PHONY: clean clean-test build rebuild release test test-concurrent format-code authors
 
 MOCHA_ARGS=test -R list -gc --require ./test/_common.js
 
 all: build
+
+authors:
+	git shortlog -se \
+	  | perl -spe 's/^\s+\d+\s+//' \
+	  | sed -e '/^BrandonReavis/d' \
+	  | sed -e '/^brandonreavis/d' \
+	  > AUTHORS
 
 clean: clean-test
 	@rm -rf ./build
@@ -60,6 +67,7 @@ else
 	rm -rf node_modules
 	npm install
 	make test
+	@make authors
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package.json
 	rm *.bak
 	git add .
