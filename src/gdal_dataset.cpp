@@ -33,6 +33,7 @@ void Dataset::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getMetadata", getMetadata);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "executeSQL", executeSQL);
+	NODE_SET_PROTOTYPE_METHOD(constructor, "buildOverviews", buildOverviews);
 
 	ATTR(constructor, "description", descriptionGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "bands", bandsGetter, READ_ONLY_SETTER);
@@ -342,7 +343,7 @@ Handle<Value> Dataset::executeSQL(const Arguments& args)
 
 	if (layer) {
 		ds->result_sets.push_back(layer);
-		return scope.Close(Layer::New(layer, ds, true));
+		return scope.Close(Layer::New(layer, raw, true));
 	} else {
 		return NODE_THROW("Error executing SQL");
 	}
@@ -475,6 +476,73 @@ Handle<Value> Dataset::setGCPs(const Arguments& args)
 	return Undefined();
 }
 
+Handle<Value> Dataset::buildOverviews(const Arguments& args)
+{
+	HandleScope scope;
+	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	
+	if (ds->uses_ogr) {
+		return NODE_THROW("Dataset does not support building overviews");
+	}
+
+	GDALDataset* raw = ds->getDataset();
+	if (!raw) {
+		return NODE_THROW("Dataset object has already been destroyed");
+	}
+
+
+	std::string resampling = "";
+	Handle<Array> overviews;
+	Handle<Array> bands;
+
+	NODE_ARG_STR(0, "resampling", resampling);
+	NODE_ARG_ARRAY(1, "overviews", overviews);
+	NODE_ARG_ARRAY_OPT(2, "bands", bands);
+
+	int *o, *b = NULL;
+	int n_overviews = overviews->Length();
+	int i, n_bands = 0; 
+
+	o = new int[n_overviews];
+	for(i = 0; i<n_overviews; i++){
+		Handle<Value> val = overviews->Get(i);
+		if(!val->IsNumber()) {
+			delete [] o;
+			return NODE_THROW("overviews array must only contain numbers");
+		}
+		o[i] = val->Int32Value(); 
+	}
+
+	if(!bands.IsEmpty()){
+		n_bands = bands->Length();
+		b = new int[n_bands];
+		for(i = 0; i<n_bands; i++){
+			Handle<Value> val = bands->Get(i);
+			if(!val->IsNumber()) {
+				delete [] o;
+				delete [] b;
+				return NODE_THROW("band array must only contain numbers");
+			}
+			b[i] = val->Int32Value(); 
+			if(b[i] > raw->GetRasterCount() || b[i] < 1) {
+				//BuildOverviews prints an error but segfaults before returning
+				delete [] o;
+				delete [] b;
+				return NODE_THROW("invalid band id");
+			}
+		}
+	}
+
+	CPLErr err = raw->BuildOverviews(resampling.c_str(), n_overviews, o, n_bands, b, NULL, NULL);
+	
+	delete [] o;
+	if(b) delete [] b;
+
+	if(err) return NODE_THROW_CPLERR(err);
+
+	return Undefined();
+}
+
 Handle<Value> Dataset::descriptionGetter(Local<String> property, const AccessorInfo &info)
 {
 	HandleScope scope;
@@ -485,13 +553,13 @@ Handle<Value> Dataset::descriptionGetter(Local<String> property, const AccessorI
 		if (!raw) {
 			return NODE_THROW("Dataset object has already been destroyed");
 		}
-		return SafeString::New(raw->GetName());
+		return scope.Close(SafeString::New(raw->GetName()));
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {
 			return NODE_THROW("Dataset object has already been destroyed");
 		}
-		return SafeString::New(raw->GetDescription());
+		return scope.Close(SafeString::New(raw->GetDescription()));
 	}
 }
 

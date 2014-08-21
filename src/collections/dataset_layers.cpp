@@ -107,7 +107,7 @@ Handle<Value> DatasetLayers::get(const Arguments& args)
 		return NODE_THROW("method must be given integer or string")
 	}
 
-	return scope.Close(Layer::New(lyr, ds));
+	return scope.Close(Layer::New(lyr, raw));
 }
 
 Handle<Value> DatasetLayers::create(const Arguments& args)
@@ -164,7 +164,7 @@ Handle<Value> DatasetLayers::create(const Arguments& args)
 	if(options_str)	delete [] options_str;
 
 	if (layer) {
-		return scope.Close(Layer::New(layer, ds, false));
+		return scope.Close(Layer::New(layer, raw, false));
 	} else {
 		return NODE_THROW("Error creating layer");
 	}
@@ -239,7 +239,7 @@ Handle<Value> DatasetLayers::copy(const Arguments& args)
 	}
 
 	if (layer) {
-		return scope.Close(Layer::New(layer, ds));
+		return scope.Close(Layer::New(layer, raw));
 	} else {
 		return NODE_THROW("Error copying layer");
 	}

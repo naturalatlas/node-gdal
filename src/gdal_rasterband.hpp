@@ -12,6 +12,7 @@
 #include <gdal_priv.h>
 
 #include "obj_cache.hpp"
+#include "gdal_dataset.hpp"
 
 using namespace v8;
 using namespace node;
@@ -23,7 +24,7 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
 	static Handle<Value> New(const Arguments &args);
-	static Handle<Value> New(GDALRasterBand *band);
+	static Handle<Value> New(GDALRasterBand *band, GDALDataset *parent);
 	static Handle<Value> toString(const Arguments &args);
 	static Handle<Value> flush(const Arguments &args);
 	static Handle<Value> fill(const Arguments &args);
@@ -74,12 +75,16 @@ public:
 	RasterBand(GDALRasterBand *band);
 	inline GDALRasterBand *get() {
 		return this_;
+	}	
+	inline GDALDataset *getParent() {
+		return parent_ds;
 	}
 	void dispose();
 
 private:
 	~RasterBand();
 	GDALRasterBand *this_;
+	GDALDataset *parent_ds;
 };
 
 }

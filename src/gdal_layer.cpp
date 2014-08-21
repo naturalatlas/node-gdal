@@ -113,13 +113,21 @@ Handle<Value> Layer::New(const Arguments& args)
 	return args.This();
 }
 
-Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent)
+#if GDAL_VERSION_MAJOR >= 2
+Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent)
+#else
+Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent)
+#endif
 {
 	HandleScope scope;
-	return scope.Close(Layer::New(raw, parent, false));
+	return scope.Close(Layer::New(raw, raw_parent, false));
 }
 
-Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent, bool result_set)
+#if GDAL_VERSION_MAJOR >= 2
+Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set)
+#else
+Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set)
+#endif
 {
 	HandleScope scope;
 
@@ -139,23 +147,24 @@ Handle<Value> Layer::New(OGRLayer *raw, Dataset *parent, bool result_set)
 	cache.add(raw, obj);
 
 	//add reference to datasource so datasource doesnt get GC'ed while layer is alive
-	if (parent) {
+	if (raw_parent) {
 		Handle<Value> ds;
-		#if GDAL_VERSION_MAJOR > 2
-			GDALDataset *raw_parent = parent->getDataset();
+		#if GDAL_VERSION_MAJOR >= 2
 			if (Dataset::dataset_cache.has(raw_parent)) {
 				ds = Dataset::dataset_cache.get(raw_parent);
 			}
 		#else
-			OGRDataSource *raw_parent = parent->getDatasource();
 			if (Dataset::datasource_cache.has(raw_parent)) {
 				ds = Dataset::datasource_cache.get(raw_parent);
 			}
 		#endif
 		else {
-			ds = Dataset::New(raw_parent); //should never happen
+			LOG("Layer's parent dataset disappeared from cache (layer = %p, dataset = %p)", raw, raw_parent);
+			return NODE_THROW("Layer's parent dataset disappeared from cache");
+			//ds = Dataset::New(raw_parent); //should never happen
 		}
 
+		wrapped->parent_ds = raw_parent;
 		obj->SetHiddenValue(String::NewSymbol("ds_"), ds);
 	}
 
@@ -189,7 +198,7 @@ Handle<Value> Layer::getExtent(const Arguments& args)
 		return NODE_THROW("Layer object has already been destroyed");
 	}
 
-	bool force = true;
+	int force = 1;
 	NODE_ARG_BOOL_OPT(0, "force", force);
 
 	OGREnvelope *envelope = new OGREnvelope();

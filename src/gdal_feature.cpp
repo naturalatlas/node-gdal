@@ -228,7 +228,7 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 {
 	HandleScope scope;
 	Feature *other_feature;
-	bool forgiving = true;
+	int forgiving = 1;
 	Handle<Array> index_map;
 	OGRErr err = 0;
 

@@ -92,7 +92,7 @@ Handle<Value> DatasetBands::get(const Arguments& args)
 	
 		GDALRasterBand *band = raw->GetRasterBand(band_id);
 
-		return scope.Close(RasterBand::New(band));
+		return scope.Close(RasterBand::New(band, raw));
 	}
 }
 
@@ -150,7 +150,7 @@ Handle<Value> DatasetBands::create(const Arguments& args)
 		return NODE_THROW_CPLERR(err);
 	}
 
-	return scope.Close(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount())));
+	return scope.Close(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount()), raw));
 }
 
 Handle<Value> DatasetBands::count(const Arguments& args)

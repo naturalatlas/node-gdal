@@ -179,7 +179,7 @@ void FeatureDefn::geomIgnoredSetter(Local<String> property, Local<Value> value, 
 		NODE_THROW("geomIgnored must be a boolean");
 		return;
 	}
-	def->this_->SetGeometryIgnored(value->BooleanValue());
+	def->this_->SetGeometryIgnored(value->IntegerValue());
 }
 
 void FeatureDefn::styleIgnoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
@@ -190,7 +190,7 @@ void FeatureDefn::styleIgnoredSetter(Local<String> property, Local<Value> value,
 		NODE_THROW("styleIgnored must be a boolean");
 		return;
 	}
-	def->this_->SetStyleIgnored(value->BooleanValue());
+	def->this_->SetStyleIgnored(value->IntegerValue());
 }
 
 } // namespace node_gdal

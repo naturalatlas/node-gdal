@@ -40,6 +40,7 @@ public:
 	static Handle<Value> setGCPs(const Arguments &args);
 	static Handle<Value> executeSQL(const Arguments &args);
 	static Handle<Value> testCapability(const Arguments &args);
+	static Handle<Value> buildOverviews(const Arguments &args);
 	static Handle<Value> close(const Arguments &args);
 
 	static Handle<Value> bandsGetter(Local<String> property, const AccessorInfo &info);

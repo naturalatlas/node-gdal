@@ -85,7 +85,7 @@ Handle<Value> RasterBandOverviews::get(const Arguments& args)
 		return NODE_THROW("Specified overview not found");
 	}
 
-	return scope.Close(RasterBand::New(result));
+	return scope.Close(RasterBand::New(result, band->getParent()));
 }
 
 Handle<Value> RasterBandOverviews::getBySampleCount(const Arguments& args)
@@ -103,7 +103,7 @@ Handle<Value> RasterBandOverviews::getBySampleCount(const Arguments& args)
 	
 	GDALRasterBand *result = band->get()->GetRasterSampleOverview(n_samples);
 
-	return scope.Close(RasterBand::New(result));
+	return scope.Close(RasterBand::New(result, band->getParent()));
 }
 
 Handle<Value> RasterBandOverviews::count(const Arguments& args)

@@ -467,5 +467,59 @@ describe('gdal.Dataset', function() {
 				});
 			});
 		});
+		describe('buildOverviews()', function() {
+			it('should generate overviews for all bands', function() {
+				var ds   = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+				var expected_w = [ds.rasterSize.x/2, ds.rasterSize.x/4, ds.rasterSize.x/8];
+				ds.buildOverviews('NEAREST', [2, 4, 8]);
+				ds.bands.forEach(function(band){
+					var w = [];
+					assert.equal(band.overviews.count(), 3);
+					band.overviews.forEach(function(overview){
+						w.push(overview.size.x);
+					});
+					assert.sameMembers(w, expected_w);
+				});
+				ds.close();
+			});
+			it('should throw if invalid overview is given', function() {
+				var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+				assert.throws(function(){
+					ds.buildOverviews('NEAREST', [2, 4, -3]);
+				});
+			});
+			it('should throw if overview is not a number', function() {
+				var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+				assert.throws(function(){
+					ds.buildOverviews('NEAREST', [2, 4, {}]);
+				});
+			});
+			describe('w/bands argument', function(){
+				it('should generate overviews only for the given bands', function(){
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					ds.buildOverviews('NEAREST', [2, 4, 8], [1]);
+					assert.equal(ds.bands.get(1).overviews.count(), 3);
+				});
+				it('should throw if invalid band given', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					assert.throws(function(){
+						ds.buildOverviews('NEAREST', [2, 4, 8], [4]);
+					});
+				});
+				it('should throw if band id is not a number', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					assert.throws(function(){
+						ds.buildOverviews('NEAREST', [2, 4, 8], [{}]);
+					});
+				});
+			});
+			it('should throw if dataset already closed', function() {
+				var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+				ds.close();
+				assert.throws(function(){
+					ds.buildOverviews('NEAREST', [2, 4, 8]);
+				});
+			});
+		});
 	});
 });

@@ -2,6 +2,7 @@
 
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
+var fileUtils = require('./utils/file.js')
 
 describe('gdal.RasterBand', function() {
 	afterEach(gc);
@@ -874,6 +875,85 @@ describe('gdal.RasterBand', function() {
 					ds.close();
 					assert.throws(function(){
 						band.pixels.writeBlock(0, 0, data);
+					});
+				});
+			});
+		});
+		describe('"overviews" property', function() {
+			describe('getter', function() {
+				it('should return overview collection', function() {
+					var ds   = gdal.open('temp', 'w', 'MEM', 32, 32, 1, gdal.GDT_Byte);
+					var band = ds.bands.get(1);
+					assert.instanceOf(band.overviews, gdal.RasterBandOverviews);
+				});
+			});
+			describe('setter', function() {
+				it('should throw an error', function() {
+					var ds   = gdal.open('temp', 'w', 'MEM', 32, 32, 1, gdal.GDT_Byte);
+					var band = ds.bands.get(1);
+					assert.throws(function(){
+						band.overviews = null;
+					});
+				});
+			});
+			describe('count()', function() {
+				it('should return a number', function() {
+					var ds   = gdal.open('temp', 'w', 'MEM', 32, 32, 1, gdal.GDT_Byte);
+					var band = ds.bands.get(1);
+					assert.equal(band.overviews.count(), 0);
+				});
+				it('should throw error if dataset already closed', function() {
+					var ds   = gdal.open('temp', 'w', 'MEM', 32, 32, 1, gdal.GDT_Byte);
+					var band = ds.bands.get(1);
+					ds.close();
+					assert.throws(function(){
+						band.overviews.count();
+					});
+				});
+			});
+			describe('get()', function() {
+				it('should return a RasterBand', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2]);
+					assert.instanceOf(band.overviews.get(0), gdal.RasterBand);
+				});
+				it('should throw error if dataset already closed', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2]);
+					ds.close();
+					assert.throws(function(){
+						band.overviews.get(0);
+					});
+				});
+				it('should throw error if id out of range', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2]);
+					assert.throws(function(){
+						band.overviews.get(2);
+					});
+				});
+			});
+			describe('forEach()', function() {
+				it('should pass each overview to the callback', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2,4]);
+					var w = [];
+					band.overviews.forEach(function(overview){
+						w.push(overview.size.x);
+					});
+					assert.sameMembers(w, [ds.rasterSize.x/2,ds.rasterSize.x/4]);
+				});
+				it('should throw error if dataset already closed', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2]);
+					ds.close();
+					assert.throws(function(){
+						band.overviews.forEach(function(){});
 					});
 				});
 			});

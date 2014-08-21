@@ -151,7 +151,7 @@ Handle<Value> LayerFeatures::count(const Arguments& args)
 		return NODE_THROW("Layer object already destroyed");
 	}
 
-	bool force = true;
+	int force = 1;
 	NODE_ARG_BOOL_OPT(0, "force", force);
 
 	return scope.Close(Integer::New(layer->get()->GetFeatureCount(force)));

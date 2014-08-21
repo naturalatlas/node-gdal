@@ -209,7 +209,7 @@ Handle<Value> LayerFields::add(const Arguments& args)
 
 	FieldDefn *field_def;
 	int err;
-	bool approx = true;
+	int approx = 1;
 	NODE_ARG_BOOL_OPT(1, "approx", approx);
 
 	if (args[0]->IsArray()) {

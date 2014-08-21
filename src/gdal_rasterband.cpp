@@ -65,13 +65,13 @@ void RasterBand::Initialize(Handle<Object> target)
 }
 
 RasterBand::RasterBand(GDALRasterBand *band)
-	: ObjectWrap(), this_(band)
+	: ObjectWrap(), this_(band), parent_ds(0)
 {
 	LOG("Created band [%p] (dataset = %p)", band, band->GetDataset());
 }
 
 RasterBand::RasterBand()
-	: ObjectWrap(), this_(0)
+	: ObjectWrap(), this_(0), parent_ds(0)
 {
 }
 
@@ -138,8 +138,7 @@ Handle<Value> RasterBand::New(const Arguments& args)
 		return NODE_THROW("Cannot create band directly create with dataset instead");
 	}
 }
-
-Handle<Value> RasterBand::New(GDALRasterBand *raw)
+Handle<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 {
 	HandleScope scope;
 
@@ -158,14 +157,20 @@ Handle<Value> RasterBand::New(GDALRasterBand *raw)
 	cache.add(raw, obj);
 
 	//add reference to dataset so dataset doesnt get GC'ed while band is alive
-	GDALDataset *parent = raw->GetDataset();
-	if (parent) {
+	if (raw_parent) {
+		//DONT USE GDALRasterBand.GetDataset() ... it will return a "fake" dataset for overview bands
+		//https://github.com/naturalatlas/node-gdal/blob/master/deps/libgdal/gdal/frmts/gtiff/geotiff.cpp#L84
+
 		Handle<Value> ds;
-		if (Dataset::dataset_cache.has(parent)) {
-			ds = Dataset::dataset_cache.get(parent);
+		if (Dataset::dataset_cache.has(raw_parent)) {
+			ds = Dataset::dataset_cache.get(raw_parent);
 		} else {
-			ds = Dataset::New(parent); //this should never happen
+			LOG("Band's parent dataset disappeared from cache (band = %p, dataset = %p)", raw, raw_parent);
+			return NODE_THROW("Band's parent dataset disappeared from cache");
+			//ds = Dataset::New(raw_parent); //this should never happen
 		}
+
+		wrapped->parent_ds = raw_parent;
 		obj->SetHiddenValue(String::NewSymbol("ds_"), ds);
 	}
 
@@ -179,9 +184,24 @@ Handle<Value> RasterBand::toString(const Arguments& args)
 }
 
 NODE_WRAPPED_METHOD(RasterBand, flush, FlushCache);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskBand, RasterBand, GetMaskBand);
 NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskFlags, Integer, GetMaskFlags);
 NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(RasterBand, createMaskBand, CreateMaskBand, "number of desired samples");
+
+Handle<Value> RasterBand::getMaskBand(const Arguments& args)
+{
+	HandleScope scope;
+
+	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
+	if (!band->this_) {
+		return NODE_THROW("RasterBand object has already been destroyed");
+	}
+
+	GDALRasterBand *mask_band = band->this_->GetMaskBand();
+
+	if(!mask_band) return Null();
+
+	return scope.Close(RasterBand::New(mask_band, band->getParent()));
+}
 
 Handle<Value> RasterBand::fill(const Arguments& args)
 {
@@ -229,7 +249,7 @@ Handle<Value> RasterBand::getStatistics(const Arguments& args)
 {
 	HandleScope scope;
 	double min, max, mean, std_dev;
-	bool approx, force;
+	int approx, force;
 	NODE_ARG_BOOL(0, "allow approximation", approx);
 	NODE_ARG_BOOL(1, "force", force);
 
@@ -263,7 +283,7 @@ Handle<Value> RasterBand::computeStatistics(const Arguments& args)
 {
 	HandleScope scope;
 	double min, max, mean, std_dev;
-	bool approx;
+	int approx;
 	NODE_ARG_BOOL(0, "allow approximation", approx);
 
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());

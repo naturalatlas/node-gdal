@@ -51,19 +51,19 @@ Driver::Driver()
 Driver::~Driver()
 {
 	if(uses_ogr) {
-		LOG("Disposing OGR Driver [%p]", this_ogrdriver);
 		if(this_ogrdriver) {
+			LOG("Disposing OGR Driver [%p]", this_ogrdriver);
 			cache_ogr.erase(this_ogrdriver);
+			LOG("Disposed OGR Driver [%p]", this_ogrdriver);
 			this_ogrdriver = NULL;
 		}
-		LOG("Disposed OGR Driver [%p]", this_ogrdriver);
 	} else {
-		LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
 		if(this_gdaldriver) {
+			LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
 			cache.erase(this_gdaldriver);
+			LOG("Disposed GDAL Driver [%p]", this_gdaldriver);
 			this_gdaldriver = NULL;
 		}
-		LOG("Disposed GDAL Driver [%p]", this_gdaldriver);
 	}
 
 }

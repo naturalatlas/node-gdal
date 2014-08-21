@@ -257,7 +257,7 @@ void FieldDefn::ignoredSetter(Local<String> property, Local<Value> value, const 
 		NODE_THROW("ignored must be a boolean");
 		return;
 	}
-	def->this_->SetIgnored(value->BooleanValue());
+	def->this_->SetIgnored(value->IntegerValue());
 }
 
 } // namespace node_gdal

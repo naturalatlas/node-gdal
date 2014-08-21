@@ -24,8 +24,13 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
 	static Handle<Value> New(const Arguments &args);
-	static Handle<Value> New(OGRLayer *raw, Dataset *parent);
-	static Handle<Value> New(OGRLayer *raw, Dataset *parent, bool result_set);
+	#if GDAL_VERSION_MAJOR >= 2
+	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent);
+	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set);
+	#else
+	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent);
+	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set);
+	#endif
 	static Handle<Value> toString(const Arguments &args);
 	static Handle<Value> getExtent(const Arguments &args);
 	static Handle<Value> setAttributeFilter(const Arguments &args);
@@ -51,15 +56,24 @@ public:
 	inline OGRLayer *get() {
 		return this_;
 	}
+	#if GDAL_VERSION_MAJOR >= 2
+	inline GDALDataset *getParent() {
+		return parent_ds;
+	}
+	#else 
+	inline OGRDataSource *getParent() {
+		return parent_ds;
+	}
+	#endif
 	void dispose();
 
 private:
 	~Layer();
 	OGRLayer *this_;
-	#if GDAL_VERSION_MAJOR > 2
-		GDALDataset *parent_ds;
+	#if GDAL_VERSION_MAJOR >= 2
+	GDALDataset *parent_ds;
 	#else
-		OGRDataSource *parent_ds;
+	OGRDataSource *parent_ds;
 	#endif 
 	bool is_result_set;
 };
