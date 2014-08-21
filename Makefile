@@ -10,6 +10,7 @@ authors:
 	  | sed -e '/^BrandonReavis/d' \
 	  | sed -e '/^brandonreavis/d' \
 	  > AUTHORS
+	echo "Zac McCormick <zac.mccormick@gmail.com>" >> AUTHORS
 
 clean: clean-test
 	@rm -rf ./build
