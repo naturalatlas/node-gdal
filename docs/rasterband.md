@@ -71,27 +71,29 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 
 - `pixels.get(x, y)` : Number
 - `pixels.set(x, y, value)` : void
-- `pixels.read(x, y, width, height, [data], [buffer_width], [buffer_height], [type], [pixel_space], [line_space])` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) *(throws)*
+- `pixels.read(x, y, width, height, [data], [options])` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) *(throws)*
      + `x` : integer
      + `y` : integer
      + `width` : integer
      + `height` : integer
      + `data` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) - *The array to put the data in. A new array is created if not given*
-     + `buffer_width` : integer
-     + `buffer_height` : integer
-     + `type` : [GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4)
-     + `pixel_space` : integer
-     + `line_space` : integer
+     + `options` : object
+          - `buffer_width` : integer
+          - `buffer_height` : integer
+          - `type` : [GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))
+          - `pixel_space` : integer
+          - `line_space` : integer
 - `pixels.write(data, x, y, width, height, [buffer_width], [buffer_height], [pixel_space], [line_space])` : void *(throws)*
      + `x` : integer
      + `y` : integer
      + `width` : integer
      + `height` : integer
      + `data` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) 
-     + `buffer_width` : integer
-     + `buffer_height` : integer
-     + `pixel_space` : integer
-     + `line_space` : integer
+     + `options` : object
+          - `buffer_width` : integer
+          - `buffer_height` : integer
+          - `pixel_space` : integer
+          - `line_space` : integer
 - `pixels.readBlock(x, y, [data])` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) *(throws)*
      + `data` : [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) - *The array to put the data in. A new array is created if not given*
 - `pixels.writeBlock(x, y, data)` : void

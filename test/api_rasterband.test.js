@@ -21,9 +21,9 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-					var band = ds.bands.get(1);					
+					var band = ds.bands.get(1);
 					assert.throws(function(){
 						band.ds = null;
 					});
@@ -80,7 +80,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open(__dirname + '/data/dem_azimuth50_pa.img');
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -106,7 +106,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -132,7 +132,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -158,7 +158,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -184,7 +184,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should set unitType', function() {					
+				it('should set unitType', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					band.unitType = 'm';
@@ -217,7 +217,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -248,7 +248,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -274,7 +274,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -300,7 +300,7 @@ describe('gdal.RasterBand', function() {
 				});
 			});
 			describe('setter', function() {
-				it('should throw error', function() {					
+				it('should throw error', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					assert.throws(function(){
@@ -488,7 +488,7 @@ describe('gdal.RasterBand', function() {
 					assert.equal(data.length, w*h);
 					assert.equal(data[10*20+10], 10);
 				});
-				describe('w/data argument', function(){					
+				describe('w/data argument', function(){
 					it('should put the data in the existing array', function(){
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
@@ -509,99 +509,133 @@ describe('gdal.RasterBand', function() {
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
 						var data = new Uint8Array(20*30);
-						assert.throws(function(){ 
+						assert.throws(function(){
 							band.pixels.read(0,0,20,31,data);
 						});
 					});
 					it('should automatically translate data to array data type', function(){
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
+						band.pixels.set(1, 1, 30);
 						var data = new Float64Array(20*30);
-						band.pixels.read(0,0,20,30,data);
+						band.pixels.read(1,1,20,30,data);
+						assert.equal(data[0], 30);
 					});
 				});
-				describe('w/buffer_width,buffer_height arguments', function(){
-					it('should create new array with given dimensions if array isn\'t given', function(){
-						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-						var band = ds.bands.get(1);
-						var data = band.pixels.read(0,0,20,30,null,10,15);
-						assert.equal(data.length, 10*15);
-					});
-					it('should throw error if given array is smaller than given dimensions', function(){
-						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-						var band = ds.bands.get(1);
-						var data = new Float64Array(10,14);
-						assert.throws(function(){
-							band.pixels.read(0,0,20,30,data,10,15);
+				describe('w/options', function() {
+					describe('"buffer_width", "buffer_height"', function() {
+						it('should default to width, height when not present', function() {
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = band.pixels.read(0,0,20,30);
+							assert.equal(data.length, 20*30);
+						});
+						it('should create new array with given dimensions if array isn\'t given', function(){
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = band.pixels.read(0,0,20,30,null,{
+								buffer_width: 10,
+								buffer_height: 15
+							});
+							assert.equal(data.length, 10*15);
+						});
+						it('should throw error if given array is smaller than given dimensions', function(){
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = new Float64Array(10,14);
+							assert.throws(function(){
+								band.pixels.read(0,0,20,30,data,{
+									buffer_width: 10,
+									buffer_height: 15
+								});
+							}, /Invalid array length/);
 						});
 					});
-				});
-				describe('w/type argument', function(){
-					it('should be ignored if typed array is given', function(){
-						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-						var band = ds.bands.get(1);
-						var data = new Float64Array(20*30);
-						var result = band.pixels.read(0,0,20,30,data,20,30,gdal.GDT_Byte);
-						assert.instanceOf(result, Float64Array);
+					describe('"type"', function(){
+						it('should be ignored if typed array is given', function(){
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = new Float64Array(20*30);
+							var result = band.pixels.read(0,0,20,30,data,{type: gdal.GDT_Byte});
+							assert.instanceOf(result, Float64Array);
+						});
+						it('should create output array with given type', function(){
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = band.pixels.read(0,0,20,30,null,{type: gdal.GDT_Float64});
+							assert.instanceOf(data, Float64Array);
+						});
 					});
-					it('should create output array with given type', function(){
-						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-						var band = ds.bands.get(1);
-						var data = band.pixels.read(0,0,20,30,null,20,30,gdal.GDT_Float64);
-						assert.instanceOf(data, Float64Array);
-					});
-				});
-				describe('w/pixel_space,line_space arguments', function(){
-					it('should read data with space between values', function(){
-						var w = 16, h = 16;
-						var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
-						var red  = ds.bands.get(1);
-						var blue = ds.bands.get(2);
-						red.fill(1);
-						blue.fill(2);
+					describe('"pixel_space", "line_space"', function(){
+						it('should read data with space between values', function(){
+							var w = 16, h = 16;
+							var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
+							var red  = ds.bands.get(1);
+							var blue = ds.bands.get(2);
+							red.fill(1);
+							blue.fill(2);
 
-						var interleaved = new Uint8Array(w*h*2);
-						red.pixels.read(0,0,w,h,interleaved,w,h,gdal.GDT_Byte,2,2*w);
-						blue.pixels.read(0,0,w,h,interleaved.subarray(1),w,h,gdal.GDT_Byte,2,2*w);
-  
-						for(var y = 0; y < h; y++) {
-							for(var x = 0; x < w; x++) {
-								var r = interleaved[x*2+0+y*w*2];
-								var b = interleaved[x*2+1+y*w*2];
-								assert.equal(r, 1);
-								assert.equal(b, 2);
+							var interleaved = new Uint8Array(w*h*2);
+
+							var read_options = {
+								buffer_width: w,
+								buffer_height: h,
+								type: gdal.GDT_Byte,
+								pixel_space: 2,
+								line_space: 2 * w
+							};
+
+							red.pixels.read(0, 0, w, h, interleaved, read_options);
+							blue.pixels.read(0, 0, w, h, interleaved.subarray(1), read_options);
+
+							for(var y = 0; y < h; y++) {
+								for(var x = 0; x < w; x++) {
+									var r = interleaved[x*2+0+y*w*2];
+									var b = interleaved[x*2+1+y*w*2];
+									assert.equal(r, 1);
+									assert.equal(b, 2);
+								}
 							}
-						}
-					});
-					it('should throw error if array is not long enough to store result', function(){
-						var w = 16, h = 16;
-						var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
-						var red  = ds.bands.get(1);
-						var blue = ds.bands.get(2);
-						red.fill(1);
-						blue.fill(2);
+						});
+						it('should throw error if array is not long enough to store result', function(){
+							var w = 16, h = 16;
+							var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
+							var red  = ds.bands.get(1);
+							var blue = ds.bands.get(2);
+							red.fill(1);
+							blue.fill(2);
 
-						var interleaved = new Uint8Array(w*h*2);
-						red.pixels.read(0,0,w,h,interleaved,w,h,gdal.GDT_Byte,2,2*w);
+							var interleaved = new Uint8Array(w*h*2);
+							var read_options = {
+								buffer_width: w,
+								buffer_height: h,
+								type: gdal.GDT_Byte,
+								pixel_space: 2,
+								line_space: 2*w
+							};
+
+							red.pixels.read(0, 0, w, h, interleaved, read_options);
+							assert.throws(function(){
+								blue.pixels.read(0,0,w,h,interleaved.subarray(2), read_options);
+							}, /Invalid array length/)
+						});
+					});
+					it('should throw an error if region is out of bounds', function() {
+						var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
+						var band = ds.bands.get(1);
 						assert.throws(function(){
-							blue.pixels.read(0,0,w,h,interleaved.subarray(2),w,h,gdal.GDT_Byte,2,2*w);
-						})
+							band.pixels.read(20, 20, 16, 16);
+						});
 					});
-				});
-				it('should throw an error if region is out of bounds', function() {
-					var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
-					var band = ds.bands.get(1);
-					assert.throws(function(){
-						band.pixels.read(20, 20, 16, 16);
+					it('should throw error if dataset already closed', function() {
+						var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
+						var band = ds.bands.get(1);
+						ds.close();
+						assert.throws(function(){
+							band.pixels.read(0, 0, 16, 16);
+						});
 					});
-				});
-				it('should throw error if dataset already closed', function() {
-					var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
-					var band = ds.bands.get(1);
-					ds.close();
-					assert.throws(function(){
-						band.pixels.read(0,0,16,16);
-					});
+
 				});
 			});
 			describe('write()', function() {
@@ -626,7 +660,7 @@ describe('gdal.RasterBand', function() {
 					var w = 16, h = 16;
 					var data = new Uint8Array(w*h-1);
 
-					assert.throws(function(){ 
+					assert.throws(function(){
 						band.pixels.write(100, 120, w, h, data);
 					});
 				});
@@ -645,54 +679,72 @@ describe('gdal.RasterBand', function() {
 						assert.equal(result[i], Math.floor(data[i]));
 					}
 				});
-				describe('w/buffer_width,buffer_height arguments', function(){
-					it('should throw error if given array is smaller than given dimensions', function(){
-						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
-						var band = ds.bands.get(1);
-						var data = new Float64Array(10,14);
-						assert.throws(function(){
-							band.pixels.write(0,0,20,30,data,10,15);
+				describe('w/options', function() {
+					describe('"buffer_width", "buffer_height"', function(){
+						it('should throw error if given array is smaller than given dimensions', function(){
+							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
+							var band = ds.bands.get(1);
+							var data = new Float64Array(10,14);
+							assert.throws(function(){
+								band.pixels.write(0,0,20,30,data,{
+									buffer_width: 10,
+									buffer_height: 15
+								});
+							});
 						});
 					});
-				});
-				describe('w/pixel_space,line_space arguments', function(){
-					it('should skip spaces in given data', function(){
-						var w = 16, h = 16;
-						var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
-						var red  = ds.bands.get(1);
-						var blue = ds.bands.get(2);
+					describe('"pixel_space", "line_space"', function(){
+						it('should skip spaces in given data', function(){
+							var w = 16, h = 16;
+							var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
+							var red  = ds.bands.get(1);
+							var blue = ds.bands.get(2);
 
-						var interleaved = new Uint8Array(w*h*2);
-						for(var y = 0; y < h; y++) {
-							for(var x = 0; x < w; x++) {
-								interleaved[x*2+0+y*w*2] = 1;
-								interleaved[x*2+1+y*w*2] = 2;
+							var interleaved = new Uint8Array(w*h*2);
+							for(var y = 0; y < h; y++) {
+								for(var x = 0; x < w; x++) {
+									interleaved[x*2+0+y*w*2] = 1;
+									interleaved[x*2+1+y*w*2] = 2;
+								}
 							}
-						}
 
-						red.pixels.write(0,0,w,h,interleaved,w,h,2,2*w);
-						blue.pixels.write(0,0,w,h,interleaved.subarray(1),w,h,2,2*w);
+							var write_options = {
+								buffer_width: w,
+								buffer_height: h,
+								pixel_space: 2,
+								line_space: 2*w
+							};
 
+							red.pixels.write(0,0,w,h,interleaved,write_options);
+							blue.pixels.write(0,0,w,h,interleaved.subarray(1),write_options);
 
-  						var data;
-  						data = red.pixels.read(0,0,w,h);
-  						for(var i = 0; i < data.length; i++) assert.equal(data[i], 1);
-  						data = blue.pixels.read(0,0,w,h);
-  						for(var i = 0; i < data.length; i++) assert.equal(data[i], 2);
+	  						var data;
+	  						data = red.pixels.read(0,0,w,h);
+	  						for(var i = 0; i < data.length; i++) assert.equal(data[i], 1);
+	  						data = blue.pixels.read(0,0,w,h);
+	  						for(var i = 0; i < data.length; i++) assert.equal(data[i], 2);
 
-					});
-					it('should throw error if array is not long enough', function(){
-						var w = 16, h = 16;
-						var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
-						var red  = ds.bands.get(1);
-						var blue = ds.bands.get(2);
+						});
+						it('should throw error if array is not long enough', function(){
+							var w = 16, h = 16;
+							var ds   = gdal.open('temp', 'w', 'MEM', w, h, 2, gdal.GDT_Byte);
+							var red  = ds.bands.get(1);
+							var blue = ds.bands.get(2);
 
-						var interleaved = new Uint8Array(w*h*2);
-						
-						red.pixels.write(0,0,w,h,interleaved,w,h,2,2*w);
-						assert.throws(function(){
-							blue.pixels.write(0,0,w,h,interleaved.subarray(2),w,h,2,2*w);
-						})
+							var interleaved = new Uint8Array(w*h*2);
+
+							var write_options = {
+								buffer_width: w,
+								buffer_height: h,
+								pixel_space: 2,
+								line_space: 2*w
+							};
+
+							red.pixels.write(0,0,w,h,interleaved,write_options);
+							assert.throws(function(){
+								blue.pixels.write(0,0,w,h,interleaved.subarray(2),write_options);
+							})
+						});
 					});
 				});
 				it('should throw an error if region is out of bounds', function() {
@@ -725,7 +777,7 @@ describe('gdal.RasterBand', function() {
 				it('should throw error if offsets are out of range', function(){
 					var ds   = gdal.open(__dirname + '/data/sample.tif');
 					var band = ds.bands.get(1);
-					assert.throws(function(){ 
+					assert.throws(function(){
 						band.pixels.readBlock(-1, 0);
 					});
 				});
@@ -787,7 +839,7 @@ describe('gdal.RasterBand', function() {
 					var length = band.blockSize.x*band.blockSize.y;
 					var data = new Uint8Array(length);
 
-					assert.throws(function(){ 
+					assert.throws(function(){
 						band.pixels.writeBlock(0, 100, data);
 					});
 				});
@@ -798,7 +850,7 @@ describe('gdal.RasterBand', function() {
 					var length = band.blockSize.x*band.blockSize.y-1;
 					var data = new Uint8Array(length);
 
-					assert.throws(function(){ 
+					assert.throws(function(){
 						band.pixels.writeBlock(0, 0, data);
 					});
 				});

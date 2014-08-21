@@ -22,7 +22,7 @@ void RasterBandPixels::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(constructor, "write", write);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "readBlock", readBlock);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "writeBlock", writeBlock);
-	
+
 	target->Set(String::NewSymbol("RasterBandPixels"), constructor->GetFunction());
 }
 
@@ -30,7 +30,7 @@ RasterBandPixels::RasterBandPixels()
 	: ObjectWrap()
 {}
 
-RasterBandPixels::~RasterBandPixels() 
+RasterBandPixels::~RasterBandPixels()
 {}
 
 Handle<Value> RasterBandPixels::New(const Arguments& args)
@@ -95,7 +95,7 @@ Handle<Value> RasterBandPixels::get(const Arguments& args)
 Handle<Value> RasterBandPixels::set(const Arguments& args)
 {
 	HandleScope scope;
-	
+
 	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(parent);
 	if (!band->get()) {
@@ -146,8 +146,8 @@ Handle<Value> RasterBandPixels::read(const Arguments& args)
 	buffer_w = w;
 	buffer_h = h;
 	type     = band->get()->GetRasterDataType();
-	NODE_ARG_INT_OPT(5, "buffer_x_size", buffer_w);
-	NODE_ARG_INT_OPT(6, "buffer_y_size", buffer_h);
+	NODE_ARG_INT_OPT(5, "buffer_width", buffer_w);
+	NODE_ARG_INT_OPT(6, "buffer_height", buffer_h);
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
 	if(!type_name.empty()) {
 		type = GDALGetDataTypeByName(type_name.c_str());
@@ -177,7 +177,7 @@ Handle<Value> RasterBandPixels::read(const Arguments& args)
 	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
 	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
 
-	//create array if no array was passed 
+	//create array if no array was passed
 	if(passed_array.IsEmpty()){
 		array = TypedArray::New(type, length);
 		if(array.IsEmpty() || !array->IsObject()) {
@@ -191,7 +191,7 @@ Handle<Value> RasterBandPixels::read(const Arguments& args)
  		}
  		data = TypedArray::Data(passed_array);
 	}
-	
+
 	CPLErr err = band->get()->RasterIO(GF_Read, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) return NODE_THROW_CPLERR(err);
 
@@ -225,8 +225,8 @@ Handle<Value> RasterBandPixels::write(const Arguments& args)
 
 	buffer_w = w;
 	buffer_h = h;
-	NODE_ARG_INT_OPT(5, "buffer_x_size", buffer_w);
-	NODE_ARG_INT_OPT(6, "buffer_y_size", buffer_h);
+	NODE_ARG_INT_OPT(5, "buffer_width", buffer_w);
+	NODE_ARG_INT_OPT(6, "buffer_height", buffer_h);
 
 	type = TypedArray::Identify(passed_array);
 	if(type == GDT_Unknown) {
@@ -275,7 +275,7 @@ Handle<Value> RasterBandPixels::readBlock(const Arguments& args)
 	NODE_ARG_INT(0, "block_x_offset", x);
 	NODE_ARG_INT(1, "block_y_offset", y);
 
-	band->get()->GetBlockSize(&w, &h); 
+	band->get()->GetBlockSize(&w, &h);
 
 	GDALDataType type = band->get()->GetRasterDataType();
 
@@ -328,7 +328,7 @@ Handle<Value> RasterBandPixels::writeBlock(const Arguments& args)
 
 	GDALDataType type = TypedArray::Identify(obj);
 
-	if(type == GDT_Unknown || type != band->get()->GetRasterDataType()) 
+	if(type == GDT_Unknown || type != band->get()->GetRasterDataType())
 		return NODE_THROW("Array type does not match band data type");
  	if(TypedArray::Length(obj) < w*h) {
  		return NODE_THROW("Array length must be greater than or equal to blockSize.x * blockSize.y");
