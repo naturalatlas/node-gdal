@@ -1,5 +1,7 @@
 .PHONY: clean clean-test build rebuild release test test-concurrent format-code
 
+MOCHA_ARGS=test -R list -gc --require ./test/_common.js
+
 all: build
 
 clean: clean-test
@@ -26,12 +28,19 @@ format-code:
 build: ./node_modules/.bin/node-pre-gyp
 	./node_modules/.bin/node-pre-gyp build --enable-logging=true
 
+build-shared: ./node_modules/.bin/node-pre-gyp
+	./node_modules/.bin/node-pre-gyp build --enable-logging=true --shared_gdal=true
+
 rebuild:
 	@make clean
 	@make
 
 test: clean-test build
-	./node_modules/.bin/mocha test -R list -gc
+	./node_modules/.bin/mocha $(MOCHA_ARGS)
+	@make clean-test
+
+test-shared: clean-test build-shared
+	./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
 
 test-concurrent: clean-test

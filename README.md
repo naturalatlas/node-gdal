@@ -72,7 +72,8 @@ This binding is a collaboration between [Natural Atlas](https://github.com/natur
 Before submitting pull requests, please update the [tests](test) and make sure they all pass.
 
 ```sh
-$ make test
+$ make test # test against bundled gdal
+$ make test-shared # test against shared gdal
 ```
 
 ## License
