@@ -7,8 +7,12 @@
 #include <cpl_error.h>
 #include <stdio.h>
 
+namespace node_gdal {
+	extern FILE *log_file;
+}
+
 #ifdef ENABLE_LOGGING
-#define LOG(fmt, ...) if(log_file) { fprintf(log_file, fmt"\n", __VA_ARGS__); fflush(log_file); }
+#define LOG(fmt, ...) if (node_gdal::log_file) { fprintf(node_gdal::log_file, fmt"\n", __VA_ARGS__); fflush(node_gdal::log_file); }
 #else
 #define LOG(fmt, ...)
 #endif

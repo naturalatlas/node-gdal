@@ -24,7 +24,7 @@ format-code:
 	npm install node-pre-gyp
 
 build: ./node_modules/.bin/node-pre-gyp
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp build --enable-logging=true
 
 rebuild:
 	@make clean

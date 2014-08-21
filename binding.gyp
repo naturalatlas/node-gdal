@@ -2,7 +2,8 @@
 	"includes": ["common.gypi"],
 	"variables": {
 		"shared_gdal%": "false",
-		"runtime_link%": "shared"
+		"runtime_link%": "shared",
+		"enable_logging%": "false"
 	},
 	"targets": [
 		{
@@ -56,6 +57,11 @@
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
 			},
 			"conditions": [
+				["enable_logging == 'true'", {
+					"defines": [
+						"ENABLE_LOGGING=1"
+					]
+				}],
 				["shared_gdal == 'false'", {
 					"dependencies": [
 						"deps/libgdal/libgdal.gyp:libgdal"

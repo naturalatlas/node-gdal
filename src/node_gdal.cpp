@@ -59,7 +59,10 @@ namespace node_gdal {
 	using namespace node;
 	using namespace v8;
 
+	FILE *log_file = NULL;
+
 	extern "C" {
+
 		static Handle<Value> QuietOutput(const Arguments &args)
 		{
 			CPLSetErrorHandler(CPLQuietErrorHandler);
@@ -71,8 +74,6 @@ namespace node_gdal {
 			CPLSetErrorHandler(CPLDefaultErrorHandler);
 			return Undefined();
 		}
-
-		FILE *log_file = NULL;
 
 		static Handle<Value> StartLogging(const Arguments &args)
 		{
@@ -87,6 +88,8 @@ namespace node_gdal {
 			if (!log_file) {
 				return NODE_THROW("Error creating log file");
 			}
+			#else
+			return NODE_THROW("Logging requires node-gdal be compiled with --enable_logging=true");
 			#endif
 
 			return Undefined();
