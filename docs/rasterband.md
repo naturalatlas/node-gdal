@@ -83,7 +83,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
           - `type` : [GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))
           - `pixel_space` : integer
           - `line_space` : integer
-- `pixels.write(data, x, y, width, height, [buffer_width], [buffer_height], [pixel_space], [line_space])` : void *(throws)*
+- `pixels.write(data, x, y, width, height, [options])` : void *(throws)*
      + `x` : integer
      + `y` : integer
      + `width` : integer
