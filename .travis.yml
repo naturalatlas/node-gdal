@@ -25,6 +25,7 @@ before_install:
   - nvm use $NODE_NVM_VERSION
   - node --version
   - npm --version
+  - sudo chown -R $USER ~/.npm
 
 install:
   - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Linux' ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libgdal1-dev libgdal1h=1.10.0-1~precise1; fi;
