@@ -30,7 +30,9 @@ install:
   - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
   - node --version
   - npm --version
-  - npm install npm -g
+  # npm install npm -g
+  # fix for https://github.com/npm/npm/issues/6246:
+  - npm -g install npm@1.4.28
   - npm --version
   # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2013
   - npm install node-gyp
