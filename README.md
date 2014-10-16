@@ -13,6 +13,7 @@ $ npm install gdal --save
 To link against shared libgdal, install using:
 
 ```sh
+# requires libgdal-dev (debian: sudo apt-get install libgdal-dev)
 $ npm install gdal --build-from-source --shared_gdal
 ```
 
