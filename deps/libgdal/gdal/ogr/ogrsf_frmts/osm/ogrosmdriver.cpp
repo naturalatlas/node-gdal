@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrosmdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrosmdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMDriver class.
@@ -34,7 +34,7 @@
 
 extern "C" void CPL_DLL RegisterOGROSM();
 
-CPL_CVSID("$Id: ogrosmdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrosmdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                         ~OGROSMDriver()                           */
@@ -81,9 +81,8 @@ OGRDataSource *OGROSMDriver::Open( const char * pszFilename,
 /*                          CreateDataSource()                          */
 /************************************************************************/
 
-OGRDataSource *OGROSMDriver::CreateDataSource( const char * pszName,
-                                               char **papszOptions )
-
+OGRDataSource *OGROSMDriver::CreateDataSource( CPL_UNUSED const char * pszName,
+                                               CPL_UNUSED char **papszOptions )
 {
     return NULL;
 }
@@ -92,8 +91,7 @@ OGRDataSource *OGROSMDriver::CreateDataSource( const char * pszName,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGROSMDriver::TestCapability( const char * pszCap )
-
+int OGROSMDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

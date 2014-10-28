@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Polarimetric Workstation
  * Purpose:  Convair PolGASP data (.img/.hdr format). 
@@ -32,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: cpgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_CPG(void);
@@ -1264,7 +1264,7 @@ Im(SVV) = byte(10) ysca/127
 
 */
 
-CPLErr SIRC_QSLCRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr SIRC_QSLCRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 
 {
@@ -1417,7 +1417,7 @@ CPG_STOKESRasterBand::~CPG_STOKESRasterBand()
 
 /* Convert from Stokes to Covariance representation */
 
-CPLErr CPG_STOKESRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr CPG_STOKESRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 
 {

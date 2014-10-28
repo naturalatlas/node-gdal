@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pcrasterdataset.cpp 22609 2011-06-28 21:01:48Z rouault $
+ * $Id: pcrasterdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster CSF 2.0 raster file driver
@@ -30,7 +30,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: pcrasterdataset.cpp 22609 2011-06-28 21:01:48Z rouault $");
+CPL_CVSID("$Id: pcrasterdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #ifndef INCLUDED_PCRASTERDATASET
 #include "pcrasterdataset.h"
@@ -125,8 +125,8 @@ GDALDataset* PCRasterDataset::open(
 GDALDataset* PCRasterDataset::createCopy(
          char const* filename,
          GDALDataset* source,
-         int strict,
-         char** options,
+         CPL_UNUSED int strict,
+         CPL_UNUSED char** options,
          GDALProgressFunc progress,
          void* progressData)
 {

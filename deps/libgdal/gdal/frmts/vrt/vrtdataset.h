@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vrtdataset.h 27542 2014-07-22 21:25:37Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Declaration of virtual gdal dataset classes.
@@ -354,11 +354,13 @@ class VRTSimpleSource;
 class CPL_DLL VRTSourcedRasterBand : public VRTRasterBand
 {
   private:
-    int            bAntiRecursionFlag;
+    int            nRecursionCounter;
     CPLString      osLastLocationInfo;
     char         **papszSourceList;
 
     void           Initialize( int nXSize, int nYSize );
+
+    int            CanUseSourcesMinMaxImplementations();
 
   public:
     int            nSources;

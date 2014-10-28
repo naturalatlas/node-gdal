@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravce00datasource.cpp 24747 2012-08-08 00:13:30Z warmerdam $
+ * $Id: ogravce00datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCE00DataSource class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravce00datasource.cpp 24747 2012-08-08 00:13:30Z warmerdam $");
+CPL_CVSID("$Id: ogravce00datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRAVCE00DataSource()                         */
@@ -196,8 +196,7 @@ int OGRAVCE00DataSource::CheckAddTable( AVCE00Section *psTblSection )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAVCE00DataSource::TestCapability( const char * pszCap )
-
+int OGRAVCE00DataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

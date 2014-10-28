@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtmwaypointlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gtmwaypointlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of gtmwaypoint class.
@@ -33,7 +33,7 @@
 
 GTMWaypointLayer::GTMWaypointLayer( const char* pszName,
                                     OGRSpatialReference* poSRSIn,
-                                    int bWriterIn,
+                                    CPL_UNUSED int bWriterIn,
                                     OGRGTMDataSource* poDSIn )
 {
     poCT = NULL;

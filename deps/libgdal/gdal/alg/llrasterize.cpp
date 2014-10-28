@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: llrasterize.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: llrasterize.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Vector polygon rasterization code.
@@ -254,13 +254,11 @@ No known bug
 /************************************************************************/
 
 void GDALdllImagePoint( int nRasterXSize, int nRasterYSize, 
-                        int nPartCount, int *panPartSize,
+                        int nPartCount, CPL_UNUSED int *panPartSize,
                         double *padfX, double *padfY, double *padfVariant,
                         llPointFunc pfnPointFunc, void *pCBData )
 {
-    int     i;
- 
-    for ( i = 0; i < nPartCount; i++ )
+    for ( int i = 0; i < nPartCount; i++ )
     {
         int nX = (int)floor( padfX[i] );
         int nY = (int)floor( padfY[i] );

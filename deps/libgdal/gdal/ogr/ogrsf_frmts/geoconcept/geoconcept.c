@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "ogr_core.h"
 
-GCIO_CVSID("$Id: geoconcept.c,v 1.0.0 2007-11-03 20:58:19 drichard Exp $")
+CPL_CVSID("$Id: geoconcept.c,v 1.0.0 2007-11-03 20:58:19 drichard Exp $")
 
 #define kItemSize_GCIO      256
 #define kExtraSize_GCIO    4096
@@ -4718,8 +4718,8 @@ GCField GCIOAPI_CALL1(*) FindFeatureField_GCIO (
 
 /* -------------------------------------------------------------------- */
 static char GCIOAPI_CALL1(*) _escapeString_GCIO (
-                                                  GCExportFileH* H,
-                                                  const char *theString
+                                                 CPL_UNUSED GCExportFileH* H,
+                                                 const char *theString
                                                 )
 {
   int l, i, o;

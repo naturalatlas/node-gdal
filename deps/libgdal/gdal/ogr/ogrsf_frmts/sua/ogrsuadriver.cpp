@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsuadriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsuadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUADriver.
@@ -30,7 +30,7 @@
 #include "ogr_sua.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsuadriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsuadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRSUA();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGRSUADriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSUADriver::TestCapability( const char * pszCap )
-
+int OGRSUADriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

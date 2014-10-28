@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: irisdataset.cpp 27141 2014-04-09 09:00:05Z rouault $
+ * $Id: irisdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  IRIS Reader
  * Purpose:  All code for IRIS format Reader
@@ -43,7 +43,7 @@
 #include <sstream>
 
 
-CPL_CVSID("$Id: irisdataset.cpp 27141 2014-04-09 09:00:05Z rouault $");
+CPL_CVSID("$Id: irisdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_IRIS(void);
@@ -189,7 +189,7 @@ IRISRasterBand::~IRISRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr IRISRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr IRISRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                    void * pImage )
 
 {

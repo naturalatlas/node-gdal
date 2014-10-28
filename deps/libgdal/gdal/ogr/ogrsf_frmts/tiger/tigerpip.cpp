@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpip.cpp 22961 2011-08-20 17:09:59Z rouault $
+ * $Id: tigerpip.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPIP, providing access to .RTP files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpip.cpp 22961 2011-08-20 17:09:59Z rouault $");
+CPL_CVSID("$Id: tigerpip.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define FILE_CODE "P"
 
@@ -73,7 +73,7 @@ static const TigerRecordInfo rtP_info =
 /************************************************************************/
 
 TigerPIP::TigerPIP( OGRTigerDataSource * poDSIn,
-                            const char * pszPrototypeModule ) 
+                    CPL_UNUSED const char * pszPrototypeModule ) 
   : TigerPoint(TRUE, NULL, FILE_CODE)
 {
     poDS = poDSIn;

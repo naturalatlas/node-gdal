@@ -30,7 +30,7 @@
 #include "ogr_idrisi.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogridrisidriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogridrisidriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 // g++ ogr/ogrsf_frmts/idrisi/*.cpp -Wall -g -fPIC -shared -o ogr_Idrisi.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/idrisi -Iogr/ogrsf_frmts -Ifrmts/idrisi
 
@@ -77,8 +77,7 @@ OGRDataSource *OGRIdrisiDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRIdrisiDriver::TestCapability( const char * pszCap )
-
+int OGRIdrisiDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

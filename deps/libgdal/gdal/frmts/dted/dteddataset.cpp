@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dteddataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: dteddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  DTED Translator
  * Purpose:  GDALDataset driver for DTED translator.
@@ -33,7 +33,7 @@
 #include "ogr_spatialref.h"
 #include <algorithm>
 
-CPL_CVSID("$Id: dteddataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: dteddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_DTED(void);
@@ -125,7 +125,7 @@ DTEDRasterBand::DTEDRasterBand( DTEDDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
                                   void * pImage )
 
 {
@@ -187,7 +187,7 @@ CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr DTEDRasterBand::IWriteBlock( int nBlockXOff, int nBlockYOff,
+CPLErr DTEDRasterBand::IWriteBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
                                   void * pImage )
 
 {

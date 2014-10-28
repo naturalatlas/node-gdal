@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcartodbtablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcartodbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CartoDB Translator
  * Purpose:  Implements OGRCARTODBTableLayer class.
@@ -30,7 +30,7 @@
 #include "ogr_cartodb.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcartodbtablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcartodbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                    OGRCARTODBEscapeIdentifier( )                     */
@@ -226,8 +226,7 @@ OGRErr OGRCARTODBTableLayer::RollbackTransaction()
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRCARTODBTableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK )
-
+OGRErr OGRCARTODBTableLayer::CreateField( OGRFieldDefn *poFieldIn, CPL_UNUSED int bApproxOK )
 {
     GetLayerDefn();
 

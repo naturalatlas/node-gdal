@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrmemdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemDriver class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrmemdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRMemDriver()                           */
@@ -56,8 +56,7 @@ const char *OGRMemDriver::GetName()
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRMemDriver::Open( const char * pszFilename, int )
-
+OGRDataSource *OGRMemDriver::Open( CPL_UNUSED const char * pszFilename, int )
 {
     return NULL;
 }

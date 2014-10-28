@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbtablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcouchdbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBTableLayer class.
@@ -34,7 +34,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                       OGRCouchDBTableLayer()                         */
@@ -1034,7 +1034,7 @@ int OGRCouchDBTableLayer::GetTotalFeatureCount()
 /************************************************************************/
 
 OGRErr OGRCouchDBTableLayer::CreateField( OGRFieldDefn *poField,
-                                 int bApproxOK )
+                                          CPL_UNUSED int bApproxOK )
 {
 
     if (!poDS->IsReadWrite())

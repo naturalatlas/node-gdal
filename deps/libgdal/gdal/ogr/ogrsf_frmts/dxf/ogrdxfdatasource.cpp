@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxfdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdxfdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRDXFDataSource()                          */
@@ -74,8 +74,7 @@ OGRDXFDataSource::~OGRDXFDataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRDXFDataSource::TestCapability( const char * pszCap )
-
+int OGRDXFDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

@@ -32,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "ogr_geometry.h"
 
-CPL_CVSID("$Id: mapdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: mapdataset.cpp 27560 2014-08-04 17:52:58Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -247,12 +247,12 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLString osPath = CPLGetPath(poOpenInfo->pszFilename);
         if (CPLIsFilenameRelative(poDS->osImgFilename))
         {
-            poDS->osImgFilename = CPLFormFilename(osPath, poDS->osImgFilename, NULL);
+            poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, NULL);
         }
         else
         {
             poDS->osImgFilename = CPLGetFilename(poDS->osImgFilename);
-            poDS->osImgFilename = CPLFormFilename(osPath, poDS->osImgFilename, NULL);
+            poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, NULL);
         }
     }
 

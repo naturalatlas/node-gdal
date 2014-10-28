@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpolygon.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: tigerpolygon.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPolygon, providing access to .RTA files.
@@ -31,7 +31,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpolygon.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: tigerpolygon.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static const TigerFieldInfo rtA_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -382,8 +382,7 @@ static const TigerRecordInfo rtS_info =
 /************************************************************************/
 
 TigerPolygon::TigerPolygon( OGRTigerDataSource * poDSIn,
-                                  const char * pszPrototypeModule )
-
+                            CPL_UNUSED const char * pszPrototypeModule )
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "Polygon" );

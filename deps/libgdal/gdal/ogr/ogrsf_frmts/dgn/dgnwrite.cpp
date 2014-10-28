@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnwrite.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: dgnwrite.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  DGN Access functions related to writing DGN elements.
@@ -30,7 +30,7 @@
 
 #include "dgnlibp.h"
 
-CPL_CVSID("$Id: dgnwrite.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: dgnwrite.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static void DGNPointToInt( DGNInfo *psDGN, DGNPoint *psPoint, 
                            unsigned char *pabyTarget );
@@ -451,9 +451,8 @@ DGNHandle
  * the source element suitable to write to hDGNDst. 
  */
 
-DGNElemCore *DGNCloneElement( DGNHandle hDGNSrc, DGNHandle hDGNDst, 
+DGNElemCore *DGNCloneElement( CPL_UNUSED DGNHandle hDGNSrc, DGNHandle hDGNDst, 
                               DGNElemCore *psSrcElement )
-
 {
     DGNElemCore *psClone = NULL;
 
@@ -760,8 +759,7 @@ int DGNUpdateElemCore( DGNHandle hDGN, DGNElemCore *psElement,
  */
 
 
-int DGNUpdateElemCoreExtended( DGNHandle hDGN, DGNElemCore *psElement )
-
+int DGNUpdateElemCoreExtended( CPL_UNUSED DGNHandle hDGN, DGNElemCore *psElement )
 {
     GByte *rd = psElement->raw_data;
     int   nWords = (psElement->raw_bytes / 2) - 2;
@@ -818,8 +816,7 @@ int DGNUpdateElemCoreExtended( DGNHandle hDGN, DGNElemCore *psElement )
 /*                         DGNInitializeElemCore()                      */
 /************************************************************************/
 
-static void DGNInitializeElemCore( DGNHandle hDGN, DGNElemCore *psElement )
-
+static void DGNInitializeElemCore( CPL_UNUSED DGNHandle hDGN, DGNElemCore *psElement )
 {
     memset( psElement, 0, sizeof(DGNElemCore) );
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: aaigriddataset.cpp 27050 2014-03-18 00:09:03Z kyle $
+ * $Id: aaigriddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Implements Arc/Info ASCII Grid Format.
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: aaigriddataset.cpp 27050 2014-03-18 00:09:03Z kyle $");
+CPL_CVSID("$Id: aaigriddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_AAIGrid(void);
@@ -952,7 +952,7 @@ const char *AAIGDataset::GetProjectionRef()
 
 GDALDataset * AAIGDataset::CreateCopy(
                 const char * pszFilename, GDALDataset *poSrcDS,
-                int bStrict, char ** papszOptions, 
+                CPL_UNUSED int bStrict, char ** papszOptions, 
                 GDALProgressFunc pfnProgress, void * pProgressData )
 
 {

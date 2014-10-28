@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmscache.cpp 26900 2014-01-29 21:55:45Z rouault $
+ * $Id: gdalwmscache.cpp 27555 2014-08-02 17:47:11Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -57,9 +57,6 @@ CPLErr GDALWMSCache::Initialize(CPLXMLNode *config) {
             m_cache_path = "./gdalwmscache"; 
         }
     }
-
-    const char *cache_path = CPLGetXMLValue(config, "Path", "./gdalwmscache");
-    m_cache_path = cache_path;
 
     const char *cache_depth = CPLGetXMLValue(config, "Depth", "2");
     m_cache_depth = atoi(cache_depth);

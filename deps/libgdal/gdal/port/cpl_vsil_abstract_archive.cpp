@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_abstract_archive.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_abstract_archive.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for archive files.
@@ -35,7 +35,7 @@
 
 #define ENABLE_DEBUG 0
 
-CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 /************************************************************************/
 /*                    ~VSIArchiveEntryFileOffset()                      */
@@ -444,7 +444,7 @@ VSIArchiveReader* VSIArchiveFilesystemHandler::OpenArchiveFile(const char* archi
 /*                                 Stat()                               */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pStatBuf, int nFlags )
+int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pStatBuf, CPL_UNUSED int nFlags )
 {
     int ret = -1;
     CPLString osFileInArchive;
@@ -521,7 +521,7 @@ int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pSt
 /*                              Unlink()                                */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Unlink( const char *pszFilename )
+int VSIArchiveFilesystemHandler::Unlink( CPL_UNUSED const char *pszFilename )
 {
     return -1;
 }
@@ -530,7 +530,7 @@ int VSIArchiveFilesystemHandler::Unlink( const char *pszFilename )
 /*                             Rename()                                 */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Rename( const char *oldpath, const char *newpath )
+int VSIArchiveFilesystemHandler::Rename( CPL_UNUSED const char *oldpath, CPL_UNUSED const char *newpath )
 {
     return -1;
 }
@@ -539,7 +539,7 @@ int VSIArchiveFilesystemHandler::Rename( const char *oldpath, const char *newpat
 /*                             Mkdir()                                  */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Mkdir( const char *pszDirname, long nMode )
+int VSIArchiveFilesystemHandler::Mkdir( CPL_UNUSED const char *pszDirname, CPL_UNUSED long nMode )
 {
     return -1;
 }
@@ -548,7 +548,7 @@ int VSIArchiveFilesystemHandler::Mkdir( const char *pszDirname, long nMode )
 /*                             Rmdir()                                  */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Rmdir( const char *pszDirname )
+int VSIArchiveFilesystemHandler::Rmdir( CPL_UNUSED const char *pszDirname )
 {
     return -1;
 }

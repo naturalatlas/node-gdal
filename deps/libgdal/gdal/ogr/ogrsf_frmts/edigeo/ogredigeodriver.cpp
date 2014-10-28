@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogredigeodriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogredigeodriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  EDIGEO Translator
  * Purpose:  Implements OGREDIGEODriver.
@@ -30,7 +30,7 @@
 #include "ogr_edigeo.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogredigeodriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogredigeodriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGREDIGEO();
 
@@ -77,8 +77,7 @@ OGRDataSource *OGREDIGEODriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGREDIGEODriver::TestCapability( const char * pszCap )
-
+int OGREDIGEODriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

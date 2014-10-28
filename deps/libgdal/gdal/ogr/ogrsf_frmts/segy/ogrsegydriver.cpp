@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegydriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsegydriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SEG-Y Translator
  * Purpose:  Implements OGRSEGYDriver class.
@@ -30,7 +30,7 @@
 #include "ogr_segy.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsegydriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsegydriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           ~OGRSEGYDriver()                           */
@@ -73,8 +73,7 @@ OGRDataSource *OGRSEGYDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSEGYDriver::TestCapability( const char * pszCap )
-
+int OGRSEGYDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

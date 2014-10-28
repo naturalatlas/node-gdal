@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitffile.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitffile.c 27731 2014-09-24 07:58:14Z rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module responsible for opening NITF file, populating NITFFile
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: nitffile.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: nitffile.c 27731 2014-09-24 07:58:14Z rouault $");
 
 static int NITFWriteBLOCKA( VSILFILE* fp, vsi_l_offset nOffsetUDIDL,
                             int *pnOffset,
@@ -275,7 +275,7 @@ retry_read_header:
             abyDELIM2_L2[2] == 0x14 && abyDELIM2_L2[3] == 0xBF)
         {
             int SFHL2 = atoi((const char*)(abyDELIM2_L2 + 4));
-            if (SFHL2 > 0 && nFileSize > 11 + SFHL2 + 11 )
+            if (SFHL2 > 0 && nFileSize > (GUIntBig)(11 + SFHL2 + 11) )
             {
                 VSIFSeekL( fp, nFileSize - 11 - SFHL2 - 11 , SEEK_SET );
 
@@ -475,11 +475,11 @@ void NITFClose( NITFFile *psFile )
 
 static void NITFGotoOffset(VSILFILE* fp, GUIntBig nLocation)
 {
+    GUIntBig iFill;
     GUIntBig nCurrentLocation = VSIFTellL(fp);
     if (nLocation > nCurrentLocation)
     {
         GUIntBig nFileSize;
-        int iFill;
         char cSpace = ' ';
 
         VSIFSeekL(fp, 0, SEEK_END);
@@ -1643,7 +1643,7 @@ void NITFExtractMetadata( char ***ppapszMetadata, const char *pachHeader,
     char szWork[400];
     char* pszWork;
 
-    if (nLength >= sizeof(szWork) - 1)
+    if ((size_t)nLength >= sizeof(szWork) - 1)
         pszWork = (char*)CPLMalloc(nLength + 1);
     else
         pszWork = szWork;
@@ -1906,7 +1906,7 @@ const NITFSeries* NITFGetSeriesInfo(const char* pszFilename)
             {
                 seriesCode[0] = pszFilename[i+1];
                 seriesCode[1] = pszFilename[i+2];
-                for(i=0;i<sizeof(nitfSeries) / sizeof(nitfSeries[0]); i++)
+                for(i=0;(size_t)i<sizeof(nitfSeries) / sizeof(nitfSeries[0]); i++)
                 {
                     if (EQUAL(seriesCode, nitfSeries[i].code))
                     {
@@ -2076,7 +2076,7 @@ int NITFReconcileAttachments( NITFFile *psFile )
 static const char* NITFFindValFromEnd(char** papszMD,
                                       int nMDSize,
                                       const char* pszVar,
-                                      const char* pszDefault)
+                                      CPL_UNUSED const char* pszDefault)
 {
     int nVarLen = strlen(pszVar);
     int nIter = nMDSize-1;

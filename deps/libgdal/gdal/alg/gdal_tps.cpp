@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_tps.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_tps.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Thin Plate Spline transformer (GDAL wrapper portion)
@@ -37,7 +37,7 @@
 #include "cpl_atomic_ops.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdal_tps.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdal_tps.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 CPLXMLNode *GDALSerializeTPSTransformer( void *pTransformArg );
@@ -206,7 +206,7 @@ void *GDALCreateTPSTransformerInt( int nGCPCount, const GDAL_GCP *pasGCPList,
 
     if( !psInfo->bForwardSolved || !psInfo->bReverseSolved )
     {
-        delete psInfo;
+        GDALDestroyTPSTransformer(psInfo);
         return NULL;
     }
 
@@ -273,7 +273,7 @@ void GDALDestroyTPSTransformer( void *pTransformArg )
 
 int GDALTPSTransform( void *pTransformArg, int bDstToSrc, 
                       int nPointCount, 
-                      double *x, double *y, double *z, 
+                      double *x, double *y, CPL_UNUSED double *z,
                       int *panSuccess )
 
 {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerdecorator.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrlayerdecorator.cpp 27588 2014-08-18 20:57:46Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRLayerDecorator class
@@ -29,7 +29,7 @@
 
 #include "ogrlayerdecorator.h"
 
-CPL_CVSID("$Id: ogrlayerdecorator.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrlayerdecorator.cpp 27588 2014-08-18 20:57:46Z rouault $");
 
 OGRLayerDecorator::OGRLayerDecorator(OGRLayer* poDecoratedLayer,
                                      int bTakeOwnership) :
@@ -186,12 +186,12 @@ OGRStyleTable *OGRLayerDecorator::GetStyleTable()
 
 void        OGRLayerDecorator::SetStyleTableDirectly( OGRStyleTable *poStyleTable )
 {
-    return m_poDecoratedLayer->SetStyleTableDirectly(poStyleTable);
+    m_poDecoratedLayer->SetStyleTableDirectly(poStyleTable);
 }
 
 void        OGRLayerDecorator::SetStyleTable(OGRStyleTable *poStyleTable)
 {
-    return m_poDecoratedLayer->SetStyleTable(poStyleTable);
+    m_poDecoratedLayer->SetStyleTable(poStyleTable);
 }
 
 OGRErr      OGRLayerDecorator::StartTransaction()

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonutils.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonutils.cpp 27613 2014-08-30 15:55:30Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of private utilities used within OGR GeoJSON Driver.
@@ -41,6 +41,11 @@ int GeoJSONIsObject( const char* pszText )
 {
     if( NULL == pszText )
         return FALSE;
+
+    /* Skip UTF-8 BOM (#5630) */
+    const GByte* pabyData = (const GByte*)pszText;
+    if( pabyData[0] == 0xEF && pabyData[1] == 0xBB && pabyData[2] == 0xBF )
+        pszText += 3;
 
 /* -------------------------------------------------------------------- */
 /*      This is a primitive test, but we need to perform it fast.       */

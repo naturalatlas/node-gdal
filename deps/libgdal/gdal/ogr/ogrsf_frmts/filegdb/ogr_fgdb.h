@@ -1,5 +1,5 @@
 /******************************************************************************
-* $Id: ogr_fgdb.h 27044 2014-03-16 23:41:27Z rouault $
+* $Id: ogr_fgdb.h 27654 2014-09-09 18:28:10Z rouault $
 *
 * Project:  OpenGIS Simple Features Reference Implementation
 * Purpose:  Standard includes and class definitions ArcObjects OGR driver.
@@ -181,7 +181,8 @@ protected:
 
   bool GDBToOGRFields(CPLXMLNode* psFields);  
   bool ParseGeometryDef(CPLXMLNode* psGeometryDef);
-  bool ParseSpatialReference(CPLXMLNode* psSpatialRefNode, std::string* pOutWkt, std::string* pOutWKID);
+  bool ParseSpatialReference(CPLXMLNode* psSpatialRefNode, std::string* pOutWkt,
+                             std::string* pOutWKID, std::string* pOutLatestWKID);
 
   FGdbDataSource* m_pDS;
   Table* m_pTable;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_buffered_reader.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_buffered_reader.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Implementation of buffered reader IO functions.
@@ -37,7 +37,7 @@
 
 #define MAX_BUFFER_SIZE 65536
 
-CPL_CVSID("$Id: cpl_vsil_buffered_reader.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_buffered_reader.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 class VSIBufferedReaderHandle : public VSIVirtualHandle
 {
@@ -201,7 +201,7 @@ size_t VSIBufferedReaderHandle::Read( void *pBuffer, size_t nSize, size_t nMemb 
 /*                              Write()                                 */
 /************************************************************************/
 
-size_t VSIBufferedReaderHandle::Write( const void *pBuffer, size_t nSize, size_t nMemb )
+size_t VSIBufferedReaderHandle::Write( CPL_UNUSED const void *pBuffer, CPL_UNUSED size_t nSize, CPL_UNUSED size_t nMemb )
 {
     CPLError(CE_Failure, CPLE_NotSupported,
              "VSIFWriteL is not supported on buffer reader streams\n");

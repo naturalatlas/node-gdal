@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: airsardataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: airsardataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  AirSAR Reader
  * Purpose:  Implements read support for AirSAR Polarimetric data.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_vsi.h"
 
-CPL_CVSID("$Id: airsardataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: airsardataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_AirSAR(void);
@@ -173,7 +173,7 @@ AirSARRasterBand::~AirSARRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr AirSARRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr AirSARRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                       void * pImage )
 
 {

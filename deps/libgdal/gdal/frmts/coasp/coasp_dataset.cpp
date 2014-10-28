@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: coasp_dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: coasp_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  DRDC Configurable Airborne SAR Processor (COASP) data reader
  * Purpose:  Support in GDAL for the DRDC COASP format data, both Metadata
@@ -39,7 +39,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: coasp_dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: coasp_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_COASP(void);
@@ -292,8 +292,8 @@ COASPRasterBand::COASPRasterBand( COASPDataset *poDS, GDALDataType eDataType,
 	this->nBlockYSize = 1;
 }
 
-CPLErr COASPRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff, 
-	void *pImage )
+CPLErr COASPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, 
+                                    void *pImage )
 {
 	if (this->fp == NULL) {
 		CPLError(CE_Fatal, 1, "file pointer freed unexpectedly\n");

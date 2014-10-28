@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_multiproc.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_multiproc.cpp 27720 2014-09-21 17:58:47Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  CPL Multi-Threading, and process handling portability functions.
@@ -41,7 +41,7 @@
 #  include <wce_time.h>
 #endif
 
-CPL_CVSID("$Id: cpl_multiproc.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_multiproc.cpp 27720 2014-09-21 17:58:47Z goatbar $");
 
 #if defined(CPL_MULTIPROC_STUB) && !defined(DEBUG)
 #  define MUTEX_NONE
@@ -1206,8 +1206,7 @@ void *CPLCreateMutex()
 /*                          CPLAcquireMutex()                           */
 /************************************************************************/
 
-int CPLAcquireMutex( void *hMutexIn, double dfWaitInSeconds )
-
+int CPLAcquireMutex( void *hMutexIn, CPL_UNUSED double dfWaitInSeconds )
 {
     int err;
 

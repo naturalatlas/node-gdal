@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: northwood.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: northwood.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GRC/GRD Reader
  * Purpose:  Northwood Format basic implementation
@@ -480,9 +480,8 @@ void nwtCloseGrid( NWT_GRID * pGrd )
         return;
 }
 
-void nwtGetRow( NWT_GRID * pGrd )
+void nwtGetRow( CPL_UNUSED NWT_GRID * pGrd )
 {
-
 }
 
 void nwtPrintGridHeader( NWT_GRID * pGrd )

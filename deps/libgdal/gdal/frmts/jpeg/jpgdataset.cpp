@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jpgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: jpgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  JPEG JFIF Driver
  * Purpose:  Implement GDAL JPEG Support based on IJG libjpeg.
@@ -50,7 +50,7 @@ typedef struct {
         GUInt32  tiff_diroff;    /* byte offset to first directory */
 } TIFFHeader;
 
-CPL_CVSID("$Id: jpgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: jpgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 #ifdef LIBJPEG_12_PATH 
@@ -748,8 +748,7 @@ JPGMaskBand::JPGMaskBand( JPGDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr JPGMaskBand::IReadBlock( int nBlockX, int nBlockY, void *pImage )
-
+CPLErr JPGMaskBand::IReadBlock( CPL_UNUSED int nBlockX, int nBlockY, void *pImage )
 {
     JPGDataset *poJDS = (JPGDataset *) poDS;
 

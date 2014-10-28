@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpxdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgpxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogrgpxdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgpxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define SPACE_FOR_METADATA 160
 
@@ -145,7 +145,7 @@ OGRLayer *OGRGPXDataSource::GetLayer( int iLayer )
 /************************************************************************/
 
 OGRLayer * OGRGPXDataSource::CreateLayer( const char * pszLayerName,
-                                          OGRSpatialReference *poSRS,
+                                          CPL_UNUSED OGRSpatialReference *poSRS,
                                           OGRwkbGeometryType eType,
                                           char ** papszOptions )
 
@@ -239,7 +239,7 @@ void OGRGPXDataSource::startElementValidateCbk(const char *pszName, const char *
 /*                      dataHandlerValidateCbk()                        */
 /************************************************************************/
 
-void OGRGPXDataSource::dataHandlerValidateCbk(const char *data, int nLen)
+void OGRGPXDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
 {
     nDataHandlerCounter ++;
     if (nDataHandlerCounter >= BUFSIZ)

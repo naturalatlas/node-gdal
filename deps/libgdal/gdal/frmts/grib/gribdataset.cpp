@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gribdataset.cpp 27116 2014-04-02 19:29:50Z rouault $
+ * $Id: gribdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GRIB Driver
  * Purpose:  GDALDataset driver for GRIB translator for read support
@@ -41,7 +41,7 @@
 
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: gribdataset.cpp 27116 2014-04-02 19:29:50Z rouault $");
+CPL_CVSID("$Id: gribdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_GRIB(void);
@@ -339,7 +339,7 @@ CPLErr GRIBRasterBand::LoadData()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GRIBRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr GRIBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                    void * pImage )
 
 {
@@ -858,12 +858,17 @@ void GRIBDataset::SetGribMetaData(grib_MetaData* meta)
           rMinY = meta->gds.lat1;
         }
 
-        if (meta->gds.lon1 > meta->gds.lon2)
+        if( meta->gds.Nx == 1 )
+          rPixelSizeX = meta->gds.Dx;
+        else if (meta->gds.lon1 > meta->gds.lon2)
           rPixelSizeX = (360.0 - (meta->gds.lon1 - meta->gds.lon2)) / (meta->gds.Nx - 1);
         else
           rPixelSizeX = (meta->gds.lon2 - meta->gds.lon1) / (meta->gds.Nx - 1);
 
-        rPixelSizeY = (rMaxY - rMinY) / (meta->gds.Ny - 1);
+        if( meta->gds.Ny == 1 )
+            rPixelSizeY = meta->gds.Dy;
+        else
+            rPixelSizeY = (rMaxY - rMinY) / (meta->gds.Ny - 1);
 
         // Do some sanity checks for cases that can't be handled by the above
         // pixel size corrections. GRIB1 has a minimum precision of 0.001

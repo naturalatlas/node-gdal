@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgtmlayer.cpp 17588 2009-08-27 20:52:33Z rouault $
+ * $Id: ogrgtmlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of OGRGTMLayer class.
@@ -132,7 +132,7 @@ OGRErr OGRGTMLayer::CheckAndFixCoordinatesValidity( double& pdfLatitude, double&
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGTMLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
+OGRErr OGRGTMLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 
 {
     for( int iField = 0; iField < poFeatureDefn->GetFieldCount(); iField++ )

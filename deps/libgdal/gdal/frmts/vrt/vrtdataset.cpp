@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vrtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTDataset
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: vrtdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: vrtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            VRTDataset()                             */
@@ -865,7 +865,7 @@ CPLErr VRTDataset::AddBand( GDALDataType eType, char **papszOptions )
         }
         
         bRelativeToVRT = 
-            CSLFetchBoolean( papszOptions, "RelativeToVRT", FALSE );
+            CSLFetchBoolean( papszOptions, "relativeToVRT", FALSE );
 
 /* -------------------------------------------------------------------- */
 /*      Create and initialize the band.                                 */
@@ -1106,7 +1106,7 @@ CPLErr VRTDataset::Delete( const char * pszFilename )
 /*                          CreateMaskBand()                            */
 /************************************************************************/
 
-CPLErr VRTDataset::CreateMaskBand( int nFlags )
+CPLErr VRTDataset::CreateMaskBand( CPL_UNUSED int nFlags )
 {
     if (poMaskBand != NULL)
     {

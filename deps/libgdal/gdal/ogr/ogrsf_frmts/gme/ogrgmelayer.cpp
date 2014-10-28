@@ -54,6 +54,7 @@ OGRGMELayer::OGRGMELayer(OGRGMEDataSource* poDS,
     bCreateTablePending = false;
     osTableId = pszTableId;
     bInTransaction = false;
+    m_poFilterGeom = NULL;
 }
 
 
@@ -120,7 +121,13 @@ int OGRGMELayer::TestCapability( const char * pszCap )
         return TRUE;
     else if(EQUAL(pszCap,OLCIgnoreFields))
         return TRUE;
+    else if(EQUAL(pszCap,OLCFastSpatialFilter))
+        return TRUE;
+    else if(EQUAL(pszCap,OLCSequentialWrite))
+        return TRUE;
     else if(EQUAL(pszCap,OLCRandomWrite))
+        return TRUE;
+    else if(EQUAL(pszCap,OLCDeleteFeature))
         return TRUE;
     else if(EQUAL(pszCap,OLCTransactions))
         return TRUE;
@@ -277,6 +284,12 @@ void OGRGMELayer::GetPageOfFeatures()
         osMoreOptions += osWhere;
     }
 
+    if (!osIntersects.empty()) {
+        CPLDebug( "GME Layer", "found intersects=%s", osIntersects.c_str());
+        osMoreOptions += "&intersects=";
+        osMoreOptions += osIntersects;
+    }
+
     CPLHTTPResult *psFeaturesResult =
         poDS->MakeRequest(osRequest, osMoreOptions);
 
@@ -354,10 +367,12 @@ OGRFeature *OGRGMELayer::GetNextRawFeature()
 /*      Handle gx_id.                                                   */
 /* -------------------------------------------------------------------- */
     const char *gx_id = OGRGMEGetJSONString(properties_obj, "gx_id");
-    CPLString gmeId(gx_id);
-    omnosIdToGMEKey[++m_nFeaturesRead] = gmeId;
-    poFeature->SetFID(m_nFeaturesRead);
-    CPLDebug("GME", "Mapping ids: \"%s\" to %d", gx_id, (int)m_nFeaturesRead);
+    if (gx_id) {
+        CPLString gmeId(gx_id);
+        omnosIdToGMEKey[++m_nFeaturesRead] = gmeId;
+        poFeature->SetFID(m_nFeaturesRead);
+        CPLDebug("GME", "Mapping ids: \"%s\" to %d", gx_id, (int)m_nFeaturesRead);
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Handle geometry.                                                */
@@ -470,6 +485,79 @@ OGRErr OGRGMELayer::SetIgnoredFields(const char ** papszFields )
     }
     return eErr;
 }
+
+/************************************************************************/
+/*                       SetSpatialFilter()                             */
+/************************************************************************/
+
+void OGRGMELayer::SetSpatialFilter( OGRGeometry *poGeomIn)
+{
+    if (poGeomIn == NULL) {
+        osIntersects.clear();
+        OGRLayer::SetSpatialFilter( poGeomIn );
+        return;
+    }
+    switch( poGeomIn->getGeometryType() )
+    {
+      case wkbPolygon:
+        WindPolygonCCW((OGRPolygon *) poGeomIn);
+      case wkbPoint:
+      case wkbLineString:
+        if( poGeomIn == NULL ) {
+          osIntersects = "";
+        }
+        else {
+            char * pszWkt;
+            poGeomIn->exportToWkt(&pszWkt);
+            char * pszEscaped = CPLEscapeString(pszWkt, -1, CPLES_URL);
+            osIntersects = CPLString(pszEscaped);
+            CPLFree(pszEscaped);
+            CPLFree(pszWkt);
+        }
+        ResetReading();
+        break;
+      default:
+        m_iGeomFieldFilter = 0;
+        if( InstallFilter( poGeomIn ) )
+            ResetReading();
+        break;
+    }
+}
+
+/************************************************************************/
+/*                          WindPolygonCCW()                            */
+/************************************************************************/
+
+OGRPolygon* OGRGMELayer::WindPolygonCCW( OGRPolygon *poPolygon )
+{
+    CPLAssert( NULL != poPolygon );
+
+    OGRLinearRing* poRing = poPolygon->getExteriorRing();
+    if (poRing == NULL) {
+        return poPolygon;
+    }
+
+    // If the linear ring is CW re-wind it CCW
+    if (poRing->isClockwise() ) {
+      poRing->reverseWindingOrder();
+    }
+
+    /* Interior rings. */
+    const int nCount = poPolygon->getNumInteriorRings();
+    for( int i = 0; i < nCount; ++i ) {
+        poRing = poPolygon->getInteriorRing( i );
+        if (poRing == NULL)
+            continue;
+        // If the linear ring is CW re-wind it CCW
+
+        if (poRing->isClockwise() ) {
+            poRing->reverseWindingOrder();
+        }
+    }
+
+    return poPolygon;
+}
+
 
 /************************************************************************/
 /*                            BatchPatch()                              */
@@ -725,7 +813,7 @@ OGRErr OGRGMELayer::DeleteFeature( long nFID )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGMELayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
+OGRErr OGRGMELayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     CPLDebug("GME", "create field %s of type %s, pending = %d",
              poField->GetNameRef(), OGRFieldDefn::GetFieldTypeName(poField->GetType()),

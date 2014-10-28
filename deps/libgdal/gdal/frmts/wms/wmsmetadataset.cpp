@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wmsmetadataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: wmsmetadataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Definition of GDALWMSMetaDataset class
@@ -235,15 +235,15 @@ char **GDALWMSMetaDataset::GetMetadata( const char *pszDomain )
 /************************************************************************/
 
 void GDALWMSMetaDataset::AddSubDataset( const char* pszLayerName,
-                                          const char* pszTitle,
-                                          const char* pszAbstract,
-                                          const char* pszSRS,
-                                          const char* pszMinX,
-                                          const char* pszMinY,
-                                          const char* pszMaxX,
-                                          const char* pszMaxY,
-                                          CPLString osFormat,
-                                          CPLString osTransparent)
+                                        const char* pszTitle,
+                                        CPL_UNUSED const char* pszAbstract,
+                                        const char* pszSRS,
+                                        const char* pszMinX,
+                                        const char* pszMinY,
+                                        const char* pszMaxX,
+                                        const char* pszMaxY,
+                                        CPLString osFormat,
+                                        CPLString osTransparent)
 
 {
     CPLString osSubdatasetName = "WMS:";

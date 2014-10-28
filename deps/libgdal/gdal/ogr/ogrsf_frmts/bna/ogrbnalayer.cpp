@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnalayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrbnalayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNALayer class.
@@ -560,8 +560,7 @@ OGRErr OGRBNALayer::CreateFeature( OGRFeature *poFeature )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRBNALayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
-
+OGRErr OGRBNALayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     if( !bWriter || nFeatures != 0)
         return OGRERR_FAILURE;

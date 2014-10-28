@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cplgetsymbol.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cplgetsymbol.cpp 27461 2014-06-18 12:38:34Z rouault $
  *
  * Project:  Common Portability Library
  * Purpose:  Fetch a function pointer from a shared library / DLL.
@@ -30,7 +30,7 @@
 
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: cplgetsymbol.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cplgetsymbol.cpp 27461 2014-06-18 12:38:34Z rouault $");
 
 
 /* ==================================================================== */
@@ -143,8 +143,8 @@ void *CPLGetSymbol( const char * pszLibrary, const char * pszSymbolName )
     void        *pSymbol;
     UINT        uOldErrorMode;
 
-    /* Avoid error boxes to pop up (#5122) */
-    uOldErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX);
+    /* Avoid error boxes to pop up (#5211, #5525) */
+    uOldErrorMode = SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     pLibrary = LoadLibrary(pszLibrary);
 

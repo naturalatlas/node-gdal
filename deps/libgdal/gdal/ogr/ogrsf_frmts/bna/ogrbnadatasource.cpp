@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrbnadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNADataSource class
@@ -106,10 +106,9 @@ OGRLayer *OGRBNADataSource::GetLayer( int iLayer )
 /************************************************************************/
 
 OGRLayer * OGRBNADataSource::CreateLayer( const char * pszLayerName,
-                                          OGRSpatialReference *poSRS,
+                                          CPL_UNUSED OGRSpatialReference *poSRS,
                                           OGRwkbGeometryType eType,
-                                          char ** papszOptions )
-
+                                          CPL_UNUSED char ** papszOptions )
 {
     BNAFeatureType bnaFeatureType;
     

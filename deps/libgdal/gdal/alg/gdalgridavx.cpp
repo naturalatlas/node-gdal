@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgridavx.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalgridavx.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -33,7 +33,7 @@
 #ifdef HAVE_AVX_AT_COMPILE_TIME
 #include <immintrin.h>
 
-CPL_CVSID("$Id: gdalgridavx.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalgridavx.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          CPLHaveRuntimeAVX()                         */
@@ -85,9 +85,9 @@ CPLErr
 GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
                                         const void *poOptions,
                                         GUInt32 nPoints,
-                                        const double *unused_padfX,
-                                        const double *unused_padfY,
-                                        const double *unused_padfZ,
+                                        CPL_UNUSED const double *unused_padfX,
+                                        CPL_UNUSED const double *unused_padfY,
+                                        CPL_UNUSED const double *unused_padfZ,
                                         double dfXPoint, double dfYPoint,
                                         double *pdfValue,
                                         void* hExtraParamsIn )

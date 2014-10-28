@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerdatasource.cpp 24433 2012-05-17 16:21:43Z rouault $
+ * $Id: ogrtigerdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include <ctype.h>
 
-CPL_CVSID("$Id: ogrtigerdatasource.cpp 24433 2012-05-17 16:21:43Z rouault $");
+CPL_CVSID("$Id: ogrtigerdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        TigerClassifyVersion()                        */
@@ -318,6 +318,11 @@ int OGRTigerDataSource::Open( const char * pszFilename, int bTestOpen,
     if( VSI_ISREG(stat.st_mode) )
     {
         char       szModule[128];
+        
+        if( strlen(CPLGetFilename(pszFilename)) == 0 )
+        {
+            return FALSE;
+        }
 
         pszPath = CPLStrdup( CPLGetPath(pszFilename) );
 
@@ -815,8 +820,8 @@ int OGRTigerDataSource::Create( const char *pszNameIn, char **papszOptions )
 
 OGRLayer *OGRTigerDataSource::CreateLayer( const char *pszLayerName, 
                                            OGRSpatialReference *poSpatRef, 
-                                           OGRwkbGeometryType eGType, 
-                                           char **papszOptions )
+                                           CPL_UNUSED OGRwkbGeometryType eGType, 
+                                           CPL_UNUSED char **papszOptions )
 
 {
     OGRTigerLayer       *poLayer = NULL;

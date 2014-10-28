@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpdfdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpdfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PDF Translator
  * Purpose:  Implements OGRPDFDataSource class
@@ -39,7 +39,7 @@
 #define SQUARE(x) ((x)*(x))
 #define EPSILON 1e-5
 
-CPL_CVSID("$Id: ogrpdfdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpdfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRPDFLayer()                             */
@@ -1950,9 +1950,9 @@ int OGRPDFDataSource::Create( const char * pszName, char **papszOptions )
 
 OGRLayer *
 OGRPDFDataSource::CreateLayer( const char * pszLayerName,
-                                OGRSpatialReference *poSRS,
-                                OGRwkbGeometryType eType,
-                                char ** papszOptions )
+                               OGRSpatialReference *poSRS,
+                               OGRwkbGeometryType eType,
+                               CPL_UNUSED char ** papszOptions )
 
 {
 /* -------------------------------------------------------------------- */

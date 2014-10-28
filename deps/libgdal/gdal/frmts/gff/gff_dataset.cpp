@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gff_dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gff_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Ground-based SAR Applitcations Testbed File Format driver
  * Purpose:  Support in GDAL for Sandia National Laboratory's GFF format
@@ -36,7 +36,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gff_dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gff_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /*******************************************************************
  * Declaration of the GFFDataset class                             *
@@ -137,8 +137,8 @@ GFFRasterBand::GFFRasterBand( GFFDataset *poDS, int nBand,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GFFRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
-				void *pImage ) 
+CPLErr GFFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+                                  void *pImage ) 
 {
     GFFDataset *poGDS = (GFFDataset *)poDS;
     long nOffset = poGDS->nLength;

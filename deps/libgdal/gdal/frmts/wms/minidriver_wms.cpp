@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver_wms.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: minidriver_wms.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -176,14 +176,16 @@ void GDALWMSMiniDriver_WMS::ImageRequest(CPLString *url, const GDALWMSImageReque
     CPLDebug("WMS", "URL = %s", url->c_str());
 }
 
-void GDALWMSMiniDriver_WMS::TiledImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri, const GDALWMSTiledImageRequestInfo &tiri) {
+void GDALWMSMiniDriver_WMS::TiledImageRequest(CPLString *url,
+                                              const GDALWMSImageRequestInfo &iri,
+                                              CPL_UNUSED const GDALWMSTiledImageRequestInfo &tiri) {
     ImageRequest(url, iri);
 }
 
 
 void GDALWMSMiniDriver_WMS::GetTiledImageInfo(CPLString *url,
                                               const GDALWMSImageRequestInfo &iri,
-                                              const GDALWMSTiledImageRequestInfo &tiri,
+                                              CPL_UNUSED const GDALWMSTiledImageRequestInfo &tiri,
                                               int nXInBlock,
                                               int nYInBlock)
 {

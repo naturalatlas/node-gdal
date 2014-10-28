@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_minizip_zip.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_minizip_zip.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -33,8 +33,9 @@
 #include <string.h>
 #include <time.h>
 #include "zlib.h"
-#include "cpl_minizip_zip.h"
 #include "cpl_conv.h"
+#include "cpl_minizip_zip.h"
+#include "cpl_port.h"
 #include "cpl_string.h"
 
 #ifdef STDC
@@ -98,7 +99,8 @@
 #  define DEF_MEM_LEVEL  MAX_MEM_LEVEL
 #endif
 #endif
-const char zip_copyright[] =
+
+CPL_UNUSED const char zip_copyright[] =
    " zip 1.01 Copyright 1998-2004 Gilles Vollant - http://www.winimage.com/zLibDll";
 
 
@@ -317,7 +319,7 @@ local void ziplocal_putValue_inmemory (void *dest, uLong x, int nbByte)
 /****************************************************************************/
 
 
-local uLong ziplocal_TmzDateToDosDate(const tm_zip*ptm,uLong dosDate)
+local uLong ziplocal_TmzDateToDosDate(const tm_zip*ptm, CPL_UNUSED uLong dosDate)
 {
     uLong year = (uLong)ptm->tm_year;
     if (year>1980)
@@ -697,7 +699,7 @@ extern int ZEXPORT cpl_zipOpenNewFileInZip3 (
     int memLevel,
     int strategy,
     const char* password,
-    uLong crcForCrypting )
+    CPL_UNUSED uLong crcForCrypting )
 {
     zip_internal* zi;
     uInt size_filename;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgcommand.cpp 15085 2008-07-31 13:41:31Z mloskot $
+ * $Id: msgcommand.cpp 27371 2014-05-21 09:35:42Z rouault $
  *
  * Purpose:  Implementation of MSGCommand class. Parse the src_dataset
  *           string that is meant for the MSG driver.
@@ -29,6 +29,7 @@
 
 #include "msgcommand.h"
 #include <cstdlib>
+#include <cstdio>
 using namespace std;
 
 #ifdef _WIN32

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: xpmdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: xpmdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  XPM Driver
  * Purpose:  Implement GDAL XPM Support
@@ -34,7 +34,7 @@
 #include "gdal_frmts.h"						      
 
 
-CPL_CVSID("$Id: xpmdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: xpmdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static unsigned char *ParseXPM( const char *pszInput,
                                 int *pnXSize, int *pnYSize, 
@@ -201,13 +201,12 @@ GDALDataset *XPMDataset::Open( GDALOpenInfo * poOpenInfo )
 
 static GDALDataset *
 XPMCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-               int bStrict, char ** papszOptions, 
-               GDALProgressFunc pfnProgress, void * pProgressData )
-
+               int bStrict, CPL_UNUSED char ** papszOptions, 
+               CPL_UNUSED GDALProgressFunc pfnProgress, CPL_UNUSED void * pProgressData )
 {
-    int  nBands = poSrcDS->GetRasterCount();
-    int  nXSize = poSrcDS->GetRasterXSize();
-    int  nYSize = poSrcDS->GetRasterYSize();
+    const int  nBands = poSrcDS->GetRasterCount();
+    const int  nXSize = poSrcDS->GetRasterXSize();
+    const int  nYSize = poSrcDS->GetRasterYSize();
     GDALColorTable *poCT;
 
 /* -------------------------------------------------------------------- */

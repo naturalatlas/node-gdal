@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: gmlfeature.cpp 27188 2014-04-14 23:26:49Z rouault $
+ * $Id: gmlfeature.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLFeature.
@@ -165,8 +165,7 @@ void GMLFeature::SetPropertyDirectly( int iIndex, char *pszValue )
 /*                                Dump()                                */
 /************************************************************************/
 
-void GMLFeature::Dump( FILE * fp )
-
+void GMLFeature::Dump( CPL_UNUSED FILE * fp )
 {
     printf( "GMLFeature(%s):\n", m_poClass->GetName() );
     

@@ -35,7 +35,7 @@
 #include "ogr_spatialref.h"
 #include "gdal_proxy.h"
 
-CPL_CVSID("$Id: dimapdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: dimapdataset.cpp 27222 2014-04-19 18:09:01Z rouault $");
 
 CPL_C_START
 void    GDALRegister_DIMAP(void);
@@ -432,7 +432,13 @@ GDALDataset *DIMAPDataset::Open( GDALOpenInfo * poOpenInfo )
         
         CPLXMLNode *psDatasetComponent = psDatasetComponents->psChild;
 
-        for( ; psDatasetComponent != NULL; psDatasetComponent = psDatasetComponent->psNext ) 
+        if( CPLGetXMLNode(psDoc, "Raster_Data") ) 
+        {
+            osDIMAPFilename = osMDFilename; 
+        }
+
+        for( ; osDIMAPFilename.size() == 0 && psDatasetComponent != NULL;
+                psDatasetComponent = psDatasetComponent->psNext ) 
         {
             const char* pszComponentType = CPLGetXMLValue(psDatasetComponent, "COMPONENT_TYPE","");
             if( strcmp(pszComponentType, "DIMAP") == 0 )
@@ -500,7 +506,7 @@ GDALDataset *DIMAPDataset::Open( GDALOpenInfo * poOpenInfo )
                     {
                         CPLString osPath = CPLGetPath(osDIMAPFilename);
                         osSTRIPFilename = 
-                            CPLFormFilename( osPath, pszHref, NULL );
+                            CPLFormCIFilename( osPath, pszHref, NULL );
                         
                         break;
                     }
@@ -609,6 +615,12 @@ int DIMAPDataset::ReadImageInformation()
         adfGeoTransform[3] = atof(CPLGetXMLValue(psGeoLoc,"ULYMAP","0"));
         adfGeoTransform[4] = 0.0;
         adfGeoTransform[5] = -atof(CPLGetXMLValue(psGeoLoc,"YDIM","0"));
+    }
+    else
+    {
+        // Try to get geotransform from underlying raster. 
+        if ( poImageDS->GetGeoTransform(adfGeoTransform) == CE_None ) 
+            bHaveGeoTransform = TRUE; 
     }
 
 /* -------------------------------------------------------------------- */
@@ -818,7 +830,7 @@ int DIMAPDataset::ReadImageInformation2()
         {
             CPLString osPath = CPLGetPath( osDIMAPFilename );
             osImageDSFilename = 
-                CPLFormFilename( osPath, pszHref, NULL );
+                CPLFormCIFilename( osPath, pszHref, NULL );
         }
         else
         {
@@ -864,14 +876,26 @@ int DIMAPDataset::ReadImageInformation2()
         adfGeoTransform[4] = 0.0;
         adfGeoTransform[5] = -atof(CPLGetXMLValue(psGeoLoc,"YDIM","0"));
     }
+    else
+    {
+        // Try to get geotransform from underlying raster. 
+        if ( poImageDS->GetGeoTransform(adfGeoTransform) == CE_None ) 
+            bHaveGeoTransform = TRUE; 
+    }
+
 
 /* -------------------------------------------------------------------- */
 /*      Collect the CRS.  For now we look only for EPSG codes.          */
 /* -------------------------------------------------------------------- */
     const char *pszSRS = CPLGetXMLValue( 
         psDoc, 
-        "Coordinate_Reference_System.Projected_CRS..PROJECTED_CRS_CODE", 
+        "Coordinate_Reference_System.Projected_CRS.PROJECTED_CRS_CODE", 
         NULL );
+    if( pszSRS == NULL )
+        pszSRS = CPLGetXMLValue( 
+            psDoc, 
+            "Coordinate_Reference_System.Geodetic_CRS.GEODETIC_CRS_CODE", 
+            NULL );
 
     if( pszSRS != NULL )
     {

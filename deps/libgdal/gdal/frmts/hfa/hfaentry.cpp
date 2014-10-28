@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaentry.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hfaentry.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Implementation of the HFAEntry class for reading and relating
@@ -38,7 +38,7 @@
 #include "hfa_p.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: hfaentry.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hfaentry.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                              HFAEntry()                              */
@@ -252,8 +252,8 @@ HFAEntry* HFAEntry::BuildEntryFromMIFObject( HFAEntry *poContainer, const char *
 /*      Create a pseudo-HFAEntry wrapping a MIFObject.                  */
 /************************************************************************/
 
-HFAEntry::HFAEntry( HFAEntry * poContainer,
-                    const char *pszMIFObjectPath,
+HFAEntry::HFAEntry( CPL_UNUSED HFAEntry * poContainer,
+                    CPL_UNUSED const char *pszMIFObjectPath,
                     const char * pszDictionnary, 
                     const char * pszTypeName,
                     int nDataSizeIn,
@@ -710,7 +710,7 @@ int HFAEntry::GetFieldValue( const char * pszFieldPath,
 /*                           GetFieldCount()                            */
 /************************************************************************/
 
-int HFAEntry::GetFieldCount( const char * pszFieldPath, CPLErr *peErr )
+int HFAEntry::GetFieldCount( const char * pszFieldPath, CPL_UNUSED CPLErr *peErr )
 
 {
     HFAEntry	*poEntry = this;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgfttablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgfttablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTTableLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_gft.h"
 
-CPL_CVSID("$Id: ogrgfttablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgfttablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                         OGRGFTTableLayer()                           */
@@ -471,7 +471,7 @@ OGRFeatureDefn * OGRGFTTableLayer::GetLayerDefn()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRGFTTableLayer::GetFeatureCount(int bForce)
+int OGRGFTTableLayer::GetFeatureCount(CPL_UNUSED int bForce)
 {
     GetLayerDefn();
 
@@ -522,7 +522,7 @@ int OGRGFTTableLayer::GetFeatureCount(int bForce)
 /************************************************************************/
 
 OGRErr OGRGFTTableLayer::CreateField( OGRFieldDefn *poField,
-                                 int bApproxOK )
+                                      CPL_UNUSED int bApproxOK )
 {
 
     if (!poDS->IsReadWrite())

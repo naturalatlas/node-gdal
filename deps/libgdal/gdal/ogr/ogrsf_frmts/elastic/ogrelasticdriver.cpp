@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrelasticdriver.cpp 23836 2012-01-31 19:32:04Z rouault $
+ * $Id: ogrelasticdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -30,7 +30,7 @@
 #include "ogr_elastic.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrelasticdriver.cpp 23836 2012-01-31 19:32:04Z rouault $");
+CPL_CVSID("$Id: ogrelasticdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                         ~OGRElasticDriver()                          */
@@ -51,7 +51,8 @@ const char *OGRElasticDriver::GetName() {
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRElasticDriver::Open(const char * pszFilename, int bUpdate) {
+OGRDataSource *OGRElasticDriver::Open(CPL_UNUSED const char * pszFilename,
+                                      CPL_UNUSED int bUpdate) {
     return NULL;
 }
 

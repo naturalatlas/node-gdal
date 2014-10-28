@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntf_estlayers.cpp 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ntf_estlayers.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NTF Translator
  * Purpose:  NTFFileReader methods related to establishing the schemas
@@ -33,7 +33,7 @@
 #include "ntf.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ntf_estlayers.cpp 26466 2013-09-14 09:07:46Z rouault $");
+CPL_CVSID("$Id: ntf_estlayers.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define MAX_LINK        5000
 
@@ -312,7 +312,7 @@ static OGRFeature *TranslateOscarRouteLine( NTFFileReader *poReader,
 /*                       TranslateOscarComment()                        */
 /************************************************************************/
 
-static OGRFeature *TranslateOscarComment( NTFFileReader *poReader,
+static OGRFeature *TranslateOscarComment( CPL_UNUSED NTFFileReader *poReader,
                                           OGRNTFLayer *poLayer,
                                           NTFRecord **papoGroup )
 
@@ -1144,7 +1144,7 @@ static OGRFeature *TranslateMeridian2Line( NTFFileReader *poReader,
 /*      Also used for Meridian, Oscar and BaseData.GB nodes.            */
 /************************************************************************/
 
-static OGRFeature *TranslateStrategiNode( NTFFileReader *poReader,
+static OGRFeature *TranslateStrategiNode( CPL_UNUSED NTFFileReader *poReader,
                                           OGRNTFLayer *poLayer,
                                           NTFRecord **papoGroup )
 

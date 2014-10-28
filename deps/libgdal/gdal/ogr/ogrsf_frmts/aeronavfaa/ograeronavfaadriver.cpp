@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograeronavfaadriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ograeronavfaadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAADriver.
@@ -30,7 +30,7 @@
 #include "ogr_aeronavfaa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ograeronavfaadriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ograeronavfaadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 // g++ ogr/ogrsf_frmts/aeronavfaa/*.cpp -Wall -g -fPIC -shared -o ogr_AeronavFAA.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/aernovfaa -Iogr/ogrsf_frmts
 
@@ -77,8 +77,7 @@ OGRDataSource *OGRAeronavFAADriver::Open( const char * pszFilename, int bUpdate 
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAeronavFAADriver::TestCapability( const char * pszCap )
-
+int OGRAeronavFAADriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

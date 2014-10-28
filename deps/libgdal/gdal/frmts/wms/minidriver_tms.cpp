@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver_tms.cpp 26079 2013-06-13 01:31:48Z warmerdam $
+ * $Id: minidriver_tms.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -74,7 +74,8 @@ void GDALWMSMiniDriver_TMS::GetCapabilities(GDALWMSMiniDriverCapabilities *caps)
     caps->m_max_overview_count = 32;
 }
 
-void GDALWMSMiniDriver_TMS::ImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri) {
+void GDALWMSMiniDriver_TMS::ImageRequest(CPL_UNUSED CPLString *url,
+                                         CPL_UNUSED const GDALWMSImageRequestInfo &iri) {
 }
 
 void GDALWMSMiniDriver_TMS::TiledImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri, const GDALWMSTiledImageRequestInfo &tiri) {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerlandmarks.cpp 22961 2011-08-20 17:09:59Z rouault $
+ * $Id: tigerlandmarks.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerLandmarks, providing access to .RT7 files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerlandmarks.cpp 22961 2011-08-20 17:09:59Z rouault $");
+CPL_CVSID("$Id: tigerlandmarks.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define FILE_CODE "7"
 
@@ -76,7 +76,7 @@ static const TigerRecordInfo rt7_info =
 /************************************************************************/
 
 TigerLandmarks::TigerLandmarks( OGRTigerDataSource * poDSIn,
-                                const char * pszPrototypeModule )
+                                CPL_UNUSED const char * pszPrototypeModule )
   : TigerPoint(FALSE, NULL, FILE_CODE)
 {
     poDS = poDSIn;

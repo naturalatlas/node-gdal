@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitesqlfunctions.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqlitesqlfunctions.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Extension SQL functions
@@ -69,7 +69,7 @@ class OGRSQLiteExtensionData
 /*                     OGRSQLiteExtensionData()                         */
 /************************************************************************/
 
-OGRSQLiteExtensionData::OGRSQLiteExtensionData(sqlite3* hDB) :
+OGRSQLiteExtensionData::OGRSQLiteExtensionData(CPL_UNUSED sqlite3* hDB) :
         hRegExpCache(NULL), hGeocodingSession(NULL)
 {
 #ifdef DEBUG
@@ -438,8 +438,8 @@ static double OGR2SQLITE_GetValAsDouble(sqlite3_value* val, int* pbGotVal)
 /*                      OGR2SQLITE_GetGeom()                            */
 /************************************************************************/
 
-static OGRGeometry* OGR2SQLITE_GetGeom(sqlite3_context* pContext,
-                                       int argc, sqlite3_value** argv,
+static OGRGeometry* OGR2SQLITE_GetGeom(CPL_UNUSED sqlite3_context* pContext,
+                                       CPL_UNUSED int argc, sqlite3_value** argv,
                                        int* pnSRSId)
 {
     if( sqlite3_value_type (argv[0]) != SQLITE_BLOB )

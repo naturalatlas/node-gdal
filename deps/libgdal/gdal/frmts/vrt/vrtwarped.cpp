@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtwarped.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vrtwarped.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTWarpedRasterBand *and VRTWarpedDataset.
@@ -35,7 +35,7 @@
 #include "gdal_alg_priv.h"
 #include <cassert>
 
-CPL_CVSID("$Id: vrtwarped.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: vrtwarped.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                      GDALAutoCreateWarpedVRT()                       */
@@ -653,9 +653,9 @@ int VRTWarpedOverviewTransform( void *pTransformArg, int bDstToSrc,
 /************************************************************************/
 
 CPLErr 
-VRTWarpedDataset::IBuildOverviews( const char *pszResampling, 
+VRTWarpedDataset::IBuildOverviews( CPL_UNUSED const char *pszResampling, 
                                    int nOverviews, int *panOverviewList, 
-                                   int nListBands, int *panBandList,
+                                   CPL_UNUSED int nListBands, CPL_UNUSED int *panBandList,
                                    GDALProgressFunc pfnProgress, 
                                    void * pProgressData )
     

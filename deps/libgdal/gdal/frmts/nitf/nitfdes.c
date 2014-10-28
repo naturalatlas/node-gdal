@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdes.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfdes.c 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module responsible for implementation of DE segments.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: nitfdes.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: nitfdes.c 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          NITFDESAccess()                             */
@@ -429,7 +429,7 @@ int   NITFDESGetTRE( NITFDES* psDES,
     psSegInfo = psDES->psFile->pasSegmentInfo + psDES->iSegment;
     fp = psDES->psFile->fp;
 
-    if (nOffset >= psSegInfo->nSegmentSize)
+    if ((GUIntBig)nOffset >= psSegInfo->nSegmentSize)
         return FALSE;
 
     VSIFSeekL(fp, psSegInfo->nSegmentStart + nOffset, SEEK_SET);
@@ -460,7 +460,7 @@ int   NITFDESGetTRE( NITFDES* psDES,
                  nTRESize, szTRETempName);
         return FALSE;
     }
-    if (nOffset + 11 + nTRESize > psSegInfo->nSegmentSize)
+    if ((GUIntBig)(nOffset + 11 + nTRESize) > psSegInfo->nSegmentSize)
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Cannot read %s TRE. Not enough bytes : remaining %d, expected %d",
@@ -565,7 +565,7 @@ int NITFDESExtractShapefile(NITFDES* psDES, const char* pszRadixFileName)
         }
 
         VSIFSeekL(psDES->psFile->fp, psSegInfo->nSegmentStart + anOffset[iShpFile], SEEK_SET);
-        if (VSIFReadL(pabyBuffer, 1, nSize, psDES->psFile->fp) != nSize)
+        if (VSIFReadL(pabyBuffer, 1, nSize, psDES->psFile->fp) != (size_t)nSize)
         {
             VSIFree(pabyBuffer);
             VSIFree(pszFilename);

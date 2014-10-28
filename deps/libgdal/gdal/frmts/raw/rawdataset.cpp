@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rawdataset.cpp 27194 2014-04-16 10:07:21Z rouault $
+ * $Id: rawdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Generic Raw Binary Driver
  * Purpose:  Implementation of RawDataset and RawRasterBand classes.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: rawdataset.cpp 27194 2014-04-16 10:07:21Z rouault $");
+CPL_CVSID("$Id: rawdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           RawRasterBand()                            */
@@ -348,7 +348,7 @@ CPLErr RawRasterBand::AccessLine( int iLine )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr RawRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr RawRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 
 {
@@ -375,7 +375,7 @@ CPLErr RawRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 /*                            IWriteBlock()                             */
 /************************************************************************/
 
-CPLErr RawRasterBand::IWriteBlock( int nBlockXOff, int nBlockYOff,
+CPLErr RawRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                    void * pImage )
 
 {
@@ -574,8 +574,8 @@ int RawRasterBand::IsSignificantNumberOfLinesLoaded( int nLineOff, int nLines )
 /*                           CanUseDirectIO()                           */
 /************************************************************************/
 
-int RawRasterBand::CanUseDirectIO(int nXOff, int nYOff, int nXSize, int nYSize,
-                                  GDALDataType eBufType)
+int RawRasterBand::CanUseDirectIO(CPL_UNUSED int nXOff, int nYOff, int nXSize, int nYSize,
+                                  CPL_UNUSED GDALDataType eBufType)
 {
 
 /* -------------------------------------------------------------------- */

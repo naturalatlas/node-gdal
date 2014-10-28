@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wcsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: wcsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WCS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WCS.
@@ -34,7 +34,7 @@
 #include "cpl_http.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: wcsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: wcsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -500,7 +500,7 @@ WCSDataset::~WCSDataset()
 /*      (FALSE) for a given request configuration and environment.      */
 /************************************************************************/
 
-int WCSDataset::TestUseBlockIO( int nXOff, int nYOff, int nXSize, int nYSize,
+int WCSDataset::TestUseBlockIO( CPL_UNUSED int nXOff, CPL_UNUSED int nYOff, int nXSize, int nYSize,
                                 int nBufXSize, int nBufYSize )
 
 {
@@ -557,7 +557,7 @@ CPLErr WCSDataset::IRasterIO( GDALRWFlag eRWFlag,
 /************************************************************************/
 
 CPLErr 
-WCSDataset::DirectRasterIO( GDALRWFlag eRWFlag,
+WCSDataset::DirectRasterIO( CPL_UNUSED GDALRWFlag eRWFlag,
                             int nXOff, int nYOff, int nXSize, int nYSize,
                             void * pData, int nBufXSize, int nBufYSize,
                             GDALDataType eBufType, 

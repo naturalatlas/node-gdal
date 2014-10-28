@@ -134,8 +134,7 @@ void  OGRSXFDataSource::CloseFile()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSXFDataSource::TestCapability( const char * pszCap )
-
+int OGRSXFDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -594,7 +593,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     long iEllips = anData[0];
     long iVCS = anData[1];
     long iProjSys = anData[2];
-    long iDatum = anData[3];
+    /* long iDatum = anData[3]; Unused. */
     double dfProjScale = 1;
 
     double adfPrjParams[8] = { 0 };
@@ -893,7 +892,7 @@ void OGRSXFDataSource::FillLayers()
         {
             delete pOGRSXFLayer;
             nDeletedLayerIndex = i;
-            while (nDeletedLayerIndex < nLayers - 1)
+            while (nDeletedLayerIndex < (int)(nLayers - 1))
             {
                 papoLayers[nDeletedLayerIndex] = papoLayers[nDeletedLayerIndex + 1];
                 nDeletedLayerIndex++;
@@ -1210,7 +1209,7 @@ void OGRSXFDataSource::CreateLayers(VSILFILE* fpRSC)
     vsi_l_offset nOffset = stRSCFileHeader.Layers.nOffset;
     _layer LAYER;
 
-    for (i = 0; i < stRSCFileHeader.Layers.nRecordCount; ++i)
+    for (i = 0; (GUInt32)i < stRSCFileHeader.Layers.nRecordCount; ++i)
     {
         VSIFReadL(&LAYER, nLayerStructSize, 1, fpRSC);
 

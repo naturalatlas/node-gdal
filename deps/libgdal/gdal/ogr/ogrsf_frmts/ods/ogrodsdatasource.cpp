@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrodsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  ODS Translator
  * Purpose:  Implements OGRODSDataSource class
@@ -34,7 +34,7 @@
 #include "ods_formula.h"
 #include <set>
 
-CPL_CVSID("$Id: ogrodsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrodsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 
 /************************************************************************/
@@ -273,7 +273,7 @@ int OGRODSDataSource::Open( const char * pszFilename,
 /*                             Create()                                 */
 /************************************************************************/
 
-int OGRODSDataSource::Create( const char * pszFilename, char **papszOptions )
+int OGRODSDataSource::Create( const char * pszFilename, CPL_UNUSED char **papszOptions )
 {
     bUpdated = TRUE;
     bUpdatable = TRUE;
@@ -610,7 +610,7 @@ void OGRODSDataSource::startElementTable(const char *pszName,
 /*                           endElementTable()                          */
 /************************************************************************/
 
-void OGRODSDataSource::endElementTable(const char *pszName)
+void OGRODSDataSource::endElementTable(CPL_UNUSED const char *pszName)
 {
     if (stateStack[nStackDepth].nBeginDepth == nDepth)
     {
@@ -742,7 +742,7 @@ void OGRODSDataSource::startElementRow(const char *pszName,
 /*                            endElementRow()                           */
 /************************************************************************/
 
-void OGRODSDataSource::endElementRow(const char *pszName)
+void OGRODSDataSource::endElementRow(CPL_UNUSED const char *pszName)
 {
     if (stateStack[nStackDepth].nBeginDepth == nDepth)
     {
@@ -930,7 +930,7 @@ void OGRODSDataSource::endElementRow(const char *pszName)
 /************************************************************************/
 
 void OGRODSDataSource::startElementCell(const char *pszName,
-                                        const char **ppszAttr)
+                                        CPL_UNUSED const char **ppszAttr)
 {
     if (osValue.size() == 0 && strcmp(pszName, "text:p") == 0)
     {
@@ -942,7 +942,7 @@ void OGRODSDataSource::startElementCell(const char *pszName,
 /*                            endElementCell()                          */
 /************************************************************************/
 
-void OGRODSDataSource::endElementCell(const char *pszName)
+void OGRODSDataSource::endElementCell(CPL_UNUSED const char *pszName)
 {
     if (stateStack[nStackDepth].nBeginDepth == nDepth)
     {
@@ -1088,7 +1088,7 @@ static void XMLCALL endElementStylesCbk(void *pUserData, const char *pszName)
     ((OGRODSDataSource*)pUserData)->endElementStylesCbk(pszName);
 }
 
-void OGRODSDataSource::endElementStylesCbk(const char *pszName)
+void OGRODSDataSource::endElementStylesCbk(CPL_UNUSED const char *pszName)
 {
     if (bStopParsing) return;
 
@@ -1208,9 +1208,9 @@ void OGRODSDataSource::AnalyseSettings()
 
 OGRLayer *
 OGRODSDataSource::CreateLayer( const char * pszLayerName,
-                                OGRSpatialReference *poSRS,
-                                OGRwkbGeometryType eType,
-                                char ** papszOptions )
+                               CPL_UNUSED OGRSpatialReference *poSRS,
+                               CPL_UNUSED OGRwkbGeometryType eType,
+                               char ** papszOptions )
 
 {
 /* -------------------------------------------------------------------- */

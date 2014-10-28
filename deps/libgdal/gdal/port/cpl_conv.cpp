@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_conv.cpp 27121 2014-04-03 22:08:55Z rouault $
+ * $Id: cpl_conv.cpp 27550 2014-07-25 20:43:52Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Convenience functions.
@@ -35,7 +35,7 @@
 #include "cpl_vsi.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: cpl_conv.cpp 27121 2014-04-03 22:08:55Z rouault $");
+CPL_CVSID("$Id: cpl_conv.cpp 27550 2014-07-25 20:43:52Z rouault $");
 
 #if defined(WIN32CE)
 #  include "cpl_wince.h"
@@ -1619,6 +1619,16 @@ CPLSetConfigOption( const char *pszKey, const char *pszValue )
 }
 
 /************************************************************************/
+/*                   CPLSetThreadLocalTLSFreeFunc()                     */
+/************************************************************************/
+
+/* non-stdcall wrapper function for CSLDestroy() (#5590) */
+static void CPLSetThreadLocalTLSFreeFunc( void* pData )
+{
+    CSLDestroy( (char**) pData );
+}
+
+/************************************************************************/
 /*                   CPLSetThreadLocalConfigOption()                    */
 /************************************************************************/
 
@@ -1653,7 +1663,8 @@ CPLSetThreadLocalConfigOption( const char *pszKey, const char *pszValue )
     papszTLConfigOptions = 
         CSLSetNameValue( papszTLConfigOptions, pszKey, pszValue );
 
-    CPLSetTLSWithFreeFunc( CTLS_CONFIGOPTIONS, papszTLConfigOptions, (CPLTLSFreeFunc)CSLDestroy );
+    CPLSetTLSWithFreeFunc( CTLS_CONFIGOPTIONS, papszTLConfigOptions,
+                           CPLSetThreadLocalTLSFreeFunc );
 }
 
 /************************************************************************/

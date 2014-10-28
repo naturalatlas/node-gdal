@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceosopen.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ceosopen.c 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CEOS Translator
  * Purpose:  Implementation of non-GDAL dependent CEOS support.
@@ -30,7 +30,7 @@
 
 #include "ceosopen.h"
 
-CPL_CVSID("$Id: ceosopen.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ceosopen.c 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            CEOSScanInt()                             */
@@ -275,7 +275,7 @@ CEOSImage * CEOSOpen( const char * pszFilename, const char * pszAccess )
     if( psImage->nImageRecLength <= 0 ||
         psImage->nPrefixBytes < 0 ||
         psImage->nBands > INT_MAX / psImage->nImageRecLength ||
-        psImage->nBands > INT_MAX / sizeof(int))
+        (size_t)psImage->nBands > INT_MAX / sizeof(int))
     {
         CEOSDestroyRecord( psRecord );
         CEOSClose( psImage );

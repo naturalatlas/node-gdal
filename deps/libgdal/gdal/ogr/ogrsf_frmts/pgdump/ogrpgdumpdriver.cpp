@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdumpdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgdumpdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDumpDriver class.
@@ -30,7 +30,7 @@
 #include "ogr_pgdump.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgdumpdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgdumpdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                         ~OGRPGDumpDriver()                           */
@@ -55,8 +55,8 @@ const char *OGRPGDumpDriver::GetName()
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRPGDumpDriver::Open( const char * pszFilename,
-                                     int bUpdate )
+OGRDataSource *OGRPGDumpDriver::Open( CPL_UNUSED const char * pszFilename,
+                                      CPL_UNUSED int bUpdate )
 
 {
     return NULL;

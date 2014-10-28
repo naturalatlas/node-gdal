@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: elasdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: elasdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  ELAS Translator
  * Purpose:  Complete implementation of ELAS translator module for GDAL.
@@ -30,7 +30,7 @@
 
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: elasdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: elasdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_ELAS(void);
@@ -153,7 +153,7 @@ ELASRasterBand::ELASRasterBand( ELASDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr ELASRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr ELASRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                    void * pImage )
 
 {
@@ -188,7 +188,7 @@ CPLErr ELASRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 /*                            IWriteBlock()                             */
 /************************************************************************/
 
-CPLErr ELASRasterBand::IWriteBlock( int nBlockXOff, int nBlockYOff,
+CPLErr ELASRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                      void * pImage )
 
 {

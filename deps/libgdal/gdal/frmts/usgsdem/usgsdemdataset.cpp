@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: usgsdemdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: usgsdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  USGS DEM Driver
  * Purpose:  All reader for USGS DEM Reader
@@ -34,7 +34,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: usgsdemdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: usgsdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_USGSDEM(void);
@@ -327,7 +327,7 @@ USGSDEMRasterBand::USGSDEMRasterBand( USGSDEMDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr USGSDEMRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, CPL_UNUSED int nBlockYOff,
                                       void * pImage )
 
 {

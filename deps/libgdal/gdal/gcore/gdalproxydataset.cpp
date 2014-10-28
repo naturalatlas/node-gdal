@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxydataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalproxydataset.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that act as proxy for underlying
@@ -30,7 +30,7 @@
 
 #include "gdal_proxy.h"
 
-CPL_CVSID("$Id: gdalproxydataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalproxydataset.cpp 27723 2014-09-22 18:21:08Z goatbar $");
 
 /* ******************************************************************** */
 /*                        GDALProxyDataset                              */
@@ -126,7 +126,7 @@ D_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, CreateMaskBand, ( int nFlags ), (nFl
 /*                    UnrefUnderlyingDataset()                        */
 /************************************************************************/
 
-void GDALProxyDataset::UnrefUnderlyingDataset(GDALDataset* poUnderlyingDataset)
+void GDALProxyDataset::UnrefUnderlyingDataset(CPL_UNUSED GDALDataset* poUnderlyingDataset)
 {
 }
 
@@ -298,6 +298,6 @@ RB_PROXY_METHOD_WITH_RET(CPLVirtualMem*, NULL, GetVirtualMemAuto,
 /*                 UnrefUnderlyingRasterBand()                        */
 /************************************************************************/
 
-void GDALProxyRasterBand::UnrefUnderlyingRasterBand(GDALRasterBand* poUnderlyingRasterBand)
+void GDALProxyRasterBand::UnrefUnderlyingRasterBand(CPL_UNUSED GDALRasterBand* poUnderlyingRasterBand)
 {
 }

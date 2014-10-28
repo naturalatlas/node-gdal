@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigeraltname.cpp 23871 2012-02-02 03:24:07Z warmerdam $
+ * $Id: tigeraltname.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerAltName, providing access to RT4 files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigeraltname.cpp 23871 2012-02-02 03:24:07Z warmerdam $");
+CPL_CVSID("$Id: tigeraltname.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define FILE_CODE "4"
 
@@ -58,8 +58,7 @@ static const TigerRecordInfo rt4_info =
 /************************************************************************/
 
 TigerAltName::TigerAltName( OGRTigerDataSource * poDSIn,
-                            const char * pszPrototypeModule ) : TigerFileBase(&rt4_info, FILE_CODE)
-
+                            CPL_UNUSED const char * pszPrototypeModule ) : TigerFileBase(&rt4_info, FILE_CODE)
 {
     OGRFieldDefn        oField("",OFTInteger);
 

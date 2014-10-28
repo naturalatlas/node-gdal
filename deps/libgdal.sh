@@ -1,5 +1,6 @@
 #!/bin/bash
-cd libgdal
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/libgdal"
 
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
@@ -11,10 +12,10 @@ dir_gyp_templates=./gyp-templates
 
 rm -rf $dir_gdal
 if [[ ! -f gdal.tar.gz ]]; then
-	curl http://download.osgeo.org/gdal/1.11.0/gdal-1.11.0.tar.gz -o gdal.tar.gz
+	curl http://download.osgeo.org/gdal/1.11.1/gdal-1.11.1.tar.gz -o gdal.tar.gz
 fi
 tar -xzf gdal.tar.gz
-mv gdal-1.11.0 $dir_gdal
+mv gdal-1.11.1 $dir_gdal
 
 rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig

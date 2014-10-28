@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrvfkdriver.cpp 25340 2012-12-21 20:30:21Z rouault $
+ * $Id: ogrvfkdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVFKDriver class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrvfkdriver.cpp 25340 2012-12-21 20:30:21Z rouault $");
+CPL_CVSID("$Id: ogrvfkdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRVFKDriver()                             */
@@ -84,7 +84,7 @@ OGRDataSource *OGRVFKDriver::Open(const char * pszFilename,
 
   \return TRUE on success or FALSE on failure
 */
-int OGRVFKDriver::TestCapability(const char *pszCap)
+int OGRVFKDriver::TestCapability(CPL_UNUSED const char *pszCap)
 {
     return FALSE;
 }

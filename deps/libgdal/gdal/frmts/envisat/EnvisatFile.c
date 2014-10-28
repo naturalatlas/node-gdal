@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: EnvisatFile.c 27098 2014-03-27 00:16:11Z rouault $
+ * $Id: EnvisatFile.c 27731 2014-09-24 07:58:14Z rouault $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Low Level Envisat file access (read/write) API.
@@ -33,7 +33,7 @@
 #  include "cpl_conv.h"
 #  include "EnvisatFile.h"
 
-CPL_CVSID("$Id: EnvisatFile.c 27098 2014-03-27 00:16:11Z rouault $");
+CPL_CVSID("$Id: EnvisatFile.c 27731 2014-09-24 07:58:14Z rouault $");
 
 #else
 #  include "APP/app.h"
@@ -1204,10 +1204,10 @@ Returns:
 -----------------------------------------------------------------------------*/
 
 int EnvisatFile_GetDatasetIndex( EnvisatFile *self, const char *ds_name )
-
 {
-    int		i;
     char	padded_ds_name[100];
+    size_t i;
+    int ii;
 
     /* 
      * Padd the name.  While the normal product spec says the DS_NAME will
@@ -1225,12 +1225,12 @@ int EnvisatFile_GetDatasetIndex( EnvisatFile *self, const char *ds_name )
     /* 
      * Compare only for the full length of DS_NAME we have saved.
      */
-    for( i = 0; i < self->ds_count; i++ )
+    for( ii = 0; ii < self->ds_count; ii++ )
     {
-        if( strncmp( padded_ds_name, self->ds_info[i]->ds_name, 
-                     strlen(self->ds_info[i]->ds_name) ) == 0 )
+        if( strncmp( padded_ds_name, self->ds_info[ii]->ds_name, 
+                     strlen(self->ds_info[ii]->ds_name) ) == 0 )
         {
-            return i;
+            return ii;
         }
     }
 
@@ -1739,7 +1739,7 @@ int S_NameValueList_Parse( const char *text, int text_offset,
         line_offset = (int) (next_text - text) + text_offset;
         while( *next_text != '\0' && *next_text != '\n' )
         {
-            if( line_len > sizeof(line)-1 )
+          if( (size_t)line_len > sizeof(line)-1 )
             {
                 SendError( "S_NameValueList_Parse(): "
                            "Corrupt line, longer than 1024 characters." );

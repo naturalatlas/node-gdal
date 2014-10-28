@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grddataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: grddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GRD Reader
  * Purpose:  GDAL driver for Northwood Grid Format
@@ -173,7 +173,7 @@ GDALColorInterp NWT_GRDRasterBand::GetColorInterpretation()
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
-CPLErr NWT_GRDRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff, void *pImage )
+CPLErr NWT_GRDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, void *pImage )
 {
     NWT_GRDDataset *poGDS = (NWT_GRDDataset *) poDS;
     char *pszRecord;

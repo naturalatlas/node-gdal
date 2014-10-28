@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpolygoneconomic.cpp 22961 2011-08-20 17:09:59Z rouault $
+ * $Id: tigerpolygoneconomic.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPolygonEconomic, providing access to .RTE files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpolygoneconomic.cpp 22961 2011-08-20 17:09:59Z rouault $");
+CPL_CVSID("$Id: tigerpolygoneconomic.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define FILE_CODE       "E"
 
@@ -84,8 +84,7 @@ static const TigerRecordInfo rtE_info =
 /************************************************************************/
 
 TigerPolygonEconomic::TigerPolygonEconomic( OGRTigerDataSource * poDSIn,
-                              const char * pszPrototypeModule ) : TigerFileBase(&rtE_info, FILE_CODE)
-
+                                            CPL_UNUSED const char * pszPrototypeModule ) : TigerFileBase(&rtE_info, FILE_CODE)
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "PolygonEconomic" );

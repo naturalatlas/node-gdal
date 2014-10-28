@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gpb.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gpb.h 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
@@ -226,6 +226,7 @@ static void SkipVarInt(GByte** ppabyData)
 /*                         SkipUnknownField()                           */
 /************************************************************************/
 
+/* TODO: Move static function into the cpp file where it is used. */
 #define SKIP_UNKNOWN_FIELD_INLINE(pabyData, pabyDataLimit, verbose) \
         int nWireType = GET_WIRETYPE(nKey); \
         if (verbose) \

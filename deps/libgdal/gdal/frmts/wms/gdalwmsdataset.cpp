@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalwmsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -571,7 +571,7 @@ const char *GDALWMSDataset::GetProjectionRef() {
 /************************************************************************/
 /*                           SetProjection()                            */
 /************************************************************************/
-CPLErr GDALWMSDataset::SetProjection(const char *proj) {
+CPLErr GDALWMSDataset::SetProjection(CPL_UNUSED const char *proj) {
     return CE_Failure;
 }
 
@@ -591,15 +591,18 @@ CPLErr GDALWMSDataset::GetGeoTransform(double *gt) {
 /************************************************************************/
 /*                          SetGeoTransform()                           */
 /************************************************************************/
-CPLErr GDALWMSDataset::SetGeoTransform(double *gt) {
+CPLErr GDALWMSDataset::SetGeoTransform(CPL_UNUSED double *gt) {
     return CE_Failure;
 }
 
 /************************************************************************/
 /*                             AdviseRead()                             */
 /************************************************************************/
-CPLErr GDALWMSDataset::AdviseRead(int x0, int y0, int sx, int sy, int bsx, int bsy, GDALDataType bdt, int band_count, int *band_map, char **options) {
-//    printf("AdviseRead(%d, %d, %d, %d)\n", x0, y0, sx, sy);
+CPLErr GDALWMSDataset::AdviseRead(int x0, int y0,
+                                  int sx, int sy,
+                                  int bsx, int bsy,
+                                  GDALDataType bdt, CPL_UNUSED int band_count, CPL_UNUSED int *band_map,
+                                  char **options) {
     if (m_offline_mode || !m_use_advise_read) return CE_None;
     if (m_cache == NULL) return CE_Failure;
 

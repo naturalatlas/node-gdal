@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrshapedriver.cpp 25881 2013-04-08 20:34:55Z rouault $
+ * $Id: ogrshapedriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRShapeDriver class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrshapedriver.cpp 25881 2013-04-08 20:34:55Z rouault $");
+CPL_CVSID("$Id: ogrshapedriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRShapeDriver()                           */
@@ -78,8 +78,7 @@ OGRDataSource *OGRShapeDriver::Open( const char * pszFilename,
 /************************************************************************/
 
 OGRDataSource *OGRShapeDriver::CreateDataSource( const char * pszName,
-                                                 char **papszOptions )
-
+                                                 CPL_UNUSED char **papszOptions )
 {
     VSIStatBuf  stat;
     int         bSingleNewFile = FALSE;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgftdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Google Fusion Table Translator
  * Purpose:  Implements OGRGFTDataSource class
@@ -29,7 +29,7 @@
 
 #include "ogr_gft.h"
 
-CPL_CVSID("$Id: ogrgftdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgftdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define GDAL_API_KEY "AIzaSyA_2h1_wXMOLHNSVeo-jf1ACME-M1XMgP0"
 #define FUSION_TABLE_SCOPE "https://www.googleapis.com/Fauth/fusiontables"
@@ -305,7 +305,7 @@ const char*  OGRGFTDataSource::GetAPIURL() const
 /************************************************************************/
 
 OGRLayer   *OGRGFTDataSource::CreateLayer( const char *pszName,
-                                           OGRSpatialReference *poSpatialRef,
+                                           CPL_UNUSED OGRSpatialReference *poSpatialRef,
                                            OGRwkbGeometryType eGType,
                                            char ** papszOptions )
 {

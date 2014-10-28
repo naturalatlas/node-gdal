@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaldataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdaldataset.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Base class for raster file formats.  
@@ -34,7 +34,7 @@
 #include "cpl_multiproc.h"
 #include <map>
 
-CPL_CVSID("$Id: gdaldataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdaldataset.cpp 27723 2014-09-22 18:21:08Z goatbar $");
 
 CPL_C_START
 GDALAsyncReader *
@@ -789,8 +789,7 @@ const char * CPL_STDCALL GDALGetProjectionRef( GDALDatasetH hDS )
  * @return CE_Failure if an error occurs, otherwise CE_None.
  */
 
-CPLErr GDALDataset::SetProjection( const char * pszProjection )
-
+CPLErr GDALDataset::SetProjection( CPL_UNUSED const char * pszProjection )
 {
     if( !(GetMOFlags() & GMO_IGNORE_UNIMPLEMENTED) )
         ReportError( CE_Failure, CPLE_NotSupported,
@@ -900,8 +899,7 @@ CPLErr CPL_STDCALL GDALGetGeoTransform( GDALDatasetH hDS, double * padfTransform
  * written.
  */
 
-CPLErr GDALDataset::SetGeoTransform( double * padfTransform )
-
+CPLErr GDALDataset::SetGeoTransform( CPL_UNUSED double * padfTransform )
 {
     if( !(GetMOFlags() & GMO_IGNORE_UNIMPLEMENTED) )
         ReportError( CE_Failure, CPLE_NotSupported,
@@ -921,8 +919,7 @@ CPLErr GDALDataset::SetGeoTransform( double * padfTransform )
  */
 
 CPLErr CPL_STDCALL 
-GDALSetGeoTransform( GDALDatasetH hDS, double * padfTransform )
-
+GDALSetGeoTransform( GDALDatasetH hDS, CPL_UNUSED double * padfTransform )
 {
     VALIDATE_POINTER1( hDS, "GDALSetGeoTransform", CE_Failure );
 
@@ -944,8 +941,7 @@ GDALSetGeoTransform( GDALDatasetH hDS, double * padfTransform )
  * @return the desired handle value, or NULL if not recognised/supported.
  */
 
-void *GDALDataset::GetInternalHandle( const char * pszHandleName )
-
+void *GDALDataset::GetInternalHandle( CPL_UNUSED const char * pszHandleName )
 {
     return( NULL );
 }

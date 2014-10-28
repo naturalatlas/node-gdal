@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_mssqlspatial.h 26395 2013-09-03 11:49:23Z tamas $
+ * $Id: ogr_mssqlspatial.h 27344 2014-05-15 21:13:54Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -329,6 +329,7 @@ class OGRMSSQLSpatialDataSource : public OGRDataSource
     const char          *GetName() { return pszName; }
     int                 GetLayerCount();
     OGRLayer            *GetLayer( int );
+    OGRLayer            *GetLayerByName( const char* pszLayerName );
 
     int                 GetGeometryFormat() { return nGeometryFormat; }
     int                 UseGeometryColumns() { return bUseGeometryColumns; }

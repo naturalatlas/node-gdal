@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgftdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTDriver.
@@ -33,7 +33,7 @@
 
 /* http://code.google.com/intl/fr/apis/fusiontables/docs/developers_reference.html */
 
-CPL_CVSID("$Id: ogrgftdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgftdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRGFT();
 
@@ -80,8 +80,7 @@ OGRDataSource *OGRGFTDriver::Open( const char * pszFilename, int bUpdate )
 /************************************************************************/
 
 OGRDataSource *OGRGFTDriver::CreateDataSource( const char * pszName,
-                                               char **papszOptions )
-
+                                               CPL_UNUSED char **papszOptions )
 {
     OGRGFTDataSource   *poDS = new OGRGFTDataSource();
 

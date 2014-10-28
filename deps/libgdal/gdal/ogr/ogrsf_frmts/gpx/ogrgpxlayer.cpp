@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpxlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgpxlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgpxlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgpxlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define FLD_TRACK_FID       0
 #define FLD_TRACK_SEG_ID    1
@@ -1768,8 +1768,7 @@ OGRErr OGRGPXLayer::CreateFeature( OGRFeature *poFeature )
 /************************************************************************/
 
 
-OGRErr OGRGPXLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
-
+OGRErr OGRGPXLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     for( int iField = 0; iField < poFeatureDefn->GetFieldCount(); iField++ )
     {
@@ -1894,7 +1893,8 @@ void OGRGPXLayer::LoadExtensionsSchema()
 /************************************************************************/
 
 
-void OGRGPXLayer::startElementLoadSchemaCbk(const char *pszName, const char **ppszAttr)
+void OGRGPXLayer::startElementLoadSchemaCbk(const char *pszName,
+                                            CPL_UNUSED const char **ppszAttr)
 {
     if (bStopParsing) return;
 

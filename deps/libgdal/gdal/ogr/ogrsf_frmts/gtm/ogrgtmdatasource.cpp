@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgtmdatasource.cpp 21684 2011-02-11 22:14:01Z warmerdam $
+ * $Id: ogrgtmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of OGRGTMDataSource class.
@@ -324,7 +324,7 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
 /*                               Create()                               */
 /************************************************************************/
 
-int OGRGTMDataSource::Create( const char* pszFilename, char** papszOptions )
+int OGRGTMDataSource::Create( const char* pszFilename, CPL_UNUSED char** papszOptions )
 {
     CPLAssert( NULL != pszFilename );
 
@@ -453,8 +453,7 @@ OGRLayer* OGRGTMDataSource::GetLayer( int iLayer )
 OGRLayer * OGRGTMDataSource::CreateLayer( const char * pszLayerName,
                                           OGRSpatialReference *poSRS,
                                           OGRwkbGeometryType eType,
-                                          char ** papszOptions )
-
+                                          CPL_UNUSED char ** papszOptions )
 {
     if (eType == wkbPoint || eType == wkbPoint25D)
     {

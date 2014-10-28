@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: envisatdataset.cpp 27098 2014-03-27 00:16:11Z rouault $
+ * $Id: envisatdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Reader for ENVISAT format image data.
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: envisatdataset.cpp 27098 2014-03-27 00:16:11Z rouault $");
+CPL_CVSID("$Id: envisatdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 #include "EnvisatFile.h"
@@ -105,7 +105,7 @@ MerisL2FlagBand::~MerisL2FlagBand()
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
-CPLErr MerisL2FlagBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr MerisL2FlagBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                     void * pImage )
 {
     CPLAssert( nBlockXOff == 0 );

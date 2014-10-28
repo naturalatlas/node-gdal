@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaldefaultoverviews.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdaldefaultoverviews.cpp 27657 2014-09-10 07:21:17Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Helper code to implement overview and mask support for many 
@@ -32,7 +32,7 @@
 #include "gdal_priv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdaldefaultoverviews.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdaldefaultoverviews.cpp 27657 2014-09-10 07:21:17Z rouault $");
 
 /************************************************************************/
 /*                        GDALDefaultOverviews()                        */
@@ -768,7 +768,18 @@ GDALDefaultOverviews::BuildOverviews(
             CPLSetThreadLocalConfigOption("PHOTOMETRIC_OVERVIEW", "YCBCR");
 
         if( bOwnMaskDS )
+        {
+            /* Reset the poMask member of main dataset bands, since it */
+            /* will become invalid after poMaskDS closing */
+            for( int iBand = 1; iBand <= poDS->GetRasterCount(); iBand ++ )
+            {
+                GDALRasterBand *poBand = poDS->GetRasterBand(iBand);
+                if( poBand != NULL )
+                    poBand->InvalidateMaskBand();
+            }
+
             GDALClose( poMaskDS );
+        }
 
         // force next request to reread mask file.
         poMaskDS = NULL;

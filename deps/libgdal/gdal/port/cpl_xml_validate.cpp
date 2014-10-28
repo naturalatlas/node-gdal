@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_xml_validate.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_xml_validate.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement XML validation against XSD schema
@@ -29,7 +29,7 @@
 
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: cpl_xml_validate.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_xml_validate.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 #ifdef HAVE_LIBXML2
 #include <libxml/xmlversion.h>
@@ -984,7 +984,7 @@ void CPLFreeXMLSchema(CPLXMLSchemaPtr pSchema)
 
 int CPLValidateXML(const char* pszXMLFilename,
                    const char* pszXSDFilename,
-                   char** papszOptions)
+                   CPL_UNUSED char** papszOptions)
 {
     char szHeader[2048];
     CPLString osTmpXSDFilename;

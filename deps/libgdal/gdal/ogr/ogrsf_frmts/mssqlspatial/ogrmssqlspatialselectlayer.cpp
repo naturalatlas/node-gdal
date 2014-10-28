@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialselectlayer.cpp 25989 2013-05-05 19:35:01Z tamas $
+ * $Id: ogrmssqlspatialselectlayer.cpp 27361 2014-05-18 12:11:28Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLSpatialSelectLayer class, layer access to the results
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 25989 2013-05-05 19:35:01Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 27361 2014-05-18 12:11:28Z tamas $");
 /************************************************************************/
 /*                     OGRMSSQLSpatialSelectLayer()                     */
 /************************************************************************/
@@ -91,6 +91,9 @@ OGRMSSQLSpatialSelectLayer::OGRMSSQLSpatialSelectLayer( OGRMSSQLSpatialDataSourc
     }
 
     BuildFeatureDefn( "SELECT", poStmt );
+
+    if ( GetSpatialRef() && poFeatureDefn->GetGeomFieldCount() == 1)
+        poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef( poSRS );
 }
 
 /************************************************************************/

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemdatasource.cpp 26302 2013-08-11 16:24:14Z rouault $
+ * $Id: ogrmemdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemDataSource class.
@@ -31,15 +31,14 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdatasource.cpp 26302 2013-08-11 16:24:14Z rouault $");
+CPL_CVSID("$Id: ogrmemdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRMemDataSource()                          */
 /************************************************************************/
 
 OGRMemDataSource::OGRMemDataSource( const char *pszFilename, 
-                                    char **papszOptions)
-
+                                    CPL_UNUSED char **papszOptions)
 {
     pszName = CPLStrdup(pszFilename);
     papoLayers = NULL;
@@ -67,10 +66,9 @@ OGRMemDataSource::~OGRMemDataSource()
 
 OGRLayer *
 OGRMemDataSource::CreateLayer( const char * pszLayerName,
-                                 OGRSpatialReference *poSRS,
-                                 OGRwkbGeometryType eType,
-                                 char ** papszOptions )
-
+                               OGRSpatialReference *poSRS,
+                               OGRwkbGeometryType eType,
+                               CPL_UNUSED char ** papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */

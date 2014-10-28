@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geocoding.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_geocoding.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Client of geocoding service.
@@ -77,7 +77,7 @@ int OGR_gettimeofday(struct timeval *tv, struct timezone *tzIgnored)
 #include "ogr_mem.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogr_geocoding.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_geocoding.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 struct _OGRGeocodingSessionHS
 {
@@ -606,7 +606,7 @@ static OGRLayerH OGRGeocodeMakeRawLayer(const char* pszContent)
 /************************************************************************/
 
 static OGRLayerH OGRGeocodeBuildLayerNominatim(CPLXMLNode* psSearchResults,
-                                               const char* pszContent,
+                                               CPL_UNUSED const char* pszContent,
                                                int bAddRawFeature)
 {
     OGRMemLayer* poLayer = new OGRMemLayer( "place", NULL, wkbUnknown );
@@ -868,7 +868,7 @@ static OGRLayerH OGRGeocodeReverseBuildLayerNominatim(CPLXMLNode* psReverseGeoco
 /************************************************************************/
 
 static OGRLayerH OGRGeocodeBuildLayerYahoo(CPLXMLNode* psResultSet,
-                                           const char* pszContent,
+                                           CPL_UNUSED const char* pszContent,
                                            int bAddRawFeature)
 {
     OGRMemLayer* poLayer = new OGRMemLayer( "place", NULL, wkbPoint );
@@ -999,7 +999,7 @@ static OGRLayerH OGRGeocodeBuildLayerYahoo(CPLXMLNode* psResultSet,
 /************************************************************************/
 
 static OGRLayerH OGRGeocodeBuildLayerBing (CPLXMLNode* psResponse,
-                                           const char* pszContent,
+                                           CPL_UNUSED const char* pszContent,
                                            int bAddRawFeature)
 {
     CPLXMLNode* psResources = CPLGetXMLNode(psResponse, "ResourceSets.ResourceSet.Resources");

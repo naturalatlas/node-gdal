@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: openjpegdataset.cpp 27182 2014-04-14 20:03:08Z rouault $
+ * $Id: openjpegdataset.cpp 27373 2014-05-21 12:14:37Z rouault $
  *
  * Project:  JPEG2000 driver based on OpenJPEG library
  * Purpose:  JPEG2000 driver based on OpenJPEG library
@@ -39,7 +39,7 @@
 #include "cpl_multiproc.h"
 #include "cpl_atomic_ops.h"
 
-CPL_CVSID("$Id: openjpegdataset.cpp 27182 2014-04-14 20:03:08Z rouault $");
+CPL_CVSID("$Id: openjpegdataset.cpp 27373 2014-05-21 12:14:37Z rouault $");
 
 /************************************************************************/
 /*                  JP2OpenJPEGDataset_ErrorCallback()                  */
@@ -630,8 +630,10 @@ CPLErr JP2OpenJPEGDataset::ReadBlock( int nBand, VSILFILE* fp,
     if (bUseSetDecodeArea)
     {
         if (!opj_set_decode_area(pCodec,psImage,
-                                nBlockXOff*nBlockXSize,nBlockYOff*nBlockYSize,
-                                (nBlockXOff+1)*nBlockXSize,(nBlockYOff+1)*nBlockYSize))
+                                 nBlockXOff*nBlockXSize,
+                                 nBlockYOff*nBlockYSize,
+                                 nBlockXOff*nBlockXSize+nWidthToRead,
+                                 nBlockYOff*nBlockYSize+nHeightToRead))
         {
             CPLError(CE_Failure, CPLE_AppDefined, "opj_set_decode_area() failed");
             eErr = CE_Failure;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: zmapdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: zmapdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  ZMap driver
  * Purpose:  GDALDataset driver for ZMap dataset.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: zmapdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: zmapdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_ZMap(void);
@@ -111,7 +111,7 @@ ZMapRasterBand::ZMapRasterBand( ZMapDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
                                   void * pImage )
 
 {
@@ -520,7 +520,7 @@ static void WriteRightJustified(VSILFILE* fp, double dfValue, int nWidth,
 
 GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
                                      GDALDataset *poSrcDS,
-                                     int bStrict, char ** papszOptions,
+                                     int bStrict, CPL_UNUSED char ** papszOptions,
                                      GDALProgressFunc pfnProgress,
                                      void * pProgressData )
 {

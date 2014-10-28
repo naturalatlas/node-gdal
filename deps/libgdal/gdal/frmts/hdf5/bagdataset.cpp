@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bagdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: bagdataset.cpp 27394 2014-05-24 16:37:41Z rouault $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  Read BAG datasets.
@@ -35,7 +35,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bagdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: bagdataset.cpp 27394 2014-05-24 16:37:41Z rouault $");
 
 CPL_C_START
 void    GDALRegister_BAG(void);
@@ -229,7 +229,12 @@ bool BAGRasterBand::Initialize( hid_t hDatasetID, const char *pszName )
                                     dfMaximum ) 
              && GH5_FetchAttribute( hDatasetID, "Minimum Uncertainty Value", 
                                     dfMinimum ) )
-        bMinMaxSet = true;
+    {
+        /* Some products where uncertainty band is completely set to nodata */
+        /* wrongly declare minimum and maximum to 0.0 */
+        if( dfMinimum != 0.0 && dfMaximum != 0.0 )
+            bMinMaxSet = true;
+    }
     else if( EQUAL(pszName,"nominal_elevation") 
              && GH5_FetchAttribute( hDatasetID, "max_value", 
                                     dfMaximum ) 
@@ -286,7 +291,7 @@ double BAGRasterBand::GetNoDataValue( int * pbSuccess )
     if( EQUAL(GetDescription(),"elevation") )
         return  1000000.0;
     else if( EQUAL(GetDescription(),"uncertainty") )
-        return 0.0;
+        return 1000000.0;
     else if( EQUAL(GetDescription(),"nominal_elevation") )
         return 1000000.0;
     else
@@ -560,7 +565,7 @@ GDALDataset *BAGDataset::Open( GDALOpenInfo * poOpenInfo )
         delete poUBand;
 
 /* -------------------------------------------------------------------- */
-/*      Try to do the same for the uncertainty band.                    */
+/*      Try to do the same for the nominal_elevation band.              */
 /* -------------------------------------------------------------------- */
     hid_t hNominal = -1;
 

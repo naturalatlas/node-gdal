@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteexecutesql.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqliteexecutesql.cpp 27730 2014-09-24 00:59:45Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Run SQL requests with SQLite SQL engine
@@ -467,6 +467,7 @@ static void OGR2SQLITEGetPotentialLayerNames(const char *pszSQLCommand,
 /*               OGR2SQLITE_IgnoreAllFieldsExceptGeometry()             */
 /************************************************************************/
 
+#if defined(HAVE_SPATIALITE)
 static
 void OGR2SQLITE_IgnoreAllFieldsExceptGeometry(OGRLayer* poLayer)
 {
@@ -481,6 +482,7 @@ void OGR2SQLITE_IgnoreAllFieldsExceptGeometry(OGRLayer* poLayer)
     poLayer->SetIgnoredFields((const char**)papszIgnored);
     CSLDestroy(papszIgnored);
 }
+#endif  // HAVE_SPATIALITE
 
 
 /************************************************************************/
@@ -494,7 +496,13 @@ int OGR2SQLITEDealWithSpatialColumn(OGRLayer* poLayer,
                                     OGRSQLiteDataSource* poSQLiteDS,
                                     sqlite3* hDB,
                                     int bSpatialiteDB,
+#ifndef HAVE_SPATIALITE
+CPL_UNUSED
+#endif
                                     const std::set<LayerDesc>& oSetLayers,
+#ifndef HAVE_SPATIALITE
+CPL_UNUSED
+#endif
                                     const std::set<CPLString>& oSetSpatialIndex
                                    )
 {
@@ -528,7 +536,9 @@ int OGR2SQLITEDealWithSpatialColumn(OGRLayer* poLayer,
         nSRSId = poSQLiteDS->FetchSRSId(poSRS);
 
     CPLString osSQL;
+#ifdef HAVE_SPATIALITE
     int bCreateSpatialIndex = FALSE;
+#endif
     if( !bSpatialiteDB )
     {
         osSQL.Printf("INSERT INTO geometry_columns (f_table_name, "
@@ -709,7 +719,7 @@ int OGR2SQLITEDealWithSpatialColumn(OGRLayer* poLayer,
 OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
                                 const char *pszStatement,
                                 OGRGeometry *poSpatialFilter,
-                                const char *pszDialect )
+                                CPL_UNUSED const char *pszDialect )
 {
     char* pszTmpDBName = (char*) CPLMalloc(256);
     sprintf(pszTmpDBName, "/vsimem/ogr2sqlite/temp_%p.db", pszTmpDBName);
@@ -1052,7 +1062,7 @@ std::set<LayerDesc> OGRSQLiteGetReferencedLayers(const char* pszStatement)
 OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
                                 const char *pszStatement,
                                 OGRGeometry *poSpatialFilter,
-                                const char *pszDialect )
+                                CPL_UNUSED const char *pszDialect )
 {
     CPLError(CE_Failure, CPLE_NotSupported,
                 "The SQLite version is to old to support the SQLite SQL dialect");

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegukooadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsegukooadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SEG-P1 / UKOOA P1-90 Translator
  * Purpose:  Implements OGRSEGUKOOADataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsegukooadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsegukooadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRSEGUKOOADataSource()                       */
@@ -64,8 +64,7 @@ OGRSEGUKOOADataSource::~OGRSEGUKOOADataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSEGUKOOADataSource::TestCapability( const char * pszCap )
-
+int OGRSEGUKOOADataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
