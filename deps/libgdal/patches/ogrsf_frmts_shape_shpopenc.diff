@@ -1,0 +1,10 @@
+--- deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shpopen.c	2014-10-27 20:18:21.000000000 -0600
++++ deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shpopen.new.c	2014-10-27 20:18:04.000000000 -0600
+@@ -266,6 +266,7 @@
+  */
+ 
+ #include "shapefil.h"
++#include "cpl_port.h"
+ 
+ #include <math.h>
+ #include <limits.h>

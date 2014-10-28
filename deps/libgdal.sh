@@ -85,6 +85,8 @@ patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
 patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
 patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
 patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
+patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
+patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
 
 #
 # create format gyps
