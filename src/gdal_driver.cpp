@@ -114,7 +114,7 @@ Handle<Value> Driver::New(GDALDriver *driver)
 
 Handle<Value> Driver::New(OGRSFDriver *driver)
 {
-	NanScope();
+	NanEscapableScope();
 
 	if (!driver) {
 		return NanEscapeScope(NanNull());
