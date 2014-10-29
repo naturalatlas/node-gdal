@@ -378,7 +378,11 @@ NAN_METHOD(FeatureFields::get)
 
 	Handle<Value> result = FeatureFields::get(f->get(), field_index);
 	
-	NanReturnValue(result);
+	if(result.IsEmpty()) {
+		NanReturnUndefined();
+	} else {
+		NanReturnValue(result);
+	}
 }
 
 NAN_METHOD(FeatureFields::getNames)

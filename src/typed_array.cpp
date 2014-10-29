@@ -32,7 +32,7 @@ Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 
 	Handle<Function> constructor = val.As<Function>();
 
-	Local<Value>  size  = Integer::NewFromUnsigned(length);
+	Local<Value>  size  = NanNew<Integer>(length);
 	Local<Object> array = constructor->NewInstance(1, &size);
 
 	if(array.IsEmpty() || !array->IsObject()) {
