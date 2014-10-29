@@ -28,7 +28,7 @@ public:
 	static Handle<Value> New(OGRFeature *feature, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getGeometry);
-	static NAN_METHOD(setGeometryDirectly);
+//	static NAN_METHOD(setGeometryDirectly);
 	static NAN_METHOD(setGeometry);
 //  static NAN_METHOD(stealGeometry);
 	static NAN_METHOD(clone);

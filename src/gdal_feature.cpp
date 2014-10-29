@@ -220,38 +220,6 @@ NAN_METHOD(Feature::destroy)
 	NanReturnUndefined();
 }
 
-NAN_METHOD(Feature::setGeometryDirectly)
-{
-	//- currently disabled
-	//- uses setGeometry instead in case future versions support unowned geometry
-	//Geometry objects in V8 must be the owner of the OGRGeometry in the current implementation
-	//   to avoid geometry being destroyed when a feature is destroyed
-
-	NanScope();
-	NanReturnValue(Feature::setGeometry(args));
-
-	/*
-	Geometry *geom;
-	NODE_ARG_WRAPPED(0, "geometry", Geometry, geom);
-
-	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
-	}
-
-	OGRErr err = feature->this_->SetGeometryDirectly(geom->get());
-
-	if(err) {
-		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
-	}
-
-	geom->owned_ = false;
-	NanReturnUndefined();
-	*/
-}
-
 NAN_METHOD(Feature::setFrom)
 {
 	NanScope();
