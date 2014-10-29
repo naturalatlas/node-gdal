@@ -6,8 +6,8 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> Driver::constructor;
-ObjectCache<GDALDriver*> Driver::cache;
-ObjectCache<OGRSFDriver*> Driver::cache_ogr;
+ObjectCache<GDALDriver> Driver::cache;
+ObjectCache<OGRSFDriver> Driver::cache_ogr;
 
 void Driver::Initialize(Handle<Object> target)
 {

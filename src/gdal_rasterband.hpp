@@ -72,7 +72,7 @@ public:
 	static NAN_SETTER(categoryNamesSetter);
 	static NAN_SETTER(colorInterpretationSetter);
 
-	static ObjectCache<GDALRasterBand*> cache;
+	static ObjectCache<GDALRasterBand> cache;
 
 	RasterBand();
 	RasterBand(GDALRasterBand *band);

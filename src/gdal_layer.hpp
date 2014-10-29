@@ -52,7 +52,7 @@ public:
 	static NAN_GETTER(geomColumnGetter);
 	static NAN_GETTER(geomTypeGetter);
 
-	static ObjectCache<OGRLayer*> cache;
+	static ObjectCache<OGRLayer> cache;
 
 	Layer();
 	Layer(OGRLayer *ds);

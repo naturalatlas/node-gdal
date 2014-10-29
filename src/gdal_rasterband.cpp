@@ -13,7 +13,7 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> RasterBand::constructor;
-ObjectCache<GDALRasterBand*> RasterBand::cache;
+ObjectCache<GDALRasterBand> RasterBand::cache;
 
 void RasterBand::Initialize(Handle<Object> target)
 {

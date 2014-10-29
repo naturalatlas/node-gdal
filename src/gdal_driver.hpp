@@ -43,8 +43,8 @@ public:
 	static NAN_METHOD(copyFiles);
 	static NAN_METHOD(getMetadata);
 
-	static ObjectCache<GDALDriver*>  cache;
-	static ObjectCache<OGRSFDriver*> cache_ogr;
+	static ObjectCache<GDALDriver>  cache;
+	static ObjectCache<OGRSFDriver> cache_ogr;
 
 	static NAN_GETTER(descriptionGetter);
 

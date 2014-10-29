@@ -25,9 +25,9 @@ NAN_WEAK_CALLBACK(cacheWeakCallback)
 
 template <typename P>
 struct ObjectCacheItem {
-	v8::Persistent<v8::Object> handle;
-	P key;
-	P alias;
+	_NanWeakCallbackInfo<v8::Object, P> *cbinfo;
+	P *key;
+	P *alias;
 };
 
 // a class for maintaining a map of native pointers and persistent JS handles
@@ -37,25 +37,25 @@ template <typename P>
 class ObjectCache {
 public:
 	//map a native pointer to a handle to the V8 obj that wraps it
-	void add(P key, v8::Handle<v8::Object> obj);
-	void add(P key, P alias, v8::Handle<v8::Object> obj);
+	void add(P *key, v8::Handle<v8::Object> obj);
+	void add(P *key, P *alias, v8::Handle<v8::Object> obj);
 
 	//fetch the V8 obj that wraps the native pointer (or alias)
 	//call has() before calling to get() to ensure handle exists
-	v8::Handle<v8::Object> get(P key);
+	v8::Handle<v8::Object> get(P *key);
 
 	//check if native pointer has been wrapped, or if an alias wraps it
-	bool has(P key);
-	void erase(P key);
+	bool has(P *key);
+	void erase(P *key);
 
 	ObjectCache();
 	~ObjectCache();
 
 private:
-	ObjectCacheItem<P> getItem(P key);
+	ObjectCacheItem<P> getItem(P *key);
 	void erase(ObjectCacheItem<P> key);
-	std::map<P, ObjectCacheItem<P> > cache;
-	std::map<P, P> aliases;
+	std::map<P*, ObjectCacheItem<P> > cache;
+	std::map<P*, P*> aliases;
 };
 
 template <typename P>
@@ -70,12 +70,12 @@ ObjectCache<P>::~ObjectCache()
 }
 
 template <typename P>
-void ObjectCache<P>::add(P key, P alias, v8::Handle<v8::Object> obj)
+void ObjectCache<P>::add(P *key, P *alias, v8::Handle<v8::Object> obj)
 {
 	ObjectCacheItem<P> item;
 	item.key    = key;
 	item.alias  = alias;
-	item.handle = NanMakeWeakPersistent(obj, key, cacheWeakCallback)->persistent;
+	item.cbinfo = NanMakeWeakPersistent(obj, key, cacheWeakCallback);
 
 	//add it to the map
 	cache[key] = item;
@@ -86,25 +86,25 @@ void ObjectCache<P>::add(P key, P alias, v8::Handle<v8::Object> obj)
 
 
 template <typename P>
-void ObjectCache<P>::add(P key, v8::Handle<v8::Object> obj)
+void ObjectCache<P>::add(P *key, v8::Handle<v8::Object> obj)
 {
 	add(key, NULL, obj);
 }
 
 template <typename P>
-bool ObjectCache<P>::has(P key)
+bool ObjectCache<P>::has(P *key)
 {
 	return cache.count(key) > 0 || aliases.count(key) > 0;
 }
 
 template <typename P>
-v8::Handle<v8::Object> ObjectCache<P>::get(P key)
+v8::Handle<v8::Object> ObjectCache<P>::get(P *key)
 {
-	return getItem(key).handle;
+	return NanNew(getItem(key).cbinfo->persistent);
 }
 
 template <typename P>
-ObjectCacheItem<P> ObjectCache<P>::getItem(P key)
+ObjectCacheItem<P> ObjectCache<P>::getItem(P *key)
 {
 	//return handle to existing object if already wrapped
 	//check by calling has() first
@@ -116,7 +116,7 @@ ObjectCacheItem<P> ObjectCache<P>::getItem(P key)
 
 
 template <typename P>
-void ObjectCache<P>::erase(P key)
+void ObjectCache<P>::erase(P *key)
 {
 	if(has(key)){
 		erase(getItem(key));

@@ -16,7 +16,7 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> Layer::constructor;
-ObjectCache<OGRLayer*> Layer::cache;
+ObjectCache<OGRLayer> Layer::cache;
 
 void Layer::Initialize(Handle<Object> target)
 {
