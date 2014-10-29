@@ -9,16 +9,18 @@ Persistent<FunctionTemplate> CoordinateTransformation::constructor;
 
 void CoordinateTransformation::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(CoordinateTransformation::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("CoordinateTransformation"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(CoordinateTransformation::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("CoordinateTransformation"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "transformPoint", transformPoint);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "transformPoint", transformPoint);
 
-	target->Set(String::NewSymbol("CoordinateTransformation"), constructor->GetFunction());
+	target->Set(NanNew("CoordinateTransformation"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 CoordinateTransformation::CoordinateTransformation(OGRCoordinateTransformation *transform)
@@ -44,17 +46,18 @@ CoordinateTransformation::~CoordinateTransformation()
 	}
 }
 
-Handle<Value> CoordinateTransformation::New(const Arguments& args)
+NAN_METHOD(CoordinateTransformation::New)
 {
-	HandleScope scope;
+	NanScope();
 	CoordinateTransformation *f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f =  static_cast<CoordinateTransformation *>(ptr);
 	} else {
@@ -69,47 +72,48 @@ Handle<Value> CoordinateTransformation::New(const Arguments& args)
 	}
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> CoordinateTransformation::New(OGRCoordinateTransformation *transform)
 {
-	v8::HandleScope scope;
+	NanEscapableScope();
 
 	if (!transform) {
-		return Null();
+		return NanNull();
 	}
 
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = CoordinateTransformation::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(CoordinateTransformation::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> CoordinateTransformation::toString(const Arguments& args)
+NAN_METHOD(CoordinateTransformation::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("CoordinateTransformation"));
+	NanScope();
+	NanReturnValue(NanNew("CoordinateTransformation"));
 }
 
 
-Handle<Value> CoordinateTransformation::transformPoint(const Arguments& args)
+NAN_METHOD(CoordinateTransformation::transformPoint)
 {
-	HandleScope scope;
+	NanScope();
 
 	CoordinateTransformation *transform = ObjectWrap::Unwrap<CoordinateTransformation>(args.This());
 
 	double x, y, z = 0;
 
 	if (args.Length() == 1 && args[0]->IsObject()) {
-		Local<Object> obj = args[0]->ToObject();
-		Local<Value> arg_x = obj->Get(String::NewSymbol("x"));
-		Local<Value> arg_y = obj->Get(String::NewSymbol("y"));
-		Local<Value> arg_z = obj->Get(String::NewSymbol("z"));
+		Local<Object> obj = args[0].As<Object>();
+		Local<Value> arg_x = obj->Get(NanNew("x"));
+		Local<Value> arg_y = obj->Get(NanNew("y"));
+		Local<Value> arg_z = obj->Get(NanNew("z"));
 		if (!arg_x->IsNumber() || !arg_y->IsNumber()) {
-			return NODE_THROW("point must contain numerical properties x and y")
+			NanThrowError("point must contain numerical properties x and y");
+			NanReturnUndefined();
 		}
 		x = static_cast<double>(arg_x->NumberValue());
 		y = static_cast<double>(arg_y->NumberValue());
@@ -123,15 +127,16 @@ Handle<Value> CoordinateTransformation::transformPoint(const Arguments& args)
 	}
 
 	if (!transform->this_->Transform(1, &x, &y, &z)) {
-		return NODE_THROW("Error transforming point");
+		NanThrowError("Error transforming point");
+		NanReturnUndefined();
 	}
 
-	Local<Object> result = Object::New();
-	result->Set(String::NewSymbol("x"), Number::New(x));
-	result->Set(String::NewSymbol("y"), Number::New(y));
-	result->Set(String::NewSymbol("z"), Number::New(z));
+	Local<Object> result = NanNew<Object>();
+	result->Set(NanNew("x"), NanNew<Number>(x));
+	result->Set(NanNew("y"), NanNew<Number>(y));
+	result->Set(NanNew("z"), NanNew<Number>(z));
 
-	return scope.Close(result);
+	NanReturnValue(result);
 }
 
 } // namespace node_gdal

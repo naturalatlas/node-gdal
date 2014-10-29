@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_FEATURE_H__
 #define __NODE_OGR_FEATURE_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -20,25 +23,25 @@ class Feature: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRFeature *feature);
 	static Handle<Value> New(OGRFeature *feature, bool owned);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getGeometry(const Arguments& args);
-	static Handle<Value> setGeometryDirectly(const Arguments& args);
-	static Handle<Value> setGeometry(const Arguments& args);
-//  static Handle<Value> stealGeometry(const Arguments& args);
-	static Handle<Value> clone(const Arguments& args);
-	static Handle<Value> equals(const Arguments& args);
-	static Handle<Value> getFieldDefn(const Arguments& args);
-	static Handle<Value> setFrom(const Arguments& args);
-	static Handle<Value> destroy(const Arguments& args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(getGeometry);
+	static NAN_METHOD(setGeometryDirectly);
+	static NAN_METHOD(setGeometry);
+//  static NAN_METHOD(stealGeometry);
+	static NAN_METHOD(clone);
+	static NAN_METHOD(equals);
+	static NAN_METHOD(getFieldDefn);
+	static NAN_METHOD(setFrom);
+	static NAN_METHOD(destroy);
 
-	static Handle<Value> fieldsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> fidGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> defnGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(fieldsGetter);
+	static NAN_GETTER(fidGetter);
+	static NAN_GETTER(defnGetter);
 
-	static void fidSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_SETTER(fidSetter);
 
 	Feature();
 	Feature(OGRFeature *feature);

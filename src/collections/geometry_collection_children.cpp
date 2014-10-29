@@ -9,19 +9,21 @@ Persistent<FunctionTemplate> GeometryCollectionChildren::constructor;
 
 void GeometryCollectionChildren::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(GeometryCollectionChildren::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("GeometryCollectionChildren"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(GeometryCollectionChildren::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("GeometryCollectionChildren"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
 
-	target->Set(String::NewSymbol("GeometryCollectionChildren"), constructor->GetFunction());
+	target->Set(NanNew("GeometryCollectionChildren"), lcons->GetFunction());
+	
+	NanAssignPersistent(constructor, lcons);
 }
 
 GeometryCollectionChildren::GeometryCollectionChildren()
@@ -31,123 +33,131 @@ GeometryCollectionChildren::GeometryCollectionChildren()
 GeometryCollectionChildren::~GeometryCollectionChildren() 
 {}
 
-Handle<Value> GeometryCollectionChildren::New(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		GeometryCollectionChildren *geom =  static_cast<GeometryCollectionChildren *>(ptr);
 		geom->Wrap(args.This());
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create GeometryCollectionChildren directly");
+		NanThrowError("Cannot create GeometryCollectionChildren directly");
+		NanReturnUndefined();
 	}
 }
 
 Handle<Value> GeometryCollectionChildren::New(Handle<Value> geom)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	GeometryCollectionChildren *wrapped = new GeometryCollectionChildren();
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = GeometryCollectionChildren::constructor->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(String::NewSymbol("parent_"), geom);
+	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
+	v8::Handle<v8::Object> obj = NanNew(GeometryCollectionChildren::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(NanNew("parent_"), geom);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> GeometryCollectionChildren::toString(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("GeometryCollectionChildren"));
+	NanScope();
+	NanReturnValue(NanNew("GeometryCollectionChildren"));
 }
 
-Handle<Value> GeometryCollectionChildren::count(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::count)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
 
-	return scope.Close(Integer::New(geom->get()->getNumGeometries()));
+	NanReturnValue(NanNew<Integer>(geom->get()->getNumGeometries()));
 }
 
-Handle<Value> GeometryCollectionChildren::get(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::get)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
 	
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
-	return scope.Close(Geometry::New(geom->get()->getGeometryRef(i), false));
+	NanReturnValue(Geometry::New(geom->get()->getGeometryRef(i), false));
 }
 
-Handle<Value> GeometryCollectionChildren::remove(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::remove)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
 	OGRErr err = geom->get()->removeGeometry(i);
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> GeometryCollectionChildren::add(const Arguments& args)
+NAN_METHOD(GeometryCollectionChildren::add)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
 	
 	Geometry *child;
 
 	if (args.Length() < 1) {
-		return NODE_THROW("child(ren) must be given");
+		NanThrowError("child(ren) must be given");
+		NanReturnUndefined();
 	}
 	if (args[0]->IsArray()){
 		//set from array of geometry objects
-		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		Handle<Array> array = args[0].As<Array>();
 		int length = array->Length();
 		for (int i = 0; i < length; i++){
 			Handle<Value> element = array->Get(i);
 			if(IS_WRAPPED(element, Geometry)){
-				child = ObjectWrap::Unwrap<Geometry>(element->ToObject());
+				child = ObjectWrap::Unwrap<Geometry>(element.As<Object>());
 				OGRErr err = geom->get()->addGeometry(child->get());
-				if (err) {
-					return NODE_THROW_OGRERR(err);
+				if(err) {
+					NODE_THROW_OGRERR(err);
+					NanReturnUndefined();
 				}
 			} else {
-				return NODE_THROW("All array elements must be geometry objects")
+				NanThrowError("All array elements must be geometry objects");
+				NanReturnUndefined();
 			}
 		}
 	} else if (IS_WRAPPED(args[0], Geometry)){
-		child = ObjectWrap::Unwrap<Geometry>(args[0]->ToObject());
+		child = ObjectWrap::Unwrap<Geometry>(args[0].As<Object>());
 		OGRErr err = geom->get()->addGeometry(child->get());
-		if (err) {
-			return NODE_THROW_OGRERR(err);
+		if(err) {
+			NODE_THROW_OGRERR(err);
+			NanReturnUndefined();
 		}
 	} else {
-		return NODE_THROW("child must be a geometry object or array of geometry objects")
+		NanThrowError("child must be a geometry object or array of geometry objects");
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
 } // namespace node_gdal

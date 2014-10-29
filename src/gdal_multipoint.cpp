@@ -14,17 +14,19 @@ Persistent<FunctionTemplate> MultiPoint::constructor;
 
 void MultiPoint::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(MultiPoint::New));
-	constructor->Inherit(GeometryCollection::constructor);
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("MultiPoint"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiPoint::New);
+	lcons->Inherit(GeometryCollection::constructor);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("MultiPoint"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
 
-	target->Set(String::NewSymbol("MultiPoint"), constructor->GetFunction());
+	target->Set(NanNew("MultiPoint"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 MultiPoint::MultiPoint(OGRMultiPoint *geom)
@@ -51,53 +53,55 @@ MultiPoint::~MultiPoint()
 		LOG("Disposing MultiPoint [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+			NanAdjustExternalMemory(-size_);
 		}
 		LOG("Disposed MultiPoint [%p]", this_);
 		this_ = NULL;
 	}
 }
 
-Handle<Value> MultiPoint::New(const Arguments& args)
+NAN_METHOD(MultiPoint::New)
 {
-	HandleScope scope;
+	NanScope();
 	MultiPoint *f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<MultiPoint *>(ptr);
 
 	} else {
 		if (args.Length() != 0) {
-			return NODE_THROW("MultiPoint constructor doesn't take any arguments");
+			NanThrowError("MultiPoint constructor doesn't take any arguments");
+			NanReturnUndefined();
 		}
 		f = new MultiPoint(new OGRMultiPoint());
 	}
 
 	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(String::NewSymbol("children_"), children); 
+	args.This()->SetHiddenValue(NanNew("children_"), children); 
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> MultiPoint::New(OGRMultiPoint *geom)
 {
-	HandleScope scope;
-	return scope.Close(MultiPoint::New(geom, true));
+	NanEscapableScope();
+	return NanEscapeScope(MultiPoint::New(geom, true));
 }
 
 Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!geom) {
-		return Null();
+		return NanNull();
 	}
 
 	//make a copy of geometry owned by a feature
@@ -114,27 +118,27 @@ Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = MultiPoint::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(MultiPoint::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	NanReturnValue(obj);
 }
 
-Handle<Value> MultiPoint::toString(const Arguments& args)
+NAN_METHOD(MultiPoint::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("MultiPoint"));
+	NanScope();
+	NanReturnValue(NanNew("MultiPoint"));
 }
 
-Handle<Value> MultiPoint::getGeometry(const Arguments& args)
+NAN_METHOD(MultiPoint::getGeometry)
 {
-	HandleScope scope;
+	NanScope();
 	MultiPoint *geom = ObjectWrap::Unwrap<MultiPoint>(args.This());
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
-	return scope.Close(Point::New(static_cast<OGRPoint*>(geom->this_->getGeometryRef(i)), false));
+	NanReturnValue(Point::New(static_cast<OGRPoint*>(geom->this_->getGeometryRef(i)), false));
 }
 
 } // namespace node_gdal

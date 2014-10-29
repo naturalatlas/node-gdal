@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_MULTIPOINT_H__
 #define __NODE_OGR_MULTIPOINT_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -22,11 +25,11 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRMultiPoint *geom);
 	static Handle<Value> New(OGRMultiPoint *geom, bool owned);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getGeometry(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(getGeometry);
 
 	MultiPoint();
 	MultiPoint(OGRMultiPoint *geom);

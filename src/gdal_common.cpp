@@ -1,8 +1,11 @@
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 #include <string>
 
@@ -10,10 +13,10 @@
 
 using namespace v8;
 
-void READ_ONLY_SETTER(Local<String> property, Local<Value> value, const AccessorInfo &info)
+NAN_SETTER(READ_ONLY_SETTER)
 {
-	HandleScope scope;
-	std::string name = TOSTR(property);
+	NanScope();
+	std::string name = *NanUtf8String(property);
 	std::string err = name + " is a read-only property";
-	NODE_THROW(err.c_str());
+	NanThrowError(err.c_str());
 }

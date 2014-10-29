@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_SPATIALREFERENCE_H__
 #define __NODE_OGR_SPATIALREFERENCE_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -22,47 +25,47 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
 
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRSpatialReference *srs);
 	static Handle<Value> New(OGRSpatialReference *srs, bool owned);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> clone(const Arguments &args);
-	static Handle<Value> cloneGeogCS(const Arguments &args);
-	static Handle<Value> exportToWKT(const Arguments &args);
-	static Handle<Value> exportToPrettyWKT(const Arguments &args);
-	static Handle<Value> exportToProj4(const Arguments &args);
-	static Handle<Value> exportToXML(const Arguments &args);
-	static Handle<Value> setWellKnownGeogCS(const Arguments &args);
-	static Handle<Value> morphToESRI(const Arguments &args);
-	static Handle<Value> morphFromESRI(const Arguments &args);
-	static Handle<Value> EPSGTreatsAsLatLong(const Arguments &args);
-	static Handle<Value> EPSGTreatsAsNorthingEasting(const Arguments &args);
-	static Handle<Value> getLinearUnits(const Arguments &args);
-	static Handle<Value> getAngularUnits(const Arguments &args);
-	static Handle<Value> isGeocentric(const Arguments &args);
-	static Handle<Value> isProjected(const Arguments &args);
-	static Handle<Value> isLocal(const Arguments &args);
-	static Handle<Value> isVertical(const Arguments &args);
-	static Handle<Value> isCompound(const Arguments &args);
-	static Handle<Value> isSameGeogCS(const Arguments &args);
-	static Handle<Value> isSameVertCS(const Arguments &args);
-	static Handle<Value> isSame(const Arguments &args);
-	static Handle<Value> autoIdentifyEPSG(const Arguments &args);
-	static Handle<Value> getAuthorityCode(const Arguments &args);
-	static Handle<Value> getAuthorityName(const Arguments &args);
-	static Handle<Value> getAttrValue(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(clone);
+	static NAN_METHOD(cloneGeogCS);
+	static NAN_METHOD(exportToWKT);
+	static NAN_METHOD(exportToPrettyWKT);
+	static NAN_METHOD(exportToProj4);
+	static NAN_METHOD(exportToXML);
+	static NAN_METHOD(setWellKnownGeogCS);
+	static NAN_METHOD(morphToESRI);
+	static NAN_METHOD(morphFromESRI);
+	static NAN_METHOD(EPSGTreatsAsLatLong);
+	static NAN_METHOD(EPSGTreatsAsNorthingEasting);
+	static NAN_METHOD(getLinearUnits);
+	static NAN_METHOD(getAngularUnits);
+	static NAN_METHOD(isGeocentric);
+	static NAN_METHOD(isProjected);
+	static NAN_METHOD(isLocal);
+	static NAN_METHOD(isVertical);
+	static NAN_METHOD(isCompound);
+	static NAN_METHOD(isSameGeogCS);
+	static NAN_METHOD(isSameVertCS);
+	static NAN_METHOD(isSame);
+	static NAN_METHOD(autoIdentifyEPSG);
+	static NAN_METHOD(getAuthorityCode);
+	static NAN_METHOD(getAuthorityName);
+	static NAN_METHOD(getAttrValue);
 
-	static Handle<Value> fromUserInput(const Arguments &args);
-	static Handle<Value> fromWKT(const Arguments &args);
-	static Handle<Value> fromProj4(const Arguments &args);
-	static Handle<Value> fromEPSG(const Arguments &args);
-	static Handle<Value> fromEPSGA(const Arguments &args);
-	static Handle<Value> fromWMSAUTO(const Arguments &args);
-	static Handle<Value> fromXML(const Arguments &args);
-	static Handle<Value> fromURN(const Arguments &args);
-	static Handle<Value> fromCRSURL(const Arguments &args);
-	static Handle<Value> fromURL(const Arguments &args);
-	static Handle<Value> fromMICoordSys(const Arguments &args);
+	static NAN_METHOD(fromUserInput);
+	static NAN_METHOD(fromWKT);
+	static NAN_METHOD(fromProj4);
+	static NAN_METHOD(fromEPSG);
+	static NAN_METHOD(fromEPSGA);
+	static NAN_METHOD(fromWMSAUTO);
+	static NAN_METHOD(fromXML);
+	static NAN_METHOD(fromURN);
+	static NAN_METHOD(fromCRSURL);
+	static NAN_METHOD(fromURL);
+	static NAN_METHOD(fromMICoordSys);
 
 	static ObjectCache<OGRSpatialReference*> cache;
 

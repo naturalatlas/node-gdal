@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_FIELD_DEFN_H__
 #define __NODE_OGR_FIELD_DEFN_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -20,24 +23,24 @@ class FieldDefn: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRFieldDefn *def);
 	static Handle<Value> New(OGRFieldDefn *def, bool owned);
-	static Handle<Value> toString(const Arguments &args);
+	static NAN_METHOD(toString);
 
-	static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> justificationGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> precisionGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> widthGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> ignoredGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(nameGetter);
+	static NAN_GETTER(typeGetter);
+	static NAN_GETTER(justificationGetter);
+	static NAN_GETTER(precisionGetter);
+	static NAN_GETTER(widthGetter);
+	static NAN_GETTER(ignoredGetter);
 
-	static void nameSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void typeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void justificationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void precisionSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void widthSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void ignoredSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_SETTER(nameSetter);
+	static NAN_SETTER(typeSetter);
+	static NAN_SETTER(justificationSetter);
+	static NAN_SETTER(precisionSetter);
+	static NAN_SETTER(widthSetter);
+	static NAN_SETTER(ignoredSetter);
 
 	FieldDefn();
 	FieldDefn(OGRFieldDefn *def);

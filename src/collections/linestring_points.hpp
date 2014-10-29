@@ -1,12 +1,15 @@
 #ifndef __NODE_GDAL_LINESTRING_POINTS_H__
 #define __NODE_GDAL_LINESTRING_POINTS_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>
@@ -23,16 +26,16 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(Handle<Value> geom);
-	static Handle<Value> toString(const Arguments &args);
+	static NAN_METHOD(toString);
 
-	static Handle<Value> add(const Arguments &args);
-	static Handle<Value> get(const Arguments &args);
-	static Handle<Value> set(const Arguments &args);
-	static Handle<Value> count(const Arguments &args);
-	static Handle<Value> reverse(const Arguments &args);
-	static Handle<Value> resize(const Arguments &args);
+	static NAN_METHOD(add);
+	static NAN_METHOD(get);
+	static NAN_METHOD(set);
+	static NAN_METHOD(count);
+	static NAN_METHOD(reverse);
+	static NAN_METHOD(resize);
 
 	LineStringPoints();
 private:

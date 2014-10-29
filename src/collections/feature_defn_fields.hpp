@@ -1,12 +1,15 @@
 #ifndef __NODE_GDAL_FIELD_DEFN_COLLECTION_H__
 #define __NODE_GDAL_FIELD_DEFN_COLLECTION_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>
@@ -23,22 +26,22 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(Handle<Value> layer_obj);
-	static Handle<Value> toString(const Arguments &args);
+	static NAN_METHOD(toString);
 
-	static Handle<Value> get(const Arguments &args);
-	static Handle<Value> getNames(const Arguments &args);
-	static Handle<Value> count(const Arguments &args);
-	static Handle<Value> add(const Arguments &args);
-	static Handle<Value> remove(const Arguments &args);
-	static Handle<Value> indexOf(const Arguments &args);
-	static Handle<Value> reorder(const Arguments &args);
+	static NAN_METHOD(get);
+	static NAN_METHOD(getNames);
+	static NAN_METHOD(count);
+	static NAN_METHOD(add);
+	static NAN_METHOD(remove);
+	static NAN_METHOD(indexOf);
+	static NAN_METHOD(reorder);
 
 	// - implement in the future -
-	//static Handle<Value> alter(const Arguments &args);
+	//static NAN_METHOD(alter);
 
-	static Handle<Value> featureDefnGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(featureDefnGetter);
 
 	FeatureDefnFields();
 private:

@@ -10,21 +10,23 @@ Persistent<FunctionTemplate> LineStringPoints::constructor;
 
 void LineStringPoints::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LineStringPoints::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("LineStringPoints"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LineStringPoints::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("LineStringPoints"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "reverse", reverse);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "resize", resize);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "set", set);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "reverse", reverse);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "resize", resize);
 
-	target->Set(String::NewSymbol("LineStringPoints"), constructor->GetFunction());
+	target->Set(NanNew("LineStringPoints"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 LineStringPoints::LineStringPoints()
@@ -34,84 +36,86 @@ LineStringPoints::LineStringPoints()
 LineStringPoints::~LineStringPoints()
 {}
 
-Handle<Value> LineStringPoints::New(const Arguments& args)
+NAN_METHOD(LineStringPoints::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		LineStringPoints *geom =  static_cast<LineStringPoints *>(ptr);
 		geom->Wrap(args.This());
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create LineStringPoints directly");
+		NanThrowError("Cannot create LineStringPoints directly");
+		NanReturnUndefined();
 	}
 }
 
 Handle<Value> LineStringPoints::New(Handle<Value> geom)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	LineStringPoints *wrapped = new LineStringPoints();
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = LineStringPoints::constructor->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(String::NewSymbol("parent_"), geom);
+	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
+	v8::Handle<v8::Object> obj = NanNew(LineStringPoints::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(NanNew("parent_"), geom);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> LineStringPoints::toString(const Arguments& args)
+NAN_METHOD(LineStringPoints::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("LineStringPoints"));
+	NanScope();
+	NanReturnValue(NanNew("LineStringPoints"));
 }
 
-Handle<Value> LineStringPoints::count(const Arguments& args)
+NAN_METHOD(LineStringPoints::count)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
-	return scope.Close(Integer::New(geom->get()->getNumPoints()));
+	NanReturnValue(NanNew<Integer>(geom->get()->getNumPoints()));
 }
 
-Handle<Value> LineStringPoints::reverse(const Arguments& args)
+NAN_METHOD(LineStringPoints::reverse)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
 	geom->get()->reversePoints();
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> LineStringPoints::resize(const Arguments& args)
+NAN_METHOD(LineStringPoints::resize)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
 	int count;
 	NODE_ARG_INT(0, "point count", count)
 	geom->get()->setNumPoints(count);
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> LineStringPoints::get(const Arguments& args)
+NAN_METHOD(LineStringPoints::get)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
 	OGRPoint *pt = new OGRPoint();
@@ -119,51 +123,55 @@ Handle<Value> LineStringPoints::get(const Arguments& args)
 
 	NODE_ARG_INT(0, "index", i);
 	if(i < 0 || i >= geom->get()->getNumPoints()) {
-		return scope.Close(Null());
+		NanReturnValue(NanNull());
 	}
 
 	geom->get()->getPoint(i, pt);
 
-	return scope.Close(Point::New(pt));
+	NanReturnValue(Point::New(pt));
 }
 
-Handle<Value> LineStringPoints::set(const Arguments& args)
+NAN_METHOD(LineStringPoints::set)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
 	if(i < 0 || i >= geom->get()->getNumPoints()) {
-		return NODE_THROW("Point index out of range");
+		NanThrowError("Point index out of range");
+		NanReturnUndefined();
 	}
 
 	int n = args.Length() - 1;
 
 	if(n == 0) {
-		return NODE_THROW("Point must be given");
+		NanThrowError("Point must be given");
+		NanReturnUndefined();
 	} else if(n == 1) {
 		if(!args[1]->IsObject()) {
-			return NODE_THROW("Point or object expected for second argument");
+			NanThrowError("Point or object expected for second argument");
+			NanReturnUndefined();
 		}
 		if(IS_WRAPPED(args[1], Point)){
 			//set from Point object
-			Point* pt = ObjectWrap::Unwrap<Point>(args[1]->ToObject());
+			Point* pt = ObjectWrap::Unwrap<Point>(args[1].As<Object>());
 			geom->get()->setPoint(i, pt->get());
 		} else {
-			Handle<Object> obj = args[1]->ToObject();
+			Handle<Object> obj = args[1].As<Object>();
 			//set from object {x: 0, y: 5}
 			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
 
-			Handle<String> z_prop_name = String::NewSymbol("z");
+			Handle<String> z_prop_name = NanNew("z");
 			if (obj->HasOwnProperty(z_prop_name)) {
 				Handle<Value> z_val = obj->Get(z_prop_name);
 				if (!z_val->IsNumber()) {
-					return NODE_THROW("z property must be number");
+					NanThrowError("z property must be number");
+					NanReturnUndefined();
 				}
 				geom->get()->setPoint(i, x, y, z_val->NumberValue());
 			} else {
@@ -173,54 +181,60 @@ Handle<Value> LineStringPoints::set(const Arguments& args)
 	} else {
 		//set x, y, z from numeric arguments
 		if(!args[1]->IsNumber()){
-			return NODE_THROW("Number expected for second argument");
+			NanThrowError("Number expected for second argument");
+			NanReturnUndefined();
 		}
 		if(!args[2]->IsNumber()){
-			return NODE_THROW("Number expected for third argument");
+			NanThrowError("Number expected for third argument");
+			NanReturnUndefined();
 		}
 		if(n == 2){
 			geom->get()->setPoint(i, args[1]->NumberValue(), args[2]->NumberValue());
 		} else {
 			if(!args[3]->IsNumber()){
-				return NODE_THROW("Number expected for fourth argument");
+				NanThrowError("Number expected for fourth argument");
+				NanReturnUndefined();
 			}
 
 			geom->get()->setPoint(i, args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
 		}
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> LineStringPoints::add(const Arguments& args)
+NAN_METHOD(LineStringPoints::add)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	LineString *geom = ObjectWrap::Unwrap<LineString>(parent);
 
 	int n = args.Length();
 
 	if(n == 0) {
-		return NODE_THROW("Point must be given");
+		NanThrowError("Point must be given");
+		NanReturnUndefined();
 	} else if(n == 1) {
 		if(!args[0]->IsObject()) {
-			return NODE_THROW("Point, object, or array of points expected");
+			NanThrowError("Point, object, or array of points expected");
+			NanReturnUndefined();
 		}
 		if(IS_WRAPPED(args[0], Point)){
 			//set from Point object
-			Point* pt = ObjectWrap::Unwrap<Point>(args[0]->ToObject());
+			Point* pt = ObjectWrap::Unwrap<Point>(args[0].As<Object>());
 			geom->get()->addPoint(pt->get());
 		} else if (args[0]->IsArray()) {
 			//set from array of points
-			Handle<Array> array = Handle<Array>::Cast(args[0]);
+			Handle<Array> array = args[0].As<Array>();
 			int length = array->Length();
 			for (int i = 0; i < length; i++){
 				Handle<Value> element = array->Get(i);
 				if(!element->IsObject()) {
-					return NODE_THROW("All points must be Point objects or objects");
+					NanThrowError("All points must be Point objects or objects");
+					NanReturnUndefined();
 				}
-				Handle<Object> element_obj = element->ToObject();
+				Handle<Object> element_obj = element.As<Object>();
 				if(IS_WRAPPED(element_obj, Point)){
 					//set from Point object
 					Point* pt = ObjectWrap::Unwrap<Point>(element_obj);
@@ -231,11 +245,12 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 					NODE_DOUBLE_FROM_OBJ(element_obj, "x", x);
 					NODE_DOUBLE_FROM_OBJ(element_obj, "y", y);
 
-					Handle<String> z_prop_name = String::NewSymbol("z");
+					Handle<String> z_prop_name = NanNew("z");
 					if (element_obj->HasOwnProperty(z_prop_name)) {
 						Handle<Value> z_val = element_obj->Get(z_prop_name);
 						if (!z_val->IsNumber()) {
-							return NODE_THROW("z property must be number");
+							NanThrowError("z property must be number");
+							NanReturnUndefined();
 						}
 						geom->get()->addPoint(x, y, z_val->NumberValue());
 					} else {
@@ -245,16 +260,17 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 			}
 		} else {
 			//set from object {x: 0, y: 5}
-			Handle<Object> obj = args[0]->ToObject();
+			Handle<Object> obj = args[0].As<Object>();
 			double x, y;
 			NODE_DOUBLE_FROM_OBJ(obj, "x", x);
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
 
-			Handle<String> z_prop_name = String::NewSymbol("z");
+			Handle<String> z_prop_name = NanNew("z");
 			if (obj->HasOwnProperty(z_prop_name)) {
 				Handle<Value> z_val = obj->Get(z_prop_name);
 				if (!z_val->IsNumber()) {
-					return NODE_THROW("z property must be number");
+					NanThrowError("z property must be number");
+					NanReturnUndefined();
 				}
 				geom->get()->addPoint(x, y, z_val->NumberValue());
 			} else {
@@ -264,23 +280,26 @@ Handle<Value> LineStringPoints::add(const Arguments& args)
 	} else {
 		//set x, y, z from numeric arguments
 		if(!args[0]->IsNumber()){
-			return NODE_THROW("Number expected for first argument");
+			NanThrowError("Number expected for first argument");
+			NanReturnUndefined();
 		}
 		if(!args[1]->IsNumber()){
-			return NODE_THROW("Number expected for second argument");
+			NanThrowError("Number expected for second argument");
+			NanReturnUndefined();
 		}
 		if(n == 2){
 			geom->get()->addPoint(args[0]->NumberValue(), args[1]->NumberValue());
 		} else {
 			if(!args[2]->IsNumber()){
-				return NODE_THROW("Number expected for third argument");
+				NanThrowError("Number expected for third argument");
+				NanReturnUndefined();
 			}
 
 			geom->get()->addPoint(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue());
 		}
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
 } // namespace node_gdal

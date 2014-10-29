@@ -14,18 +14,20 @@ Persistent<FunctionTemplate> MultiLineString::constructor;
 
 void MultiLineString::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(MultiLineString::New));
-	constructor->Inherit(GeometryCollection::constructor);
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("MultiLineString"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiLineString::New);
+	lcons->Inherit(GeometryCollection::constructor);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("MultiLineString"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "polygonize", polygonize);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "polygonize", polygonize);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
 
-	target->Set(String::NewSymbol("MultiLineString"), constructor->GetFunction());
+	target->Set(NanNew("MultiLineString"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 MultiLineString::MultiLineString(OGRMultiLineString *geom)
@@ -52,53 +54,55 @@ MultiLineString::~MultiLineString()
 		LOG("Disposing GeometryCollection [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+			NanAdjustExternalMemory(-size_);
 		}
 		LOG("Disposed GeometryCollection [%p]", this_);
 		this_ = NULL;
 	}
 }
 
-Handle<Value> MultiLineString::New(const Arguments& args)
+NAN_METHOD(MultiLineString::New)
 {
-	HandleScope scope;
+	NanScope();
 	MultiLineString *f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<MultiLineString *>(ptr);
 
 	} else {
 		if (args.Length() != 0) {
-			return NODE_THROW("MultiLineString constructor doesn't take any arguments");
+			NanThrowError("MultiLineString constructor doesn't take any arguments");
+			NanReturnUndefined();
 		}
 		f = new MultiLineString(new OGRMultiLineString());
 	}
 
 	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(String::NewSymbol("children_"), children); 
+	args.This()->SetHiddenValue(NanNew("children_"), children); 
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> MultiLineString::New(OGRMultiLineString *geom)
 {
-	HandleScope scope;
-	return scope.Close(MultiLineString::New(geom, true));
+	NanEscapableScope();
+	return NanEscapeScope(MultiLineString::New(geom, true));
 }
 
 Handle<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	if (!geom) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -115,30 +119,36 @@ Handle<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = MultiLineString::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(MultiLineString::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> MultiLineString::toString(const Arguments& args)
+NAN_METHOD(MultiLineString::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("MultiLineString"));
+	NanScope();
+	NanReturnValue(NanNew("MultiLineString"));
 }
 
-
-NODE_WRAPPED_METHOD_WITH_RESULT(MultiLineString, polygonize, Geometry, Polygonize);
-
-Handle<Value> MultiLineString::getGeometry(const Arguments& args)
+NAN_METHOD(MultiLineString::polygonize)
 {
-	HandleScope scope;
+	NanScope();
+
+	MultiLineString *geom = ObjectWrap::Unwrap<MultiLineString>(args.This());
+
+	NanReturnValue(Geometry::New(geom->this_->Polygonize()));
+}
+
+NAN_METHOD(MultiLineString::getGeometry)
+{
+	NanScope();
 	MultiLineString *geom = ObjectWrap::Unwrap<MultiLineString>(args.This());
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
-	return scope.Close(LineString::New(static_cast<OGRLineString*>(geom->this_->getGeometryRef(i)), false));
+	NanReturnValue(LineString::New(static_cast<OGRLineString*>(geom->this_->getGeometryRef(i)), false));
 }
 
 } // namespace node_gdal

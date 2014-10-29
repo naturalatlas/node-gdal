@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_COORDINATETRANSFORMATION_H__
 #define __NODE_OGR_COORDINATETRANSFORMATION_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -20,10 +23,10 @@ class CoordinateTransformation: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRCoordinateTransformation *transform);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> transformPoint(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(transformPoint);
 
 	CoordinateTransformation();
 	CoordinateTransformation(OGRCoordinateTransformation *srs);

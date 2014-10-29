@@ -6,7 +6,7 @@ namespace node_gdal {
 //https://github.com/joyent/node/issues/4201#issuecomment-9837340
 
 Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
-	HandleScope scope;
+	NanEscapableScope();
 
 	const char *name;
 	switch(type) {
@@ -17,14 +17,17 @@ Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 		case GDT_UInt32:  name = "Uint32Array";  break;
 		case GDT_Float32: name = "Float32Array"; break;
 		case GDT_Float64: name = "Float64Array"; break;
-		default:          return NODE_THROW("Unsupported array type");
+		default: 
+			NanThrowError("Unsupported array type"); 
+			return NanEscapeScope(NanUndefined());
 	}
 
-	Local<Object> global = Context::GetCurrent()->Global();
-	Handle<Value> val = global->Get(String::NewSymbol(name));
+	Local<Object> global = NanGetCurrentContext()->Global();
+	Handle<Value> val = global->Get(NanNew(name));
 
 	if(val.IsEmpty() || !val->IsFunction()) {
-		return NODE_THROW("Error getting typed array constructor");
+		NanThrowError("Error getting typed array constructor");
+		return NanEscapeScope(NanUndefined());
 	}
 
 	Handle<Function> constructor = val.As<Function>();
@@ -32,10 +35,12 @@ Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 	Local<Value>  size  = Integer::NewFromUnsigned(length);
 	Local<Object> array = constructor->NewInstance(1, &size);
 
-	if(array.IsEmpty() || !array->IsObject())
-		return NODE_THROW("Error allocating array");
+	if(array.IsEmpty() || !array->IsObject()) {
+		NanThrowError("Error allocating array");
+		return NanEscapeScope(NanUndefined());
+	}
 
-	return scope.Close(array);
+	return NanEscapeScope(array);
 }
 
 GDALDataType TypedArray::Identify(Handle<Object> obj) {

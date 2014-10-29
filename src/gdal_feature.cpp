@@ -13,11 +13,11 @@ Persistent<FunctionTemplate> Feature::constructor;
 
 void Feature::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
 	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Feature::New));
 	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("Feature"));
+	constructor->SetClassName(NanNew("Feature"));
 
 	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
@@ -31,14 +31,14 @@ void Feature::Initialize(Handle<Object> target)
 
 	//Note: We should let node GC handle destroying features when they arent being used
 	//TODO: Give node more info on the amount of memory a feature is using
-	//      V8::AdjustAmountOfExternalAllocatedMemory()
+	//      NanAdjustExternalMemory()
 	//NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
 
 	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "defn", defnGetter, READ_ONLY_SETTER);
 	ATTR(constructor, "fid", fidGetter, fidSetter);
 
-	target->Set(String::NewSymbol("Feature"), constructor->GetFunction());
+	target->Set(NanNew("Feature"), constructor->GetFunction());
 }
 
 Feature::Feature(OGRFeature *feature)
@@ -72,42 +72,47 @@ void Feature::dispose()
 }
 
 
-Handle<Value> Feature::New(const Arguments& args)
+NAN_METHOD(Feature::New)
 {
-	HandleScope scope;
+	NanScope();
 	Feature* f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<Feature *>(ptr);
 
 	} else {
 
 		if (args.Length() < 1) {
-			return NODE_THROW("Constructor expects Layer or FeatureDefn object");
+			NanThrowError("Constructor expects Layer or FeatureDefn object");
+			NanReturnUndefined();
 		}
 
 		OGRFeatureDefn *def;
 
 		if (IS_WRAPPED(args[0], Layer)) {
-			Layer *layer = ObjectWrap::Unwrap<Layer>(args[0]->ToObject());
+			Layer *layer = ObjectWrap::Unwrap<Layer>(args[0].As<Object>());
 			if (!layer->get()) {
-				return NODE_THROW("Layer object already destroyed");
+				NanThrowError("Layer object already destroyed");
+				NanReturnUndefined();
 			}
 			def = layer->get()->GetLayerDefn();
 		} else if(IS_WRAPPED(args[0], FeatureDefn)) {
-			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(args[0]->ToObject());
+			FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(args[0].As<Object>());
 			if (!feature_def->get()) {
-				return NODE_THROW("FeatureDefn object already destroyed");
+				NanThrowError("FeatureDefn object already destroyed");
+				NanReturnUndefined();
 			}
 			def = feature_def->get();
 		} else {
-			return NODE_THROW("Constructor expects Layer or FeatureDefn object");
+			NanThrowError("Constructor expects Layer or FeatureDefn object");
+			NanReturnUndefined();
 		}
 
 		OGRFeature *ogr_f = new OGRFeature(def);
@@ -115,118 +120,139 @@ Handle<Value> Feature::New(const Arguments& args)
 	}
 
 	Handle<Value> fields = FeatureFields::New(args.This());
-	args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
+	args.This()->SetHiddenValue(NanNew("fields_"), fields);
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> Feature::New(OGRFeature *feature)
 {
-	HandleScope scope;
-	return scope.Close(Feature::New(feature, true));
+	NanEscapableScope();
+	return NanEscapeScope(Feature::New(feature, true));
 }
 
 Handle<Value> Feature::New(OGRFeature *feature, bool owned)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	if (!feature) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
 
 	Feature *wrapped = new Feature(feature);
 	wrapped->owned_ = owned;
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = Feature::constructor->GetFunction()->NewInstance(1, &ext);
-	return scope.Close(obj);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(Feature::constructor)->GetFunction()->NewInstance(1, &ext);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> Feature::toString(const Arguments& args)
+NAN_METHOD(Feature::toString)
 {
-	return HandleScope().Close(String::New("Feature"));
+	NanScope();
+	NanReturnValue(NanNew("Feature"));
 }
 
-Handle<Value> Feature::getGeometry(const Arguments& args)
+NAN_METHOD(Feature::getGeometry)
 {
-	HandleScope scope;
+	NanScope();
 
 	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
 
 	OGRGeometry* geom = feature->this_->GetGeometryRef();
 	if (!geom) {
-		NODE_THROW("Error getting feature geometry");
+		NanThrowError("Error getting feature geometry");
 	}
 
 
-	return scope.Close(Geometry::New(geom, false));
+	NanReturnValue(Geometry::New(geom, false));
 }
 
-Handle<Value> Feature::getFieldDefn(const Arguments& args)
+NAN_METHOD(Feature::getFieldDefn)
 {
-	HandleScope scope;
+	NanScope();
 	int field_index;
 	NODE_ARG_INT(0, "field index", field_index);
 
 	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
 
 	if (field_index < 0 || field_index >= feature->this_->GetFieldCount()) {
-		return NODE_THROW("Invalid field index");
+		NanThrowError("Invalid field index");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(FieldDefn::New(feature->this_->GetFieldDefnRef(field_index), false));
+	NanReturnValue(FieldDefn::New(feature->this_->GetFieldDefnRef(field_index), false));
 }
 //NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
-NODE_WRAPPED_METHOD_WITH_RESULT(Feature, clone, Feature, Clone);
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equals, Boolean, Equal, Feature, "feature");
 
-Handle<Value> Feature::destroy(const Arguments& args)
+NAN_METHOD(Feature::clone)
 {
-	HandleScope scope;
+	NanScope();
 	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
-	feature->dispose();
-	return Undefined();
+	NanReturnValue(Feature::New(feature->this_->Clone()));
 }
 
-Handle<Value> Feature::setGeometryDirectly(const Arguments& args)
+NAN_METHOD(Feature::destroy)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
+	if (!feature->this_) {
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
+	}
+	feature->dispose();
+	return NanUndefined();
+}
+
+NAN_METHOD(Feature::setGeometryDirectly)
 {
 	//- currently disabled
 	//- uses setGeometry instead in case future versions support unowned geometry
 	//Geometry objects in V8 must be the owner of the OGRGeometry in the current implementation
 	//   to avoid geometry being destroyed when a feature is destroyed
 
-	HandleScope scope;
-	return scope.Close(Feature::setGeometry(args));
+	NanScope();
+	NanReturnValue(Feature::setGeometry(args));
 
 	/*
 	Geometry *geom;
 	NODE_ARG_WRAPPED(0, "geometry", Geometry, geom);
 
 	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
-	if (!feature->this_) return NODE_THROW("Feature object already destroyed");
+	if (!feature->this_) {
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
+	}
 
 	OGRErr err = feature->this_->SetGeometryDirectly(geom->get());
 
-	if (err) return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
 
 	geom->owned_ = false;
-	return Undefined();
+	return NanUndefined();
 	*/
 }
 
-Handle<Value> Feature::setFrom(const Arguments& args)
+NAN_METHOD(Feature::setFrom)
 {
-	HandleScope scope;
+	NanScope();
 	Feature *other_feature;
 	int forgiving = 1;
 	Handle<Array> index_map;
@@ -236,7 +262,8 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 
 	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
 
 	if (args.Length() <= 2) {
@@ -248,17 +275,19 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 		NODE_ARG_BOOL_OPT(2, "forgiving", forgiving);
 
 		if (index_map->Length() < 1) {
-			return NODE_THROW("index map must contain at least 1 index");
+			NanThrowError("index map must contain at least 1 index");
+			NanReturnUndefined();
 		}
 
 		int *index_map_ptr = new int[index_map->Length()];
 
 		for (unsigned index = 0; index < index_map->Length(); index++) {
-			Handle<Value> field_index(index_map->Get(Integer::New(index)));
+			Handle<Value> field_index(index_map->Get(NanNew<Integer>(index)));
 
 			if (!field_index->IsUint32()) {
 				delete [] index_map_ptr;
-				return NODE_THROW("index map must contain only integer values");
+				NanThrowError("index map must contain only integer values");
+				NanReturnUndefined();
 			}
 
 			int val = (int)field_index->Uint32Value(); //todo: validate index? perhaps ogr already does this and throws an error
@@ -271,48 +300,51 @@ Handle<Value> Feature::setFrom(const Arguments& args)
 		delete [] index_map_ptr;
 	}
 
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> Feature::fieldsGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Feature::fieldsGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("fields_")));
 }
 
-Handle<Value> Feature::fidGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Feature::fidGetter)
 {
-	HandleScope scope;
-	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(Integer::New(feature->this_->GetFID()));
+	NanReturnValue(NanNew<Integer>(feature->this_->GetFID()));
 }
 
-Handle<Value> Feature::defnGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Feature::defnGetter)
 {
-	HandleScope scope;
-	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		return NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(FeatureDefn::New(feature->this_->GetDefnRef(), false));
+	NanReturnValue(FeatureDefn::New(feature->this_->GetDefnRef(), false));
 }
 
-void Feature::fidSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+NAN_SETTER(Feature::fidSetter)
 {
-	HandleScope scope;
-	Feature *feature = ObjectWrap::Unwrap<Feature>(info.This());
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
 	if (!feature->this_) {
-		NODE_THROW("Feature object already destroyed");
+		NanThrowError("Feature object already destroyed");
 		return;
 	}
 	if(!value->IsInt32()){
-		NODE_THROW("fid must be an integer");
+		NanThrowError("fid must be an integer");
 		return;
 	}
 	feature->this_->SetFID(value->IntegerValue());

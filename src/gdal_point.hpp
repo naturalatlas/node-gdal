@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_POINT_H__
 #define __NODE_OGR_POINT_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -22,17 +25,17 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRPoint *geom);
 	static Handle<Value> New(OGRPoint *geom, bool owned);
-	static Handle<Value> toString(const Arguments &args);
+	static NAN_METHOD(toString);
 
-	static Handle<Value> xGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> yGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> zGetter(Local<String> property, const AccessorInfo &info);
-	static void xSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void ySetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void zSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_GETTER(xGetter);
+	static NAN_GETTER(yGetter);
+	static NAN_GETTER(zGetter);
+	static NAN_SETTER(xSetter);
+	static NAN_SETTER(ySetter);
+	static NAN_SETTER(zSetter);
 
 	Point();
 	Point(OGRPoint *geom);

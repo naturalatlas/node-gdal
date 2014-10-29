@@ -12,19 +12,21 @@ Persistent<FunctionTemplate> Polygon::constructor;
 
 void Polygon::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Polygon::New));
-	constructor->Inherit(Geometry::constructor);
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("Polygon"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Polygon::New);
+	lcons->Inherit(Geometry::constructor);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("Polygon"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getArea", getArea);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getArea", getArea);
 
-	ATTR(constructor, "rings", ringsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "rings", ringsGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("Polygon"), constructor->GetFunction());
+	target->Set(NanNew("Polygon"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 Polygon::Polygon(OGRPolygon *geom)
@@ -51,53 +53,55 @@ Polygon::~Polygon()
 		LOG("Disposing Polygon [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+			NanAdjustExternalMemory(-size_);
 		}
 		LOG("Disposed Polygon [%p]", this_);
 		this_ = NULL;
 	}
 }
 
-Handle<Value> Polygon::New(const Arguments& args)
+NAN_METHOD(Polygon::New)
 {
-	HandleScope scope;
+	NanScope();
 	Polygon *f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<Polygon *>(ptr);
 
 	} else {
 		if (args.Length() != 0) {
-			return NODE_THROW("Polygon constructor doesn't take any arguments");
+			NanThrowError("Polygon constructor doesn't take any arguments");
+			NanReturnUndefined();
 		}
 		f = new Polygon(new OGRPolygon());
 	}
 
 	Handle<Value> rings = PolygonRings::New(args.This()); 
-	args.This()->SetHiddenValue(String::NewSymbol("rings_"), rings); 
+	args.This()->SetHiddenValue(NanNew("rings_"), rings); 
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> Polygon::New(OGRPolygon *geom)
 {
-	HandleScope scope;
-	return scope.Close(Polygon::New(geom, true));
+	NanEscapableScope();
+	return NanEscapeScope(Polygon::New(geom, true));
 }
 
 Handle<Value> Polygon::New(OGRPolygon *geom, bool owned)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	if (!geom) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -114,24 +118,24 @@ Handle<Value> Polygon::New(OGRPolygon *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = Polygon::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(Polygon::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> Polygon::toString(const Arguments& args)
+NAN_METHOD(Polygon::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("Polygon"));
+	NanScope();
+	NanReturnValue(NanNew("Polygon"));
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getArea, Number, get_Area);
 
-Handle<Value> Polygon::ringsGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Polygon::ringsGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("rings_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("rings_")));
 }
 
 } // namespace node_gdal

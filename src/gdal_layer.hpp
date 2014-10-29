@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_LAYER_H__
 #define __NODE_OGR_LAYER_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -23,7 +26,7 @@ class Layer: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	#if GDAL_VERSION_MAJOR >= 2
 	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent);
 	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set);
@@ -31,23 +34,23 @@ public:
 	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent);
 	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set);
 	#endif
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> getExtent(const Arguments &args);
-	static Handle<Value> setAttributeFilter(const Arguments &args);
-	static Handle<Value> setSpatialFilter(const Arguments &args);
-	static Handle<Value> getSpatialFilter(const Arguments &args);
-	static Handle<Value> testCapability(const Arguments &args);
-	static Handle<Value> syncToDisk(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(getExtent);
+	static NAN_METHOD(setAttributeFilter);
+	static NAN_METHOD(setSpatialFilter);
+	static NAN_METHOD(getSpatialFilter);
+	static NAN_METHOD(testCapability);
+	static NAN_METHOD(syncToDisk);
 
-	static void dsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> featuresGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> fieldsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> fidColumnGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> geomColumnGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> geomTypeGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_SETTER(dsSetter);
+	static NAN_GETTER(dsGetter);
+	static NAN_GETTER(srsGetter);
+	static NAN_GETTER(featuresGetter);
+	static NAN_GETTER(fieldsGetter);
+	static NAN_GETTER(nameGetter);
+	static NAN_GETTER(fidColumnGetter);
+	static NAN_GETTER(geomColumnGetter);
+	static NAN_GETTER(geomTypeGetter);
 
 	static ObjectCache<OGRLayer*> cache;
 

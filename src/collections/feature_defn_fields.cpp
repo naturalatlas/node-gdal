@@ -9,25 +9,27 @@ Persistent<FunctionTemplate> FeatureDefnFields::constructor;
 
 void FeatureDefnFields::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(FeatureDefnFields::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("FeatureDefnFields"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(FeatureDefnFields::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("FeatureDefnFields"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getNames", getNames);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "indexOf", indexOf);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "reorder", reorder);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "alter", alter);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getNames", getNames);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "indexOf", indexOf);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "reorder", reorder);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, "alter", alter);
 
-	ATTR_DONT_ENUM(constructor, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("FeatureDefnFields"), constructor->GetFunction());
+	target->Set(NanNew("FeatureDefnFields"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 FeatureDefnFields::FeatureDefnFields()
@@ -37,193 +39,209 @@ FeatureDefnFields::FeatureDefnFields()
 FeatureDefnFields::~FeatureDefnFields() 
 {}
 
-Handle<Value> FeatureDefnFields::New(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		FeatureDefnFields *feature_def =  static_cast<FeatureDefnFields *>(ptr);
 		feature_def->Wrap(args.This());
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create FeatureDefnFields directly");
+		NanThrowError("Cannot create FeatureDefnFields directly");
+		NanReturnUndefined();
 	}
 }
 
 Handle<Value> FeatureDefnFields::New(Handle<Value> feature_defn)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = FeatureDefnFields::constructor->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(String::NewSymbol("parent_"), feature_defn);
+	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
+	v8::Handle<v8::Object> obj = NanNew(FeatureDefnFields::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(NanNew("parent_"), feature_defn);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> FeatureDefnFields::toString(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("FeatureDefnFields"));
+	NanScope();
+	NanReturnValue(NanNew("FeatureDefnFields"));
 }
 
-Handle<Value> FeatureDefnFields::count(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::count)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(Integer::New(feature_def->get()->GetFieldCount()));
+	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldCount()));
 }
 
-Handle<Value> FeatureDefnFields::indexOf(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::indexOf)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
 	std::string name("");
 	NODE_ARG_STR(0, "field name", name);
 
-	return scope.Close(Integer::New(feature_def->get()->GetFieldIndex(name.c_str())));
+	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldIndex(name.c_str())));
 }
 
-Handle<Value> FeatureDefnFields::get(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::get)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
 	if (args.Length() < 1) {
-		return NODE_THROW("Field index or name must be given");
+		NanThrowError("Field index or name must be given");
+		NanReturnUndefined();
 	}
 	
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
-	return scope.Close(FieldDefn::New(feature_def->get()->GetFieldDefn(field_index)));
+	NanReturnValue(FieldDefn::New(feature_def->get()->GetFieldDefn(field_index)));
 }
 
-Handle<Value> FeatureDefnFields::getNames(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::getNames)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
 	int n = feature_def->get()->GetFieldCount();	
-	Handle<Array> result = Array::New(n);
+	Handle<Array> result = NanNew<Array>(n);
 
 	for (int i = 0; i < n;  i++) {
 		OGRFieldDefn *field_def = feature_def->get()->GetFieldDefn(i);
 		result->Set(i, SafeString::New(field_def->GetNameRef()));
 	}
 
-	return scope.Close(result);
+	NanReturnValue(result);
 }
 
-Handle<Value> FeatureDefnFields::remove(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::remove)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
 	if (args.Length() < 1) {
-		return NODE_THROW("Field index or name must be given");
+		NanThrowError("Field index or name must be given");
+		NanReturnUndefined();
 	}
 	
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
 	int err = feature_def->get()->DeleteFieldDefn(field_index);
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> FeatureDefnFields::add(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::add)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 	if (args.Length() < 1) {
-		return NODE_THROW("field definition(s) must be given");
+		NanThrowError("field definition(s) must be given");
+		NanReturnUndefined();
 	}
 
 	FieldDefn *field_def;
 
 	if (args[0]->IsArray()) {
-		Handle<Array> array = Handle<Array>::Cast(args[0]);
+		Handle<Array> array = args[0].As<Array>();
 		int n = array->Length();
 		for (int i = 0; i < n; i++) {
 			Handle<Value> element = array->Get(i);
 			if (IS_WRAPPED(element, FieldDefn)) {
-				field_def = ObjectWrap::Unwrap<FieldDefn>(element->ToObject());
+				field_def = ObjectWrap::Unwrap<FieldDefn>(element.As<Object>());
 				feature_def->get()->AddFieldDefn(field_def->get());
 			} else {
-				return NODE_THROW("All array elements must be FieldDefn objects");
+				NanThrowError("All array elements must be FieldDefn objects");
+				NanReturnUndefined();
 			}
 		}
 	} else if (IS_WRAPPED(args[0], FieldDefn)) {
-		field_def = ObjectWrap::Unwrap<FieldDefn>(args[0]->ToObject());
+		field_def = ObjectWrap::Unwrap<FieldDefn>(args[0].As<Object>());
 		feature_def->get()->AddFieldDefn(field_def->get());
 	} else {
-		return NODE_THROW("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
+		NanThrowError("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> FeatureDefnFields::reorder(const Arguments& args)
+NAN_METHOD(FeatureDefnFields::reorder)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	FeatureDefn *feature_def = ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->get()) {
-		return NODE_THROW("FeatureDefn object already destroyed");
+		NanThrowError("FeatureDefn object already destroyed");
+		NanReturnUndefined();
 	}
 
-	Handle<Array> field_map = Array::New(0);
+	Handle<Array> field_map = NanNew<Array>(0);
 	NODE_ARG_ARRAY(0, "field map", field_map);
 
 	int n = feature_def->get()->GetFieldCount();
 	OGRErr err = 0;
 
 	if ((int)field_map->Length() != n) {
-		return NODE_THROW("Array length must match field count");
+		NanThrowError("Array length must match field count");
+		NanReturnUndefined();
 	}
 	
 	int *field_map_array = new int[n];
@@ -232,13 +250,15 @@ Handle<Value> FeatureDefnFields::reorder(const Arguments& args)
 		Handle<Value> val = field_map->Get(i);
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
-			return NODE_THROW("Array must only contain integers"); 
+			NanThrowError("Array must only contain integers");
+			NanReturnUndefined(); 
 		}
 		
 		int key = val->IntegerValue();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
-			return NODE_THROW("Values must be between 0 and field count - 1");
+			NanThrowError("Values must be between 0 and field count - 1");
+			NanReturnUndefined();
 		}
 		
 		field_map_array[i] = key;
@@ -248,17 +268,18 @@ Handle<Value> FeatureDefnFields::reorder(const Arguments& args)
 
 	delete [] field_map_array;
 
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
-	return Undefined();
+	return NanUndefined();
 }
 
 
-Handle<Value> FeatureDefnFields::featureDefnGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
 }
 
 } // namespace node_gdal

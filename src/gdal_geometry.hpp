@@ -1,12 +1,15 @@
 #ifndef __NODE_OGR_GEOMETRY_H__
 #define __NODE_OGR_GEOMETRY_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -23,65 +26,65 @@ public:
 	static Persistent<FunctionTemplate> constructor;
 
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(OGRGeometry *geom);
 	static Handle<Value> New(OGRGeometry *geom, bool owned);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> isEmpty(const Arguments &args);
-	static Handle<Value> isValid(const Arguments &args);
-	static Handle<Value> isSimple(const Arguments &args);
-	static Handle<Value> isRing(const Arguments &args);
-	static Handle<Value> clone(const Arguments &args);
-	static Handle<Value> empty(const Arguments &args);
-	static Handle<Value> exportToKML(const Arguments &args);
-	static Handle<Value> exportToGML(const Arguments &args);
-	static Handle<Value> exportToJSON(const Arguments &args);
-	static Handle<Value> exportToWKT(const Arguments &args);
-	static Handle<Value> exportToWKB(const Arguments &args);
-	static Handle<Value> closeRings(const Arguments &args);
-	static Handle<Value> segmentize(const Arguments &args);
-	static Handle<Value> intersects(const Arguments &args);
-	static Handle<Value> equals(const Arguments &args);
-	static Handle<Value> disjoint(const Arguments &args);
-	static Handle<Value> touches(const Arguments &args);
-	static Handle<Value> crosses(const Arguments &args);
-	static Handle<Value> within(const Arguments &args);
-	static Handle<Value> contains(const Arguments &args);
-	static Handle<Value> overlaps(const Arguments &args);
-	static Handle<Value> boundary(const Arguments &args);
-	static Handle<Value> distance(const Arguments &args);
-	static Handle<Value> convexHull(const Arguments &args);
-	static Handle<Value> buffer(const Arguments &args);
-	static Handle<Value> intersection(const Arguments &args);
-	static Handle<Value> unionGeometry(const Arguments &args);
-	static Handle<Value> difference(const Arguments &args);
-	static Handle<Value> symDifference(const Arguments &args);
-	static Handle<Value> centroid(const Arguments &args);
-	static Handle<Value> simplify(const Arguments &args);
-	static Handle<Value> simplifyPreserveTopology(const Arguments &args);
-	static Handle<Value> polygonize(const Arguments &args);
-	static Handle<Value> swapXY(const Arguments &args);
-	static Handle<Value> getNumGeometries(const Arguments &args);
-	static Handle<Value> getEnvelope(const Arguments &args);
-	static Handle<Value> getEnvelope3D(const Arguments &args);
-	static Handle<Value> transform(const Arguments &args);
-	static Handle<Value> transformTo(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(isEmpty);
+	static NAN_METHOD(isValid);
+	static NAN_METHOD(isSimple);
+	static NAN_METHOD(isRing);
+	static NAN_METHOD(clone);
+	static NAN_METHOD(empty);
+	static NAN_METHOD(exportToKML);
+	static NAN_METHOD(exportToGML);
+	static NAN_METHOD(exportToJSON);
+	static NAN_METHOD(exportToWKT);
+	static NAN_METHOD(exportToWKB);
+	static NAN_METHOD(closeRings);
+	static NAN_METHOD(segmentize);
+	static NAN_METHOD(intersects);
+	static NAN_METHOD(equals);
+	static NAN_METHOD(disjoint);
+	static NAN_METHOD(touches);
+	static NAN_METHOD(crosses);
+	static NAN_METHOD(within);
+	static NAN_METHOD(contains);
+	static NAN_METHOD(overlaps);
+	static NAN_METHOD(boundary);
+	static NAN_METHOD(distance);
+	static NAN_METHOD(convexHull);
+	static NAN_METHOD(buffer);
+	static NAN_METHOD(intersection);
+	static NAN_METHOD(unionGeometry);
+	static NAN_METHOD(difference);
+	static NAN_METHOD(symDifference);
+	static NAN_METHOD(centroid);
+	static NAN_METHOD(simplify);
+	static NAN_METHOD(simplifyPreserveTopology);
+	static NAN_METHOD(polygonize);
+	static NAN_METHOD(swapXY);
+	static NAN_METHOD(getNumGeometries);
+	static NAN_METHOD(getEnvelope);
+	static NAN_METHOD(getEnvelope3D);
+	static NAN_METHOD(transform);
+	static NAN_METHOD(transformTo);
 
 	//static constructor methods
-	static Handle<Value> create(const Arguments &args);
-	static Handle<Value> createFromWkt(const Arguments &args);
-	static Handle<Value> createFromWkb(const Arguments &args);
-	static Handle<Value> getName(const Arguments &args);
-	static Handle<Value> getConstructor(const Arguments &args);
+	static NAN_METHOD(create);
+	static NAN_METHOD(createFromWkt);
+	static NAN_METHOD(createFromWkb);
+	static NAN_METHOD(getName);
+	static NAN_METHOD(getConstructor);
 
-	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> typeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> nameGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> wkbSizeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> dimensionGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> coordinateDimensionGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(srsGetter);
+	static NAN_GETTER(typeGetter);
+	static NAN_GETTER(nameGetter);
+	static NAN_GETTER(wkbSizeGetter);
+	static NAN_GETTER(dimensionGetter);
+	static NAN_GETTER(coordinateDimensionGetter);
 
-	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_SETTER(srsSetter);
 
 	static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
 	static Handle<Value> getConstructor(OGRwkbGeometryType type);
@@ -101,7 +104,7 @@ protected:
 
 #define UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(geom) {                                        \
     int new_size = geom->this_->WkbSize();                                              \
-    if (geom->owned_) V8::AdjustAmountOfExternalAllocatedMemory(new_size - geom->size_); \
+    if (geom->owned_) NanAdjustExternalMemory(new_size - geom->size_); \
     geom->size_ = new_size;                                                             \
 }
 

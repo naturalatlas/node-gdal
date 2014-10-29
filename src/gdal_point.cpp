@@ -10,21 +10,23 @@ Persistent<FunctionTemplate> Point::constructor;
 
 void Point::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Point::New));
-	constructor->Inherit(Geometry::constructor);
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("Point"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Point::New);
+	lcons->Inherit(Geometry::constructor);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("Point"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
 
 	// properties
-	ATTR(constructor, "x", xGetter, xSetter);
-	ATTR(constructor, "y", yGetter, ySetter);
-	ATTR(constructor, "z", zGetter, zSetter);
+	ATTR(lcons, "x", xGetter, xSetter);
+	ATTR(lcons, "y", yGetter, ySetter);
+	ATTR(lcons, "z", zGetter, zSetter);
 
-	target->Set(String::NewSymbol("Point"), constructor->GetFunction());
+	target->Set(NanNew("Point"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 Point::Point(OGRPoint *geom)
@@ -51,26 +53,27 @@ Point::~Point()
 		LOG("Disposing Point [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+			NanAdjustExternalMemory(-size_);
 		}
 		LOG("Disposed Point [%p]", this_);
 		this_ = NULL;
 	}
 }
 
-Handle<Value> Point::New(const Arguments& args)
+NAN_METHOD(Point::New)
 {
-	HandleScope scope;
+	NanScope();
 	Point *f;
 	OGRPoint *geom;
 	double x = 0, y = 0, z = 0;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<Point *>(ptr);
 
@@ -80,7 +83,8 @@ Handle<Value> Point::New(const Arguments& args)
 		NODE_ARG_DOUBLE_OPT(2, "z", z);
 
 		if (args.Length() == 1) {
-			return NODE_THROW("Point constructor must be given 0, 2, or 3 arguments");
+			NanThrowError("Point constructor must be given 0, 2, or 3 arguments");
+			NanReturnUndefined();
 		}
 
 		if (args.Length() == 3) {
@@ -93,21 +97,21 @@ Handle<Value> Point::New(const Arguments& args)
 	}
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> Point::New(OGRPoint *geom)
 {
-	HandleScope scope;
-	return scope.Close(Point::New(geom, true));
+	NanEscapableScope();
+	return NanEscapeScope(Point::New(geom, true));
 }
 
 Handle<Value> Point::New(OGRPoint *geom, bool owned)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	if (!geom) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -124,32 +128,32 @@ Handle<Value> Point::New(OGRPoint *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = Point::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(Point::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> Point::toString(const Arguments& args)
+NAN_METHOD(Point::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("Point"));
+	NanScope();
+	NanReturnValue(NanNew("Point"));
 }
 
-Handle<Value> Point::xGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Point::xGetter)
 {
-	HandleScope scope;
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-	return scope.Close(Number::New((geom->this_)->getX()));
+	NanScope();
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
+	NanReturnValue(NanNew<Number>((geom->this_)->getX()));
 }
 
-void Point::xSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+NAN_SETTER(Point::xSetter)
 {
-	HandleScope scope;
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
+	NanScope();
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
 
 	if (!value->IsNumber()) {
-		NODE_THROW("y must be a number");
+		NanThrowError("y must be a number");
 		return;
 	}
 	double x = value->NumberValue();
@@ -157,20 +161,20 @@ void Point::xSetter(Local<String> property, Local<Value> value, const AccessorIn
 	((OGRPoint* )geom->this_)->setX(x);
 }
 
-Handle<Value> Point::yGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Point::yGetter)
 {
-	HandleScope scope;
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-	return scope.Close(Number::New((geom->this_)->getY()));
+	NanScope();
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
+	NanReturnValue(NanNew<Number>((geom->this_)->getY()));
 }
 
-void Point::ySetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+NAN_SETTER(Point::ySetter)
 {
-	HandleScope scope;
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
+	NanScope();
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
 
 	if (!value->IsNumber()) {
-		NODE_THROW("y must be a number");
+		NanThrowError("y must be a number");
 		return;
 	}
 	double y = value->NumberValue();
@@ -178,19 +182,19 @@ void Point::ySetter(Local<String> property, Local<Value> value, const AccessorIn
 	((OGRPoint* )geom->this_)->setY(y);
 }
 
-Handle<Value> Point::zGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Point::zGetter)
 {
-	HandleScope scope;
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
-	return scope.Close(Number::New((geom->this_)->getZ()));
+	NanScope();
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
+	NanReturnValue(NanNew<Number>((geom->this_)->getZ()));
 }
 
-void Point::zSetter(Local<String> property, Local<Value> value, const AccessorInfo &info)
+NAN_SETTER(Point::zSetter)
 {
-	Point *geom = ObjectWrap::Unwrap<Point>(info.This());
+	Point *geom = ObjectWrap::Unwrap<Point>(args.This());
 
 	if (!value->IsNumber()) {
-		NODE_THROW("z must be a number");
+		NanThrowError("z must be a number");
 		return;
 	}
 	double z = value->NumberValue();

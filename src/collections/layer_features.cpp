@@ -9,24 +9,26 @@ Persistent<FunctionTemplate> LayerFeatures::constructor;
 
 void LayerFeatures::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LayerFeatures::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("LayerFeatures"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LayerFeatures::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("LayerFeatures"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "add", add);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "set", set);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "first", first);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "next", next);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "remove", remove);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "set", set);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "first", first);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "next", next);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
 
-	ATTR_DONT_ENUM(constructor, "layer", layerGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("LayerFeatures"), constructor->GetFunction());
+	target->Set(NanNew("LayerFeatures"), lcons->GetFunction());
+	
+	NanAssignPersistent(constructor, lcons);
 }
 
 LayerFeatures::LayerFeatures()
@@ -36,135 +38,144 @@ LayerFeatures::LayerFeatures()
 LayerFeatures::~LayerFeatures() 
 {}
 
-Handle<Value> LayerFeatures::New(const Arguments& args)
+NAN_METHOD(LayerFeatures::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		LayerFeatures *f =  static_cast<LayerFeatures *>(ptr);
 		f->Wrap(args.This());
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create LayerFeatures directly");
+		NanThrowError("Cannot create LayerFeatures directly");
+		NanReturnUndefined();
 	}
 }
 
 Handle<Value> LayerFeatures::New(Handle<Value> layer_obj)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	LayerFeatures *wrapped = new LayerFeatures();
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = LayerFeatures::constructor->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(String::NewSymbol("parent_"), layer_obj);
+	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
+	v8::Handle<v8::Object> obj = NanNew(LayerFeatures::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(NanNew("parent_"), layer_obj);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> LayerFeatures::toString(const Arguments& args)
+NAN_METHOD(LayerFeatures::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("LayerFeatures"));
+	NanScope();
+	NanReturnValue(NanNew("LayerFeatures"));
 }
 
-Handle<Value> LayerFeatures::get(const Arguments& args)
+NAN_METHOD(LayerFeatures::get)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	int feature_id;
 	NODE_ARG_INT(0, "feature id", feature_id);
 	OGRFeature *feature = layer->get()->GetFeature(feature_id);
 
-	return scope.Close(Feature::New(feature));
+	NanReturnValue(Feature::New(feature));
 }
 
-Handle<Value> LayerFeatures::first(const Arguments& args)
+NAN_METHOD(LayerFeatures::first)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	layer->get()->ResetReading();
 	OGRFeature *feature = layer->get()->GetNextFeature();
 
-	return scope.Close(Feature::New(feature));
+	NanReturnValue(Feature::New(feature));
 }
 
-Handle<Value> LayerFeatures::next(const Arguments& args)
+NAN_METHOD(LayerFeatures::next)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	OGRFeature *feature = layer->get()->GetNextFeature();
 
-	return scope.Close(Feature::New(feature));
+	NanReturnValue(Feature::New(feature));
 }
 
-Handle<Value> LayerFeatures::add(const Arguments& args)
+NAN_METHOD(LayerFeatures::add)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	Feature *f;
 	NODE_ARG_WRAPPED(0, "feature", Feature, f)
 	
 	int err = layer->get()->CreateFeature(f->get());
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> LayerFeatures::count(const Arguments& args)
+NAN_METHOD(LayerFeatures::count)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	int force = 1;
 	NODE_ARG_BOOL_OPT(0, "force", force);
 
-	return scope.Close(Integer::New(layer->get()->GetFeatureCount(force)));
+	NanReturnValue(NanNew<Integer>(layer->get()->GetFeatureCount(force)));
 }
 
-Handle<Value> LayerFeatures::set(const Arguments& args)
+NAN_METHOD(LayerFeatures::set)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
 	int err;
@@ -179,47 +190,53 @@ Handle<Value> LayerFeatures::set(const Arguments& args)
 		NODE_ARG_WRAPPED(1, "feature", Feature, f);
 		err = f->get()->SetFID(i);
 		if(err) {
-			return NODE_THROW("Error setting feature id");
+			NanThrowError("Error setting feature id");
+			NanReturnUndefined();
 		}
 	} else {
-		return NODE_THROW("Invalid number of arguments");
+		NanThrowError("Invalid number of arguments");
+		NanReturnUndefined();
 	}
 
 	if(!f->get()){
-		return NODE_THROW("Feature already destroyed");
+		NanThrowError("Feature already destroyed");
+		NanReturnUndefined();
 	}
 	err = layer->get()->SetFeature(f->get());
-	if (err) {
-		return NODE_THROW_OGRERR(err);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
-	return Undefined();
+	return NanUndefined();
 }
 
 
-Handle<Value> LayerFeatures::remove(const Arguments& args)
+NAN_METHOD(LayerFeatures::remove)
 {
-	HandleScope scope;
+	NanScope();
 
-	Handle<Object> parent = args.This()->GetHiddenValue(String::NewSymbol("parent_"))->ToObject();
+	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 	
 	int i;
 	NODE_ARG_INT(0, "feature id", i);
 	int err = layer->get()->DeleteFeature(i);
 	if(err) {
-		return NODE_THROW_OGRERR(err);
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> LayerFeatures::layerGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(LayerFeatures::layerGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("parent_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
 }
 
 } // namespace node_gdal

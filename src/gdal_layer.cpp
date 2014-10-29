@@ -20,30 +20,32 @@ ObjectCache<OGRLayer*> Layer::cache;
 
 void Layer::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Layer::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("Layer"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Layer::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("Layer"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getExtent", getExtent);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setAttributeFilter", setAttributeFilter);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setSpatialFilter", setSpatialFilter);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getSpatialFilter", getSpatialFilter);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "testCapability", testCapability);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "flush", syncToDisk);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getExtent", getExtent);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "setAttributeFilter", setAttributeFilter);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "setSpatialFilter", setSpatialFilter);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getSpatialFilter", getSpatialFilter);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "testCapability", testCapability);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "flush", syncToDisk);
 
-	ATTR_DONT_ENUM(constructor, "ds", dsGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "srs", srsGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "features", featuresGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "name", nameGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "geomType", geomTypeGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "geomColumn", geomColumnGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "fidColumn", fidColumnGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "srs", srsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "features", featuresGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "fields", fieldsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "name", nameGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "geomType", geomTypeGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "geomColumn", geomColumnGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "fidColumn", fidColumnGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("Layer"), constructor->GetFunction());
+	target->Set(NanNew("Layer"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 Layer::Layer(OGRLayer *layer)
@@ -85,32 +87,34 @@ void Layer::dispose()
 	}
 };
 
-Handle<Value> Layer::New(const Arguments& args)
+NAN_METHOD(Layer::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		Layer *f = static_cast<Layer *>(ptr);
 		f->Wrap(args.This());
 
 		Handle<Value> features = LayerFeatures::New(args.This());
-		args.This()->SetHiddenValue(String::NewSymbol("features_"), features);
+		args.This()->SetHiddenValue(NanNew("features_"), features);
 
 		Handle<Value> fields = LayerFields::New(args.This());
-		args.This()->SetHiddenValue(String::NewSymbol("fields_"), fields);
+		args.This()->SetHiddenValue(NanNew("fields_"), fields);
 
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create layer directly. Create with dataset instead.");
+		NanThrowError("Cannot create layer directly. Create with dataset instead.");
+		NanReturnUndefined();
 	}
 
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 #if GDAL_VERSION_MAJOR >= 2
@@ -119,8 +123,8 @@ Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent)
 Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent)
 #endif
 {
-	HandleScope scope;
-	return scope.Close(Layer::New(raw, raw_parent, false));
+	NanScope();
+	NanReturnValue(Layer::New(raw, raw_parent, false));
 }
 
 #if GDAL_VERSION_MAJOR >= 2
@@ -129,20 +133,20 @@ Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set
 Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set)
 #endif
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!raw) {
-		return v8::Null();
+		return NanNull();
 	}
 	if (cache.has(raw)) {
-		return cache.get(raw);
+		return NanNew(cache.get(raw));
 	}
 
 	Layer *wrapped = new Layer(raw);
 	wrapped->is_result_set = result_set;
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = Layer::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(Layer::constructor)->GetFunction()->NewInstance(1, &ext);
 
 	cache.add(raw, obj);
 
@@ -151,51 +155,53 @@ Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_s
 		Handle<Value> ds;
 		#if GDAL_VERSION_MAJOR >= 2
 			if (Dataset::dataset_cache.has(raw_parent)) {
-				ds = Dataset::dataset_cache.get(raw_parent);
+				ds = NanNew(Dataset::dataset_cache.get(raw_parent));
 			}
 		#else
 			if (Dataset::datasource_cache.has(raw_parent)) {
-				ds = Dataset::datasource_cache.get(raw_parent);
+				ds = NanNew(Dataset::datasource_cache.get(raw_parent));
 			}
 		#endif
 		else {
 			LOG("Layer's parent dataset disappeared from cache (layer = %p, dataset = %p)", raw, raw_parent);
-			return NODE_THROW("Layer's parent dataset disappeared from cache");
+			NanThrowError("Layer's parent dataset disappeared from cache");
+			NanReturnUndefined();
 			//ds = Dataset::New(raw_parent); //should never happen
 		}
 
 		wrapped->parent_ds = raw_parent;
-		obj->SetHiddenValue(String::NewSymbol("ds_"), ds);
+		obj->SetHiddenValue(NanNew("ds_"), ds);
 	}
 
-	return scope.Close(obj);
+	NanReturnValue(obj);
 }
 
-Handle<Value> Layer::toString(const Arguments& args)
+NAN_METHOD(Layer::toString)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return scope.Close(String::New("Null layer"));
+		NanReturnValue(NanNew("Null layer"));
 	}
 
 	std::ostringstream ss;
 	ss << "Layer (" << layer->this_->GetName() << ")";
 
-	return scope.Close(SafeString::New(ss.str().c_str()));
+	NanReturnValue(SafeString::New(ss.str().c_str()));
 }
 
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
 
-Handle<Value> Layer::getExtent(const Arguments& args)
+NAN_METHOD(Layer::getExtent)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
 
 	int force = 1;
@@ -204,39 +210,42 @@ Handle<Value> Layer::getExtent(const Arguments& args)
 	OGREnvelope *envelope = new OGREnvelope();
 	OGRErr err = layer->this_->GetExtent(envelope, force);
 	if(err) {
-		return NODE_THROW("Can't get layer extent without computing it");
+		NanThrowError("Can't get layer extent without computing it");
+		NanReturnUndefined();
 	}
 
-	Local<Object> obj = Object::New();
-	obj->Set(String::NewSymbol("minX"), Number::New(envelope->MinX));
-	obj->Set(String::NewSymbol("maxX"), Number::New(envelope->MaxX));
-	obj->Set(String::NewSymbol("minY"), Number::New(envelope->MinY));
-	obj->Set(String::NewSymbol("maxY"), Number::New(envelope->MaxY));
+	Local<Object> obj = NanNew<Object>();
+	obj->Set(NanNew("minX"), NanNew<Number>(envelope->MinX));
+	obj->Set(NanNew("maxX"), NanNew<Number>(envelope->MaxX));
+	obj->Set(NanNew("minY"), NanNew<Number>(envelope->MinY));
+	obj->Set(NanNew("maxY"), NanNew<Number>(envelope->MaxY));
 
 	delete envelope;
 
-	return scope.Close(obj);
+	NanReturnValue(obj);
 }
 
-Handle<Value> Layer::getSpatialFilter(const Arguments& args)
+NAN_METHOD(Layer::getSpatialFilter)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(Geometry::New(layer->this_->GetSpatialFilter(), false));
+	NanReturnValue(Geometry::New(layer->this_->GetSpatialFilter(), false));
 }
 
-Handle<Value> Layer::setSpatialFilter(const Arguments& args)
+NAN_METHOD(Layer::setSpatialFilter)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
 
 	if(args.Length() == 1) {
@@ -257,19 +266,21 @@ Handle<Value> Layer::setSpatialFilter(const Arguments& args)
 
 		layer->this_->SetSpatialFilterRect(minX, minY, maxX, maxY);
 	} else {
-		return NODE_THROW("Invalid number of arguments");
+		NanThrowError("Invalid number of arguments");
+		NanReturnUndefined();
 	}
 
-	return Undefined();
+	return NanUndefined();
 }
 
-Handle<Value> Layer::setAttributeFilter(const Arguments& args)
+NAN_METHOD(Layer::setAttributeFilter)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
 
 	std::string filter = "";
@@ -282,90 +293,99 @@ Handle<Value> Layer::setAttributeFilter(const Arguments& args)
 		err = layer->this_->SetAttributeFilter(filter.c_str());
 	}
 
-	if(err) return NODE_THROW_OGRERR(err);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
 	
-	return Undefined();
+	return NanUndefined();
 }
 /*
-Handle<Value> Layer::getLayerDefn(const Arguments& args)
+NAN_METHOD(Layer::getLayerDefn)
 {
-	HandleScope scope;
+	NanScope();
 
 	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 
 	if (!layer->this_) {
-		return NODE_THROW("Layer object already destroyed");
+		NanThrowError("Layer object already destroyed");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
+	NanReturnValue(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
 }*/
 
-Handle<Value> Layer::dsGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::dsGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("ds_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("ds_")));
 }
 
-Handle<Value> Layer::srsGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::srsGetter)
 {
-	HandleScope scope;
-	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	NanScope();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(SpatialReference::New(layer->this_->GetSpatialRef(), false));
+	NanReturnValue(SpatialReference::New(layer->this_->GetSpatialRef(), false));
 }
 
-Handle<Value> Layer::nameGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::nameGetter)
 {
-	HandleScope scope;
-	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	NanScope();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(SafeString::New(layer->this_->GetName()));
+	NanReturnValue(SafeString::New(layer->this_->GetName()));
 }
 
-Handle<Value> Layer::geomColumnGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::geomColumnGetter)
 {
-	HandleScope scope;
-	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	NanScope();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(SafeString::New(layer->this_->GetGeometryColumn()));
+	NanReturnValue(SafeString::New(layer->this_->GetGeometryColumn()));
 }
 
-Handle<Value> Layer::fidColumnGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::fidColumnGetter)
 {
-	HandleScope scope;
-	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	NanScope();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(SafeString::New(layer->this_->GetFIDColumn()));
+	NanReturnValue(SafeString::New(layer->this_->GetFIDColumn()));
 }
 
-Handle<Value> Layer::geomTypeGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::geomTypeGetter)
 {
-	HandleScope scope;
-	Layer *layer = ObjectWrap::Unwrap<Layer>(info.This());
+	NanScope();
+	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
 	if (!layer->this_) {
-		return NODE_THROW("Layer object has already been destroyed");
+		NanThrowError("Layer object has already been destroyed");
+		NanReturnUndefined();
 	}
-	return scope.Close(Integer::New(layer->this_->GetGeomType()));
+	NanReturnValue(NanNew<Integer>(layer->this_->GetGeomType()));
 }
 
-Handle<Value> Layer::featuresGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::featuresGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("features_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("features_")));
 }
 
-Handle<Value> Layer::fieldsGetter(Local<String> property, const AccessorInfo &info)
+NAN_GETTER(Layer::fieldsGetter)
 {
-	HandleScope scope;
-	return scope.Close(info.This()->GetHiddenValue(String::NewSymbol("fields_")));
+	NanScope();
+	NanReturnValue(args.This()->GetHiddenValue(NanNew("fields_")));
 }
 
 } // namespace node_gdal

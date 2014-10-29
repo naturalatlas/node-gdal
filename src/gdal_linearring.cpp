@@ -13,17 +13,19 @@ Persistent<FunctionTemplate> LinearRing::constructor;
 
 void LinearRing::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(LinearRing::New));
-	constructor->Inherit(LineString::constructor);
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("LinearRing"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LinearRing::New);
+	lcons->Inherit(LineString::constructor);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("LinearRing"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getArea", getArea);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getArea", getArea);
 
-	target->Set(String::NewSymbol("LinearRing"), constructor->GetFunction());
+	target->Set(NanNew("LinearRing"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 LinearRing::LinearRing(OGRLinearRing *geom)
@@ -50,53 +52,55 @@ LinearRing::~LinearRing()
 		LOG("Disposing LinearRing [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			V8::AdjustAmountOfExternalAllocatedMemory(-size_);
+			NanAdjustExternalMemory(-size_);
 		}
 		LOG("Disposed LinearRing [%p]", this_);
 		this_ = NULL;
 	}
 }
 
-Handle<Value> LinearRing::New(const Arguments& args)
+NAN_METHOD(LinearRing::New)
 {
-	HandleScope scope;
+	NanScope();
 	LinearRing *f;
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<LinearRing *>(ptr);
 
 	} else {
 		if (args.Length() != 0) {
-			return NODE_THROW("LinearRing constructor doesn't take any arguments");
+			NanThrowError("LinearRing constructor doesn't take any arguments");
+			NanReturnUndefined();
 		}
 		f = new LinearRing(new OGRLinearRing());
 	}
 
 	Handle<Value> points = LineStringPoints::New(args.This()); 
-	args.This()->SetHiddenValue(String::NewSymbol("points_"), points); 
+	args.This()->SetHiddenValue(NanNew("points_"), points); 
 
 	f->Wrap(args.This());
-	return args.This();
+	NanReturnValue(args.This());
 }
 
 Handle<Value> LinearRing::New(OGRLinearRing *geom)
 {
-	HandleScope scope;
-	return scope.Close(LinearRing::New(geom, true));
+	NanEscapableScope();
+	return NanEscapeScope(LinearRing::New(geom, true));
 }
 
 Handle<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	if (!geom) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -113,16 +117,16 @@ Handle<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-	v8::Handle<v8::Object> obj = LinearRing::constructor->GetFunction()->NewInstance(1, &ext);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(LinearRing::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
-Handle<Value> LinearRing::toString(const Arguments& args)
+NAN_METHOD(LinearRing::toString)
 {
-	HandleScope scope;
-	return scope.Close(String::New("LinearRing"));
+	NanScope();
+	NanReturnValue(NanNew("LinearRing"));
 }
 
 NODE_WRAPPED_METHOD_WITH_RESULT(LinearRing, getArea, Number, get_Area);

@@ -10,17 +10,19 @@ Persistent<FunctionTemplate> MajorObject::constructor;
 
 void MajorObject::Initialize(Handle<Object> target)
 {
-	HandleScope scope;
+	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(MajorObject::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(String::NewSymbol("MajorObject"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MajorObject::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("MajorObject"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getMetadata", getMetadata);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getMetadata", getMetadata);
 
-	ATTR(constructor, "description", descriptionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "description", descriptionGetter, READ_ONLY_SETTER);
 
-	target->Set(String::NewSymbol("MajorObject"), constructor->GetFunction());
+	target->Set(NanNew("MajorObject"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 MajorObject::MajorObject(GDALMajorObject *obj)
@@ -38,53 +40,63 @@ MajorObject::~MajorObject()
 }
 
 
-Handle<Value> MajorObject::New(const Arguments& args)
+NAN_METHOD(MajorObject::New)
 {
-	HandleScope scope;
+	NanScope();
 
 	if (!args.IsConstructCall()) {
-		return NODE_THROW("Cannot call constructor as function, you need to use 'new' keyword");
+		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		NanReturnUndefined();
 	}
 
 	if (args[0]->IsExternal()) {
-		Local<External> ext = Local<External>::Cast(args[0]);
+		Local<External> ext = args[0].As<External>();
 		void* ptr = ext->Value();
 		MajorObject *f = static_cast<MajorObject *>(ptr);
 		f->Wrap(args.This());
-		return args.This();
+		NanReturnValue(args.This());
 	} else {
-		return NODE_THROW("Cannot create MajorObject directly");
+		NanThrowError("Cannot create MajorObject directly");
+		NanReturnUndefined();
 	}
 }
 
-Handle<Value> MajorObject::New(GDALMajorObject *obj)
+Handle<Value> MajorObject::New(GDALMajorObject *raw)
 {
-	return ClosedPtr<MajorObject, GDALMajorObject>::Closed(obj);
+	NanEscapableScope();
+	if (!raw) {
+		return NanEscapeScope(NanNull());
+	}
+	MajorObject *wrapped = new MajorObject(raw);
+	Handle<Value> ext = NanNew<External>(wrapped);
+	Handle<Object> obj = NanNew(MajorObject::constructor)->GetFunction()->NewInstance(1, &ext);
+	return NanEscapeScope(obj);
 }
 
 
-Handle<Value> MajorObject::getMetadata(const Arguments& args)
+NAN_METHOD(MajorObject::getMetadata)
 {
-	HandleScope scope;
+	NanScope();
 
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
 	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
 	if (!obj->this_) {
-		return NODE_THROW("MajorObject object has already been destroyed");
+		NanThrowError("MajorObject object has already been destroyed");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
+	NanReturnValue(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
 }
 
 Handle<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
 {
-	HandleScope scope;
+	NanEscapableScope();
 
 	char **metadata = obj->GetMetadata(domain);
 
-	Local<Object> result = Object::New();
+	Local<Object> result = NanNew<Object>();
 
 	if (metadata) {
 		int i = 0;
@@ -94,25 +106,26 @@ Handle<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain
 			if (i_equal != std::string::npos) {
 				std::string key = pair.substr(0, i_equal);
 				std::string val = pair.substr(i_equal+1);
-				result->Set(String::NewSymbol(key.c_str()), String::New(val.c_str()));
+				result->Set(NanNew(key.c_str()), NanNew(val.c_str()));
 			}
 			i++;
 		}
 	}
 
-	return scope.Close(result);
+	return NanEscapeScope(result);
 }
 
 
-Handle<Value> MajorObject::descriptionGetter(Local<String> property, const AccessorInfo &info) {
-	HandleScope scope;
+NAN_GETTER(MajorObject::descriptionGetter) {
+	NanScope();
 
-	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(info.This());
+	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
 	if (!obj->this_) {
-		return NODE_THROW("MajorObject object has already been destroyed");
+		NanThrowError("MajorObject object has already been destroyed");
+		NanReturnUndefined();
 	}
 
-	return scope.Close(SafeString::New(obj->this_->GetDescription()));
+	NanReturnValue(SafeString::New(obj->this_->GetDescription()));
 }
 
 } // namespace node_gdal

@@ -1,12 +1,15 @@
 #ifndef __NODE_TYPEDARRAY_H__
 #define __NODE_TYPEDARRAY_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>

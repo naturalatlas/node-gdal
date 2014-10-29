@@ -5,17 +5,17 @@
 
 Handle<Value> FastBuffer::New(unsigned char *data, int length) 
 {
-	HandleScope scope;
+	NanEscapableScope();
 
-	node::Buffer *slowBuffer = node::Buffer::New(length);
+	Local<Object> slowBuffer = NanNewBufferHandle(length);
 
 	memcpy(node::Buffer::Data(slowBuffer), data, length);
 
-	v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-	v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-	v8::Handle<v8::Value> constructorArgs[3] = { slowBuffer->handle_, v8::Integer::New(length), v8::Integer::New(0) };
+	Local<Object> globalObj = NanGetCurrentContext()->Global();
+	Local<Function> bufferConstructor = globalObj->Get(NanNew("Buffer")).As<Function>();
+	Handle<Value> constructorArgs[3] = { slowBuffer, NanNew<Integer>(length), NanNew<Integer>(0) };
 	
-	v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+	Local<Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
 
-	return scope.Close(actualBuffer);
+	return NanEscapeScope(actualBuffer);
 }

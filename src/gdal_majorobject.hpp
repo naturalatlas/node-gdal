@@ -1,12 +1,15 @@
 #ifndef __NODE_GDAL_MAJOROBJECT_H__
 #define __NODE_GDAL_MAJOROBJECT_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>
@@ -20,12 +23,12 @@ class MajorObject: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(GDALMajorObject *obj);
-	static Handle<Value> getMetadata(const Arguments &args);
+	static NAN_METHOD(getMetadata);
 	static Handle<Object> getMetadata(GDALMajorObject *obj, const char *domain);
 	
-	static Handle<Value> descriptionGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(descriptionGetter);
 
 	MajorObject();
 	MajorObject(GDALMajorObject *obj);

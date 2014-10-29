@@ -2,10 +2,15 @@
 #ifndef __GDAL_COMMON_H__
 #define __GDAL_COMMON_H__
 
-#include <v8.h>
 #include <gdal_version.h>
 #include <cpl_error.h>
 #include <stdio.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 namespace node_gdal {
 	extern FILE *log_file;
@@ -17,14 +22,14 @@ namespace node_gdal {
 #define LOG(fmt, ...)
 #endif
 
-//String::New(null) -> seg fault
+//NanNew(null) -> seg fault
 class SafeString {
 public:
 	static v8::Handle<v8::Value> New(const char * data) {
 		if (!data) {
-			return v8::Null();
+			return NanNull();
 		} else {
-			return v8::String::New(data);
+			return NanNew<v8::String>(data);
 		}
 	}
 };
@@ -58,76 +63,60 @@ inline const char* getOGRErrMsg(int err)
   }
 };
 
-#define TOSTR(obj) (*String::Utf8Value((obj)->ToString()))
-
-#define NODE_THROW(msg) ThrowException(Exception::Error(String::New(msg)));
-
-#define NODE_THROW_CPLERR(err) ThrowException(Exception::Error(String::New(CPLGetLastErrorMsg())));
+#define NODE_THROW_CPLERR(err) NanThrowError(CPLGetLastErrorMsg());
 
 #define NODE_THROW_LAST_CPLERR NODE_THROW_CPLERR
 
-#define NODE_THROW_OGRERR(err) ThrowException(Exception::Error(String::New(getOGRErrMsg(err))));
+#define NODE_THROW_OGRERR(err) NanThrowError(getOGRErrMsg(err));
 
 #define ATTR(t, name, get, set)                                         \
-    t->InstanceTemplate()->SetAccessor(String::NewSymbol(name), get, set);
+    t->InstanceTemplate()->SetAccessor(NanNew(name), get, set);
 
 #define ATTR_DONT_ENUM(t, name, get, set)                                         \
-    t->InstanceTemplate()->SetAccessor(String::NewSymbol(name), get, set, Handle<Value>(), DEFAULT, DontEnum);
+    t->InstanceTemplate()->SetAccessor(NanNew(name), get, set, Handle<Value>(), DEFAULT, DontEnum);
 
-void READ_ONLY_SETTER(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+NAN_SETTER(READ_ONLY_SETTER);
 
-template <typename T, typename K>
-class ClosedPtr {
-public:
-	static v8::Handle<v8::Value> Closed(K *raw) {
-		if (!raw) {
-			return v8::Null();
-		}
-		v8::HandleScope scope;
-		T *wrapped = new T(raw);
-		v8::Handle<v8::Value> ext = v8::External::New(wrapped);
-		v8::Handle<v8::Object> obj = T::constructor->GetFunction()->NewInstance(1, &ext);
-		return scope.Close(obj);
-	}
-};
-
-#define IS_WRAPPED(obj, type) type::constructor->HasInstance(obj)
+#define IS_WRAPPED(obj, type) NanHasInstance(type::constructor, obj)
 
 // ----- object property conversion -------
 
 #define NODE_DOUBLE_FROM_OBJ(obj, key, var)                                                               \
 {                                                                                                         \
-  Local<String> sym = String::NewSymbol(key);                                                             \
-  if (!obj->HasOwnProperty(sym)){                                                                                    \
-     return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (!obj->HasOwnProperty(sym)){                                                                         \
+     NanThrowError("Object must contain property \"" key "\""); NanReturnUndefined();                     \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
   if (!val->IsNumber()){                                                                                  \
-    return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a number")));        \
+    NanThrowTypeError("Property \"" key "\" must be a number");                                           \
+    NanReturnUndefined();                                                                                 \
   }                                                                                                       \
   var = val->NumberValue();                                                                               \
 }
 
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
-  Local<String> sym = String::NewSymbol(key);                                                             \
-  if (!obj->HasOwnProperty(sym)){                                                                                    \
-     return ThrowException(Exception::Error(String::New("Object must contain property \"" key "\"")));    \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (!obj->HasOwnProperty(sym)){                                                                         \
+     NanThrowError("Object must contain property \"" key "\""); NanReturnUndefined();                     \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
   if (!val->IsString()){                                                                                  \
-    return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a string")));        \
+      NanThrowTypeError("Property \"" key "\" must be a string");                                         \
+      NanReturnUndefined();                                                                               \
   }                                                                                                       \
-  var = (*String::Utf8Value(val->ToString()));                                                            \
+  var = *NanUtf8String(val);                                                                              \
 }
 
 #define NODE_DOUBLE_FROM_OBJ_OPT(obj, key, var)                                                           \
 {                                                                                                         \
-  Local<String> sym = String::NewSymbol(key);                                                             \
-  if (obj->HasOwnProperty(sym)){                                                                                     \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (obj->HasOwnProperty(sym)){                                                                          \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsNumber()){                                                                                \
-      return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a number")));      \
+      NanThrowTypeError("Property \"" key "\" must be a number");                                         \
+      NanReturnUndefined();                                                                               \
     }                                                                                                     \
     var = val->NumberValue();                                                                             \
   }                                                                                                       \
@@ -135,13 +124,14 @@ public:
 
 #define NODE_STR_FROM_OBJ_OPT(obj, key, var)                                                              \
 {                                                                                                         \
-  Local<String> sym = String::NewSymbol(key);                                                             \
-  if (obj->HasOwnProperty(sym)){                                                                                     \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (obj->HasOwnProperty(sym)){                                                                          \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsString()){                                                                                \
-      return ThrowException(Exception::Error(String::New("Property \"" key "\" must be a string")));      \
+      NanThrowTypeError("Property \"" key "\" must be a string");                                         \
+      NanReturnUndefined();                                                                               \
     }                                                                                                     \
-    var = (*String::Utf8Value(val->ToString()));                                                          \
+    var = *NanUtf8String(val);                                                                            \
   }                                                                                                       \
 }
 
@@ -152,100 +142,104 @@ public:
 
 #define ARG_FIELD_ID(num, f, var) {                                    \
   if (args[num]->IsString()) {                                         \
-    std::string field_name = TOSTR(args[num]);                         \
-    var = f->GetFieldIndex(field_name.c_str());                        \
+    NanUtf8String field_name = NanUtf8String(args[num]);               \
+    var = f->GetFieldIndex(*field_name);                               \
     if (field_index == -1) {                                           \
-      return NODE_THROW("Specified field name does not exist");        \
+      NanThrowError("Specified field name does not exist");            \
+      NanReturnUndefined();                                            \
     }                                                                  \
   } else if (args[num]->IsInt32()) {                                   \
     var = args[num]->Int32Value();                                     \
     if (var < 0 || var >= f->GetFieldCount()) {                        \
-      return NODE_THROW("Invalid field index");                        \
+      NanThrowRangeError("Invalid field index");                       \
+      NanReturnUndefined();                                            \
     }                                                                  \
   } else {                                                             \
-    return NODE_THROW("Field index must be integer or string");        \
+    NanThrowTypeError("Field index must be integer or string");        \
+    NanReturnUndefined();                                              \
   }                                                                    \
 }
 
 #define NODE_ARG_INT(num, name, var)                                                                           \
   if (args.Length() < num + 1) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));      \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                                \
   }                                                                                                            \
   if (!args[num]->IsNumber()) {                                                                                \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an integer").c_str()))); \
+    NanThrowTypeError(name " must be an integer"); NanReturnUndefined();                                       \
   }                                                                                                            \
   var = static_cast<int>(args[num]->IntegerValue());
 
 
 #define NODE_ARG_ENUM(num, name, enum_type, var)                                                                                       \
   if (args.Length() < num + 1) {                                                                                                       \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));                              \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                                                        \
   }                                                                                                                                    \
   if (!args[num]->IsInt32()) {                                                                                                         \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be of type " + std::string(#enum_type)).c_str()))); \
+    NanThrowTypeError(name " must be of type " #enum_type); NanReturnUndefined();                                                      \
   }                                                                                                                                    \
   var = enum_type(args[num]->IntegerValue());
 
 
 #define NODE_ARG_BOOL(num, name, var)                                                                          \
   if (args.Length() < num + 1) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));      \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                                \
   }                                                                                                            \
   if (!args[num]->IsBoolean()) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an boolean").c_str()))); \
+    NanThrowTypeError(name " must be an boolean"); NanReturnUndefined();                                       \
   }                                                                                                            \
   var = static_cast<bool>(args[num]->BooleanValue());
 
 
 #define NODE_ARG_DOUBLE(num, name, var)                                                                      \
   if (args.Length() < num + 1) {                                                                             \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));    \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                              \
   }                                                                                                          \
   if (!args[num]->IsNumber()) {                                                                              \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be a number").c_str()))); \
+    NanThrowTypeError(name " must be a number"); NanReturnUndefined();                                       \
   }                                                                                                          \
   var = static_cast<double>(args[num]->NumberValue());
 
 
 #define NODE_ARG_ARRAY(num, name, var)                                                                       \
   if (args.Length() < num + 1) {                                                                             \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));    \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                              \
   }                                                                                                          \
   if (!args[num]->IsArray()) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an array").c_str()))); \
+    return NanThrowTypeError((std::string(name) + " must be an array").c_str());                             \
   }                                                                                                          \
-  var = Handle<Array>::Cast(args[num]);
+  var = args[num].As<Array>();
 
 
 #define NODE_ARG_OBJECT(num, name, var)                                                                       \
   if (args.Length() < num + 1) {                                                                              \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));     \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                               \
   }                                                                                                           \
   if (!args[num]->IsObject()) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an object").c_str()))); \
+    return NanThrowTypeError((std::string(name) + " must be an object").c_str());                             \
   }                                                                                                           \
-  var = Handle<Object>::Cast(args[num]);
+  var = args[num].As<Object>();
 
 
 #define NODE_ARG_WRAPPED(num, name, type, var)                                                                                           \
   if (args.Length() < num + 1) {                                                                                                         \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));                                \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                                                          \
   }                                                                                                                                      \
-  if (args[num]->IsNull() || args[num]->IsUndefined() || !type::constructor->HasInstance(args[num])) {                                   \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#type)).c_str()))); \
+  if (args[num]->IsNull() || args[num]->IsUndefined() || !NanNew(type::constructor)->HasInstance(args[num])) {                           \
+    NanThrowTypeError(name " must be an instance of " #type); NanReturnUndefined();                                                      \
   }                                                                                                                                      \
-  var = ObjectWrap::Unwrap<type>(args[num]->ToObject());                                                                                 \
-  if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));
-
+  var = ObjectWrap::Unwrap<type>(args[num].As<Object>());                                                                                \
+  if (!var->get()) {                                                                                                                     \
+    NanThrowError(#type" parameter already destroyed"); NanReturnUndefined();                                                            \
+  }
 
 #define NODE_ARG_STR(num, name, var)                                                                          \
   if (args.Length() < num + 1) {                                                                              \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be given").c_str())));     \
+    NanThrowError(name " must be given"); NanReturnUndefined();                                               \
   }                                                                                                           \
   if (!args[num]->IsString()) {                                                                               \
-    return ThrowException(Exception::Error(String::New((std::string(name) + " must be an string").c_str()))); \
+    NanThrowTypeError(name " must be an string"); NanReturnUndefined();                                       \
   }                                                                                                           \
-  var = (*String::Utf8Value((args[num])->ToString()))
+  var = (*NanUtf8String(args[num]))
 
 // ----- optional argument conversion -------
 
@@ -254,7 +248,7 @@ public:
     if (args[num]->IsInt32()) {                                                                                  \
       var = static_cast<int>(args[num]->IntegerValue());                                                         \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an integer").c_str()))); \
+      NanThrowTypeError(name " must be an integer"); NanReturnUndefined();                                       \
     }                                                                                                            \
   }
 
@@ -264,7 +258,7 @@ public:
     if (args[num]->IsInt32()) {                                                                                  \
       var = static_cast<enum_type>(args[num]->IntegerValue());                                                   \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an integer").c_str()))); \
+      NanThrowTypeError(name " must be an integer"); NanReturnUndefined();                                       \
     }                                                                                                            \
   }
 
@@ -274,7 +268,7 @@ public:
     if (args[num]->IsBoolean()) {                                                                                \
       var = static_cast<bool>(args[num]->BooleanValue());                                                        \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an boolean").c_str()))); \
+      NanThrowTypeError(name " must be an boolean"); NanReturnUndefined();                                       \
     }                                                                                                            \
   }
 
@@ -282,9 +276,9 @@ public:
 #define NODE_ARG_OPT_STR(num, name, var)                                                                        \
   if (args.Length() > num) {                                                                                    \
     if (args[num]->IsString()) {                                                                                \
-      var = TOSTR(args[num]);                                                                                   \
+      var = *NanUtf8String(args[num]);                                                                          \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                              \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an string").c_str()))); \
+      NanThrowTypeError(name " must be an string"); NanReturnUndefined();                                       \
     }                                                                                                           \
   }
 
@@ -294,323 +288,423 @@ public:
     if (args[num]->IsNumber()) {                                                                               \
       var = static_cast<double>(args[num]->NumberValue());                                                     \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                             \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be a number").c_str()))); \
+      NanThrowTypeError(name " must be a number"); NanReturnUndefined();                                       \
     }                                                                                                          \
   }
 
 
 #define NODE_ARG_WRAPPED_OPT(num, name, type, var)                                                                                         \
   if (args.Length() > num && !args[num]->IsNull() && !args[num]->IsUndefined()) {                                                          \
-    if (!type::constructor->HasInstance(args[num])) {                                                                                      \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an instance of " + std::string(#type)).c_str()))); \
+    if (!NanNew(type::constructor)->HasInstance(args[num])) {                                                                              \
+      NanThrowTypeError(name " must be an instance of " #type); NanReturnUndefined();                                                      \
     }                                                                                                                                      \
-    var = ObjectWrap::Unwrap<type>(args[num]->ToObject());                                                                                 \
-    if (!var->get()) return ThrowException(Exception::Error(String::New(#type" parameter already destroyed")));                            \
+    var = ObjectWrap::Unwrap<type>(args[num].As<Object>());                                                                                \
+    if (!var->get()) {                                                                                                                     \
+      NanThrowError(#type" parameter already destroyed");                                                                                  \
+      NanReturnUndefined();                                                                                                                \
+    }                                                                                                                                      \
   }
 
 
 #define NODE_ARG_ARRAY_OPT(num, name, var)                                                                     \
   if (args.Length() > num) {                                                                                   \
     if (args[num]->IsArray()) {                                                                                \
-      var = Handle<Array>::Cast(args[num]);                                                                    \
+      var = args[num].As<Array>();                                                                             \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                             \
-      return ThrowException(Exception::Error(String::New((std::string(name) + " must be an array").c_str()))); \
+      NanThrowTypeError(name " must be an array"); NanReturnUndefined();                                       \
     }                                                                                                          \
   }
 
 // ----- wrapped methods w/ results-------
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT(klass, method, result_type, wrapped_method)                               \
-Handle<Value> klass::method(const Arguments& args)                                                                \
+NAN_METHOD(klass::method)                                                                                         \
 {                                                                                                                 \
-  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                            \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed"); \
-  return HandleScope().Close(result_type::New(obj->this_->wrapped_method()));     \
+  NanScope();                                                                                                     \
+  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                            \
+  if (!obj->this_) {                                                                                              \
+    NanThrowError(#klass" object has already been destroyed");                                                    \
+    NanReturnUndefined();                                                                                         \
+  }                                                                                                               \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method()));                                              \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(klass, method, result_type, wrapped_method, param_type, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                                          \
+NAN_METHOD(klass::method)                                                                                                   \
 {                                                                                                                           \
-  HandleScope scope;                                                                                                        \
+  NanScope();                                                                                                               \
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
-  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if (!obj->this_)   return NODE_THROW(#klass" object has already been destroyed");                \
-  return scope.Close(result_type::New(obj->this_->wrapped_method(param->get())));                  \
+  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                      \
+  if (!obj->this_)   return NanThrowError(#klass" object has already been destroyed");                                      \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method(param->get())));                                            \
 }
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT_1_ENUM_PARAM(klass, method, result_type, wrapped_method, enum_type, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                                      \
+NAN_METHOD(klass::method)                                                                                               \
 {                                                                                                                       \
-  HandleScope scope;                                                                                                    \
+  NanScope();                                                                                                           \
   enum_type param;                                                                                                      \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                                      \
-  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                  \
-  return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                         \
+  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                  \
+  if (!obj->this_) {                                                                                                    \
+    NanThrowError(#klass" object has already been destroyed");                                                          \
+    NanReturnUndefined();                                                                                               \
+  }                                                                                                                     \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method(param)));                                               \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(klass, method, result_type, wrapped_method, param_name)        \
-Handle<Value> klass::method(const Arguments& args)                                                                    \
+NAN_METHOD(klass::method)                                                                                             \
 {                                                                                                                     \
-  HandleScope scope;                                                                                                  \
+  NanScope();                                                                                                         \
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
-  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                             \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                  \
-  return scope.Close(result_type::New(obj->this_->wrapped_method(param.c_str())));                 \
+  klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                \
+  if (!obj->this_) {                                                                                                  \
+    NanThrowError(#klass" object has already been destroyed");                                                        \
+    NanReturnUndefined();                                                                                             \
+  }                                                                                                                   \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method(param.c_str())));                                     \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT_1_INTEGER_PARAM(klass, method, result_type, wrapped_method, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                              \
+NAN_METHOD(klass::method)                                                                                       \
 {                                                                                                               \
-  HandleScope scope;                                                                                            \
+  NanScope();                                                                                                   \
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
-  return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                                      \
+  if (!obj->this_) {                                                                                            \
+    NanThrowError(#klass" object has already been destroyed");                                                  \
+    NanReturnUndefined();                                                                                       \
+  }                                                                                                             \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method(param)));                                       \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_RESULT_1_DOUBLE_PARAM(klass, method, result_type, wrapped_method, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                             \
+NAN_METHOD(klass::method)                                                                                      \
 {                                                                                                              \
-  HandleScope scope;                                                                                           \
+  NanScope();                                                                                                  \
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
-  return scope.Close(result_type::New(obj->this_->wrapped_method(param)));                                     \
+  if (!obj->this_) {                                                                                           \
+    NanThrowError(#klass" object has already been destroyed");                                                 \
+    NanReturnUndefined();                                                                                      \
+  }                                                                                                            \
+  NanReturnValue(NanNew<result_type>(obj->this_->wrapped_method(param)));                                      \
 }
 
 // ----- wrapped methods w/ CPLErr result (throws) -------
 
 #define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT(klass, method, wrapped_method)                                       \
-Handle<Value> klass::method(const Arguments& args)                                                                  \
+NAN_METHOD(klass::method)                                                                                           \
 {                                                                                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                              \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                   \
+  if (!obj->this_) {                                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                                      \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
   int err = obj->this_->wrapped_method();                                                                           \
-  if (err) return NODE_THROW_CPLERR(err);                                                                           \
-  return Undefined();                                                                                               \
+  if(err) {                                                                                                         \
+    NODE_THROW_CPLERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                                          \
+NAN_METHOD(klass::method)                                                                                                   \
 {                                                                                                                           \
-  HandleScope scope;                                                                                                        \
+  NanScope();                                                                                                               \
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                           \
-  int err = obj->this_->wrapped_method(param->get());                                                                       \
-  if (err) return NODE_THROW_CPLERR(err);                                                                                   \
-  return Undefined();                                                                                                       \
+  if (!obj->this_) {                                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                                      \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  int err = obj->this_->wrapped_method(param->get());                                                               \
+  if(err) {                                                                                                         \
+    NODE_THROW_CPLERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_STRING_PARAM(klass, method, wrapped_method, param_name)              \
-Handle<Value> klass::method(const Arguments& args)                                                                    \
+NAN_METHOD(klass::method)                                                                                             \
 {                                                                                                                     \
-  HandleScope scope;                                                                                                  \
+  NanScope();                                                                                                         \
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                     \
-  int err = obj->this_->wrapped_method(param.c_str());                                                                \
-  if (err) return NODE_THROW_CPLERR(err);                                                                             \
-  return Undefined();                                                                                                 \
+  if (!obj->this_) {                                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                                      \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  int err = obj->this_->wrapped_method(param.c_str());                                                              \
+  if(err) {                                                                                                         \
+    NODE_THROW_CPLERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(klass, method, wrapped_method, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                              \
+NAN_METHOD(klass::method)                                                                                       \
 {                                                                                                               \
-  HandleScope scope;                                                                                            \
+  NanScope();                                                                                                   \
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
+  if (!obj->this_) {                                                                                            \
+    NanThrowError(#klass" object has already been destroyed");                                                  \
+    NanReturnUndefined();                                                                                       \
+  }                                                                                                             \
   int err = obj->this_->wrapped_method(param);                                                                  \
-  if (err) return NODE_THROW_CPLERR(err);                                                                       \
-  return Undefined();                                                                                           \
+  if (err) {                                                                                                    \
+    NODE_THROW_CPLERR(err);                                                                                     \
+    NanReturnUndefined();                                                                                       \
+  }                                                                                                             \
+  NanReturnUndefined();                                                                                         \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                             \
+NAN_METHOD(klass::method)                                                                                      \
 {                                                                                                              \
-  HandleScope scope;                                                                                           \
+  NanScope();                                                                                                  \
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
-  int err =obj->this_->wrapped_method(param);                                                                  \
-  if (err) return NODE_THROW_CPLERR(err);                                                                      \
-  return Undefined();                                                                                          \
+  if (!obj->this_) {                                                                                           \
+    NanThrowError(#klass" object has already been destroyed");                                                 \
+    NanReturnUndefined();                                                                                      \
+  }                                                                                                            \
+  int err =obj->this_->wrapped_method(param);                                                                       \
+  if(err) {                                                                                                         \
+    NODE_THROW_CPLERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 // ----- wrapped methods w/ OGRErr result (throws) -------
 
 #define NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(klass, method, wrapped_method)                                       \
-Handle<Value> klass::method(const Arguments& args)                                                                  \
+NAN_METHOD(klass::method)                                                                                           \
 {                                                                                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                              \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                   \
+  if (!obj->this_) {                                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                                      \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
   int err = obj->this_->wrapped_method();                                                                           \
-  if (err) return NODE_THROW_OGRERR(err);                                                                           \
-  return Undefined();                                                                                               \
+  if (err) {                                                                                                        \
+    NODE_THROW_OGRERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                                          \
+NAN_METHOD(klass::method)                                                                                                   \
 {                                                                                                                           \
-  HandleScope scope;                                                                                                        \
+  NanScope();                                                                                                               \
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                           \
-  int err = obj->this_->wrapped_method(param->get());                                                                       \
-  if (err) return NODE_THROW_OGRERR(err);                                                                                   \
-  return Undefined();                                                                                                       \
+  if (!obj->this_) {                                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                                      \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  int err = obj->this_->wrapped_method(param->get());                                                               \
+  if (err) {                                                                                                        \
+    NODE_THROW_OGRERR(err);                                                                                         \
+    NanReturnUndefined();                                                                                           \
+  }                                                                                                                 \
+  NanReturnUndefined();                                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(klass, method, wrapped_method, param_name)              \
-Handle<Value> klass::method(const Arguments& args)                                                                    \
+NAN_METHOD(klass::method)                                                                                             \
 {                                                                                                                     \
-  HandleScope scope;                                                                                                  \
+  NanScope();                                                                                                         \
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                                \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                                     \
+  if (!obj->this_) {                                                                                                  \
+    NanThrowError(#klass" object has already been destroyed");                                                        \
+    NanReturnUndefined();                                                                                             \
+  }                                                                                                                   \
   int err = obj->this_->wrapped_method(param.c_str());                                                                \
-  if (err) return NODE_THROW_OGRERR(err);                                                                             \
-  return Undefined();                                                                                                 \
+  if (err) {                                                                                                          \
+    NODE_THROW_OGRERR(err);                                                                                           \
+    NanReturnUndefined();                                                                                             \
+  }                                                                                                                   \
+  NanReturnUndefined();                                                                                               \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_INTEGER_PARAM(klass, method, wrapped_method, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                              \
+NAN_METHOD(klass::method)                                                                                       \
 {                                                                                                               \
-  HandleScope scope;                                                                                            \
+  NanScope();                                                                                                   \
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                          \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                               \
+  if (!obj->this_) {                                                                                            \
+    NanThrowError(#klass" object has already been destroyed");                                                  \
+    NanReturnUndefined();                                                                                       \
+  }                                                                                                             \
   int err = obj->this_->wrapped_method(param);                                                                  \
-  if (err) return NODE_THROW_OGRERR(err);                                                                       \
-  return Undefined();                                                                                           \
+  if (err) {                                                                                                    \
+    NODE_THROW_OGRERR(err);                                                                                     \
+    NanReturnUndefined();                                                                                       \
+  }                                                                                                             \
+  NanReturnUndefined();                                                                                         \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)       \
-Handle<Value> klass::method(const Arguments& args)                                                             \
+NAN_METHOD(klass::method)                                                                                      \
 {                                                                                                              \
-  HandleScope scope;                                                                                           \
+  NanScope();                                                                                                  \
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                         \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                              \
+  if (!obj->this_) {                                                                                           \
+    NanThrowError(#klass" object has already been destroyed");                                                 \
+    NanReturnUndefined();                                                                                      \
+  }                                                                                                            \
   int err =obj->this_->wrapped_method(param);                                                                  \
-  if (err) return NODE_THROW_OGRERR(err);                                                                      \
-  return Undefined();                                                                                          \
+  if (err) {                                                                                                   \
+    NODE_THROW_OGRERR(err);                                                                                    \
+    NanReturnUndefined();                                                                                      \
+  }                                                                                                            \
+  NanReturnUndefined();                                                                                        \
 }
 
 // ----- wrapped methods -------
 
 #define NODE_WRAPPED_METHOD(klass, method, wrapped_method)           \
-Handle<Value> klass::method(const Arguments& args)                   \
+NAN_METHOD(klass::method)                                            \
 {                                                                    \
-  HandleScope scope;                                                 \
+  NanScope();                                                        \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());               \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed"); \
+  if (!obj->this_) {                                                 \
+    NanThrowError(#klass" object has already been destroyed");       \
+    NanReturnUndefined();                                            \
+  }                                                                  \
   obj->this_->wrapped_method();                                      \
-  return Undefined();                                                \
+  NanReturnUndefined();                                              \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_WRAPPED_PARAM(klass, method, wrapped_method, param_type, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                      \
+NAN_METHOD(klass::method)                                                                               \
 {                                                                                                       \
-  HandleScope scope;                                                                                    \
+  NanScope();                                                                                           \
   param_type *param;                                                                                    \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                  \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                                  \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                       \
+  if (!obj->this_) {                                                                                    \
+    NanThrowError(#klass" object has already been destroyed");                                          \
+    NanReturnUndefined();                                                                               \
+  }                                                                                                     \
   obj->this_->wrapped_method(param->get());                                                             \
-  return Undefined();                                                                                   \
+  NanReturnUndefined();                                                                                 \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_INTEGER_PARAM(klass, method, wrapped_method, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                          \
+NAN_METHOD(klass::method)                                                                   \
 {                                                                                           \
-  HandleScope scope;                                                                        \
+  NanScope();                                                                               \
   int param;                                                                                \
   NODE_ARG_INT(0, #param_name, param);                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");            \
+  if (!obj->this_) {                                                                        \
+    NanThrowError(#klass" object has already been destroyed");                              \
+    NanReturnUndefined();                                                                   \
+  }                                                                                         \
   obj->this_->wrapped_method(param);                                                        \
-  return Undefined();                                                                       \
+  NanReturnUndefined();                                                                     \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_DOUBLE_PARAM(klass, method, wrapped_method, param_name)  \
-Handle<Value> klass::method(const Arguments& args)                                          \
+NAN_METHOD(klass::method)                                                                   \
 {                                                                                           \
-  HandleScope scope;                                                                        \
+  NanScope();                                                                               \
   double param;                                                                             \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                   \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
+  if (!obj->this_) {                                                                        \
+    NanThrowError(#klass" object has already been destroyed");                              \
+    NanReturnUndefined();                                                                   \
+  }                                                                                         \
   obj->this_->wrapped_method(param);                                                        \
-  return Undefined();                                                                       \
+  NanReturnUndefined();                                                                     \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_BOOLEAN_PARAM(klass, method, wrapped_method, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                          \
+NAN_METHOD(klass::method)                                                                   \
 {                                                                                           \
-  HandleScope scope;                                                                        \
+  NanScope();                                                                               \
   bool param;                                                                               \
   NODE_ARG_BOOL(0, #param_name, param);                                                     \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
+  if (!obj->this_) {                                                                        \
+    NanThrowError(#klass" object has already been destroyed");                              \
+    NanReturnUndefined();                                                                   \
+  }                                                                                         \
   obj->this_->wrapped_method(param);                                                        \
-  return Undefined();                                                                       \
+  NanReturnUndefined();                                                                     \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_ENUM_PARAM(klass, method, wrapped_method, enum_type, param_name) \
-Handle<Value> klass::method(const Arguments& args)                                                  \
+NAN_METHOD(klass::method)                                                                           \
 {                                                                                                   \
-  HandleScope scope;                                                                                \
+  NanScope();                                                                                       \
   enum_type param;                                                                                  \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                  \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                              \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");                   \
+  if (!obj->this_) {                                                                                \
+    NanThrowError(#klass" object has already been destroyed");                                      \
+    NanReturnUndefined();                                                                           \
+  }                                                                                                 \
   obj->this_->wrapped_method(param);                                                                \
-  return Undefined();                                                                               \
+  NanReturnUndefined();                                                                             \
 }
 
 
 #define NODE_WRAPPED_METHOD_WITH_1_STRING_PARAM(klass, method, wrapped_method, param_name)  \
-Handle<Value> klass::method(const Arguments& args)                                          \
+NAN_METHOD(klass::method)                                                                   \
 {                                                                                           \
-  HandleScope scope;                                                                        \
+  NanScope();                                                                               \
   std::string param;                                                                        \
   NODE_ARG_STR(0, #param_name, param);                                                      \
   klass *obj = ObjectWrap::Unwrap<klass>(args.This());                                      \
-  if (!obj->this_) return NODE_THROW(#klass" object has already been destroyed");           \
+  if (!obj->this_) {                                                                        \
+    NanThrowError(#klass" object has already been destroyed");                              \
+    NanReturnUndefined();                                                                   \
+  }                                                                                         \
   obj->this_->wrapped_method(param.c_str());                                                \
-  return Undefined();                                                                       \
+  NanReturnUndefined();                                                                     \
 }
 
 #endif

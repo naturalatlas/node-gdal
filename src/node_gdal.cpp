@@ -1,10 +1,13 @@
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_buffer.h>
 #include <node_version.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal.h>
@@ -63,39 +66,43 @@ namespace node_gdal {
 
 	extern "C" {
 
-		static Handle<Value> QuietOutput(const Arguments &args)
+		static NAN_METHOD(QuietOutput)
 		{
 			CPLSetErrorHandler(CPLQuietErrorHandler);
-			return Undefined();
+			NanReturnUndefined();
 		}
 
-		static Handle<Value> VerboseOutput(const Arguments &args)
+		static NAN_METHOD(VerboseOutput)
 		{
 			CPLSetErrorHandler(CPLDefaultErrorHandler);
-			return Undefined();
+			NanReturnUndefined();
 		}
 
-		static Handle<Value> StartLogging(const Arguments &args)
+		static NAN_METHOD(StartLogging)
 		{
+			NanScope();
+
 			#ifdef ENABLE_LOGGING
 			std::string filename = "";
 			NODE_ARG_STR(0, "filename", filename);
 			if (filename.empty()) {
-				return NODE_THROW("Invalid filename");
+				NanThrowError("Invalid filename");
+				NanReturnUndefined();
 			}
 			if (log_file) fclose(log_file);
 			log_file = fopen(filename.c_str(), "w");
 			if (!log_file) {
-				return NODE_THROW("Error creating log file");
+				NanThrowError("Error creating log file");
+				NanReturnUndefined();
 			}
 			#else
-			return NODE_THROW("Logging requires node-gdal be compiled with --enable_logging=true");
+			NanThrowError("Logging requires node-gdal be compiled with --enable_logging=true");
 			#endif
 
-			return Undefined();
+			NanReturnUndefined();
 		}
 
-		static Handle<Value> StopLogging(const Arguments &args)
+		static NAN_METHOD(StopLogging)
 		{
 			#ifdef ENABLE_LOGGING
 			if (log_file) {
@@ -104,7 +111,7 @@ namespace node_gdal {
 			}
 			#endif
 
-			return Undefined();
+			NanReturnUndefined();
 		}
 
 		static void Init(Handle<Object> target)
@@ -150,20 +157,20 @@ namespace node_gdal {
 
 			//calls GDALRegisterAll()
 			GDALDrivers::Initialize(target);
-			target->Set(String::NewSymbol("drivers"), GDALDrivers::New());
+			target->Set(NanNew("drivers"), GDALDrivers::New());
 
-			// Local<Object> versions = Object::New();
-			// versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
-			// versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
-			// target->Set(String::NewSymbol("versions"), versions);
+			// Local<Object> versions = NanNew<Object>();
+			// versions->Set(NanNew("node"), NanNew(NODE_VERSION+1));
+			// versions->Set(NanNew("v8"), NanNew(V8::GetVersion()));
+			// target->Set(NanNew("versions"), versions);
 
 			NODE_SET_METHOD(target, "quiet", QuietOutput);
 			NODE_SET_METHOD(target, "verbose", VerboseOutput);
 			NODE_SET_METHOD(target, "startLogging", StartLogging);
 			NODE_SET_METHOD(target, "stopLogging", StopLogging);
 
-			Local<Object> supports = Object::New();
-			target->Set(String::NewSymbol("supports"), supports);
+			Local<Object> supports = NanNew<Object>();
+			target->Set(NanNew("supports"), supports);
 
 			NODE_DEFINE_CONSTANT(target, CPLE_OpenFailed);
 			NODE_DEFINE_CONSTANT(target, CPLE_IllegalArg);
@@ -172,44 +179,44 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, CPLE_NoWriteAccess);
 			NODE_DEFINE_CONSTANT(target, CPLE_UserInterrupt);
 
-			target->Set(String::NewSymbol("DMD_LONGNAME"), String::New(GDAL_DMD_LONGNAME));
-			target->Set(String::NewSymbol("DMD_MIMETYPE"), String::New(GDAL_DMD_MIMETYPE));
-			target->Set(String::NewSymbol("DMD_HELPTOPIC"), String::New(GDAL_DMD_HELPTOPIC));
-			target->Set(String::NewSymbol("DMD_EXTENSION"), String::New(GDAL_DMD_EXTENSION));
-			target->Set(String::NewSymbol("DMD_CREATIONOPTIONLIST"), String::New(GDAL_DMD_CREATIONOPTIONLIST));
-			target->Set(String::NewSymbol("DMD_CREATIONDATATYPES"), String::New(GDAL_DMD_CREATIONDATATYPES));
+			target->Set(NanNew("DMD_LONGNAME"), NanNew(GDAL_DMD_LONGNAME));
+			target->Set(NanNew("DMD_MIMETYPE"), NanNew(GDAL_DMD_MIMETYPE));
+			target->Set(NanNew("DMD_HELPTOPIC"), NanNew(GDAL_DMD_HELPTOPIC));
+			target->Set(NanNew("DMD_EXTENSION"), NanNew(GDAL_DMD_EXTENSION));
+			target->Set(NanNew("DMD_CREATIONOPTIONLIST"), NanNew(GDAL_DMD_CREATIONOPTIONLIST));
+			target->Set(NanNew("DMD_CREATIONDATATYPES"), NanNew(GDAL_DMD_CREATIONDATATYPES));
 
-			target->Set(String::NewSymbol("DCAP_CREATE"), String::New(GDAL_DCAP_CREATE));
-			target->Set(String::NewSymbol("DCAP_CREATECOPY"), String::New(GDAL_DCAP_CREATECOPY));
-			target->Set(String::NewSymbol("DCAP_VIRTUALIO"), String::New(GDAL_DCAP_VIRTUALIO));
+			target->Set(NanNew("DCAP_CREATE"), NanNew(GDAL_DCAP_CREATE));
+			target->Set(NanNew("DCAP_CREATECOPY"), NanNew(GDAL_DCAP_CREATECOPY));
+			target->Set(NanNew("DCAP_VIRTUALIO"), NanNew(GDAL_DCAP_VIRTUALIO));
 
-			target->Set(String::NewSymbol("OLCRandomRead"), String::New(OLCRandomRead));
-			target->Set(String::NewSymbol("OLCSequentialWrite"), String::New(OLCSequentialWrite));
-			target->Set(String::NewSymbol("OLCRandomWrite"), String::New(OLCRandomWrite));
-			target->Set(String::NewSymbol("OLCFastSpatialFilter"), String::New(OLCFastSpatialFilter));
-			target->Set(String::NewSymbol("OLCFastFeatureCount"), String::New(OLCFastFeatureCount));
-			target->Set(String::NewSymbol("OLCFastGetExtent"), String::New(OLCFastGetExtent));
-			target->Set(String::NewSymbol("OLCCreateField"), String::New(OLCCreateField));
-			target->Set(String::NewSymbol("OLCDeleteField"), String::New(OLCDeleteField));
-			target->Set(String::NewSymbol("OLCReorderFields"), String::New(OLCReorderFields));
-			target->Set(String::NewSymbol("OLCAlterFieldDefn"), String::New(OLCAlterFieldDefn));
-			target->Set(String::NewSymbol("OLCTransactions"), String::New(OLCTransactions));
-			target->Set(String::NewSymbol("OLCDeleteFeature"), String::New(OLCDeleteFeature));
-			target->Set(String::NewSymbol("OLCFastSetNextByIndex"), String::New(OLCFastSetNextByIndex));
-			target->Set(String::NewSymbol("OLCStringsAsUTF8"), String::New(OLCStringsAsUTF8));
-			target->Set(String::NewSymbol("OLCIgnoreFields"), String::New(OLCIgnoreFields));
+			target->Set(NanNew("OLCRandomRead"), NanNew(OLCRandomRead));
+			target->Set(NanNew("OLCSequentialWrite"), NanNew(OLCSequentialWrite));
+			target->Set(NanNew("OLCRandomWrite"), NanNew(OLCRandomWrite));
+			target->Set(NanNew("OLCFastSpatialFilter"), NanNew(OLCFastSpatialFilter));
+			target->Set(NanNew("OLCFastFeatureCount"), NanNew(OLCFastFeatureCount));
+			target->Set(NanNew("OLCFastGetExtent"), NanNew(OLCFastGetExtent));
+			target->Set(NanNew("OLCCreateField"), NanNew(OLCCreateField));
+			target->Set(NanNew("OLCDeleteField"), NanNew(OLCDeleteField));
+			target->Set(NanNew("OLCReorderFields"), NanNew(OLCReorderFields));
+			target->Set(NanNew("OLCAlterFieldDefn"), NanNew(OLCAlterFieldDefn));
+			target->Set(NanNew("OLCTransactions"), NanNew(OLCTransactions));
+			target->Set(NanNew("OLCDeleteFeature"), NanNew(OLCDeleteFeature));
+			target->Set(NanNew("OLCFastSetNextByIndex"), NanNew(OLCFastSetNextByIndex));
+			target->Set(NanNew("OLCStringsAsUTF8"), NanNew(OLCStringsAsUTF8));
+			target->Set(NanNew("OLCIgnoreFields"), NanNew(OLCIgnoreFields));
 
 			#ifdef OLCCreateGeomField
-			target->Set(String::NewSymbol("OLCCreateGeomField"), String::New(OLCCreateGeomField));
+			target->Set(NanNew("OLCCreateGeomField"), NanNew(OLCCreateGeomField));
 			#endif
 			#ifdef ODsCCreateGeomFieldAfterCreateLayer
-			target->Set(String::NewSymbol("ODsCCreateGeomFieldAfterCreateLayer"), String::New(ODsCCreateGeomFieldAfterCreateLayer));
+			target->Set(NanNew("ODsCCreateGeomFieldAfterCreateLayer"), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
 			#endif
 
-			target->Set(String::NewSymbol("ODsCCreateLayer"), String::New(ODsCCreateLayer));
-			target->Set(String::NewSymbol("ODsCDeleteLayer"), String::New(ODsCDeleteLayer));
-			target->Set(String::NewSymbol("ODrCCreateDataSource"), String::New(ODrCCreateDataSource));
-			target->Set(String::NewSymbol("ODrCDeleteDataSource"), String::New(ODrCDeleteDataSource));
+			target->Set(NanNew("ODsCCreateLayer"), NanNew(ODsCCreateLayer));
+			target->Set(NanNew("ODsCDeleteLayer"), NanNew(ODsCDeleteLayer));
+			target->Set(NanNew("ODrCCreateDataSource"), NanNew(ODrCCreateDataSource));
+			target->Set(NanNew("ODrCDeleteDataSource"), NanNew(ODrCDeleteDataSource));
 
 
 			NODE_DEFINE_CONSTANT(target, GA_ReadOnly);
@@ -217,86 +224,86 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Read);
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
-			target->Set(String::NewSymbol("GDT_Unknown"), Undefined());
-			target->Set(String::NewSymbol("GDT_Byte"), String::New(GDALGetDataTypeName(GDT_Byte)));
-			target->Set(String::NewSymbol("GDT_UInt16"), String::New(GDALGetDataTypeName(GDT_UInt16)));
-			target->Set(String::NewSymbol("GDT_Int16"), String::New(GDALGetDataTypeName(GDT_Int16)));
-			target->Set(String::NewSymbol("GDT_UInt32"), String::New(GDALGetDataTypeName(GDT_UInt32)));
-			target->Set(String::NewSymbol("GDT_Int32"), String::New(GDALGetDataTypeName(GDT_Int32)));
-			target->Set(String::NewSymbol("GDT_Float32"), String::New(GDALGetDataTypeName(GDT_Float32)));
-			target->Set(String::NewSymbol("GDT_Float64"), String::New(GDALGetDataTypeName(GDT_Float64)));
-			target->Set(String::NewSymbol("GDT_CInt16"), String::New(GDALGetDataTypeName(GDT_CInt16)));
-			target->Set(String::NewSymbol("GDT_CInt32"), String::New(GDALGetDataTypeName(GDT_CInt32)));
-			target->Set(String::NewSymbol("GDT_CFloat32"), String::New(GDALGetDataTypeName(GDT_CFloat32)));
-			target->Set(String::NewSymbol("GDT_CFloat64"), String::New(GDALGetDataTypeName(GDT_CFloat64)));
+			target->Set(NanNew("GDT_Unknown"), Undefined());
+			target->Set(NanNew("GDT_Byte"), NanNew(GDALGetDataTypeName(GDT_Byte)));
+			target->Set(NanNew("GDT_UInt16"), NanNew(GDALGetDataTypeName(GDT_UInt16)));
+			target->Set(NanNew("GDT_Int16"), NanNew(GDALGetDataTypeName(GDT_Int16)));
+			target->Set(NanNew("GDT_UInt32"), NanNew(GDALGetDataTypeName(GDT_UInt32)));
+			target->Set(NanNew("GDT_Int32"), NanNew(GDALGetDataTypeName(GDT_Int32)));
+			target->Set(NanNew("GDT_Float32"), NanNew(GDALGetDataTypeName(GDT_Float32)));
+			target->Set(NanNew("GDT_Float64"), NanNew(GDALGetDataTypeName(GDT_Float64)));
+			target->Set(NanNew("GDT_CInt16"), NanNew(GDALGetDataTypeName(GDT_CInt16)));
+			target->Set(NanNew("GDT_CInt32"), NanNew(GDALGetDataTypeName(GDT_CInt32)));
+			target->Set(NanNew("GDT_CFloat32"), NanNew(GDALGetDataTypeName(GDT_CFloat32)));
+			target->Set(NanNew("GDT_CFloat64"), NanNew(GDALGetDataTypeName(GDT_CFloat64)));
 
-			target->Set(String::NewSymbol("OJUndefined"), Undefined());
-			target->Set(String::NewSymbol("OJLeft"), String::New("Left"));
-			target->Set(String::NewSymbol("OJRight"), String::New("Right"));
+			target->Set(NanNew("OJUndefined"), Undefined());
+			target->Set(NanNew("OJLeft"), NanNew("Left"));
+			target->Set(NanNew("OJRight"), NanNew("Right"));
 
-			target->Set(String::NewSymbol("GCI_Undefined"), Undefined());
-			target->Set(String::NewSymbol("GCI_GrayIndex"), String::New(GDALGetColorInterpretationName(GCI_GrayIndex)));
-			target->Set(String::NewSymbol("GCI_PaletteIndex"), String::New(GDALGetColorInterpretationName(GCI_PaletteIndex)));
-			target->Set(String::NewSymbol("GCI_RedBand"), String::New(GDALGetColorInterpretationName(GCI_RedBand)));
-			target->Set(String::NewSymbol("GCI_GreenBand"), String::New(GDALGetColorInterpretationName(GCI_GreenBand)));
-			target->Set(String::NewSymbol("GCI_BlueBand"), String::New(GDALGetColorInterpretationName(GCI_BlueBand)));
-			target->Set(String::NewSymbol("GCI_AlphaBand"), String::New(GDALGetColorInterpretationName(GCI_AlphaBand)));
-			target->Set(String::NewSymbol("GCI_HueBand"), String::New(GDALGetColorInterpretationName(GCI_HueBand)));
-			target->Set(String::NewSymbol("GCI_SaturationBand"), String::New(GDALGetColorInterpretationName(GCI_SaturationBand)));
-			target->Set(String::NewSymbol("GCI_LightnessBand"), String::New(GDALGetColorInterpretationName(GCI_LightnessBand)));
-			target->Set(String::NewSymbol("GCI_CyanBand"), String::New(GDALGetColorInterpretationName(GCI_CyanBand)));
-			target->Set(String::NewSymbol("GCI_MagentaBand"), String::New(GDALGetColorInterpretationName(GCI_MagentaBand)));
-			target->Set(String::NewSymbol("GCI_YellowBand"), String::New(GDALGetColorInterpretationName(GCI_YellowBand)));
-			target->Set(String::NewSymbol("GCI_BlackBand"), String::New(GDALGetColorInterpretationName(GCI_BlackBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_YBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_CbBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
-			target->Set(String::NewSymbol("GCI_YCbCr_CrBand"), String::New(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
+			target->Set(NanNew("GCI_Undefined"), Undefined());
+			target->Set(NanNew("GCI_GrayIndex"), NanNew(GDALGetColorInterpretationName(GCI_GrayIndex)));
+			target->Set(NanNew("GCI_PaletteIndex"), NanNew(GDALGetColorInterpretationName(GCI_PaletteIndex)));
+			target->Set(NanNew("GCI_RedBand"), NanNew(GDALGetColorInterpretationName(GCI_RedBand)));
+			target->Set(NanNew("GCI_GreenBand"), NanNew(GDALGetColorInterpretationName(GCI_GreenBand)));
+			target->Set(NanNew("GCI_BlueBand"), NanNew(GDALGetColorInterpretationName(GCI_BlueBand)));
+			target->Set(NanNew("GCI_AlphaBand"), NanNew(GDALGetColorInterpretationName(GCI_AlphaBand)));
+			target->Set(NanNew("GCI_HueBand"), NanNew(GDALGetColorInterpretationName(GCI_HueBand)));
+			target->Set(NanNew("GCI_SaturationBand"), NanNew(GDALGetColorInterpretationName(GCI_SaturationBand)));
+			target->Set(NanNew("GCI_LightnessBand"), NanNew(GDALGetColorInterpretationName(GCI_LightnessBand)));
+			target->Set(NanNew("GCI_CyanBand"), NanNew(GDALGetColorInterpretationName(GCI_CyanBand)));
+			target->Set(NanNew("GCI_MagentaBand"), NanNew(GDALGetColorInterpretationName(GCI_MagentaBand)));
+			target->Set(NanNew("GCI_YellowBand"), NanNew(GDALGetColorInterpretationName(GCI_YellowBand)));
+			target->Set(NanNew("GCI_BlackBand"), NanNew(GDALGetColorInterpretationName(GCI_BlackBand)));
+			target->Set(NanNew("GCI_YCbCr_YBand"), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
+			target->Set(NanNew("GCI_YCbCr_CbBand"), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
+			target->Set(NanNew("GCI_YCbCr_CrBand"), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
 
-			target->Set(String::NewSymbol("wkbVariantOgc"), String::New("OGC"));
-			target->Set(String::NewSymbol("wkbVariantIso"), String::New("ISO"));
-			target->Set(String::NewSymbol("wkbXDR"), String::New("MSB"));
-			target->Set(String::NewSymbol("wkbNDR"), String::New("LSB"));
+			target->Set(NanNew("wkbVariantOgc"), NanNew("OGC"));
+			target->Set(NanNew("wkbVariantIso"), NanNew("ISO"));
+			target->Set(NanNew("wkbXDR"), NanNew("MSB"));
+			target->Set(NanNew("wkbNDR"), NanNew("LSB"));
 
-			target->Set(String::NewSymbol("wkb25DBit"), Integer::New(wkb25DBit));
+			target->Set(NanNew("wkb25DBit"), NanNew<Integer>(wkb25DBit));
 
 			int wkbLinearRing25D = wkbLinearRing | wkb25DBit;
 
-			target->Set(String::NewSymbol("wkbUnknown"), Integer::New(wkbUnknown));
-			target->Set(String::NewSymbol("wkbPoint"), Integer::New(wkbPoint));
-			target->Set(String::NewSymbol("wkbLineString"), Integer::New(wkbLineString));
-			target->Set(String::NewSymbol("wkbPolygon"), Integer::New(wkbPolygon));
-			target->Set(String::NewSymbol("wkbMultiPoint"), Integer::New(wkbMultiPoint));
-			target->Set(String::NewSymbol("wkbMultiLineString"), Integer::New(wkbMultiLineString));
-			target->Set(String::NewSymbol("wkbMultiPolygon"), Integer::New(wkbMultiPolygon));
-			target->Set(String::NewSymbol("wkbGeometryCollection"), Integer::New(wkbGeometryCollection));
-			target->Set(String::NewSymbol("wkbNone"), Integer::New(wkbNone));
-			target->Set(String::NewSymbol("wkbLinearRing"), Integer::New(wkbLinearRing));
-			target->Set(String::NewSymbol("wkbPoint25D"), Integer::New(wkbPoint25D));
-			target->Set(String::NewSymbol("wkbLineString25D"), Integer::New(wkbLineString25D));
-			target->Set(String::NewSymbol("wkbPolygon25D"), Integer::New(wkbPolygon25D));
-			target->Set(String::NewSymbol("wkbMultiPoint25D"), Integer::New(wkbMultiPoint25D));
-			target->Set(String::NewSymbol("wkbMultiLineString25D"), Integer::New(wkbMultiLineString25D));
-			target->Set(String::NewSymbol("wkbMultiPolygon25D"), Integer::New(wkbMultiPolygon25D));
-			target->Set(String::NewSymbol("wkbGeometryCollection25D"), Integer::New(wkbGeometryCollection25D));
-			target->Set(String::NewSymbol("wkbLinearRing25D"), Integer::New(wkbLinearRing25D));
+			target->Set(NanNew("wkbUnknown"), NanNew<Integer>(wkbUnknown));
+			target->Set(NanNew("wkbPoint"), NanNew<Integer>(wkbPoint));
+			target->Set(NanNew("wkbLineString"), NanNew<Integer>(wkbLineString));
+			target->Set(NanNew("wkbPolygon"), NanNew<Integer>(wkbPolygon));
+			target->Set(NanNew("wkbMultiPoint"), NanNew<Integer>(wkbMultiPoint));
+			target->Set(NanNew("wkbMultiLineString"), NanNew<Integer>(wkbMultiLineString));
+			target->Set(NanNew("wkbMultiPolygon"), NanNew<Integer>(wkbMultiPolygon));
+			target->Set(NanNew("wkbGeometryCollection"), NanNew<Integer>(wkbGeometryCollection));
+			target->Set(NanNew("wkbNone"), NanNew<Integer>(wkbNone));
+			target->Set(NanNew("wkbLinearRing"), NanNew<Integer>(wkbLinearRing));
+			target->Set(NanNew("wkbPoint25D"), NanNew<Integer>(wkbPoint25D));
+			target->Set(NanNew("wkbLineString25D"), NanNew<Integer>(wkbLineString25D));
+			target->Set(NanNew("wkbPolygon25D"), NanNew<Integer>(wkbPolygon25D));
+			target->Set(NanNew("wkbMultiPoint25D"), NanNew<Integer>(wkbMultiPoint25D));
+			target->Set(NanNew("wkbMultiLineString25D"), NanNew<Integer>(wkbMultiLineString25D));
+			target->Set(NanNew("wkbMultiPolygon25D"), NanNew<Integer>(wkbMultiPolygon25D));
+			target->Set(NanNew("wkbGeometryCollection25D"), NanNew<Integer>(wkbGeometryCollection25D));
+			target->Set(NanNew("wkbLinearRing25D"), NanNew<Integer>(wkbLinearRing25D));
 
-			target->Set(String::NewSymbol("OFTInteger"), String::New(getFieldTypeName(OFTInteger)));
-			target->Set(String::NewSymbol("OFTIntegerList"), String::New(getFieldTypeName(OFTIntegerList)));
-			target->Set(String::NewSymbol("OFTReal"), String::New(getFieldTypeName(OFTReal)));
-			target->Set(String::NewSymbol("OFTRealList"), String::New(getFieldTypeName(OFTRealList)));
-			target->Set(String::NewSymbol("OFTString"), String::New(getFieldTypeName(OFTString)));
-			target->Set(String::NewSymbol("OFTStringList"), String::New(getFieldTypeName(OFTStringList)));
-			target->Set(String::NewSymbol("OFTWideString"), String::New(getFieldTypeName(OFTWideString)));
-			target->Set(String::NewSymbol("OFTWideStringList"), String::New(getFieldTypeName(OFTWideStringList)));
-			target->Set(String::NewSymbol("OFTBinary"), String::New(getFieldTypeName(OFTBinary)));
-			target->Set(String::NewSymbol("OFTDate"), String::New(getFieldTypeName(OFTDate)));
-			target->Set(String::NewSymbol("OFTTime"), String::New(getFieldTypeName(OFTTime)));
-			target->Set(String::NewSymbol("OFTDateTime"), String::New(getFieldTypeName(OFTDateTime)));
+			target->Set(NanNew("OFTInteger"), NanNew(getFieldTypeName(OFTInteger)));
+			target->Set(NanNew("OFTIntegerList"), NanNew(getFieldTypeName(OFTIntegerList)));
+			target->Set(NanNew("OFTReal"), NanNew(getFieldTypeName(OFTReal)));
+			target->Set(NanNew("OFTRealList"), NanNew(getFieldTypeName(OFTRealList)));
+			target->Set(NanNew("OFTString"), NanNew(getFieldTypeName(OFTString)));
+			target->Set(NanNew("OFTStringList"), NanNew(getFieldTypeName(OFTStringList)));
+			target->Set(NanNew("OFTWideString"), NanNew(getFieldTypeName(OFTWideString)));
+			target->Set(NanNew("OFTWideStringList"), NanNew(getFieldTypeName(OFTWideStringList)));
+			target->Set(NanNew("OFTBinary"), NanNew(getFieldTypeName(OFTBinary)));
+			target->Set(NanNew("OFTDate"), NanNew(getFieldTypeName(OFTDate)));
+			target->Set(NanNew("OFTTime"), NanNew(getFieldTypeName(OFTTime)));
+			target->Set(NanNew("OFTDateTime"), NanNew(getFieldTypeName(OFTDateTime)));
 
-			target->Set(String::NewSymbol("version"), String::New(GDAL_RELEASE_NAME));
+			target->Set(NanNew("version"), NanNew(GDAL_RELEASE_NAME));
 
-			target->Set(String::NewSymbol("CreateDataSourceOption"), String::New(ODrCCreateDataSource));
-			target->Set(String::NewSymbol("DeleteDataSourceOption"), String::New(ODrCDeleteDataSource));
+			target->Set(NanNew("CreateDataSourceOption"), NanNew(ODrCCreateDataSource));
+			target->Set(NanNew("DeleteDataSourceOption"), NanNew(ODrCDeleteDataSource));
 		}
 
 	}

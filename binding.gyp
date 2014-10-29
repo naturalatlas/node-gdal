@@ -48,6 +48,9 @@
 				"src/collections/rasterband_pixels.cpp",
 				"src/collections/gdal_drivers.cpp"
 			],
+			"include_dirs": [
+				"<!(node -e \"require('nan')\")"
+			],
 			"defines": [
 				"PLATFORM='<(OS)'",
 				"_LARGEFILE_SOURCE",

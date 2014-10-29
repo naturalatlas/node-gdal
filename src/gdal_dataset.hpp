@@ -1,12 +1,15 @@
 #ifndef __NODE_GDAL_DATASET_H__
 #define __NODE_GDAL_DATASET_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>
@@ -28,31 +31,31 @@ class Dataset: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(GDALDataset *ds);
 	static Handle<Value> New(OGRDataSource *ds);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> flush(const Arguments &args);
-	static Handle<Value> getMetadata(const Arguments &args);
-	static Handle<Value> getFileList(const Arguments &args);
-	static Handle<Value> getGCPProjection(const Arguments &args);
-	static Handle<Value> getGCPs(const Arguments &args);
-	static Handle<Value> setGCPs(const Arguments &args);
-	static Handle<Value> executeSQL(const Arguments &args);
-	static Handle<Value> testCapability(const Arguments &args);
-	static Handle<Value> buildOverviews(const Arguments &args);
-	static Handle<Value> close(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(flush);
+	static NAN_METHOD(getMetadata);
+	static NAN_METHOD(getFileList);
+	static NAN_METHOD(getGCPProjection);
+	static NAN_METHOD(getGCPs);
+	static NAN_METHOD(setGCPs);
+	static NAN_METHOD(executeSQL);
+	static NAN_METHOD(testCapability);
+	static NAN_METHOD(buildOverviews);
+	static NAN_METHOD(close);
 
-	static Handle<Value> bandsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> rasterSizeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> srsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> driverGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> geoTransformGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> descriptionGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> layersGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(bandsGetter);
+	static NAN_GETTER(rasterSizeGetter);
+	static NAN_GETTER(srsGetter);
+	static NAN_GETTER(driverGetter);
+	static NAN_GETTER(geoTransformGetter);
+	static NAN_GETTER(descriptionGetter);
+	static NAN_GETTER(layersGetter);
 
-	static void srsSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void geoTransformSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_SETTER(srsSetter);
+	static NAN_SETTER(geoTransformSetter);
 
 	static ObjectCache<GDALDataset*>   dataset_cache;
 	static ObjectCache<OGRDataSource*> datasource_cache;

@@ -1,12 +1,15 @@
 #ifndef __NODE_GDAL_RASTERBAND_H__
 #define __NODE_GDAL_RASTERBAND_H__
 
-// v8
-#include <v8.h>
-
 // node
 #include <node.h>
 #include <node_object_wrap.h>
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nan.h>
+#pragma GCC diagnostic pop
 
 // gdal
 #include <gdal_priv.h>
@@ -23,51 +26,51 @@ class RasterBand: public node::ObjectWrap {
 public:
 	static Persistent<FunctionTemplate> constructor;
 	static void Initialize(Handle<Object> target);
-	static Handle<Value> New(const Arguments &args);
+	static NAN_METHOD(New);
 	static Handle<Value> New(GDALRasterBand *band, GDALDataset *parent);
-	static Handle<Value> toString(const Arguments &args);
-	static Handle<Value> flush(const Arguments &args);
-	static Handle<Value> fill(const Arguments &args);
-	static Handle<Value> getStatistics(const Arguments &args);
-	static Handle<Value> computeStatistics(const Arguments &args);
-	static Handle<Value> setStatistics(const Arguments &args);
-	static Handle<Value> getMaskBand(const Arguments &args);
-	static Handle<Value> getMaskFlags(const Arguments &args);
-	static Handle<Value> createMaskBand(const Arguments &args);
+	static NAN_METHOD(toString);
+	static NAN_METHOD(flush);
+	static NAN_METHOD(fill);
+	static NAN_METHOD(getStatistics);
+	static NAN_METHOD(computeStatistics);
+	static NAN_METHOD(setStatistics);
+	static NAN_METHOD(getMaskBand);
+	static NAN_METHOD(getMaskFlags);
+	static NAN_METHOD(createMaskBand);
 
 	// unimplemented methods
-	//static Handle<Value> getColorTable(const Arguments &args);
-	//static Handle<Value> setColorTable(const Arguments &args);
-	//static Handle<Value> rasterIO(const Arguments &args);
-	//static Handle<Value> buildOverviews(const Arguments &args);
-	//static Handle<Value> getHistogram(const Arguments &args);
-	//static Handle<Value> getDefaultHistogram(const Arguments &args);
-	//static Handle<Value> setDefaultHistogram(const Arguments &args);
+	//static NAN_METHOD(getColorTable);
+	//static NAN_METHOD(setColorTable);
+	//static NAN_METHOD(rasterIO);
+	//static NAN_METHOD(buildOverviews);
+	//static NAN_METHOD(getHistogram);
+	//static NAN_METHOD(getDefaultHistogram);
+	//static NAN_METHOD(setDefaultHistogram);
 
-	static Handle<Value> dsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> sizeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> idGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> overviewsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> pixelsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> blockSizeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> minimumGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> maximumGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> readOnlyGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> dataTypeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> hasArbitraryOverviewsGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> unitTypeGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> scaleGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> offsetGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> noDataValueGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> categoryNamesGetter(Local<String> property, const AccessorInfo &info);
-	static Handle<Value> colorInterpretationGetter(Local<String> property, const AccessorInfo &info);
+	static NAN_GETTER(dsGetter);
+	static NAN_GETTER(sizeGetter);
+	static NAN_GETTER(idGetter);
+	static NAN_GETTER(overviewsGetter);
+	static NAN_GETTER(pixelsGetter);
+	static NAN_GETTER(blockSizeGetter);
+	static NAN_GETTER(minimumGetter);
+	static NAN_GETTER(maximumGetter);
+	static NAN_GETTER(readOnlyGetter);
+	static NAN_GETTER(dataTypeGetter);
+	static NAN_GETTER(hasArbitraryOverviewsGetter);
+	static NAN_GETTER(unitTypeGetter);
+	static NAN_GETTER(scaleGetter);
+	static NAN_GETTER(offsetGetter);
+	static NAN_GETTER(noDataValueGetter);
+	static NAN_GETTER(categoryNamesGetter);
+	static NAN_GETTER(colorInterpretationGetter);
 
-	static void unitTypeSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void scaleSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void offsetSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void noDataValueSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void categoryNamesSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
-	static void colorInterpretationSetter(Local<String> property, Local<Value> value, const AccessorInfo &info);
+	static NAN_SETTER(unitTypeSetter);
+	static NAN_SETTER(scaleSetter);
+	static NAN_SETTER(offsetSetter);
+	static NAN_SETTER(noDataValueSetter);
+	static NAN_SETTER(categoryNamesSetter);
+	static NAN_SETTER(colorInterpretationSetter);
 
 	static ObjectCache<GDALRasterBand*> cache;
 
