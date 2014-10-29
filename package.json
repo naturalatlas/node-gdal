@@ -57,7 +57,7 @@
     "node-pre-gyp"
   ],
   "engines": {
-      "node": ">= 0.8.0 < 0.11.0"
+      "node": ">= 0.8.0"
   },
   "engineStrict": true
 }
