@@ -17,7 +17,7 @@ void MultiLineString::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiLineString::New);
-	lcons->Inherit(GeometryCollection::constructor);
+	lcons->Inherit(NanNew(GeometryCollection::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("MultiLineString"));
 

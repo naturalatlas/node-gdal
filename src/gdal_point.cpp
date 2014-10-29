@@ -13,7 +13,7 @@ void Point::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Point::New);
-	lcons->Inherit(Geometry::constructor);
+	lcons->Inherit(NanNew(Geometry::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("Point"));
 

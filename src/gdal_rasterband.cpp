@@ -20,7 +20,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(RasterBand::New);
-	lcons->Inherit(MajorObject::constructor);
+	lcons->Inherit(NanNew(MajorObject::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("RasterBand"));
 

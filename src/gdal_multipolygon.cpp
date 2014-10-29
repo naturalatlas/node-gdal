@@ -16,7 +16,7 @@ void MultiPolygon::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiPolygon::New);
-	lcons->Inherit(GeometryCollection::constructor);
+	lcons->Inherit(NanNew(GeometryCollection::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("MultiPolygon"));
 

@@ -16,7 +16,7 @@ void LinearRing::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LinearRing::New);
-	lcons->Inherit(LineString::constructor);
+	lcons->Inherit(NanNew(LineString::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("LinearRing"));
 

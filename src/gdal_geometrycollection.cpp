@@ -15,7 +15,7 @@ void GeometryCollection::Initialize(Handle<Object> target)
 	NanScope();
 
 	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(GeometryCollection::New);
-	lcons->Inherit(Geometry::constructor);
+	lcons->Inherit(NanNew(Geometry::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
 	lcons->SetClassName(NanNew("GeometryCollection"));
 
