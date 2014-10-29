@@ -199,7 +199,7 @@ NAN_METHOD(RasterBandPixels::read)
 	if(passed_array.IsEmpty()){
 		array = TypedArray::New(type, length);
 		if(array.IsEmpty() || !array->IsObject()) {
-			return array; //TypedArray::New threw an error
+			NanReturnUndefined(); //TypedArray::New threw an error
 		}
 		data = TypedArray::Data(array.As<Object>());
 	} else {
@@ -327,7 +327,7 @@ NAN_METHOD(RasterBandPixels::readBlock)
 	} else {
 		array = TypedArray::New(type, w * h);
 		if(array.IsEmpty() || !array->IsObject()) {
-			return array; //TypedArray::New threw an error
+			NanReturnUndefined(); //TypedArray::New threw an error
 		}
 	}
 
