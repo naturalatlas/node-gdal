@@ -86,7 +86,7 @@ NAN_METHOD(DatasetBands::get)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		return NanNull();
+		NanReturnNull();
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {

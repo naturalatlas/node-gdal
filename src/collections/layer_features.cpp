@@ -147,7 +147,7 @@ NAN_METHOD(LayerFeatures::add)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LayerFeatures::count)
@@ -207,7 +207,7 @@ NAN_METHOD(LayerFeatures::set)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 
@@ -230,7 +230,7 @@ NAN_METHOD(LayerFeatures::remove)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(LayerFeatures::layerGetter)

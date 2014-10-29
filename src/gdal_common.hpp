@@ -26,10 +26,11 @@ namespace node_gdal {
 class SafeString {
 public:
 	static v8::Handle<v8::Value> New(const char * data) {
-		if (!data) {
-			return NanNull();
+		NanEscapableScope();
+    if (!data) {
+			return NanEscapeScope(NanNull());
 		} else {
-			return NanNew<v8::String>(data);
+			return NanEscapeScope(NanNew<v8::String>(data));
 		}
 	}
 };

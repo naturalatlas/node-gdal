@@ -204,7 +204,7 @@ NAN_METHOD(RasterBand::getMaskBand)
 
 	GDALRasterBand *mask_band = band->this_->GetMaskBand();
 
-	if(!mask_band) return NanNull();
+	if(!mask_band) NanReturnNull();
 
 	NanReturnValue(RasterBand::New(mask_band, band->getParent()));
 }
@@ -228,7 +228,7 @@ NAN_METHOD(RasterBand::fill)
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
 	} 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 // --- Custom error handling to handle VRT errors --- 
@@ -515,7 +515,7 @@ NAN_GETTER(RasterBand::dataTypeGetter)
 
 	GDALDataType type = band->this_->GetRasterDataType();
 	
-	if(type == GDT_Unknown) return NanUndefined();
+	if(type == GDT_Unknown) NanReturnUndefined();
 	NanReturnValue(SafeString::New(GDALGetDataTypeName(type)));
 }
 
@@ -578,7 +578,7 @@ NAN_GETTER(RasterBand::colorInterpretationGetter)
 		NanReturnUndefined();
 	}
 	GDALColorInterp interp = band->this_->GetColorInterpretation();
-	if(interp == GCI_Undefined) return NanUndefined();
+	if(interp == GCI_Undefined) NanReturnUndefined();
 	else NanReturnValue(SafeString::New(GDALGetColorInterpretationName(interp)));
 }
 

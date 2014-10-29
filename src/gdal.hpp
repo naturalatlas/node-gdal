@@ -78,7 +78,7 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 
-		return NanUndefined();
+		NanReturnUndefined();
 	}
 
 	static NAN_METHOD(getConfigOption)

@@ -215,7 +215,7 @@ NAN_METHOD(Feature::destroy)
 		NanReturnUndefined();
 	}
 	feature->dispose();
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Feature::setGeometryDirectly)
@@ -246,7 +246,7 @@ NAN_METHOD(Feature::setGeometryDirectly)
 	}
 
 	geom->owned_ = false;
-	return NanUndefined();
+	NanReturnUndefined();
 	*/
 }
 
@@ -304,7 +304,7 @@ NAN_METHOD(Feature::setFrom)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(Feature::fieldsGetter)

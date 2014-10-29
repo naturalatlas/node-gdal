@@ -272,7 +272,7 @@ NAN_METHOD(Dataset::getGCPProjection)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		return NanNull();
+		NanReturnNull();
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {
@@ -293,7 +293,7 @@ NAN_METHOD(Dataset::close)
 
 	ds->dispose();
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Dataset::flush)
@@ -321,7 +321,7 @@ NAN_METHOD(Dataset::flush)
 		raw->FlushCache();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Dataset::executeSQL)
@@ -510,7 +510,7 @@ NAN_METHOD(Dataset::setGCPs)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Dataset::buildOverviews)
@@ -585,7 +585,7 @@ NAN_METHOD(Dataset::buildOverviews)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(Dataset::descriptionGetter)
@@ -621,7 +621,7 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		return NanNull();
+		NanReturnNull();
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {
@@ -646,7 +646,7 @@ NAN_GETTER(Dataset::srsGetter)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		return NanNull();
+		NanReturnNull();
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {
@@ -657,7 +657,7 @@ NAN_GETTER(Dataset::srsGetter)
 		char* wkt = (char*) raw->GetProjectionRef();
 		if (*wkt == '\0') {
 			//getProjectionRef returns string of length 0 if no srs set
-			return NanNull();
+			NanReturnNull();
 		}
 		//otherwise construct and return SpatialReference from wkt
 		OGRSpatialReference *srs = new OGRSpatialReference();
@@ -684,7 +684,7 @@ NAN_GETTER(Dataset::geoTransformGetter)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		return NanNull();
+		NanReturnNull();
 	} else {
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {

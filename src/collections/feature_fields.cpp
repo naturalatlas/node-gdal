@@ -290,7 +290,7 @@ NAN_METHOD(FeatureFields::toJSON)
 		//get field value
 		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			return val; //get method threw an exception	
+			NanReturnUndefined(); //get method threw an exception	
 		}
 
 		obj->Set(NanNew(key), val);
@@ -316,7 +316,7 @@ NAN_METHOD(FeatureFields::toArray)
 		//get field value
 		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			return val; //get method threw an exception	
+			NanReturnUndefined(); //get method threw an exception	
 		}
 		
 		array->Set(i, val);
@@ -330,7 +330,7 @@ Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 	//#throws : caller must check if return_val.IsEmpty() and bail out if true
 	NanEscapableScope();
 
-	if(!f->IsFieldSet(field_index)) return NanNull();
+	if(!f->IsFieldSet(field_index)) return NanEscapeScope(NanNull());
 
 	OGRFieldDefn *field_def = f->GetFieldDefnRef(field_index);
 	switch(field_def->GetType()) {
@@ -378,9 +378,7 @@ NAN_METHOD(FeatureFields::get)
 
 	Handle<Value> result = FeatureFields::get(f->get(), field_index);
 	
-	//check if exception... not sure if this is needed
-	if(result.IsEmpty()) return result;
-	else NanReturnValue(result);
+	NanReturnValue(result);
 }
 
 NAN_METHOD(FeatureFields::getNames)

@@ -361,7 +361,7 @@ NAN_METHOD(Geometry::exportToWKT)
 		NanReturnValue(SafeString::New(text));
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Geometry::exportToWKB)
@@ -433,7 +433,7 @@ NAN_METHOD(Geometry::exportToKML)
 		NanReturnValue(result);
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Geometry::exportToGML)
@@ -449,7 +449,7 @@ NAN_METHOD(Geometry::exportToGML)
 		NanReturnValue(result);
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Geometry::exportToJSON)
@@ -465,7 +465,7 @@ NAN_METHOD(Geometry::exportToJSON)
 		NanReturnValue(result);
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 // The Centroid method wants the caller to create the point to fill in. Instead

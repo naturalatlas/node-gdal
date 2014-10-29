@@ -94,7 +94,7 @@ NAN_METHOD(LineStringPoints::reverse)
 
 	geom->get()->reversePoints();
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LineStringPoints::resize)
@@ -108,7 +108,7 @@ NAN_METHOD(LineStringPoints::resize)
 	NODE_ARG_INT(0, "point count", count)
 	geom->get()->setNumPoints(count);
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LineStringPoints::get)
@@ -200,7 +200,7 @@ NAN_METHOD(LineStringPoints::set)
 		}
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LineStringPoints::add)
@@ -299,7 +299,7 @@ NAN_METHOD(LineStringPoints::add)
 		}
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 } // namespace node_gdal

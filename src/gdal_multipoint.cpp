@@ -98,10 +98,10 @@ Handle<Value> MultiPoint::New(OGRMultiPoint *geom)
 
 Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 {
-	NanScope();
+	NanEscapableScope();
 
 	if (!geom) {
-		return NanNull();
+		return NanEscapeScope(NanNull());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -121,7 +121,7 @@ Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 	Handle<Value> ext = NanNew<External>(wrapped);
 	Handle<Object> obj = NanNew(MultiPoint::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	NanReturnValue(obj);
+	return NanEscapeScope(obj);
 }
 
 NAN_METHOD(MultiPoint::toString)

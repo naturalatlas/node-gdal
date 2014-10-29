@@ -80,7 +80,7 @@ Handle<Value> CoordinateTransformation::New(OGRCoordinateTransformation *transfo
 	NanEscapableScope();
 
 	if (!transform) {
-		return NanNull();
+		return NanEscapeScope(NanNull());
 	}
 
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);

@@ -137,7 +137,7 @@ NAN_METHOD(PolygonRings::add)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 } // namespace node_gdal

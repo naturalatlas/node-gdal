@@ -178,7 +178,7 @@ NAN_METHOD(FeatureDefnFields::remove)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(FeatureDefnFields::add)
@@ -219,7 +219,7 @@ NAN_METHOD(FeatureDefnFields::add)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(FeatureDefnFields::reorder)
@@ -272,7 +272,7 @@ NAN_METHOD(FeatureDefnFields::reorder)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 

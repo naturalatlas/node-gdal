@@ -111,7 +111,7 @@ NAN_METHOD(GeometryCollectionChildren::remove)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(GeometryCollectionChildren::add)
@@ -157,7 +157,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 } // namespace node_gdal

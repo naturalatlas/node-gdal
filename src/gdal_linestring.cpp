@@ -197,7 +197,7 @@ NAN_METHOD(LineString::addPoint)
 
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(LineString::pointsGetter)

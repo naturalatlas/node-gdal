@@ -88,7 +88,7 @@ NAN_METHOD(DatasetLayers::get)
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && ds->getDataset()) {
-			return NanNull();
+			NanReturnNull();
 		}
 	#endif
 
@@ -297,7 +297,7 @@ NAN_METHOD(DatasetLayers::remove)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(DatasetLayers::dsGetter)

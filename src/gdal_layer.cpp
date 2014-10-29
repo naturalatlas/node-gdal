@@ -123,8 +123,8 @@ Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent)
 Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent)
 #endif
 {
-	NanScope();
-	NanReturnValue(Layer::New(raw, raw_parent, false));
+	NanEscapableScope();
+	return NanEscapeScope(Layer::New(raw, raw_parent, false));
 }
 
 #if GDAL_VERSION_MAJOR >= 2
@@ -133,13 +133,13 @@ Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set
 Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set)
 #endif
 {
-	NanScope();
+	NanEscapableScope();
 
 	if (!raw) {
-		return NanNull();
+		return NanEscapeScope(NanNull());
 	}
 	if (cache.has(raw)) {
-		return NanNew(cache.get(raw));
+		return NanEscapeScope(NanNew(cache.get(raw)));
 	}
 
 	Layer *wrapped = new Layer(raw);
@@ -165,7 +165,7 @@ Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_s
 		else {
 			LOG("Layer's parent dataset disappeared from cache (layer = %p, dataset = %p)", raw, raw_parent);
 			NanThrowError("Layer's parent dataset disappeared from cache");
-			NanReturnUndefined();
+			return NanEscapeScope(NanUndefined());
 			//ds = Dataset::New(raw_parent); //should never happen
 		}
 
@@ -173,7 +173,7 @@ Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_s
 		obj->SetHiddenValue(NanNew("ds_"), ds);
 	}
 
-	NanReturnValue(obj);
+	return NanEscapeScope(obj);
 }
 
 NAN_METHOD(Layer::toString)
@@ -270,7 +270,7 @@ NAN_METHOD(Layer::setSpatialFilter)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Layer::setAttributeFilter)
@@ -298,7 +298,7 @@ NAN_METHOD(Layer::setAttributeFilter)
 		NanReturnUndefined();
 	}
 	
-	return NanUndefined();
+	NanReturnUndefined();
 }
 /*
 NAN_METHOD(Layer::getLayerDefn)

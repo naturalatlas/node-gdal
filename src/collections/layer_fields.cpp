@@ -208,7 +208,7 @@ NAN_METHOD(LayerFields::remove)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LayerFields::add)
@@ -260,7 +260,7 @@ NAN_METHOD(LayerFields::add)
 		NanReturnUndefined();
 	}
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(LayerFields::reorder)
@@ -319,7 +319,7 @@ NAN_METHOD(LayerFields::reorder)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_GETTER(LayerFields::layerGetter)

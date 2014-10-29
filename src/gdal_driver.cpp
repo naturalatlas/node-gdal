@@ -170,7 +170,7 @@ NAN_METHOD(Driver::deleteDataset)
 			NanReturnUndefined();
 		} 
 	}
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Driver::create)
@@ -353,7 +353,7 @@ NAN_METHOD(Driver::copyFiles)
 		NanReturnUndefined();
 	} 
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Driver::rename)
@@ -377,7 +377,7 @@ NAN_METHOD(Driver::rename)
 		NanReturnUndefined();
 	} 
 
-	return NanUndefined();
+	NanReturnUndefined();
 }
 
 NAN_METHOD(Driver::getMetadata)
