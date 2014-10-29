@@ -44,7 +44,7 @@ Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 }
 
 GDALDataType TypedArray::Identify(Handle<Object> obj) {
-	std::string arraytype = *NanUtf8String(obj->GetConstructorName());
+	/*std::string arraytype = *NanUtf8String(obj->GetConstructorName());
 
 	if(arraytype == "Uint8Array")   return GDT_Byte;
 	if(arraytype == "Int8Array")    return GDT_Byte;
@@ -56,8 +56,8 @@ GDALDataType TypedArray::Identify(Handle<Object> obj) {
 	if(arraytype == "Float64Array") return GDT_Float64;
 	
 	return GDT_Unknown;
-
-	/*
+	*/
+	
 	switch(obj->GetIndexedPropertiesExternalArrayDataType()){
 		case kExternalByteArray:          return GDT_Byte;
 		case kExternalUnsignedByteArray:  return GDT_Byte;
@@ -68,7 +68,7 @@ GDALDataType TypedArray::Identify(Handle<Object> obj) {
 		case kExternalFloatArray:         return GDT_Float32;
 		case kExternalDoubleArray:        return GDT_Float64;
 		default:                          return GDT_Unknown;
-	}*/
+	}
 }
 int TypedArray::Length(Handle<Object> obj) {
 	return obj->GetIndexedPropertiesExternalArrayDataLength();

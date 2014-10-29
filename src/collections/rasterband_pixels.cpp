@@ -372,7 +372,7 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	NODE_ARG_OBJECT(2, "data", obj);
 
 	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
-		NanThrowError("Array has no external array data");
+		NanThrowError("Object has no external array data");
 		NanReturnUndefined();
 	}
 

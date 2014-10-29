@@ -493,7 +493,7 @@ describe('gdal.RasterBand', function() {
 					it('should put the data in the existing array', function(){
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
-						var data = new Uint8Array(20*30);
+						var data = new Uint8Array(new ArrayBuffer(20*30));
 						data[15] = 31;
 						var result = band.pixels.read(0,0,20,30,data);
 						assert.equal(data, result);
@@ -509,7 +509,7 @@ describe('gdal.RasterBand', function() {
 					it('should throw error if array is too small', function(){
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
-						var data = new Uint8Array(20*30);
+						var data = new Uint8Array(new ArrayBuffer(20*30));
 						assert.throws(function(){
 							band.pixels.read(0,0,20,31,data);
 						});
@@ -518,7 +518,7 @@ describe('gdal.RasterBand', function() {
 						var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 						var band = ds.bands.get(1);
 						band.pixels.set(1, 1, 30);
-						var data = new Float64Array(20*30);
+						var data = new Float64Array(new ArrayBuffer(20*30*8));
 						band.pixels.read(1,1,20,30,data);
 						assert.equal(data[0], 30);
 					});
@@ -543,7 +543,7 @@ describe('gdal.RasterBand', function() {
 						it('should throw error if given array is smaller than given dimensions', function(){
 							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 							var band = ds.bands.get(1);
-							var data = new Float64Array(10,14);
+							var data = new Float64Array(new ArrayBuffer(8*10*14));
 							assert.throws(function(){
 								band.pixels.read(0,0,20,30,data,{
 									buffer_width: 10,
@@ -556,7 +556,7 @@ describe('gdal.RasterBand', function() {
 						it('should be ignored if typed array is given', function(){
 							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 							var band = ds.bands.get(1);
-							var data = new Float64Array(20*30);
+							var data = new Float64Array(new ArrayBuffer(20*30*8));
 							var result = band.pixels.read(0,0,20,30,data,{type: gdal.GDT_Byte});
 							assert.instanceOf(result, Float64Array);
 						});
@@ -576,7 +576,7 @@ describe('gdal.RasterBand', function() {
 							red.fill(1);
 							blue.fill(2);
 
-							var interleaved = new Uint8Array(w*h*2);
+							var interleaved = new Uint8Array(new ArrayBuffer(w*h*2));
 
 							var read_options = {
 								buffer_width: w,
@@ -606,7 +606,7 @@ describe('gdal.RasterBand', function() {
 							red.fill(1);
 							blue.fill(2);
 
-							var interleaved = new Uint8Array(w*h*2);
+							var interleaved = new Uint8Array(new ArrayBuffer(w*h*2));
 							var read_options = {
 								buffer_width: w,
 								buffer_height: h,
@@ -645,7 +645,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 					var w = 16, h = 16;
 
-					var data = new Uint8Array(w*h);
+					var data = new Uint8Array(new ArrayBuffer(w*h));
 					for(var i = 0; i < w*h; i++) data[i] = i;
 
 					band.pixels.write(100, 120, w, h, data);
@@ -659,7 +659,7 @@ describe('gdal.RasterBand', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					var w = 16, h = 16;
-					var data = new Uint8Array(w*h-1);
+					var data = new Uint8Array(new ArrayBuffer(w*h-1));
 
 					assert.throws(function(){
 						band.pixels.write(100, 120, w, h, data);
@@ -670,7 +670,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 					var w = 16, h = 16;
 
-					var data = new Float64Array(w*h);
+					var data = new Float64Array(new ArrayBuffer(8*w*h));
 					for(var i = 0; i < w*h; i++) data[i] = i+0.33;
 
 					band.pixels.write(100, 120, w, h, data);
@@ -685,7 +685,7 @@ describe('gdal.RasterBand', function() {
 						it('should throw error if given array is smaller than given dimensions', function(){
 							var ds   = gdal.open('temp', 'w', 'MEM', 256, 256, 1, gdal.GDT_Byte);
 							var band = ds.bands.get(1);
-							var data = new Float64Array(10,14);
+							var data = new Float64Array(new ArrayBuffer(10*14*8));
 							assert.throws(function(){
 								band.pixels.write(0,0,20,30,data,{
 									buffer_width: 10,
@@ -701,7 +701,7 @@ describe('gdal.RasterBand', function() {
 							var red  = ds.bands.get(1);
 							var blue = ds.bands.get(2);
 
-							var interleaved = new Uint8Array(w*h*2);
+							var interleaved = new Uint8Array(new ArrayBuffer(w*h*2));
 							for(var y = 0; y < h; y++) {
 								for(var x = 0; x < w; x++) {
 									interleaved[x*2+0+y*w*2] = 1;
@@ -732,7 +732,7 @@ describe('gdal.RasterBand', function() {
 							var red  = ds.bands.get(1);
 							var blue = ds.bands.get(2);
 
-							var interleaved = new Uint8Array(w*h*2);
+							var interleaved = new Uint8Array(new ArrayBuffer(w*h*2));
 
 							var write_options = {
 								buffer_width: w,
@@ -751,7 +751,7 @@ describe('gdal.RasterBand', function() {
 				it('should throw an error if region is out of bounds', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
-					var data = new Uint8Array(16*16);
+					var data = new Uint8Array(new ArrayBuffer(16*16));
 					assert.throws(function(){
 						band.pixels.write(20, 20, 16, 16, data);
 					});
@@ -760,7 +760,7 @@ describe('gdal.RasterBand', function() {
 					var ds   = gdal.open('temp', 'w', 'MEM', 16, 16, 1, gdal.GDT_Byte);
 					var band = ds.bands.get(1);
 					ds.close();
-					var data = new Uint8Array(16*16);
+					var data = new Uint8Array(new ArrayBuffer(16*16));
 					assert.throws(function(){
 						band.pixels.write(0,0,16,16, data);
 					});
@@ -786,14 +786,14 @@ describe('gdal.RasterBand', function() {
 					it('should read data into existing', function(){
 						var ds   = gdal.open(__dirname + '/data/sample.tif');
 						var band = ds.bands.get(1);
-						var data = new Uint8Array(band.blockSize.x*band.blockSize.y);
+						var data = new Uint8Array(new ArrayBuffer(band.blockSize.x*band.blockSize.y));
 						var result = band.pixels.readBlock(0,0,data);
 						assert.equal(result, data);
 					})
 					it('should throw error if given array is not big enough', function(){
 						var ds   = gdal.open(__dirname + '/data/sample.tif');
 						var band = ds.bands.get(1);
-						var data = new Uint8Array(band.blockSize.x*band.blockSize.y-1);
+						var data = new Uint8Array(new ArrayBuffer(band.blockSize.x*band.blockSize.y-1));
 						assert.throws(function(){
 							band.pixels.readBlock(0,0,data);
 						});
@@ -801,7 +801,7 @@ describe('gdal.RasterBand', function() {
 					it('should throw error if given array is not the right type', function(){
 						var ds   = gdal.open(__dirname + '/data/sample.tif');
 						var band = ds.bands.get(1);
-						var data = new Float64Array(band.blockSize.x*band.blockSize.y);
+						var data = new Float64Array(new ArrayBuffer(8*band.blockSize.x*band.blockSize.y));
 						assert.throws(function(){
 							band.pixels.readBlock(0,0,data);
 						});
@@ -822,7 +822,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 
 					var length = band.blockSize.x*band.blockSize.y;
-					var data = new Uint8Array(length);
+					var data = new Uint8Array(new ArrayBuffer(length));
 					for(var i = 0; i < length; i++) data[i] = i;
 
 					band.pixels.writeBlock(0,0,data);
@@ -838,7 +838,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 
 					var length = band.blockSize.x*band.blockSize.y;
-					var data = new Uint8Array(length);
+					var data = new Uint8Array(new ArrayBuffer(length));
 
 					assert.throws(function(){
 						band.pixels.writeBlock(0, 100, data);
@@ -849,7 +849,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 
 					var length = band.blockSize.x*band.blockSize.y-1;
-					var data = new Uint8Array(length);
+					var data = new Uint8Array(new ArrayBuffer(length));
 
 					assert.throws(function(){
 						band.pixels.writeBlock(0, 0, data);
@@ -860,7 +860,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 
 					var length = band.blockSize.x*band.blockSize.y;
-					var data = new Float64Array(length);
+					var data = new Float64Array(new ArrayBuffer(length*8));
 
 					assert.throws(function(){
 						band.pixels.writeBlock(0, 0, data);
@@ -871,7 +871,7 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 
 					var length = band.blockSize.x*band.blockSize.y;
-					var data = new Uint8Array(length);
+					var data = new Uint8Array(new ArrayBuffer(length));
 					ds.close();
 					assert.throws(function(){
 						band.pixels.writeBlock(0, 0, data);
