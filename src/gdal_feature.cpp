@@ -15,30 +15,32 @@ void Feature::Initialize(Handle<Object> target)
 {
 	NanScope();
 
-	constructor = Persistent<FunctionTemplate>::New(FunctionTemplate::New(Feature::New));
-	constructor->InstanceTemplate()->SetInternalFieldCount(1);
-	constructor->SetClassName(NanNew("Feature"));
+	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Feature::New);
+	lcons->InstanceTemplate()->SetInternalFieldCount(1);
+	lcons->SetClassName(NanNew("Feature"));
 
-	NODE_SET_PROTOTYPE_METHOD(constructor, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "getGeometry", getGeometry);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometryDirectly", setGeometryDirectly);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setGeometry", setGeometry);
-	// NODE_SET_PROTOTYPE_METHOD(constructor, "stealGeometry", stealGeometry);
-	NODE_SET_PROTOTYPE_METHOD(constructor, "clone", clone);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "equals", equals);
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "getFieldDefn", getFieldDefn); (use defn.fields.get() instead)
-	NODE_SET_PROTOTYPE_METHOD(constructor, "setFrom", setFrom);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, "setGeometryDirectly", setGeometryDirectly);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "setGeometry", setGeometry);
+	// NODE_SET_PROTOTYPE_METHOD(lcons, "stealGeometry", stealGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "clone", clone);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, "equals", equals);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, "getFieldDefn", getFieldDefn); (use defn.fields.get() instead)
+	NODE_SET_PROTOTYPE_METHOD(lcons, "setFrom", setFrom);
 
 	//Note: We should let node GC handle destroying features when they arent being used
 	//TODO: Give node more info on the amount of memory a feature is using
 	//      NanAdjustExternalMemory()
-	//NODE_SET_PROTOTYPE_METHOD(constructor, "destroy", destroy);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, "destroy", destroy);
 
-	ATTR(constructor, "fields", fieldsGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "defn", defnGetter, READ_ONLY_SETTER);
-	ATTR(constructor, "fid", fidGetter, fidSetter);
+	ATTR(lcons, "fields", fieldsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "defn", defnGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "fid", fidGetter, fidSetter);
 
-	target->Set(NanNew("Feature"), constructor->GetFunction());
+	target->Set(NanNew("Feature"), lcons->GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
 
 Feature::Feature(OGRFeature *feature)

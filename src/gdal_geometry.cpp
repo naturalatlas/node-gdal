@@ -665,14 +665,14 @@ Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
 	
 	type = wkbFlatten(type);
 	switch (type) {
-		case wkbPoint:              return NanEscapeScope(Point::constructor->GetFunction());
-		case wkbLineString:         return NanEscapeScope(LineString::constructor->GetFunction());
-		case wkbLinearRing:         return NanEscapeScope(LinearRing::constructor->GetFunction());
-		case wkbPolygon:            return NanEscapeScope(Polygon::constructor->GetFunction());
-		case wkbGeometryCollection: return NanEscapeScope(GeometryCollection::constructor->GetFunction());
-		case wkbMultiPoint:         return NanEscapeScope(MultiPoint::constructor->GetFunction());
-		case wkbMultiLineString:    return NanEscapeScope(MultiLineString::constructor->GetFunction());
-		case wkbMultiPolygon:       return NanEscapeScope(MultiPolygon::constructor->GetFunction());
+		case wkbPoint:              return NanEscapeScope(NanNew(Point::constructor)->GetFunction());
+		case wkbLineString:         return NanEscapeScope(NanNew(LineString::constructor)->GetFunction());
+		case wkbLinearRing:         return NanEscapeScope(NanNew(LinearRing::constructor)->GetFunction());
+		case wkbPolygon:            return NanEscapeScope(NanNew(Polygon::constructor)->GetFunction());
+		case wkbGeometryCollection: return NanEscapeScope(NanNew(GeometryCollection::constructor)->GetFunction());
+		case wkbMultiPoint:         return NanEscapeScope(NanNew(MultiPoint::constructor)->GetFunction());
+		case wkbMultiLineString:    return NanEscapeScope(NanNew(MultiLineString::constructor)->GetFunction());
+		case wkbMultiPolygon:       return NanEscapeScope(NanNew(MultiPolygon::constructor)->GetFunction());
 		default:                    return NanEscapeScope(NanNull());
 	}
 }
