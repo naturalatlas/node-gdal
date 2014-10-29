@@ -371,6 +371,11 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	Handle<Object> obj;
 	NODE_ARG_OBJECT(2, "data", obj);
 
+	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
+		NanThrowError("Array has no external array data");
+		NanReturnUndefined();
+	}
+
 	GDALDataType type = TypedArray::Identify(obj);
 
 	if(type == GDT_Unknown || type != band->get()->GetRasterDataType()) {
@@ -384,7 +389,11 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 		NanReturnUndefined();
 	}
  	if(TypedArray::Length(obj) < w*h) {
- 		NanThrowError("Array length must be greater than or equal to blockSize.x * blockSize.y");
+		std::ostringstream ss;
+		ss << "Array length must be greater than or equal to blockSize.x * blockSize.y" 
+		   << " (length = " << TypedArray::Length(obj) << ")";
+
+		NanThrowError(ss.str().c_str());
 		NanReturnUndefined();
  	}
 
