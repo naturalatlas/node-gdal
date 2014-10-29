@@ -224,7 +224,7 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Read);
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
-			target->Set(NanNew("GDT_Unknown"), Undefined());
+			target->Set(NanNew("GDT_Unknown"), NanUndefined());
 			target->Set(NanNew("GDT_Byte"), NanNew(GDALGetDataTypeName(GDT_Byte)));
 			target->Set(NanNew("GDT_UInt16"), NanNew(GDALGetDataTypeName(GDT_UInt16)));
 			target->Set(NanNew("GDT_Int16"), NanNew(GDALGetDataTypeName(GDT_Int16)));
@@ -237,11 +237,11 @@ namespace node_gdal {
 			target->Set(NanNew("GDT_CFloat32"), NanNew(GDALGetDataTypeName(GDT_CFloat32)));
 			target->Set(NanNew("GDT_CFloat64"), NanNew(GDALGetDataTypeName(GDT_CFloat64)));
 
-			target->Set(NanNew("OJUndefined"), Undefined());
+			target->Set(NanNew("OJUndefined"), NanUndefined());
 			target->Set(NanNew("OJLeft"), NanNew("Left"));
 			target->Set(NanNew("OJRight"), NanNew("Right"));
 
-			target->Set(NanNew("GCI_Undefined"), Undefined());
+			target->Set(NanNew("GCI_Undefined"), NanUndefined());
 			target->Set(NanNew("GCI_GrayIndex"), NanNew(GDALGetColorInterpretationName(GCI_GrayIndex)));
 			target->Set(NanNew("GCI_PaletteIndex"), NanNew(GDALGetColorInterpretationName(GCI_PaletteIndex)));
 			target->Set(NanNew("GCI_RedBand"), NanNew(GDALGetColorInterpretationName(GCI_RedBand)));
