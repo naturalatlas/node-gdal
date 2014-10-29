@@ -322,7 +322,7 @@ NAN_METHOD(RasterBandPixels::readBlock)
 			std::ostringstream ss;
 			ss << "Array type does not match band data type (" 
 			   << "array: " << GDALGetDataTypeName(src_type)
-			   << "band: " << GDALGetDataTypeName(type) << ")";
+			   << " band: " << GDALGetDataTypeName(type) << ")";
 
 			NanThrowTypeError(ss.str().c_str());
 			NanReturnUndefined();
@@ -376,9 +376,9 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	if(type == GDT_Unknown || type != band->get()->GetRasterDataType()) {
 
 		std::ostringstream ss;
-		ss << "Array type does not match band data type (src: " 
+		ss << "Array type does not match band data type (" 
 		   << "array: " << GDALGetDataTypeName(type)
-		   << "band: " << GDALGetDataTypeName(band->get()->GetRasterDataType()) << ")";
+		   << " band: " << GDALGetDataTypeName(band->get()->GetRasterDataType()) << ")";
 
 		NanThrowTypeError(ss.str().c_str());
 		NanReturnUndefined();
