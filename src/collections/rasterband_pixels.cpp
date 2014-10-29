@@ -3,6 +3,8 @@
 #include "rasterband_pixels.hpp"
 #include "../typed_array.hpp"
 
+#include <sstream>
+
 namespace node_gdal {
 
 Persistent<FunctionTemplate> RasterBandPixels::constructor;
@@ -315,8 +317,14 @@ NAN_METHOD(RasterBandPixels::readBlock)
 	if(args.Length() == 3 && !args[2]->IsUndefined() && !args[2]->IsNull()) {
 		Handle<Object> obj;
 		NODE_ARG_OBJECT(2, "data", obj);
-		if(TypedArray::Identify(obj) != type) {
-			NanThrowError("Array type does not match band data type");
+		GDALDataType src_type = TypedArray::Identify(obj);
+		if(src_type != type) {
+			std::ostringstream ss;
+			ss << "Array type does not match band data type (" 
+			   << "array: " << GDALGetDataTypeName(src_type)
+			   << "band: " << GDALGetDataTypeName(type) << ")";
+
+			NanThrowTypeError(ss.str().c_str());
 			NanReturnUndefined();
 		}
 		if(TypedArray::Length(obj) < w*h) {
@@ -366,7 +374,13 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	GDALDataType type = TypedArray::Identify(obj);
 
 	if(type == GDT_Unknown || type != band->get()->GetRasterDataType()) {
-		NanThrowError("Array type does not match band data type");
+
+		std::ostringstream ss;
+		ss << "Array type does not match band data type (src: " 
+		   << "array: " << GDALGetDataTypeName(type)
+		   << "band: " << GDALGetDataTypeName(band->get()->GetRasterDataType()) << ")";
+
+		NanThrowTypeError(ss.str().c_str());
 		NanReturnUndefined();
 	}
  	if(TypedArray::Length(obj) < w*h) {
