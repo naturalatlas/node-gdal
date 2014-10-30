@@ -13,6 +13,7 @@
 #pragma GCC diagnostic pop
 
 #include <map>
+#include <cstdlib>
 
 #include "../gdal_common.hpp"
 
@@ -21,6 +22,7 @@
 struct ObjectCacheWeakCallbackData {
 	void *key;
 	void *cache;
+	int id;
 };
 
 template <typename K>
@@ -28,6 +30,7 @@ struct ObjectCacheItem {
 	_NanWeakCallbackInfo<v8::Object, ObjectCacheWeakCallbackData> *cbinfo;
 	K *key;
 	K *alias;
+	int id; // a uniq id so that the weak callback can distinguish if the object in the cache with the given key is referring to the same object as when the persistent pointer was made
 };
 
 // a class for maintaining a map of native pointers and persistent JS handles
@@ -85,8 +88,11 @@ void ObjectCache<K, W>::cacheWeakCallback(const _NanWeakCallbackData<T, P> &data
 	// dispose of the wrapped object before the handle in the cache gets deleted by NAN
 	// but do not dispose if destructor has already been called
 	if(cache->has(key)) {
-		W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
-		wrapped->dispose();
+		//double check that the item in the cache isnt something new (meaning object was already disposed)
+		if(cache->getItem(key).id == info->id) { 
+			W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
+			wrapped->dispose();
+		}
 	}
 
 	delete info;
@@ -98,10 +104,12 @@ void ObjectCache<K, W>::add(K *key, K *alias, v8::Handle<v8::Object> obj)
 	ObjectCacheWeakCallbackData *cbdata = new ObjectCacheWeakCallbackData();
 	cbdata->cache = this;
 	cbdata->key = key;
+	cbdata->id  = rand();
 
 	ObjectCacheItem<K> item;
 	item.key    = key;
 	item.alias  = alias;
+	item.id     = cbdata->id;
 	item.cbinfo = NanMakeWeakPersistent(obj, cbdata, cacheWeakCallback);
 
 	//add it to the map
