@@ -211,6 +211,19 @@ describe('gdal.Dataset', function() {
 						ds.layers.create('layer_name', null, gdal.wkbPoint);
 					});
 				});
+				it('should accept layer creation options', function() {
+					var basename = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2);
+					var file = basename + ".dbf";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var lyr = ds.layers.create('layer_name', null, null, ['SHPT=NULL']);
+					ds.close();
+					//check if .dbf file was created
+					fs.statSync(file);
+					//make sure that .shp file wasnt created
+					assert.throws(function(){
+						fs.statSync(basename+".shp");
+					});
+				});
 				it('should throw if dataset is closed', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
