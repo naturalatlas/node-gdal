@@ -16,9 +16,16 @@
 
 #include "../gdal_common.hpp"
 
+//TODO: This could use some serious cleaning
+
+struct ObjectCacheWeakCallbackData {
+	void *key;
+	void *cache;
+};
+
 template <typename K>
 struct ObjectCacheItem {
-	_NanWeakCallbackInfo<v8::Object, K> *cbinfo;
+	_NanWeakCallbackInfo<v8::Object, ObjectCacheWeakCallbackData> *cbinfo;
 	K *key;
 	K *alias;
 };
@@ -64,27 +71,38 @@ ObjectCache<K, W>::~ObjectCache()
 {
 }
 
-
 template <typename K, typename W>
-template<typename T, typename P>                                           \
+template<typename T, typename P>
 void ObjectCache<K, W>::cacheWeakCallback(const _NanWeakCallbackData<T, P> &data)
 {
 	//called when only reference to object is weak - after object destructor is called (... or before, who knows)
+	ObjectCacheWeakCallbackData *info = (ObjectCacheWeakCallbackData*) data.GetParameter();
+	ObjectCache<K, W> *cache = (ObjectCache<K, W>*) info->cache;
+	K *key = (K*) info->key;
 
-	LOG("ObjectCache Weak Callback [%p]", data.GetParameter());
+	LOG("ObjectCache Weak Callback [%p]", key);
+	
+	// dispose of the wrapped object before the handle in the cache gets deleted by NAN
+	// but do not dispose if destructor has already been called
+	if(cache->has(key)) {
+		W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
+		wrapped->dispose();
+	}
 
-	//dispose of the wrapped object before the handle in the cache gets deleted by NAN
-	W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
-	wrapped->dispose();
+	delete info;
 }
 
 template <typename K, typename W>
 void ObjectCache<K, W>::add(K *key, K *alias, v8::Handle<v8::Object> obj)
 {
+	ObjectCacheWeakCallbackData *cbdata = new ObjectCacheWeakCallbackData();
+	cbdata->cache = this;
+	cbdata->key = key;
+
 	ObjectCacheItem<K> item;
 	item.key    = key;
 	item.alias  = alias;
-	item.cbinfo = NanMakeWeakPersistent(obj, key, cacheWeakCallback);
+	item.cbinfo = NanMakeWeakPersistent(obj, cbdata, cacheWeakCallback);
 
 	//add it to the map
 	cache[key] = item;
