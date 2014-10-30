@@ -28,7 +28,7 @@ public:
 	static Handle<Value> New(Handle<Value> layer_obj);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(toArray);
-	static NAN_METHOD(toJSON);
+	static NAN_METHOD(toObject);
 
 	static NAN_METHOD(get);
 	static NAN_METHOD(getNames);

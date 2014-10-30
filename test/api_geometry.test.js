@@ -19,6 +19,20 @@ describe('gdal.Geometry', function() {
 			});
 		});
 	});
+	describe('toObject()', function() {
+		it('should return valid result', function() {
+			var point2d = new gdal.Point(1,2);
+			assert.deepEqual(point2d.toObject(), {
+				type: 'Point',
+				coordinates: [1, 2]
+			});
+			var point3d = new gdal.Point(1,2,3);
+			assert.deepEqual(point3d.toObject(), {
+				type: 'Point',
+				coordinates: [1, 2, 3]
+			});
+		});
+	});
 	describe('toKML()', function() {
 		it('should return valid result', function() {
 			var point2d = new gdal.Point(1,2);

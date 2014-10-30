@@ -37,7 +37,7 @@ describe('Open', function() {
 				it('should be readable', function() {
 					assert.equal(layer.features.count(), 2);
 					var feature = layer.features.get(0);
-					var fields = feature.fields.toJSON();
+					var fields = feature.fields.toObject();
 
 					assert.closeTo(fields.ele, 1975.311646, 0.000001);
 					assert.deepEqual(fields.time, {

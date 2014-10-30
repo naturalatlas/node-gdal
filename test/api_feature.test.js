@@ -239,11 +239,21 @@ describe('gdal.Feature', function() {
 					});
 				});
 			});
-			describe('toJSON()', function() {
+			describe('toObject()', function() {
 				it('should return the fields as a JSON object', function(){
 					var feature = new gdal.Feature(defn);
 					feature.fields.set([5, 'test', 3.14]);
-					var obj = feature.fields.toJSON();
+					var obj = feature.fields.toObject();
+					assert.equal(obj.id, 5);
+					assert.equal(obj.name, 'test');
+					assert.closeTo(obj.value, 3.14, 0.0001);
+				});
+			});
+			describe('toJSON()', function() {
+				it('should return the fields as a stringified JSON object', function(){
+					var feature = new gdal.Feature(defn);
+					feature.fields.set([5, 'test', 3.14]);
+					var obj = JSON.parse(feature.fields.toJSON());
 					assert.equal(obj.id, 5);
 					assert.equal(obj.name, 'test');
 					assert.closeTo(obj.value, 3.14, 0.0001);

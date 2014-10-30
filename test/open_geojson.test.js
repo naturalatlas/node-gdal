@@ -37,7 +37,7 @@ describe('Open', function() {
 				it('should be readable', function() {
 					assert.equal(layer.features.count(), 1);
 					var feature = layer.features.get(0);
-					var fields = feature.fields.toJSON();
+					var fields = feature.fields.toObject();
 
 					assert.deepEqual(fields, {
 						'kind': 'county',

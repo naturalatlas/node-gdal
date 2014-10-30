@@ -16,7 +16,7 @@ void FeatureFields::Initialize(Handle<Object> target)
 	lcons->SetClassName(NanNew("FeatureFields"));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toJSON", toJSON);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "toObject", toObject);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toArray", toArray);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
@@ -263,7 +263,7 @@ NAN_METHOD(FeatureFields::indexOf)
 	NanReturnValue(NanNew<Integer>(f->get()->GetFieldIndex(name.c_str())));
 }
 
-NAN_METHOD(FeatureFields::toJSON)
+NAN_METHOD(FeatureFields::toObject)
 {
 	NanScope();
 
