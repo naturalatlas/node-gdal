@@ -57,8 +57,8 @@ public:
 	static NAN_SETTER(srsSetter);
 	static NAN_SETTER(geoTransformSetter);
 
-	static ObjectCache<GDALDataset>   dataset_cache;
-	static ObjectCache<OGRDataSource> datasource_cache;
+	static ObjectCache<GDALDataset, Dataset>   dataset_cache;
+	static ObjectCache<OGRDataSource, Dataset> datasource_cache;
 
 	Dataset(GDALDataset *ds);
 	Dataset(OGRDataSource *ds);

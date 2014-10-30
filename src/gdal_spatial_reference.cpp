@@ -5,7 +5,7 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> SpatialReference::constructor;
-ObjectCache<OGRSpatialReference> SpatialReference::cache;
+ObjectCache<OGRSpatialReference, SpatialReference> SpatialReference::cache;
 
 void SpatialReference::Initialize(Handle<Object> target)
 {

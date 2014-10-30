@@ -7,8 +7,8 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> Driver::constructor;
-ObjectCache<GDALDriver> Driver::cache;
-ObjectCache<OGRSFDriver> Driver::cache_ogr;
+ObjectCache<GDALDriver, Driver> Driver::cache;
+ObjectCache<OGRSFDriver, Driver> Driver::cache_ogr;
 
 void Driver::Initialize(Handle<Object> target)
 {
@@ -53,6 +53,11 @@ Driver::Driver()
 
 Driver::~Driver()
 {
+	dispose();
+}
+
+void Driver::dispose()
+{
 	if(uses_ogr) {
 		if(this_ogrdriver) {
 			LOG("Disposing OGR Driver [%p]", this_ogrdriver);
@@ -68,7 +73,6 @@ Driver::~Driver()
 			this_gdaldriver = NULL;
 		}
 	}
-
 }
 
 NAN_METHOD(Driver::New)

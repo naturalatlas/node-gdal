@@ -220,7 +220,7 @@ NAN_METHOD(DatasetLayers::copy)
 
 	NODE_ARG_WRAPPED(0, "layer to copy", Layer, layer_to_copy);
 	NODE_ARG_STR(1, "new layer name", new_name);
-	if(args.Length() > 2 && options.parse(args[2])){	
+	if(args.Length() > 2 && options.parse(args[2])){
 		NanReturnUndefined(); //error parsing string list
 	}
 

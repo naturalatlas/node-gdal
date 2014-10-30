@@ -67,7 +67,7 @@ public:
 	static NAN_METHOD(fromURL);
 	static NAN_METHOD(fromMICoordSys);
 
-	static ObjectCache<OGRSpatialReference> cache;
+	static ObjectCache<OGRSpatialReference, SpatialReference> cache;
 
 	SpatialReference();
 	SpatialReference(OGRSpatialReference *srs);

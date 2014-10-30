@@ -66,7 +66,8 @@ NAN_METHOD(CoordinateTransformation::New)
 		NODE_ARG_WRAPPED(1, "target", SpatialReference, target);
 		OGRCoordinateTransformation * transform = OGRCreateCoordinateTransformation(source->get(), target->get());
 		if (!transform) {
-			return NODE_THROW_LAST_CPLERR();
+			NODE_THROW_LAST_CPLERR();
+			NanReturnUndefined();
 		}
 		f = new CoordinateTransformation(transform);
 	}

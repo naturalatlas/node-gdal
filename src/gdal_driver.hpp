@@ -43,8 +43,8 @@ public:
 	static NAN_METHOD(copyFiles);
 	static NAN_METHOD(getMetadata);
 
-	static ObjectCache<GDALDriver>  cache;
-	static ObjectCache<OGRSFDriver> cache_ogr;
+	static ObjectCache<GDALDriver, Driver>  cache;
+	static ObjectCache<OGRSFDriver, Driver> cache_ogr;
 
 	static NAN_GETTER(descriptionGetter);
 
@@ -57,6 +57,7 @@ public:
 	inline OGRSFDriver *getOGRSFDriver() {
 		return this_ogrdriver;
 	}
+	void dispose();
 
 	bool uses_ogr;
 private:

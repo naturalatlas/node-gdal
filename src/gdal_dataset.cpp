@@ -12,8 +12,8 @@
 namespace node_gdal {
 
 Persistent<FunctionTemplate> Dataset::constructor;
-ObjectCache<GDALDataset> Dataset::dataset_cache;
-ObjectCache<OGRDataSource> Dataset::datasource_cache;
+ObjectCache<GDALDataset, Dataset> Dataset::dataset_cache;
+ObjectCache<OGRDataSource, Dataset> Dataset::datasource_cache;
 
 void Dataset::Initialize(Handle<Object> target)
 {

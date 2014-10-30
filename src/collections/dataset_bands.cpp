@@ -122,7 +122,6 @@ NAN_METHOD(DatasetBands::create)
 	}
 
 	GDALDataType type;
-	Handle<Array> band_options = NanNew<Array>(0);
 	StringList options;
 
 	//NODE_ARG_ENUM(0, "data type", GDALDataType, type);
