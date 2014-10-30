@@ -40,7 +40,9 @@ install:
   # build with/without logging depending on if we're pushing a binary
   - IF NOT "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2013 --shared_gdal=c:/projects/node-gdal/libs/)
   - IF "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2013 --shared_gdal=c:/projects/node-gdal/libs/ --enable-logging=true)
-  - npm test
+  - npm test || SET HAD_ERROR=1
+  - IF "%ENABLE_LOGGING%" == "1" (appveyor PushArtifact test/artifacts/log.txt)
+  - IF DEFINED HAD_ERROR (EXIT /B 1)
   - node_modules\.bin\node-pre-gyp package
   - ECHO commit message %CM%
   - ECHO pull request %APPVEYOR_PULL_REQUEST_NUMBER%
