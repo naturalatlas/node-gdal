@@ -281,7 +281,12 @@ NAN_METHOD(SpatialReference::exportToProj4)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	result = SafeString::New(str);
+
+	if(str){
+		result = NanNew(CPLString(str).Trim().c_str());
+	} else {
+		result = NanNull();
+	}
 	CPLFree(str);
 
 	NanReturnValue(result);

@@ -87,4 +87,10 @@ describe('gdal.SpatialReference', function() {
 			assert.instanceOf(ref, gdal.SpatialReference);
 		});
 	});
+	describe('toProj4', function() {
+		it('should return string', function() {
+			var srs = gdal.SpatialReference.fromUserInput('NAD83');
+			assert.equal(srs.toProj4(), '+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs');
+		});
+	});
 });
