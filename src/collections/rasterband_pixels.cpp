@@ -126,7 +126,7 @@ NAN_METHOD(RasterBandPixels::set)
 		NanReturnUndefined();
 	}
 
-	NanReturnValue(NanUndefined());
+	NanReturnUndefined();
 }
 
 NAN_METHOD(RasterBandPixels::read)
@@ -147,7 +147,7 @@ NAN_METHOD(RasterBandPixels::read)
 	int size, length, min_size, min_length;
 	void *data;
 	Handle<Value>  array;
-	Handle<Object> passed_array;
+	Handle<Object> obj;
 	GDALDataType type;
 
 
@@ -169,8 +169,8 @@ NAN_METHOD(RasterBandPixels::read)
 	}
 
 	if(args.Length() >= 5 && !args[4]->IsUndefined() && !args[4]->IsNull()) {
-		NODE_ARG_OBJECT(4, "data", passed_array);
-		type = TypedArray::Identify(passed_array);
+		NODE_ARG_OBJECT(4, "data", obj);
+		type = TypedArray::Identify(obj);
 		if(type == GDT_Unknown) {
 			NanThrowError("Invalid array");
 			NanReturnUndefined();
@@ -198,19 +198,17 @@ NAN_METHOD(RasterBandPixels::read)
 	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
 
 	//create array if no array was passed
-	if(passed_array.IsEmpty()){
+	if(obj.IsEmpty()){
 		array = TypedArray::New(type, length);
 		if(array.IsEmpty() || !array->IsObject()) {
 			NanReturnUndefined(); //TypedArray::New threw an error
 		}
-		data = TypedArray::Data(array.As<Object>());
-	} else {
-		array = passed_array;
-		if(TypedArray::Length(passed_array) < min_length) {
- 			NanThrowError("Invalid array length");
-			NanReturnUndefined();
- 		}
- 		data = TypedArray::Data(passed_array);
+		obj = array.As<Object>();
+	} 
+
+	data = TypedArray::Validate(obj, type, min_length);
+	if(!data) {
+		NanReturnUndefined(); //TypedArray::Validate threw an error
 	}
 
 	CPLErr err = band->get()->RasterIO(GF_Read, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
@@ -219,7 +217,7 @@ NAN_METHOD(RasterBandPixels::read)
 		NanReturnUndefined();
 	}
 
-	NanReturnValue(array);
+	NanReturnValue(obj);
 }
 
 NAN_METHOD(RasterBandPixels::write)
@@ -277,12 +275,11 @@ NAN_METHOD(RasterBandPixels::write)
 		NanThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
 		NanReturnUndefined();
 	}
-	if(TypedArray::Length(passed_array) < min_length) {
-		NanThrowError("Invalid array length");
-		NanReturnUndefined();
-	}
 
-	data = TypedArray::Data(passed_array);
+	data = TypedArray::Validate(passed_array, type, min_length);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
 
 	CPLErr err = band->get()->RasterIO(GF_Write, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) {
@@ -290,7 +287,7 @@ NAN_METHOD(RasterBandPixels::write)
 		NanReturnUndefined();
 	}
 
-	NanReturnValue(NanUndefined());
+	NanReturnUndefined();
 }
 
 NAN_METHOD(RasterBandPixels::readBlock)
@@ -313,33 +310,24 @@ NAN_METHOD(RasterBandPixels::readBlock)
 	GDALDataType type = band->get()->GetRasterDataType();
 
 	Handle<Value> array;
+	Handle<Object> obj;
 
 	if(args.Length() == 3 && !args[2]->IsUndefined() && !args[2]->IsNull()) {
-		Handle<Object> obj;
 		NODE_ARG_OBJECT(2, "data", obj);
-		GDALDataType src_type = TypedArray::Identify(obj);
-		if(src_type != type) {
-			std::ostringstream ss;
-			ss << "Array type does not match band data type (" 
-			   << "array: " << GDALGetDataTypeName(src_type)
-			   << " band: " << GDALGetDataTypeName(type) << ")";
-
-			NanThrowTypeError(ss.str().c_str());
-			NanReturnUndefined();
-		}
-		if(TypedArray::Length(obj) < w*h) {
- 			NanThrowError("Array length must be greater than or equal to blockSize.x * blockSize.y");
-			NanReturnUndefined();
- 		}
  		array = obj;
 	} else {
 		array = TypedArray::New(type, w * h);
 		if(array.IsEmpty() || !array->IsObject()) {
 			NanReturnUndefined(); //TypedArray::New threw an error
 		}
+		obj = array.As<Object>();
 	}
 
-	void* data = TypedArray::Data(array.As<Object>());
+
+	void* data = TypedArray::Validate(obj, type, w*h);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
 
 	CPLErr err = band->get()->ReadBlock(x, y, data);
 	if(err) {
@@ -371,41 +359,20 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	Handle<Object> obj;
 	NODE_ARG_OBJECT(2, "data", obj);
 
-	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
-		NanThrowError("Object has no external array data");
-		NanReturnUndefined();
+	// validate array
+	void* data = TypedArray::Validate(obj, band->get()->GetRasterDataType(), w*h);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
 	}
-
-	GDALDataType type = TypedArray::Identify(obj);
-
-	if(type == GDT_Unknown || type != band->get()->GetRasterDataType()) {
-
-		std::ostringstream ss;
-		ss << "Array type does not match band data type (" 
-		   << "array: " << GDALGetDataTypeName(type)
-		   << " band: " << GDALGetDataTypeName(band->get()->GetRasterDataType()) << ")";
-
-		NanThrowTypeError(ss.str().c_str());
-		NanReturnUndefined();
-	}
- 	if(TypedArray::Length(obj) < w*h) {
-		std::ostringstream ss;
-		ss << "Array length must be greater than or equal to blockSize.x * blockSize.y" 
-		   << " (length = " << TypedArray::Length(obj) << ")";
-
-		NanThrowError(ss.str().c_str());
-		NanReturnUndefined();
- 	}
-
-	void* data = TypedArray::Data(obj);
 
 	CPLErr err = band->get()->WriteBlock(x, y, data);
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
 	}
 
-	NanReturnValue(NanUndefined());
+	NanReturnUndefined();
 }
 
 

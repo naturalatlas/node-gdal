@@ -549,7 +549,7 @@ describe('gdal.RasterBand', function() {
 									buffer_width: 10,
 									buffer_height: 15
 								});
-							}, /Invalid array length/);
+							}, /Array length must be greater than.*/);
 						});
 					});
 					describe('"type"', function(){
@@ -618,7 +618,7 @@ describe('gdal.RasterBand', function() {
 							red.pixels.read(0, 0, w, h, interleaved, read_options);
 							assert.throws(function(){
 								blue.pixels.read(0,0,w,h,interleaved.subarray(2), read_options);
-							}, /Invalid array length/)
+							}, /Array length must be greater than.*/)
 						});
 					});
 					it('should throw an error if region is out of bounds', function() {
