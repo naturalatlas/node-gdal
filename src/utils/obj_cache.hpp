@@ -14,7 +14,7 @@
 
 #include <map>
 
-#include "gdal_common.hpp"
+#include "../gdal_common.hpp"
 
 NAN_WEAK_CALLBACK(cacheWeakCallback)
 {

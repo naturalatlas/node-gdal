@@ -13,7 +13,7 @@
 
 // ogr
 #include <ogrsf_frmts.h>
-#include "obj_cache.hpp"
+#include "utils/obj_cache.hpp"
 
 using namespace v8;
 using namespace node;

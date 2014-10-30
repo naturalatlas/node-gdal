@@ -14,7 +14,7 @@
 // gdal
 #include <gdal_priv.h>
 
-#include "obj_cache.hpp"
+#include "utils/obj_cache.hpp"
 #include "gdal_dataset.hpp"
 
 using namespace v8;

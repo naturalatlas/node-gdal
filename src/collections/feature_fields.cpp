@@ -1,6 +1,6 @@
 #include "../gdal_common.hpp"
 #include "../gdal_feature.hpp"
-#include "../fast_buffer.hpp"
+#include "../utils/fast_buffer.hpp"
 #include "feature_fields.hpp"
 
 namespace node_gdal {

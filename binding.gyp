@@ -12,8 +12,9 @@
 			"product_prefix": "",
 			"product_extension": "node",
 			"sources": [
-				"src/fast_buffer.cpp",
-				"src/typed_array.cpp",
+				"src/utils/fast_buffer.cpp",
+				"src/utils/typed_array.cpp",
+				"src/utils/string_list.cpp",
 				"src/node_gdal.cpp",
 				"src/gdal_common.cpp",
 				"src/gdal_dataset.cpp",

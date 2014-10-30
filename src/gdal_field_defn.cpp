@@ -1,7 +1,7 @@
 
 #include "gdal_common.hpp"
 #include "gdal_field_defn.hpp"
-#include "field_types.hpp"
+#include "utils/field_types.hpp"
 
 namespace node_gdal {
 

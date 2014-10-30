@@ -12,7 +12,7 @@
 #include "gdal_multilinestring.hpp"
 #include "gdal_multipolygon.hpp"
 
-#include "fast_buffer.hpp"
+#include "utils/fast_buffer.hpp"
 
 #include <node_buffer.h>
 #include <sstream>

@@ -3,6 +3,7 @@
 #include "../gdal_layer.hpp"
 #include "../gdal_spatial_reference.hpp"
 #include "dataset_layers.hpp"
+#include "../utils/string_list.hpp"
 
 namespace node_gdal {
 
@@ -142,25 +143,13 @@ NAN_METHOD(DatasetLayers::create)
 	std::string layer_name;
 	SpatialReference *spatial_ref = NULL;
 	OGRwkbGeometryType geom_type = wkbUnknown;
-	Handle<Array> layer_options = NanNew<Array>(0);
+	StringList options;
 
 	NODE_ARG_STR(0, "layer name", layer_name);
 	NODE_ARG_WRAPPED_OPT(1, "spatial reference", SpatialReference, spatial_ref);
 	NODE_ARG_ENUM_OPT(2, "geometry type", OGRwkbGeometryType, geom_type);
-	NODE_ARG_ARRAY_OPT(3, "layer creation options", layer_options);
-
-	char **options = NULL;
-	std::string *options_str = NULL;
-
-	if (layer_options->Length() > 0) {
-		unsigned int i = 0;
-		options = new char* [layer_options->Length() + 1];
-		options_str = new std::string [layer_options->Length()];
-		for (i = 0; i < layer_options->Length(); ++i) {
-			options_str[i] = *NanUtf8String(layer_options->Get(i));
-			options[i] = (char*) options_str[i].c_str();
-		}
-		options[i] = NULL;
+	if(args.Length() > 3 && options.parse(args[3])){	
+		NanReturnUndefined(); //error parsing string list
 	}
 
 	OGRSpatialReference *srs = NULL;
@@ -169,10 +158,7 @@ NAN_METHOD(DatasetLayers::create)
 	OGRLayer *layer = raw->CreateLayer(layer_name.c_str(),
 					  srs,
 					  geom_type,
-					  options);
-
-	if(options)	    delete [] options;
-	if(options_str)	delete [] options_str;
+					  options.get());
 
 	if (layer) {
 		NanReturnValue(Layer::New(layer, raw, false));
@@ -230,32 +216,17 @@ NAN_METHOD(DatasetLayers::copy)
 
 	Layer *layer_to_copy;
 	std::string new_name = "";
-	Handle<Array> layer_options = NanNew<Array>(0);
+	StringList options;
 
 	NODE_ARG_WRAPPED(0, "layer to copy", Layer, layer_to_copy);
 	NODE_ARG_STR(1, "new layer name", new_name);
-	NODE_ARG_ARRAY_OPT(2, "layer creation options", layer_options);
-
-	char **options = NULL;
-	std::string *options_str = NULL;
-
-	if (layer_options->Length() > 0) {
-		unsigned int i;
-		options = new char* [layer_options->Length() + 1];
-		options_str = new std::string [layer_options->Length()];
-		for (i = 0; i < layer_options->Length(); ++i) {
-			options_str[i] = *NanUtf8String(layer_options->Get(i));
-			options[i] = (char*) options_str[i].c_str();
-		}
-		options[i] = NULL;
+	if(args.Length() > 2 && options.parse(args[2])){	
+		NanReturnUndefined(); //error parsing string list
 	}
 
 	OGRLayer *layer = raw->CopyLayer(layer_to_copy->get(),
 										   new_name.c_str(),
-										   options);
-
-	if (options) delete [] options;
-	if (options_str) delete [] options_str;
+										   options.get());
 
 	if (layer) {
 		NanReturnValue(Layer::New(layer, raw));

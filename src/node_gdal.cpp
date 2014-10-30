@@ -36,7 +36,7 @@
 #include "gdal_geometry.hpp"
 
 #include "gdal.hpp"
-#include "field_types.hpp"
+#include "utils/field_types.hpp"
 
 //collections
 #include "collections/dataset_bands.hpp"

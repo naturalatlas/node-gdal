@@ -1,7 +1,7 @@
 #include "../gdal_common.hpp"
 #include "../gdal_rasterband.hpp"
 #include "rasterband_pixels.hpp"
-#include "../typed_array.hpp"
+#include "../utils/typed_array.hpp"
 
 #include <sstream>
 

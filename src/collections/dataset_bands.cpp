@@ -2,6 +2,7 @@
 #include "../gdal_dataset.hpp"
 #include "../gdal_rasterband.hpp"
 #include "dataset_bands.hpp"
+#include "../utils/string_list.hpp"
 
 namespace node_gdal {
 
@@ -122,8 +123,7 @@ NAN_METHOD(DatasetBands::create)
 
 	GDALDataType type;
 	Handle<Array> band_options = NanNew<Array>(0);
-	char **options = NULL;
-	std::string *options_str = NULL;
+	StringList options;
 
 	//NODE_ARG_ENUM(0, "data type", GDALDataType, type);
 	if(args.Length() < 1) {
@@ -140,21 +140,11 @@ NAN_METHOD(DatasetBands::create)
 		NanReturnUndefined();
 	}
 
-	NODE_ARG_ARRAY_OPT(1, "band creation options", band_options);
-
-	if (band_options->Length() > 0) {
-		options     = new char* [band_options->Length()];
-		options_str = new std::string [band_options->Length()];
-		for (unsigned int i = 0; i < band_options->Length(); ++i) {
-			options_str[i] = *NanUtf8String(band_options->Get(i));
-			options[i] = (char*) options_str[i].c_str();
-		}
+	if(args.Length() > 1 && options.parse(args[1])){
+		NanReturnUndefined(); //error parsing creation options
 	}
 
-	CPLErr err = raw->AddBand(type, options);
-
-	if(options)	    delete [] options;
-	if(options_str)	delete [] options_str;
+	CPLErr err = raw->AddBand(type, options.get());
 	
 	if(err) {
 		NODE_THROW_CPLERR(err);

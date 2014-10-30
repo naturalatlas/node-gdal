@@ -1,4 +1,3 @@
-#include "gdal_common.hpp"
 #include "typed_array.hpp"
 
 #include <sstream>

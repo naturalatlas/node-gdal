@@ -2,6 +2,7 @@
 #include "gdal_majorobject.hpp"
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
+#include "utils/string_list.hpp"
 
 namespace node_gdal {
 
@@ -179,47 +180,33 @@ NAN_METHOD(Driver::create)
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
 	std::string filename;
-	unsigned int i, x_size = 0, y_size = 0, n_bands = 1;
+	unsigned int x_size = 0, y_size = 0, n_bands = 1;
 	GDALDataType type = GDT_Byte;
 	std::string type_name = "";
-	Handle<Array> creation_options = NanNew<Array>(0);
-
+	StringList options;
 
 	NODE_ARG_STR(0, "filename", filename);
 	
 	if(args.Length() < 3){
-		NODE_ARG_ARRAY_OPT(1, "creation options", creation_options);
+		if(args.Length() > 1 && options.parse(args[1])){
+			NanReturnUndefined(); //error parsing string list
+		}
 	} else {
 		NODE_ARG_INT(1, "x size", x_size);
 		NODE_ARG_INT(2, "y size", y_size);
 		NODE_ARG_INT_OPT(3, "number of bands", n_bands);
 		NODE_ARG_OPT_STR(4, "data type", type_name);
-		NODE_ARG_ARRAY_OPT(5, "creation options", creation_options);	
+		if(args.Length() > 5 && options.parse(args[5])){
+			NanReturnUndefined(); //error parsing string list
+		}
 		if(!type_name.empty()) {
 			type = GDALGetDataTypeByName(type_name.c_str());
 		}
 	}
 
-	char **options = NULL;
-	std::string *options_str;
-	if (creation_options->Length() > 0) {
-		options = new char* [creation_options->Length() + 1];
-		options_str = new std::string [creation_options->Length()];
-		for (i = 0; i < creation_options->Length(); ++i) {
-			options_str[i] = *NanUtf8String(creation_options->Get(i));
-			options[i]     = (char*) options_str[i].c_str();
-		}
-		options[i] = NULL;
-	}
-
 	if(driver->uses_ogr){
 		OGRSFDriver *raw = driver->getOGRSFDriver();
-		OGRDataSource *ds = raw->CreateDataSource(filename.c_str(), options);
-
-		if (options) {
-			delete [] options;
-			delete [] options_str;
-		}
+		OGRDataSource *ds = raw->CreateDataSource(filename.c_str(), options.get());
 
 		if (!ds) {
 			NanThrowError("Error creating dataset");
@@ -229,12 +216,7 @@ NAN_METHOD(Driver::create)
 		NanReturnValue(Dataset::New(ds));
 	} else {
 		GDALDriver *raw = driver->getGDALDriver();
-		GDALDataset* ds = raw->Create(filename.c_str(), x_size, y_size, n_bands, type, options);
-
-		if (options) {
-			delete [] options;
-			delete [] options_str;
-		}
+		GDALDataset* ds = raw->Create(filename.c_str(), x_size, y_size, n_bands, type, options.get());
 
 		if (!ds) {
 			NanThrowError("Error creating dataset");
@@ -252,8 +234,8 @@ NAN_METHOD(Driver::createCopy)
 
 	std::string filename;
 	Dataset* src_dataset;
-	unsigned int i, strict = 0;
-	Handle<Array> creation_options = NanNew<Array>(0);
+	unsigned int strict = 0;
+	StringList options;
 
 	NODE_ARG_STR(0, "filename", filename);
 
@@ -269,19 +251,9 @@ NAN_METHOD(Driver::createCopy)
 		NanReturnUndefined();
 	}	
 
-	NODE_ARG_ARRAY_OPT(2, "dataset creation options", creation_options);
 
-	char **options = NULL;
-	std::string *options_str = NULL;
-
-	if (creation_options->Length() > 0) {
-		options = new char* [creation_options->Length()+1];
-		options_str = new std::string [creation_options->Length()];
-		for (i = 0; i < creation_options->Length(); ++i) {
-			options_str[i] = *NanUtf8String(creation_options->Get(i));
-			options[i]     = (char*) options_str[i].c_str();
-		}
-		options[i] = NULL;
+	if(args.Length() > 2 && options.parse(args[2])){
+		NanReturnUndefined(); //error parsing string list
 	}
 
 	if (driver->uses_ogr) {
@@ -296,10 +268,7 @@ NAN_METHOD(Driver::createCopy)
 			NanReturnUndefined();
 		}
 
-		OGRDataSource *ds = raw->CopyDataSource(raw_ds, filename.c_str(), options);
-
-		if(options)	    delete [] options;
-		if(options_str)	delete [] options_str;
+		OGRDataSource *ds = raw->CopyDataSource(raw_ds, filename.c_str(), options.get());
 
 		if (!ds) {
 			NanThrowError("Error copying dataset.");
@@ -318,10 +287,7 @@ NAN_METHOD(Driver::createCopy)
 			NanThrowError("Dataset object has already been destroyed");
 			NanReturnUndefined();
 		}
-		GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options, NULL, NULL);
-
-		if(options)	    delete [] options;
-		if(options_str)	delete [] options_str;
+		GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
 
 		if (!ds) {
 			NanThrowError("Error copying dataset");
