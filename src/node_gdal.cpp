@@ -18,6 +18,7 @@
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
+#include "gdal_warper.hpp"
 
 #include "gdal_layer.hpp"
 #include "gdal_feature_defn.hpp"
@@ -121,6 +122,8 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, "setConfigOption", setConfigOption);
 			NODE_SET_METHOD(target, "getConfigOption", getConfigOption);
 			NODE_SET_METHOD(target, "decToDMS", decToDMS);
+
+			Warper::Initialize(target);
 
 			MajorObject::Initialize(target);
 			Driver::Initialize(target);
@@ -299,6 +302,14 @@ namespace node_gdal {
 			target->Set(NanNew("OFTDate"), NanNew(getFieldTypeName(OFTDate)));
 			target->Set(NanNew("OFTTime"), NanNew(getFieldTypeName(OFTTime)));
 			target->Set(NanNew("OFTDateTime"), NanNew(getFieldTypeName(OFTDateTime)));
+
+			target->Set(NanNew("GRA_NearestNeighbor"), NanNew("NearestNeighbor"));
+			target->Set(NanNew("GRA_Bilinear"), NanNew("Bilinear"));
+			target->Set(NanNew("GRA_Cubic"), NanNew("Cubic"));
+			target->Set(NanNew("GRA_CubicSpline"), NanNew("CubicSpline"));
+			target->Set(NanNew("GRA_Lanczos"), NanNew("Lanczos"));
+			target->Set(NanNew("GRA_Average"), NanNew("Average"));
+			target->Set(NanNew("GRA_Mode"), NanNew("Mode"));
 
 			target->Set(NanNew("version"), NanNew(GDAL_RELEASE_NAME));
 

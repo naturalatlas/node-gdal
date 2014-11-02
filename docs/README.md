@@ -8,6 +8,19 @@
 - `verbose()` : void
 - `decToDMS(number angle, string axis, int precision = 2)` : string
     + axis: `'lat'` or `'long'`
+- `reprojectImage(object options)`
+	+ src: [Dataset](dataset.md) *(required)*
+	+ dst: [Dataset](dataset.md) *(required)*
+	+ s_srs: [SpatialReference](spatialreference.md)
+	+ t_srs: [SpatialReference](spatialreference.md)
+	+ cutline: [Geometry](geometry.md)
+	+ blend: Number
+	+ srcBands: int[]
+	+ dstBands: int[]
+	+ srcAlphaBand: int
+	+ dstAlphaBand: int
+	+ srcNodata: Number
+	+ dstNodata: Number
 
 #### Configuration
 

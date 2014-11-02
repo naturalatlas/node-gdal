@@ -3,6 +3,8 @@
 #### Constructor
 
 - `CoordinateTransformation(SpatialReference source, SpatialReference target)`
+- `CoordinateTransformation(SpatialReference source, Dataset target)`
+	+ *converts to pixel coordinates*
 
 #### Methods
 

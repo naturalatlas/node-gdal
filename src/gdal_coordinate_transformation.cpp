@@ -2,6 +2,7 @@
 #include "gdal_common.hpp"
 #include "gdal_spatial_reference.hpp"
 #include "gdal_coordinate_transformation.hpp"
+#include "gdal_dataset.hpp"
 
 namespace node_gdal {
 
@@ -50,6 +51,7 @@ NAN_METHOD(CoordinateTransformation::New)
 {
 	NanScope();
 	CoordinateTransformation *f;
+	SpatialReference *source, *target;
 
 	if (!args.IsConstructCall()) {
 		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
@@ -61,15 +63,71 @@ NAN_METHOD(CoordinateTransformation::New)
 		void* ptr = ext->Value();
 		f =  static_cast<CoordinateTransformation *>(ptr);
 	} else {
-		SpatialReference *source, *target;
-		NODE_ARG_WRAPPED(0, "source", SpatialReference, source);
-		NODE_ARG_WRAPPED(1, "target", SpatialReference, target);
-		OGRCoordinateTransformation * transform = OGRCreateCoordinateTransformation(source->get(), target->get());
-		if (!transform) {
-			NODE_THROW_LAST_CPLERR();
+		if(args.Length() < 2) {
+			NanThrowError("Invalid number of arguments");
 			NanReturnUndefined();
 		}
-		f = new CoordinateTransformation(transform);
+
+		NODE_ARG_WRAPPED(0, "source", SpatialReference, source);
+
+		if(!args[1]->IsObject() || args[1]->IsNull()){
+			NanThrowTypeError("target must be a SpatialReference or Dataset object");
+			NanReturnUndefined();
+		}
+		if(NanHasInstance(SpatialReference::constructor, args[1])) {
+			// srs -> srs
+			NODE_ARG_WRAPPED(1, "target", SpatialReference, target);
+
+			OGRCoordinateTransformation * transform = OGRCreateCoordinateTransformation(source->get(), target->get());
+			if (!transform) {
+				NODE_THROW_LAST_CPLERR();
+				NanReturnUndefined();
+			}
+			f = new CoordinateTransformation(transform);
+		} else if(NanHasInstance(Dataset::constructor, args[1])) {
+			// srs -> px/line
+			// todo: allow additional options using StringList
+			
+			Dataset *ds;
+			char** papszTO = NULL;
+			char* src_wkt;
+
+			ds = ObjectWrap::Unwrap<Dataset>(args[1].As<Object>());
+
+			if(!ds->getDataset()){
+				if(ds->getDatasource()){
+					NanThrowError("Only raster datasets can be used to create geotransform coordinate transformations");
+					NanReturnUndefined();
+				} else {
+					NanThrowError("Dataset already closed");
+					NanReturnUndefined();
+				}
+			}
+
+			OGRErr err = source->get()->exportToWkt(&src_wkt);
+			if(err) {
+				NODE_THROW_OGRERR(err);
+				NanReturnUndefined();
+			}
+
+			papszTO = CSLSetNameValue( papszTO, "DST_SRS", src_wkt );
+			papszTO = CSLSetNameValue( papszTO, "INSERT_CENTER_LONG", "FALSE" );
+
+			GeoTransformTransformer* transform = new GeoTransformTransformer();
+			transform->hSrcImageTransformer = GDALCreateGenImgProjTransformer2( ds->getDataset(), NULL, papszTO );
+			if(!transform->hSrcImageTransformer){
+				NODE_THROW_LAST_CPLERR();
+				NanReturnUndefined();
+			}
+
+			f = new CoordinateTransformation(transform);
+
+			CPLFree(src_wkt);
+			CSLDestroy(papszTO);
+		} else {
+			NanThrowTypeError("target must be a SpatialReference or Dataset object");
+			NanReturnUndefined();
+		}
 	}
 
 	f->Wrap(args.This());
