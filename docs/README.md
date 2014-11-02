@@ -13,6 +13,7 @@
 	+ dst: [Dataset](dataset.md) *(required)*
 	+ s_srs: [SpatialReference](spatialreference.md)
 	+ t_srs: [SpatialReference](spatialreference.md)
+	+ r: string *(resampling method)*
 	+ cutline: [Geometry](geometry.md)
 	+ blend: Number
 	+ srcBands: int[]

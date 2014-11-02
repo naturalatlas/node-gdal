@@ -89,8 +89,8 @@ int WarpOptions::parse(Handle<Value> value)
 			NanThrowTypeError("memoryLimit property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("resampleAlg"))){
-		prop = obj->Get(NanNew("resampleAlg"));
+	if(obj->HasOwnProperty(NanNew("r"))){
+		prop = obj->Get(NanNew("r"));
 		if(parseResamplingAlg(prop)){
 			return 1; //error parsing resampling algorithm
 		}
