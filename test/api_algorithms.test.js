@@ -138,9 +138,10 @@ describe('gdal', function() {
 
 			for (var x = 0; x < w; x++) {
 				for (var y = 0; y < h; y++) {
-					band.pixels.set(x,y, Math.random()*255);
+					band.pixels.set(x,y,(x*h+y)%255);
 				}
 			}
+			band.pixels.set(4, 4, 25);
 			var a = gdal.checksumImage(band);
 			band.pixels.set(4, 4, 93);
 			var b = gdal.checksumImage(band);
