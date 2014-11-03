@@ -19,6 +19,7 @@
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
 #include "gdal_warper.hpp"
+#include "gdal_algorithms.hpp"
 
 #include "gdal_layer.hpp"
 #include "gdal_feature_defn.hpp"
@@ -124,6 +125,7 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, "decToDMS", decToDMS);
 
 			Warper::Initialize(target);
+			Algorithms::Initialize(target);
 
 			MajorObject::Initialize(target);
 			Driver::Initialize(target);

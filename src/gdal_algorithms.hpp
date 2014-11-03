@@ -1,5 +1,5 @@
-#ifndef __GDAL_WARPER_H__
-#define __GDAL_WARPER_H__
+#ifndef __GDAL_ALGORITHMS_H__
+#define __GDAL_ALGORITHMS_H__
 
 // node
 #include <node.h>
@@ -13,6 +13,7 @@
 
 // gdal
 #include <gdal_priv.h>
+#include <gdal_alg.h>
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -22,18 +23,21 @@ using namespace node;
 
 
 /**
- * Methods and classes from gdalwarper.h
+ * Methods from gdal_alg.h
  *
- * http://www.gdal.org/gdalwarper_8h.html
+ * http://www.gdal.org/gdal__alg_8h.html
  */
 
 namespace node_gdal {
-namespace Warper {
+namespace Algorithms {
 
 	void Initialize(Handle<Object> target);
 
-	NAN_METHOD(reprojectImage);
-
+	NAN_METHOD(fillNodata);
+	NAN_METHOD(contourGenerate);
+	NAN_METHOD(sieveFilter);
+	NAN_METHOD(checksumImage);
+	NAN_METHOD(polygonize);
 }
 }
 

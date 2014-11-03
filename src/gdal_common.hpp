@@ -96,6 +96,20 @@ NAN_SETTER(READ_ONLY_SETTER);
   var = val->NumberValue();                                                                               \
 }
 
+#define NODE_INT_FROM_OBJ(obj, key, var)                                                                  \
+{                                                                                                         \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (!obj->HasOwnProperty(sym)){                                                                         \
+     NanThrowError("Object must contain property \"" key "\""); NanReturnUndefined();                     \
+  }                                                                                                       \
+  Local<Value> val = obj->Get(sym);                                                                       \
+  if (!val->IsNumber()){                                                                                  \
+    NanThrowTypeError("Property \"" key "\" must be a number");                                           \
+    NanReturnUndefined();                                                                                 \
+  }                                                                                                       \
+  var = val->Int32Value();                                                                                \
+}
+
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
   Local<String> sym = NanNew(key);                                                                        \
@@ -110,6 +124,42 @@ NAN_SETTER(READ_ONLY_SETTER);
   var = *NanUtf8String(val);                                                                              \
 }
 
+#define NODE_WRAPPED_FROM_OBJ(obj, key, type, var)                                                        \
+{                                                                                                         \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (!obj->HasOwnProperty(sym)){                                                                         \
+     NanThrowError("Object must contain property \"" key "\""); NanReturnUndefined();                     \
+  }                                                                                                       \
+  Local<Value> val = obj->Get(sym);                                                                       \
+  if (!val->IsObject() || val->IsNull() || !NanHasInstance(type::constructor, val)) {                     \
+      NanThrowTypeError("Property \"" key "\" must be a " #type " object");                               \
+      NanReturnUndefined();                                                                               \
+  }                                                                                                       \
+  var = ObjectWrap::Unwrap<type>(val.As<Object>());                                                       \
+  if(!var->get()) {                                                                                       \
+      NanThrowError(key ": " #type " object has already been destroyed");                                 \
+      NanReturnUndefined();                                                                               \
+  }                                                                                                       \
+}
+
+#define NODE_WRAPPED_FROM_OBJ_OPT(obj, key, type, var)                                                    \
+{                                                                                                         \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (obj->HasOwnProperty(sym)){                                                                          \
+    Local<Value> val = obj->Get(sym);                                                                     \
+    if(val->IsObject() && NanHasInstance(type::constructor, val)){                                        \
+      var = ObjectWrap::Unwrap<type>(val.As<Object>());                                                   \
+      if(!var->get()) {                                                                                   \
+          NanThrowError(key ": " #type " object has already been destroyed");                             \
+          NanReturnUndefined();                                                                           \
+      }                                                                                                   \
+    } else if(!val->IsNull() && !val->IsUndefined()){                                                     \
+      NanThrowTypeError(key "property must be a " #type " object");                                       \
+      NanReturnUndefined();                                                                               \
+    }                                                                                                     \
+  }                                                                                                       \
+}
+
 #define NODE_DOUBLE_FROM_OBJ_OPT(obj, key, var)                                                           \
 {                                                                                                         \
   Local<String> sym = NanNew(key);                                                                        \
@@ -120,6 +170,19 @@ NAN_SETTER(READ_ONLY_SETTER);
       NanReturnUndefined();                                                                               \
     }                                                                                                     \
     var = val->NumberValue();                                                                             \
+  }                                                                                                       \
+}
+
+#define NODE_INT_FROM_OBJ_OPT(obj, key, var)                                                              \
+{                                                                                                         \
+  Local<String> sym = NanNew(key);                                                                        \
+  if (obj->HasOwnProperty(sym)){                                                                          \
+    Local<Value> val = obj->Get(sym);                                                                     \
+    if (!val->IsNumber()){                                                                                \
+      NanThrowTypeError("Property \"" key "\" must be a number");                                         \
+      NanReturnUndefined();                                                                               \
+    }                                                                                                     \
+    var = val->Int32Value();                                                                              \
   }                                                                                                       \
 }
 

@@ -124,7 +124,7 @@ ds.bands.forEach(function(band){
 
 	// band metadata
 	var metadata = band.getMetadata();
-	var keys = Object.keys(metadata).length;
+	var keys = Object.keys(metadata);
 	if (keys.length > 0) {
 		console.log('  Metadata:');
 		keys.forEach(function(key) {
@@ -133,7 +133,7 @@ ds.bands.forEach(function(band){
 	}
 
 	metadata = band.getMetadata('IMAGE_STRUCTURE');
-	keys = Object.keys(metadata).length;
+	keys = Object.keys(metadata);
 	if (keys.length > 0) {
 		console.log('  Image Structure Metadata:');
 		keys.forEach(function(key) {
