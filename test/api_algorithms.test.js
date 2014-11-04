@@ -185,5 +185,51 @@ describe('gdal', function() {
 			assert.equal(band.pixels.get(8, 8), 20);
 		});
 	});
-	
+	describe('polygonize()', function() {
+		var src, srcband, dst, lyr;
+
+		before(function(){
+			//create two identical rectangles
+			var w = 64;
+			var h = 64;
+			src = gdal.open('temp', 'w', 'MEM', w, h, 1);
+			srcband = src.bands.get(1);
+			for(var y = 0; y < h; y++){
+				var buf = new Buffer(w);
+				buf.fill(y & 32);
+				srcband.pixels.write(0, y, w, 1, new Uint8Array(buf))
+			}
+		});
+		after(function(){
+			src.close();
+		});
+		beforeEach(function(){
+			dst = gdal.open('temp', 'w', 'Memory');
+
+			lyr = dst.layers.create('temp', null, gdal.Polygon);
+			lyr.fields.add(new gdal.FieldDefn('val', gdal.OFTInteger));
+		});
+		afterEach(function(){
+			dst.close();
+		})
+		it('should generate polygons from a RasterBand', function(){
+
+			var offset = 7;
+			var interval = 32;
+
+			gdal.polygonize({
+				src: srcband,
+				dst: lyr,
+				pixValField: 0,
+				connectedness: 8
+			});
+
+			assert.equal(lyr.features.count(), 2);
+			lyr.features.forEach(function(f){
+				var geom = f.getGeometry();
+				assert.isFalse(geom.isEmpty());
+				assert.instanceOf(geom, gdal.Polygon);
+			});
+		});
+	});
 });
