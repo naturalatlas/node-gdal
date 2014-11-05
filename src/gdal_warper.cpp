@@ -9,6 +9,7 @@ namespace node_gdal {
 void Warper::Initialize(Handle<Object> target)
 {
 	NODE_SET_METHOD(target, "reprojectImage", reprojectImage);
+	NODE_SET_METHOD(target, "suggestedWarpOutput", suggestedWarpOutput);
 }
 
 NAN_METHOD(Warper::reprojectImage)
@@ -22,22 +23,13 @@ NAN_METHOD(Warper::reprojectImage)
 	GDALWarpOptions* opts;
 	std::string s_srs_str;
 	std::string t_srs_str;
-	char* s_srs = NULL;
-	char* t_srs = NULL;
+	SpatialReference* s_srs;
+	SpatialReference* t_srs;
 	double maxError = 0;
 
-	if(args.Length() == 0) {
-		NanThrowError("Warp options must be provided");
-		NanReturnUndefined();
-	}
-	if(!args[0]->IsObject()) {
-		NanThrowTypeError("Warp options must be an object");
-		NanReturnUndefined();
-	}
-	obj = args[0].As<Object>();
+	NODE_ARG_OBJECT(0, "Warp options", obj);
 
-
-	if(options.parse(args[0])){
+	if(options.parse(obj)){
 		NanReturnUndefined(); // error parsing options object
 	} else {
 		opts = options.get();
@@ -46,54 +38,27 @@ NAN_METHOD(Warper::reprojectImage)
 		NanThrowTypeError("dst Dataset must be provided");
 		NanReturnUndefined();
 	}
-	if(obj->HasOwnProperty(NanNew("s_srs"))){
-		prop = obj->Get(NanNew("s_srs"));
-		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(SpatialReference::constructor, prop)) {
-			SpatialReference* srs = ObjectWrap::Unwrap<SpatialReference>(prop.As<Object>());
-			
-			OGRErr err = srs->get()->exportToWkt(&s_srs);
-			if(err) {
-				NODE_THROW_OGRERR(err);
-				NanReturnUndefined();
-			}
-			s_srs_str = s_srs;
-			CPLFree(s_srs);
-			s_srs = (char*) s_srs_str.c_str();
-		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("s_srs must be a SpatialReference object");
-			NanReturnUndefined();
-		}
+
+	NODE_WRAPPED_FROM_OBJ(obj, "s_srs", SpatialReference, s_srs);
+	NODE_WRAPPED_FROM_OBJ(obj, "t_srs", SpatialReference, t_srs);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, "maxError", maxError);
+
+	char *s_srs_wkt, *t_srs_wkt;
+	if(s_srs->get()->exportToWkt(&s_srs_wkt)){
+		NanThrowError("Error converting s_srs to WKT");
+		NanReturnUndefined();
 	}
-	if(obj->HasOwnProperty(NanNew("t_srs"))){
-		prop = obj->Get(NanNew("t_srs"));
-		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(SpatialReference::constructor, prop)) {
-			SpatialReference* srs = ObjectWrap::Unwrap<SpatialReference>(prop.As<Object>());
-			
-			OGRErr err = srs->get()->exportToWkt(&t_srs);
-			if(err) {
-				NODE_THROW_OGRERR(err);
-				NanReturnUndefined();
-			}
-			t_srs_str = t_srs;
-			CPLFree(t_srs);
-			t_srs = (char*) t_srs_str.c_str();
-		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("t_srs must be a SpatialReference object");
-			NanReturnUndefined();
-		}
-	}
-	if(obj->HasOwnProperty(NanNew("maxError"))){
-		prop = obj->Get(NanNew("maxError"));
-		if(prop->IsNumber()){
-			maxError = prop->NumberValue();
-		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("maxError property must be a number");
-			NanReturnUndefined();
-		}
+	if(t_srs->get()->exportToWkt(&t_srs_wkt)){
+		CPLFree(s_srs_wkt);
+		NanThrowError("Error converting t_srs to WKT");
+		NanReturnUndefined();
 	}
 
-	CPLErr err = GDALReprojectImage(opts->hSrcDS, s_srs, opts->hDstDS, t_srs, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	CPLErr err = GDALReprojectImage(opts->hSrcDS, s_srs_wkt, opts->hDstDS, t_srs_wkt, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
 	
+	CPLFree(s_srs_wkt);
+	CPLFree(t_srs_wkt);
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
@@ -101,5 +66,92 @@ NAN_METHOD(Warper::reprojectImage)
 
 	NanReturnUndefined();
 }
+
+NAN_METHOD(Warper::suggestedWarpOutput)
+{
+	NanScope();
+
+	Handle<Object> obj;
+	Handle<Value> prop;
+
+	WarpOptions options;
+	GDALWarpOptions* opts;
+	SpatialReference* s_srs;
+	SpatialReference* t_srs;
+	double maxError = 0;	
+	double geotransform[6];
+	int w = 0, h = 0;
+
+	NODE_ARG_OBJECT(0, "Warp options", obj);
+
+	if(options.parse(obj)){
+		NanReturnUndefined(); // error parsing options object
+	} else {
+		opts = options.get();
+	}
+
+	NODE_WRAPPED_FROM_OBJ(obj, "s_srs", SpatialReference, s_srs);
+	NODE_WRAPPED_FROM_OBJ(obj, "t_srs", SpatialReference, t_srs);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, "maxError", maxError);
+
+	char *s_srs_wkt, *t_srs_wkt;
+	if(s_srs->get()->exportToWkt(&s_srs_wkt)){
+		NanThrowError("Error converting s_srs to WKT");
+		NanReturnUndefined();
+	}
+	if(t_srs->get()->exportToWkt(&t_srs_wkt)){
+		CPLFree(s_srs_wkt);
+		NanThrowError("Error converting t_srs to WKT");
+		NanReturnUndefined();
+	}
+
+
+
+	void *hTransformArg;
+	void *hGenTransformArg = GDALCreateGenImgProjTransformer( opts->hSrcDS, s_srs_wkt, NULL, t_srs_wkt, TRUE, 1000.0, 0 );
+	GDALTransformerFunc pfnTransformer;
+
+	if(maxError > 0.0){
+		hTransformArg = GDALCreateApproxTransformer( GDALGenImgProjTransform, hGenTransformArg, maxError );
+		pfnTransformer = GDALApproxTransform;
+	} else {
+		hTransformArg = hGenTransformArg;
+		pfnTransformer = GDALGenImgProjTransform;
+	}
+
+	CPLErr err = GDALSuggestedWarpOutput(opts->hSrcDS, pfnTransformer, hTransformArg, geotransform, &w, &h);
+
+
+	CPLFree(s_srs_wkt);
+	CPLFree(t_srs_wkt);
+	GDALDestroyGenImgProjTransformer(hGenTransformArg);
+	if(maxError > 0.0){
+		GDALDestroyApproxTransformer(hTransformArg);
+	}
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+	
+	Handle<Array> result_geotransform = NanNew<Array>();
+	result_geotransform->Set(0, NanNew<Number>(geotransform[0]));
+	result_geotransform->Set(1, NanNew<Number>(geotransform[1]));
+	result_geotransform->Set(2, NanNew<Number>(geotransform[2]));
+	result_geotransform->Set(3, NanNew<Number>(geotransform[3]));
+	result_geotransform->Set(4, NanNew<Number>(geotransform[4]));
+	result_geotransform->Set(5, NanNew<Number>(geotransform[5]));
+
+	Handle<Object> result_size = NanNew<Object>();
+	result_size->Set(NanNew("x"), NanNew<Integer>(w));
+	result_size->Set(NanNew("y"), NanNew<Integer>(h));
+
+	Handle<Object> result = NanNew<Object>();
+	result->Set(NanNew("rasterSize"), result_size);
+	result->Set(NanNew("geoTransform"), result_geotransform);
+
+	NanReturnValue(result);
+}
+
 
 } //node_gdal namespace

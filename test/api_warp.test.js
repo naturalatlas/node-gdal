@@ -9,6 +9,78 @@ var fileUtils = require('./utils/file.js');
 describe('gdal', function() {
 	afterEach(gc);
 
+	describe('suggestedWarpOutput()', function(){
+		var src; 
+		beforeEach(function(){
+			src = gdal.open(__dirname + "/data/sample.tif");
+		});
+		afterEach(function(){
+			src.close();
+		});
+		it('should return object with suggested output dimensions', function(){
+			//src properties
+			var w =  src.rasterSize.x;
+			var h =  src.rasterSize.y;
+			var gt = src.geoTransform;
+
+			//warp options
+			var s_srs = src.srs; 
+			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
+			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
+
+			//compute output extent
+			var ul = tx.transformPoint(gt[0], gt[3]);
+			var ur = tx.transformPoint(gt[0]+gt[1]*w, gt[3]);
+			var lr = tx.transformPoint(gt[0]+gt[1]*w, gt[3]+gt[5]*h);
+			var ll = tx.transformPoint(gt[0], gt[3]+gt[5]*h);
+
+			var extent = new gdal.Polygon();
+			var ring = new gdal.LinearRing();
+			ring.points.add([ul,ur,lr,ll,ul]);
+			extent.rings.add(ring);
+			extent = extent.getEnvelope();
+
+			//compute pixel resolution in target srs (function assumes square pixels)
+			
+			var s_diagonal = new gdal.LineString();
+			s_diagonal.points.add(gt[0], gt[3]);
+			s_diagonal.points.add(gt[0]+gt[1]*w, gt[3]+gt[5]*h);
+			var t_diagonal = s_diagonal.clone();
+			t_diagonal.transform(tx);
+
+			var pixels_along_diagonal = Math.sqrt(w*w + h*h);
+			var sr = s_diagonal.getLength() / pixels_along_diagonal;
+			var tr = t_diagonal.getLength() / pixels_along_diagonal;
+
+			//compute expected size / geotransform with computed resolution
+			
+			var expected = {
+				geoTransform: [
+					extent.minX, tr, gt[2],
+					extent.maxY, gt[4], -tr
+				],
+				rasterSize: {
+					x: Math.ceil(Math.max(extent.maxX-extent.minX)/tr),
+					y: Math.ceil(Math.max(extent.maxY-extent.minY)/tr)
+				}
+			};
+
+			var output = gdal.suggestedWarpOutput({
+				src: src,
+				s_srs: s_srs,
+				t_srs: t_srs
+			});
+
+			assert.closeTo(output.rasterSize.x, expected.rasterSize.x, 1);
+			assert.closeTo(output.rasterSize.y, expected.rasterSize.y, 1);
+			assert.closeTo(output.geoTransform[0], expected.geoTransform[0], 0.001);
+			assert.closeTo(output.geoTransform[1], expected.geoTransform[1], 0.001);
+			assert.closeTo(output.geoTransform[2], expected.geoTransform[2], 0.001);
+			assert.closeTo(output.geoTransform[3], expected.geoTransform[3], 0.001);
+			assert.closeTo(output.geoTransform[4], expected.geoTransform[4], 0.001);
+			assert.closeTo(output.geoTransform[5], expected.geoTransform[5], 0.001);
+		});
+	});
 	describe('reprojectImage()', function() {
 		it('should write reprojected image into dst dataset', function(){
 

@@ -13,6 +13,7 @@
 
 // gdal
 #include <gdal_priv.h>
+#include <gdal_alg.h>
 
 // ogr
 #include <ogrsf_frmts.h>
@@ -33,6 +34,7 @@ namespace Warper {
 	void Initialize(Handle<Object> target);
 
 	NAN_METHOD(reprojectImage);
+	NAN_METHOD(suggestedWarpOutput);
 
 }
 }
