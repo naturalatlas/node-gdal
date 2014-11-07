@@ -694,8 +694,10 @@ NAN_GETTER(Dataset::geoTransformGetter)
 		double transform[6];
 		CPLErr err = raw->GetGeoTransform(transform);
 		if(err) {
-			NODE_THROW_CPLERR(err);
-			NanReturnUndefined();
+			// This is mostly (always?) a sign that it has not been set
+			NanReturnNull();
+			//NODE_THROW_CPLERR(err);
+			//NanReturnUndefined();
 		}
 
 		Handle<Array> result = NanNew<Array>(6);

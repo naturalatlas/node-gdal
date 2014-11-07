@@ -235,6 +235,8 @@ describe('gdal', function() {
 		it('should throw if target does not have geotransform set', function(){
 			var dst = gdal.open('temp', 'w', 'MEM', 128, 128, 1, gdal.GDT_Byte);
 		
+			assert.isNull(dst.geoTransform);
+
 			assert.throws(function(){
 				gdal.reprojectImage({
 					src: src,
