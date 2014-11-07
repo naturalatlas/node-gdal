@@ -2,6 +2,7 @@
 #include "utils/warp_options.hpp"
 #include "gdal_common.hpp"
 #include "gdal_spatial_reference.hpp"
+#include "gdal_dataset.hpp"
 
 namespace node_gdal {
 
@@ -74,8 +75,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	Handle<Object> obj;
 	Handle<Value> prop;
 
-	WarpOptions options;
-	GDALWarpOptions* opts;
+	Dataset* ds;
 	SpatialReference* s_srs;
 	SpatialReference* t_srs;
 	double maxError = 0;	
@@ -84,10 +84,22 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	NODE_ARG_OBJECT(0, "Warp options", obj);
 
-	if(options.parse(obj)){
-		NanReturnUndefined(); // error parsing options object
+	if(obj->HasOwnProperty(NanNew("src"))){
+		prop = obj->Get(NanNew("src"));
+		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
+			ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
+			if(!ds->getDataset()){
+				if(ds->getDatasource()) NanThrowError("src dataset must be a raster dataset");
+				else NanThrowError("src dataset already closed");
+				NanReturnUndefined();
+			}
+		} else {
+			NanThrowTypeError("src property must be a Dataset object");
+			NanReturnUndefined();
+		}
 	} else {
-		opts = options.get();
+		NanThrowError("src dataset must be provided");
+		NanReturnUndefined();
 	}
 
 	NODE_WRAPPED_FROM_OBJ(obj, "s_srs", SpatialReference, s_srs);
@@ -108,7 +120,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 
 	void *hTransformArg;
-	void *hGenTransformArg = GDALCreateGenImgProjTransformer( opts->hSrcDS, s_srs_wkt, NULL, t_srs_wkt, TRUE, 1000.0, 0 );
+	void *hGenTransformArg = GDALCreateGenImgProjTransformer(ds->getDataset(), s_srs_wkt, NULL, t_srs_wkt, TRUE, 1000.0, 0 );
 	GDALTransformerFunc pfnTransformer;
 
 	if(maxError > 0.0){
@@ -119,7 +131,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 		pfnTransformer = GDALGenImgProjTransform;
 	}
 
-	CPLErr err = GDALSuggestedWarpOutput(opts->hSrcDS, pfnTransformer, hTransformArg, geotransform, &w, &h);
+	CPLErr err = GDALSuggestedWarpOutput(ds->getDataset(), pfnTransformer, hTransformArg, geotransform, &w, &h);
 
 
 	CPLFree(s_srs_wkt);

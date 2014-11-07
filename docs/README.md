@@ -54,7 +54,7 @@
 	+ dst: [Dataset](dataset.md) *(required)*
 	+ s_srs: [SpatialReference](spatialreference.md) *(required)*
 	+ t_srs: [SpatialReference](spatialreference.md) *(required)*
-	+ r: [GDALResampleAlg](constants.md#resampling)
+	+ resampling: [GDALResampleAlg](constants.md#resampling)
 	+ cutline: [Geometry](geometry.md) 
 		+ *Must be in src dataset pixel coordinates. Use [CoordinateTransformation](coordinatetransformation.md) to convert between georeferenced coordinates and pixel coordinates*
 	+ blend: Number
@@ -65,6 +65,8 @@
 	+ dstAlphaBand: int
 	+ srcNodata: Number
 	+ dstNodata: Number
+	+ memoryLimit: int
+	+ maxError: Number
 	+ options: object | array
 		+ *additional warp options*
 - `suggestedWarpOutput(object options)` : object *(rasterSize, geoTransform)* *(throws)*

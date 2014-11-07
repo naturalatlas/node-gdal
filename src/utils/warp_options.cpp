@@ -30,7 +30,7 @@ int WarpOptions::parseResamplingAlg(Handle<Value> value){
 		return 0;
 	}
 	if(!value->IsString()){
-		NanThrowTypeError("resampleAlg property must be a string");
+		NanThrowTypeError("resampling property must be a string");
 		return 1;
 	}
 	std::string name = *NanUtf8String(value);
@@ -89,8 +89,8 @@ int WarpOptions::parse(Handle<Value> value)
 			NanThrowTypeError("memoryLimit property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("r"))){
-		prop = obj->Get(NanNew("r"));
+	if(obj->HasOwnProperty(NanNew("resampling"))){
+		prop = obj->Get(NanNew("resampling"));
 		if(parseResamplingAlg(prop)){
 			return 1; //error parsing resampling algorithm
 		}
@@ -98,13 +98,15 @@ int WarpOptions::parse(Handle<Value> value)
 	if(obj->HasOwnProperty(NanNew("src"))){
 		prop = obj->Get(NanNew("src"));
 		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
-			options->hSrcDS = ObjectWrap::Unwrap<Dataset>(prop.As<Object>())->getDataset();
+			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
+			options->hSrcDS = ds->getDataset();
 			if(!options->hSrcDS){
-				NanThrowError("src dataset already closed");
+				if(ds->getDatasource()) NanThrowError("src dataset must be a raster dataset");
+				else NanThrowError("src dataset already closed");
 				return 1;
 			}
 		} else {
-			NanThrowTypeError("src property must be a GDAL dataset"); return 1;
+			NanThrowTypeError("src property must be a Dataset object"); return 1;
 		}
 	} else {
 		NanThrowError("Warp options must include a source dataset");
@@ -113,13 +115,15 @@ int WarpOptions::parse(Handle<Value> value)
 	if(obj->HasOwnProperty(NanNew("dst"))){
 		prop = obj->Get(NanNew("dst"));
 		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
-			options->hDstDS = ObjectWrap::Unwrap<Dataset>(prop.As<Object>())->getDataset();
+			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
+			options->hDstDS = ds->getDataset();
 			if(!options->hDstDS){
-				NanThrowError("dst dataset already closed");
+				if(ds->getDatasource()) NanThrowError("dst dataset must be a raster dataset");
+				else NanThrowError("dst dataset already closed");
 				return 1;
 			}
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("dst property must be a GDAL dataset"); return 1;
+			NanThrowTypeError("dst property must be a Dataset object"); return 1;
 		}
 	}
 	if(obj->HasOwnProperty(NanNew("srcBands"))){
@@ -136,10 +140,19 @@ int WarpOptions::parse(Handle<Value> value)
 			return 1; //error parsing number list
 		}
 		options->panDstBands = dst_bands.get();
+
+		if (!options->panSrcBands) {
+			NanThrowError("srcBands must be provided if dstBands option is used");
+			return 1;
+		}
 		if(dst_bands.length() != options->nBandCount){
 			NanThrowError("Number of dst bands must equal number of src bands");
 			return 1; 
 		}
+	} 
+	if (options->panSrcBands && !options->panDstBands) {
+		NanThrowError("dstBands must be provided if srcBands option is used"); 
+		return 1;
 	}
 	if(obj->HasOwnProperty(NanNew("srcNodata"))){
 		prop = obj->Get(NanNew("srcNodata"));

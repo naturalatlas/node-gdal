@@ -71,7 +71,7 @@ The `wkb25DBit` constant can be used to convert between 2D types to 2.5D types.
 wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
 
 // 2.5D -> 2D (same as wkbFlatten())
-wkbPoint = gdal.wkbPoint & (~gdal.wkb25DBit)
+wkbPoint = gdal.wkbPoint25D & (~gdal.wkb25DBit)
 ``` 
 
 ### WKB Variants

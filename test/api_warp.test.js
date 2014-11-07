@@ -82,8 +82,14 @@ describe('gdal', function() {
 		});
 	});
 	describe('reprojectImage()', function() {
+		var src; 
+		beforeEach(function(){
+			src = gdal.open(__dirname + "/data/sample.tif");
+		});
+		afterEach(function(){
+			try { src.close(); } catch (err) {}
+		});
 		it('should write reprojected image into dst dataset', function(){
-
 
 			/*
 			 * expected result is the same (but not necessarily exact) as the result of: 
@@ -97,9 +103,7 @@ describe('gdal', function() {
 			 * -of GTiff 
 			 * ./test/data/sample.tif ./test/data/sample_warped.tif
 			 */
-
-
-			var src = gdal.open(__dirname + "/data/sample.tif");
+			
 			var expected = gdal.open(__dirname + "/data/sample_warped.tif");
 			var cutline_ds = gdal.open(__dirname + "/data/cutline.shp");
 
@@ -148,15 +152,17 @@ describe('gdal', function() {
 				dst: dst,
 				s_srs: s_srs,
 				t_srs: t_srs,
-				r: gdal.GRA_Bilinear,
+				resampling: gdal.GRA_Bilinear,
 				cutline: cutline,
-				dstAlphaBand: 2,
-				blend: 0
+				dstAlphaBand: 1,
+				blend: 0,
+				srcBands: [1],
+				dstBands: [2]
 			});
 
 			//compare with result of gdalwarp
 		
-			// gdalwarp might pick the output size slightly differently (+/- 1 px)
+			//gdalwarp might pick the output size slightly differently (+/- 1 px)
 			assert.closeTo(dst.rasterSize.x, expected.rasterSize.x, 1);
 			assert.closeTo(dst.rasterSize.y, expected.rasterSize.y, 1);
 			w = Math.min(dst.rasterSize.x, expected.rasterSize.x);
@@ -164,7 +170,7 @@ describe('gdal', function() {
 
 			//check data band
 			var expected_pixels = expected.bands.get(1).pixels;
-			var actual_pixels = dst.bands.get(1).pixels;
+			var actual_pixels = dst.bands.get(2).pixels;
 			var error = 0;
 			var n = 0;
 			for(var x = 0; x < w; x += 10){
@@ -178,7 +184,7 @@ describe('gdal', function() {
 
 			//check alpha band
 			expected_pixels = expected.bands.get(2).pixels;
-			actual_pixels = dst.bands.get(2).pixels;
+			actual_pixels = dst.bands.get(1).pixels;
 			error = 0;
 			for(var x = 0; x < w; x += 10){
 				for(var y = 0; y < h; y += 10){
@@ -189,9 +195,232 @@ describe('gdal', function() {
 			assert(avgerror < 0.005, 'minimal error in alpha band pixel data');
 
 			dst.close();
-			src.close();
 			cutline_ds.close();
 			expected.close();
+		});
+		it('should use approx transformer if maxError is given', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+			var info = gdal.suggestedWarpOutput(options);
+
+			//use lower than suggested resolution (faster)
+			info.rasterSize.x /= 4;
+			info.rasterSize.y /= 4; 
+			info.geoTransform[1] *= 4; 
+			info.geoTransform[5] *= 4;
+
+			//compute exact version
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			gdal.reprojectImage(options);
+
+			var exact_checksum = gdal.checksumImage(options.dst.bands.get(1));
+
+			//compute approximate version
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+			options.maxError = 4;
+
+			gdal.reprojectImage(options);
+
+			var approx_checksum = gdal.checksumImage(options.dst.bands.get(1));
+
+			
+			assert.notEqual(approx_checksum, exact_checksum);
+		});
+		it('should throw if target does not have geotransform set', function(){
+			var dst = gdal.open('temp', 'w', 'MEM', 128, 128, 1, gdal.GDT_Byte);
+		
+			assert.throws(function(){
+				gdal.reprojectImage({
+					src: src,
+					dst: dst,
+					s_srs: src.srs,
+					t_srs: gdal.SpatialReference.fromEPSG(4326)
+				});
+			});
+		});
+		it('should throw if cutline is wrong geometry type', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				cutline: new gdal.LineString()
+			};
+			var info = gdal.suggestedWarpOutput(options);
+
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			});
+		});
+		it('should throw if src dataset has been closed', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+			var info = gdal.suggestedWarpOutput(options);
+
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			src.close();
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'src dataset already closed');
+		});
+		it('should throw if dst dataset has been closed', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+			var info = gdal.suggestedWarpOutput(options);
+
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			options.dst.close();
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'dst dataset already closed');
+		});
+		it('should throw if dst dataset isnt a raster', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+
+			options.dst = gdal.open('temp', 'w', 'Memory');
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'must be a raster dataset');
+		});
+		it('should throw if src dataset isnt a raster', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			options.src = gdal.open('temp_src', 'w', 'Memory');
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'must be a raster dataset');
+		});
+		it('should throw if srcBands option is provided but dstBands isnt', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				srcBands: [1]
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'dstBands must be provided if srcBands option is used');
+		});
+		it('should throw if dstBands option is provided but srcBands isnt', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				dstBands: [1]
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'srcBands must be provided if dstBands option is used');
+		});
+		it('should throw if srcBands option is invalid', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				srcBands: [3],
+				dstBands: [1]
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'out of range for dataset');
+		});
+		it('should throw if dstBands option is invalid', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				srcBands: [1],
+				dstBands: [3]
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'out of range for dataset');
+		});
+		it('should throw if dstAlphaBand is invalid', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				dstAlphaBand: 5
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			}, 'out of range for dataset');
+		});
+		it('should throw if memoryLimit is invalid', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				memoryLimit: 1
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			assert.throws(function(){
+				gdal.reprojectImage(options);
+			},'dfWarpMemoryLimit=1 is unreasonably small');
 		});
 	});
 });
