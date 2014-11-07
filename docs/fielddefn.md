@@ -4,7 +4,8 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
 
 #### Constructor
 
-- `FieldDefn(string field_name, string type)`
+- `FieldDefn(string field_name, OGRFieldType type)` 
+    - type: [OGRFieldType](constants.md#field-types)
 
 #### Methods
 
@@ -13,20 +14,8 @@ Note: all field definitions owned by feature definitions are cloned to avoid seg
 #### Properties
 
 - `name` : string
-- `type` : string
-    + `'integer'`
-    + `'integer[]'`
-    + `'real'`
-    + `'real[]'`
-    + `'string'`
-    + `'string[]'`
-    + `'binary'`
-    + `'date'`
-    + `'time'`
-    + `'dateTime'`
+- `type` : [OGRFieldType](constants.md#field-types)
 - `width` : int
 - `precision` : int
-- `justification` : string
-    + `'Left'`
-    + `'Right'`
+- `justification` : [OGRJustification](constants.md#field-justification)
 - `ignored` : bool

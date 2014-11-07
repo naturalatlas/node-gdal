@@ -5,7 +5,7 @@ Note: all methods throw errors if the layer has been destroyed by the datasource
 #### Methods 
 
 - `toString()` : string
-- `testCapability(string capability_name)` : bool
+- `testCapability(string capability_name)` : bool *([see capabilities](constants.md#vector-layer-capabilities))*
 - `flush() *(throws)*`
 - `getExtent(boolean force = true)` : [Envelope](envelope.md) *(throws)*
 - `getSpatialFilter()` : [Geometry](geometry.md)

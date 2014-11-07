@@ -23,18 +23,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `size` : object
 - `blockSize` : object
 - `unitType` : string *(settable)*
-- `dataType` : string
-    + `'Byte'`
-    + `'UInt16'`
-    + `'Int16'`
-    + `'UInt32'`
-    + `'Int32'`
-    + `'Float32'`
-    + `'Float64'`
-    + `'CInt16'`
-    + `'CInt32'`
-    + `'CFloat32'`
-    + `'CFloat64'`
+- `dataType` : [GDALDataType](constants.md#pixel-data-types)
 - `minimum` : Number
 - `maximum` : Number
 - `offset` : Number *(settable)*
@@ -45,21 +34,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
 - `categoryNames` : string[] *(settable)*
 - `overviews` : [RasterBandOverviews](#overviews)
 - `pixels` : [RasterBandPixels](#pixels)
-- `colorInterpretation` : string
-    + `"Undefined"`
-    + `"Gray"`
-    + `"Palette"`
-    + `"Red"`
-    + `"Green"`
-    + `"Blue"`
-    + `"Alpha"`
-    + `"Hue"`
-    + `"Saturation"`
-    + `"Lightness"`
-    + `"Cyan"`
-    + `"Magenta"`
-    + `"Yellow"`
-    + `"Black"`
+- `colorInterpretation` : [GDALColorInterp](constants.md#color-interpretation)
 
 #### Overviews
 
@@ -81,7 +56,7 @@ Note: all methods throw errors if the band has been destroyed by the dataset
      + `options` : object
           - `buffer_width` : integer
           - `buffer_height` : integer
-          - `type` : string – Can be any of the following: `'Byte'`, `'UInt16'`, `'Int16'`, `'UInt32'`, `'Int32'`, `'Float32'`, `'Float64'`, `'CInt16'`, `'CInt32'`, `'CFloat32'`, `'CFloat64'` ([GDALDataType](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4)).
+          - `type` : [GDALDataType](constants.md#pixel-data-types)
           - `pixel_space` : integer
           - `line_space` : integer
 - `pixels.write(x, y, width, height, data, [options])` : void *(throws)*

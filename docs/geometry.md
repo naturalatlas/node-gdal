@@ -11,7 +11,7 @@ Note: all geometry objects owned by features are cloned to avoid segfaults when 
 
 #### Static Properties
 
-- `wkbType` : integer
+- `wkbType` : [wkbGeometryType](constants.md#geometry-types)
 
 #### Methods
 

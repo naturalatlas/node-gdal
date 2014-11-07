@@ -36,6 +36,8 @@
 - [Envelope](envelope.md)
 - [Envelope3D](envelope3d.md)
 
+#### [Constants](constants.md)
+
 #### Methods
 
 - `open(string name, string mode = 'r', string[] drivers = null, string[] options = null)` : [Dataset](dataset.md)
@@ -52,7 +54,7 @@
 	+ dst: [Dataset](dataset.md) *(required)*
 	+ s_srs: [SpatialReference](spatialreference.md) *(required)*
 	+ t_srs: [SpatialReference](spatialreference.md) *(required)*
-	+ r: string *(resampling method)*
+	+ r: [GDALResampleAlg](constants.md#resampling)
 	+ cutline: [Geometry](geometry.md) 
 		+ *Must be in src dataset pixel coordinates. Use [CoordinateTransformation](coordinatetransformation.md) to convert between georeferenced coordinates and pixel coordinates*
 	+ blend: Number
@@ -94,7 +96,7 @@
 		+ *the attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.*
 	+ connectedness: int
 		+ *either `4` indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or `8` indicating they are.*
-	+ useFloats: boolean
+	+ useFloats: bool
 		+ use floating point buffers instead of int buffers
 - `sieveFilter(object options)` *(throws)*
 	+ src: [RasterBand](rasterband.md)

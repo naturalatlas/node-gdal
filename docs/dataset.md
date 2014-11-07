@@ -18,6 +18,7 @@ Note: all methods throw errors if the dataset has already been explicitly destro
 	+ *In GDAL versions < 2.0 it will return an empty array for vector datasets*
 - `flush()` : void
 - `getMetadata(string domain = null)` : object
+- `testCapability(string capability_name)` : bool *([see capabilities](constants.md#vector-dataset-capabilities))*
 
 #### Properties
 

@@ -14,7 +14,7 @@ Note: all feature definitions owned by layers are cloned to avoid segfaults when
 #### Properties
 
 - `name` : string
-- `geomType` : int *(OGRwkbGeometryType)*
+- `geomType` : [wkbGeometryType](constants.md#geometry-types)
 - `geomIgnored` : bool
 - `styleIgnored` : bool
 - `fields` : [FeatureDefnFields](#fields)
