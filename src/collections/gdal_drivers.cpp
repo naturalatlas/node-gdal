@@ -77,7 +77,11 @@ NAN_METHOD(GDALDrivers::toString)
 NAN_METHOD(GDALDrivers::get)
 {
 	NanScope();
+	
+	#if GDAL_VERSION_MAJOR < 2
 	OGRSFDriver *ogr_driver;
+	#endif
+
 	GDALDriver *gdal_driver;
 
 	if (args.Length() == 0) {
@@ -168,14 +172,16 @@ NAN_METHOD(GDALDrivers::getNames)
 		driver_names->Set(i, SafeString::New(name.c_str()));
 	}
 
+
+	#if GDAL_VERSION_MAJOR < 2
 	for (; i < n; ++i) {
 		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(i - gdal_count);
 		name = driver->GetName();
-		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") name = "VRT:vector";
-		#endif
 		driver_names->Set(i, SafeString::New(name.c_str()));
 	}
+	#endif
+	
 	NanReturnValue(driver_names);
 }
 

@@ -8,7 +8,9 @@ namespace node_gdal {
 
 Persistent<FunctionTemplate> Driver::constructor;
 ObjectCache<GDALDriver, Driver> Driver::cache;
+#if GDAL_VERSION_MAJOR < 2
 ObjectCache<OGRSFDriver, Driver> Driver::cache_ogr;
+#endif
 
 void Driver::Initialize(Handle<Object> target)
 {
@@ -34,22 +36,35 @@ void Driver::Initialize(Handle<Object> target)
 	NanAssignPersistent(constructor, lcons);
 }
 
+
+#if GDAL_VERSION_MAJOR < 2
 Driver::Driver(GDALDriver *driver)
 	: ObjectWrap(), uses_ogr(false), this_gdaldriver(driver), this_ogrdriver(0)
 {
 	LOG("Created GDAL Driver [%p]", driver);
 }
-
 Driver::Driver(OGRSFDriver *driver)
 	: ObjectWrap(), uses_ogr(true), this_gdaldriver(0), this_ogrdriver(driver)
 {
 	LOG("Created OGR Driver [%p]", driver);
 }
-
 Driver::Driver()
 	: ObjectWrap(), uses_ogr(false), this_gdaldriver(0), this_ogrdriver(0)
 {
 }
+#else
+Driver::Driver(GDALDriver *driver)
+	: ObjectWrap(), this_gdaldriver(driver)
+{
+	LOG("Created GDAL Driver [%p]", driver);
+}
+Driver::Driver()
+	: ObjectWrap(), this_gdaldriver(0)
+{
+}
+#endif
+
+
 
 Driver::~Driver()
 {
@@ -58,6 +73,7 @@ Driver::~Driver()
 
 void Driver::dispose()
 {
+	#if GDAL_VERSION_MAJOR < 2
 	if(uses_ogr) {
 		if(this_ogrdriver) {
 			LOG("Disposing OGR Driver [%p]", this_ogrdriver);
@@ -65,13 +81,14 @@ void Driver::dispose()
 			LOG("Disposed OGR Driver [%p]", this_ogrdriver);
 			this_ogrdriver = NULL;
 		}
-	} else {
-		if(this_gdaldriver) {
-			LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
-			cache.erase(this_gdaldriver);
-			LOG("Disposed GDAL Driver [%p]", this_gdaldriver);
-			this_gdaldriver = NULL;
-		}
+		return;
+	} 
+	#endif
+	if(this_gdaldriver) {
+		LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
+		cache.erase(this_gdaldriver);
+		LOG("Disposed GDAL Driver [%p]", this_gdaldriver);
+		this_gdaldriver = NULL;
 	}
 }
 
@@ -117,6 +134,7 @@ Handle<Value> Driver::New(GDALDriver *driver)
 	return NanEscapeScope(obj);
 }
 
+#if GDAL_VERSION_MAJOR < 2
 Handle<Value> Driver::New(OGRSFDriver *driver)
 {
 	NanEscapableScope();
@@ -136,6 +154,7 @@ Handle<Value> Driver::New(OGRSFDriver *driver)
 
 	return NanEscapeScope(obj);
 }
+#endif
 
 NAN_METHOD(Driver::toString)
 {
@@ -147,11 +166,14 @@ NAN_GETTER(Driver::descriptionGetter)
 {
 	NanScope();
 	Driver* driver = ObjectWrap::Unwrap<Driver>(args.This());
+
+	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		NanReturnValue(SafeString::New(driver->getOGRSFDriver()->GetName()));
-	} else {
-		NanReturnValue(SafeString::New(driver->getGDALDriver()->GetDescription()));
-	}
+	} 
+	#endif
+
+	NanReturnValue(SafeString::New(driver->getGDALDriver()->GetDescription()));
 }
 
 NAN_METHOD(Driver::deleteDataset)
@@ -162,19 +184,23 @@ NAN_METHOD(Driver::deleteDataset)
 	NODE_ARG_STR(0, "dataset name", name);
 
 	Driver* driver = ObjectWrap::Unwrap<Driver>(args.This());
+	
+	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		OGRErr err = driver->getOGRSFDriver()->DeleteDataSource(name.c_str());
 		if(err) {
 			NODE_THROW_OGRERR(err);
 			NanReturnUndefined();
 		}
-	} else {
-		CPLErr err = driver->getGDALDriver()->Delete(name.c_str());
-		if (err) {
-			NODE_THROW_CPLERR(err);
-			NanReturnUndefined();
-		} 
-	}
+		NanReturnUndefined();
+	} 
+	#endif
+
+	CPLErr err = driver->getGDALDriver()->Delete(name.c_str());
+	if (err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	} 
 	NanReturnUndefined();
 }
 
@@ -208,6 +234,8 @@ NAN_METHOD(Driver::create)
 		}
 	}
 
+
+	#if GDAL_VERSION_MAJOR < 2
 	if(driver->uses_ogr){
 		OGRSFDriver *raw = driver->getOGRSFDriver();
 		OGRDataSource *ds = raw->CreateDataSource(filename.c_str(), options.get());
@@ -218,18 +246,18 @@ NAN_METHOD(Driver::create)
 		}
 
 		NanReturnValue(Dataset::New(ds));
-	} else {
-		GDALDriver *raw = driver->getGDALDriver();
-		GDALDataset* ds = raw->Create(filename.c_str(), x_size, y_size, n_bands, type, options.get());
+	} 
+	#endif
 
-		if (!ds) {
-			NanThrowError("Error creating dataset");
-			NanReturnUndefined();
-		}
+	GDALDriver *raw = driver->getGDALDriver();
+	GDALDataset* ds = raw->Create(filename.c_str(), x_size, y_size, n_bands, type, options.get());
 
-		NanReturnValue(Dataset::New(ds));
+	if (!ds) {
+		NanThrowError("Error creating dataset");
+		NanReturnUndefined();
 	}
 
+	NanReturnValue(Dataset::New(ds));
 }
 NAN_METHOD(Driver::createCopy)
 {
@@ -260,6 +288,7 @@ NAN_METHOD(Driver::createCopy)
 		NanReturnUndefined(); //error parsing string list
 	}
 
+	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		OGRSFDriver *raw = driver->getOGRSFDriver();
 		OGRDataSource *raw_ds = src_dataset->getDatasource();
@@ -280,26 +309,23 @@ NAN_METHOD(Driver::createCopy)
 		}
 
 		NanReturnValue(Dataset::New(ds));
-	} else {
-		GDALDriver *raw = driver->getGDALDriver();
-		GDALDataset* raw_ds = src_dataset->getDataset();
-		if(src_dataset->uses_ogr) {
-			NanThrowError("Driver unable to copy dataset");
-			NanReturnUndefined();
-		}
-		if(!raw_ds) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
-		}
-		GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
-
-		if (!ds) {
-			NanThrowError("Error copying dataset");
-			NanReturnUndefined();
-		}
-
-		NanReturnValue(Dataset::New(ds));
 	}
+	#endif
+
+	GDALDriver *raw = driver->getGDALDriver();
+	GDALDataset* raw_ds = src_dataset->getDataset();
+	if(!raw_ds) {
+		NanThrowError("Dataset object has already been destroyed");
+		NanReturnUndefined();
+	}
+	GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
+
+	if (!ds) {
+		NanThrowError("Error copying dataset");
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Dataset::New(ds));
 }
 
 NAN_METHOD(Driver::copyFiles)
@@ -309,10 +335,12 @@ NAN_METHOD(Driver::copyFiles)
 	std::string old_name;
 	std::string new_name;
 
+	#if GDAL_VERSION_MAJOR < 2
 	if(driver->uses_ogr) {
 		NanThrowError("Driver unable to copy files");
 		NanReturnUndefined();
 	}
+	#endif
 
 	NODE_ARG_STR(0, "new name", new_name);
 	NODE_ARG_STR(1, "old name", old_name);
@@ -333,10 +361,12 @@ NAN_METHOD(Driver::rename)
 	std::string old_name;
 	std::string new_name;
 
+	#if GDAL_VERSION_MAJOR < 2
 	if(driver->uses_ogr) {
 		NanThrowError("Driver unable to rename files");
 		NanReturnUndefined();
 	}
+	#endif
 
 	NODE_ARG_STR(0, "new name", new_name);
 	NODE_ARG_STR(1, "old name", old_name);
@@ -360,15 +390,17 @@ NAN_METHOD(Driver::getMetadata)
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
+	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr){
 		result = NanNew<Object>();
 		result->Set(NanNew("DCAP_VECTOR"), NanNew("YES"));
 		NanReturnValue(result);
 	}
+	#endif
 
 	GDALDriver* raw = driver->getGDALDriver();
 	result = MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str());
-	#if GDAL_MAJOR < 2
+	#if GDAL_VERSION_MAJOR < 2
 		result->Set(NanNew("DCAP_RASTER"), NanNew("YES"));
 	#endif
 	NanReturnValue(result);
@@ -393,6 +425,7 @@ NAN_METHOD(Driver::open)
 		NanReturnUndefined();
 	}
 
+	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr){
 		OGRSFDriver *raw = driver->getOGRSFDriver();
 		OGRDataSource *ds = raw->Open(path.c_str(), static_cast<int>(access));
@@ -401,17 +434,18 @@ NAN_METHOD(Driver::open)
 			NanReturnUndefined();
 		}
 		NanReturnValue(Dataset::New(ds));
-	} else {
-		GDALDriver  *raw = driver->getGDALDriver();
-		GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
-		GDALDataset *ds = raw->pfnOpen(info);
-		delete info;
-		if (!ds) {
-			NanThrowError("Error opening dataset");
-			NanReturnUndefined();
-		}
-		NanReturnValue(Dataset::New(ds));
 	}
+	#endif
+
+	GDALDriver  *raw = driver->getGDALDriver();
+	GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
+	GDALDataset *ds = raw->pfnOpen(info);
+	delete info;
+	if (!ds) {
+		NanThrowError("Error opening dataset");
+		NanReturnUndefined();
+	}
+	NanReturnValue(Dataset::New(ds));
 }
 
 } // namespace node_gdal

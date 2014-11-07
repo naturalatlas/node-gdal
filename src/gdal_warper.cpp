@@ -89,8 +89,13 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
 			ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			if(!ds->getDataset()){
-				if(ds->getDatasource()) NanThrowError("src dataset must be a raster dataset");
-				else NanThrowError("src dataset already closed");
+				#if GDAL_VERSION_MAJOR < 2
+				if(ds->getDatasource()) {
+					NanThrowError("src dataset must be a raster dataset");
+					NanReturnUndefined();
+				}
+				#endif
+				NanThrowError("src dataset already closed");
 				NanReturnUndefined();
 			}
 		} else {

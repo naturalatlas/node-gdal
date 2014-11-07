@@ -33,7 +33,6 @@ public:
 	static void Initialize(Handle<Object> target);
 	static NAN_METHOD(New);
 	static Handle<Value> New(GDALDriver *driver);
-	static Handle<Value> New(OGRSFDriver *driver);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(open);
 	static NAN_METHOD(create);
@@ -44,26 +43,35 @@ public:
 	static NAN_METHOD(getMetadata);
 
 	static ObjectCache<GDALDriver, Driver>  cache;
-	static ObjectCache<OGRSFDriver, Driver> cache_ogr;
 
 	static NAN_GETTER(descriptionGetter);
 
 	Driver();
 	Driver(GDALDriver *driver);
-	Driver(OGRSFDriver *driver);
 	inline GDALDriver *getGDALDriver() {
 		return this_gdaldriver;
 	}
+	void dispose();
+
+	#if GDAL_VERSION_MAJOR < 2
+	static Handle<Value> New(OGRSFDriver *driver);
+
+	static ObjectCache<OGRSFDriver, Driver> cache_ogr;
+
+	Driver(OGRSFDriver *driver);
+	
 	inline OGRSFDriver *getOGRSFDriver() {
 		return this_ogrdriver;
 	}
-	void dispose();
-
 	bool uses_ogr;
+	#endif
+
 private:
 	~Driver();
 	GDALDriver *this_gdaldriver;
+	#if GDAL_VERSION_MAJOR < 2
 	OGRSFDriver *this_ogrdriver;
+	#endif
 };
 
 }

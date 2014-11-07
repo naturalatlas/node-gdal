@@ -1,6 +1,7 @@
 #include "warp_options.hpp"
 #include "../gdal_dataset.hpp"
 #include "../gdal_geometry.hpp"
+#include "../gdal_common.hpp"
 #include <stdio.h>
 namespace node_gdal {
 
@@ -101,8 +102,13 @@ int WarpOptions::parse(Handle<Value> value)
 			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			options->hSrcDS = ds->getDataset();
 			if(!options->hSrcDS){
-				if(ds->getDatasource()) NanThrowError("src dataset must be a raster dataset");
-				else NanThrowError("src dataset already closed");
+				#if GDAL_VERSION_MAJOR < 2
+				if(ds->getDatasource()) {
+					NanThrowError("src dataset must be a raster dataset");
+					return 1;
+				}
+				#endif
+				NanThrowError("src dataset already closed");
 				return 1;
 			}
 		} else {
@@ -118,8 +124,13 @@ int WarpOptions::parse(Handle<Value> value)
 			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			options->hDstDS = ds->getDataset();
 			if(!options->hDstDS){
-				if(ds->getDatasource()) NanThrowError("dst dataset must be a raster dataset");
-				else NanThrowError("dst dataset already closed");
+				#if GDAL_VERSION_MAJOR < 2
+				if(ds->getDatasource()) {
+					NanThrowError("dst dataset must be a raster dataset");
+					return 1;
+				}
+				#endif
+				NanThrowError("dst dataset already closed");
 				return 1;
 			}
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {

@@ -84,7 +84,7 @@ NAN_METHOD(DatasetLayers::get)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
-	#if GDAL_VERSION_MAJOR > 2
+	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -125,7 +125,7 @@ NAN_METHOD(DatasetLayers::create)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_VERSION_MAJOR > 2
+	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -175,7 +175,7 @@ NAN_METHOD(DatasetLayers::count)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_VERSION_MAJOR > 2
+	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -199,7 +199,7 @@ NAN_METHOD(DatasetLayers::copy)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 
-	#if GDAL_VERSION_MAJOR > 2
+	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
@@ -244,7 +244,7 @@ NAN_METHOD(DatasetLayers::remove)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
-	#if GDAL_VERSION_MAJOR > 2
+	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();

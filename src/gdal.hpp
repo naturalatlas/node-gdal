@@ -30,27 +30,44 @@ namespace node_gdal {
 
 		std::string path;
 		std::string mode = "r";
-		GDALAccess access = GA_ReadOnly;
 
 		NODE_ARG_STR(0, "path", path);
-		NODE_ARG_OPT_STR(1, "update", mode);
+		NODE_ARG_OPT_STR(1, "mode", mode);
 
-		if (mode == "r+") {
-			access = GA_Update;
-		} else if (mode != "r") {
-			NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
-			NanReturnUndefined();
-		}
+		#if GDAL_VERSION_MAJOR < 2
+			GDALAccess access = GA_ReadOnly;
+			if (mode == "r+") {
+				access = GA_Update;
+			} else if (mode != "r") {
+				NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
+				NanReturnUndefined();
+			}
 
-		OGRDataSource *ogr_ds = OGRSFDriverRegistrar::Open(path.c_str(), static_cast<int>(access));
-		if(ogr_ds) {
-			NanReturnValue(Dataset::New(ogr_ds));
-		}
+			OGRDataSource *ogr_ds = OGRSFDriverRegistrar::Open(path.c_str(), static_cast<int>(access));
+			if(ogr_ds) {
+				NanReturnValue(Dataset::New(ogr_ds));
+			}
 
-		GDALDataset *gdal_ds = (GDALDataset*) GDALOpen(path.c_str(), access);
-		if(gdal_ds) {
-			NanReturnValue(Dataset::New(gdal_ds));
-		}
+			GDALDataset *gdal_ds = (GDALDataset*) GDALOpen(path.c_str(), access);
+			if(gdal_ds) {
+				NanReturnValue(Dataset::New(gdal_ds));
+			}
+		#else
+			unsigned int flags = 0;
+			if (mode == "r+") {
+				flags |= GDAL_OF_UPDATE;
+			} else if (mode == "r") {
+				flags |= GDAL_OF_READONLY; 
+			} else {
+				NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
+				NanReturnUndefined();
+			}
+
+			GDALDataset *ds = (GDALDataset*) GDALOpenEx(path.c_str(), flags, NULL, NULL, NULL);
+			if(ds) {
+				NanReturnValue(Dataset::New(ds));
+			}
+		#endif
 
 		NanThrowError("Error opening dataset");
 		NanReturnUndefined();

@@ -81,6 +81,7 @@ NAN_METHOD(DatasetBands::get)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
+	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
@@ -89,6 +90,9 @@ NAN_METHOD(DatasetBands::get)
 		}
 		NanReturnNull();
 	} else {
+	#else
+	{
+	#endif
 		GDALDataset* raw = ds->getDataset();
 		if (!raw) {
 			NanThrowError("Dataset object has already been destroyed");
@@ -110,10 +114,12 @@ NAN_METHOD(DatasetBands::create)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
+	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		NanThrowError("Dataset does not support getting creating bands");
 		NanReturnUndefined();
 	} 
+	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
@@ -160,6 +166,7 @@ NAN_METHOD(DatasetBands::count)
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
 	
+	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
@@ -167,14 +174,15 @@ NAN_METHOD(DatasetBands::count)
 			NanReturnUndefined();
 		}
 		NanReturnValue(NanNew<Integer>(0));
-	} else {
-		GDALDataset* raw = ds->getDataset();
-		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
-		}
-		NanReturnValue(NanNew<Integer>(raw->GetRasterCount()));
 	}
+	#endif
+
+	GDALDataset* raw = ds->getDataset();
+	if (!raw) {
+		NanThrowError("Dataset object has already been destroyed");
+		NanReturnUndefined();
+	}
+	NanReturnValue(NanNew<Integer>(raw->GetRasterCount()));
 }
 
 NAN_GETTER(DatasetBands::dsGetter)

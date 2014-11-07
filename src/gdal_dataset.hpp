@@ -33,7 +33,6 @@ public:
 	static void Initialize(Handle<Object> target);
 	static NAN_METHOD(New);
 	static Handle<Value> New(GDALDataset *ds);
-	static Handle<Value> New(OGRDataSource *ds);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(flush);
 	static NAN_METHOD(getMetadata);
@@ -57,24 +56,31 @@ public:
 	static NAN_SETTER(srsSetter);
 	static NAN_SETTER(geoTransformSetter);
 
-	static ObjectCache<GDALDataset, Dataset>   dataset_cache;
-	static ObjectCache<OGRDataSource, Dataset> datasource_cache;
+	static ObjectCache<GDALDataset, Dataset> dataset_cache;
 
 	Dataset(GDALDataset *ds);
-	Dataset(OGRDataSource *ds);
 	inline GDALDataset *getDataset() {
 		return this_dataset;
 	}
+
+	void dispose();
+
+	#if GDAL_VERSION_MAJOR < 2
+	static Handle<Value> New(OGRDataSource *ds);
+	static ObjectCache<OGRDataSource, Dataset> datasource_cache;
+	Dataset(OGRDataSource *ds);
 	inline OGRDataSource *getDatasource() {
 		return this_datasource;
 	}
-	void dispose();
-
 	bool uses_ogr;
+	#endif
+
 private:
 	~Dataset();
 	GDALDataset   *this_dataset;
+	#if GDAL_VERSION_MAJOR < 2
 	OGRDataSource *this_datasource;
+	#endif
 	std::vector<OGRLayer*> result_sets;
 };
 
