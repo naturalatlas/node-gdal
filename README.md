@@ -20,26 +20,6 @@ $ npm install gdal --build-from-source --shared_gdal
 ### Links
 
 - [**Documentation**](docs/)
-    - [Dataset](docs/dataset.md)
-    - [Layer](docs/layer.md)
-    - [RasterBand](docs/rasterband.md)
-    - [Feature](docs/feature.md)
-    - [FeatureDefn](docs/featuredefn.md)
-    - [FieldDefn](docs/fielddefn.md)
-    - [Geometry](docs/geometry.md)
-        - [Point](docs/point.md)
-        - [LineString](docs/linestring.md)
-        - [LinearRing](docs/linearring.md)
-        - [Polygon](docs/polygon.md)
-        - [GeometryCollection](docs/geometrycollection.md)
-        - [MultiPoint](docs/multipoint.md)
-        - [MultiLineString](docs/multilinestring.md)
-        - [MultiPolygon](docs/multipolygon.md)
-    - [SpatialReference](docs/spatialreference.md)
-    - [CoordinateTransformation](docs/coordinatetransformation.md)
-    - [Driver](docs/driver.md)
-    - [Envelope](docs/envelope.md)
-    - [Envelope3D](docs/envelope3d.md)
 - [**Examples**](examples/)
 
 ### Sample Usage
