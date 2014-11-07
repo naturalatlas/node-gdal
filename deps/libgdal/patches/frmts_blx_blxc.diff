@@ -1,0 +1,10 @@
+--- deps/libgdal/gdal/frmts/blx/blx.c	2014-10-27 20:18:21.000000000 -0600
++++ deps/libgdal/gdal/frmts/blx/blx.new.c	2014-10-27 20:18:15.000000000 -0600
+@@ -26,6 +26,7 @@
+  */
+ 
+ #include "blx.h"
++#include "cpl_port.h"
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_xml.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_srs_xml.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference interface to OGC XML (014r4).
@@ -714,8 +714,7 @@ static CPLXMLNode *exportProjCSToXML( const OGRSpatialReference *poSRS )
  */
 
 OGRErr OGRSpatialReference::exportToXML( char **ppszRawXML, 
-                                         const char * pszDialect ) const
-
+                                         CPL_UNUSED const char * pszDialect ) const
 {
     CPLXMLNode *psXMLTree = NULL;
 

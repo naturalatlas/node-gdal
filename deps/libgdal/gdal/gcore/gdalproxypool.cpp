@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxypool.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalproxypool.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that differ the opening of the
@@ -31,7 +31,7 @@
 #include "gdal_proxy.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalproxypool.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalproxypool.cpp 27723 2014-09-22 18:21:08Z goatbar $");
 
 /* We *must* share the same mutex as the gdaldataset.cpp file, as we are */
 /* doing GDALOpen() calls that can indirectly call GDALOpenShared() on */
@@ -600,7 +600,7 @@ GDALDataset* GDALProxyPoolDataset::RefUnderlyingDataset()
 /*                    UnrefUnderlyingDataset()                        */
 /************************************************************************/
 
-void GDALProxyPoolDataset::UnrefUnderlyingDataset(GDALDataset* poUnderlyingDataset)
+void GDALProxyPoolDataset::UnrefUnderlyingDataset(CPL_UNUSED GDALDataset* poUnderlyingDataset)
 {
     if (cacheEntry != NULL)
     {
@@ -1109,7 +1109,7 @@ GDALRasterBand *GDALProxyPoolRasterBand::GetOverview(int nOverviewBand)
 /*                     GetRasterSampleOverview()                        */
 /* ******************************************************************** */
 
-GDALRasterBand *GDALProxyPoolRasterBand::GetRasterSampleOverview( int nDesiredSamples)
+GDALRasterBand *GDALProxyPoolRasterBand::GetRasterSampleOverview( CPL_UNUSED int nDesiredSamples)
 {
     CPLError(CE_Failure, CPLE_AppDefined,
              "GDALProxyPoolRasterBand::GetRasterSampleOverview : not implemented yet");
@@ -1185,7 +1185,7 @@ GDALRasterBand* GDALProxyPoolOverviewRasterBand::RefUnderlyingRasterBand()
 /*                  UnrefUnderlyingRasterBand()                         */
 /* ******************************************************************** */
 
-void GDALProxyPoolOverviewRasterBand::UnrefUnderlyingRasterBand(GDALRasterBand* poUnderlyingRasterBand)
+void GDALProxyPoolOverviewRasterBand::UnrefUnderlyingRasterBand(CPL_UNUSED GDALRasterBand* poUnderlyingRasterBand)
 {
     poMainBand->UnrefUnderlyingRasterBand(poUnderlyingMainRasterBand);
     nRefCountUnderlyingMainRasterBand --;
@@ -1250,7 +1250,7 @@ GDALRasterBand* GDALProxyPoolMaskBand::RefUnderlyingRasterBand()
 /*                  UnrefUnderlyingRasterBand()                         */
 /* ******************************************************************** */
 
-void GDALProxyPoolMaskBand::UnrefUnderlyingRasterBand(GDALRasterBand* poUnderlyingRasterBand)
+void GDALProxyPoolMaskBand::UnrefUnderlyingRasterBand(CPL_UNUSED GDALRasterBand* poUnderlyingRasterBand)
 {
     poMainBand->UnrefUnderlyingRasterBand(poUnderlyingMainRasterBand);
     nRefCountUnderlyingMainRasterBand --;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaopen.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hfaopen.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Supporting functions for HFA (.img) ... main (C callable) API
@@ -42,7 +42,7 @@
 #include <limits.h>
 #include <vector>
 
-CPL_CVSID("$Id: hfaopen.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hfaopen.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 
 static const char *apszAuxMetadataItems[] = {
@@ -2041,7 +2041,7 @@ HFACreateLayer( HFAHandle psInfo, HFAEntry *poParent,
                 int bCreateCompressed, int bCreateLargeRaster, 
                 int bDependentLayer,
                 int nXSize, int nYSize, int nDataType, 
-                char **papszOptions,
+                CPL_UNUSED char **papszOptions,
                 
                 // these are only related to external (large) files
                 GIntBig nStackValidFlagsOffset, 

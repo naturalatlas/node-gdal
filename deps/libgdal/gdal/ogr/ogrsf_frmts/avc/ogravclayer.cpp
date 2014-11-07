@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravclayer.cpp 15014 2008-07-23 21:05:23Z dmorissette $
+ * $Id: ogravclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCLayer class.  This is the base class for E00
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravclayer.cpp 15014 2008-07-23 21:05:23Z dmorissette $");
+CPL_CVSID("$Id: ogravclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           OGRAVCLayer()                           */
@@ -72,8 +72,7 @@ OGRAVCLayer::~OGRAVCLayer()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAVCLayer::TestCapability( const char * pszCap )
-
+int OGRAVCLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

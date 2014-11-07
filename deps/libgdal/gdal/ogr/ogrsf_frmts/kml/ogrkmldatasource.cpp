@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrkmldatasource.cpp 27051 2014-03-19 12:27:33Z rouault $
+ * $Id: ogrkmldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGRKMLDataSource class.
@@ -342,7 +342,7 @@ OGRLayer *
 OGRKMLDataSource::CreateLayer( const char * pszLayerName,
                                OGRSpatialReference *poSRS,
                                OGRwkbGeometryType eType,
-                               char ** papszOptions )
+                               CPL_UNUSED char ** papszOptions )
 {
     CPLAssert( NULL != pszLayerName);
 

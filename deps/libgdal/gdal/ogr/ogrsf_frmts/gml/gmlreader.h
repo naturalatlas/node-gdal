@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreader.h 27132 2014-04-05 21:48:58Z rouault $
+ * $Id: gmlreader.h 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GML Reader
  * Purpose:  Public Declarations for OGR free GML Reader code.
@@ -261,7 +261,7 @@ public:
     virtual void SetClassListLocked( int bFlag ) = 0;
 
     virtual void SetSourceFile( const char *pszFilename ) = 0;
-    virtual void SetFP( VSILFILE* fp ) { }
+    virtual void SetFP( CPL_UNUSED VSILFILE* fp ) { }
     virtual const char* GetSourceFileName() = 0;
 
     virtual int  GetClassCount() const = 0;
@@ -291,7 +291,7 @@ public:
 
     virtual int HasStoppedParsing() = 0;
 
-    virtual void  SetGlobalSRSName( const char* pszGlobalSRSName ) {}
+    virtual void  SetGlobalSRSName( CPL_UNUSED const char* pszGlobalSRSName ) {}
     virtual const char* GetGlobalSRSName() = 0;
     virtual int CanUseGlobalSRSName() = 0;
 

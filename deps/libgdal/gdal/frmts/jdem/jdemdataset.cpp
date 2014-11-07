@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jdemdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: jdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  JDEM Reader
  * Purpose:  All code for Japanese DEM Reader
@@ -30,7 +30,7 @@
 
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: jdemdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: jdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_JDEM(void);
@@ -157,12 +157,10 @@ JDEMRasterBand::~JDEMRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr JDEMRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr JDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
-
 {
     JDEMDataset *poGDS = (JDEMDataset *) poDS;
-    int		i;
     
     if (pszRecord == NULL)
     {
@@ -199,7 +197,7 @@ CPLErr JDEMRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
         return CE_Failure;
     }
 
-    for( i = 0; i < nBlockXSize; i++ )
+    for( int i = 0; i < nBlockXSize; i++ )
         ((float *) pImage)[i] = (float)
             (JDEMGetField( pszRecord + 9 + 5 * i, 5) * 0.1);
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograeronavfaadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ograeronavfaadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAADataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ograeronavfaadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ograeronavfaadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                      OGRAeronavFAADataSource()                       */
@@ -64,8 +64,7 @@ OGRAeronavFAADataSource::~OGRAeronavFAADataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAeronavFAADataSource::TestCapability( const char * pszCap )
-
+int OGRAeronavFAADataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

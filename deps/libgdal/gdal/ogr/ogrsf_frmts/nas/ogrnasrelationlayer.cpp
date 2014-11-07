@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasrelationlayer.cpp 24105 2012-03-10 12:08:04Z rouault $
+ * $Id: ogrnasrelationlayer.cpp 27713 2014-09-21 15:51:47Z jef $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASRelationLayer class, a special layer holding all
@@ -33,7 +33,7 @@
 #include "cpl_port.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnasrelationlayer.cpp 24105 2012-03-10 12:08:04Z rouault $");
+CPL_CVSID("$Id: ogrnasrelationlayer.cpp 27713 2014-09-21 15:51:47Z jef $");
 
 /************************************************************************/
 /*                        OGRNASRelationLayer()                         */
@@ -175,7 +175,7 @@ int OGRNASRelationLayer::TestCapability( const char * pszCap )
     else if( EQUAL(pszCap,OLCStringsAsUTF8) )
         return TRUE;
 
-    else 
+    else
         return FALSE;
 }
 
@@ -190,7 +190,7 @@ void OGRNASRelationLayer::AddRelation( const char *pszFromID,
 {
     int nMergedLen = strlen(pszFromID) + strlen(pszType) + strlen(pszToID) + 3;
     char *pszMerged = (char *) CPLMalloc(nMergedLen);
-    
+
     strcpy( pszMerged, pszFromID );
     strcpy( pszMerged + strlen(pszFromID) + 1, pszType );
     strcpy( pszMerged + strlen(pszFromID) + strlen(pszType) + 2, pszToID );

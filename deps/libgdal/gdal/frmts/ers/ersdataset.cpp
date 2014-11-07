@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ersdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ersdataset.cpp 27433 2014-06-04 19:21:16Z rouault $
  *
  * Project:  ERMapper .ers Driver
  * Purpose:  Implementation of .ers driver.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ershdrnode.h"
 
-CPL_CVSID("$Id: ersdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ersdataset.cpp 27433 2014-06-04 19:21:16Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -553,7 +553,15 @@ CPLErr ERSDataset::SetGeoTransform( double *padfTransform )
                    CPLString().Printf( "%.15g", adfGeoTransform[0] ) );
     poHeader->Set( "RasterInfo.RegistrationCoord.Northings", 
                    CPLString().Printf( "%.15g", adfGeoTransform[3] ) );
-    
+
+    if( CPLAtof(poHeader->Find("RasterInfo.RegistrationCellX", "0")) != 0.0 ||
+        CPLAtof(poHeader->Find("RasterInfo.RegistrationCellY", "0")) != 0.0 ) 
+    {
+        // Reset RegistrationCellX/Y to 0 if the header gets rewritten (#5493)
+        poHeader->Set("RasterInfo.RegistrationCellX", "0");
+        poHeader->Set("RasterInfo.RegistrationCellY", "0");
+    }
+
     return CE_None;
 }
 

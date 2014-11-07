@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigercompletechain.cpp 23871 2012-02-02 03:24:07Z warmerdam $
+ * $Id: tigercompletechain.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerCompleteChain, providing access to RT1 and
@@ -31,7 +31,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigercompletechain.cpp 23871 2012-02-02 03:24:07Z warmerdam $");
+CPL_CVSID("$Id: tigercompletechain.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static const TigerFieldInfo rt1_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -215,8 +215,7 @@ static const TigerRecordInfo rt3_info =
 /************************************************************************/
 
 TigerCompleteChain::TigerCompleteChain( OGRTigerDataSource * poDSIn,
-                                        const char * pszPrototypeModule )
-
+                                        CPL_UNUSED const char * pszPrototypeModule )
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "CompleteChain" );
@@ -483,8 +482,7 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
 /************************************************************************/
 
 int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
-                                        OGRLineString * poLine, int nSeqNum ) 
-
+                                        OGRLineString * poLine, CPL_UNUSED int nSeqNum )
 {
     int         nShapeRecId;
 

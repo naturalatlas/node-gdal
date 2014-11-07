@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkreadersqlite.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vfkreadersqlite.cpp 27206 2014-04-16 21:23:33Z martinl $
  *
  * Project:  VFK Reader (SQLite)
  * Purpose:  Implements VFKReaderSQLite class.
@@ -62,7 +62,7 @@ VFKReaderSQLite::VFKReaderSQLite(const char *pszFilename) : VFKReader(pszFilenam
 	pszDbName = pszDbNameConf;
     }
     else {
-	pszDbName.Printf("%s.db", m_pszFilename);
+	pszDbName = CPLResetExtension(m_pszFilename, "db");
     }
     m_pszDBname = new char [pszDbName.length()+1];
     std::strcpy(m_pszDBname, pszDbName.c_str());

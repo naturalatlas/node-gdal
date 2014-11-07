@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnaparser.h 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: ogrbnaparser.h 27710 2014-09-21 15:30:29Z goatbar $
  *
  * Project:  BNA Parser header
  * Purpose:  Definition of structures, enums and functions of BNA parser
@@ -40,6 +40,7 @@ extern "C"
 
 typedef enum
 {
+  BNA_UNKNOWN = -1,
   BNA_POINT,
   BNA_POLYGON,
   BNA_POLYLINE,

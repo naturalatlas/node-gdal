@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsbdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: bsbdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  BSB Reader
  * Purpose:  BSBDataset implementation for BSB format.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: bsbdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: bsbdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_BSB(void);
@@ -135,7 +135,7 @@ BSBRasterBand::BSBRasterBand( BSBDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr BSBRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr BSBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                       void * pImage )
 
 {

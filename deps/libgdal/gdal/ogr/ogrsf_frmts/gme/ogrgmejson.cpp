@@ -302,7 +302,7 @@ json_object* OGRGMEPolygonToGeoJSON( OGRPolygon* poPolygon )
     json_object* pjoRing = NULL;
     // If the linear ring is CW re-wind it CCW
     if (poRing->isClockwise() ) {
-      poRing->reverseWindingOrder();;
+      poRing->reverseWindingOrder();
     }
 
     pjoRing = OGRGMELineCoordsToGeoJSON( poRing );
@@ -315,6 +315,9 @@ json_object* OGRGMEPolygonToGeoJSON( OGRPolygon* poPolygon )
         if (poRing == NULL)
             continue;
         // If the linear ring is CW re-wind it CCW
+        if (poRing->isClockwise() ) {
+            poRing->reverseWindingOrder();
+        }
         pjoRing = OGRGMELineCoordsToGeoJSON( poRing );
         json_object_array_add( pjoCoordinates, pjoRing );
     }
@@ -467,8 +470,8 @@ json_object* json_object_new_gme_double(double dfVal)
 
 static int json_gme_double_to_string(json_object *pjo,
                                      printbuf *pb,
-                                     int level,
-                                     int flags)
+                                     CPL_UNUSED int level,
+                                     CPL_UNUSED int flags)
 {
   char buf[128], *p, *q;
   int size;
@@ -511,7 +514,7 @@ json_object *OGRGMEParseJSON( const char* pszText )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "JSON parsing error: %s (at offset %d)",
-                          json_tokener_errors[jstok->err], jstok->char_offset);
+                          json_tokener_error_desc(jstok->err), jstok->char_offset);
 
             json_tokener_free(jstok);
             return NULL;

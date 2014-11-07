@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmemlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemLayer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrmemlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmemlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRMemLayer()                             */
@@ -343,8 +343,7 @@ int OGRMemLayer::TestCapability( const char * pszCap )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRMemLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
-
+OGRErr OGRMemLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     if (!bUpdatable)
         return OGRERR_FAILURE;
@@ -567,8 +566,7 @@ OGRErr OGRMemLayer::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, in
 /************************************************************************/
 
 OGRErr OGRMemLayer::CreateGeomField( OGRGeomFieldDefn *poGeomField,
-                                     int bApproxOK )
-
+                                     CPL_UNUSED int bApproxOK )
 {
     if (!bUpdatable)
         return OGRERR_FAILURE;

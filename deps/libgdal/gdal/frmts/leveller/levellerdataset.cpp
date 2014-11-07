@@ -35,7 +35,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: levellerdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: levellerdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_Leveller(void);
@@ -454,11 +454,10 @@ LevellerRasterBand::~LevellerRasterBand()
 /*                             IWriteBlock()                            */
 /************************************************************************/
 
-CPLErr LevellerRasterBand::IWriteBlock
-( 
-	int nBlockXOff, 
+CPLErr LevellerRasterBand::IWriteBlock ( 
+	CPL_UNUSED int nBlockXOff, 
 	int nBlockYOff,
-    void* pImage
+        void* pImage
 )
 {
     CPLAssert( nBlockXOff == 0  );
@@ -521,7 +520,7 @@ CPLErr LevellerRasterBand::SetUnitType( const char* psz )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr LevellerRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr LevellerRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                        void* pImage )
 
 {

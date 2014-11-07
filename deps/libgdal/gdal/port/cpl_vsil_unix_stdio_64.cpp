@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_vsil_unix_stdio_64.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_unix_stdio_64.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for Unix platforms with fseek64()
@@ -52,7 +52,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 #if defined(UNIX_STDIO_64)
 
@@ -169,7 +169,11 @@ class VSIUnixStdioHandle : public VSIVirtualHandle
 /*                       VSIUnixStdioHandle()                           */
 /************************************************************************/
 
-VSIUnixStdioHandle::VSIUnixStdioHandle(VSIUnixStdioFilesystemHandler *poFSIn,
+VSIUnixStdioHandle::VSIUnixStdioHandle(
+#ifndef VSI_COUNT_BYTES_READ
+CPL_UNUSED
+#endif
+                                       VSIUnixStdioFilesystemHandler *poFSIn,
                                        FILE* fpIn, int bReadOnlyIn) :
     fp(fpIn), nOffset(0), bReadOnly(bReadOnlyIn), bLastOpWrite(FALSE), bLastOpRead(FALSE), bAtEOF(FALSE)
 #ifdef VSI_COUNT_BYTES_READ
@@ -504,7 +508,7 @@ VSIUnixStdioFilesystemHandler::Open( const char *pszFilename,
 
 int VSIUnixStdioFilesystemHandler::Stat( const char * pszFilename, 
                                          VSIStatBufL * pStatBuf,
-                                         int nFlags)
+                                         CPL_UNUSED int nFlags)
 
 {
     return( VSI_STAT64( pszFilename, pStatBuf ) );

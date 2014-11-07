@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: usgsdem_create.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: usgsdem_create.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  USGS DEM Driver
  * Purpose:  CreateCopy() implementation.
@@ -37,7 +37,7 @@
 #include "gdalwarper.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: usgsdem_create.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: usgsdem_create.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 typedef struct 
 {
@@ -1269,8 +1269,7 @@ static int USGSDEMProductSetup_DEFAULT( USGSDEMWriteInfo *psWInfo )
 /************************************************************************/
 
 static int USGSDEMLoadRaster( USGSDEMWriteInfo *psWInfo,
-                              GDALRasterBand *poSrcBand )
-
+                              CPL_UNUSED GDALRasterBand *poSrcBand )
 {
     CPLErr eErr;
     int i;
@@ -1397,8 +1396,7 @@ static int USGSDEMLoadRaster( USGSDEMWriteInfo *psWInfo,
 GDALDataset *
 USGSDEMCreateCopy( const char *pszFilename, GDALDataset *poSrcDS, 
                    int bStrict, char **papszOptions,
-                   GDALProgressFunc pfnProgress, void * pProgressData )
-
+                   CPL_UNUSED GDALProgressFunc pfnProgress, CPL_UNUSED void * pProgressData )
 {
     USGSDEMWriteInfo sWInfo;
 

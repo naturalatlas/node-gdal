@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntf_raster.cpp 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ntf_raster.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NTF Translator
  * Purpose:  Handle UK Ordnance Survey Raster DTM products.  Includes some
@@ -31,7 +31,7 @@
 
 #include "ntf.h"
 
-CPL_CVSID("$Id: ntf_raster.cpp 26466 2013-09-14 09:07:46Z rouault $");
+CPL_CVSID("$Id: ntf_raster.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -401,8 +401,7 @@ OGRFeature *OGRNTFRasterLayer::GetFeature( long nFeatureId )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRNTFRasterLayer::GetFeatureCount( int bForce )
-
+int OGRNTFRasterLayer::GetFeatureCount( CPL_UNUSED int bForce )
 {
     return nFeatureCount;
 }

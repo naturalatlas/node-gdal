@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocisession.cpp 22346 2011-05-10 03:02:15Z warmerdam $
+ * $Id: ogrocisession.cpp 27575 2014-08-06 19:40:30Z ilucena $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of OGROCISession, which encapsulates much of the
@@ -31,7 +31,7 @@
 #include "ogr_oci.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrocisession.cpp 22346 2011-05-10 03:02:15Z warmerdam $");
+CPL_CVSID("$Id: ogrocisession.cpp 27575 2014-08-06 19:40:30Z ilucena $");
 
 /************************************************************************/
 /*                          OGRGetOCISession()                          */
@@ -103,6 +103,9 @@ OGROCISession::~OGROCISession()
 
         if( hSession )
             OCIHandleFree((dvoid *) hSession, (ub4) OCI_HTYPE_SESSION);
+
+        if( hEnv )
+            OCIHandleFree((dvoid *) hEnv, (ub4) OCI_HTYPE_ENV);
     }
 
     CPLFree( pszUserid );

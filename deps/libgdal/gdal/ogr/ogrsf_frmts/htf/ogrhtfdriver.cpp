@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrhtfdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrhtfdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  HTF Translator
  * Purpose:  Implements OGRHTFDriver.
@@ -30,7 +30,7 @@
 #include "ogr_htf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrhtfdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrhtfdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRHTF();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGRHTFDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRHTFDriver::TestCapability( const char * pszCap )
-
+int OGRHTFDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

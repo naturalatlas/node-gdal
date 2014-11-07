@@ -30,7 +30,7 @@
 #include "ogr_xplane.h"
 #include "ogr_xplane_reader.h"
 
-CPL_CVSID("$Id: ogrxplanedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrxplanedatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRXPlaneDataSource()                          */
@@ -164,8 +164,7 @@ int OGRXPlaneDataSource::Open( const char * pszFilename, int bReadWholeFile )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRXPlaneDataSource::TestCapability( const char * pszCap )
-
+int OGRXPlaneDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

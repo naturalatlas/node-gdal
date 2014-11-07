@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpdsdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpdsdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PDS Translator
  * Purpose:  Implements OGRPDSDriver.
@@ -30,7 +30,7 @@
 #include "ogr_pds.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpdsdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpdsdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRPDS();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGRPDSDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRPDSDriver::TestCapability( const char * pszCap )
-
+int OGRPDSDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

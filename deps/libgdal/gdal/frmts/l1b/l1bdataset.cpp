@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: l1bdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: l1bdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NOAA Polar Orbiter Level 1b Dataset Reader (AVHRR)
  * Purpose:  Can read NOAA-9(F)-NOAA-17(M) AVHRR datasets
@@ -37,7 +37,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: l1bdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: l1bdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_L1B(void);
@@ -339,7 +339,7 @@ L1BRasterBand::L1BRasterBand( L1BDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr L1BRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr L1BRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 {
     L1BDataset  *poGDS = (L1BDataset *) poDS;
@@ -2268,7 +2268,7 @@ L1BInterpol(double vals[],
 /*                         IReadBlock()                                 */
 /************************************************************************/
 
-CPLErr L1BGeolocRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pData)
+CPLErr L1BGeolocRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff, void* pData)
 {
     L1BGeolocDataset* poGDS = (L1BGeolocDataset*)poDS;
     L1BDataset* poL1BDS = poGDS->poL1BDS;
@@ -2447,7 +2447,7 @@ L1BSolarZenithAnglesRasterBand::L1BSolarZenithAnglesRasterBand(L1BSolarZenithAng
 /*                         IReadBlock()                                 */
 /************************************************************************/
 
-CPLErr L1BSolarZenithAnglesRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pData)
+CPLErr L1BSolarZenithAnglesRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff, void* pData)
 {
     L1BSolarZenithAnglesDataset* poGDS = (L1BSolarZenithAnglesDataset*)poDS;
     L1BDataset* poL1BDS = poGDS->poL1BDS;
@@ -2640,7 +2640,7 @@ L1BNOAA15AnglesRasterBand::L1BNOAA15AnglesRasterBand(L1BNOAA15AnglesDataset* poD
 /*                         IReadBlock()                                 */
 /************************************************************************/
 
-CPLErr L1BNOAA15AnglesRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pData)
+CPLErr L1BNOAA15AnglesRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff, void* pData)
 {
     L1BNOAA15AnglesDataset* poGDS = (L1BNOAA15AnglesDataset*)poDS;
     L1BDataset* poL1BDS = poGDS->poL1BDS;
@@ -2766,7 +2766,7 @@ L1BCloudsRasterBand::L1BCloudsRasterBand(L1BCloudsDataset* poDS, int nBand)
 /*                         IReadBlock()                                 */
 /************************************************************************/
 
-CPLErr L1BCloudsRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pData)
+CPLErr L1BCloudsRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff, void* pData)
 {
     L1BCloudsDataset* poGDS = (L1BCloudsDataset*)poDS;
     L1BDataset* poL1BDS = poGDS->poL1BDS;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The generic portions of the OGRSFLayer class.
@@ -34,7 +34,7 @@
 #include "ogr_attrind.h"
 #include "swq.h"
 
-CPL_CVSID("$Id: ogrlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                              OGRLayer()                              */
@@ -879,7 +879,7 @@ int OGR_L_FindFieldIndex( OGRLayerH hLayer, const char *pszFieldName, int bExact
 /*                           FindFieldIndex()                           */
 /************************************************************************/
 
-int OGRLayer::FindFieldIndex( const char *pszFieldName, int bExactMatch )
+int OGRLayer::FindFieldIndex( const char *pszFieldName, CPL_UNUSED int bExactMatch )
 {
     return GetLayerDefn()->GetFieldIndex( pszFieldName );
 }
@@ -1346,7 +1346,7 @@ OGRErr OGR_L_SyncToDisk( OGRLayerH hDS )
 /*                           DeleteFeature()                            */
 /************************************************************************/
 
-OGRErr OGRLayer::DeleteFeature( long nFID )
+OGRErr OGRLayer::DeleteFeature( CPL_UNUSED long nFID )
 
 {
     return OGRERR_UNSUPPORTED_OPERATION;

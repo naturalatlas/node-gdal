@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerlayer.cpp 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ogrtigerlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_tiger.h"
 
-CPL_CVSID("$Id: ogrtigerlayer.cpp 26466 2013-09-14 09:07:46Z rouault $");
+CPL_CVSID("$Id: ogrtigerlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           OGRTigerLayer()                            */
@@ -245,11 +245,9 @@ OGRFeatureDefn *OGRTigerLayer::GetLayerDefn()
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRTigerLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
-
+OGRErr OGRTigerLayer::CreateField( CPL_UNUSED OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     /* notdef/TODO: I should add some checking here eventually. */
-
     return OGRERR_NONE;
 }
 

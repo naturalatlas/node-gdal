@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxfdriver.cpp 22527 2011-06-13 03:58:34Z warmerdam $
+ * $Id: ogrdxfdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFDriver.
@@ -30,7 +30,7 @@
 #include "ogr_dxf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdxfdriver.cpp 22527 2011-06-13 03:58:34Z warmerdam $");
+CPL_CVSID("$Id: ogrdxfdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRDXFDriver()                          */
@@ -55,8 +55,7 @@ const char *OGRDXFDriver::GetName()
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRDXFDriver::Open( const char * pszFilename, int bUpdate )
-
+OGRDataSource *OGRDXFDriver::Open( const char * pszFilename, CPL_UNUSED int bUpdate )
 {
     OGRDXFDataSource   *poDS = new OGRDXFDataSource();
 

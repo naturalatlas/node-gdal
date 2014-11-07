@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hugefileresolver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hugefileresolver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLReader::HugeFileResolver() method.
@@ -47,7 +47,7 @@
 
 #include <stack>
 
-CPL_CVSID("$Id: hugefileresolver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hugefileresolver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /****************************************************/
 /*      SQLite is absolutely required in order to   */
@@ -1057,7 +1057,7 @@ static int gmlHugeFindGmlId( const CPLXMLNode *psNode, CPLString **gmlId )
 
 static void gmlHugeFileNodeCoords( struct huge_tag *pItem,
                                    const CPLXMLNode * psNode,
-                                   CPLString **nodeSrs )
+                                   CPL_UNUSED CPLString **nodeSrs )
 {
 /* 
 / this function attempts to set coordinates for <Node> items
@@ -1461,7 +1461,7 @@ static int gmlHugeSetChild( struct huge_parent *pParent,
 }
 
 static int gmlHugeResolveEdges( struct huge_helper *helper,
-                                CPLXMLNode *psNode, sqlite3 *hDB )
+                                CPL_UNUSED CPLXMLNode *psNode, sqlite3 *hDB )
 {
 /* resolving GML <Edge> xlink:href */
     CPLString      osCommand;

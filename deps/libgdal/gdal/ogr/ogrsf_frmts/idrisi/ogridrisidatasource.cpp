@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogridrisidatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogridrisidatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Idrisi Translator
  * Purpose:  Implements OGRIdrisiDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "idrisi.h"
 
-CPL_CVSID("$Id: ogridrisidatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogridrisidatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRIdrisiDataSource()                         */
@@ -65,8 +65,7 @@ OGRIdrisiDataSource::~OGRIdrisiDataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRIdrisiDataSource::TestCapability( const char * pszCap )
-
+int OGRIdrisiDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

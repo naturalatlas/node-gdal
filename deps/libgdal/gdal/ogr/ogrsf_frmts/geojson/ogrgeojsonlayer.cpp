@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonlayer.cpp 27718 2014-09-21 16:55:01Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONLayer class (OGR GeoJSON Driver).
@@ -51,10 +51,10 @@ const OGRwkbGeometryType OGRGeoJSONLayer::DefaultGeometryType = wkbUnknown;
 OGRGeoJSONLayer::OGRGeoJSONLayer( const char* pszName,
                                   OGRSpatialReference* poSRSIn,
                                   OGRwkbGeometryType eGType,
-                                  OGRGeoJSONDataSource* poDS )
-    : iterCurrent_( seqFeatures_.end() ), poDS_( poDS ), poFeatureDefn_(new OGRFeatureDefn( pszName ) )
+                                  CPL_UNUSED OGRGeoJSONDataSource* poDS )
+  : iterCurrent_( seqFeatures_.end() ), /* poDS_( poDS ), */ poFeatureDefn_(new OGRFeatureDefn( pszName ) )
 {
-    CPLAssert( NULL != poDS_ );
+    /* CPLAssert( NULL != poDS_ ); */
     CPLAssert( NULL != poFeatureDefn_ );
     
     poFeatureDefn_->Reference();

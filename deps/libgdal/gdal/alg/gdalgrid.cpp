@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid.cpp 27110 2014-03-28 21:29:20Z rouault $
+ * $Id: gdalgrid.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -40,7 +40,7 @@
 #include <xmmintrin.h>
 #endif
 
-CPL_CVSID("$Id: gdalgrid.cpp 27110 2014-03-28 21:29:20Z rouault $");
+CPL_CVSID("$Id: gdalgrid.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define TO_RADIANS (3.14159265358979323846 / 180.0)
 
@@ -193,7 +193,7 @@ GDALGridInverseDistanceToAPower( const void *poOptions, GUInt32 nPoints,
                                  const double *padfZ,
                                  double dfXPoint, double dfYPoint,
                                  double *pdfValue,
-                                 void* hExtraParamsIn )
+                                 CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -301,7 +301,7 @@ GDALGridInverseDistanceToAPowerNoSearch( const void *poOptions, GUInt32 nPoints,
                                          const double *padfZ,
                                          double dfXPoint, double dfYPoint,
                                          double *pdfValue,
-                                         void* hExtraParamsIn )
+                                         CPL_UNUSED void* hExtraParamsIn )
 {
     const double    dfPowerDiv2 =
         ((GDALGridInverseDistanceToAPowerOptions *)poOptions)->dfPower / 2;
@@ -403,9 +403,9 @@ static CPLErr
 GDALGridInverseDistanceToAPower2NoSmoothingNoSearchSSE(
                                         const void *poOptions,
                                         GUInt32 nPoints,
-                                        const double *unused_padfX,
-                                        const double *unused_padfY,
-                                        const double *unused_padfZ,
+                                        CPL_UNUSED const double *unused_padfX,
+                                        CPL_UNUSED const double *unused_padfY,
+                                        CPL_UNUSED const double *unused_padfZ,
                                         double dfXPoint, double dfYPoint,
                                         double *pdfValue,
                                         void* hExtraParamsIn )
@@ -581,7 +581,7 @@ GDALGridMovingAverage( const void *poOptions, GUInt32 nPoints,
                        const double *padfX, const double *padfY,
                        const double *padfZ,
                        double dfXPoint, double dfYPoint, double *pdfValue,
-                       void* hExtraParamsIn )
+                       CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -835,7 +835,7 @@ GDALGridDataMetricMinimum( const void *poOptions, GUInt32 nPoints,
                            const double *padfX, const double *padfY,
                            const double *padfZ,
                            double dfXPoint, double dfYPoint, double *pdfValue,
-                           void* hExtraParamsIn )
+                           CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -947,7 +947,7 @@ GDALGridDataMetricMaximum( const void *poOptions, GUInt32 nPoints,
                            const double *padfX, const double *padfY,
                            const double *padfZ,
                            double dfXPoint, double dfYPoint, double *pdfValue,
-                           void* hExtraParamsIn )
+                           CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -1060,7 +1060,7 @@ GDALGridDataMetricRange( const void *poOptions, GUInt32 nPoints,
                          const double *padfX, const double *padfY,
                          const double *padfZ,
                          double dfXPoint, double dfYPoint, double *pdfValue,
-                         void* hExtraParamsIn )
+                         CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -1170,9 +1170,9 @@ GDALGridDataMetricRange( const void *poOptions, GUInt32 nPoints,
 CPLErr
 GDALGridDataMetricCount( const void *poOptions, GUInt32 nPoints,
                          const double *padfX, const double *padfY,
-                         const double *padfZ,
+                         CPL_UNUSED const double *padfZ,
                          double dfXPoint, double dfYPoint, double *pdfValue,
-                         void* hExtraParamsIn )
+                         CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -1273,10 +1273,10 @@ GDALGridDataMetricCount( const void *poOptions, GUInt32 nPoints,
 CPLErr
 GDALGridDataMetricAverageDistance( const void *poOptions, GUInt32 nPoints,
                                    const double *padfX, const double *padfY,
-                                   const double *padfZ,
+                                   CPL_UNUSED const double *padfZ,
                                    double dfXPoint, double dfYPoint,
                                    double *pdfValue,
-                                   void* hExtraParamsIn )
+                                   CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -1384,10 +1384,10 @@ GDALGridDataMetricAverageDistance( const void *poOptions, GUInt32 nPoints,
 CPLErr
 GDALGridDataMetricAverageDistancePts( const void *poOptions, GUInt32 nPoints,
                                       const double *padfX, const double *padfY,
-                                      const double *padfZ,
+                                      CPL_UNUSED const double *padfZ,
                                       double dfXPoint, double dfYPoint,
                                       double *pdfValue,
-                                      void* hExtraParamsIn )
+                                      CPL_UNUSED void* hExtraParamsIn )
 {
     // TODO: For optimization purposes pre-computed parameters should be moved
     // out of this routine to the calling function.
@@ -1766,14 +1766,14 @@ GDALGridCreate( GDALGridAlgorithm eAlgorithm, const void *poOptions,
                             pabyX = pabyY = pabyZ = NULL;
                         }
                     }
-                    else
 #endif
 
 #ifdef HAVE_SSE_AT_COMPILE_TIME
 
 #define ALIGN16(x)  (((char*)(x)) + ((16 - (((size_t)(x)) % 16)) % 16))
 
-                    if( CSLTestBoolean(CPLGetConfigOption("GDAL_USE_SSE", "YES")) &&
+                    if( pafXAligned == NULL &&
+                        CSLTestBoolean(CPLGetConfigOption("GDAL_USE_SSE", "YES")) &&
                         CPLHaveRuntimeSSE() )
                     {
                         pabyX = (float*)VSIMalloc(sizeof(float) * nPoints + 15);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqldriver.cpp 12396 2007-10-13 10:02:17Z rouault $
+ * $Id: ogrmysqldriver.cpp 27506 2014-07-07 19:49:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLDriver class.
@@ -29,8 +29,12 @@
 
 #include "ogr_mysql.h"
 #include "cpl_conv.h"
+#include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmysqldriver.cpp 12396 2007-10-13 10:02:17Z rouault $");
+CPL_CVSID("$Id: ogrmysqldriver.cpp 27506 2014-07-07 19:49:05Z rouault $");
+
+static void* hMutex = NULL;
+static int   bInitialized = FALSE;
 
 /************************************************************************/
 /*                          ~OGRMySQLDriver()                           */
@@ -39,6 +43,16 @@ CPL_CVSID("$Id: ogrmysqldriver.cpp 12396 2007-10-13 10:02:17Z rouault $");
 OGRMySQLDriver::~OGRMySQLDriver()
 
 {
+    if( bInitialized )
+    {
+        mysql_library_end();
+        bInitialized = FALSE;
+    }
+    if( hMutex != NULL )
+    {
+        CPLDestroyMutex(hMutex);
+        hMutex = NULL;
+    }
 }
 
 /************************************************************************/
@@ -60,6 +74,21 @@ OGRDataSource *OGRMySQLDriver::Open( const char * pszFilename,
 
 {
     OGRMySQLDataSource     *poDS;
+ 
+    if( !EQUALN(pszFilename,"MYSQL:",6) )
+        return NULL;
+    {
+        CPLMutexHolderD(&hMutex);
+        if( !bInitialized )
+        {
+            if ( mysql_library_init( 0, NULL, NULL ) )
+            {
+                CPLError( CE_Failure, CPLE_AppDefined, "Could not initialize MySQL library" );
+                return NULL;
+            }
+            bInitialized = TRUE;
+        }
+    }
 
     poDS = new OGRMySQLDataSource();
 

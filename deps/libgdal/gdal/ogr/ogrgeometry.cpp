@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeometry.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeometry.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements a few base methods on OGRGeometry.
@@ -35,7 +35,7 @@
 #include "cpl_multiproc.h"
 #include <assert.h>
 
-CPL_CVSID("$Id: ogrgeometry.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeometry.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 int OGRGeometry::bGenerate_DB2_V72_BYTE_ORDER = FALSE;
 
@@ -592,7 +592,7 @@ int OGRGeometry::getIsoGeometryType() const
  * @param dfMaxLength the maximum distance between 2 points after segmentization
  */
 
-void OGRGeometry::segmentize( double dfMaxLength )
+void OGRGeometry::segmentize( CPL_UNUSED double dfMaxLength )
 {
     /* Do nothing */
 }

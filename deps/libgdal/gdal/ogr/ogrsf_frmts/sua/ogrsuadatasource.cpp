@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsuadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsuadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUADataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsuadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsuadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRSUADataSource()                          */
@@ -64,8 +64,7 @@ OGRSUADataSource::~OGRSUADataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSUADataSource::TestCapability( const char * pszCap )
-
+int OGRSUADataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

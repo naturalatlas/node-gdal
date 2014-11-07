@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegukooadriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsegukooadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SEG-P1 / UKOOA P1-90 Translator
  * Purpose:  Implements OGRSEGUKOOADriver.
@@ -30,7 +30,7 @@
 #include "ogr_segukooa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsegukooadriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsegukooadriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRSEGUKOOA();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGRSEGUKOOADriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSEGUKOOADriver::TestCapability( const char * pszCap )
-
+int OGRSEGUKOOADriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeorsslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeorsslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GeoRSS Translator
  * Purpose:  Implements OGRGeoRSSLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_api.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgeorsslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeorsslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static const char* apszAllowedATOMFieldNamesWithSubElements[] = { "author", "contributor", NULL };
 
@@ -1634,8 +1634,7 @@ OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGeoRSSLayer::CreateField( OGRFieldDefn *poFieldDefn, int bApproxOK )
-
+OGRErr OGRGeoRSSLayer::CreateField( OGRFieldDefn *poFieldDefn, CPL_UNUSED int bApproxOK )
 {
     const char* pszName = poFieldDefn->GetNameRef();
     if (((eFormat == GEORSS_RSS && strcmp(pszName, "pubDate") == 0) ||

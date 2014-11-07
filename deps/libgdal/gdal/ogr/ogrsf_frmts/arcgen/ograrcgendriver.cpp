@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograrcgendriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ograrcgendriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENDriver.
@@ -30,7 +30,7 @@
 #include "ogr_arcgen.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ograrcgendriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ograrcgendriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRARCGEN();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGRARCGENDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRARCGENDriver::TestCapability( const char * pszCap )
-
+int OGRARCGENDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

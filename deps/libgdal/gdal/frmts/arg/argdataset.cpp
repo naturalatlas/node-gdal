@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: argdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: argdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Azavea Raster Grid format driver.
  * Purpose:  Implements support for reading and writing Azavea Raster Grid
@@ -34,7 +34,7 @@
 #include <json.h>
 #include <ogr_spatialref.h>
 
-CPL_CVSID("$Id: argdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: argdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define MAX_FILENAME_LEN 4096
 
@@ -577,8 +577,11 @@ GDALDataset *ARGDataset::Open( GDALOpenInfo * poOpenInfo )
 /*                          CreateCopy()                                */
 /************************************************************************/
 GDALDataset * ARGDataset::CreateCopy( const char * pszFilename, 
-    GDALDataset * poSrcDS, int bStrict, char ** papszOptions, 
-    GDALProgressFunc pfnProgress, void * pProgressData ) 
+                                      GDALDataset * poSrcDS,
+                                      CPL_UNUSED int bStrict,
+                                      CPL_UNUSED char ** papszOptions, 
+                                      CPL_UNUSED GDALProgressFunc pfnProgress,
+                                      CPL_UNUSED void * pProgressData ) 
 {
     int nBands = poSrcDS->GetRasterCount();
     int nXSize = poSrcDS->GetRasterXSize();

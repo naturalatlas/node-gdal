@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalpamrasterband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalpamrasterband.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALPamRasterBand, a raster band base class
@@ -34,7 +34,7 @@
 #include "gdal_rat.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdalpamrasterband.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalpamrasterband.cpp 27723 2014-09-22 18:21:08Z goatbar $");
 
 /************************************************************************/
 /*                         GDALPamRasterBand()                          */
@@ -61,7 +61,7 @@ GDALPamRasterBand::~GDALPamRasterBand()
 /*                           SerializeToXML()                           */
 /************************************************************************/
 
-CPLXMLNode *GDALPamRasterBand::SerializeToXML( const char *pszUnused )
+CPLXMLNode *GDALPamRasterBand::SerializeToXML( CPL_UNUSED const char *pszUnused )
 
 {
     if( psPam == NULL )
@@ -207,7 +207,11 @@ CPLXMLNode *GDALPamRasterBand::SerializeToXML( const char *pszUnused )
 /*      Raster Attribute Table                                          */
 /* -------------------------------------------------------------------- */
     if( psPam->poDefaultRAT != NULL )
-        CPLAddXMLChild( psTree, psPam->poDefaultRAT->Serialize() );
+    {
+        CPLXMLNode* psSerializedRAT = psPam->poDefaultRAT->Serialize();
+        if( psSerializedRAT != NULL )
+            CPLAddXMLChild( psTree, psSerializedRAT );
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Metadata.                                                       */
@@ -305,7 +309,7 @@ void GDALPamRasterBand::PamClear()
 /*                              XMLInit()                               */
 /************************************************************************/
 
-CPLErr GDALPamRasterBand::XMLInit( CPLXMLNode *psTree, const char *pszUnused )
+CPLErr GDALPamRasterBand::XMLInit( CPLXMLNode *psTree, CPL_UNUSED const char *pszUnused )
 
 {
     PamInitialize();
@@ -975,8 +979,7 @@ int
 PamParseHistogram( CPLXMLNode *psHistItem, 
                    double *pdfMin, double *pdfMax, 
                    int *pnBuckets, int **ppanHistogram, 
-                   int *pbIncludeOutOfRange, int *pbApproxOK )
-
+                   CPL_UNUSED int *pbIncludeOutOfRange, CPL_UNUSED int *pbApproxOK )
 {
     if( psHistItem == NULL )
         return FALSE;

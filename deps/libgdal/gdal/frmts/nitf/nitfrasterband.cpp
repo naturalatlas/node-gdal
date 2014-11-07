@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfrasterband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NITF Read/Write Translator
  * Purpose:  NITFRasterBand (and related proxy band) implementations.
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: nitfrasterband.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: nitfrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                       NITFMakeColorTable()                           */
@@ -352,7 +352,7 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, CreateMaskBand, ( int nFlags ), (nF
 /*                 UnrefUnderlyingRasterBand()                        */
 /************************************************************************/
 
-void NITFProxyPamRasterBand::UnrefUnderlyingRasterBand(GDALRasterBand* poUnderlyingRasterBand)
+void NITFProxyPamRasterBand::UnrefUnderlyingRasterBand(CPL_UNUSED GDALRasterBand* poUnderlyingRasterBand)
 {
 }
 

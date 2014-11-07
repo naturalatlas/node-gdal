@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogropenairlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirLayer class.
@@ -34,7 +34,7 @@
 #include "ogr_xplane_geo_utils.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogropenairlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogropenairlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                         OGROpenAirLayer()                            */
@@ -465,8 +465,7 @@ OGRFeature *OGROpenAirLayer::GetNextRawFeature()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGROpenAirLayer::TestCapability( const char * pszCap )
-
+int OGROpenAirLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonwriter.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonwriter.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of GeoJSON writer utilities (OGR GeoJSON Driver).
@@ -603,8 +603,8 @@ char* OGR_G_ExportToJsonEx( OGRGeometryH hGeometry, char** papszOptions )
 
 static int OGR_json_double_with_precision_to_string(struct json_object *jso,
                                                     struct printbuf *pb,
-                                                    int level,
-                                                    int flags)
+                                                    CPL_UNUSED int level,
+                                                    CPL_UNUSED int flags)
 {
     char szBuffer[75]; 
     int nPrecision = (int) (size_t) jso->_userdata;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gtxdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Vertical Datum Transformation
  * Purpose:  Implementation of NOAA .gtx vertical datum shift file format.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gtxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gtxdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /**
 
@@ -314,9 +314,9 @@ const char *GTXDataset::GetProjectionRef()
 /************************************************************************/
 
 GDALDataset *GTXDataset::Create( const char * pszFilename,
-                                 int nXSize, int nYSize, int nBands,
+                                 int nXSize, int nYSize, CPL_UNUSED int nBands,
                                  GDALDataType eType,
-                                 char ** papszOptions )
+                                 CPL_UNUSED char ** papszOptions )
 
 {
     if( eType != GDT_Float32 )

@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_spawn.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_spawn.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement CPLSystem().
@@ -39,7 +39,7 @@
 #define IN_FOR_PARENT   0
 #define OUT_FOR_PARENT  1
 
-CPL_CVSID("$Id: cpl_spawn.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_spawn.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 static void FillFileFromPipe(CPL_FILE_HANDLE pipe_fd, VSILFILE* fout);
 
@@ -328,7 +328,16 @@ CPLSpawnedProcess* CPLSpawnAsync(int (*pfnMain)(CPL_FILE_HANDLE, CPL_FILE_HANDLE
     {
         if (i > 0)
             osCommandLine += " ";
-        osCommandLine += papszArgv[i];
+        /* We need to quote arguments with spaces in them (if not already done) */
+        if( strchr(papszArgv[i], ' ') != NULL &&
+            papszArgv[i][0] != '"' )
+        {
+            osCommandLine += "\"";
+            osCommandLine += papszArgv[i];
+            osCommandLine += "\"";
+        }
+        else
+            osCommandLine += papszArgv[i];
     }
 
     if (!CreateProcess(NULL, 
@@ -644,7 +653,7 @@ CPLSpawnedProcess* CPLSpawnAsync(int (*pfnMain)(CPL_FILE_HANDLE, CPL_FILE_HANDLE
                                  int bCreateInputPipe,
                                  int bCreateOutputPipe,
                                  int bCreateErrorPipe,
-                                 char** papszOptions)
+                                 CPL_UNUSED char** papszOptions)
 {
     pid_t pid;
     int pipe_in[2] = { -1, -1 };
@@ -878,7 +887,7 @@ CPL_PID CPLSpawnAsyncGetChildProcessId(CPLSpawnedProcess* p)
  *
  * @since GDAL 1.10.0
  */
-int CPLSpawnAsyncFinish(CPLSpawnedProcess* p, int bWait, int bKill)
+int CPLSpawnAsyncFinish(CPLSpawnedProcess* p, int bWait, CPL_UNUSED int bKill)
 {
     int status = 0;
 

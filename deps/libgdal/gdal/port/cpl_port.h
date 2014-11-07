@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_port.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_port.h 27701 2014-09-20 15:07:02Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -572,6 +572,13 @@ static char *cvsid_aw() { return( cvsid_aw() ? ((char *) NULL) : cpl_cvsid ); }
 #define CPL_WARN_UNUSED_RESULT                        __attribute__((warn_unused_result))
 #else
 #define CPL_WARN_UNUSED_RESULT
+#endif
+
+#if defined(__GNUC__) && __GNUC__ >= 4
+#  define CPL_UNUSED __attribute((__unused__))
+#else
+/* TODO: add cases for other compilers */
+#  define CPL_UNUSED
 #endif
 
 #if defined(__GNUC__) && __GNUC__ >= 3 && !defined(DOXYGEN_SKIP)

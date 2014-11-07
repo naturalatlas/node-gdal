@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxfwriterlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxfwriterlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFWriterLayer - the OGRLayer class used for
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_featurestyle.h"
 
-CPL_CVSID("$Id: ogrdxfwriterlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxfwriterlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
@@ -519,9 +519,8 @@ OGRErr OGRDXFWriterLayer::WriteTEXT( OGRFeature *poFeature )
 /*                     PrepareLineTypeDefinition()                      */
 /************************************************************************/
 CPLString 
-OGRDXFWriterLayer::PrepareLineTypeDefinition( OGRFeature *poFeature, 
+OGRDXFWriterLayer::PrepareLineTypeDefinition( CPL_UNUSED OGRFeature *poFeature,
                                               OGRStyleTool *poTool )
-
 {
     CPLString osDef;
     OGRStylePen *poPen = (OGRStylePen *) poTool;

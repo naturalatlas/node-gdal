@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_priv.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_priv.h 27657 2014-09-10 07:21:17Z rouault $
  *
  * Name:     gdal_priv.h
  * Project:  GDAL Core
@@ -512,9 +512,12 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     GDALRasterBand *poMask;
     bool        bOwnMask;
     int         nMaskFlags;
+    
+    void        InvalidateMaskBand();
 
     friend class GDALDataset;
     friend class GDALProxyRasterBand;
+    friend class GDALDefaultOverviews;
 
   protected:
     virtual CPLErr IReadBlock( int, int, void * ) = 0;

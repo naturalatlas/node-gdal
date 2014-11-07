@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver_virtualearth.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: minidriver_virtualearth.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -83,7 +83,7 @@ void GDALWMSMiniDriver_VirtualEarth::GetCapabilities(GDALWMSMiniDriverCapabiliti
 }
 
 void GDALWMSMiniDriver_VirtualEarth::TiledImageRequest(CPLString *url,
-                                                       const GDALWMSImageRequestInfo &iri,
+                                                       CPL_UNUSED const GDALWMSImageRequestInfo &iri,
                                                        const GDALWMSTiledImageRequestInfo &tiri)
 {
 

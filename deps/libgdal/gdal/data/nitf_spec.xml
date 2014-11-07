@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /******************************************************************************
- * $Id: nitf_spec.xml 24212 2012-04-08 18:41:59Z rouault $
+ * $Id: nitf_spec.xml 27536 2014-07-16 08:01:29Z rouault $
  *
  * Project:  NITF Library
  * Purpose:  Description of NITF TREs
@@ -290,12 +290,12 @@
             <if cond="ROT_FLAG=1">
                 <field name="ROT_ANGLE" length="8"/>
             </if>
-            <field name="PROJ_FLAG" length="1"/>
             <field name="ASYM_FLAG" length="1"/>
             <if cond="ASYM_FLAG=1">
                 <field name="ZOOMROW" length="7"/>
                 <field name="ZOOMCOL" length="7"/>
             </if>
+            <field name="PROJ_FLAG" length="1"/>
             <field name="SHARP_FLAG" length="1"/>
             <if cond="SHARP_FLAG=1">
                 <field name="SHARPFAM" length="2"/>

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrnasdatasource.cpp 27713 2014-09-21 15:51:47Z jef $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnasdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrnasdatasource.cpp 27713 2014-09-21 15:51:47Z jef $");
 
 static const char *apszURNNames[] =
 {
@@ -269,7 +269,7 @@ OGRNASLayer *OGRNASDataSource::TranslateNASSchema( GMLFeatureClass *poClass )
 {
     OGRNASLayer *poLayer;
     OGRwkbGeometryType eGType = wkbNone;
-    
+
     if( poClass->GetGeometryPropertyCount() != 0 )
     {
         eGType = (OGRwkbGeometryType) poClass->GetGeometryProperty(0)->GetType();

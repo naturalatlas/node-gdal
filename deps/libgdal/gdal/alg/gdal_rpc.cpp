@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_rpc.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_rpc.cpp 27486 2014-07-01 17:30:04Z rouault $
  *
  * Project:  Image Warper
  * Purpose:  Implements a rational polynomail (RPC) based transformer. 
@@ -33,7 +33,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_minixml.h"
 
-CPL_CVSID("$Id: gdal_rpc.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdal_rpc.cpp 27486 2014-07-01 17:30:04Z rouault $");
 
 CPL_C_START
 CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg );
@@ -768,14 +768,14 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
                 }
                 else
                 {
-                    if (!(dX >= 0 && dY >= 0 && dX <= nRasterXSize && dY <= nRasterYSize))
+                    if (!(dX >= 0 && dY >= 0 && dX < nRasterXSize && dY < nRasterYSize))
                     {
                         panSuccess[i] = FALSE;
                         continue;
                     }
                     CPLErr eErr = psTransform->poDS->RasterIO(GF_Read, dX, dY, 1, 1,
                                                               &dfDEMH, 1, 1,
-                                                              GDT_Int32, 1, bands, 0, 0, 0);
+                                                              GDT_Float64, 1, bands, 0, 0, 0);
                     if(eErr != CE_None)
                     {
                         panSuccess[i] = FALSE;
@@ -903,14 +903,14 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
             }
             else
             {
-                if (!(dX >= 0 && dY >= 0 && dX <= nRasterXSize && dY <= nRasterYSize))
+                if (!(dX >= 0 && dY >= 0 && dX < nRasterXSize && dY < nRasterYSize))
                 {
                     panSuccess[i] = FALSE;
                     continue;
                 }
                 CPLErr eErr = psTransform->poDS->RasterIO(GF_Read, dX, dY, 1, 1,
                                                           &dfDEMH, 1, 1,
-                                                          GDT_Int32, 1, bands, 0, 0, 0);
+                                                          GDT_Float64, 1, bands, 0, 0, 0);
                 if(eErr != CE_None)
                 {
                     panSuccess[i] = FALSE;

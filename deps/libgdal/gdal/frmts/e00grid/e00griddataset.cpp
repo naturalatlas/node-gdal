@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: e00griddataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: e00griddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  E00 grid driver
  * Purpose:  GDALDataset driver for E00 grid dataset.
@@ -46,7 +46,7 @@
 #define E00_DOUBLE_SIZE 21
 #define VALS_PER_LINE   5
 
-CPL_CVSID("$Id: e00griddataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: e00griddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_E00GRID(void);
@@ -164,7 +164,7 @@ E00GRIDRasterBand::E00GRIDRasterBand( E00GRIDDataset *poDS, int nBand,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr E00GRIDRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr E00GRIDRasterBand::IReadBlock( int CPL_UNUSED nBlockXOff, int nBlockYOff,
                                       void * pImage )
 
 {

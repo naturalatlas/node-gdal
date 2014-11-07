@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_curl_streaming.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_curl_streaming.cpp 27722 2014-09-22 15:37:31Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for HTTP/FTP files in streaming mode
@@ -33,7 +33,7 @@
 #include "cpl_hash_set.h"
 #include "cpl_time.h"
 
-CPL_CVSID("$Id: cpl_vsil_curl_streaming.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_curl_streaming.cpp 27722 2014-09-22 15:37:31Z goatbar $");
 
 #if !defined(HAVE_CURL) || defined(CPL_MULTIPROC_STUB)
 
@@ -1265,7 +1265,7 @@ void  VSICurlStreamingHandle::AddRegion( vsi_l_offset    nFileOffsetStart,
 /*                               Write()                                */
 /************************************************************************/
 
-size_t VSICurlStreamingHandle::Write( const void *pBuffer, size_t nSize, size_t nMemb )
+size_t VSICurlStreamingHandle::Write( CPL_UNUSED const void *pBuffer, CPL_UNUSED size_t nSize, CPL_UNUSED size_t nMemb )
 {
     return 0;
 }

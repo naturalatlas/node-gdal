@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograrcgenlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ograrcgenlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ograrcgenlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ograrcgenlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRARCGENLayer()                             */
@@ -225,8 +225,7 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRARCGENLayer::TestCapability( const char * pszCap )
-
+int OGRARCGENLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

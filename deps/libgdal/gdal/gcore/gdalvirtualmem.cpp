@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: gdalvirtualmem.cpp 27110 2014-03-28 21:29:20Z rouault $
+ * $Id: gdalvirtualmem.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Name:     gdalvirtualmem.cpp
  * Project:  GDAL
@@ -104,14 +104,14 @@ public:
 
 GDALVirtualMem::GDALVirtualMem( GDALDatasetH hDS,
                                 GDALRasterBandH hBand,
-                          int nXOff, int nYOff,
-                          int nXSize, int nYSize,
-                          int nBufXSize, int nBufYSize,
-                          GDALDataType eBufType,
-                          int nBandCount, const int* panBandMapIn,
-                          int nPixelSpace,
-                          GIntBig nLineSpace,
-                          GIntBig nBandSpace ) :
+                                int nXOff, int nYOff,
+                                CPL_UNUSED int nXSize, CPL_UNUSED int nYSize,
+                                int nBufXSize, int nBufYSize,
+                                GDALDataType eBufType,
+                                int nBandCount, const int* panBandMapIn,
+                                int nPixelSpace,
+                                GIntBig nLineSpace,
+                                GIntBig nBandSpace ) :
     hDS(hDS), hBand(hBand), nXOff(nXOff), nYOff(nYOff), /*nXSize(nXSize), nYSize(nYSize),*/
     nBufXSize(nBufXSize), nBufYSize(nBufYSize), eBufType(eBufType),
     nBandCount(nBandCount), nPixelSpace(nPixelSpace), nLineSpace(nLineSpace),

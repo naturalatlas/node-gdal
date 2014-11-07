@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogredigeodatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogredigeodatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  EDIGEO Translator
  * Purpose:  Implements OGREDIGEODataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogredigeodatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogredigeodatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #ifndef M_PI
 # define M_PI  3.1415926535897932384626433832795
@@ -94,8 +94,7 @@ OGREDIGEODataSource::~OGREDIGEODataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGREDIGEODataSource::TestCapability( const char * pszCap )
-
+int OGREDIGEODataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

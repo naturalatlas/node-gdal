@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbtable.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: filegdbtable.h 27640 2014-09-06 15:32:09Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB tables
@@ -223,7 +223,8 @@ class FileGDBTable
         GUInt32                     nOffsetFieldDesc;
         GUInt32                     nFieldDescLength;
 
-        std::vector<GUInt32>        anFeatureOffsets;
+        GUInt32                     nTablxOffsetSize;
+        std::vector<vsi_l_offset>   anFeatureOffsets;
 
         GByte*                      pabyTablXBlockMap;
 
@@ -256,8 +257,8 @@ class FileGDBTable
         GUInt32                     nOffsetHeaderEnd;
 
         int                         ReadTableXHeader();
-        int                         IsLikelyFeatureAtOffset(GUInt32 nFileSize,
-                                                GUInt32 nOffset, GUInt32* pnSize,
+        int                         IsLikelyFeatureAtOffset(vsi_l_offset nFileSize,
+                                                vsi_l_offset nOffset, GUInt32* pnSize,
                                                 int* pbDeletedRecord);
         int                         GuessFeatureLocations();
 
@@ -284,7 +285,7 @@ class FileGDBTable
        int                      GetIndexCount();
        const FileGDBIndex*      GetIndex(int i) const { return apoIndexes[i]; }
 
-       GUInt32                  GetOffsetInTableForRow(int iRow);
+       vsi_l_offset             GetOffsetInTableForRow(int iRow);
 
        /* Next call to SelectRow() or GetFieldValue() invalidates previously returned values */
        int                      SelectRow(int iRow);

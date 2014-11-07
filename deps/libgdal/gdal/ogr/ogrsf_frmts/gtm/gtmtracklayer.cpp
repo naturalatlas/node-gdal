@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtmtracklayer.cpp 26464 2013-09-13 21:06:03Z rouault $
+ * $Id: gtmtracklayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of GTMTrackLayer class.
@@ -32,7 +32,7 @@
 
 GTMTrackLayer::GTMTrackLayer( const char* pszName,
                               OGRSpatialReference* poSRSIn,
-                              int bWriterIn,
+                              CPL_UNUSED int bWriterIn,
                               OGRGTMDataSource* poDSIn )
 {
     poCT = NULL;

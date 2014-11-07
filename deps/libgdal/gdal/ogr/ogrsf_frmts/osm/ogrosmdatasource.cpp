@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrosmdatasource.cpp 27139 2014-04-07 20:39:34Z rouault $
+ * $Id: ogrosmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMDataSource class.
@@ -121,7 +121,7 @@ size_t GetMaxTotalAllocs();
 static void WriteVarInt64(GUIntBig nSVal, GByte** ppabyData);
 static void WriteVarSInt64(GIntBig nSVal, GByte** ppabyData);
 
-CPL_CVSID("$Id: ogrosmdatasource.cpp 27139 2014-04-07 20:39:34Z rouault $");
+CPL_CVSID("$Id: ogrosmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 class DSToBeOpened
 {
@@ -861,7 +861,7 @@ void OGROSMDataSource::NotifyNodes(unsigned int nNodes, OSMNode* pasNodes)
 }
 
 static void OGROSMNotifyNodes (unsigned int nNodes, OSMNode* pasNodes,
-                               OSMContext* psOSMContext, void* user_data)
+                               CPL_UNUSED OSMContext* psOSMContext, void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyNodes(nNodes, pasNodes);
 }
@@ -1652,7 +1652,8 @@ void OGROSMDataSource::ProcessWaysBatch()
                         }
                     }
                 }
-                else if( panReqIds[nIdx] != psWayFeaturePairs->panNodeRefs[i] )
+                else if( nIdx >= 0 &&
+                         panReqIds[nIdx] != psWayFeaturePairs->panNodeRefs[i] )
                     nIdx = -1;
 
                 if (nIdx >= 0)
@@ -2069,7 +2070,7 @@ void OGROSMDataSource::NotifyWay (OSMWay* psWay)
     nUnsortedReqIds += (psWay->nRefs - bIsArea);
 }
 
-static void OGROSMNotifyWay (OSMWay* psWay, OSMContext* psOSMContext, void* user_data)
+static void OGROSMNotifyWay (OSMWay* psWay, CPL_UNUSED OSMContext* psOSMContext, void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyWay(psWay);
 }
@@ -2518,7 +2519,7 @@ void OGROSMDataSource::NotifyRelation (OSMRelation* psRelation)
 }
 
 static void OGROSMNotifyRelation (OSMRelation* psRelation,
-                                  OSMContext* psOSMContext, void* user_data)
+                                  CPL_UNUSED OSMContext* psOSMContext, void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyRelation(psRelation);
 }
@@ -2638,7 +2639,7 @@ void OGROSMDataSource::NotifyBounds (double dfXMin, double dfYMin,
 
 static void OGROSMNotifyBounds( double dfXMin, double dfYMin,
                                 double dfXMax, double dfYMax,
-                                OSMContext* psCtxt, void* user_data )
+                                CPL_UNUSED OSMContext* psCtxt, void* user_data )
 {
     ((OGROSMDataSource*) user_data)->NotifyBounds(dfXMin, dfYMin,
                                                   dfXMax, dfYMax);
@@ -3785,8 +3786,7 @@ int OGROSMDataSource::TransferToDiskIfNecesserary()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGROSMDataSource::TestCapability( const char * pszCap )
-
+int OGROSMDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

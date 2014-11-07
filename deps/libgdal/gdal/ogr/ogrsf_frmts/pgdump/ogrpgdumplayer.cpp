@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdumplayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgdumplayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDumpLayer class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrpgdumplayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgdumplayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define USE_COPY_UNSET -1
 
@@ -738,7 +738,7 @@ static CPLString OGRPGDumpEscapeStringList(
         osStr += "ARRAY[";
     else
         osStr += "{";
-    while(*papszItems)
+    while(papszItems && *papszItems)
     {
         if (!bFirstItem)
         {
@@ -773,7 +773,11 @@ static CPLString OGRPGDumpEscapeStringList(
         papszItems++;
     }
     if (bForInsertOrUpdate)
+    {
         osStr += "]";
+        if( papszItems == NULL )
+            osStr += "::varchar[]";
+    }
     else
         osStr += "}";
     return osStr;
@@ -1088,7 +1092,7 @@ OGRErr OGRPGDumpLayer::CreateField( OGRFieldDefn *poFieldIn,
 /************************************************************************/
 
 OGRErr OGRPGDumpLayer::CreateGeomField( OGRGeomFieldDefn *poGeomFieldIn,
-                                        int bApproxOK )
+                                        CPL_UNUSED int bApproxOK )
 {
     OGRwkbGeometryType eType = poGeomFieldIn->GetType();
     if( eType == wkbNone )

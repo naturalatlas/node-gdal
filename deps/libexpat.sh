@@ -1,5 +1,6 @@
 #!/bin/bash
-cd libexpat
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/libexpat"
 
 dir_expat=./expat
 

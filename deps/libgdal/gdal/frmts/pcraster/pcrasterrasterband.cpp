@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pcrasterrasterband.cpp 15453 2008-10-03 11:00:02Z kdejong $
+ * $Id: pcrasterrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster raster band implementation.
@@ -248,9 +248,9 @@ double PCRasterRasterBand::GetMaximum(
 
 
 CPLErr PCRasterRasterBand::IReadBlock(
-         int nBlockXoff,
-         int nBlockYoff,
-         void* buffer)
+                                      CPL_UNUSED int nBlockXoff,
+                                      int nBlockYoff,
+                                      void* buffer)
 {
   size_t nrCellsRead = RgetRow(d_dataset->map(), nBlockYoff, buffer);
 

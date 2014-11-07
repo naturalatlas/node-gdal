@@ -485,7 +485,7 @@ OGRErr OGRGeoPackageLayer::ReadTableDefinition()
             CPLError( CE_Failure, CPLE_AppDefined, "error reading gpkg_contents" );
             
         SQLResultFree(&oResultContents);
-        return err;        
+        return OGRERR_FAILURE;
     }
 
     const char *pszMinX = SQLResultGetValue(&oResultContents, 4, 0);
@@ -524,7 +524,7 @@ OGRErr OGRGeoPackageLayer::ReadTableDefinition()
     {
         CPLError( CE_Failure, CPLE_AppDefined, "%s", oResultGeomCols.pszErrMsg );
         SQLResultFree(&oResultGeomCols);
-        return err;
+        return OGRERR_FAILURE;
     }
 
     /* Use the "PRAGMA TABLE_INFO()" call to get table definition */
@@ -541,10 +541,10 @@ OGRErr OGRGeoPackageLayer::ReadTableDefinition()
             CPLError( CE_Failure, CPLE_AppDefined, "%s", oResultTable.pszErrMsg );
         else
             CPLError( CE_Failure, CPLE_AppDefined, "Cannot find table %s", m_pszTableName );
-        err = OGRERR_FAILURE;
+
         SQLResultFree(&oResultGeomCols);
         SQLResultFree(&oResultTable);
-        return err;
+        return OGRERR_FAILURE;
     }
     
     /* Populate feature definition from table description */
@@ -727,7 +727,8 @@ OGRGeoPackageLayer::~OGRGeoPackageLayer()
 /*                      CreateField()                                   */
 /************************************************************************/
 
-OGRErr OGRGeoPackageLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
+OGRErr OGRGeoPackageLayer::CreateField( OGRFieldDefn *poField,
+                                        CPL_UNUSED int bApproxOK )
 {
     if( !m_poDS->IsUpdatable() )
     {
@@ -1231,7 +1232,10 @@ OGRErr OGRGeoPackageLayer::GetExtent(OGREnvelope *psExtent, int bForce)
         if ( err != OGRERR_NONE )
             return err;
     
-        *m_poExtent = *psExtent;
+        if ( ! m_poExtent )
+            m_poExtent = new OGREnvelope( *psExtent );
+        else
+            *m_poExtent = *psExtent;
         return SaveExtent();
     }
 

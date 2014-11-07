@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceossar.c 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ceossar.c 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  Functions related to CeosSARVolume_t.
@@ -29,7 +29,7 @@
 
 #include "ceos.h"
 
-CPL_CVSID("$Id: ceossar.c 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ceossar.c 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern Link_t *RecipeFunctions;
 
@@ -94,17 +94,20 @@ void CalcCeosSARImageFilePosition(CeosSARVolume_t *volume, int channel, int line
     }
 }
 
-int32 GetCeosSARImageData(CeosSARVolume_t *volume, CeosRecord_t *processed_data_record, int channel, int xoff, int xsize, int bufsize, uchar *buffer)
+int32 GetCeosSARImageData(CPL_UNUSED CeosSARVolume_t *volume,
+                          CPL_UNUSED CeosRecord_t *processed_data_record,
+                          CPL_UNUSED int channel, CPL_UNUSED int xoff, CPL_UNUSED int xsize,
+                          CPL_UNUSED int bufsize, CPL_UNUSED uchar *buffer)
 {
     return 0;
 }
 
-void DetermineCeosSARPixelOrder( CeosSARVolume_t *volume, CeosRecord_t *record )
+void DetermineCeosSARPixelOrder( CPL_UNUSED CeosSARVolume_t *volume, CPL_UNUSED CeosRecord_t *record )
 {
 
 }
 
-void GetCeosSAREmbeddedInfo(CeosSARVolume_t *volume, CeosRecord_t *processed_data_record, CeosSAREmbeddedInfo_t *info)
+void GetCeosSAREmbeddedInfo(CPL_UNUSED CeosSARVolume_t *volume, CPL_UNUSED CeosRecord_t *processed_data_record, CPL_UNUSED CeosSAREmbeddedInfo_t *info)
 {
 }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitevirtualogr.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqlitevirtualogr.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  SQLite Virtual Table module using OGR layers
@@ -879,7 +879,7 @@ int OGR2SQLITE_Close(sqlite3_vtab_cursor* pCursor)
 
 static
 int OGR2SQLITE_Filter(sqlite3_vtab_cursor* pCursor,
-                      int idxNum, const char *idxStr,
+                      CPL_UNUSED int idxNum, const char *idxStr,
                       int argc, sqlite3_value **argv)
 {
     OGR2SQLITE_vtab_cursor* pMyCursor = (OGR2SQLITE_vtab_cursor*) pCursor;
@@ -1330,7 +1330,7 @@ int OGR2SQLITE_Rowid(sqlite3_vtab_cursor* pCursor, sqlite3_int64 *pRowid)
 /************************************************************************/
 
 static
-int OGR2SQLITE_Rename(sqlite3_vtab *pVtab, const char *zNew)
+int OGR2SQLITE_Rename(CPL_UNUSED sqlite3_vtab *pVtab, CPL_UNUSED const char *zNew)
 {
     //CPLDebug("OGR2SQLITE", "Rename");
     return SQLITE_ERROR;

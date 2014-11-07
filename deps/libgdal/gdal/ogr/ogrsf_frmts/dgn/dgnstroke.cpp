@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnstroke.cpp 18382 2009-12-24 05:17:27Z warmerdam $
+ * $Id: dgnstroke.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  Code to stroke Arcs/Ellipses into polylines.
@@ -30,7 +30,7 @@
 #include "dgnlibp.h"
 #include <math.h>
 
-CPL_CVSID("$Id: dgnstroke.cpp 18382 2009-12-24 05:17:27Z warmerdam $");
+CPL_CVSID("$Id: dgnstroke.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define DEG_TO_RAD (PI/180.0)
 
@@ -72,7 +72,7 @@ static void ComputePointOnArc2D( double dfPrimary, double dfSecondary,
  * @return TRUE on success or FALSE on failure.
  */
 
-int DGNStrokeArc( DGNHandle hFile, DGNElemArc *psArc, 
+int DGNStrokeArc( CPL_UNUSED DGNHandle hFile, DGNElemArc *psArc, 
                   int nPoints, DGNPoint * pasPoints )
 
 {
@@ -127,7 +127,7 @@ int DGNStrokeArc( DGNHandle hFile, DGNElemArc *psArc,
  * @return TRUE on success or FALSE on failure.
  */
 
-int DGNStrokeCurve( DGNHandle hFile, DGNElemMultiPoint *psCurve, 
+int DGNStrokeCurve( CPL_UNUSED DGNHandle hFile, DGNElemMultiPoint *psCurve, 
                     int nPoints, DGNPoint * pasPoints )
 
 {

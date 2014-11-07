@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnaslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrnaslayer.cpp 27713 2014-09-21 15:51:47Z jef $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_port.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnaslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrnaslayer.cpp 27713 2014-09-21 15:51:47Z jef $");
 
 /************************************************************************/
 /*                           OGRNASLayer()                              */
@@ -254,7 +254,7 @@ OGRFeature *OGRNASLayer::GetNextFeature()
             int iId = poNASFeature->GetClass()->GetPropertyIndex( "gml_id" );
             const GMLProperty *poIdProp = poNASFeature->GetProperty(iId);
             CPLError( CE_Warning, CPLE_AppDefined, "NAS: could not set geometry (gml_id:%s)",
-		      poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)" );
+                      poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)" );
         }
 
         delete poNASFeature;
@@ -290,7 +290,7 @@ OGRErr OGRNASLayer::GetExtent(OGREnvelope *psExtent, int bForce )
 {
     double dfXMin, dfXMax, dfYMin, dfYMax;
 
-    if( poFClass != NULL && 
+    if( poFClass != NULL &&
         poFClass->GetExtents( &dfXMin, &dfXMax, &dfYMin, &dfYMax ) )
     {
         psExtent->MinX = dfXMin;
@@ -300,7 +300,7 @@ OGRErr OGRNASLayer::GetExtent(OGREnvelope *psExtent, int bForce )
 
         return OGRERR_NONE;
     }
-    else 
+    else
         return OGRLayer::GetExtent( psExtent, bForce );
 }
 
@@ -323,8 +323,8 @@ int OGRNASLayer::TestCapability( const char * pszCap )
 
     else if( EQUAL(pszCap,OLCFastFeatureCount) )
     {
-        if( poFClass == NULL 
-            || m_poFilterGeom != NULL 
+        if( poFClass == NULL
+            || m_poFilterGeom != NULL
             || m_poAttrQuery != NULL )
             return FALSE;
 
@@ -334,6 +334,6 @@ int OGRNASLayer::TestCapability( const char * pszCap )
     else if( EQUAL(pszCap,OLCStringsAsUTF8) )
         return TRUE;
 
-    else 
+    else
         return FALSE;
 }

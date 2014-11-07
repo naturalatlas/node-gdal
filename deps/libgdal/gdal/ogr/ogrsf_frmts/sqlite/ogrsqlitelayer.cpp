@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitelayer.cpp 27102 2014-03-28 09:03:37Z rouault $
+ * $Id: ogrsqlitelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteLayer class, code shared between 
@@ -42,7 +42,7 @@
 #include "ogr_sqlite.h"
 #include <cassert>
 
-CPL_CVSID("$Id: ogrsqlitelayer.cpp 27102 2014-03-28 09:03:37Z rouault $");
+CPL_CVSID("$Id: ogrsqlitelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           OGRSQLiteLayer()                           */
@@ -129,7 +129,7 @@ void OGRSQLiteLayer::Finalize()
 
 static
 int OGRIsBinaryGeomCol( sqlite3_stmt *hStmt, int iCol,
-                        OGRFieldDefn& oField,
+                        CPL_UNUSED OGRFieldDefn& oField,
                         OGRSQLiteGeomFormat& eGeomFormat )
 {
     OGRGeometry* poGeometry = NULL;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonreader.cpp 27613 2014-08-30 15:55:30Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONReader class (OGR GeoJSON Driver).
@@ -71,13 +71,21 @@ OGRErr OGRGeoJSONReader::Parse( const char* pszText )
         json_tokener* jstok = NULL;
         json_object* jsobj = NULL;
 
+        /* Skip UTF-8 BOM (#5630) */
+        const GByte* pabyData = (const GByte*)pszText;
+        if( pabyData[0] == 0xEF && pabyData[1] == 0xBB && pabyData[2] == 0xBF )
+        {
+            CPLDebug("GeoJSON", "Skip UTF-8 BOM");
+            pszText += 3;
+        }
+
         jstok = json_tokener_new();
         jsobj = json_tokener_parse_ex(jstok, pszText, -1);
         if( jstok->err != json_tokener_success)
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "GeoJSON parsing error: %s (at offset %d)",
-            	      json_tokener_errors[jstok->err], jstok->char_offset);
+            	      json_tokener_error_desc(jstok->err), jstok->char_offset);
             
             json_tokener_free(jstok);
             return OGRERR_CORRUPT_DATA;
@@ -1516,7 +1524,7 @@ OGRGeometryH OGR_G_CreateGeometryFromJson( const char* pszJson )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "GeoJSON parsing error: %s (at offset %d)",
-                      json_tokener_errors[jstok->err], jstok->char_offset);
+                      json_tokener_error_desc(jstok->err), jstok->char_offset);
             json_tokener_free(jstok);
             return NULL;
         }

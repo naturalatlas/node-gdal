@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogresrijsonreader.cpp 27050 2014-03-18 00:09:03Z kyle $
+ * $Id: ogresrijsonreader.cpp 27268 2014-05-01 10:46:20Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRESRIJSONReader class (OGR ESRIJSON Driver)
@@ -78,7 +78,7 @@ OGRErr OGRESRIJSONReader::Parse( const char* pszText )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "ESRIJSON parsing error: %s (at offset %d)",
-            	      json_tokener_errors[jstok->err], jstok->char_offset);
+            	      json_tokener_error_desc(jstok->err), jstok->char_offset);
             
             json_tokener_free(jstok);
             return OGRERR_CORRUPT_DATA;

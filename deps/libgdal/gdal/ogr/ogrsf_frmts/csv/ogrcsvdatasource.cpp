@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcsvdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVDataSource class
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "cpl_vsi_virtual.h"
 
-CPL_CVSID("$Id: ogrcsvdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcsvdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRCSVDataSource()                          */
@@ -466,7 +466,7 @@ int OGRCSVDataSource::OpenTable( const char * pszFilename,
 
 OGRLayer *
 OGRCSVDataSource::CreateLayer( const char *pszLayerName, 
-                               OGRSpatialReference *poSpatialRef,
+                               CPL_UNUSED OGRSpatialReference *poSpatialRef,
                                OGRwkbGeometryType eGType,
                                char ** papszOptions  )
 

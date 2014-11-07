@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpdsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpdsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PDS Translator
  * Purpose:  Implements OGRPDSDataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrpdsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpdsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           OGRPDSDataSource()                         */
@@ -64,8 +64,7 @@ OGRPDSDataSource::~OGRPDSDataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRPDSDataSource::TestCapability( const char * pszCap )
-
+int OGRPDSDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

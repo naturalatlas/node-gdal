@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grcdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: grcdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GRC Reader
  * Purpose:  GDAL driver for Northwood Classified Format
@@ -228,7 +228,7 @@ GDALColorInterp NWT_GRCRasterBand::GetColorInterpretation()
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
-CPLErr NWT_GRCRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr NWT_GRCRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                         void *pImage )
 {
     NWT_GRCDataset *poGDS =(NWT_GRCDataset *) poDS;

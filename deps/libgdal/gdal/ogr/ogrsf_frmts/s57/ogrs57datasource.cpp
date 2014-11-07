@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrs57datasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrs57datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements OGRS57DataSource class
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrs57datasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrs57datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRS57DataSource()                          */
@@ -477,8 +477,7 @@ OGRErr OGRS57DataSource::GetDSExtent( OGREnvelope *psExtent, int bForce )
 /*      Create a new S57 file, and represent it as a datasource.        */
 /************************************************************************/
 
-int OGRS57DataSource::Create( const char *pszFilename, char **papszOptions )
-
+int OGRS57DataSource::Create( const char *pszFilename, CPL_UNUSED char **papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Instantiate the class registrar if possible.                    */

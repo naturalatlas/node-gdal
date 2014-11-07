@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtopojsonreader.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrtopojsonreader.cpp 27268 2014-05-01 10:46:20Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRTopoJSONReader class
@@ -74,7 +74,7 @@ OGRErr OGRTopoJSONReader::Parse( const char* pszText )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "TopoJSON parsing error: %s (at offset %d)",
-            	      json_tokener_errors[jstok->err], jstok->char_offset);
+            	      json_tokener_error_desc(jstok->err), jstok->char_offset);
             
             json_tokener_free(jstok);
             return OGRERR_CORRUPT_DATA;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarper.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalwarper.h 27701 2014-09-20 15:07:02Z goatbar $
  *
  * Project:  GDAL High Performance Warper
  * Purpose:  Prototypes, and definitions for warping related work.
@@ -338,8 +338,9 @@ private:
     CPLErr          CreateKernelMask( GDALWarpKernel *, int iBand, 
                                       const char *pszType );
 
-    void            *unused1;
-    void            *unused2;
+    /* Unused kept to preserve binary ABI */
+    CPL_UNUSED void            *unused1;
+    CPL_UNUSED void            *unused2;
     void            *hIOMutex;
     void            *hWarpMutex;
 

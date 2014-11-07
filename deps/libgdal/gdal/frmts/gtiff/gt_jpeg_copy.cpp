@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_jpeg_copy.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gt_jpeg_copy.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Specialized copy of JPEG content into TIFF.
@@ -33,7 +33,7 @@
 /* Note: JPEG_DIRECT_COPY is not defined by default, because it is mainly */
 /* usefull for debugging purposes */
 
-CPL_CVSID("$Id: gt_jpeg_copy.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gt_jpeg_copy.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #if defined(JPEG_DIRECT_COPY) || defined(HAVE_LIBJPEG)
 
@@ -469,7 +469,7 @@ CPLErr GTIFF_CopyFromJPEG_WriteAdditionalTags(TIFF* hTIFF,
 static CPLErr GTIFF_CopyBlockFromJPEG(TIFF* hTIFF,
                                       jpeg_decompress_struct& sDInfo,
                                       int iX, int iY,
-                                      int nXBlocks, int nYBlocks,
+                                      int nXBlocks, CPL_UNUSED int nYBlocks,
                                       int nXSize, int nYSize,
                                       int nBlockXSize, int nBlockYSize,
                                       int iMCU_sample_width, int iMCU_sample_height,

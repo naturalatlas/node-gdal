@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57featuredefns.cpp 26333 2013-08-15 21:40:50Z rouault $
+ * $Id: s57featuredefns.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements methods to create OGRFeatureDefns for various
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: s57featuredefns.cpp 26333 2013-08-15 21:40:50Z rouault $");
+CPL_CVSID("$Id: s57featuredefns.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 
 /************************************************************************/
@@ -220,8 +220,7 @@ OGRFeatureDefn *S57GenerateGeomFeatureDefn( OGRwkbGeometryType eGType,
 /************************************************************************/
 
 OGRFeatureDefn *
-S57GenerateVectorPrimitiveFeatureDefn( int nRCNM, int nOptionFlags )
-
+S57GenerateVectorPrimitiveFeatureDefn( int nRCNM, CPL_UNUSED int nOptionFlags )
 {
     OGRFeatureDefn      *poFDefn = NULL;
  

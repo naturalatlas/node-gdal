@@ -106,7 +106,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-// CPL_CVSID("$Id: terragendataset.cpp 21680 2011-02-11 21:12:07Z warmerdam $");
+// CPL_CVSID("$Id: terragendataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_Terragen(void);
@@ -270,7 +270,7 @@ TerragenRasterBand::TerragenRasterBand( TerragenDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr TerragenRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr TerragenRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                        void* pImage )
 
 {
@@ -367,7 +367,7 @@ double TerragenRasterBand::GetOffset(int* pbSuccess)
 
 CPLErr TerragenRasterBand::IWriteBlock
 ( 
-	int nBlockXOff, 
+	CPL_UNUSED int nBlockXOff, 
 	int nBlockYOff,
     void* pImage
 )

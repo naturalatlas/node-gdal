@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pngdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pngdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  PNG Driver
  * Purpose:  Implement GDAL PNG Support
@@ -50,7 +50,7 @@
 #include "cpl_string.h"
 #include <setjmp.h>
 
-CPL_CVSID("$Id: pngdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pngdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_PNG(void);
@@ -1816,7 +1816,7 @@ static void png_gdal_error( png_structp png_ptr, const char *error_message )
 /*                          png_gdal_warning()                          */
 /************************************************************************/
 
-static void png_gdal_warning( png_structp png_ptr, const char *error_message )
+static void png_gdal_warning( CPL_UNUSED png_structp png_ptr, const char *error_message )
 {
     CPLError( CE_Warning, CPLE_AppDefined, 
               "libpng: %s", error_message );

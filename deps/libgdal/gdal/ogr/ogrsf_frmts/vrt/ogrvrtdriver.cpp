@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrvrtdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrvrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVRTDriver class.
@@ -31,14 +31,13 @@
 #include "ogr_vrt.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrvrtdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrvrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            ~OGRVRTDriver()                            */
 /************************************************************************/
 
 OGRVRTDriver::~OGRVRTDriver()
-
 {
 }
 
@@ -47,7 +46,6 @@ OGRVRTDriver::~OGRVRTDriver()
 /************************************************************************/
 
 const char *OGRVRTDriver::GetName()
-
 {
     return "VRT";
 }
@@ -56,7 +54,9 @@ const char *OGRVRTDriver::GetName()
 /*                           OGRVRTErrorHandler()                       */
 /************************************************************************/
 
-static void CPL_STDCALL OGRVRTErrorHandler(CPLErr eErr, int nType, const char* pszMsg)
+static void CPL_STDCALL OGRVRTErrorHandler(CPL_UNUSED CPLErr eErr,
+                                           CPL_UNUSED int nType,
+                                           const char* pszMsg)
 {
     std::vector<CPLString>* paosErrors = (std::vector<CPLString>* )CPLGetErrorHandlerUserData();
     paosErrors->push_back(pszMsg);
@@ -67,8 +67,7 @@ static void CPL_STDCALL OGRVRTErrorHandler(CPLErr eErr, int nType, const char* p
 /************************************************************************/
 
 OGRDataSource *OGRVRTDriver::Open( const char * pszFilename,
-                                     int bUpdate )
-
+                                   int bUpdate )
 {
     OGRVRTDataSource     *poDS;
     char *pszXML = NULL;
@@ -199,8 +198,7 @@ OGRDataSource *OGRVRTDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRVRTDriver::TestCapability( const char * pszCap )
-
+int OGRVRTDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -210,7 +208,6 @@ int OGRVRTDriver::TestCapability( const char * pszCap )
 /************************************************************************/
 
 void RegisterOGRVRT()
-
 {
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRVRTDriver );
 }

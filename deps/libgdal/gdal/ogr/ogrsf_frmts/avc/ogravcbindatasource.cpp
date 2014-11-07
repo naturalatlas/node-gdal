@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravcbindatasource.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogravcbindatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCBinDataSource class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravcbindatasource.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogravcbindatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRAVCBinDataSource()                         */
@@ -159,8 +159,7 @@ int OGRAVCBinDataSource::Open( const char * pszNewName, int bTestOpen )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAVCBinDataSource::TestCapability( const char * pszCap )
-
+int OGRAVCBinDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

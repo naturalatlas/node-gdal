@@ -1,5 +1,6 @@
 #!/bin/bash
-cd libgeos
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/libgeos"
 
 dir_geos=./geos
 

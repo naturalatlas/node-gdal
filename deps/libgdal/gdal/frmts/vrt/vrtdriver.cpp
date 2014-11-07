@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTDriver
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "gdal_alg_priv.h"
 
-CPL_CVSID("$Id: vrtdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: vrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                             VRTDriver()                              */
@@ -156,8 +156,7 @@ VRTSource *VRTDriver::ParseSource( CPLXMLNode *psSrc, const char *pszVRTPath )
 static GDALDataset *
 VRTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
                int bStrict, char ** papszOptions, 
-               GDALProgressFunc pfnProgress, void * pProgressData )
-
+               CPL_UNUSED GDALProgressFunc pfnProgress, CPL_UNUSED void * pProgressData )
 {
     VRTDataset *poVRTDS = NULL;
 

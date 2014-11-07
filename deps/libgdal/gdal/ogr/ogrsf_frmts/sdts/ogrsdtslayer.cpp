@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsdtslayer.cpp 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ogrsdtslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SDTSReader
  * Purpose:  Implements OGRSDTSLayer class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsdtslayer.cpp 26466 2013-09-14 09:07:46Z rouault $");
+CPL_CVSID("$Id: ogrsdtslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRSDTSLayer()                            */
@@ -219,9 +219,8 @@ void OGRSDTSLayer::ResetReading()
 /************************************************************************/
 
 static void
-AssignAttrRecordToFeature( OGRFeature * poFeature, SDTSTransfer * poTransfer, 
+AssignAttrRecordToFeature( OGRFeature * poFeature, CPL_UNUSED SDTSTransfer * poTransfer,
                            DDFField * poSR )
-
 {
 /* -------------------------------------------------------------------- */
 /*      Process each subfield in the record.                            */

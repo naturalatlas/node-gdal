@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvgdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsvgdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGDataSource class
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvgdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsvgdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          OGRSVGDataSource()                          */
@@ -110,7 +110,7 @@ void OGRSVGDataSource::startElementValidateCbk(const char *pszName,
 /*                      dataHandlerValidateCbk()                        */
 /************************************************************************/
 
-void OGRSVGDataSource::dataHandlerValidateCbk(const char *data, int nLen)
+void OGRSVGDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
 {
     nDataHandlerCounter ++;
     if (nDataHandlerCounter >= BUFSIZ)
@@ -272,7 +272,7 @@ int OGRSVGDataSource::Open( const char * pszFilename, int bUpdateIn)
 /*                            TestCapability()                          */
 /************************************************************************/
 
-int OGRSVGDataSource::TestCapability( const char *pszCap )
+int OGRSVGDataSource::TestCapability( CPL_UNUSED const char *pszCap )
 {
     return FALSE;
 }

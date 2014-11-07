@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitetablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqlitetablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteTableLayer class, access to an existing table.
@@ -37,7 +37,7 @@
 
 #define UNSUPPORTED_OP_READ_ONLY "%s : unsupported operation on a read-only datasource."
 
-CPL_CVSID("$Id: ogrsqlitetablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsqlitetablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRSQLiteTableLayer()                         */
@@ -912,8 +912,7 @@ CPLString OGRSQLiteTableLayer::FieldDefnToSQliteFieldDefn( OGRFieldDefn* poField
 /************************************************************************/
 
 OGRErr OGRSQLiteTableLayer::CreateField( OGRFieldDefn *poFieldIn, 
-                                         int bApproxOK )
-
+                                         CPL_UNUSED int bApproxOK )
 {
     OGRFieldDefn        oField( poFieldIn );
 

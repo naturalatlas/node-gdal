@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrosmlayer.cpp 27138 2014-04-07 20:32:14Z rouault $
+ * $Id: ogrosmlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMLayer class
@@ -33,7 +33,7 @@
 #include "cpl_time.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrosmlayer.cpp 27138 2014-04-07 20:32:14Z rouault $");
+CPL_CVSID("$Id: ogrosmlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #define SWITCH_THRESHOLD   10000
 #define MAX_THRESHOLD      100000
@@ -400,7 +400,7 @@ int  OGROSMLayer::AddFeature(OGRFeature* poFeature,
 /*                             GetExtent()                              */
 /************************************************************************/
 
-OGRErr OGROSMLayer::GetExtent( OGREnvelope *psExtent, int bForce )
+OGRErr OGROSMLayer::GetExtent( OGREnvelope *psExtent, CPL_UNUSED int bForce )
 {
     if (poDS->GetExtent(psExtent) == OGRERR_NONE)
         return OGRERR_NONE;

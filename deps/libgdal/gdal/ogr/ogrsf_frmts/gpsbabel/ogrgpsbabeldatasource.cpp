@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpsbabeldatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgpsbabeldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGPSBabelDataSource class.
@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-CPL_CVSID("$Id: ogrgpsbabeldatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgpsbabeldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                      OGRGPSBabelDataSource()                         */
@@ -377,8 +377,7 @@ int OGRGPSBabelDataSource::Open( const char * pszDatasourceName, int bUpdateIn)
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRGPSBabelDataSource::TestCapability( const char * pszCap )
-
+int OGRGPSBabelDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: krodataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: krodataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  KRO format reader/writer
  * Purpose:  Implementation of KOLOR Raw Format
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: krodataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: krodataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /* http://www.autopano.net/wiki-en/Format_KRO */
 
@@ -220,10 +220,9 @@ GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
 /************************************************************************/
 
 GDALDataset *KRODataset::Create( const char * pszFilename,
-                                  int nXSize, int nYSize, int nBands,
-                                  GDALDataType eType,
-                                  char ** papszOptions )
-
+                                 int nXSize, int nYSize, int nBands,
+                                 GDALDataType eType,
+                                 CPL_UNUSED char ** papszOptions )
 {
     if( eType != GDT_Byte && eType != GDT_UInt16 && eType != GDT_Float32 )
     {

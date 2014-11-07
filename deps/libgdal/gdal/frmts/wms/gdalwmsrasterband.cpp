@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmsrasterband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalwmsrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  GDALWMSRasterBand implementation.
@@ -802,8 +802,10 @@ CPLErr GDALWMSRasterBand::ReportWMSException(const char *file_name) {
 }
 
 
-CPLErr GDALWMSRasterBand::AdviseRead(int x0, int y0, int sx, int sy, int bsx, int bsy, GDALDataType bdt, char **options) {
-//    printf("AdviseRead(%d, %d, %d, %d)\n", x0, y0, sx, sy);
+CPLErr GDALWMSRasterBand::AdviseRead(int x0, int y0,
+                                     int sx, int sy,
+                                     CPL_UNUSED int bsx, CPL_UNUSED int bsy,
+                                     CPL_UNUSED GDALDataType bdt, CPL_UNUSED char **options) {
     if (m_parent_dataset->m_offline_mode || !m_parent_dataset->m_use_advise_read) return CE_None;
     if (m_parent_dataset->m_cache == NULL) return CE_Failure;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdgnlayer.cpp 26929 2014-02-11 20:45:17Z rouault $
+ * $Id: ogrdgnlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRDGNLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_api.h"
 #include <list>
 
-CPL_CVSID("$Id: ogrdgnlayer.cpp 26929 2014-02-11 20:45:17Z rouault $");
+CPL_CVSID("$Id: ogrdgnlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                           OGRDGNLayer()                              */
@@ -802,8 +802,7 @@ int OGRDGNLayer::GetFeatureCount( int bForce )
 /*                             GetExtent()                              */
 /************************************************************************/
 
-OGRErr OGRDGNLayer::GetExtent( OGREnvelope *psExtent, int bForce )
-
+OGRErr OGRDGNLayer::GetExtent( OGREnvelope *psExtent, CPL_UNUSED int bForce )
 {
     double      adfExtents[6];
 
@@ -1143,7 +1142,7 @@ OGRErr OGRDGNLayer::CreateFeatureWithGeom( OGRFeature *poFeature,
     nColor = MAX(0,MIN(255,nColor));
     nWeight = MAX(0,MIN(31,nWeight));
     nStyle = MAX(0,MIN(7,nStyle));
-    nMSLink = MAX(0,MIN(4294967295,nMSLink));
+    nMSLink = MAX(0,nMSLink);
 
     DGNUpdateElemCore( hDGN, papsGroup[0], nLevel, nGraphicGroup, nColor, 
                        nWeight, nStyle );

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gxfdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GXF Reader
  * Purpose:  GDAL binding for GXF reader.
@@ -31,7 +31,7 @@
 #include "gxfopen.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: gxfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gxfdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 #ifndef PI
 #  define PI 3.14159265358979323846
@@ -124,7 +124,7 @@ double GXFRasterBand::GetNoDataValue(int* bGotNoDataValue)
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GXFRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr GXFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 
 {

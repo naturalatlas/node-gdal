@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfadataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hfadataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Name:     hfadataset.cpp
  * Project:  Erdas Imagine Driver
@@ -34,7 +34,7 @@
 #include "hfa_p.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: hfadataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hfadataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_HFA(void);
@@ -3048,7 +3048,7 @@ GDALRasterAttributeTable *HFARasterBand::GetDefaultRAT()
 /*                            WriteNamedRAT()                            */
 /************************************************************************/
  
-CPLErr HFARasterBand::WriteNamedRAT( const char *pszName, const GDALRasterAttributeTable *poRAT )
+CPLErr HFARasterBand::WriteNamedRAT( CPL_UNUSED const char *pszName, const GDALRasterAttributeTable *poRAT )
 {
 /* -------------------------------------------------------------------- */
 /*      Find the requested table.                                       */
@@ -4613,11 +4613,10 @@ HFAPCSStructToWKT( const Eprj_Datum *psDatum,
         break;
 
       case EPRJ_HOTINE_OBLIQUE_MERCATOR_AZIMUTH_CENTER:
-        if( psPro->proParams[12] > 0.0 )
-            oSRS.SetHOMAC( psPro->proParams[5]*R2D, psPro->proParams[4]*R2D,
-                           psPro->proParams[3]*R2D, 0.0,
-                           psPro->proParams[2],
-                           psPro->proParams[6], psPro->proParams[7] );
+        oSRS.SetHOMAC( psPro->proParams[5]*R2D, psPro->proParams[4]*R2D,
+                        psPro->proParams[3]*R2D, 0.0,
+                        psPro->proParams[2],
+                        psPro->proParams[6], psPro->proParams[7] );
         break;
 
       case EPRJ_ROBINSON:
@@ -5816,7 +5815,7 @@ CPLErr HFADataset::CopyFiles( const char *pszNewName, const char *pszOldName )
 
 GDALDataset *
 HFADataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
-                        int bStrict, char ** papszOptions,
+                        CPL_UNUSED int bStrict, char ** papszOptions,
                         GDALProgressFunc pfnProgress, void * pProgressData )
 
 {

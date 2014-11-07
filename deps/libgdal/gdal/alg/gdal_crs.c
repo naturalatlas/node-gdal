@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_crs.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_crs.c 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Mapinfo Image Warper
  * Purpose:  Implemention of the GDALTransformer wrapper around CRS.C functions
@@ -58,7 +58,7 @@
 #include "cpl_minixml.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdal_crs.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdal_crs.c 27729 2014-09-24 00:40:16Z goatbar $");
 
 /* Hum, we cannot include gdal_priv.h from a .c file... */
 CPL_C_START
@@ -326,7 +326,7 @@ void GDALDestroyGCPTransformer( void *pTransformArg )
 
 int GDALGCPTransform( void *pTransformArg, int bDstToSrc, 
                       int nPointCount, 
-                      double *x, double *y, double *z, 
+                      double *x, double *y, CPL_UNUSED double *z, 
                       int *panSuccess )
 
 {

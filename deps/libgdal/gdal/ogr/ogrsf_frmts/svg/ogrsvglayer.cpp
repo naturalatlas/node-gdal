@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvglayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsvglayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGLayer class.
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvglayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsvglayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRSVGLayer()                             */
@@ -428,7 +428,7 @@ void OGRSVGLayer::startElementCbk(const char *pszName, const char **ppszAttr)
 /*                           endElementCbk()                            */
 /************************************************************************/
 
-void OGRSVGLayer::endElementCbk(const char *pszName)
+void OGRSVGLayer::endElementCbk(CPL_UNUSED const char *pszName)
 {
     if (bStopParsing) return;
 
@@ -758,7 +758,7 @@ void OGRSVGLayer::startElementLoadSchemaCbk(const char *pszName,
 /*                   endElementLoadSchemaCbk()                           */
 /************************************************************************/
 
-void OGRSVGLayer::endElementLoadSchemaCbk(const char *pszName)
+void OGRSVGLayer::endElementLoadSchemaCbk(CPL_UNUSED const char *pszName)
 {
     if (bStopParsing) return;
 
@@ -777,7 +777,7 @@ void OGRSVGLayer::endElementLoadSchemaCbk(const char *pszName)
 /*                   dataHandlerLoadSchemaCbk()                         */
 /************************************************************************/
 
-void OGRSVGLayer::dataHandlerLoadSchemaCbk(const char *data, int nLen)
+void OGRSVGLayer::dataHandlerLoadSchemaCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
 {
     if (bStopParsing) return;
 

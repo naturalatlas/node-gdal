@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rcreatecopy.cpp 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: rcreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  R Format Driver
  * Purpose:  CreateCopy() implementation for R stats package object format.
@@ -30,7 +30,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: rcreatecopy.cpp 20996 2010-10-28 18:38:15Z rouault $");
+CPL_CVSID("$Id: rcreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -85,7 +85,7 @@ static void RWriteString( VSILFILE *fp, int bASCII, const char *pszValue )
 
 GDALDataset *
 RCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-             int bStrict, char ** papszOptions, 
+             CPL_UNUSED int bStrict, char ** papszOptions, 
              GDALProgressFunc pfnProgress, void * pProgressData )
 
 {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgtablelayer.cpp 27106 2014-03-28 11:59:57Z rouault $
+ * $Id: ogrpgtablelayer.cpp 27697 2014-09-19 18:21:02Z rouault $
 
  *
  * Project:  OpenGIS Simple Features Reference Implementation
@@ -37,7 +37,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgtablelayer.cpp 27106 2014-03-28 11:59:57Z rouault $");
+CPL_CVSID("$Id: ogrpgtablelayer.cpp 27697 2014-09-19 18:21:02Z rouault $");
 
 
 #define USE_COPY_UNSET  -10
@@ -1590,7 +1590,7 @@ static CPLString OGRPGEscapeStringList(PGconn *hPGConn,
         osStr += "ARRAY[";
     else
         osStr += "{";
-    while(*papszItems)
+    while(papszItems && *papszItems)
     {
         if (!bFirstItem)
         {
@@ -1625,7 +1625,11 @@ static CPLString OGRPGEscapeStringList(PGconn *hPGConn,
         papszItems++;
     }
     if (bForInsertOrUpdate)
+    {
         osStr += "]";
+        if( papszItems == NULL )
+            osStr += "::varchar[]";
+    }
     else
         osStr += "}";
     return osStr;

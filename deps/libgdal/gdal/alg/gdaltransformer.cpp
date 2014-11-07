@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaltransformer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdaltransformer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Mapinfo Image Warper
  * Purpose:  Implementation of one or more GDALTrasformerFunc types, including
@@ -38,7 +38,7 @@
 #include "cpl_list.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdaltransformer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdaltransformer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 CPL_C_START
 void *GDALDeserializeGCPTransformer( CPLXMLNode *psTree );
 void *GDALDeserializeTPSTransformer( CPLXMLNode *psTree );
@@ -168,7 +168,7 @@ GDALSuggestedWarpOutput( GDALDatasetH hSrcDS,
 
  static int GDALSuggestedWarpOutput2_MustAdjustForRightBorder(
                      GDALTransformerFunc pfnTransformer, void *pTransformArg,
-                     double* padfExtent, int nPixels, int nLines,
+                     double* padfExtent, CPL_UNUSED int nPixels, int nLines,
                      double dfPixelSizeX, double dfPixelSizeY)
  {
     int nSamplePoints;
@@ -230,7 +230,7 @@ GDALSuggestedWarpOutput( GDALDatasetH hSrcDS,
 
  static int GDALSuggestedWarpOutput2_MustAdjustForBottomBorder(
                      GDALTransformerFunc pfnTransformer, void *pTransformArg,
-                     double* padfExtent, int nPixels, int nLines,
+                     double* padfExtent, int nPixels, CPL_UNUSED int nLines,
                      double dfPixelSizeX, double dfPixelSizeY)
  {
     int nSamplePoints;
@@ -339,7 +339,7 @@ GDALSuggestedWarpOutput2( GDALDatasetH hSrcDS,
                           void *pTransformArg, 
                           double *padfGeoTransformOut, 
                           int *pnPixels, int *pnLines,
-                          double *padfExtent, int nOptions )
+                          double *padfExtent, CPL_UNUSED int nOptions )
 
 {
     VALIDATE_POINTER1( hSrcDS, "GDALSuggestedWarpOutput2", CE_Failure );
@@ -348,8 +348,8 @@ GDALSuggestedWarpOutput2( GDALDatasetH hSrcDS,
 /*      Setup sample points all around the edge of the input raster.    */
 /* -------------------------------------------------------------------- */
     int    nSamplePoints = 0;
-    int    nInXSize = GDALGetRasterXSize( hSrcDS );
-    int    nInYSize = GDALGetRasterYSize( hSrcDS );
+    const int    nInXSize = GDALGetRasterXSize( hSrcDS );
+    const int    nInYSize = GDALGetRasterYSize( hSrcDS );
 
     if (pfnTransformer == GDALGenImgProjTransform)
     {
@@ -921,7 +921,7 @@ void* GDALCloneGenImgProjTransformer( void *hTransformArg )
 void *
 GDALCreateGenImgProjTransformer( GDALDatasetH hSrcDS, const char *pszSrcWKT,
                                  GDALDatasetH hDstDS, const char *pszDstWKT,
-                                 int bGCPUseOK, double dfGCPErrorThreshold,
+                                 int bGCPUseOK, CPL_UNUSED double dfGCPErrorThreshold,
                                  int nOrder )
 
 {
@@ -2877,7 +2877,7 @@ int CPL_STDCALL GDALInvGeoTransform( double *gt_in, double *gt_out )
 /*                      GDALSerializeTransformer()                      */
 /************************************************************************/
 
-CPLXMLNode *GDALSerializeTransformer( GDALTransformerFunc pfnFunc,
+CPLXMLNode *GDALSerializeTransformer( CPL_UNUSED GDALTransformerFunc pfnFunc,
                                       void *pTransformArg )
 
 {

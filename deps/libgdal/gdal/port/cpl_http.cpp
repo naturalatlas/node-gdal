@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_http.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_http.cpp 27517 2014-07-11 18:12:54Z kyle $
  *
  * Project:  libcurl based HTTP client
  * Purpose:  libcurl based HTTP client
@@ -44,7 +44,7 @@ void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions);
 
 #endif
 
-CPL_CVSID("$Id: cpl_http.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_http.cpp 27517 2014-07-11 18:12:54Z kyle $");
 
 // list of named persistent http sessions 
 
@@ -494,9 +494,9 @@ void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions)
 
     /* NOSIGNAL should be set to true for timeout to work in multithread
      * environments on Unix, requires libcurl 7.10 or more recent.
-     * (this force avoiding the use of sgnal handlers)
+     * (this force avoiding the use of signal handlers)
      */
-#ifdef CURLOPT_NOSIGNAL
+#if LIBCURL_VERSION_NUM >= 0x070A00
     curl_easy_setopt(http_handle, CURLOPT_NOSIGNAL, 1 );
 #endif
 

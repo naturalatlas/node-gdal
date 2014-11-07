@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreaderp.h 27120 2014-04-03 20:33:49Z rouault $
+ * $Id: gmlreaderp.h 27531 2014-07-14 20:33:03Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Private Declarations for OGR free GML Reader code.
@@ -381,10 +381,17 @@ public:
 /*                              GMLReader                               */
 /************************************************************************/
 
+typedef enum
+{
+    OGRGML_XERCES_UNINITIALIZED,
+    OGRGML_XERCES_INIT_FAILED,
+    OGRGML_XERCES_INIT_SUCCESSFUL
+} OGRGMLXercesState;
+
 class GMLReader : public IGMLReader 
 {
 private:
-    static int    m_bXercesInitialized;
+    static OGRGMLXercesState    m_eXercesInitState;
     static int    m_nInstanceCount;
     int           m_bClassListLocked;
 

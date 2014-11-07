@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgmldatasource.cpp 27195 2014-04-16 11:03:12Z rouault $
+ * $Id: ogrgmldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRGMLDataSource class.
@@ -46,7 +46,7 @@
 
 #include <vector>
 
-CPL_CVSID("$Id: ogrgmldatasource.cpp 27195 2014-04-16 11:03:12Z rouault $");
+CPL_CVSID("$Id: ogrgmldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 static int ExtractSRSName(const char* pszXML, char* szSRSName,
                           size_t sizeof_szSRSName);
@@ -1421,8 +1421,7 @@ OGRLayer *
 OGRGMLDataSource::CreateLayer( const char * pszLayerName,
                                OGRSpatialReference *poSRS,
                                OGRwkbGeometryType eType,
-                               char ** papszOptions )
-
+                               CPL_UNUSED char ** papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Verify we are in update mode.                                   */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsi_virtual.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsi_virtual.h 27720 2014-09-21 17:58:47Z goatbar $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Declarations for classes related to the virtual filesystem.
@@ -61,7 +61,7 @@ class CPL_DLL VSIVirtualHandle {
     virtual int       Eof() = 0;
     virtual int       Flush() {return 0;}
     virtual int       Close() = 0;
-    virtual int       Truncate( vsi_l_offset nNewSize ) { return -1; }
+    virtual int       Truncate( CPL_UNUSED vsi_l_offset nNewSize ) { return -1; }
     virtual void     *GetNativeFileDescriptor() { return NULL; }
     virtual           ~VSIVirtualHandle() { }
 };

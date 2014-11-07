@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: srtmhgtdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: srtmhgtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SRTM HGT Driver
  * Purpose:  SRTM HGT File Read Support.
@@ -38,7 +38,7 @@
 
 #define SRTMHG_NODATA_VALUE -32768
 
-CPL_CVSID("$Id: srtmhgtdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: srtmhgtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_SRTMHGT(void);
@@ -386,7 +386,7 @@ GDALDataset* SRTMHGTDataset::Open(GDALOpenInfo* poOpenInfo)
 /************************************************************************/
 
 GDALDataset * SRTMHGTDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                                          int bStrict, char ** papszOptions, 
+                                          int bStrict, CPL_UNUSED char ** papszOptions, 
                                           GDALProgressFunc pfnProgress, void * pProgressData )
 
 {

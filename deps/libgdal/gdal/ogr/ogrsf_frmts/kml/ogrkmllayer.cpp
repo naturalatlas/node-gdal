@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrkmllayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrkmllayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGRKMLLayer class.
@@ -599,7 +599,7 @@ int OGRKMLLayer::TestCapability( const char * pszCap )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRKMLLayer::CreateField( OGRFieldDefn *poField, int bApproxOK )
+OGRErr OGRKMLLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
 {
     if( !bWriter_ || iNextKMLId_ != 0 )
         return OGRERR_FAILURE;

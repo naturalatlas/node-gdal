@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sqlite.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_sqlite.h 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/SQLite driver.
@@ -281,8 +281,8 @@ class OGRSQLiteLayer : public OGRLayer
 
     virtual int          HasSpatialIndex() { return bHasSpatialIndex; }
 
-    virtual CPLString     GetSpatialWhere(int iGeomCol,
-                                          OGRGeometry* poFilterGeom) { return ""; }
+    virtual CPLString     GetSpatialWhere(CPL_UNUSED int iGeomCol,
+                                          CPL_UNUSED OGRGeometry* poFilterGeom) { return ""; }
 
     static OGRErr       ImportSpatiaLiteGeometry( const GByte *, int,
                                                   OGRGeometry ** );

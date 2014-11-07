@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrutils.cpp 27121 2014-04-03 22:08:55Z rouault $
+ * $Id: ogrutils.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Utility functions for OGR classes, including some related to
@@ -41,7 +41,7 @@
 # include "ogrsf_frmts.h"
 #endif /* OGR_ENABLED */
 
-CPL_CVSID("$Id: ogrutils.cpp 27121 2014-04-03 22:08:55Z rouault $");
+CPL_CVSID("$Id: ogrutils.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                        OGRFormatDouble()                             */
@@ -811,8 +811,7 @@ int OGRGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
  * @return TRUE if apparently successful or FALSE on failure.
  */
 
-int OGRParseDate( const char *pszInput, OGRField *psField, int nOptions )
-
+int OGRParseDate( const char *pszInput, OGRField *psField, CPL_UNUSED int nOptions )
 {
     int bGotSomething = FALSE;
 

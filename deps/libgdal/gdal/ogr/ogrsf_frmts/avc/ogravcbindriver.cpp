@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravcbindriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogravcbindriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OGR
  * Purpose:  OGRAVCBinDriver implementation (Arc/Info Binary Coverages)
@@ -29,7 +29,7 @@
 
 #include "ogr_avc.h"
 
-CPL_CVSID("$Id: ogravcbindriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogravcbindriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRAVCBinDriver()                          */
@@ -89,8 +89,7 @@ OGRDataSource *OGRAVCBinDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRAVCBinDriver::TestCapability( const char * pszCap )
-
+int OGRAVCBinDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

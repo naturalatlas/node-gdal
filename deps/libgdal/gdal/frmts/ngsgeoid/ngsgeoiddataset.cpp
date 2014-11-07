@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ngsgeoiddataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ngsgeoiddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  NGSGEOID driver
  * Purpose:  GDALDataset driver for NGSGEOID dataset.
@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ngsgeoiddataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ngsgeoiddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_NGSGEOID(void);
@@ -113,7 +113,7 @@ NGSGEOIDRasterBand::NGSGEOIDRasterBand( NGSGEOIDDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr NGSGEOIDRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr NGSGEOIDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                        void * pImage )
 
 {

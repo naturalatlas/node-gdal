@@ -32,7 +32,7 @@
 
 // g++ -fPIC -g -Wall ogr/ogrsf_frmts/wfs/*.cpp -shared -o ogr_WFS.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/gml -Iogr/ogrsf_frmts/wfs -L. -lgdal
 
-CPL_CVSID("$Id: ogrwfsdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrwfsdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGRWFS();
 
@@ -77,8 +77,7 @@ OGRDataSource *OGRWFSDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRWFSDriver::TestCapability( const char * pszCap )
-
+int OGRWFSDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

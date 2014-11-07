@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsualayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsualayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUALayer class.
@@ -34,7 +34,7 @@
 #include "ogr_xplane_geo_utils.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogrsualayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsualayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                            OGRSUALayer()                             */
@@ -361,8 +361,7 @@ OGRFeature *OGRSUALayer::GetNextRawFeature()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSUALayer::TestCapability( const char * pszCap )
-
+int OGRSUALayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

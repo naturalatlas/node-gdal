@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogropenairdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirDriver.
@@ -30,7 +30,7 @@
 #include "ogr_openair.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogropenairdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogropenairdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 extern "C" void RegisterOGROpenAir();
 
@@ -75,8 +75,7 @@ OGRDataSource *OGROpenAirDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGROpenAirDriver::TestCapability( const char * pszCap )
-
+int OGROpenAirDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcsvlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcsvlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcsvlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 
 
@@ -983,7 +983,7 @@ OGRErr OGRCSVLayer::CreateField( OGRFieldDefn *poNewField, int bApproxOK )
 /************************************************************************/
 
 OGRErr OGRCSVLayer::CreateGeomField( OGRGeomFieldDefn *poGeomField,
-                                     int bApproxOK )
+                                     CPL_UNUSED int bApproxOK )
 
 {
     if( !TestCapability(OLCCreateGeomField) )
@@ -1275,21 +1275,16 @@ OGRErr OGRCSVLayer::CreateFeature( OGRFeature *poNewFeature )
 
     if( bHiddenWKTColumn )
     {
-        char *pszEscaped;
+        char *pszWKT = NULL;
         OGRGeometry     *poGeom = poNewFeature->GetGeomFieldRef(0);
-        if (poGeom && poGeom->exportToWkt(&pszEscaped) == OGRERR_NONE)
+        if (poGeom && poGeom->exportToWkt(&pszWKT) == OGRERR_NONE)
         {
-            char* pszNew = CPLStrdup(CPLSPrintf("\"%s\"", pszEscaped));
-            CPLFree(pszEscaped);
-            pszEscaped = pszNew;
+            bNonEmptyLine = TRUE;
+            VSIFWriteL( "\"", 1, 1, fpCSV );
+            VSIFWriteL( pszWKT, 1, strlen(pszWKT), fpCSV );
+            VSIFWriteL( "\"", 1, 1, fpCSV );
         }
-        else
-            pszEscaped = CPLStrdup("");
-
-        int nLen = (int)strlen(pszEscaped);
-        bNonEmptyLine |= (nLen != 0);
-        VSIFWriteL( pszEscaped, 1, nLen, fpCSV );
-        CPLFree( pszEscaped );
+        CPLFree(pszWKT);
     }
 
 /* -------------------------------------------------------------------- */
@@ -1310,7 +1305,12 @@ OGRErr OGRCSVLayer::CreateFeature( OGRFeature *poNewFeature )
             OGRGeometry     *poGeom = poNewFeature->GetGeomFieldRef(iGeom);
             if (poGeom && poGeom->exportToWkt(&pszEscaped) == OGRERR_NONE)
             {
-                char* pszNew = CPLStrdup(CPLSPrintf("\"%s\"", pszEscaped));
+                int nLenWKT = (int)strlen(pszEscaped);
+                char* pszNew = (char*) CPLMalloc(1 + nLenWKT + 1 + 1);
+                pszNew[0] = '"';
+                memcpy(pszNew + 1, pszEscaped, nLenWKT);
+                pszNew[1 + nLenWKT] = '"';
+                pszNew[1 + nLenWKT + 1] = '\0';
                 CPLFree(pszEscaped);
                 pszEscaped = pszNew;
             }

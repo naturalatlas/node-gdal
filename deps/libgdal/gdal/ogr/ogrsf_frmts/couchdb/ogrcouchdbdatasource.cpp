@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcouchdbdatasource.cpp 27268 2014-05-01 10:46:20Z rouault $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBDataSource class
@@ -30,7 +30,7 @@
 #include "ogr_couchdb.h"
 #include "swq.h"
 
-CPL_CVSID("$Id: ogrcouchdbdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcouchdbdatasource.cpp 27268 2014-05-01 10:46:20Z rouault $");
 
 /************************************************************************/
 /*                        OGRCouchDBDataSource()                        */
@@ -1078,7 +1078,7 @@ json_object* OGRCouchDBDataSource::REQUEST(const char* pszVerb,
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                     "JSON parsing error: %s (at offset %d)",
-                    json_tokener_errors[jstok->err], jstok->char_offset);
+                    json_tokener_error_desc(jstok->err), jstok->char_offset);
 
         json_tokener_free(jstok);
 

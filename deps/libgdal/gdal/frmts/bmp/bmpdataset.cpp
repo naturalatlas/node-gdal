@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bmpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: bmpdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  Microsoft Windows Bitmap
  * Purpose:  Read/write MS Windows Device Independent Bitmap (DIB) files
@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bmpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: bmpdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_BMP(void);
@@ -164,7 +164,9 @@ typedef struct
 
 // Info header size in bytes:
 const unsigned int  BIH_WIN4SIZE = 40; // for BMPT_WIN4
+#if 0  /* Unused */
 const unsigned int  BIH_WIN5SIZE = 57; // for BMPT_WIN5
+#endif
 const unsigned int  BIH_OS21SIZE = 12; // for BMPT_OS21
 const unsigned int  BIH_OS22SIZE = 64; // for BMPT_OS22
 
@@ -319,7 +321,7 @@ BMPRasterBand::~BMPRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr BMPRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr BMPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 {
     BMPDataset  *poGDS = (BMPDataset *) poDS;
@@ -859,7 +861,7 @@ BMPComprRasterBand::~BMPComprRasterBand()
 /************************************************************************/
 
 CPLErr BMPComprRasterBand::
-    IReadBlock( int nBlockXOff, int nBlockYOff, void * pImage )
+    IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, void * pImage )
 {
     memcpy( pImage, pabyUncomprBuf +
             (poDS->GetRasterYSize() - nBlockYOff - 1) * poDS->GetRasterXSize(),

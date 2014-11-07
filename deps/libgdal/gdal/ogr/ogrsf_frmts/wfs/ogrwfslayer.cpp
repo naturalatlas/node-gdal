@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwfslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrwfslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  WFS Translator
  * Purpose:  Implements OGRWFSLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_http.h"
 #include "parsexsd.h"
 
-CPL_CVSID("$Id: ogrwfslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrwfslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 
 /************************************************************************/
@@ -189,7 +189,7 @@ OGRWFSLayer::~OGRWFSLayer()
 /*                    GetDescribeFeatureTypeURL()                       */
 /************************************************************************/
 
-CPLString OGRWFSLayer::GetDescribeFeatureTypeURL(int bWithNS)
+CPLString OGRWFSLayer::GetDescribeFeatureTypeURL(CPL_UNUSED int bWithNS)
 {
     CPLString osURL(pszBaseURL);
     osURL = CPLURLAddKVP(osURL, "SERVICE", "WFS");

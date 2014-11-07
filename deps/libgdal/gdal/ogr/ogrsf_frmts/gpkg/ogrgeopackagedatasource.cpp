@@ -538,7 +538,8 @@ sqlite3* OGRGeoPackageDataSource::GetDatabaseHandle()
 /*                                Create()                              */
 /************************************************************************/
 
-int OGRGeoPackageDataSource::Create( const char * pszFilename, char **papszOptions )
+int OGRGeoPackageDataSource::Create( const char * pszFilename,
+                                     CPL_UNUSED char **papszOptions )
 {
     CPLString osCommand;
     const char *pszSpatialRefSysRecord;
@@ -823,7 +824,7 @@ OGRLayer* OGRGeoPackageDataSource::CreateLayer( const char * pszLayerName,
     {
         /* Requirement 27: The z value in a gpkg_geometry_columns table row */
         /* SHALL be one of 0 (none), 1 (mandatory), or 2 (optional) */
-        int bGeometryTypeHasZ = wkb25DBit & eGType;
+        int bGeometryTypeHasZ = (wkb25DBit & eGType) != 0;
 
         /* Update gpkg_geometry_columns with the table info */
         pszSQL = sqlite3_mprintf(

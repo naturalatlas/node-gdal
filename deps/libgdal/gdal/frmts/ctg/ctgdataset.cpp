@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ctgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ctgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  CTG driver
  * Purpose:  GDALDataset driver for CTG dataset.
@@ -30,7 +30,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ctgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ctgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_CTG(void);
@@ -194,9 +194,8 @@ CTGRasterBand::~CTGRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr CTGRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
+CPLErr CTGRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, CPL_UNUSED int nBlockYOff,
                                   void * pImage )
-
 {
     CTGDataset* poGDS = (CTGDataset* ) poDS;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalmultidomainmetadata.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalmultidomainmetadata.cpp 27723 2014-09-22 18:21:08Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALMultiDomainMetadata class.  This class
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include <map>
 
-CPL_CVSID("$Id: gdalmultidomainmetadata.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalmultidomainmetadata.cpp 27723 2014-09-22 18:21:08Z goatbar $");
 
 /************************************************************************/
 /*                      GDALMultiDomainMetadata()                       */
@@ -190,8 +190,7 @@ CPLErr GDALMultiDomainMetadata::SetMetadataItem( const char *pszName,
 /*      <Metadata> elements.                                            */
 /************************************************************************/
 
-int GDALMultiDomainMetadata::XMLInit( CPLXMLNode *psTree, int bMerge )
-
+int GDALMultiDomainMetadata::XMLInit( CPLXMLNode *psTree, CPL_UNUSED int bMerge )
 {
     CPLXMLNode *psMetadata;
 

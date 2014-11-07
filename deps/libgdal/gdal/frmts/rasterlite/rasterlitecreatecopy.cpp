@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterlitecreatecopy.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rasterlitecreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $
  *
  * Project:  GDAL Rasterlite driver
  * Purpose:  Implement GDAL Rasterlite support using OGR SQLite driver
@@ -33,7 +33,7 @@
 
 #include "rasterlitedataset.h"
 
-CPL_CVSID("$Id: rasterlitecreatecopy.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rasterlitecreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 
 /************************************************************************/
 /*                  RasterliteGetTileDriverOptions ()                   */
@@ -323,7 +323,7 @@ OGRDataSourceH RasterliteCreateTables(OGRDataSourceH hDS, const char* pszTableNa
 
 GDALDataset *
 RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                       int bStrict, char ** papszOptions, 
+                       CPL_UNUSED int bStrict, CPL_UNUSED char ** papszOptions, 
                        GDALProgressFunc pfnProgress, void * pProgressData )
 {
     int nBands = poSrcDS->GetRasterCount();
@@ -727,7 +727,7 @@ RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /*                         RasterliteDelete ()                          */
 /************************************************************************/
 
-CPLErr RasterliteDelete(const char* pszFilename)
+CPLErr RasterliteDelete(CPL_UNUSED const char* pszFilename)
 {
     return CE_None;
 }

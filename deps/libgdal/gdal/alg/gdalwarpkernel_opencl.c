@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarpkernel_opencl.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalwarpkernel_opencl.c 27455 2014-06-15 10:54:41Z rouault $
  *
  * Project:  OpenCL Image Reprojector
  * Purpose:  Implementation of the GDALWarpKernel reprojector in OpenCL.
@@ -41,7 +41,7 @@
 #include "cpl_string.h"
 #include "gdalwarpkernel_opencl.h"
 
-CPL_CVSID("$Id: gdalwarpkernel_opencl.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalwarpkernel_opencl.c 27455 2014-06-15 10:54:41Z rouault $");
 
 #define handleErr(err) if((err) != CL_SUCCESS) { \
     CPLError(CE_Failure, CPLE_AppDefined, "Error at file %s line %d: %s", __FILE__, __LINE__, getCLErrorString(err)); \
@@ -836,7 +836,6 @@ cl_kernel get_kernel(struct oclWarper *warper, char useVec,
                     "__global int *nDstValid,\n"
                     "const int bandNum)\n"
 "{\n"
-    "int i;\n"
     "float2  fSrc = getSrcCoords(srcCoords);\n"
     "if (!isValid(fUnifiedSrcDensity, nUnifiedSrcValid, fSrc))\n"
         "return;\n"
