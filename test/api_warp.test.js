@@ -232,20 +232,6 @@ describe('gdal', function() {
 			
 			assert.notEqual(approx_checksum, exact_checksum);
 		});
-		it('should throw if target does not have geotransform set', function(){
-			var dst = gdal.open('temp', 'w', 'MEM', 128, 128, 1, gdal.GDT_Byte);
-		
-			assert.isNull(dst.geoTransform);
-
-			assert.throws(function(){
-				gdal.reprojectImage({
-					src: src,
-					dst: dst,
-					s_srs: src.srs,
-					t_srs: gdal.SpatialReference.fromEPSG(4326)
-				});
-			});
-		});
 		it('should throw if cutline is wrong geometry type', function(){
 			var options = {
 				src: src,
