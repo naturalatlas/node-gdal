@@ -210,7 +210,7 @@ NAN_METHOD(Driver::create)
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
 
 	std::string filename;
-	unsigned int x_size = 0, y_size = 0, n_bands = 1;
+	unsigned int x_size = 0, y_size = 0, n_bands = 0;
 	GDALDataType type = GDT_Byte;
 	std::string type_name = "";
 	StringList options;

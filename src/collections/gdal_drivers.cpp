@@ -189,10 +189,13 @@ NAN_METHOD(GDALDrivers::count)
 {
 	NanScope();
 
-	int gdal_count = GetGDALDriverManager()->GetDriverCount();
-	int ogr_count = OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount();
+	int count = GetGDALDriverManager()->GetDriverCount();
 
-	NanReturnValue(NanNew<Integer>(gdal_count + ogr_count));
+	#if GDAL_VERSION_MAJOR < 2
+	count += OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount();
+	#endif
+
+	NanReturnValue(NanNew<Integer>(count));
 }
 
 } // namespace node_gdal

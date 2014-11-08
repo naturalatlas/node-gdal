@@ -35,7 +35,7 @@ describe('gdal', function() {
 			lyr.fields.add(new gdal.FieldDefn('elev', gdal.OFTReal))
 		});
 		afterEach(function(){
-			dst.close();
+			try { dst.close(); } catch(err) {}
 		})
 		it('should generate contours when passed an interval / base', function(){
 
@@ -108,7 +108,7 @@ describe('gdal', function() {
 			}
 		});
 		afterEach(function(){
-			src.close();
+			try { src.close(); } catch(err) {}
 		});
 		it('should fill nodata values', function(){
 
@@ -132,7 +132,7 @@ describe('gdal', function() {
 			band = src.bands.get(1);
 		});
 		afterEach(function(){
-			src.close();
+			try { src.close(); } catch(err) {}
 		});
 		it('should generate unique checksum for the given region', function(){
 
@@ -169,7 +169,7 @@ describe('gdal', function() {
 			band.pixels.write(7,7,4,4,new Uint8Array(small_buffer));
 		});
 		afterEach(function(){
-			src.close();
+			try { src.close(); } catch(err) {}
 		});
 		it('should fill smaller polygons with value from neighboring bigger polygon', function(){
 
@@ -201,7 +201,7 @@ describe('gdal', function() {
 			}
 		});
 		after(function(){
-			src.close();
+			try { src.close(); } catch(err) {}
 		});
 		beforeEach(function(){
 			dst = gdal.open('temp', 'w', 'Memory');
@@ -210,7 +210,7 @@ describe('gdal', function() {
 			lyr.fields.add(new gdal.FieldDefn('val', gdal.OFTInteger));
 		});
 		afterEach(function(){
-			dst.close();
+			try { dst.close(); } catch(err) {}
 		})
 		it('should generate polygons from a RasterBand', function(){
 

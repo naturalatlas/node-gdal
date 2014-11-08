@@ -682,6 +682,15 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 		NanThrowError("Dataset object has already been destroyed");
 		NanReturnUndefined();
 	}
+
+	//GDAL 2.x will return 512x512 for vector datasets... which doesn't really make sense in JS where we can return null instead of a number
+	//https://github.com/OSGeo/gdal/blob/beef45c130cc2778dcc56d85aed1104a9b31f7e6/gdal/gcore/gdaldataset.cpp#L173-L174
+	#if GDAL_VERSION_MAJOR >= 2
+	if(!raw->GetDriver()->GetMetadataItem(GDAL_DCAP_RASTER)){
+		NanReturnNull();
+	}
+	#endif
+
 	Local<Object> result = NanNew<Object>();
 	result->Set(NanNew("x"), NanNew<Integer>(raw->GetRasterXSize()));
 	result->Set(NanNew("y"), NanNew<Integer>(raw->GetRasterYSize()));

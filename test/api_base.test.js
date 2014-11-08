@@ -9,7 +9,7 @@ describe('gdal', function() {
 
 	describe('"version" property', function() {
 		it('should exist', function() {
-			assert.match(gdal.version, /^\d+\.\d+\.\d+$/);
+			assert.match(gdal.version, /^\d+\.\d+\.\d+[a-zA-Z]*$/);
 		});
 	});
 	describe('"config" property', function() {
