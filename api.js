@@ -1,21 +1,25 @@
 YUI.add("yuidoc-meta", function(Y) {
    Y.YUIDoc = { meta: {
     "classes": [
+        "Constants (DCAP)",
+        "Constants (DMD)",
+        "Constants (GCI)",
+        "Constants (GDT)",
+        "Constants (GRA)",
+        "Constants (ODsC)",
+        "Constants (OFT)",
+        "Constants (OJ)",
+        "Constants (OLC)",
+        "Constants (WKB)",
+        "gdal",
+        "gdal.Driver",
         "gdal.Envelope",
         "gdal.Envelope3D",
         "gdal.Feature",
         "gdal.FeatureDefn",
         "gdal.Layer"
     ],
-    "modules": [
-        "gdal"
-    ],
-    "allModules": [
-        {
-            "displayName": "gdal",
-            "name": "gdal",
-            "description": "Provides a binding to libgdal."
-        }
-    ]
+    "modules": [],
+    "allModules": []
 } };
 });

@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/node_gdal.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Layer"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <h3>APIs</h3>
+    <div id="sidebar">
+        <ul id="main-nav" class="nav nav-tabs" style="margin-bottom:0;">
+            <li class="active"><a href="#classes" data-toggle="tab">Classes</a></li>
+            <li><a href="#modules" data-toggle="tab">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" placeholder="Type to filter APIs">
+        </div>
+
+        <div class="tab-content" style="border: 1px solid #DDD; border-top:0;">
+            <div class="tab-pane active" id="classes">
+                <ul id="api-classes" class="nav nav-list">
+                    
+                        <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+                    
+                        <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+                    
+                        <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+                    
+                        <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+                    
+                        <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+                    
+                        <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+                    
+                        <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+                    
+                        <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+                    
+                        <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+                    
+                        <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                    
+                        <li><a href="../classes/gdal.html">gdal</a></li>
+                    
+                        <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+                    
+                        <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+                    
+                        <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+                    
+                        <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+                    
+                </ul>
+            </div>
+
+            <div class="tab-pane" id="modules">
+                <ul id="api-modules" class="nav nav-list">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/node_gdal.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+// node
+#include &lt;node.h&gt;
+#include &lt;node_buffer.h&gt;
+#include &lt;node_version.h&gt;
+
+// nan
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored &quot;-Wunused-parameter&quot;
+#include &lt;nan.h&gt;
+#pragma GCC diagnostic pop
+
+// gdal
+#include &lt;gdal.h&gt;
+
+// node-gdal
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_majorobject.hpp&quot;
+#include &quot;gdal_driver.hpp&quot;
+#include &quot;gdal_dataset.hpp&quot;
+#include &quot;gdal_rasterband.hpp&quot;
+#include &quot;gdal_warper.hpp&quot;
+#include &quot;gdal_algorithms.hpp&quot;
+
+#include &quot;gdal_layer.hpp&quot;
+#include &quot;gdal_feature_defn.hpp&quot;
+#include &quot;gdal_field_defn.hpp&quot;
+#include &quot;gdal_feature.hpp&quot;
+#include &quot;gdal_spatial_reference.hpp&quot;
+#include &quot;gdal_coordinate_transformation.hpp&quot;
+#include &quot;gdal_point.hpp&quot;
+#include &quot;gdal_polygon.hpp&quot;
+#include &quot;gdal_linestring.hpp&quot;
+#include &quot;gdal_linearring.hpp&quot;
+#include &quot;gdal_geometrycollection.hpp&quot;
+#include &quot;gdal_multipoint.hpp&quot;
+#include &quot;gdal_multilinestring.hpp&quot;
+#include &quot;gdal_multipolygon.hpp&quot;
+#include &quot;gdal_geometry.hpp&quot;
+
+#include &quot;gdal.hpp&quot;
+#include &quot;utils/field_types.hpp&quot;
+
+//collections
+#include &quot;collections/dataset_bands.hpp&quot;
+#include &quot;collections/dataset_layers.hpp&quot;
+#include &quot;collections/layer_features.hpp&quot;
+#include &quot;collections/feature_fields.hpp&quot;
+#include &quot;collections/layer_fields.hpp&quot;
+#include &quot;collections/feature_defn_fields.hpp&quot;
+#include &quot;collections/geometry_collection_children.hpp&quot;
+#include &quot;collections/polygon_rings.hpp&quot;
+#include &quot;collections/linestring_points.hpp&quot;
+#include &quot;collections/rasterband_overviews.hpp&quot;
+#include &quot;collections/rasterband_pixels.hpp&quot;
+#include &quot;collections/gdal_drivers.hpp&quot;
+
+// std
+#include &lt;string&gt;
+#include &lt;sstream&gt;
+#include &lt;vector&gt;
+
+/**
+ * Node.js binding to libgdal.
+ * https://github.com/naturalatlas/node-gdal
+ *
+ * @static
+ * @class gdal
+ */
+
+namespace node_gdal {
+
+	using namespace node;
+	using namespace v8;
+
+	FILE *log_file = NULL;
+
+	extern &quot;C&quot; {
+
+		static NAN_METHOD(QuietOutput)
+		{
+			CPLSetErrorHandler(CPLQuietErrorHandler);
+			NanReturnUndefined();
+		}
+
+		static NAN_METHOD(VerboseOutput)
+		{
+			CPLSetErrorHandler(CPLDefaultErrorHandler);
+			NanReturnUndefined();
+		}
+
+		static NAN_METHOD(StartLogging)
+		{
+			NanScope();
+
+			#ifdef ENABLE_LOGGING
+			std::string filename = &quot;&quot;;
+			NODE_ARG_STR(0, &quot;filename&quot;, filename);
+			if (filename.empty()) {
+				NanThrowError(&quot;Invalid filename&quot;);
+				NanReturnUndefined();
+			}
+			if (log_file) fclose(log_file);
+			log_file = fopen(filename.c_str(), &quot;w&quot;);
+			if (!log_file) {
+				NanThrowError(&quot;Error creating log file&quot;);
+				NanReturnUndefined();
+			}
+			#else
+			NanThrowError(&quot;Logging requires node-gdal be compiled with --enable_logging=true&quot;);
+			#endif
+
+			NanReturnUndefined();
+		}
+
+		static NAN_METHOD(StopLogging)
+		{
+			#ifdef ENABLE_LOGGING
+			if (log_file) {
+				fclose(log_file);
+				log_file = NULL;
+			}
+			#endif
+
+			NanReturnUndefined();
+		}
+
+		static void Init(Handle&lt;Object&gt; target)
+		{
+
+			NODE_SET_METHOD(target, &quot;open&quot;, open);
+			NODE_SET_METHOD(target, &quot;setConfigOption&quot;, setConfigOption);
+			NODE_SET_METHOD(target, &quot;getConfigOption&quot;, getConfigOption);
+			NODE_SET_METHOD(target, &quot;decToDMS&quot;, decToDMS);
+
+			Warper::Initialize(target);
+			Algorithms::Initialize(target);
+
+			MajorObject::Initialize(target);
+			Driver::Initialize(target);
+			Dataset::Initialize(target);
+			RasterBand::Initialize(target);
+
+			Layer::Initialize(target);
+			Feature::Initialize(target);
+			FeatureDefn::Initialize(target);
+			FieldDefn::Initialize(target);
+			Geometry::Initialize(target);
+			Point::Initialize(target);
+			LineString::Initialize(target);
+			LinearRing::Initialize(target);
+			Polygon::Initialize(target);
+			GeometryCollection::Initialize(target);
+			MultiPoint::Initialize(target);
+			MultiLineString::Initialize(target);
+			MultiPolygon::Initialize(target);
+			SpatialReference::Initialize(target);
+			CoordinateTransformation::Initialize(target);
+
+			DatasetBands::Initialize(target);
+			DatasetLayers::Initialize(target);
+			LayerFeatures::Initialize(target);
+			FeatureFields::Initialize(target);
+			LayerFields::Initialize(target);
+			FeatureDefnFields::Initialize(target);
+			GeometryCollectionChildren::Initialize(target);
+			PolygonRings::Initialize(target);
+			LineStringPoints::Initialize(target);
+			RasterBandOverviews::Initialize(target);
+			RasterBandPixels::Initialize(target);
+
+			//calls GDALRegisterAll()
+			GDALDrivers::Initialize(target);
+			target-&gt;Set(NanNew(&quot;drivers&quot;), GDALDrivers::New());
+
+			/**
+			 * @class Constants (DMD)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.DMD_LONGNAME
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_LONGNAME&quot;), NanNew(GDAL_DMD_LONGNAME));
+			/**
+			 * @final
+			 * @property gdal.DMD_MIMETYPE
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_MIMETYPE&quot;), NanNew(GDAL_DMD_MIMETYPE));
+			/**
+			 * @final
+			 * @property gdal.DMD_HELPTOPIC
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_HELPTOPIC&quot;), NanNew(GDAL_DMD_HELPTOPIC));
+			/**
+			 * @final
+			 * @property gdal.DMD_EXTENSION
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_EXTENSION&quot;), NanNew(GDAL_DMD_EXTENSION));
+			/**
+			 * @final
+			 * @property gdal.DMD_CREATIONOPTIONLIST
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_CREATIONOPTIONLIST&quot;), NanNew(GDAL_DMD_CREATIONOPTIONLIST));
+			/**
+			 * @final
+			 * @property gdal.DMD_CREATIONDATATYPES
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DMD_CREATIONDATATYPES&quot;), NanNew(GDAL_DMD_CREATIONDATATYPES));
+
+			/**
+			 * @class Constants (DCAP)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.DCAP_CREATE
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DCAP_CREATE&quot;), NanNew(GDAL_DCAP_CREATE));
+			/**
+			 * @final
+			 * @property gdal.DCAP_CREATECOPY
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DCAP_CREATECOPY&quot;), NanNew(GDAL_DCAP_CREATECOPY));
+			/**
+			 * @final
+			 * @property gdal.DCAP_VIRTUALIO
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;DCAP_VIRTUALIO&quot;), NanNew(GDAL_DCAP_VIRTUALIO));
+
+			/**
+			 * @class Constants (OLC)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.OLCRandomRead
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCRandomRead&quot;), NanNew(OLCRandomRead));
+			/**
+			 * @final
+			 * @property gdal.OLCSequentialWrite
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCSequentialWrite&quot;), NanNew(OLCSequentialWrite));
+			/**
+			 * @final
+			 * @property gdal.OLCRandomWrite
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCRandomWrite&quot;), NanNew(OLCRandomWrite));
+			/**
+			 * @final
+			 * @property gdal.OLCFastSpatialFilter
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCFastSpatialFilter&quot;), NanNew(OLCFastSpatialFilter));
+			/**
+			 * @final
+			 * @property gdal.OLCFastFeatureCount
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCFastFeatureCount&quot;), NanNew(OLCFastFeatureCount));
+			/**
+			 * @final
+			 * @property gdal.OLCFastGetExtent
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCFastGetExtent&quot;), NanNew(OLCFastGetExtent));
+			/**
+			 * @final
+			 * @property gdal.OLCCreateField
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCCreateField&quot;), NanNew(OLCCreateField));
+			/**
+			 * @final
+			 * @property gdal.OLCDeleteField
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCDeleteField&quot;), NanNew(OLCDeleteField));
+			/**
+			 * @final
+			 * @property gdal.OLCReorderFields
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCReorderFields&quot;), NanNew(OLCReorderFields));
+			/**
+			 * @final
+			 * @property gdal.OLCAlterFieldDefn
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCAlterFieldDefn&quot;), NanNew(OLCAlterFieldDefn));
+			/**
+			 * @final
+			 * @property gdal.OLCTransactions
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCTransactions&quot;), NanNew(OLCTransactions));
+			/**
+			 * @final
+			 * @property gdal.OLCDeleteFeature
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCDeleteFeature&quot;), NanNew(OLCDeleteFeature));
+			/**
+			 * @final
+			 * @property gdal.OLCFastSetNextByIndex
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCFastSetNextByIndex&quot;), NanNew(OLCFastSetNextByIndex));
+			/**
+			 * @final
+			 * @property gdal.OLCStringsAsUTF8
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCStringsAsUTF8&quot;), NanNew(OLCStringsAsUTF8));
+			/**
+			 * @final
+			 * @property gdal.OLCIgnoreFields
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCIgnoreFields&quot;), NanNew(OLCIgnoreFields));
+
+			#ifdef OLCCreateGeomField
+			/**
+			 * @final
+			 * @property gdal.OLCCreateGeomField
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OLCCreateGeomField&quot;), NanNew(OLCCreateGeomField));
+			#endif
+			#ifdef ODsCCreateGeomFieldAfterCreateLayer
+			/**
+			 * @final
+			 * @property gdal.ODsCCreateGeomFieldAfterCreateLayer
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODsCCreateGeomFieldAfterCreateLayer&quot;), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
+			#endif
+
+			/**
+			 * @class Constants (ODsC)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.ODsCCreateLayer
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODsCCreateLayer&quot;), NanNew(ODsCCreateLayer));
+			/**
+			 * @final
+			 * @property gdal.ODsCDeleteLayer
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODsCDeleteLayer&quot;), NanNew(ODsCDeleteLayer));
+			/**
+			 * @final
+			 * @property gdal.ODrCCreateDataSource
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODrCCreateDataSource&quot;), NanNew(ODrCCreateDataSource));
+			/**
+			 * @final
+			 * @property gdal.ODrCDeleteDataSource
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODrCDeleteDataSource&quot;), NanNew(ODrCDeleteDataSource));
+
+
+			NODE_DEFINE_CONSTANT(target, GA_ReadOnly);
+			NODE_DEFINE_CONSTANT(target, GA_Update);
+			NODE_DEFINE_CONSTANT(target, GF_Read);
+			NODE_DEFINE_CONSTANT(target, GF_Write);
+
+			/**
+			 * Pixel data types. ([reference](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))
+			 *
+			 * @class Constants (GDT)
+			 */
+
+			/**
+			 * Unknown or unspecified type
+			 * @final
+			 * @property gdal.GDT_Unknown
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Unknown&quot;), NanUndefined());
+			/**
+			 * Eight bit unsigned integer
+			 * @final
+			 * @property gdal.GDT_Byte
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Byte&quot;), NanNew(GDALGetDataTypeName(GDT_Byte)));
+			/**
+			 * Sixteen bit unsigned integer
+			 * @final
+			 * @property gdal.GDT_UInt16
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_UInt16&quot;), NanNew(GDALGetDataTypeName(GDT_UInt16)));
+			/**
+			 * Sixteen bit signed integer
+			 * @final
+			 * @property gdal.GDT_Int16
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Int16&quot;), NanNew(GDALGetDataTypeName(GDT_Int16)));
+			/**
+			 * Thirty two bit unsigned integer
+			 * @final
+			 * @property gdal.GDT_UInt32
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_UInt32&quot;), NanNew(GDALGetDataTypeName(GDT_UInt32)));
+			/**
+			 * Thirty two bit signed integer
+			 * @final
+			 * @property gdal.GDT_Int32
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Int32&quot;), NanNew(GDALGetDataTypeName(GDT_Int32)));
+			/**
+			 * Thirty two bit floating point
+			 * @final
+			 * @property gdal.GDT_Float32
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Float32&quot;), NanNew(GDALGetDataTypeName(GDT_Float32)));
+			/**
+			 * Sixty four bit floating point
+			 * @final
+			 * @property gdal.GDT_Float64
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_Float64&quot;), NanNew(GDALGetDataTypeName(GDT_Float64)));
+			/**
+			 * Complex Int16
+			 * @final
+			 * @property gdal.GDT_CInt16
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_CInt16&quot;), NanNew(GDALGetDataTypeName(GDT_CInt16)));
+			/**
+			 * Complex Int32
+			 * @final
+			 * @property gdal.GDT_CInt32
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_CInt32&quot;), NanNew(GDALGetDataTypeName(GDT_CInt32)));
+			/**
+			 * Complex Float32
+			 * @final
+			 * @property gdal.GDT_CFloat32
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_CFloat32&quot;), NanNew(GDALGetDataTypeName(GDT_CFloat32)));
+			/**
+			 * Complex Float64
+			 * @final
+			 * @property gdal.GDT_CFloat64
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GDT_CFloat64&quot;), NanNew(GDALGetDataTypeName(GDT_CFloat64)));
+
+			/**
+			 * @class Constants (OJ)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.OJUndefined
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OJUndefined&quot;), NanUndefined());
+			/**
+			 * @final
+			 * @property gdal.OJLeft
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OJLeft&quot;), NanNew(&quot;Left&quot;));
+			/**
+			 * @final
+			 * @property gdal.OJRight
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OJRight&quot;), NanNew(&quot;Right&quot;));
+
+			/**
+			 * @class Constants (GCI)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.GCI_Undefined
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_Undefined&quot;), NanUndefined());
+			/**
+			 * @final
+			 * @property gdal.GCI_GrayIndex
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_GrayIndex&quot;), NanNew(GDALGetColorInterpretationName(GCI_GrayIndex)));
+			/**
+			 * @final
+			 * @property gdal.GCI_PaletteIndex
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_PaletteIndex&quot;), NanNew(GDALGetColorInterpretationName(GCI_PaletteIndex)));
+			/**
+			 * @final
+			 * @property gdal.GCI_RedBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_RedBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_RedBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_GreenBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_GreenBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_GreenBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_BlueBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_BlueBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_BlueBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_AlphaBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_AlphaBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_AlphaBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_HueBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_HueBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_HueBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_SaturationBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_SaturationBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_SaturationBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_LightnessBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_LightnessBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_LightnessBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_CyanBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_CyanBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_CyanBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_MagentaBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_MagentaBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_MagentaBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_YellowBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_YellowBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_YellowBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_BlackBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_BlackBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_BlackBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_YCbCr_YBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_YCbCr_YBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_YBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_YCbCr_CbBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_YCbCr_CbBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CbBand)));
+			/**
+			 * @final
+			 * @property gdal.GCI_YCbCr_CrBand
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GCI_YCbCr_CrBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
+
+			/**
+			 * @class Constants (WKB)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.wkbVariantOgc
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbVariantOgc&quot;), NanNew(&quot;OGC&quot;));
+			/**
+			 * @final
+			 * @property gdal.wkbVariantIso
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbVariantIso&quot;), NanNew(&quot;ISO&quot;));
+			/**
+			 * @final
+			 * @property gdal.wkbXDR
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbXDR&quot;), NanNew(&quot;MSB&quot;));
+			/**
+			 * @final
+			 * @property gdal.wkbNDR
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbNDR&quot;), NanNew(&quot;LSB&quot;));
+
+			/**
+			 * @final
+			 * @property gdal.wkb25DBit
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkb25DBit&quot;), NanNew&lt;Integer&gt;(wkb25DBit));
+
+			int wkbLinearRing25D = wkbLinearRing | wkb25DBit;
+
+			/**
+			 * @final
+			 * @property gdal.wkbUnknown
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbUnknown&quot;), NanNew&lt;Integer&gt;(wkbUnknown));
+			/**
+			 * @final
+			 * @property gdal.wkbPoint
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbPoint&quot;), NanNew&lt;Integer&gt;(wkbPoint));
+			/**
+			 * @final
+			 * @property gdal.wkbLineString
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbLineString&quot;), NanNew&lt;Integer&gt;(wkbLineString));
+			/**
+			 * @final
+			 * @property gdal.wkbPolygon
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbPolygon&quot;), NanNew&lt;Integer&gt;(wkbPolygon));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiPoint
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiPoint&quot;), NanNew&lt;Integer&gt;(wkbMultiPoint));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiLineString
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiLineString&quot;), NanNew&lt;Integer&gt;(wkbMultiLineString));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiPolygon
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiPolygon&quot;), NanNew&lt;Integer&gt;(wkbMultiPolygon));
+			/**
+			 * @final
+			 * @property gdal.wkbGeometryCollection
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbGeometryCollection&quot;), NanNew&lt;Integer&gt;(wkbGeometryCollection));
+			/**
+			 * @final
+			 * @property gdal.wkbNone
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbNone&quot;), NanNew&lt;Integer&gt;(wkbNone));
+			/**
+			 * @final
+			 * @property gdal.wkbLinearRing
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbLinearRing&quot;), NanNew&lt;Integer&gt;(wkbLinearRing));
+			/**
+			 * @final
+			 * @property gdal.wkbPoint25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbPoint25D&quot;), NanNew&lt;Integer&gt;(wkbPoint25D));
+			/**
+			 * @final
+			 * @property gdal.wkbLineString25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbLineString25D&quot;), NanNew&lt;Integer&gt;(wkbLineString25D));
+			/**
+			 * @final
+			 * @property gdal.wkbPolygon25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbPolygon25D&quot;), NanNew&lt;Integer&gt;(wkbPolygon25D));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiPoint25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiPoint25D&quot;), NanNew&lt;Integer&gt;(wkbMultiPoint25D));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiLineString25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiLineString25D&quot;), NanNew&lt;Integer&gt;(wkbMultiLineString25D));
+			/**
+			 * @final
+			 * @property gdal.wkbMultiPolygon25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbMultiPolygon25D&quot;), NanNew&lt;Integer&gt;(wkbMultiPolygon25D));
+			/**
+			 * @final
+			 * @property gdal.wkbGeometryCollection25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbGeometryCollection25D&quot;), NanNew&lt;Integer&gt;(wkbGeometryCollection25D));
+			/**
+			 * @final
+			 * @property gdal.wkbLinearRing25D
+			 * @type {integer}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbLinearRing25D&quot;), NanNew&lt;Integer&gt;(wkbLinearRing25D));
+
+			/**
+			 * @class Constants (OFT)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.OFTInteger
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTInteger&quot;), NanNew(getFieldTypeName(OFTInteger)));
+			/**
+			 * @final
+			 * @property gdal.OFTIntegerList
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTIntegerList&quot;), NanNew(getFieldTypeName(OFTIntegerList)));
+			/**
+			 * @final
+			 * @property gdal.OFTReal
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTReal&quot;), NanNew(getFieldTypeName(OFTReal)));
+			/**
+			 * @final
+			 * @property gdal.OFTRealList
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTRealList&quot;), NanNew(getFieldTypeName(OFTRealList)));
+			/**
+			 * @final
+			 * @property gdal.OFTString
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTString&quot;), NanNew(getFieldTypeName(OFTString)));
+			/**
+			 * @final
+			 * @property gdal.OFTStringList
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTStringList&quot;), NanNew(getFieldTypeName(OFTStringList)));
+			/**
+			 * @final
+			 * @property gdal.OFTWideString
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTWideString&quot;), NanNew(getFieldTypeName(OFTWideString)));
+			/**
+			 * @final
+			 * @property gdal.OFTWideStringList
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTWideStringList&quot;), NanNew(getFieldTypeName(OFTWideStringList)));
+			/**
+			 * @final
+			 * @property gdal.OFTBinary
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTBinary&quot;), NanNew(getFieldTypeName(OFTBinary)));
+			/**
+			 * @final
+			 * @property gdal.OFTDate
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTDate&quot;), NanNew(getFieldTypeName(OFTDate)));
+			/**
+			 * @final
+			 * @property gdal.OFTTime
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTTime&quot;), NanNew(getFieldTypeName(OFTTime)));
+			/**
+			 * @final
+			 * @property gdal.OFTDateTime
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;OFTDateTime&quot;), NanNew(getFieldTypeName(OFTDateTime)));
+
+			/**
+			 * Resampling options that can be used with the gdal.reprojectImage() method. ([reference](http://www.gdal.org/gdalwarper_8h.html#a4775b029869df1f9270ad554c0633843))
+			 *
+			 * @class Constants (GRA)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.GRA_NearestNeighbor
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_NearestNeighbor&quot;), NanNew(&quot;NearestNeighbor&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_Bilinear
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_Bilinear&quot;), NanNew(&quot;Bilinear&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_Cubic
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_Cubic&quot;), NanNew(&quot;Cubic&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_CubicSpline
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_CubicSpline&quot;), NanNew(&quot;CubicSpline&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_Lanczos
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_Lanczos&quot;), NanNew(&quot;Lanczos&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_Average
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_Average&quot;), NanNew(&quot;Average&quot;));
+			/**
+			 * @final
+			 * @property gdal.GRA_Mode
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;GRA_Mode&quot;), NanNew(&quot;Mode&quot;));
+
+			/**
+			 * @class gdal
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.version
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;version&quot;), NanNew(GDAL_RELEASE_NAME));
+
+			/**
+			 * @final
+			 * @property gdal.CreateDataSourceOption
+			 * @type {mixed}
+			 */
+			target-&gt;Set(NanNew(&quot;CreateDataSourceOption&quot;), NanNew(ODrCCreateDataSource));
+			/**
+			 * @final
+			 * @property gdal.DeleteDataSourceOption
+			 * @type {mixed}
+			 */
+			target-&gt;Set(NanNew(&quot;DeleteDataSourceOption&quot;), NanNew(ODrCDeleteDataSource));
+
+
+			// Local&lt;Object&gt; versions = NanNew&lt;Object&gt;();
+			// versions-&gt;Set(NanNew(&quot;node&quot;), NanNew(NODE_VERSION+1));
+			// versions-&gt;Set(NanNew(&quot;v8&quot;), NanNew(V8::GetVersion()));
+			// target-&gt;Set(NanNew(&quot;versions&quot;), versions);
+
+			/**
+			 * Disables all output.
+			 * @method quiet
+			 */
+			NODE_SET_METHOD(target, &quot;quiet&quot;, QuietOutput);
+			/**
+			 * Displays extra debugging information from GDAL.
+			 * @method verbose
+			 */
+			NODE_SET_METHOD(target, &quot;verbose&quot;, VerboseOutput);
+
+			NODE_SET_METHOD(target, &quot;startLogging&quot;, StartLogging);
+			NODE_SET_METHOD(target, &quot;stopLogging&quot;, StopLogging);
+
+			Local&lt;Object&gt; supports = NanNew&lt;Object&gt;();
+			target-&gt;Set(NanNew(&quot;supports&quot;), supports);
+
+			NODE_DEFINE_CONSTANT(target, CPLE_OpenFailed);
+			NODE_DEFINE_CONSTANT(target, CPLE_IllegalArg);
+			NODE_DEFINE_CONSTANT(target, CPLE_NotSupported);
+			NODE_DEFINE_CONSTANT(target, CPLE_AssertionFailed);
+			NODE_DEFINE_CONSTANT(target, CPLE_NoWriteAccess);
+			NODE_DEFINE_CONSTANT(target, CPLE_UserInterrupt);
+
+		}
+
+	}
+
+} // namespace node_gdal
+
+NODE_MODULE(gdal, node_gdal::Init)
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>gdal.Envelope - node-gdal</title>
+    <title>gdal.Driver - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -127,7 +127,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>gdal.Envelope <small>Class</small></h1>
+    <h1>gdal.Driver <small>Class</small></h1>
 </div>
 
 <div class="well well-small">
@@ -137,7 +137,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/lib_envelope.js.html#l4"><code>lib&#x2F;envelope.js:4</code></a>
+            Defined in: <a href="../files/src_gdal_driver.cpp.html#l96"><code>src&#x2F;gdal_driver.cpp:96</code></a>
         </div>
     
 
@@ -149,102 +149,14 @@
 
 
 <div class="well well-small">
-    <p>A 2D bounding box. For 3D envelopes, see <a href="../classes/gdal.Envelope3D.html" class="crosslink">gdal.Envelope3D</a>.</p>
+    <p>Format specific driver.</p>
+<p>An instance of this class is created for each supported format, and
+manages information about the format.</p>
+<p>This roughly corresponds to a file format, though some drivers may
+be gateways to many formats through a secondary multi-library.</p>
 
 </div>
 
-
-    <div class="constructor">
-        <h2>Constructor</h2>
-        <div id="method_gdal.Envelope" class="method item">
-    <h3 class="name"><code>gdal.Envelope</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">[bounds]</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_envelope.js.html#l4"><code>lib&#x2F;envelope.js:4</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[bounds]</code>
-                        <span class="type">Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>An object containing <code>minX</code>, <code>maxX</code>, <code>minY</code>, and <code>maxY</code> values.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-    </div>
 
 
 <div>
@@ -255,6 +167,8 @@
             <li><a data-toggle="tab" href="#methods">Methods</a></li>
         
         
+        
+            <li><a data-toggle="tab" href="#attrs">Attributes</a></li>
         
         
     </ul>
@@ -270,42 +184,28 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_contains" data-tablink="contains">contains</a>
+                                <a href="#" data-tabid="#methods" data-anchor="#method_copyFiles" data-tablink="copyFiles">copyFiles</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_intersect" data-tablink="intersect">intersect</a>
+                                <a href="#" data-tabid="#methods" data-anchor="#method_create" data-tablink="create">create</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_intersects" data-tablink="intersects">intersects</a>
+                                <a href="#" data-tabid="#methods" data-anchor="#method_createCopy" data-tablink="createCopy">createCopy</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_isEmpty" data-tablink="isEmpty">isEmpty</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_merge" data-tablink="merge">merge</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_toPolygon" data-tablink="toPolygon">toPolygon</a>
+                                <a href="#" data-tabid="#methods" data-anchor="#method_deleteDataset" data-tablink="deleteDataset">deleteDataset</a>
 
                                 
                                 
@@ -318,6 +218,18 @@
             
 
             
+                <div class="index-section attrs">
+                    <h3>Attributes</h3>
+
+                    <ul class="index-list attrs">
+                        
+                            <li class="index-item attr">
+                                <a href="#" data-tabid="#attrs" data-anchor="#attr_description" data-tablink="description">description</a>
+                            </li>
+                        
+                    </ul>
+                </div>
+            
 
             
         </div>
@@ -327,8 +239,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_contains" class="method item">
-    <h3 class="name"><code>contains</code></h3>
+                    <div id="method_copyFiles" class="method item">
+    <h3 class="name"><code>copyFiles</code></h3>
 
     
         <div class="args">
@@ -336,7 +248,148 @@
             
                 <li class="arg">
                     
-                        <code>envelope</code>
+                        <code>name_old</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>name_new</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_driver.cpp.html#l378"><code>src&#x2F;gdal_driver.cpp:378</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Copy the files of a dataset.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">name_old</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>New name for the dataset.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">name_new</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Old name of the dataset.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_create" class="method item">
+    <h3 class="name"><code>create</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>filename</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[x_size]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[y_size]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[band_count]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[data_type]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[control_options]</code>
                     
                 </li>
             
@@ -346,7 +399,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Boolean</span>
+            <span class="type"></span>
         </span>
     
 
@@ -373,7 +426,7 @@
             
         
         
-        <a href="../files/lib_envelope.js.html#l107"><code>lib&#x2F;envelope.js:107</code></a>
+        <a href="../files/src_gdal_driver.cpp.html#l229"><code>src&#x2F;gdal_driver.cpp:229</code></a>
         
         </p>
 
@@ -384,7 +437,7 @@
     </div>
 
     <div class="description">
-        <p>Determines if the provided envelope is wholly-contained by the current envelope.</p>
+        <p>Create a new dataset with this driver.</p>
 
     </div>
 
@@ -396,8 +449,88 @@
             
                 <li class="param">
                     
-                        <code class="param-name">envelope</code>
-                        <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>
+                        <code class="param-name">filename</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[x_size]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[y_size]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[band_count]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[data_type]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[control_options]</code>
+                        <span class="type">String</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
@@ -420,8 +553,8 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
-                    
+                    <p>gdal.Dataset</p>
+
                 
             </div>
         </div>
@@ -431,8 +564,8 @@
 </div>
 
                 
-                    <div id="method_intersect" class="method item">
-    <h3 class="name"><code>intersect</code></h3>
+                    <div id="method_createCopy" class="method item">
+    <h3 class="name"><code>createCopy</code></h3>
 
     
         <div class="args">
@@ -440,7 +573,25 @@
             
                 <li class="arg">
                     
-                        <code>envelope</code>
+                        <code>filename</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>src</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[strict=false]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[options=null]</code>
                     
                 </li>
             
@@ -450,7 +601,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Void</span>
+            <span class="type"></span>
         </span>
     
 
@@ -477,7 +628,7 @@
             
         
         
-        <a href="../files/lib_envelope.js.html#l82"><code>lib&#x2F;envelope.js:82</code></a>
+        <a href="../files/src_gdal_driver.cpp.html#l298"><code>src&#x2F;gdal_driver.cpp:298</code></a>
         
         </p>
 
@@ -488,7 +639,7 @@
     </div>
 
     <div class="description">
-        <p>Updates the envelope to the intersection of the two envelopes.</p>
+        <p>Create a copy of a dataset.</p>
 
     </div>
 
@@ -500,14 +651,62 @@
             
                 <li class="param">
                     
-                        <code class="param-name">envelope</code>
-                        <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>
+                        <code class="param-name">filename</code>
+                        <span class="type">String</span>
                     
 
                     
 
                     <div class="param-description">
                          
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">src</code>
+                        <span class="type">gdal.Dataset</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[strict=false]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[options=null]</code>
+                        <span class="type">String</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>An array of creation options.</p>
+
                     </div>
 
                     
@@ -524,8 +723,8 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Void</span>:
-                    
+                    <p>gdal.Dataset</p>
+
                 
             </div>
         </div>
@@ -535,8 +734,8 @@
 </div>
 
                 
-                    <div id="method_intersects" class="method item">
-    <h3 class="name"><code>intersects</code></h3>
+                    <div id="method_deleteDataset" class="method item">
+    <h3 class="name"><code>deleteDataset</code></h3>
 
     
         <div class="args">
@@ -544,7 +743,7 @@
             
                 <li class="arg">
                     
-                        <code>envelope</code>
+                        <code>filename</code>
                     
                 </li>
             
@@ -552,10 +751,6 @@
         </div>
     
 
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
     
 
     
@@ -581,7 +776,7 @@
             
         
         
-        <a href="../files/lib_envelope.js.html#l70"><code>lib&#x2F;envelope.js:70</code></a>
+        <a href="../files/src_gdal_driver.cpp.html#l196"><code>src&#x2F;gdal_driver.cpp:196</code></a>
         
         </p>
 
@@ -592,8 +787,7 @@
     </div>
 
     <div class="description">
-        <p>Determines if the provided envelope touches it.</p>
-
+        
     </div>
 
     
@@ -604,8 +798,8 @@
             
                 <li class="param">
                     
-                        <code class="param-name">envelope</code>
-                        <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>
+                        <code class="param-name">filename</code>
+                        <span class="type">String</span>
                     
 
                     
@@ -622,46 +816,40 @@
     
 
     
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                
-            </div>
-        </div>
-    
 
     
 </div>
 
                 
-                    <div id="method_isEmpty" class="method item">
-    <h3 class="name"><code>isEmpty</code></h3>
+            </div>
+        
 
-    
-        <span class="paren">()</span>
-    
+        
 
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
+        
+            <div id="attrs" class="tab-pane">
+                <h2 class="off-left">Attributes</h2>
 
-    
-
-    
-
-    
+                
+                    <div id="attr_description" class="attr item">
+    <a name="config_description"></a> 
+    <h3 class="name"><code>description</code></h3>
+    <span class="type">String</span>
 
     
 
     
 
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
     
 
     <div class="meta">
@@ -675,10 +863,9 @@
             
         
         
-        <a href="../files/lib_envelope.js.html#l25"><code>lib&#x2F;envelope.js:25</code></a>
+        <a href="../files/src_gdal_driver.cpp.html#l177"><code>src&#x2F;gdal_driver.cpp:177</code></a>
         
         </p>
-
 
         
 
@@ -686,199 +873,11 @@
     </div>
 
     <div class="description">
-        <p>Determines if the envelope has not been set yet.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_merge" class="method item">
-    <h3 class="name"><code>merge</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>envelope</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Void</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_envelope.js.html#l35"><code>lib&#x2F;envelope.js:35</code></a>
-        
-        </p>
-
-
-        
-
         
     </div>
 
-    <div class="description">
-        <p>Unions the provided envelope with the current envelope.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">envelope</code>
-                        <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
     
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Void</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_toPolygon" class="method item">
-    <h3 class="name"><code>toPolygon</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">gdal.Polygon</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_envelope.js.html#l119"><code>lib&#x2F;envelope.js:119</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Converts the envelope to a polygon.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">gdal.Polygon</span>:
-                    
-                
-            </div>
-        </div>
     
 
     
@@ -886,10 +885,6 @@
 
                 
             </div>
-        
-
-        
-
         
 
         

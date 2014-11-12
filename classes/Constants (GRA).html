@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>gdal.Feature - node-gdal</title>
+    <title>Constants (GRA) - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -127,7 +127,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>gdal.Feature <small>Class</small></h1>
+    <h1>Constants (GRA) <small>Class</small></h1>
 </div>
 
 <div class="well well-small">
@@ -137,7 +137,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/src_gdal_feature.cpp.html#l76"><code>src&#x2F;gdal_feature.cpp:76</code></a>
+            Defined in: <a href="../files/src_node_gdal.cpp.html#l831"><code>src&#x2F;node_gdal.cpp:831</code></a>
         </div>
     
 
@@ -149,100 +149,10 @@
 
 
 <div class="well well-small">
-    <p>A simple feature, including geometry and attributes.</p>
+    <p>Resampling options that can be used with the gdal.reprojectImage() method. (<a href="http://www.gdal.org/gdalwarper_8h.html#a4775b029869df1f9270ad554c0633843">reference</a>)</p>
 
 </div>
 
-
-    <div class="constructor">
-        <h2>Constructor</h2>
-        <div id="method_gdal.Feature" class="method item">
-    <h3 class="name"><code>gdal.Feature</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>definition</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_feature.cpp.html#l76"><code>src&#x2F;gdal_feature.cpp:76</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">definition</code>
-                        <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a> | <a href="../classes/gdal.FeatureDefn.html" class="crosslink">gdal.FeatureDefn</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-    </div>
 
 
 <div>
@@ -250,8 +160,8 @@
         <li class="active"><a data-toggle="tab" href="#index">Index</a></li>
 
         
-            <li><a data-toggle="tab" href="#methods">Methods</a></li>
         
+            <li><a data-toggle="tab" href="#properties">Properties</a></li>
         
         
         
@@ -262,20 +172,57 @@
             <h2 class="off-left">Item Index</h2>
 
             
-                <div class="index-section methods">
-                    <h3>Methods</h3>
 
-                    <ul class="index-list methods">
+            
+                <div class="index-section properties">
+                    <h3>Properties</h3>
+
+                    <ul class="index-list properties">
                         
-                            <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_getFieldDefn" data-tablink="getFieldDefn">getFieldDefn</a>
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_Average" data-tablink="gdal.GRA_Average">gdal.GRA_Average</a>
 
                                 
                                 
                             </li>
                         
-                            <li class="index-item method">
-                                <a href="#" data-tabid="#methods" data-anchor="#method_getGeometry" data-tablink="getGeometry">getGeometry</a>
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_Bilinear" data-tablink="gdal.GRA_Bilinear">gdal.GRA_Bilinear</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_Cubic" data-tablink="gdal.GRA_Cubic">gdal.GRA_Cubic</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_CubicSpline" data-tablink="gdal.GRA_CubicSpline">gdal.GRA_CubicSpline</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_Lanczos" data-tablink="gdal.GRA_Lanczos">gdal.GRA_Lanczos</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_Mode" data-tablink="gdal.GRA_Mode">gdal.GRA_Mode</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.GRA_NearestNeighbor" data-tablink="gdal.GRA_NearestNeighbor">gdal.GRA_NearestNeighbor</a>
 
                                 
                                 
@@ -288,46 +235,25 @@
             
 
             
-
-            
         </div>
 
         
-            <div id="methods" class="tab-pane">
-                <h2 class="off-left">Methods</h2>
+
+        
+            <div id="properties" class="tab-pane">
+                <h2 class="off-left">Properties</h2>
 
                 
-                    <div id="method_getFieldDefn" class="method item">
-    <h3 class="name"><code>getFieldDefn</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>index</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">gdal.FieldDefn</span>
-        </span>
-    
+                    <div id="property_gdal.GRA_Average" class="property item">
+    <h3 class="name"><code>gdal.GRA_Average</code></h3>
+    <span class="type">String</span>
 
     
 
     
 
     
-
-    
-
+        <span class="flag final">final</span>
     
 
     
@@ -343,10 +269,9 @@
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l189"><code>src&#x2F;gdal_feature.cpp:189</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l867"><code>src&#x2F;node_gdal.cpp:867</code></a>
         
         </p>
-
 
         
 
@@ -354,75 +279,27 @@
     </div>
 
     <div class="description">
-        <p>Returns the definition of a particular field at an index.</p>
-
+        
     </div>
 
     
-        <div class="params">
-            <h4>Parameters:</h4>
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">index</code>
-                        <span class="type">Int</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>Field index (0-based)</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">gdal.FieldDefn</span>:
-                    
-                
-            </div>
-        </div>
     
 
     
 </div>
 
                 
-                    <div id="method_getGeometry" class="method item">
-    <h3 class="name"><code>getGeometry</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">gdal.Geometry</span>
-        </span>
-    
+                    <div id="property_gdal.GRA_Bilinear" class="property item">
+    <h3 class="name"><code>gdal.GRA_Bilinear</code></h3>
+    <span class="type">String</span>
 
     
 
     
 
     
-
-    
-
+        <span class="flag final">final</span>
     
 
     
@@ -438,10 +315,9 @@
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l164"><code>src&#x2F;gdal_feature.cpp:164</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l843"><code>src&#x2F;node_gdal.cpp:843</code></a>
         
         </p>
-
 
         
 
@@ -449,24 +325,241 @@
     </div>
 
     <div class="description">
-        <p>Returns the geometry of the feature.</p>
-
+        
     </div>
 
     
 
     
-        <div class="returns">
-            <h4>Returns:</h4>
 
-            <div class="returns-description">
+    
+</div>
+
                 
-                    
-                        <span class="type">gdal.Geometry</span>:
-                    
+                    <div id="property_gdal.GRA_Cubic" class="property item">
+    <h3 class="name"><code>gdal.GRA_Cubic</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
                 
-            </div>
-        </div>
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l849"><code>src&#x2F;node_gdal.cpp:849</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.GRA_CubicSpline" class="property item">
+    <h3 class="name"><code>gdal.GRA_CubicSpline</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l855"><code>src&#x2F;node_gdal.cpp:855</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.GRA_Lanczos" class="property item">
+    <h3 class="name"><code>gdal.GRA_Lanczos</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l861"><code>src&#x2F;node_gdal.cpp:861</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.GRA_Mode" class="property item">
+    <h3 class="name"><code>gdal.GRA_Mode</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l873"><code>src&#x2F;node_gdal.cpp:873</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.GRA_NearestNeighbor" class="property item">
+    <h3 class="name"><code>gdal.GRA_NearestNeighbor</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l837"><code>src&#x2F;node_gdal.cpp:837</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
     
 
     
@@ -474,8 +567,6 @@
 
                 
             </div>
-        
-
         
 
         

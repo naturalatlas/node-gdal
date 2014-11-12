@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib/envelope_3d.js - node-gdal</title>
+    <title>Constants (OJ) - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -127,111 +127,239 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>lib/envelope_3d.js <small>File</small></h1>
+    <h1>Constants (OJ) <small>Class</small></h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
-//js implementation of OGREnvelope3D class
+<div class="well well-small">
+    
 
-/**
- * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
- *
- * @constructor
- * @class gdal.Envelope3D
- * @param {Object} bounds An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, &#x60;maxY&#x60;, &#x60;minZ&#x60;, and &#x60;maxZ&#x60; values.
- */
-var Envelope3D = module.exports = function Envelope3D(envelope) {
-	if (envelope) {
-		this.minX = envelope.minX;
-		this.minY = envelope.minY;
-		this.minZ = envelope.minZ || 0;
-		this.maxX = envelope.maxX;
-		this.maxY = envelope.maxY;
-		this.maxZ = envelope.maxZ || 0;
-	} else {
-		this.minX = 0;
-		this.minY = 0;
-		this.minZ = 0;
-		this.maxX = 0;
-		this.maxY = 0;
-		this.maxZ = 0;
-	}
-};
+    
 
-Envelope3D.prototype.isEmpty = function() {
-	return !(this.minX || this.minY || this.minZ || this.maxX || this.maxY || this.maxZ);
-};
+    
+        <div class="foundat">
+            Defined in: <a href="../files/src_node_gdal.cpp.html#l477"><code>src&#x2F;node_gdal.cpp:477</code></a>
+        </div>
+    
 
-Envelope3D.prototype.merge = function(envelope) {
- 	if (arguments.length == 1) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
-		} else {
-			this.minX = Math.min(envelope.minX, this.minX);
-			this.maxX = Math.max(envelope.maxX, this.maxX);
-			this.minY = Math.min(envelope.minY, this.minY);
-			this.maxY = Math.max(envelope.maxY, this.maxY);
-			this.minZ = Math.min(envelope.minZ, this.minZ);
-			this.maxZ = Math.max(envelope.maxZ, this.maxZ);
-		}
-	} else {
-		var x = arguments[0];
-		var y = arguments[1];
-		var z = arguments[2];
-		if (this.isEmpty()) {
-			this.minX = this.maxX = x;
-			this.minY = this.maxY = y;
-			this.minZ = this.maxZ = z;
-		} else {
-			this.minX = Math.min(x, this.minX);
-			this.maxX = Math.max(x, this.maxX);
-			this.minY = Math.min(y, this.minY);
-			this.maxY = Math.max(y, this.maxY);
-			this.minZ = Math.min(z, this.minZ);
-			this.maxZ = Math.max(z, this.maxZ);
-		}
-	}
-};
+    
 
-Envelope3D.prototype.intersects = function(envelope) {
-	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
-	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY &amp;&amp;
-	       this.minZ &lt;= envelope.maxZ &amp;&amp; this.maxZ &gt;= envelope.minZ;
-};
+    
+</div>
 
-Envelope3D.prototype.intersect = function(envelope) {
-	if (this.intersects(envelope)) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
-		} else {
-			this.minX = Math.max(envelope.minX, this.minX);
-			this.maxX = Math.min(envelope.maxX, this.maxX);
-			this.minY = Math.max(envelope.minY, this.minY);
-			this.maxY = Math.min(envelope.maxY, this.maxY);
-			this.minZ = Math.max(envelope.minZ, this.minZ);
-			this.maxZ = Math.min(envelope.maxZ, this.maxZ);
-		}
-	} else {
-		this.minX = this.maxX = this.minY = this.maxY = this.minZ = this.maxZ = 0;
-	}
-};
 
-Envelope3D.prototype.contains = function(envelope) {
-	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp; this.minZ &lt;= envelope.minZ &amp;&amp;
-	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY &amp;&amp; this.maxZ &gt;= envelope.maxZ;
-};
-    </pre>
+
+<div class="well well-small">
+    
+</div>
+
+
+
+<div>
+    <ul class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" href="#index">Index</a></li>
+
+        
+        
+            <li><a data-toggle="tab" href="#properties">Properties</a></li>
+        
+        
+        
+    </ul>
+
+    <div class="tab-content">
+        <div id="index" class="tab-pane active">
+            <h2 class="off-left">Item Index</h2>
+
+            
+
+            
+                <div class="index-section properties">
+                    <h3>Properties</h3>
+
+                    <ul class="index-list properties">
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.OJLeft" data-tablink="gdal.OJLeft">gdal.OJLeft</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.OJRight" data-tablink="gdal.OJRight">gdal.OJRight</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#" data-tabid="#properties" data-anchor="#property_gdal.OJUndefined" data-tablink="gdal.OJUndefined">gdal.OJUndefined</a>
+
+                                
+                                
+                            </li>
+                        
+                    </ul>
+                </div>
+            
+
+            
+
+            
+        </div>
+
+        
+
+        
+            <div id="properties" class="tab-pane">
+                <h2 class="off-left">Properties</h2>
+
+                
+                    <div id="property_gdal.OJLeft" class="property item">
+    <h3 class="name"><code>gdal.OJLeft</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l487"><code>src&#x2F;node_gdal.cpp:487</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.OJRight" class="property item">
+    <h3 class="name"><code>gdal.OJRight</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l493"><code>src&#x2F;node_gdal.cpp:493</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_gdal.OJUndefined" class="property item">
+    <h3 class="name"><code>gdal.OJUndefined</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">final</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l481"><code>src&#x2F;node_gdal.cpp:481</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+            </div>
+        
+
+        
+
+        
+    </div>
 </div>
 
                     </div>

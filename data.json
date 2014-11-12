@@ -25,12 +25,12 @@
             "fors": {},
             "namespaces": {}
         },
-        "lib/gdal.js": {
-            "name": "lib/gdal.js",
-            "modules": {
-                "gdal": 1
+        "src/gdal_driver.cpp": {
+            "name": "src/gdal_driver.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.Driver": 1
             },
-            "classes": {},
             "fors": {},
             "namespaces": {}
         },
@@ -60,27 +60,35 @@
             },
             "fors": {},
             "namespaces": {}
-        }
-    },
-    "modules": {
-        "gdal": {
-            "name": "gdal",
-            "submodules": {},
+        },
+        "src/gdal_warper.cpp": {
+            "name": "src/gdal_warper.cpp",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/node_gdal.cpp": {
+            "name": "src/node_gdal.cpp",
+            "modules": {},
             "classes": {
-                "gdal.Envelope": 1,
-                "gdal.Envelope3D": 1,
-                "gdal.Feature": 1,
-                "gdal.FeatureDefn": 1,
-                "gdal.Layer": 1
+                "gdal": 1,
+                "Constants (DMD)": 1,
+                "Constants (DCAP)": 1,
+                "Constants (OLC)": 1,
+                "Constants (ODsC)": 1,
+                "Constants (GDT)": 1,
+                "Constants (OJ)": 1,
+                "Constants (GCI)": 1,
+                "Constants (WKB)": 1,
+                "Constants (OFT)": 1,
+                "Constants (GRA)": 1
             },
             "fors": {},
-            "namespaces": {},
-            "tag": "module",
-            "file": "src/gdal_layer.cpp",
-            "line": 90,
-            "description": "Provides a binding to libgdal."
+            "namespaces": {}
         }
     },
+    "modules": {},
     "classes": {
         "gdal.Envelope": {
             "name": "gdal.Envelope",
@@ -90,7 +98,6 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "gdal",
             "file": "lib/envelope.js",
             "line": 4,
             "description": "A 2D bounding box. For 3D envelopes, see {{#crossLink \"gdal.Envelope3D\"}}gdal.Envelope3D{{/crossLink}}.",
@@ -112,7 +119,6 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "gdal",
             "file": "lib/envelope_3d.js",
             "line": 3,
             "description": "A 3D bounding box. For 2D envelopes, see {{#crossLink \"gdal.Envelope\"}}gdal.Envelope{{/crossLink}}.",
@@ -125,6 +131,18 @@
                 }
             ]
         },
+        "gdal.Driver": {
+            "name": "gdal.Driver",
+            "shortname": "gdal.Driver",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_driver.cpp",
+            "line": 96,
+            "description": "Format specific driver.\n\nAn instance of this class is created for each supported format, and\nmanages information about the format.\n\nThis roughly corresponds to a file format, though some drivers may\nbe gateways to many formats through a secondary multi-library."
+        },
         "gdal.Feature": {
             "name": "gdal.Feature",
             "shortname": "gdal.Feature",
@@ -133,10 +151,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "gdal",
-            "namespace": "",
             "file": "src/gdal_feature.cpp",
             "line": 76,
+            "description": "A simple feature, including geometry and attributes.",
             "is_constructor": 1,
             "params": [
                 {
@@ -154,10 +171,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "gdal",
-            "namespace": "",
             "file": "src/gdal_feature_defn.cpp",
             "line": 58,
+            "description": "Definition of a feature class or feature layer.",
             "is_constructor": 1
         },
         "gdal.Layer": {
@@ -168,11 +184,134 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "module": "gdal",
-            "namespace": "",
             "file": "src/gdal_layer.cpp",
             "line": 90,
             "is_constructor": 1
+        },
+        "gdal": {
+            "name": "gdal",
+            "shortname": "gdal",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 880,
+            "description": "Node.js binding to libgdal.\nhttps://github.com/naturalatlas/node-gdal",
+            "static": 1
+        },
+        "Constants (DMD)": {
+            "name": "Constants (DMD)",
+            "shortname": "Constants (DMD)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 175
+        },
+        "Constants (DCAP)": {
+            "name": "Constants (DCAP)",
+            "shortname": "Constants (DCAP)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 216
+        },
+        "Constants (OLC)": {
+            "name": "Constants (OLC)",
+            "shortname": "Constants (OLC)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 239
+        },
+        "Constants (ODsC)": {
+            "name": "Constants (ODsC)",
+            "shortname": "Constants (ODsC)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 351
+        },
+        "Constants (GDT)": {
+            "name": "Constants (GDT)",
+            "shortname": "Constants (GDT)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 386,
+            "description": "Pixel data types. ([reference](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))"
+        },
+        "Constants (OJ)": {
+            "name": "Constants (OJ)",
+            "shortname": "Constants (OJ)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 477
+        },
+        "Constants (GCI)": {
+            "name": "Constants (GCI)",
+            "shortname": "Constants (GCI)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 500
+        },
+        "Constants (WKB)": {
+            "name": "Constants (WKB)",
+            "shortname": "Constants (WKB)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 607
+        },
+        "Constants (OFT)": {
+            "name": "Constants (OFT)",
+            "shortname": "Constants (OFT)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 754
+        },
+        "Constants (GRA)": {
+            "name": "Constants (GRA)",
+            "shortname": "Constants (GRA)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 831,
+            "description": "Resampling options that can be used with the gdal.reprojectImage() method. ([reference](http://www.gdal.org/gdalwarper_8h.html#a4775b029869df1f9270ad554c0633843))"
         }
     },
     "classitems": [
@@ -275,7 +414,1281 @@
                 "type": "gdal.Polygon"
             },
             "class": "gdal.Envelope"
+        },
+        {
+            "file": "src/gdal_driver.cpp",
+            "line": 177,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "description",
+            "type": "String",
+            "class": "gdal.Driver"
+        },
+        {
+            "file": "src/gdal_driver.cpp",
+            "line": 196,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "deleteDataset",
+            "params": [
+                {
+                    "name": "filename",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "gdal.Driver"
+        },
+        {
+            "file": "src/gdal_driver.cpp",
+            "line": 229,
+            "description": "Create a new dataset with this driver.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "create",
+            "params": [
+                {
+                    "name": "filename",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "x_size",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "y_size",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "band_count",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "data_type",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "control_options",
+                    "description": "",
+                    "type": "String[]",
+                    "optional": true
+                }
+            ],
+            "return": {
+                "description": "gdal.Dataset"
+            },
+            "class": "gdal.Driver"
+        },
+        {
+            "file": "src/gdal_driver.cpp",
+            "line": 298,
+            "description": "Create a copy of a dataset.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "createCopy",
+            "params": [
+                {
+                    "name": "filename",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "src",
+                    "description": "",
+                    "type": "gdal.Dataset"
+                },
+                {
+                    "name": "strict",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "false"
+                },
+                {
+                    "name": "options",
+                    "description": "An array of creation options.",
+                    "type": "String[]",
+                    "optional": true,
+                    "optdefault": "null"
+                }
+            ],
+            "return": {
+                "description": "gdal.Dataset"
+            },
+            "class": "gdal.Driver"
+        },
+        {
+            "file": "src/gdal_driver.cpp",
+            "line": 378,
+            "description": "Copy the files of a dataset.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "copyFiles",
+            "params": [
+                {
+                    "name": "name_old",
+                    "description": "New name for the dataset.",
+                    "type": "String"
+                },
+                {
+                    "name": "name_new",
+                    "description": "Old name of the dataset.",
+                    "type": "String"
+                }
+            ],
+            "class": "gdal.Driver"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 164,
+            "description": "Returns the geometry of the feature.",
+            "itemtype": "method",
+            "name": "getGeometry",
+            "return": {
+                "description": "",
+                "type": "gdal.Geometry"
+            },
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 189,
+            "description": "Returns the definition of a particular field at an index.",
+            "itemtype": "method",
+            "name": "getFieldDefn",
+            "params": [
+                {
+                    "name": "index",
+                    "description": "Field index (0-based)",
+                    "type": "Int"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.FieldDefn"
+            },
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_warper.cpp",
+            "line": 16,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "reprojectImage",
+            "forclass": "gdal",
+            "params": [
+                {
+                    "name": "src",
+                    "description": "",
+                    "type": "gdal.Dataset"
+                },
+                {
+                    "name": "dst",
+                    "description": "",
+                    "type": "gdal.Dataset"
+                },
+                {
+                    "name": "s_srs",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                },
+                {
+                    "name": "t_srs",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                },
+                {
+                    "name": "resampling",
+                    "description": "Resampling algorithm ({{#crossLink \"Constants (GRA)\"}}available options{{/crossLink}})",
+                    "type": "String",
+                    "optional": true
+                },
+                {
+                    "name": "cutline",
+                    "description": "Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates",
+                    "type": "gdal.Geometry",
+                    "optional": true
+                },
+                {
+                    "name": "srcBands",
+                    "description": "",
+                    "type": "Int[]",
+                    "optional": true
+                },
+                {
+                    "name": "dstBands",
+                    "description": "",
+                    "type": "Int[]",
+                    "optional": true
+                },
+                {
+                    "name": "srcAlphaBand",
+                    "description": "",
+                    "type": "Int",
+                    "optional": true
+                },
+                {
+                    "name": "dstAlphaBand",
+                    "description": "",
+                    "type": "Int",
+                    "optional": true
+                },
+                {
+                    "name": "srcNodata",
+                    "description": "",
+                    "type": "Number",
+                    "optional": true
+                },
+                {
+                    "name": "dstNodata",
+                    "description": "",
+                    "type": "Number",
+                    "optional": true
+                },
+                {
+                    "name": "memoryLimit",
+                    "description": "",
+                    "type": "Int",
+                    "optional": true
+                },
+                {
+                    "name": "maxError",
+                    "description": "",
+                    "type": "Number",
+                    "optional": true
+                },
+                {
+                    "name": "options",
+                    "description": "Additional warp options",
+                    "type": "Object",
+                    "optional": true
+                }
+            ],
+            "class": "gdal"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 179,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_LONGNAME",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 185,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_MIMETYPE",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 191,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_HELPTOPIC",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 197,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_EXTENSION",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 203,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_CREATIONOPTIONLIST",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 209,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DMD_CREATIONDATATYPES",
+            "type": "{String}",
+            "class": "Constants (DMD)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 220,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DCAP_CREATE",
+            "type": "{String}",
+            "class": "Constants (DCAP)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 226,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DCAP_CREATECOPY",
+            "type": "{String}",
+            "class": "Constants (DCAP)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 232,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DCAP_VIRTUALIO",
+            "type": "{String}",
+            "class": "Constants (DCAP)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 243,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCRandomRead",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 249,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCSequentialWrite",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 255,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCRandomWrite",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 261,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCFastSpatialFilter",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 267,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCFastFeatureCount",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 273,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCFastGetExtent",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 279,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCCreateField",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 285,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCDeleteField",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 291,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCReorderFields",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 297,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCAlterFieldDefn",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 303,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCTransactions",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 309,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCDeleteFeature",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 315,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCFastSetNextByIndex",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 321,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCStringsAsUTF8",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 327,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCIgnoreFields",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 335,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OLCCreateGeomField",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 343,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.ODsCCreateGeomFieldAfterCreateLayer",
+            "type": "{String}",
+            "class": "Constants (OLC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 355,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.ODsCCreateLayer",
+            "type": "{String}",
+            "class": "Constants (ODsC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 361,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.ODsCDeleteLayer",
+            "type": "{String}",
+            "class": "Constants (ODsC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 367,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.ODrCCreateDataSource",
+            "type": "{String}",
+            "class": "Constants (ODsC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 373,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.ODrCDeleteDataSource",
+            "type": "{String}",
+            "class": "Constants (ODsC)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 392,
+            "description": "Unknown or unspecified type",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Unknown",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 399,
+            "description": "Eight bit unsigned integer",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Byte",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 406,
+            "description": "Sixteen bit unsigned integer",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_UInt16",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 413,
+            "description": "Sixteen bit signed integer",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Int16",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 420,
+            "description": "Thirty two bit unsigned integer",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_UInt32",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 427,
+            "description": "Thirty two bit signed integer",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Int32",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 434,
+            "description": "Thirty two bit floating point",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Float32",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 441,
+            "description": "Sixty four bit floating point",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_Float64",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 448,
+            "description": "Complex Int16",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_CInt16",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 455,
+            "description": "Complex Int32",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_CInt32",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 462,
+            "description": "Complex Float32",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_CFloat32",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 469,
+            "description": "Complex Float64",
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GDT_CFloat64",
+            "type": "{String}",
+            "class": "Constants (GDT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 481,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OJUndefined",
+            "type": "{String}",
+            "class": "Constants (OJ)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 487,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OJLeft",
+            "type": "{String}",
+            "class": "Constants (OJ)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 493,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OJRight",
+            "type": "{String}",
+            "class": "Constants (OJ)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 504,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_Undefined",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 510,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_GrayIndex",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 516,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_PaletteIndex",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 522,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_RedBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 528,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_GreenBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 534,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_BlueBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 540,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_AlphaBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 546,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_HueBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 552,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_SaturationBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 558,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_LightnessBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 564,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_CyanBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 570,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_MagentaBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 576,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_YellowBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 582,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_BlackBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 588,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_YCbCr_YBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 594,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_YCbCr_CbBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 600,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GCI_YCbCr_CrBand",
+            "type": "{String}",
+            "class": "Constants (GCI)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 611,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbVariantOgc",
+            "type": "{String}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 617,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbVariantIso",
+            "type": "{String}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 623,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbXDR",
+            "type": "{String}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 629,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbNDR",
+            "type": "{String}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 636,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkb25DBit",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 645,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbUnknown",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 651,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPoint",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 657,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLineString",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 663,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPolygon",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 669,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPoint",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 675,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiLineString",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 681,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPolygon",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 687,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbGeometryCollection",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 693,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbNone",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 699,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLinearRing",
+            "type": "{String}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 705,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPoint25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 711,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLineString25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 717,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPolygon25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 723,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPoint25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 729,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiLineString25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 735,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPolygon25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 741,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbGeometryCollection25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 747,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLinearRing25D",
+            "type": "{integer}",
+            "class": "Constants (WKB)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 758,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTInteger",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 764,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTIntegerList",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 770,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTReal",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 776,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTRealList",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 782,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTString",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 788,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTStringList",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 794,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTWideString",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 800,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTWideStringList",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 806,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTBinary",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 812,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTDate",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 818,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTTime",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 824,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.OFTDateTime",
+            "type": "{String}",
+            "class": "Constants (OFT)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 837,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_NearestNeighbor",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 843,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_Bilinear",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 849,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_Cubic",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 855,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_CubicSpline",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 861,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_Lanczos",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 867,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_Average",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 873,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.GRA_Mode",
+            "type": "{String}",
+            "class": "Constants (GRA)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 884,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.version",
+            "type": "{String}",
+            "class": "gdal"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 891,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.CreateDataSourceOption",
+            "type": "{mixed}",
+            "class": "gdal"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 897,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.DeleteDataSourceOption",
+            "type": "{mixed}",
+            "class": "gdal"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 910,
+            "description": "Disables all output.",
+            "itemtype": "method",
+            "name": "quiet",
+            "class": "gdal"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 915,
+            "description": "Displays extra debugging information from GDAL.",
+            "itemtype": "method",
+            "name": "verbose",
+            "class": "gdal"
         }
     ],
-    "warnings": []
+    "warnings": [
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " src/gdal_feature.cpp:164"
+        },
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " src/gdal_feature.cpp:189"
+        },
+        {
+            "message": "unknown tag: forclass",
+            "line": " src/gdal_warper.cpp:16"
+        }
+    ]
 }

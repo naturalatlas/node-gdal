@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib/envelope_3d.js - node-gdal</title>
+    <title>src/gdal_warper.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -127,110 +127,205 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>lib/envelope_3d.js <small>File</small></h1>
+    <h1>src/gdal_warper.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-//js implementation of OGREnvelope3D class
+#include &quot;gdal_warper.hpp&quot;
+#include &quot;utils/warp_options.hpp&quot;
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_spatial_reference.hpp&quot;
+#include &quot;gdal_dataset.hpp&quot;
+
+namespace node_gdal {
+
+
+void Warper::Initialize(Handle&lt;Object&gt; target)
+{
+	NODE_SET_METHOD(target, &quot;reprojectImage&quot;, reprojectImage);
+	NODE_SET_METHOD(target, &quot;suggestedWarpOutput&quot;, suggestedWarpOutput);
+}
 
 /**
- * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
- *
- * @constructor
- * @class gdal.Envelope3D
- * @param {Object} bounds An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, &#x60;maxY&#x60;, &#x60;minZ&#x60;, and &#x60;maxZ&#x60; values.
+ * @throws Error
+ * @method reprojectImage
+ * @forclass gdal
+ * @param {gdal.Dataset} src
+ * @param {gdal.Dataset} dst
+ * @param {gdal.SpatialReference} s_srs
+ * @param {gdal.SpatialReference} t_srs
+ * @param {String} [resampling] Resampling algorithm ({{#crossLink &quot;Constants (GRA)&quot;}}available options{{/crossLink}})
+ * @param {gdal.Geometry} [cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
+ * @param {int[]} [srcBands]
+ * @param {int[]} [dstBands]
+ * @param {int} [srcAlphaBand]
+ * @param {int} [dstAlphaBand]
+ * @param {Number} [srcNodata]
+ * @param {Number} [dstNodata]
+ * @param {int} [memoryLimit]
+ * @param {Number} [maxError]
+ * @param {object} [options] Additional warp options
  */
-var Envelope3D = module.exports = function Envelope3D(envelope) {
-	if (envelope) {
-		this.minX = envelope.minX;
-		this.minY = envelope.minY;
-		this.minZ = envelope.minZ || 0;
-		this.maxX = envelope.maxX;
-		this.maxY = envelope.maxY;
-		this.maxZ = envelope.maxZ || 0;
+NAN_METHOD(Warper::reprojectImage)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	Handle&lt;Value&gt; prop;
+
+	WarpOptions options;
+	GDALWarpOptions* opts;
+	std::string s_srs_str;
+	std::string t_srs_str;
+	SpatialReference* s_srs;
+	SpatialReference* t_srs;
+	double maxError = 0;
+
+	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
+
+	if(options.parse(obj)){
+		NanReturnUndefined(); // error parsing options object
 	} else {
-		this.minX = 0;
-		this.minY = 0;
-		this.minZ = 0;
-		this.maxX = 0;
-		this.maxY = 0;
-		this.maxZ = 0;
+		opts = options.get();
 	}
-};
+	if(!opts-&gt;hDstDS){
+		NanThrowTypeError(&quot;dst Dataset must be provided&quot;);
+		NanReturnUndefined();
+	}
 
-Envelope3D.prototype.isEmpty = function() {
-	return !(this.minX || this.minY || this.minZ || this.maxX || this.maxY || this.maxZ);
-};
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;s_srs&quot;, SpatialReference, s_srs);
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;t_srs&quot;, SpatialReference, t_srs);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;maxError&quot;, maxError);
 
-Envelope3D.prototype.merge = function(envelope) {
- 	if (arguments.length == 1) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
+	char *s_srs_wkt, *t_srs_wkt;
+	if(s_srs-&gt;get()-&gt;exportToWkt(&amp;s_srs_wkt)){
+		NanThrowError(&quot;Error converting s_srs to WKT&quot;);
+		NanReturnUndefined();
+	}
+	if(t_srs-&gt;get()-&gt;exportToWkt(&amp;t_srs_wkt)){
+		CPLFree(s_srs_wkt);
+		NanThrowError(&quot;Error converting t_srs to WKT&quot;);
+		NanReturnUndefined();
+	}
+
+	CPLErr err = GDALReprojectImage(opts-&gt;hSrcDS, s_srs_wkt, opts-&gt;hDstDS, t_srs_wkt, opts-&gt;eResampleAlg, opts-&gt;dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+
+	CPLFree(s_srs_wkt);
+	CPLFree(t_srs_wkt);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+NAN_METHOD(Warper::suggestedWarpOutput)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	Handle&lt;Value&gt; prop;
+
+	Dataset* ds;
+	SpatialReference* s_srs;
+	SpatialReference* t_srs;
+	double maxError = 0;
+	double geotransform[6];
+	int w = 0, h = 0;
+
+	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
+
+	if(obj-&gt;HasOwnProperty(NanNew(&quot;src&quot;))){
+		prop = obj-&gt;Get(NanNew(&quot;src&quot;));
+		if(prop-&gt;IsObject() &amp;&amp; !prop-&gt;IsNull() &amp;&amp; NanHasInstance(Dataset::constructor, prop)){
+			ds = ObjectWrap::Unwrap&lt;Dataset&gt;(prop.As&lt;Object&gt;());
+			if(!ds-&gt;getDataset()){
+				#if GDAL_VERSION_MAJOR &lt; 2
+				if(ds-&gt;getDatasource()) {
+					NanThrowError(&quot;src dataset must be a raster dataset&quot;);
+					NanReturnUndefined();
+				}
+				#endif
+				NanThrowError(&quot;src dataset already closed&quot;);
+				NanReturnUndefined();
+			}
 		} else {
-			this.minX = Math.min(envelope.minX, this.minX);
-			this.maxX = Math.max(envelope.maxX, this.maxX);
-			this.minY = Math.min(envelope.minY, this.minY);
-			this.maxY = Math.max(envelope.maxY, this.maxY);
-			this.minZ = Math.min(envelope.minZ, this.minZ);
-			this.maxZ = Math.max(envelope.maxZ, this.maxZ);
+			NanThrowTypeError(&quot;src property must be a Dataset object&quot;);
+			NanReturnUndefined();
 		}
 	} else {
-		var x = arguments[0];
-		var y = arguments[1];
-		var z = arguments[2];
-		if (this.isEmpty()) {
-			this.minX = this.maxX = x;
-			this.minY = this.maxY = y;
-			this.minZ = this.maxZ = z;
-		} else {
-			this.minX = Math.min(x, this.minX);
-			this.maxX = Math.max(x, this.maxX);
-			this.minY = Math.min(y, this.minY);
-			this.maxY = Math.max(y, this.maxY);
-			this.minZ = Math.min(z, this.minZ);
-			this.maxZ = Math.max(z, this.maxZ);
-		}
+		NanThrowError(&quot;src dataset must be provided&quot;);
+		NanReturnUndefined();
 	}
-};
 
-Envelope3D.prototype.intersects = function(envelope) {
-	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
-	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY &amp;&amp;
-	       this.minZ &lt;= envelope.maxZ &amp;&amp; this.maxZ &gt;= envelope.minZ;
-};
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;s_srs&quot;, SpatialReference, s_srs);
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;t_srs&quot;, SpatialReference, t_srs);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;maxError&quot;, maxError);
 
-Envelope3D.prototype.intersect = function(envelope) {
-	if (this.intersects(envelope)) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
-		} else {
-			this.minX = Math.max(envelope.minX, this.minX);
-			this.maxX = Math.min(envelope.maxX, this.maxX);
-			this.minY = Math.max(envelope.minY, this.minY);
-			this.maxY = Math.min(envelope.maxY, this.maxY);
-			this.minZ = Math.max(envelope.minZ, this.minZ);
-			this.maxZ = Math.min(envelope.maxZ, this.maxZ);
-		}
+	char *s_srs_wkt, *t_srs_wkt;
+	if(s_srs-&gt;get()-&gt;exportToWkt(&amp;s_srs_wkt)){
+		NanThrowError(&quot;Error converting s_srs to WKT&quot;);
+		NanReturnUndefined();
+	}
+	if(t_srs-&gt;get()-&gt;exportToWkt(&amp;t_srs_wkt)){
+		CPLFree(s_srs_wkt);
+		NanThrowError(&quot;Error converting t_srs to WKT&quot;);
+		NanReturnUndefined();
+	}
+
+
+
+	void *hTransformArg;
+	void *hGenTransformArg = GDALCreateGenImgProjTransformer(ds-&gt;getDataset(), s_srs_wkt, NULL, t_srs_wkt, TRUE, 1000.0, 0 );
+	GDALTransformerFunc pfnTransformer;
+
+	if(maxError &gt; 0.0){
+		hTransformArg = GDALCreateApproxTransformer( GDALGenImgProjTransform, hGenTransformArg, maxError );
+		pfnTransformer = GDALApproxTransform;
 	} else {
-		this.minX = this.maxX = this.minY = this.maxY = this.minZ = this.maxZ = 0;
+		hTransformArg = hGenTransformArg;
+		pfnTransformer = GDALGenImgProjTransform;
 	}
-};
 
-Envelope3D.prototype.contains = function(envelope) {
-	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp; this.minZ &lt;= envelope.minZ &amp;&amp;
-	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY &amp;&amp; this.maxZ &gt;= envelope.maxZ;
-};
+	CPLErr err = GDALSuggestedWarpOutput(ds-&gt;getDataset(), pfnTransformer, hTransformArg, geotransform, &amp;w, &amp;h);
+
+
+	CPLFree(s_srs_wkt);
+	CPLFree(t_srs_wkt);
+	GDALDestroyGenImgProjTransformer(hGenTransformArg);
+	if(maxError &gt; 0.0){
+		GDALDestroyApproxTransformer(hTransformArg);
+	}
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	Handle&lt;Array&gt; result_geotransform = NanNew&lt;Array&gt;();
+	result_geotransform-&gt;Set(0, NanNew&lt;Number&gt;(geotransform[0]));
+	result_geotransform-&gt;Set(1, NanNew&lt;Number&gt;(geotransform[1]));
+	result_geotransform-&gt;Set(2, NanNew&lt;Number&gt;(geotransform[2]));
+	result_geotransform-&gt;Set(3, NanNew&lt;Number&gt;(geotransform[3]));
+	result_geotransform-&gt;Set(4, NanNew&lt;Number&gt;(geotransform[4]));
+	result_geotransform-&gt;Set(5, NanNew&lt;Number&gt;(geotransform[5]));
+
+	Handle&lt;Object&gt; result_size = NanNew&lt;Object&gt;();
+	result_size-&gt;Set(NanNew(&quot;x&quot;), NanNew&lt;Integer&gt;(w));
+	result_size-&gt;Set(NanNew(&quot;y&quot;), NanNew&lt;Integer&gt;(h));
+
+	Handle&lt;Object&gt; result = NanNew&lt;Object&gt;();
+	result-&gt;Set(NanNew(&quot;rasterSize&quot;), result_size);
+	result-&gt;Set(NanNew(&quot;geoTransform&quot;), result_geotransform);
+
+	NanReturnValue(result);
+}
+
+
+} //node_gdal namespace
     </pre>
 </div>
 

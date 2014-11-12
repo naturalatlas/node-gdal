@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_driver.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Layer"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <h3>APIs</h3>
+    <div id="sidebar">
+        <ul id="main-nav" class="nav nav-tabs" style="margin-bottom:0;">
+            <li class="active"><a href="#classes" data-toggle="tab">Classes</a></li>
+            <li><a href="#modules" data-toggle="tab">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" placeholder="Type to filter APIs">
+        </div>
+
+        <div class="tab-content" style="border: 1px solid #DDD; border-top:0;">
+            <div class="tab-pane active" id="classes">
+                <ul id="api-classes" class="nav nav-list">
+                    
+                        <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+                    
+                        <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+                    
+                        <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+                    
+                        <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+                    
+                        <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+                    
+                        <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+                    
+                        <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+                    
+                        <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+                    
+                        <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+                    
+                        <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                    
+                        <li><a href="../classes/gdal.html">gdal</a></li>
+                    
+                        <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+                    
+                        <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+                    
+                        <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+                    
+                        <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+                    
+                </ul>
+            </div>
+
+            <div class="tab-pane" id="modules">
+                <ul id="api-modules" class="nav nav-list">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_driver.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_majorobject.hpp&quot;
+#include &quot;gdal_driver.hpp&quot;
+#include &quot;gdal_dataset.hpp&quot;
+#include &quot;utils/string_list.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; Driver::constructor;
+ObjectCache&lt;GDALDriver, Driver&gt; Driver::cache;
+#if GDAL_VERSION_MAJOR &lt; 2
+ObjectCache&lt;OGRSFDriver, Driver&gt; Driver::cache_ogr;
+#endif
+
+void Driver::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(Driver::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;Driver&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;open&quot;, open);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;create&quot;, create);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;createCopy&quot;, createCopy);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;deleteDataset&quot;, deleteDataset);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;rename&quot;, rename);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;copyFiles&quot;, copyFiles);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getMetadata&quot;, getMetadata);
+
+	ATTR(lcons, &quot;description&quot;, descriptionGetter, READ_ONLY_SETTER);
+
+	target-&gt;Set(NanNew(&quot;Driver&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+
+#if GDAL_VERSION_MAJOR &lt; 2
+Driver::Driver(GDALDriver *driver)
+	: ObjectWrap(), uses_ogr(false), this_gdaldriver(driver), this_ogrdriver(0)
+{
+	LOG(&quot;Created GDAL Driver [%p]&quot;, driver);
+}
+Driver::Driver(OGRSFDriver *driver)
+	: ObjectWrap(), uses_ogr(true), this_gdaldriver(0), this_ogrdriver(driver)
+{
+	LOG(&quot;Created OGR Driver [%p]&quot;, driver);
+}
+Driver::Driver()
+	: ObjectWrap(), uses_ogr(false), this_gdaldriver(0), this_ogrdriver(0)
+{
+}
+#else
+Driver::Driver(GDALDriver *driver)
+	: ObjectWrap(), this_gdaldriver(driver)
+{
+	LOG(&quot;Created GDAL Driver [%p]&quot;, driver);
+}
+Driver::Driver()
+	: ObjectWrap(), this_gdaldriver(0)
+{
+}
+#endif
+
+
+
+Driver::~Driver()
+{
+	dispose();
+}
+
+void Driver::dispose()
+{
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if(uses_ogr) {
+		if(this_ogrdriver) {
+			LOG(&quot;Disposing OGR Driver [%p]&quot;, this_ogrdriver);
+			cache_ogr.erase(this_ogrdriver);
+			LOG(&quot;Disposed OGR Driver [%p]&quot;, this_ogrdriver);
+			this_ogrdriver = NULL;
+		}
+		return;
+	}
+	#endif
+	if(this_gdaldriver) {
+		LOG(&quot;Disposing GDAL Driver [%p]&quot;, this_gdaldriver);
+		cache.erase(this_gdaldriver);
+		LOG(&quot;Disposed GDAL Driver [%p]&quot;, this_gdaldriver);
+		this_gdaldriver = NULL;
+	}
+}
+
+
+/**
+ * Format specific driver.
+ *
+ * An instance of this class is created for each supported format, and
+ * manages information about the format.
+ *
+ * This roughly corresponds to a file format, though some drivers may
+ * be gateways to many formats through a secondary multi-library.
+ *
+ * @class gdal.Driver
+ */
+NAN_METHOD(Driver::New)
+{
+	NanScope();
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		Driver *f =  static_cast&lt;Driver *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+
+		NanReturnValue(args.This());
+	} else {
+		NanThrowError(&quot;Cannot create Driver directly&quot;);
+		NanReturnUndefined();
+	}
+}
+
+Handle&lt;Value&gt; Driver::New(GDALDriver *driver)
+{
+	NanEscapableScope();
+
+	if (!driver) {
+		return NanEscapeScope(NanNull());
+	}
+	if (cache.has(driver)) {
+		return NanEscapeScope(NanNew(cache.get(driver)));
+	}
+
+	Driver *wrapped = new Driver(driver);
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(Driver::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	cache.add(driver, obj);
+
+	return NanEscapeScope(obj);
+}
+
+#if GDAL_VERSION_MAJOR &lt; 2
+Handle&lt;Value&gt; Driver::New(OGRSFDriver *driver)
+{
+	NanEscapableScope();
+
+	if (!driver) {
+		return NanEscapeScope(NanNull());
+	}
+	if (cache_ogr.has(driver)) {
+		return NanEscapeScope(NanNew(cache_ogr.get(driver)));
+	}
+
+	Driver *wrapped = new Driver(driver);
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(Driver::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	cache_ogr.add(driver, obj);
+
+	return NanEscapeScope(obj);
+}
+#endif
+
+NAN_METHOD(Driver::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;Driver&quot;));
+}
+
+/**
+ * @readOnly
+ * @attribute description
+ * @type String
+ */
+NAN_GETTER(Driver::descriptionGetter)
+{
+	NanScope();
+	Driver* driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (driver-&gt;uses_ogr) {
+		NanReturnValue(SafeString::New(driver-&gt;getOGRSFDriver()-&gt;GetName()));
+	}
+	#endif
+
+	NanReturnValue(SafeString::New(driver-&gt;getGDALDriver()-&gt;GetDescription()));
+}
+
+/**
+ * @throws Error
+ * @method deleteDataset
+ * @param {string} filename
+ */
+NAN_METHOD(Driver::deleteDataset)
+{
+	NanScope();
+
+	std::string name(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;dataset name&quot;, name);
+
+	Driver* driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (driver-&gt;uses_ogr) {
+		OGRErr err = driver-&gt;getOGRSFDriver()-&gt;DeleteDataSource(name.c_str());
+		if(err) {
+			NODE_THROW_OGRERR(err);
+			NanReturnUndefined();
+		}
+		NanReturnUndefined();
+	}
+	#endif
+
+	CPLErr err = driver-&gt;getGDALDriver()-&gt;Delete(name.c_str());
+	if (err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+	NanReturnUndefined();
+}
+
+/**
+ * Create a new dataset with this driver.
+ *
+ * @throws Error
+ * @method create
+ * @param {String} filename
+ * @param {Integer} [x_size]
+ * @param {Integer} [y_size]
+ * @param {Integer} [band_count]
+ * @param {Integer} [data_type]
+ * @param {String[]} [control_options]
+ * @return gdal.Dataset
+ */
+NAN_METHOD(Driver::create)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	std::string filename;
+	unsigned int x_size = 0, y_size = 0, n_bands = 0;
+	GDALDataType type = GDT_Byte;
+	std::string type_name = &quot;&quot;;
+	StringList options;
+
+	NODE_ARG_STR(0, &quot;filename&quot;, filename);
+
+	if(args.Length() &lt; 3){
+		if(args.Length() &gt; 1 &amp;&amp; options.parse(args[1])){
+			NanReturnUndefined(); //error parsing string list
+		}
+	} else {
+		NODE_ARG_INT(1, &quot;x size&quot;, x_size);
+		NODE_ARG_INT(2, &quot;y size&quot;, y_size);
+		NODE_ARG_INT_OPT(3, &quot;number of bands&quot;, n_bands);
+		NODE_ARG_OPT_STR(4, &quot;data type&quot;, type_name);
+		if(args.Length() &gt; 5 &amp;&amp; options.parse(args[5])){
+			NanReturnUndefined(); //error parsing string list
+		}
+		if(!type_name.empty()) {
+			type = GDALGetDataTypeByName(type_name.c_str());
+		}
+	}
+
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if(driver-&gt;uses_ogr){
+		OGRSFDriver *raw = driver-&gt;getOGRSFDriver();
+		OGRDataSource *ds = raw-&gt;CreateDataSource(filename.c_str(), options.get());
+
+		if (!ds) {
+			NanThrowError(&quot;Error creating dataset&quot;);
+			NanReturnUndefined();
+		}
+
+		NanReturnValue(Dataset::New(ds));
+	}
+	#endif
+
+	GDALDriver *raw = driver-&gt;getGDALDriver();
+	GDALDataset* ds = raw-&gt;Create(filename.c_str(), x_size, y_size, n_bands, type, options.get());
+
+	if (!ds) {
+		NanThrowError(&quot;Error creating dataset&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Dataset::New(ds));
+}
+
+/**
+ * Create a copy of a dataset.
+ *
+ * @throws Error
+ * @method createCopy
+ * @param {String} filename
+ * @param {gdal.Dataset} src
+ * @param {Boolean} [strict=false]
+ * @param {String[]} [options=null] An array of creation options.
+ * @return gdal.Dataset
+ */
+NAN_METHOD(Driver::createCopy)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	std::string filename;
+	Dataset* src_dataset;
+	unsigned int strict = 0;
+	StringList options;
+
+	NODE_ARG_STR(0, &quot;filename&quot;, filename);
+
+	//NODE_ARG_STR(1, &quot;source dataset&quot;, src_dataset)
+	if(args.Length() &lt; 2){
+		NanThrowError(&quot;source dataset must be provided&quot;);
+		NanReturnUndefined();
+	}
+	if (IS_WRAPPED(args[1], Dataset)) {
+		src_dataset = ObjectWrap::Unwrap&lt;Dataset&gt;(args[1].As&lt;Object&gt;());
+	} else {
+		NanThrowError(&quot;source dataset must be a Dataset object&quot;);
+		NanReturnUndefined();
+	}
+
+
+	if(args.Length() &gt; 2 &amp;&amp; options.parse(args[2])){
+		NanReturnUndefined(); //error parsing string list
+	}
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (driver-&gt;uses_ogr) {
+		OGRSFDriver *raw = driver-&gt;getOGRSFDriver();
+		OGRDataSource *raw_ds = src_dataset-&gt;getDatasource();
+		if(!src_dataset-&gt;uses_ogr) {
+			NanThrowError(&quot;Driver unable to copy dataset&quot;);
+			NanReturnUndefined();
+		}
+		if (!raw_ds) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+
+		OGRDataSource *ds = raw-&gt;CopyDataSource(raw_ds, filename.c_str(), options.get());
+
+		if (!ds) {
+			NanThrowError(&quot;Error copying dataset.&quot;);
+			NanReturnUndefined();
+		}
+
+		NanReturnValue(Dataset::New(ds));
+	}
+	#endif
+
+	GDALDriver *raw = driver-&gt;getGDALDriver();
+	GDALDataset* raw_ds = src_dataset-&gt;getDataset();
+	if(!raw_ds) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	GDALDataset* ds = raw-&gt;CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
+
+	if (!ds) {
+		NanThrowError(&quot;Error copying dataset&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Dataset::New(ds));
+}
+
+/**
+ * Copy the files of a dataset.
+ *
+ * @throws Error
+ * @method copyFiles
+ * @param {String} name_old New name for the dataset.
+ * @param {String} name_new Old name of the dataset.
+ */
+NAN_METHOD(Driver::copyFiles)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+	std::string old_name;
+	std::string new_name;
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if(driver-&gt;uses_ogr) {
+		NanThrowError(&quot;Driver unable to copy files&quot;);
+		NanReturnUndefined();
+	}
+	#endif
+
+	NODE_ARG_STR(0, &quot;new name&quot;, new_name);
+	NODE_ARG_STR(1, &quot;old name&quot;, old_name);
+
+	CPLErr err = driver-&gt;getGDALDriver()-&gt;CopyFiles(new_name.c_str(), old_name.c_str());
+	if (err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+NAN_METHOD(Driver::rename)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+	std::string old_name;
+	std::string new_name;
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if(driver-&gt;uses_ogr) {
+		NanThrowError(&quot;Driver unable to rename files&quot;);
+		NanReturnUndefined();
+	}
+	#endif
+
+	NODE_ARG_STR(0, &quot;new name&quot;, new_name);
+	NODE_ARG_STR(1, &quot;old name&quot;, old_name);
+
+	CPLErr err = driver-&gt;getGDALDriver()-&gt;Rename(new_name.c_str(), old_name.c_str());
+	if (err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+NAN_METHOD(Driver::getMetadata)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	Handle&lt;Object&gt; result;
+
+	std::string domain(&quot;&quot;);
+	NODE_ARG_OPT_STR(0, &quot;domain&quot;, domain);
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (driver-&gt;uses_ogr){
+		result = NanNew&lt;Object&gt;();
+		result-&gt;Set(NanNew(&quot;DCAP_VECTOR&quot;), NanNew(&quot;YES&quot;));
+		NanReturnValue(result);
+	}
+	#endif
+
+	GDALDriver* raw = driver-&gt;getGDALDriver();
+	result = MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str());
+	#if GDAL_VERSION_MAJOR &lt; 2
+		result-&gt;Set(NanNew(&quot;DCAP_RASTER&quot;), NanNew(&quot;YES&quot;));
+	#endif
+	NanReturnValue(result);
+}
+
+NAN_METHOD(Driver::open)
+{
+	NanScope();
+	Driver *driver = ObjectWrap::Unwrap&lt;Driver&gt;(args.This());
+
+	std::string path;
+	std::string mode = &quot;r&quot;;
+	GDALAccess access = GA_ReadOnly;
+
+	NODE_ARG_STR(0, &quot;path&quot;, path);
+	NODE_ARG_OPT_STR(1, &quot;mode&quot;, mode);
+
+	if (mode == &quot;r+&quot;) {
+		access = GA_Update;
+	} else if (mode != &quot;r&quot;) {
+		NanThrowError(&quot;Invalid open mode. Must be \&quot;r\&quot; or \&quot;r+\&quot;&quot;);
+		NanReturnUndefined();
+	}
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (driver-&gt;uses_ogr){
+		OGRSFDriver *raw = driver-&gt;getOGRSFDriver();
+		OGRDataSource *ds = raw-&gt;Open(path.c_str(), static_cast&lt;int&gt;(access));
+		if (!ds) {
+			NanThrowError(&quot;Error opening dataset&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(Dataset::New(ds));
+	}
+	#endif
+
+	GDALDriver  *raw = driver-&gt;getGDALDriver();
+	GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
+	GDALDataset *ds = raw-&gt;pfnOpen(info);
+	delete info;
+	if (!ds) {
+		NanThrowError(&quot;Error opening dataset&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(Dataset::New(ds));
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>
