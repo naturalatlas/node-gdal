@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_feature_defn.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Layer", "modules/gdal"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <h3>APIs</h3>
+    <div id="sidebar">
+        <ul id="main-nav" class="nav nav-tabs" style="margin-bottom:0;">
+            <li class="active"><a href="#classes" data-toggle="tab">Classes</a></li>
+            <li><a href="#modules" data-toggle="tab">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" placeholder="Type to filter APIs">
+        </div>
+
+        <div class="tab-content" style="border: 1px solid #DDD; border-top:0;">
+            <div class="tab-pane active" id="classes">
+                <ul id="api-classes" class="nav nav-list">
+                    
+                        <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+                    
+                        <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+                    
+                        <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+                    
+                        <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+                    
+                </ul>
+            </div>
+
+            <div class="tab-pane" id="modules">
+                <ul id="api-modules" class="nav nav-list">
+                    
+                        <li><a href="../modules/gdal.html">gdal</a></li>
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_feature_defn.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_feature_defn.hpp&quot;
+#include &quot;gdal_field_defn.hpp&quot;
+#include &quot;collections/feature_defn_fields.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; FeatureDefn::constructor;
+
+void FeatureDefn::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(FeatureDefn::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;FeatureDefn&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
+
+	ATTR(lcons, &quot;name&quot;, nameGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;fields&quot;, fieldsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;styleIgnored&quot;, styleIgnoredGetter, styleIgnoredSetter);
+	ATTR(lcons, &quot;geomIgnored&quot;, geomIgnoredGetter, geomIgnoredSetter);
+	ATTR(lcons, &quot;geomType&quot;, geomTypeGetter, geomTypeSetter);
+
+	target-&gt;Set(NanNew(&quot;FeatureDefn&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+FeatureDefn::FeatureDefn(OGRFeatureDefn *def)
+	: ObjectWrap(),
+	  this_(def),
+	  owned_(true)
+{
+	LOG(&quot;Created FeatureDefn [%p]&quot;, def);
+}
+
+FeatureDefn::FeatureDefn()
+	: ObjectWrap(),
+	  this_(0),
+	  owned_(true)
+{
+}
+
+FeatureDefn::~FeatureDefn()
+{
+	if(this_) {
+		LOG(&quot;Disposing FeatureDefn [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		if(owned_) this_-&gt;Release();
+		this_ = NULL;
+		LOG(&quot;Disposed FeatureDefn [%p]&quot;, this_);
+	}
+}
+
+/**
+ * @constructor
+ * @class gdal.FeatureDefn
+ */
+NAN_METHOD(FeatureDefn::New)
+{
+	NanScope();
+	FeatureDefn *f;
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		f = static_cast&lt;FeatureDefn *&gt;(ptr);
+	} else {
+		if (args.Length() != 0) {
+			NanThrowError(&quot;FeatureDefn constructor doesn&#x27;t take any arguments&quot;);
+			NanReturnUndefined();
+		}
+		f = new FeatureDefn(new OGRFeatureDefn());
+		f-&gt;this_-&gt;Reference();
+	}
+
+	Handle&lt;Value&gt; fields = FeatureDefnFields::New(args.This());
+	args.This()-&gt;SetHiddenValue(NanNew(&quot;fields_&quot;), fields);
+
+	f-&gt;Wrap(args.This());
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; FeatureDefn::New(OGRFeatureDefn *def)
+{
+	NanEscapableScope();
+	return NanEscapeScope(FeatureDefn::New(def, false));
+}
+
+Handle&lt;Value&gt; FeatureDefn::New(OGRFeatureDefn *def, bool owned)
+{
+	NanEscapableScope();
+
+	if (!def) {
+		return NanEscapeScope(NanNull());
+	}
+
+	//make a copy of featuredefn owned by a layer
+	// + no need to track when a layer is destroyed
+	// + no need to throw errors when a method trys to modify an owned read-only featuredefn
+	// - is slower
+
+	//TODO: cloning maybe unnecessary if reference counting is done right.
+	//      def-&gt;Reference(); def-&gt;Release();
+
+	if (!owned) {
+		def = def-&gt;Clone();
+	}
+
+	FeatureDefn *wrapped = new FeatureDefn(def);
+	wrapped-&gt;owned_ = true;
+	def-&gt;Reference();
+
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(FeatureDefn::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(FeatureDefn::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;FeatureDefn&quot;));
+}
+
+NAN_METHOD(FeatureDefn::clone)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	NanReturnValue(FeatureDefn::New(def-&gt;this_-&gt;Clone()));
+}
+
+NAN_GETTER(FeatureDefn::nameGetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	NanReturnValue(SafeString::New(def-&gt;this_-&gt;GetName()));
+}
+
+NAN_GETTER(FeatureDefn::geomTypeGetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetGeomType()));
+}
+
+NAN_GETTER(FeatureDefn::geomIgnoredGetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsGeometryIgnored()));
+}
+
+NAN_GETTER(FeatureDefn::styleIgnoredGetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsStyleIgnored()));
+}
+
+NAN_GETTER(FeatureDefn::fieldsGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;fields_&quot;)));
+}
+
+NAN_SETTER(FeatureDefn::geomTypeSetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	if(!value-&gt;IsInt32()){
+		NanThrowError(&quot;geomType must be an integer&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetGeomType(OGRwkbGeometryType(value-&gt;IntegerValue()));
+}
+
+NAN_SETTER(FeatureDefn::geomIgnoredSetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	if(!value-&gt;IsBoolean()){
+		NanThrowError(&quot;geomIgnored must be a boolean&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetGeometryIgnored(value-&gt;IntegerValue());
+}
+
+NAN_SETTER(FeatureDefn::styleIgnoredSetter)
+{
+	NanScope();
+	FeatureDefn *def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args.This());
+	if(!value-&gt;IsBoolean()){
+		NanThrowError(&quot;styleIgnored must be a boolean&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetStyleIgnored(value-&gt;IntegerValue());
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

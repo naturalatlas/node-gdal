@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_feature.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Layer", "modules/gdal"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <h3>APIs</h3>
+    <div id="sidebar">
+        <ul id="main-nav" class="nav nav-tabs" style="margin-bottom:0;">
+            <li class="active"><a href="#classes" data-toggle="tab">Classes</a></li>
+            <li><a href="#modules" data-toggle="tab">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" placeholder="Type to filter APIs">
+        </div>
+
+        <div class="tab-content" style="border: 1px solid #DDD; border-top:0;">
+            <div class="tab-pane active" id="classes">
+                <ul id="api-classes" class="nav nav-list">
+                    
+                        <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+                    
+                        <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+                    
+                        <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+                    
+                        <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+                    
+                        <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+                    
+                </ul>
+            </div>
+
+            <div class="tab-pane" id="modules">
+                <ul id="api-modules" class="nav nav-list">
+                    
+                        <li><a href="../modules/gdal.html">gdal</a></li>
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_feature.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_feature.hpp&quot;
+#include &quot;gdal_feature_defn.hpp&quot;
+#include &quot;gdal_geometry.hpp&quot;
+#include &quot;gdal_field_defn.hpp&quot;
+#include &quot;gdal_layer.hpp&quot;
+#include &quot;collections/feature_fields.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; Feature::constructor;
+
+void Feature::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(Feature::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;Feature&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGeometry&quot;, getGeometry);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setGeometryDirectly&quot;, setGeometryDirectly);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setGeometry&quot;, setGeometry);
+	// NODE_SET_PROTOTYPE_METHOD(lcons, &quot;stealGeometry&quot;, stealGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;equals&quot;, equals);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getFieldDefn&quot;, getFieldDefn); (use defn.fields.get() instead)
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setFrom&quot;, setFrom);
+
+	//Note: We should let node GC handle destroying features when they arent being used
+	//TODO: Give node more info on the amount of memory a feature is using
+	//      NanAdjustExternalMemory()
+	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;destroy&quot;, destroy);
+
+	ATTR(lcons, &quot;fields&quot;, fieldsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;defn&quot;, defnGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;fid&quot;, fidGetter, fidSetter);
+
+	target-&gt;Set(NanNew(&quot;Feature&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+Feature::Feature(OGRFeature *feature)
+	: ObjectWrap(),
+	  this_(feature),
+	  owned_(true)
+{
+	LOG(&quot;Created Feature[%p]&quot;, feature);
+}
+
+Feature::Feature()
+	: ObjectWrap(),
+	  this_(0),
+	  owned_(true)
+{
+}
+
+Feature::~Feature()
+{
+	dispose();
+}
+
+void Feature::dispose()
+{
+	if(this_) {
+		LOG(&quot;Disposing Feature [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		if(owned_) OGRFeature::DestroyFeature(this_);
+		LOG(&quot;Disposed Feature [%p]&quot;, this_);
+		this_ = NULL;
+	}
+}
+
+/**
+ * @constructor
+ * @class gdal.Feature
+ * @param {gdal.Layer|gdal.FeatureDefn} definition
+ */
+NAN_METHOD(Feature::New)
+{
+	NanScope();
+	Feature* f;
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		f = static_cast&lt;Feature *&gt;(ptr);
+
+	} else {
+
+		if (args.Length() &lt; 1) {
+			NanThrowError(&quot;Constructor expects Layer or FeatureDefn object&quot;);
+			NanReturnUndefined();
+		}
+
+		OGRFeatureDefn *def;
+
+		if (IS_WRAPPED(args[0], Layer)) {
+			Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(args[0].As&lt;Object&gt;());
+			if (!layer-&gt;get()) {
+				NanThrowError(&quot;Layer object already destroyed&quot;);
+				NanReturnUndefined();
+			}
+			def = layer-&gt;get()-&gt;GetLayerDefn();
+		} else if(IS_WRAPPED(args[0], FeatureDefn)) {
+			FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(args[0].As&lt;Object&gt;());
+			if (!feature_def-&gt;get()) {
+				NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
+				NanReturnUndefined();
+			}
+			def = feature_def-&gt;get();
+		} else {
+			NanThrowError(&quot;Constructor expects Layer or FeatureDefn object&quot;);
+			NanReturnUndefined();
+		}
+
+		OGRFeature *ogr_f = new OGRFeature(def);
+		f = new Feature(ogr_f);
+	}
+
+	Handle&lt;Value&gt; fields = FeatureFields::New(args.This());
+	args.This()-&gt;SetHiddenValue(NanNew(&quot;fields_&quot;), fields);
+
+	f-&gt;Wrap(args.This());
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; Feature::New(OGRFeature *feature)
+{
+	NanEscapableScope();
+	return NanEscapeScope(Feature::New(feature, true));
+}
+
+Handle&lt;Value&gt; Feature::New(OGRFeature *feature, bool owned)
+{
+	NanEscapableScope();
+
+	if (!feature) {
+		return NanEscapeScope(NanNull());
+	}
+
+	Feature *wrapped = new Feature(feature);
+	wrapped-&gt;owned_ = owned;
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(Feature::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(Feature::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;Feature&quot;));
+}
+
+NAN_METHOD(Feature::getGeometry)
+{
+	NanScope();
+
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRGeometry* geom = feature-&gt;this_-&gt;GetGeometryRef();
+	if (!geom) {
+		NanThrowError(&quot;Error getting feature geometry&quot;);
+	}
+
+
+	NanReturnValue(Geometry::New(geom, false));
+}
+
+NAN_METHOD(Feature::getFieldDefn)
+{
+	NanScope();
+	int field_index;
+	NODE_ARG_INT(0, &quot;field index&quot;, field_index);
+
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	if (field_index &lt; 0 || field_index &gt;= feature-&gt;this_-&gt;GetFieldCount()) {
+		NanThrowError(&quot;Invalid field index&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(FieldDefn::New(feature-&gt;this_-&gt;GetFieldDefnRef(field_index), false));
+}
+//NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, &quot;geometry&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equals, Boolean, Equal, Feature, &quot;feature&quot;);
+
+NAN_METHOD(Feature::clone)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(Feature::New(feature-&gt;this_-&gt;Clone()));
+}
+
+NAN_METHOD(Feature::destroy)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+	feature-&gt;dispose();
+	NanReturnUndefined();
+}
+
+NAN_METHOD(Feature::setFrom)
+{
+	NanScope();
+	Feature *other_feature;
+	int forgiving = 1;
+	Handle&lt;Array&gt; index_map;
+	OGRErr err = 0;
+
+	NODE_ARG_WRAPPED(0, &quot;feature&quot;, Feature, other_feature);
+
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args.Length() &lt;= 2) {
+		NODE_ARG_BOOL_OPT(1, &quot;forgiving&quot;, forgiving);
+
+		err = feature-&gt;this_-&gt;SetFrom(other_feature-&gt;this_, forgiving ? TRUE : FALSE);
+	} else {
+		NODE_ARG_ARRAY(1, &quot;index map&quot;, index_map);
+		NODE_ARG_BOOL_OPT(2, &quot;forgiving&quot;, forgiving);
+
+		if (index_map-&gt;Length() &lt; 1) {
+			NanThrowError(&quot;index map must contain at least 1 index&quot;);
+			NanReturnUndefined();
+		}
+
+		int *index_map_ptr = new int[index_map-&gt;Length()];
+
+		for (unsigned index = 0; index &lt; index_map-&gt;Length(); index++) {
+			Handle&lt;Value&gt; field_index(index_map-&gt;Get(NanNew&lt;Integer&gt;(index)));
+
+			if (!field_index-&gt;IsUint32()) {
+				delete [] index_map_ptr;
+				NanThrowError(&quot;index map must contain only integer values&quot;);
+				NanReturnUndefined();
+			}
+
+			int val = (int)field_index-&gt;Uint32Value(); //todo: validate index? perhaps ogr already does this and throws an error
+
+			index_map_ptr[index] = val;
+		}
+
+		err = feature-&gt;this_-&gt;SetFrom(other_feature-&gt;this_, index_map_ptr, forgiving ? TRUE : FALSE);
+
+		delete [] index_map_ptr;
+	}
+
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	NanReturnUndefined();
+}
+
+NAN_GETTER(Feature::fieldsGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;fields_&quot;)));
+}
+
+NAN_GETTER(Feature::fidGetter)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(NanNew&lt;Integer&gt;(feature-&gt;this_-&gt;GetFID()));
+}
+
+NAN_GETTER(Feature::defnGetter)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(FeatureDefn::New(feature-&gt;this_-&gt;GetDefnRef(), false));
+}
+
+NAN_SETTER(Feature::fidSetter)
+{
+	NanScope();
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		return;
+	}
+	if(!value-&gt;IsInt32()){
+		NanThrowError(&quot;fid must be an integer&quot;);
+		return;
+	}
+	feature-&gt;this_-&gt;SetFID(value-&gt;IntegerValue());
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

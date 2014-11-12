@@ -1,0 +1,281 @@
+{
+    "project": {
+        "name": "node-gdal",
+        "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
+        "version": "0.3.0",
+        "url": "https://github.com/naturalatlas/node-gdal",
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
+    },
+    "files": {
+        "lib/envelope.js": {
+            "name": "lib/envelope.js",
+            "modules": {},
+            "classes": {
+                "gdal.Envelope": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "lib/envelope_3d.js": {
+            "name": "lib/envelope_3d.js",
+            "modules": {},
+            "classes": {
+                "gdal.Envelope3D": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "lib/gdal.js": {
+            "name": "lib/gdal.js",
+            "modules": {
+                "gdal": 1
+            },
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal_feature.cpp": {
+            "name": "src/gdal_feature.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.Feature": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal_feature_defn.cpp": {
+            "name": "src/gdal_feature_defn.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.FeatureDefn": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal_layer.cpp": {
+            "name": "src/gdal_layer.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.Layer": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {
+        "gdal": {
+            "name": "gdal",
+            "submodules": {},
+            "classes": {
+                "gdal.Envelope": 1,
+                "gdal.Envelope3D": 1,
+                "gdal.Feature": 1,
+                "gdal.FeatureDefn": 1,
+                "gdal.Layer": 1
+            },
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "src/gdal_layer.cpp",
+            "line": 90,
+            "description": "Provides a binding to libgdal."
+        }
+    },
+    "classes": {
+        "gdal.Envelope": {
+            "name": "gdal.Envelope",
+            "shortname": "gdal.Envelope",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "gdal",
+            "file": "lib/envelope.js",
+            "line": 4,
+            "description": "A 2D bounding box. For 3D envelopes, see {{#crossLink \"gdal.Envelope3D\"}}gdal.Envelope3D{{/crossLink}}.",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "bounds",
+                    "description": "An object containing `minX`, `maxX`, `minY`, and `maxY` values.",
+                    "type": "Object",
+                    "optional": true
+                }
+            ]
+        },
+        "gdal.Envelope3D": {
+            "name": "gdal.Envelope3D",
+            "shortname": "gdal.Envelope3D",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "gdal",
+            "file": "lib/envelope_3d.js",
+            "line": 3,
+            "description": "A 3D bounding box. For 2D envelopes, see {{#crossLink \"gdal.Envelope\"}}gdal.Envelope{{/crossLink}}.",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "bounds",
+                    "description": "An object containing `minX`, `maxX`, `minY`, `maxY`, `minZ`, and `maxZ` values.",
+                    "type": "Object"
+                }
+            ]
+        },
+        "gdal.Feature": {
+            "name": "gdal.Feature",
+            "shortname": "gdal.Feature",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "gdal",
+            "namespace": "",
+            "file": "src/gdal_feature.cpp",
+            "line": 76,
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "definition",
+                    "description": "",
+                    "type": "gdal.Layer|gdal.FeatureDefn"
+                }
+            ]
+        },
+        "gdal.FeatureDefn": {
+            "name": "gdal.FeatureDefn",
+            "shortname": "gdal.FeatureDefn",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "gdal",
+            "namespace": "",
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 58,
+            "is_constructor": 1
+        },
+        "gdal.Layer": {
+            "name": "gdal.Layer",
+            "shortname": "gdal.Layer",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "gdal",
+            "namespace": "",
+            "file": "src/gdal_layer.cpp",
+            "line": 90,
+            "is_constructor": 1
+        }
+    },
+    "classitems": [
+        {
+            "file": "lib/envelope.js",
+            "line": 25,
+            "description": "Determines if the envelope has not been set yet.",
+            "itemtype": "method",
+            "name": "isEmpty",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.Envelope"
+        },
+        {
+            "file": "lib/envelope.js",
+            "line": 35,
+            "description": "Unions the provided envelope with the current envelope.",
+            "itemtype": "method",
+            "name": "merge",
+            "params": [
+                {
+                    "name": "envelope",
+                    "description": "",
+                    "type": "gdal.Envelope"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Void"
+            },
+            "class": "gdal.Envelope"
+        },
+        {
+            "file": "lib/envelope.js",
+            "line": 70,
+            "description": "Determines if the provided envelope touches it.",
+            "itemtype": "method",
+            "name": "intersects",
+            "params": [
+                {
+                    "name": "envelope",
+                    "description": "",
+                    "type": "gdal.Envelope"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.Envelope"
+        },
+        {
+            "file": "lib/envelope.js",
+            "line": 82,
+            "description": "Updates the envelope to the intersection of the two envelopes.",
+            "itemtype": "method",
+            "name": "intersect",
+            "params": [
+                {
+                    "name": "envelope",
+                    "description": "",
+                    "type": "gdal.Envelope"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Void"
+            },
+            "class": "gdal.Envelope"
+        },
+        {
+            "file": "lib/envelope.js",
+            "line": 107,
+            "description": "Determines if the provided envelope is wholly-contained by the current envelope.",
+            "itemtype": "method",
+            "name": "contains",
+            "params": [
+                {
+                    "name": "envelope",
+                    "description": "",
+                    "type": "gdal.Envelope"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.Envelope"
+        },
+        {
+            "file": "lib/envelope.js",
+            "line": 119,
+            "description": "Converts the envelope to a polygon.",
+            "itemtype": "method",
+            "name": "toPolygon",
+            "return": {
+                "description": "",
+                "type": "gdal.Polygon"
+            },
+            "class": "gdal.Envelope"
+        }
+    ],
+    "warnings": []
+}
