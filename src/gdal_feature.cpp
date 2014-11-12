@@ -74,6 +74,8 @@ void Feature::dispose()
 }
 
 /**
+ * A simple feature, including geometry and attributes.
+ *
  * @constructor
  * @class gdal.Feature
  * @param {gdal.Layer|gdal.FeatureDefn} definition
@@ -159,6 +161,12 @@ NAN_METHOD(Feature::toString)
 	NanReturnValue(NanNew("Feature"));
 }
 
+/**
+ * Returns the geometry of the feature.
+ *
+ * @method getGeometry
+ * @returns {gdal.Geometry}
+ */
 NAN_METHOD(Feature::getGeometry)
 {
 	NanScope();
@@ -178,6 +186,13 @@ NAN_METHOD(Feature::getGeometry)
 	NanReturnValue(Geometry::New(geom, false));
 }
 
+/**
+ * Returns the definition of a particular field at an index.
+ *
+ * @method getFieldDefn
+ * @param {int} index Field index (0-based)
+ * @returns {gdal.FieldDefn}
+ */
 NAN_METHOD(Feature::getFieldDefn)
 {
 	NanScope();

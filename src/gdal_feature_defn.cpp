@@ -56,6 +56,8 @@ FeatureDefn::~FeatureDefn()
 }
 
 /**
+ * Definition of a feature class or feature layer.
+ *
  * @constructor
  * @class gdal.FeatureDefn
  */
