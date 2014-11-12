@@ -87,6 +87,10 @@ void Layer::dispose()
 	}
 };
 
+/**
+ * @constructor
+ * @class gdal.Layer
+ */
 NAN_METHOD(Layer::New)
 {
 	NanScope();
@@ -251,7 +255,7 @@ NAN_METHOD(Layer::setSpatialFilter)
 	if(args.Length() == 1) {
 		Geometry *filter = NULL;
 		NODE_ARG_WRAPPED_OPT(0, "filter", Geometry, filter);
-		
+
 		if(filter) {
 			layer->this_->SetSpatialFilter(filter->get());
 		} else {
@@ -297,7 +301,7 @@ NAN_METHOD(Layer::setAttributeFilter)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	
+
 	NanReturnUndefined();
 }
 /*

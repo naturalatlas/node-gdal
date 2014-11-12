@@ -1,0 +1,13 @@
+{
+	"name": "node-gdal",
+	"description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
+	"version": "0.3.0",
+	"url": "https://github.com/naturalatlas/node-gdal",
+	"logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png",
+	"options": {
+		"paths": ["./lib","./src"],
+		"outdir": "./yuidocs",
+		"themedir": "node_modules/yuidoc-bootstrap-theme",
+		"helpers": ["node_modules/yuidoc-bootstrap-theme/helpers/helpers.js"]
+	}
+}

@@ -24,7 +24,7 @@ void FeatureDefn::Initialize(Handle<Object> target)
 	ATTR(lcons, "styleIgnored", styleIgnoredGetter, styleIgnoredSetter);
 	ATTR(lcons, "geomIgnored", geomIgnoredGetter, geomIgnoredSetter);
 	ATTR(lcons, "geomType", geomTypeGetter, geomTypeSetter);
-	
+
 	target->Set(NanNew("FeatureDefn"), lcons->GetFunction());
 
 	NanAssignPersistent(constructor, lcons);
@@ -55,6 +55,10 @@ FeatureDefn::~FeatureDefn()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.FeatureDefn
+ */
 NAN_METHOD(FeatureDefn::New)
 {
 	NanScope();
@@ -78,9 +82,9 @@ NAN_METHOD(FeatureDefn::New)
 		f->this_->Reference();
 	}
 
-	Handle<Value> fields = FeatureDefnFields::New(args.This()); 
+	Handle<Value> fields = FeatureDefnFields::New(args.This());
 	args.This()->SetHiddenValue(NanNew("fields_"), fields);
-	
+
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
 }
@@ -103,9 +107,9 @@ Handle<Value> FeatureDefn::New(OGRFeatureDefn *def, bool owned)
 	// + no need to track when a layer is destroyed
 	// + no need to throw errors when a method trys to modify an owned read-only featuredefn
 	// - is slower
-	
-	//TODO: cloning maybe unnecessary if reference counting is done right. 
-	//      def->Reference(); def->Release(); 
+
+	//TODO: cloning maybe unnecessary if reference counting is done right.
+	//      def->Reference(); def->Release();
 
 	if (!owned) {
 		def = def->Clone();

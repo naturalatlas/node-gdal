@@ -73,7 +73,11 @@ void Feature::dispose()
 	}
 }
 
-
+/**
+ * @constructor
+ * @class gdal.Feature
+ * @param {gdal.Layer|gdal.FeatureDefn} definition
+ */
 NAN_METHOD(Feature::New)
 {
 	NanScope();
