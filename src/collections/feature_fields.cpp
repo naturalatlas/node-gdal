@@ -40,6 +40,8 @@ FeatureFields::~FeatureFields()
 {}
 
 /**
+ * An encapsulation of all field data that makes up a {{#crossLink "gdal.Feature"}}Feature{{/crossLink}}.
+ *
  * @class gdal.FeatureFields
  */
 NAN_METHOD(FeatureFields::New)
@@ -81,7 +83,6 @@ NAN_METHOD(FeatureFields::toString)
 	NanReturnValue(NanNew("FeatureFields"));
 }
 
-
 inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	if (val->IsInt32()) {
 		f->SetField(field_index, val->Int32Value());
@@ -98,6 +99,25 @@ inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	return false;
 }
 
+/**
+ * Sets feature field(s).
+ *
+ * @example
+ * ```
+ * // most-efficient, least flexible. requires you to know the ordering of the fields:
+ * feature.fields.set(['Something']);
+ * feature.fields.set(0, 'Something');
+ *
+ * // most flexible.
+ * feature.fields.set({name: 'Something'});
+ * feature.fields.set('name', 'Something');
+ * ```
+ *
+ * @method set
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::set)
 {
 	NanScope();
@@ -185,6 +205,18 @@ NAN_METHOD(FeatureFields::set)
 	}
 }
 
+/**
+ * Resets all fields.
+ *
+ * @example
+ * ```
+ * feature.fields.reset();```
+ *
+ * @method reset
+ * @throws Error
+ * @param {Object} [values]
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::reset)
 {
 	NanScope();
@@ -235,6 +267,16 @@ NAN_METHOD(FeatureFields::reset)
 	NanReturnValue(NanNew<Integer>(n));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @example
+ * ```
+ * feature.fields.count();```
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureFields::count)
 {
 	NanScope();
@@ -249,6 +291,17 @@ NAN_METHOD(FeatureFields::count)
 	NanReturnValue(NanNew<Integer>(f->get()->GetFieldCount()));
 }
 
+/**
+ * Returns the index of a field, given its name.
+ *
+ * @example
+ * ```
+ * var index = feature.fields.indexOf('field');```
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or, `-1` if it cannot be found.
+ */
 NAN_METHOD(FeatureFields::indexOf)
 {
 	NanScope();
@@ -266,6 +319,13 @@ NAN_METHOD(FeatureFields::indexOf)
 	NanReturnValue(NanNew<Integer>(f->get()->GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Outputs the field data as a pure JS object.
+ *
+ * @throws Error
+ * @method toObject
+ * @return {Object}
+ */
 NAN_METHOD(FeatureFields::toObject)
 {
 	NanScope();
@@ -301,6 +361,13 @@ NAN_METHOD(FeatureFields::toObject)
 	NanReturnValue(obj);
 }
 
+/**
+ * Outputs the field values as a pure JS array.
+ *
+ * @throws Error
+ * @method toArray
+ * @return {Array}
+ */
 NAN_METHOD(FeatureFields::toArray)
 {
 	NanScope();
@@ -326,7 +393,6 @@ NAN_METHOD(FeatureFields::toArray)
 	}
 	NanReturnValue(array);
 }
-
 
 Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 {
@@ -360,6 +426,19 @@ Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 			return NanEscapeScope(NanUndefined());
 	}
 }
+
+/**
+ * Returns a field's value.
+ *
+ * @example
+ * ```
+ * value = feature.fields.get(0);
+ * value = feature.fields.get('field');```
+ *
+ * @method get
+ * @param {String|Integer} key Feature name or index.
+ * @return {mixed|Undefined}
+ */
 NAN_METHOD(FeatureFields::get)
 {
 	NanScope();
@@ -388,6 +467,13 @@ NAN_METHOD(FeatureFields::get)
 	}
 }
 
+/**
+ * Returns a list of field name.
+ *
+ * @method getNames
+ * @throws Error
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureFields::getNames)
 {
 	NanScope();
@@ -528,6 +614,13 @@ Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_i
 	}
 }
 
+/**
+ * Parent feature
+ *
+ * @readOnly
+ * @attribute feature
+ * @type {gdal.Feature}
+ */
 NAN_GETTER(FeatureFields::featureGetter)
 {
 	NanScope();

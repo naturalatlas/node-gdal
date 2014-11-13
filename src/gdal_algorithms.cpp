@@ -21,6 +21,7 @@ void Algorithms::Initialize(Handle<Object> target)
  *
  * @throws Error
  * @method fillNodata
+ * @static
  * @for gdal
  * @param {Object} options
  * @param {gdal.RasterBand} options.src If provided, this band will be updated in-place.
@@ -65,6 +66,7 @@ NAN_METHOD(Algorithms::fillNodata)
  *
  * @throws Error
  * @method contourGenerate
+ * @static
  * @for gdal
  * @param {Object} options
  * @param {gdal.RasterBand} options.src
@@ -133,6 +135,7 @@ NAN_METHOD(Algorithms::contourGenerate)
  *
  * @throws Error
  * @method sieveFilter
+ * @static
  * @for gdal
  * @param {Object} options
  * @param {gdal.RasterBand} options.src
@@ -180,6 +183,7 @@ NAN_METHOD(Algorithms::sieveFilter)
  *
  * @throws Error
  * @method checksumImage
+ * @static
  * @for gdal
  * @param {gdal.RasterBand} src
  * @param {integer} [x=0]
@@ -231,6 +235,7 @@ NAN_METHOD(Algorithms::checksumImage)
  *
  * @throws Error
  * @method polygonize
+ * @static
  * @for gdal
  * @param {Object} options
  * @param {gdal.RasterBand} options.src

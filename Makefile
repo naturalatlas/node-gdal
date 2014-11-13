@@ -22,8 +22,8 @@ authors:
 	npm install yuidocjs@0.3.50
 
 docs: ./node_modules/.bin/yuidoc ./node_modules/yuidoc-lucid-theme
-	./node_modules/.bin/yuidoc --extension .js,.cpp
-	@echo "\033[32mDocumentation generated: ../node-gdal-yui-docs\033[0;39m"
+	./node_modules/.bin/yuidoc --extension .js,.cpp,.hpp
+	@echo "\033[32mDocumentation generated: ./yuidocs\033[0;39m"
 
 publish-docs: docs ./node_modules/gh-pages
 	node ./scripts/publish-docs.js

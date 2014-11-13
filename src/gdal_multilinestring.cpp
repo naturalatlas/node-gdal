@@ -135,6 +135,12 @@ NAN_METHOD(MultiLineString::toString)
 	NanReturnValue(NanNew("MultiLineString"));
 }
 
+/**
+ * Converts it to a polygon.
+ *
+ * @method polygonize
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiLineString::polygonize)
 {
 	NanScope();
@@ -144,6 +150,13 @@ NAN_METHOD(MultiLineString::polygonize)
 	NanReturnValue(Geometry::New(geom->this_->Polygonize()));
 }
 
+/**
+ * Returns the child LineString at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.LineString}
+ */
 NAN_METHOD(MultiLineString::getGeometry)
 {
 	NanScope();

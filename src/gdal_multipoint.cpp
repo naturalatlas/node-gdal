@@ -135,6 +135,13 @@ NAN_METHOD(MultiPoint::toString)
 	NanReturnValue(NanNew("MultiPoint"));
 }
 
+/**
+ * Returns the child Point at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiPoint::getGeometry)
 {
 	NanScope();

@@ -517,7 +517,7 @@ NAN_METHOD(Driver::open)
 	}
 	#endif
 
-	GDALDriver  *raw = driver->getGDALDriver();
+	GDALDriver *raw = driver->getGDALDriver();
 	GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
 	GDALDataset *ds = raw->pfnOpen(info);
 	delete info;

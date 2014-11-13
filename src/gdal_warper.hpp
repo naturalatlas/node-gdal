@@ -21,12 +21,8 @@
 using namespace v8;
 using namespace node;
 
-
-/**
- * Methods and classes from gdalwarper.h
- *
- * http://www.gdal.org/gdalwarper_8h.html
- */
+// Methods and classes from gdalwarper.h
+// http://www.gdal.org/gdalwarper_8h.html
 
 namespace node_gdal {
 namespace Warper {

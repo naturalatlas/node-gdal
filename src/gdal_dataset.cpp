@@ -160,6 +160,15 @@ void Dataset::dispose()
 /**
  * A set of associated raster bands, usually from one file.
  *
+ * ```
+ * // raster dataset:
+ * dataset = gdal.open('file.tif');
+ * bands = dataset.bands;
+ *
+ * // vector dataset:
+ * dataset = gdal.open('file.shp');
+ * layers = dataset.layers;```
+ *
  * @class gdal.Dataset
  */
 NAN_METHOD(Dataset::New)
@@ -401,9 +410,9 @@ NAN_METHOD(Dataset::flush)
  * Execute an SQL statement against the data store.
  *
  * @method executeSQL
- * @param {String} statement
- * @param {gdal.Geometry} [spatial_filter]
- * @param {String} [dialect]
+ * @param {String} statement SQL statement to execute.
+ * @param {gdal.Geometry} [spatial_filter=null] Geometry which represents a spatial filter.
+ * @param {String} [dialect=null] Allows control of the statement dialect. If set to `null`, the OGR SQL engine will be used, except for RDBMS drivers that will use their dedicated SQL engine, unless `"OGRSQL"` is explicitely passed as the dialect. Starting with OGR 1.10, the `"SQLITE"` dialect can also be used.
  * @return {gdal.Layer}
  */
 NAN_METHOD(Dataset::executeSQL)

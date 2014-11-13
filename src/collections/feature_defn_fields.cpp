@@ -40,6 +40,8 @@ FeatureDefnFields::~FeatureDefnFields()
 {}
 
 /**
+ * An encapsulation of a {{#crossLink "gdal.FeatureDefn"}}FeatureDefn{{/crossLink}}'s fields.
+ *
  * @class gdal.FeatureDefnFields
  */
 NAN_METHOD(FeatureDefnFields::New)
@@ -81,6 +83,12 @@ NAN_METHOD(FeatureDefnFields::toString)
 	NanReturnValue(NanNew("FeatureDefnFields"));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureDefnFields::count)
 {
 	NanScope();
@@ -95,6 +103,13 @@ NAN_METHOD(FeatureDefnFields::count)
 	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldCount()));
 }
 
+/**
+ * Returns the index of field definition.
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or `-1` if not found.
+ */
 NAN_METHOD(FeatureDefnFields::indexOf)
 {
 	NanScope();
@@ -112,6 +127,13 @@ NAN_METHOD(FeatureDefnFields::indexOf)
 	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Returns a field definition.
+ *
+ * @method get
+ * @param {String|Integer} key Field name or index
+ * @return {gdal.FieldDefn}
+ */
 NAN_METHOD(FeatureDefnFields::get)
 {
 	NanScope();
@@ -134,6 +156,12 @@ NAN_METHOD(FeatureDefnFields::get)
 	NanReturnValue(FieldDefn::New(feature_def->get()->GetFieldDefn(field_index)));
 }
 
+/**
+ * Returns a list of field names.
+ *
+ * @method getNames
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureDefnFields::getNames)
 {
 	NanScope();
@@ -156,6 +184,13 @@ NAN_METHOD(FeatureDefnFields::getNames)
 	NanReturnValue(result);
 }
 
+/**
+ * Removes a field definition.
+ *
+ * @method remove
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ */
 NAN_METHOD(FeatureDefnFields::remove)
 {
 	NanScope();
@@ -184,6 +219,13 @@ NAN_METHOD(FeatureDefnFields::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds field definition(s).
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.FieldDefn|Array} field(s)
+ */
 NAN_METHOD(FeatureDefnFields::add)
 {
 	NanScope();
@@ -225,6 +267,18 @@ NAN_METHOD(FeatureDefnFields::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Reorders the fields.
+ *
+ * @example
+ * ```
+ * // reverse fields:
+ * featureDef.fields.reorder([2, 1, 0]);```
+ *
+ * @method reorder
+ * @throws Error
+ * @param {Array} map An array representing the new field order.
+ */
 NAN_METHOD(FeatureDefnFields::reorder)
 {
 	NanScope();
@@ -278,7 +332,13 @@ NAN_METHOD(FeatureDefnFields::reorder)
 	NanReturnUndefined();
 }
 
-
+/**
+ * Parent feature definition.
+ *
+ * @readOnly
+ * @attribute featureDefn
+ * @type {gdal.FeatureDefn}
+ */
 NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
 	NanScope();

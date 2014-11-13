@@ -219,7 +219,7 @@ NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, T
  * @throws Error
  * @method getExtent
  * @param {Boolean} [force=true]
- * @return {Object} An object containing `minX`, `maxX`, `minY`, `maxY` properties.
+ * @return {gdal.Envelope} Bounding envelope
  */
 NAN_METHOD(Layer::getExtent)
 {
@@ -241,7 +241,6 @@ NAN_METHOD(Layer::getExtent)
 		NanReturnUndefined();
 	}
 
-	// TODO: return Envelope object
 	Local<Object> obj = NanNew<Object>();
 	obj->Set(NanNew("minX"), NanNew<Number>(envelope->MinX));
 	obj->Set(NanNew("maxX"), NanNew<Number>(envelope->MaxX));

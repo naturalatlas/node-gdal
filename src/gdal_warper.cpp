@@ -14,8 +14,11 @@ void Warper::Initialize(Handle<Object> target)
 }
 
 /**
+ * Reprojects a dataset.
+ *
  * @throws Error
  * @method reprojectImage
+ * @static
  * @for gdal
  * @param {gdal.Dataset} src
  * @param {gdal.Dataset} dst
@@ -88,6 +91,20 @@ NAN_METHOD(Warper::reprojectImage)
 	NanReturnUndefined();
 }
 
+/**
+ * Used to determine the bounds and resolution of the output virtual file which
+ * should be large enough to include all the input image.
+ *
+ * @throws Error
+ * @method suggestedWarpOutput
+ * @static
+ * @for gdal
+ * @param {object} options Warp options
+ * @param {gdal.Dataset} options.src
+ * @param {gdal.SpatialReference} options.s_srs
+ * @param {gdal.SpatialReference} options.t_srs
+ * @return {Object} An object containing `"rasterSize"` and `"geoTransform"` properties.
+ */
 NAN_METHOD(Warper::suggestedWarpOutput)
 {
 	NanScope();

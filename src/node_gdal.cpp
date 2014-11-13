@@ -2,6 +2,14 @@
  * This [node-gdal](https://github.com/naturalatlas/node-gdal) binding for
  * Node.js provides a feature-complete way of reading, writing, and manipulating
  * geospatial data (raster and vector) using [GDAL](http://www.gdal.org/).
+ * ```
+ * // sample: open a shapefile and display all features as geojson
+ * var dataset = gdal.open("states.shp");
+ *
+ * dataset.layers.get(0).features.forEach(function(feature) {
+ *     console.log(feature.getGeometry().toJSON());
+ * });
+ * ```
  *
  * <iframe src="http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20" style="margin-top:20px"></iframe>
  * <iframe src="http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="200" height="20"></iframe>
@@ -379,7 +387,6 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target->Set(NanNew("ODrCDeleteDataSource"), NanNew(ODrCDeleteDataSource));
-
 
 			NODE_DEFINE_CONSTANT(target, GA_ReadOnly);
 			NODE_DEFINE_CONSTANT(target, GA_Update);
@@ -881,29 +888,14 @@ namespace node_gdal {
 			target->Set(NanNew("GRA_Mode"), NanNew("Mode"));
 
 			/**
+			 * GDAL version (not the binding version)
+			 *
 			 * @final
 			 * @for gdal
 			 * @property gdal.version
 			 * @type {String}
 			 */
 			target->Set(NanNew("version"), NanNew(GDAL_RELEASE_NAME));
-
-			/**
-			 * @final
-			 * @for gdal
-			 * @property gdal.CreateDataSourceOption
-			 * @type {mixed}
-			 */
-			target->Set(NanNew("CreateDataSourceOption"), NanNew(ODrCCreateDataSource));
-
-			/**
-			 * @final
-			 * @for gdal
-			 * @property gdal.DeleteDataSourceOption
-			 * @type {mixed}
-			 */
-			target->Set(NanNew("DeleteDataSourceOption"), NanNew(ODrCDeleteDataSource));
-
 
 			// Local<Object> versions = NanNew<Object>();
 			// versions->Set(NanNew("node"), NanNew(NODE_VERSION+1));
@@ -914,6 +906,7 @@ namespace node_gdal {
 			 * Disables all output.
 			 *
 			 * @for gdal
+			 * @static
 			 * @method quiet
 			 */
 			NODE_SET_METHOD(target, "quiet", QuietOutput);
@@ -922,6 +915,7 @@ namespace node_gdal {
 			 * Displays extra debugging information from GDAL.
 			 *
 			 * @for gdal
+			 * @static
 			 * @method verbose
 			 */
 			NODE_SET_METHOD(target, "verbose", VerboseOutput);

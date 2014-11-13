@@ -135,6 +135,12 @@ NAN_METHOD(MultiPolygon::toString)
 	NanReturnValue(NanNew("MultiPolygon"));
 }
 
+/**
+ * Unions all the geometries and returns the result.
+ *
+ * @method unionCascaded
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(MultiPolygon::unionCascaded)
 {
 	NanScope();
@@ -144,8 +150,21 @@ NAN_METHOD(MultiPolygon::unionCascaded)
 	NanReturnValue(Geometry::New(geom->this_->UnionCascaded()));
 }
 
+/**
+ * Computes the combined area of the collection.
+ *
+ * @method getArea
+ * @return {Number}
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(MultiPolygon, getArea, Number, get_Area);
 
+/**
+ * Returns the child Polygon at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiPolygon::getGeometry)
 {
 	NanScope();

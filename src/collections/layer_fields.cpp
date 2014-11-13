@@ -256,7 +256,7 @@ NAN_METHOD(LayerFields::remove)
  *
  * @throws Error
  * @method add
- * @param {gdal.FieldDefn|Array} def A field definition, or array of field definitions.
+ * @param {gdal.FieldDefn|Array} def(s) A field definition, or array of field definitions.
  * @param {Boolean} [approx=true]
  */
 NAN_METHOD(LayerFields::add)

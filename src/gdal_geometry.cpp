@@ -742,7 +742,7 @@ NAN_METHOD(Geometry::centroid)
  * Computes the bounding box (envelope).
  *
  * @method getEnvelope
- * @return Object
+ * @return {gdal.Envelope} Bounding envelope
  */
 NAN_METHOD(Geometry::getEnvelope)
 {
@@ -770,7 +770,7 @@ NAN_METHOD(Geometry::getEnvelope)
  * Computes the 3D bounding box (envelope).
  *
  * @method getEnvelope3D
- * @return Object
+ * @return {gdal.Envelope3D} Bounding envelope
  */
 NAN_METHOD(Geometry::getEnvelope3D)
 {

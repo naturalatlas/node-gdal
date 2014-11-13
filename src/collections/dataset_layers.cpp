@@ -27,7 +27,7 @@ void DatasetLayers::Initialize(Handle<Object> target)
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
 
 	target->Set(NanNew("DatasetLayers"), lcons->GetFunction());
-	
+
 	NanAssignPersistent(constructor, lcons);
 }
 
@@ -35,9 +35,17 @@ DatasetLayers::DatasetLayers()
 	: ObjectWrap()
 {}
 
-DatasetLayers::~DatasetLayers() 
+DatasetLayers::~DatasetLayers()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.Dataset"}}Dataset{{/crossLink}}'s vector layers.
+ *
+ * ```
+ * var layers = dataset.layers;```
+ *
+ * @class gdal.DatasetLayers
+ */
 NAN_METHOD(DatasetLayers::New)
 {
 	NanScope();
@@ -77,13 +85,20 @@ NAN_METHOD(DatasetLayers::toString)
 	NanReturnValue(NanNew("DatasetLayers"));
 }
 
+/**
+ * Returns the layer with the given name or identifier.
+ *
+ * @method get
+ * @param {String|Integer} key Layer name or ID.
+ * @return {gdal.Layer}
+ */
 NAN_METHOD(DatasetLayers::get)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	
+
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
@@ -104,7 +119,7 @@ NAN_METHOD(DatasetLayers::get)
 	}
 
 	OGRLayer *lyr;
-	
+
 	if(args[0]->IsString()) {
 		NanUtf8String layer_name = NanUtf8String(args[0]);
 		lyr = raw->GetLayerByName(*layer_name);
@@ -118,6 +133,16 @@ NAN_METHOD(DatasetLayers::get)
 	NanReturnValue(Layer::New(lyr, raw));
 }
 
+/**
+ * Adds a new layer.
+ *
+ * @method create
+ * @throws Error
+ * @param {String} name Layer name
+ * @param {gdal.SpatialReference} srs Layer projection
+ * @param {Integer} geomType Geometry type ({{#crossLink "Constants (WKB)"}}see WKB constants{{/crossLink}})
+ * @return {gdal.Layer}
+ */
 NAN_METHOD(DatasetLayers::create)
 {
 	NanScope();
@@ -148,7 +173,7 @@ NAN_METHOD(DatasetLayers::create)
 	NODE_ARG_STR(0, "layer name", layer_name);
 	NODE_ARG_WRAPPED_OPT(1, "spatial reference", SpatialReference, spatial_ref);
 	NODE_ARG_ENUM_OPT(2, "geometry type", OGRwkbGeometryType, geom_type);
-	if(args.Length() > 3 && options.parse(args[3])){	
+	if(args.Length() > 3 && options.parse(args[3])){
 		NanReturnUndefined(); //error parsing string list
 	}
 
@@ -168,6 +193,12 @@ NAN_METHOD(DatasetLayers::create)
 	}
 }
 
+/**
+ * Returns the number of layers.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(DatasetLayers::count)
 {
 	NanScope();
@@ -188,10 +219,19 @@ NAN_METHOD(DatasetLayers::count)
 		NanThrowError("Dataset object already destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	NanReturnValue(NanNew<Integer>(raw->GetLayerCount()));
 }
 
+/**
+ * Copies a layer.
+ *
+ * @method copy
+ * @param {String} src_lyr_name
+ * @param {String} dst_lyr_name
+ * @param {Array} [options=null]
+ * @return {gdal.Layer}
+ */
 NAN_METHOD(DatasetLayers::copy)
 {
 	NanScope();
@@ -236,14 +276,20 @@ NAN_METHOD(DatasetLayers::copy)
 	}
 }
 
-
+/**
+ * Removes a layer.
+ *
+ * @method remove
+ * @throws Error
+ * @param {Integer} index
+ */
 NAN_METHOD(DatasetLayers::remove)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	
+
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
@@ -259,7 +305,7 @@ NAN_METHOD(DatasetLayers::remove)
 		NanReturnUndefined();
 	}
 
-	
+
 	int i;
 	NODE_ARG_INT(0, "layer index", i);
 	OGRErr err = raw->DeleteLayer(i);
@@ -271,6 +317,13 @@ NAN_METHOD(DatasetLayers::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Parent dataset
+ *
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
 NAN_GETTER(DatasetLayers::dsGetter)
 {
 	NanScope();

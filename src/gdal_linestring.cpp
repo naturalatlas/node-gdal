@@ -242,7 +242,7 @@ NAN_METHOD(LineString::addPoint)
  * Points that make up the line string.
  *
  * @attribute points
- * @type {gdal.PointCollection}
+ * @type {gdal.LineStringPoints}
  */
 NAN_GETTER(LineString::pointsGetter)
 {

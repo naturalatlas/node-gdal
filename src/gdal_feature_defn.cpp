@@ -133,6 +133,12 @@ NAN_METHOD(FeatureDefn::toString)
 	NanReturnValue(NanNew("FeatureDefn"));
 }
 
+/**
+ * Clones the feature definition.
+ *
+ * @method clone
+ * @return {gdal.FeatureDefn}
+ */
 NAN_METHOD(FeatureDefn::clone)
 {
 	NanScope();
@@ -140,6 +146,11 @@ NAN_METHOD(FeatureDefn::clone)
 	NanReturnValue(FeatureDefn::New(def->this_->Clone()));
 }
 
+/**
+ * @readOnly
+ * @attribute name
+ * @type {String}
+ */
 NAN_GETTER(FeatureDefn::nameGetter)
 {
 	NanScope();
@@ -147,6 +158,12 @@ NAN_GETTER(FeatureDefn::nameGetter)
 	NanReturnValue(SafeString::New(def->this_->GetName()));
 }
 
+/**
+ * WKB geometry type ({{#crossLink "Constants (WKB)"}}see table{{/crossLink}})
+ *
+ * @attribute geomType
+ * @type {String}
+ */
 NAN_GETTER(FeatureDefn::geomTypeGetter)
 {
 	NanScope();
@@ -154,6 +171,10 @@ NAN_GETTER(FeatureDefn::geomTypeGetter)
 	NanReturnValue(NanNew<Integer>(def->this_->GetGeomType()));
 }
 
+/**
+ * @attribute geomIgnored
+ * @type {Boolean}
+ */
 NAN_GETTER(FeatureDefn::geomIgnoredGetter)
 {
 	NanScope();
@@ -161,6 +182,10 @@ NAN_GETTER(FeatureDefn::geomIgnoredGetter)
 	NanReturnValue(NanNew<Boolean>(def->this_->IsGeometryIgnored()));
 }
 
+/**
+ * @attribute styleIgnored
+ * @type {Boolean}
+ */
 NAN_GETTER(FeatureDefn::styleIgnoredGetter)
 {
 	NanScope();
@@ -168,6 +193,11 @@ NAN_GETTER(FeatureDefn::styleIgnoredGetter)
 	NanReturnValue(NanNew<Boolean>(def->this_->IsStyleIgnored()));
 }
 
+/**
+ * @readOnly
+ * @attribute fields
+ * @type {gdal.FeatureDefnFields}
+ */
 NAN_GETTER(FeatureDefn::fieldsGetter)
 {
 	NanScope();
