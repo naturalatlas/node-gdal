@@ -1,0 +1,49 @@
+.yuidoc-class-description {
+	background: none;
+	border: 0 none;
+	box-shadow: none;
+	padding: 0;
+	font-size: 16px;
+	line-height: 26px;
+	margin: 20px 0 40px 0;
+}
+h1 {
+	font-weight: 300 !important;
+}
+h2 {
+	font-size: 20px !important;
+	font-weight: normal !important;
+	color: #B2B2B2 !important;
+}
+h3 {
+	font-size: 14px !important;
+	color: #4A4A4A !important;
+}
+body a {
+	color: #78AFCA;
+}
+
+#sidebar .tab-pane li a:hover, #sidebar .tab-pane li a:focus {
+	background: #A2C7DA !important;
+}
+
+.navbar-fixed-top .navbar-inner, .navbar-static-top .navbar-inner {
+	background: #fff !important;
+	box-shadow: 0 1px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+code {
+	color: #806857 !important;
+}
+
+ul.inline > li, ol.inline > li {
+	padding: 0 !important;
+}
+
+.method-signature {
+	line-height: 23px !important;
+}
+.method-signature .name code {
+	font-weight: bold !important;
+	color: #F74E04 !important;
+}
