@@ -59,6 +59,11 @@ LinearRing::~LinearRing()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.LinearRing
+ * @extends gdal.LineString
+ */
 NAN_METHOD(LinearRing::New)
 {
 	NanScope();
@@ -82,8 +87,8 @@ NAN_METHOD(LinearRing::New)
 		f = new LinearRing(new OGRLinearRing());
 	}
 
-	Handle<Value> points = LineStringPoints::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("points_"), points); 
+	Handle<Value> points = LineStringPoints::New(args.This());
+	args.This()->SetHiddenValue(NanNew("points_"), points);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());

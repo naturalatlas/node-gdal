@@ -60,6 +60,11 @@ Point::~Point()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.Point
+ * @extends gdal.Geometry
+ */
 NAN_METHOD(Point::New)
 {
 	NanScope();

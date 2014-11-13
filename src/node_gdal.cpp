@@ -59,14 +59,6 @@
 #include <sstream>
 #include <vector>
 
-/**
- * Node.js binding to libgdal.
- * https://github.com/naturalatlas/node-gdal
- *
- * @static
- * @class gdal
- */
-
 namespace node_gdal {
 
 	using namespace node;
@@ -878,6 +870,10 @@ namespace node_gdal {
 			target->Set(NanNew("GRA_Mode"), NanNew("Mode"));
 
 			/**
+			 * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
+			 * Node.js provides a feature-complete way of reading, writing, and manipulating
+			 * geospatial data (raster and vector).
+			 *
 			 * @class gdal
 			 */
 

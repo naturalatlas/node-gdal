@@ -51,7 +51,6 @@ LineString::LineString()
 {
 }
 
-
 LineString::~LineString()
 {
 	if(this_) {
@@ -65,6 +64,11 @@ LineString::~LineString()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.LineString
+ * @extends gdal.Geometry
+ */
 NAN_METHOD(LineString::New)
 {
 	NanScope();
@@ -88,8 +92,8 @@ NAN_METHOD(LineString::New)
 		f = new LineString(new OGRLineString());
 	}
 
-	Handle<Value> points = LineStringPoints::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("points_"), points); 
+	Handle<Value> points = LineStringPoints::New(args.This());
+	args.This()->SetHiddenValue(NanNew("points_"), points);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());

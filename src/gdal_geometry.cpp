@@ -118,6 +118,10 @@ Geometry::~Geometry()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.Geometry
+ */
 NAN_METHOD(Geometry::New)
 {
 	NanScope();
@@ -232,6 +236,12 @@ NODE_WRAPPED_METHOD_WITH_1_DOUBLE_PARAM(Geometry, segmentize, segmentize, "segme
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transform, transform, CoordinateTransformation, "transform");
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transformTo, transformTo, SpatialReference, "spatial reference");
 
+/**
+ * Clones the instance.
+ *
+ * @method clone
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::clone)
 {
 	NanScope();
@@ -239,6 +249,12 @@ NAN_METHOD(Geometry::clone)
 	NanReturnValue(Geometry::New(geom->this_->clone()));
 }
 
+/**
+ * Compute convex hull.
+ *
+ * @method convexHull
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::convexHull)
 {
 	NanScope();
@@ -246,6 +262,12 @@ NAN_METHOD(Geometry::convexHull)
 	NanReturnValue(Geometry::New(geom->this_->ConvexHull()));
 }
 
+/**
+ * Compute boundary.
+ *
+ * @method boundary
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::boundary)
 {
 	NanScope();
@@ -253,54 +275,89 @@ NAN_METHOD(Geometry::boundary)
 	NanReturnValue(Geometry::New(geom->this_->Boundary()));
 }
 
+/**
+ * Compute intersection with another geometry.
+ *
+ * @method intersection
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::intersection)
 {
 	NanScope();
 
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	Geometry *x = NULL; 
+	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, "geometry to use for intersection", Geometry, x);
 
 	NanReturnValue(Geometry::New(geom->this_->Intersection(x->this_)));
 }
 
+/**
+ * Compute the union of this geometry with another.
+ *
+ * @method unionGeometry
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::unionGeometry)
 {
 	NanScope();
-	
+
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	Geometry *x = NULL; 
+	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, "geometry to use for union", Geometry, x);
 
 	NanReturnValue(Geometry::New(geom->this_->Union(x->this_)));
 }
 
+/**
+ * Compute the difference of this geometry with another.
+ *
+ * @method difference
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::difference)
 {
 	NanScope();
-	
+
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	Geometry *x = NULL; 
+	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, "geometry to use for difference", Geometry, x);
 
 	NanReturnValue(Geometry::New(geom->this_->Difference(x->this_)));
 }
 
+/**
+ * Computes the symmetric difference of this geometry and the second geometry.
+ *
+ * @method symDifference
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::symDifference)
 {
 	NanScope();
-	
+
 	Geometry *geom = ObjectWrap::Unwrap<Geometry>(args.This());
-	Geometry *x = NULL; 
+	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, "geometry to use for symDifference", Geometry, x);
 
 	NanReturnValue(Geometry::New(geom->this_->SymDifference(x->this_)));
 }
 
+/**
+ * Reduces the geometry complexity.
+ *
+ * @method simplify
+ * @param {Number} tolerance
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::simplify)
 {
 	NanScope();
@@ -314,6 +371,13 @@ NAN_METHOD(Geometry::simplify)
 	NanReturnValue(Geometry::New(geom->this_->Simplify(tolerance)));
 }
 
+/**
+ * Reduces the geometry complexity while preserving the topology.
+ *
+ * @method simplifyPreserveTopology
+ * @param {Number} tolerance
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::simplifyPreserveTopology)
 {
 	NanScope();
@@ -327,7 +391,14 @@ NAN_METHOD(Geometry::simplifyPreserveTopology)
 	NanReturnValue(Geometry::New(geom->this_->SimplifyPreserveTopology(tolerance)));
 }
 
-
+/**
+ * Buffers the geometry by the given distance.
+ *
+ * @method buffer
+ * @param {Number} distance
+ * @param {integer} segments
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::buffer)
 {
 	NanScope();
@@ -343,7 +414,12 @@ NAN_METHOD(Geometry::buffer)
 	NanReturnValue(Geometry::New(geom->this_->Buffer(distance, number_of_segments)));
 }
 
-
+/**
+ * Convert a geometry into well known text format.
+ *
+ * @method exportToWKT
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::exportToWKT)
 {
 	NanScope();
@@ -364,6 +440,12 @@ NAN_METHOD(Geometry::exportToWKT)
 	NanReturnUndefined();
 }
 
+/**
+ * Convert a geometry into well known binary format.
+ *
+ * @method exportToWKT
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::exportToWKB)
 {
 	NanScope();
@@ -420,6 +502,12 @@ NAN_METHOD(Geometry::exportToWKB)
 
 }
 
+/**
+ * Convert a geometry into KML format.
+ *
+ * @method exportToKML
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::exportToKML)
 {
 	NanScope();
@@ -436,6 +524,12 @@ NAN_METHOD(Geometry::exportToKML)
 	NanReturnUndefined();
 }
 
+/**
+ * Convert a geometry into GML format.
+ *
+ * @method exportToGML
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::exportToGML)
 {
 	NanScope();
@@ -452,6 +546,12 @@ NAN_METHOD(Geometry::exportToGML)
 	NanReturnUndefined();
 }
 
+/**
+ * Convert a geometry into JSON format.
+ *
+ * @method exportToJSON
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::exportToJSON)
 {
 	NanScope();
@@ -468,11 +568,17 @@ NAN_METHOD(Geometry::exportToJSON)
 	NanReturnUndefined();
 }
 
-// The Centroid method wants the caller to create the point to fill in. Instead
-// of requiring the caller to create the point geometry to fill in, we new up an
-// OGRPoint and put the result into it and return that.
+/**
+ * Compute the centroid of the geometry.
+ *
+ * @method centroid
+ * @returns gdal.Point
+ */
 NAN_METHOD(Geometry::centroid)
 {
+	// The Centroid method wants the caller to create the point to fill in. Instead
+	// of requiring the caller to create the point geometry to fill in, we new up an
+	// OGRPoint and put the result into it and return that.
 	NanScope();
 	OGRPoint *point = new OGRPoint();
 
@@ -481,6 +587,12 @@ NAN_METHOD(Geometry::centroid)
 	NanReturnValue(Point::New(point));
 }
 
+/**
+ * Computes the bounding box (envelope).
+ *
+ * @method getEnvelope
+ * @returns Object
+ */
 NAN_METHOD(Geometry::getEnvelope)
 {
 	//returns object containing boundaries until complete OGREnvelope binding is built
@@ -503,6 +615,12 @@ NAN_METHOD(Geometry::getEnvelope)
 	NanReturnValue(obj);
 }
 
+/**
+ * Computes the 3D bounding box (envelope).
+ *
+ * @method getEnvelope
+ * @returns Object
+ */
 NAN_METHOD(Geometry::getEnvelope3D)
 {
 	//returns object containing boundaries until complete OGREnvelope binding is built
@@ -529,6 +647,15 @@ NAN_METHOD(Geometry::getEnvelope3D)
 
 // --- JS static methods (OGRGeometryFactory) ---
 
+/**
+ * Creates a Geometry from a WKT string.
+ *
+ * @static
+ * @method createFromWkt
+ * @param {String} wkt
+ * @param {gdal.SpatialReference} [src]
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::createFromWkt)
 {
 	NanScope();
@@ -555,6 +682,15 @@ NAN_METHOD(Geometry::createFromWkt)
 	NanReturnValue(Geometry::New(geom, true));
 }
 
+/**
+ * Creates a Geometry from a WKB string.
+ *
+ * @static
+ * @method createFromWkb
+ * @param {Object} wkb
+ * @param {gdal.SpatialReference} [src]
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::createFromWkb)
 {
 	NanScope();
@@ -591,6 +727,14 @@ NAN_METHOD(Geometry::createFromWkb)
 	NanReturnValue(Geometry::New(geom, true));
 }
 
+/**
+ * Creates an empty Geometry from a WKB type.
+ *
+ * @static
+ * @method create
+ * @param {Object} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @returns gdal.Geometry
+ */
 NAN_METHOD(Geometry::create)
 {
 	NanScope();
@@ -601,6 +745,10 @@ NAN_METHOD(Geometry::create)
 	NanReturnValue(Geometry::New(OGRGeometryFactory::createGeometry(type), true));
 }
 
+/**
+ * @attribute srs
+ * @type gdal.SpatialReference
+ */
 NAN_GETTER(Geometry::srsGetter)
 {
 	NanScope();
@@ -625,6 +773,10 @@ NAN_SETTER(Geometry::srsSetter)
 	geom->this_->assignSpatialReference(srs);
 }
 
+/**
+ * @attribute name
+ * @type String
+ */
 NAN_GETTER(Geometry::nameGetter)
 {
 	NanScope();
@@ -632,6 +784,10 @@ NAN_GETTER(Geometry::nameGetter)
 	NanReturnValue(SafeString::New(geom->this_->getGeometryName()));
 }
 
+/**
+ * @attribute type
+ * @type Function
+ */
 NAN_GETTER(Geometry::typeGetter)
 {
 	NanScope();
@@ -639,6 +795,10 @@ NAN_GETTER(Geometry::typeGetter)
 	NanReturnValue(NanNew<Integer>(getGeometryType_fixed(geom->this_)));
 }
 
+/**
+ * @attribute wkbSize
+ * @type Integer
+ */
 NAN_GETTER(Geometry::wkbSizeGetter)
 {
 	NanScope();
@@ -662,7 +822,7 @@ NAN_GETTER(Geometry::coordinateDimensionGetter)
 
 Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
 	NanEscapableScope();
-	
+
 	type = wkbFlatten(type);
 	switch (type) {
 		case wkbPoint:              return NanEscapeScope(NanNew(Point::constructor)->GetFunction());
@@ -677,6 +837,15 @@ Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
 	}
 }
 
+/**
+ * Returns the Geometry subclass that matches the
+ * given WKB geometry type.
+ *
+ * @static
+ * @method getConstructor
+ * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @returns Function
+ */
 NAN_METHOD(Geometry::getConstructor){
 	NanScope();
 	OGRwkbGeometryType type;
@@ -684,6 +853,15 @@ NAN_METHOD(Geometry::getConstructor){
 	NanReturnValue(getConstructor(type));
 }
 
+/**
+ * Returns the Geometry subclass name that matches the
+ * given WKB geometry type.
+ *
+ * @static
+ * @method getName
+ * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @returns String
+ */
 NAN_METHOD(Geometry::getName){
 	NanScope();
 	OGRwkbGeometryType type;

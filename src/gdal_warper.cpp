@@ -21,17 +21,17 @@ void Warper::Initialize(Handle<Object> target)
  * @param {gdal.Dataset} dst
  * @param {gdal.SpatialReference} s_srs
  * @param {gdal.SpatialReference} t_srs
- * @param {String} [resampling] Resampling algorithm ({{#crossLink "Constants (GRA)"}}available options{{/crossLink}})
- * @param {gdal.Geometry} [cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
- * @param {int[]} [srcBands]
- * @param {int[]} [dstBands]
- * @param {int} [srcAlphaBand]
- * @param {int} [dstAlphaBand]
- * @param {Number} [srcNodata]
- * @param {Number} [dstNodata]
- * @param {int} [memoryLimit]
- * @param {Number} [maxError]
- * @param {object} [options] Additional warp options
+ * @param {object} [options] Warp options
+ * @param {String} [options.resampling] Resampling algorithm ({{#crossLink "Constants (GRA)"}}available options{{/crossLink}})
+ * @param {gdal.Geometry} [options.cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
+ * @param {int[]} [options.srcBands]
+ * @param {int[]} [options.dstBands]
+ * @param {int} [options.srcAlphaBand]
+ * @param {int} [options.dstAlphaBand]
+ * @param {Number} [options.srcNodata]
+ * @param {Number} [options.dstNodata]
+ * @param {int} [options.memoryLimit]
+ * @param {Number} [options.maxError]
  */
 NAN_METHOD(Warper::reprojectImage)
 {

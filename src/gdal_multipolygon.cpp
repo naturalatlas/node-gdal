@@ -47,7 +47,6 @@ MultiPolygon::MultiPolygon()
 {
 }
 
-
 MultiPolygon::~MultiPolygon()
 {
 	if(this_) {
@@ -61,6 +60,11 @@ MultiPolygon::~MultiPolygon()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.MultiPolygon
+ * @extends gdal.GeometryCollection
+ */
 NAN_METHOD(MultiPolygon::New)
 {
 	NanScope();
@@ -84,8 +88,8 @@ NAN_METHOD(MultiPolygon::New)
 		f = new MultiPolygon(new OGRMultiPolygon());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());

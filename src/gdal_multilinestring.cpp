@@ -47,7 +47,6 @@ MultiLineString::MultiLineString()
 {
 }
 
-
 MultiLineString::~MultiLineString()
 {
 	if(this_) {
@@ -61,6 +60,11 @@ MultiLineString::~MultiLineString()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.MultiLineString
+ * @extends gdal.GeometryCollection
+ */
 NAN_METHOD(MultiLineString::New)
 {
 	NanScope();
@@ -84,8 +88,8 @@ NAN_METHOD(MultiLineString::New)
 		f = new MultiLineString(new OGRMultiLineString());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());

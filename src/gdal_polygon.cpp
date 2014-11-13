@@ -60,6 +60,11 @@ Polygon::~Polygon()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.Polygon
+ * @extends gdal.Geometry
+ */
 NAN_METHOD(Polygon::New)
 {
 	NanScope();
@@ -83,8 +88,8 @@ NAN_METHOD(Polygon::New)
 		f = new Polygon(new OGRPolygon());
 	}
 
-	Handle<Value> rings = PolygonRings::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("rings_"), rings); 
+	Handle<Value> rings = PolygonRings::New(args.This());
+	args.This()->SetHiddenValue(NanNew("rings_"), rings);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
