@@ -13,12 +13,6 @@ $(function() {
     //  Functions
     // ************************************************************************* //
 
-    function setUpActiveTab() {
-        if(localStorage.getItem('main-nav')){
-            $('a[href="'+ localStorage['main-nav'] + '"]').tab('show');
-        }
-    }
-
     function setUpOptionsCheckboxes() {
         if(localStorage.getItem('options')){
             var optionsArr = JSON.parse(localStorage.options),
@@ -35,21 +29,21 @@ $(function() {
     function setUpWidgets() {
         var sideSource = [], navbarSource = [], sidebarSearch, navbarSearch;
 
-        $('#sidebar .tab-pane.active li a').each(function(index, elem) {
+        $('#sidebar li a').each(function(index, elem) {
             sideSource.push($(elem).text());
         });
         sidebarSearch = $('#sidebar input[type="search"]');
         sidebarSearch.typeahead({
             source: sideSource,
             updater : function(item) {
-                $('#sidebar .tab-pane.active a:contains(' + item + ')')[0].click();
+                $('#sidebar a:contains(' + item + ')')[0].click();
                 return item;
             }
         });
 
-        $('#sidebar .tab-pane li a').each(function(index, elem) {
+        $('#sidebar li a').each(function(index, elem) {
             var $el = $(elem),
-                type = $el.parents('.tab-pane').is('#classes') ? 'classes/' : 'modules/';
+                type = 'classes/';
             navbarSource.push(type + $el.text());
         });
         navbarSearch = $('.navbar input');
@@ -57,7 +51,7 @@ $(function() {
             source : navbarSource,
             updater : function(item) {
                 var type = item.split('/')[0], name = item.split('/')[1],
-                    $parent = $('#sidebar .tab-pane#' + type);
+                    $parent = $('#sidebar #' + type);
                 $parent.find('a:contains(' + name + ')')[0].click();
                 return item;
             }
@@ -244,7 +238,6 @@ $(function() {
     //  Immediate function calls
     // ************************************************************************* //
 
-    setUpActiveTab();
     setUpOptionsCheckboxes();
     setUpWidgets();
     setUpHashChange();

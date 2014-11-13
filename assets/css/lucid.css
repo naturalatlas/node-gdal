@@ -20,7 +20,7 @@ h3 {
 	color: #4A4A4A !important;
 }
 body a {
-	color: #78AFCA;
+	color: #4CA0E7;
 }
 
 #sidebar .tab-pane li a:hover, #sidebar .tab-pane li a:focus {
@@ -45,9 +45,78 @@ ul.inline > li, ol.inline > li {
 }
 .method-signature .name code {
 	font-weight: bold !important;
-	color: #F74E04 !important;
+	color: #4CA0E7 !important;
 }
 
-.page-section {
-	margin: 30px 0;
+
+body .apidocs .item + .item {
+	border-top: 0 none;
+}
+body .apidocs .item, body .apidocs .constructor .item {
+	border: 1px solid #efefef;
+	padding: 15px 20px;
+	margin: 0;
+}
+body .apidocs .item:last-child, body .apidocs .constructor .item:last-child {
+	border-radius: 0 0 3px 3px;
+}
+body .apidocs .item:first-child, body .apidocs .constructor .item:first-child {
+	border-radius: 3px 3px 0 0;
+}
+body .apidocs .item:first-child:last-child, body .apidocs .constructor .item:first-child:last-child {
+	border-radius: 3px;
+}
+
+
+.well-small {
+	min-height: 0 !important;
+}
+
+#sidebar {
+	margin-top: 65px;
+}
+
+#api-tabview-filter {
+	margin: 0 0 10px 0 !important;
+}
+
+#api-classes, #api-tabview-filter {
+	padding: 0 !important;
+	border: 0 none !important;
+}
+
+.page-section h2 {
+	margin: 20px 0;
+}
+.meta, .meta a, .meta code {
+	color: #bbb !important;
+}
+
+.nav-list > li > a, .nav-list .nav-header {
+	line-height: 20px;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: none !important;
+}
+.method-signature .optional:after {
+	content: ' (optional)';
+	color: #BAB7B1;
+}
+
+.paren {
+	font-family: monospace;
+}
+.apidocs .args {
+	margin: 0 !important;
+}
+
+.apidocs .flag.optional {
+	background: #DADADA;
+}
+.apidocs .flag.final {
+	background: #B6B6B6;
+}
+
+.page-header {
+	border-bottom: 0 none !important;
 }
