@@ -144,8 +144,8 @@ NAN_METHOD(PolygonRings::get)
  * // many at once:
  * polygon.rings.add([ring1, ...]);```
  *
- * @method get
- * @param {gdal.LinearRing} ring
+ * @method add
+ * @param {gdal.LinearRing} ring(s)
  */
 NAN_METHOD(PolygonRings::add)
 {
