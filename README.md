@@ -19,7 +19,7 @@ $ npm install gdal --build-from-source --shared_gdal
 
 ### Links
 
-- [**Documentation**](docs/)
+- [**Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html)
 - [**Examples**](examples/)
 
 ### Sample Usage
