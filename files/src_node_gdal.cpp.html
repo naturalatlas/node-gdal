@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -74,6 +76,10 @@
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
             
@@ -90,6 +96,8 @@
                 <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
             
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
             
         </ul>
     </div>
@@ -131,6 +139,14 @@
 
 <div class="file">
     <pre class="prettyprint linenums">
+/**
+ * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
+ * Node.js provides a feature-complete way of reading, writing, and manipulating
+ * geospatial data (raster and vector).
+ *
+ * @class gdal
+ */
+
 // node
 #include &lt;node.h&gt;
 #include &lt;node_buffer.h&gt;
@@ -509,7 +525,7 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
 			/**
-			 * Pixel data types. ([reference](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))
+			 * Pixel data types.
 			 *
 			 * @class Constants (GDT)
 			 */
@@ -954,7 +970,7 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;OFTDateTime&quot;), NanNew(getFieldTypeName(OFTDateTime)));
 
 			/**
-			 * Resampling options that can be used with the gdal.reprojectImage() method. ([reference](http://www.gdal.org/gdalwarper_8h.html#a4775b029869df1f9270ad554c0633843))
+			 * Resampling options that can be used with the gdal.reprojectImage() method.
 			 *
 			 * @class Constants (GRA)
 			 */
@@ -1003,15 +1019,8 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;GRA_Mode&quot;), NanNew(&quot;Mode&quot;));
 
 			/**
-			 * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
-			 * Node.js provides a feature-complete way of reading, writing, and manipulating
-			 * geospatial data (raster and vector).
-			 *
-			 * @class gdal
-			 */
-
-			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.version
 			 * @type {String}
 			 */
@@ -1019,12 +1028,15 @@ namespace node_gdal {
 
 			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.CreateDataSourceOption
 			 * @type {mixed}
 			 */
 			target-&gt;Set(NanNew(&quot;CreateDataSourceOption&quot;), NanNew(ODrCCreateDataSource));
+
 			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.DeleteDataSourceOption
 			 * @type {mixed}
 			 */
@@ -1038,11 +1050,16 @@ namespace node_gdal {
 
 			/**
 			 * Disables all output.
+			 *
+			 * @for gdal
 			 * @method quiet
 			 */
 			NODE_SET_METHOD(target, &quot;quiet&quot;, QuietOutput);
+
 			/**
 			 * Displays extra debugging information from GDAL.
+			 *
+			 * @for gdal
 			 * @method verbose
 			 */
 			NODE_SET_METHOD(target, &quot;verbose&quot;, VerboseOutput);

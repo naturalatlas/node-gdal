@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>gdal.Driver - node-gdal</title>
+    <title>gdal.Dataset - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -134,7 +134,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>gdal.Driver</h1>
+    <h1>gdal.Dataset</h1>
 </div>
 
     
@@ -149,11 +149,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>Format specific driver.</p>
-<p>An instance of this class is created for each supported format, and
-manages information about the format.</p>
-<p>This roughly corresponds to a file format, though some drivers may
-be gateways to many formats through a secondary multi-library.</p>
+    <p>A set of associated raster bands, usually from one file.</p>
 
 </div>
 
@@ -166,9 +162,9 @@ be gateways to many formats through a secondary multi-library.</p>
         <div class="item-list">
        		
         	
-            <div id="method_copyFiles" class="method item">
+            <div id="method_buildOverviews" class="method item">
     <div class="method-signature">
-    <span class="name"><code>copyFiles</code></span>
+    <span class="name"><code>buildOverviews</code></span>
 
     
         <div class="args">
@@ -176,13 +172,19 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="arg">
                     
-                        <code>name_old</code>
+                        <code>resampling</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>name_new</code>
+                        <code>overviews</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">bands</code>
                     
                 </li>
             
@@ -213,7 +215,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l378"><code>src&#x2F;gdal_driver.cpp:378</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l629"><code>src&#x2F;gdal_dataset.cpp:629</code></a>
         
         </p>
 
@@ -224,7 +226,7 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        <p>Copy the files of a dataset.</p>
+        <p>Builds dataset overviews.</p>
 
     </div>
 
@@ -236,14 +238,14 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">name_old</code>
+                        <code class="param-name">resampling</code>
                         <span class="type">String</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>New name for the dataset.</p>
+                        <p><code>"NEAREST"</code>, <code>"GAUSS"</code>, <code>"CUBIC"</code>, <code>"AVERAGE"</code>, <code>"MODE"</code>, <code>"AVERAGE_MAGPHASE"</code> or <code>"NONE"</code></p>
 
                     </div>
 
@@ -252,15 +254,30 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">name_new</code>
-                        <span class="type">String</span>
+                        <code class="param-name">overviews</code>
+                        <span class="type">Int</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>Old name of the dataset.</p>
+                         
+                    </div>
 
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[bands]</code>
+                        <span class="type">Int</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
                     </div>
 
                     
@@ -278,9 +295,65 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_create" class="method item">
+            <div id="method_close" class="method item">
     <div class="method-signature">
-    <span class="name"><code>create</code></span>
+    <span class="name"><code>close</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l338"><code>src&#x2F;gdal_dataset.cpp:338</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Closes the dataset to further operations.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_executeSQL" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>executeSQL</code></span>
 
     
         <div class="args">
@@ -288,37 +361,19 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="arg">
                     
-                        <code>filename</code>
+                        <code>statement</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">x_size</code>
+                        <code class="optional">spatial_filter</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">y_size</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">band_count</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">data_type</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">control_options</code>
+                        <code class="optional">dialect</code>
                     
                 </li>
             
@@ -327,7 +382,7 @@ be gateways to many formats through a secondary multi-library.</p>
     
     
         <span class="returns-inline">
-            <span class="type"></span>
+            <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
         </span>
     
     </div>
@@ -353,7 +408,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l229"><code>src&#x2F;gdal_driver.cpp:229</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l400"><code>src&#x2F;gdal_dataset.cpp:400</code></a>
         
         </p>
 
@@ -364,7 +419,7 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        <p>Create a new dataset with this driver.</p>
+        <p>Execute an SQL statement against the data store.</p>
 
     </div>
 
@@ -376,7 +431,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">filename</code>
+                        <code class="param-name">statement</code>
                         <span class="type">String</span>
                     
 
@@ -391,8 +446,8 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[x_size]</code>
-                        <span class="type">Integer</span>
+                        <code class="param-name optional">[spatial_filter]</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
@@ -407,55 +462,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[y_size]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[band_count]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[data_type]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[control_options]</code>
+                        <code class="param-name optional">[dialect]</code>
                         <span class="type">String</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
@@ -480,8 +487,8 @@ be gateways to many formats through a secondary multi-library.</p>
             <div class="returns-description">
                 
                     
-                    <p>gdal.Dataset</p>
-
+                        <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>:
+                    
                 
             </div>
         </div>
@@ -493,44 +500,72 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_createCopy" class="method item">
+            <div id="method_flush" class="method item">
     <div class="method-signature">
-    <span class="name"><code>createCopy</code></span>
+    <span class="name"><code>flush</code></span>
 
     
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
             
-                <li class="arg">
-                    
-                        <code>filename</code>
-                    
-                </li>
+                
+                <p>
+                
+                Defined in
+                
             
-                <li class="arg">
-                    
-                        <code>src</code>
-                    
-                </li>
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l364"><code>src&#x2F;gdal_dataset.cpp:364</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Flushes all changes to disk.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
             
-                <li class="arg">
-                    
-                        <code class="optional">strict=false</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">options=null</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
+        
+        	
+            <div id="method_getFileList" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getFileList</code></span>
+
+    
+        <span class="paren">()</span>
     
     
         <span class="returns-inline">
-            <span class="type"></span>
+            <span class="type">String</span>
         </span>
     
     </div>
@@ -556,7 +591,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l298"><code>src&#x2F;gdal_driver.cpp:298</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l450"><code>src&#x2F;gdal_dataset.cpp:450</code></a>
         
         </p>
 
@@ -567,81 +602,13 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        <p>Create a copy of a dataset.</p>
+        <p>Fetch files forming dataset.</p>
+<p>Returns a list of files believed to be part of this dataset. If it returns an
+empty list of files it means there is believed to be no local file system files
+associated with the dataset (for instance a virtual dataset).</p>
 
     </div>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">filename</code>
-                        <span class="type">String</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">src</code>
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[strict=false]</code>
-                        <span class="type">Boolean</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[options=null]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>An array of creation options.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
     
 
     
@@ -651,8 +618,8 @@ be gateways to many formats through a secondary multi-library.</p>
             <div class="returns-description">
                 
                     
-                    <p>gdal.Dataset</p>
-
+                        <span class="type">String</span>:
+                    
                 
             </div>
         </div>
@@ -664,23 +631,17 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_deleteDataset" class="method item">
+            <div id="method_getGCPProjection" class="method item">
     <div class="method-signature">
-    <span class="name"><code>deleteDataset</code></span>
+    <span class="name"><code>getGCPProjection</code></span>
 
     
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>filename</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
+        <span class="paren">()</span>
     
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
     
     </div>
 
@@ -705,7 +666,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l196"><code>src&#x2F;gdal_driver.cpp:196</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l308"><code>src&#x2F;gdal_dataset.cpp:308</code></a>
         
         </p>
 
@@ -716,34 +677,96 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        
+        <p>Get output projection for GCPs.</p>
+
     </div>
 
     
-        <div class="params">
-            <h4>Parameters:</h4>
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">filename</code>
-                        <span class="type">String</span>
-                    
+    
+        <div class="returns">
+            <h4>Returns:</h4>
 
+            <div class="returns-description">
+                
                     
-
-                    <div class="param-description">
-                         
-                    </div>
-
+                        <span class="type">String</span>:
                     
-                </li>
-            
-            </ul>
+                
+            </div>
         </div>
     
 
+    
+</div>
+
+            
+        
+        	
+            <div id="method_getGCPs" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getGCPs</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l500"><code>src&#x2F;gdal_dataset.cpp:500</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Fetches GCPs.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                
+            </div>
+        </div>
     
 
     
@@ -771,7 +794,7 @@ be gateways to many formats through a secondary multi-library.</p>
     
     
         <span class="returns-inline">
-            <span class="type"></span>
+            <span class="type">Object</span>
         </span>
     
     </div>
@@ -797,7 +820,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l446"><code>src&#x2F;gdal_driver.cpp:446</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l242"><code>src&#x2F;gdal_dataset.cpp:242</code></a>
         
         </p>
 
@@ -808,7 +831,7 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        <p>Returns metadata about the driver.</p>
+        <p>Fetch metadata.</p>
 
     </div>
 
@@ -845,8 +868,8 @@ be gateways to many formats through a secondary multi-library.</p>
             <div class="returns-description">
                 
                     
-                    <p>Object</p>
-
+                        <span class="type">Object</span>:
+                    
                 
             </div>
         </div>
@@ -858,9 +881,9 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_open" class="method item">
+            <div id="method_setGCPs" class="method item">
     <div class="method-signature">
-    <span class="name"><code>open</code></span>
+    <span class="name"><code>setGCPs</code></span>
 
     
         <div class="args">
@@ -868,13 +891,117 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="arg">
                     
-                        <code>path</code>
+                        <code>gcps</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>mode</code>
+                        <code>projection</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l553"><code>src&#x2F;gdal_dataset.cpp:553</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Sets GCPs.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">gcps</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">projection</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_testCapability" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>testCapability</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>capability</code>
                     
                 </li>
             
@@ -883,7 +1010,7 @@ be gateways to many formats through a secondary multi-library.</p>
     
     
         <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+            <span class="type">Boolean</span>
         </span>
     
     </div>
@@ -909,7 +1036,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l480"><code>src&#x2F;gdal_driver.cpp:480</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l276"><code>src&#x2F;gdal_dataset.cpp:276</code></a>
         
         </p>
 
@@ -920,7 +1047,7 @@ be gateways to many formats through a secondary multi-library.</p>
     </div>
 
     <div class="description">
-        <p>Opens a dataset.</p>
+        <p>Determines if the dataset supports the indicated operation.</p>
 
     </div>
 
@@ -932,29 +1059,14 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">path</code>
+                        <code class="param-name">capability</code>
                         <span class="type">String</span>
                     
 
                     
 
                     <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">mode</code>
-                        <span class="type">String</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>The mode to use to open the file: <code>"r"</code> or <code>"r+"</code></p>
+                        <p>(see <a href="../classes/Constants (ODsC).html" class="crosslink">capability list</a>)</p>
 
                     </div>
 
@@ -972,123 +1084,11 @@ be gateways to many formats through a secondary multi-library.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>:
+                        <span class="type">Boolean</span>:
                     
                 
             </div>
         </div>
-    
-
-    
-</div>
-
-            
-        
-        	
-            <div id="method_rename" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>rename</code></span>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>new_name</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>old_name</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l412"><code>src&#x2F;gdal_driver.cpp:412</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Renames the dataset.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">new_name</code>
-                        <span class="type">String</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>New name for the dataset.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">old_name</code>
-                        <span class="type">String</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>Old name of the dataset.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
     
 
     
@@ -1106,6 +1106,59 @@ be gateways to many formats through a secondary multi-library.</p>
 
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
+
+        
+            <div id="attr_bands" class="attr item">
+    <a name="config_bands"></a> 
+    <h3 class="name"><code>bands</code></h3>
+    <span class="type">gdal.DatasetBands</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l990"><code>src&#x2F;gdal_dataset.cpp:990</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
 
         
             <div id="attr_description" class="attr item">
@@ -1140,7 +1193,268 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         
-        <a href="../files/src_gdal_driver.cpp.html#l177"><code>src&#x2F;gdal_driver.cpp:177</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l714"><code>src&#x2F;gdal_dataset.cpp:714</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_driver" class="attr item">
+    <a name="config_driver"></a> 
+    <h3 class="name"><code>driver</code></h3>
+    <span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l872"><code>src&#x2F;gdal_dataset.cpp:872</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_geoTransform" class="attr item">
+    <a name="config_geoTransform"></a> 
+    <h3 class="name"><code>geoTransform</code></h3>
+    <span class="type">Array</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l827"><code>src&#x2F;gdal_dataset.cpp:827</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_layers" class="attr item">
+    <a name="config_layers"></a> 
+    <h3 class="name"><code>layers</code></h3>
+    <span class="type">gdal.DatasetLayers</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l1001"><code>src&#x2F;gdal_dataset.cpp:1001</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_rasterSize" class="attr item">
+    <a name="config_rasterSize"></a> 
+    <h3 class="name"><code>rasterSize</code></h3>
+    <span class="type">Object containing <code>x</code> and <code>y</code> properties.</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l743"><code>src&#x2F;gdal_dataset.cpp:743</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_srs" class="attr item">
+    <a name="config_srs"></a> 
+    <h3 class="name"><code>srs</code></h3>
+    <span class="type">gdal.SpatialReference</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_dataset.cpp.html#l784"><code>src&#x2F;gdal_dataset.cpp:784</code></a>
         
         </p>
 

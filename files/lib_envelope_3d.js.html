@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -74,6 +76,10 @@
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
             
@@ -90,6 +96,8 @@
                 <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
             
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
             
         </ul>
     </div>
@@ -131,10 +139,10 @@
 
 <div class="file">
     <pre class="prettyprint linenums">
-//js implementation of OGREnvelope3D class
-
 /**
  * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
+ *
+ * (Pure-javascript implementation of [OGREnvelope3D](http://www.gdal.org/classOGREnvelope3D.html))
  *
  * @constructor
  * @class gdal.Envelope3D
@@ -158,10 +166,23 @@ var Envelope3D = module.exports = function Envelope3D(envelope) {
 	}
 };
 
+/**
+ * Determines if the envelope has not been set yet.
+ *
+ * @method isEmpty
+ * @return {Boolean}
+ */
 Envelope3D.prototype.isEmpty = function() {
 	return !(this.minX || this.minY || this.minZ || this.maxX || this.maxY || this.maxZ);
 };
 
+/**
+ * Unions the provided envelope with the current envelope.
+ *
+ * @method merge
+ * @param {gdal.Envelope3D} envelope
+ * @return {void}
+ */
 Envelope3D.prototype.merge = function(envelope) {
  	if (arguments.length == 1) {
 		if (this.isEmpty()) {
@@ -198,12 +219,26 @@ Envelope3D.prototype.merge = function(envelope) {
 	}
 };
 
+/**
+ * Determines if the provided envelope touches it.
+ *
+ * @method intersects
+ * @param {gdal.Envelope3D} envelope
+ * @return {Boolean}
+ */
 Envelope3D.prototype.intersects = function(envelope) {
 	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
 	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY &amp;&amp;
 	       this.minZ &lt;= envelope.maxZ &amp;&amp; this.maxZ &gt;= envelope.minZ;
 };
 
+/**
+ * Updates the envelope to the intersection of the two envelopes.
+ *
+ * @method intersect
+ * @param {gdal.Envelope3D} envelope
+ * @return {void}
+ */
 Envelope3D.prototype.intersect = function(envelope) {
 	if (this.intersects(envelope)) {
 		if (this.isEmpty()) {
@@ -226,6 +261,13 @@ Envelope3D.prototype.intersect = function(envelope) {
 	}
 };
 
+/**
+ * Determines if the provided envelope is wholly-contained by the current envelope.
+ *
+ * @method contains
+ * @param {gdal.Envelope3D} envelope
+ * @return {Boolean}
+ */
 Envelope3D.prototype.contains = function(envelope) {
 	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp; this.minZ &lt;= envelope.minZ &amp;&amp;
 	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY &amp;&amp; this.maxZ &gt;= envelope.maxZ;

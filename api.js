@@ -12,12 +12,15 @@ YUI.add("yuidoc-meta", function(Y) {
         "Constants (OLC)",
         "Constants (WKB)",
         "gdal",
+        "gdal.Dataset",
         "gdal.Driver",
         "gdal.Envelope",
         "gdal.Envelope3D",
         "gdal.Feature",
         "gdal.FeatureDefn",
         "gdal.Geometry",
+        "gdal.GeometryCollection",
+        "gdal.GeometryCollectionChildren",
         "gdal.Layer",
         "gdal.LineString",
         "gdal.LinearRing",
@@ -25,7 +28,8 @@ YUI.add("yuidoc-meta", function(Y) {
         "gdal.MultiPoint",
         "gdal.MultiPolygon",
         "gdal.Point",
-        "gdal.Polygon"
+        "gdal.Polygon",
+        "gdal.PolygonRings"
     ],
     "modules": [],
     "allModules": []

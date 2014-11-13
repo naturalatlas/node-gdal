@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_multilinestring.cpp - node-gdal</title>
+    <title>src/collections/geometry_collection_children.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -134,166 +134,212 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_multilinestring.cpp <small>File</small></h1>
+    <h1>src/collections/geometry_collection_children.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_geometry.hpp&quot;
-#include &quot;gdal_geometrycollection.hpp&quot;
-#include &quot;gdal_multilinestring.hpp&quot;
-#include &quot;gdal_linestring.hpp&quot;
-#include &quot;collections/geometry_collection_children.hpp&quot;
-
-#include &lt;stdlib.h&gt;
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_geometry.hpp&quot;
+#include &quot;../gdal_geometrycollection.hpp&quot;
+#include &quot;geometry_collection_children.hpp&quot;
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; MultiLineString::constructor;
+Persistent&lt;FunctionTemplate&gt; GeometryCollectionChildren::constructor;
 
-void MultiLineString::Initialize(Handle&lt;Object&gt; target)
+void GeometryCollectionChildren::Initialize(Handle&lt;Object&gt; target)
 {
 	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(MultiLineString::New);
-	lcons-&gt;Inherit(NanNew(GeometryCollection::constructor));
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(GeometryCollectionChildren::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;MultiLineString&quot;));
+	lcons-&gt;SetClassName(NanNew(&quot;GeometryCollectionChildren&quot;));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;polygonize&quot;, polygonize);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGeometry&quot;, getGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;remove&quot;, remove);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
 
-	target-&gt;Set(NanNew(&quot;MultiLineString&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(NanNew(&quot;GeometryCollectionChildren&quot;), lcons-&gt;GetFunction());
 
 	NanAssignPersistent(constructor, lcons);
 }
 
-MultiLineString::MultiLineString(OGRMultiLineString *geom)
-	: ObjectWrap(),
-	  this_(geom),
-	  owned_(true),
-	  size_(0)
-{
-	LOG(&quot;Created MultiLineString [%p]&quot;, geom);
-}
+GeometryCollectionChildren::GeometryCollectionChildren()
+	: ObjectWrap()
+{}
 
-MultiLineString::MultiLineString()
-	: ObjectWrap(),
-	  this_(NULL),
-	  owned_(true),
-	  size_(0)
-{
-}
-
-MultiLineString::~MultiLineString()
-{
-	if(this_) {
-		LOG(&quot;Disposing GeometryCollection [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if (owned_) {
-			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
-		}
-		LOG(&quot;Disposed GeometryCollection [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
+GeometryCollectionChildren::~GeometryCollectionChildren()
+{}
 
 /**
- * @constructor
- * @class gdal.MultiLineString
- * @extends gdal.GeometryCollection
+ * A collection of Geometries, used by {{#crossLink &quot;gdal.GeometryCollection&quot;}}gdal.GeometryCollection{{/crossLink}}.
+ *
+ * @class gdal.GeometryCollectionChildren
  */
-NAN_METHOD(MultiLineString::New)
+NAN_METHOD(GeometryCollectionChildren::New)
 {
 	NanScope();
-	MultiLineString *f;
 
 	if (!args.IsConstructCall()) {
 		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
 		NanReturnUndefined();
 	}
-
 	if (args[0]-&gt;IsExternal()) {
 		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
-		f = static_cast&lt;MultiLineString *&gt;(ptr);
-
+		GeometryCollectionChildren *geom =  static_cast&lt;GeometryCollectionChildren *&gt;(ptr);
+		geom-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError(&quot;MultiLineString constructor doesn&#x27;t take any arguments&quot;);
-			NanReturnUndefined();
-		}
-		f = new MultiLineString(new OGRMultiLineString());
+		NanThrowError(&quot;Cannot create GeometryCollectionChildren directly&quot;);
+		NanReturnUndefined();
 	}
-
-	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
-	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
-
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
 }
 
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom)
-{
-	NanEscapableScope();
-	return NanEscapeScope(MultiLineString::New(geom, true));
-}
-
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom, bool owned)
+Handle&lt;Value&gt; GeometryCollectionChildren::New(Handle&lt;Value&gt; geom)
 {
 	NanEscapableScope();
 
-	if (!geom) {
-		return NanEscapeScope(NanNull());
-	}
+	GeometryCollectionChildren *wrapped = new GeometryCollectionChildren();
 
-	//make a copy of geometry owned by a feature
-	// + no need to track when a feature is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only geometry
-	// - is slower
-
-	if (!owned) {
-		geom = static_cast&lt;OGRMultiLineString*&gt;(geom-&gt;clone());
-	};
-
-	MultiLineString *wrapped = new MultiLineString(geom);
-	wrapped-&gt;owned_ = true;
-
-	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
-
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(MultiLineString::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(GeometryCollectionChildren::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), geom);
 
 	return NanEscapeScope(obj);
 }
 
-NAN_METHOD(MultiLineString::toString)
+NAN_METHOD(GeometryCollectionChildren::toString)
 {
 	NanScope();
-	NanReturnValue(NanNew(&quot;MultiLineString&quot;));
+	NanReturnValue(NanNew(&quot;GeometryCollectionChildren&quot;));
 }
 
-NAN_METHOD(MultiLineString::polygonize)
+/**
+ * Returns the number of items.
+ *
+ * @method count
+ * @return Integer
+ */
+NAN_METHOD(GeometryCollectionChildren::count)
 {
 	NanScope();
 
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	GeometryCollection *geom = ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Polygonize()));
+	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;get()-&gt;getNumGeometries()));
 }
 
-NAN_METHOD(MultiLineString::getGeometry)
+/**
+ * Returns the geometry at the specified index.
+ *
+ * @method get
+ * @param {Integer} index 0-based index
+ * @return {gdal.Geometry}
+ */
+NAN_METHOD(GeometryCollectionChildren::get)
 {
 	NanScope();
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	GeometryCollection *geom = ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
 	int i;
 	NODE_ARG_INT(0, &quot;index&quot;, i);
 
-	NanReturnValue(LineString::New(static_cast&lt;OGRLineString*&gt;(geom-&gt;this_-&gt;getGeometryRef(i)), false));
+	NanReturnValue(Geometry::New(geom-&gt;get()-&gt;getGeometryRef(i), false));
+}
+
+/**
+ * Removes the geometry at the specified index.
+ *
+ * @method remove
+ * @param {Integer} index 0-based index
+ */
+NAN_METHOD(GeometryCollectionChildren::remove)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	GeometryCollection *geom = ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
+
+	int i;
+	NODE_ARG_INT(0, &quot;index&quot;, i);
+
+	OGRErr err = geom-&gt;get()-&gt;removeGeometry(i);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Adds geometry(s) to the collection.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * // one at a time:
+ * geometryCollection.children.add(new Point(0,0,0));
+ *
+ * // add many at once:
+ * geometryCollection.children.add([
+ *     new Point(1,0,0),
+ *     new Point(1,0,0)
+ * ]);&#x60;&#x60;&#x60;
+ *
+ * @method add
+ * @param {mixed} geometry
+ */
+NAN_METHOD(GeometryCollectionChildren::add)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	GeometryCollection *geom = ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
+
+	Geometry *child;
+
+	if (args.Length() &lt; 1) {
+		NanThrowError(&quot;child(ren) must be given&quot;);
+		NanReturnUndefined();
+	}
+	if (args[0]-&gt;IsArray()){
+		//set from array of geometry objects
+		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+		int length = array-&gt;Length();
+		for (int i = 0; i &lt; length; i++){
+			Handle&lt;Value&gt; element = array-&gt;Get(i);
+			if(IS_WRAPPED(element, Geometry)){
+				child = ObjectWrap::Unwrap&lt;Geometry&gt;(element.As&lt;Object&gt;());
+				OGRErr err = geom-&gt;get()-&gt;addGeometry(child-&gt;get());
+				if(err) {
+					NODE_THROW_OGRERR(err);
+					NanReturnUndefined();
+				}
+			} else {
+				NanThrowError(&quot;All array elements must be geometry objects&quot;);
+				NanReturnUndefined();
+			}
+		}
+	} else if (IS_WRAPPED(args[0], Geometry)){
+		child = ObjectWrap::Unwrap&lt;Geometry&gt;(args[0].As&lt;Object&gt;());
+		OGRErr err = geom-&gt;get()-&gt;addGeometry(child-&gt;get());
+		if(err) {
+			NODE_THROW_OGRERR(err);
+			NanReturnUndefined();
+		}
+	} else {
+		NanThrowError(&quot;child must be a geometry object or array of geometry objects&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
 }
 
 } // namespace node_gdal

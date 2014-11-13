@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_algorithms.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_algorithms.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;gdal_algorithms.hpp&quot;
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_layer.hpp&quot;
+#include &quot;gdal_dataset.hpp&quot;
+#include &quot;gdal_rasterband.hpp&quot;
+#include &quot;utils/number_list.hpp&quot;
+
+namespace node_gdal {
+
+void Algorithms::Initialize(Handle&lt;Object&gt; target)
+{
+	NODE_SET_METHOD(target, &quot;fillNodata&quot;, fillNodata);
+	NODE_SET_METHOD(target, &quot;contourGenerate&quot;, contourGenerate);
+	NODE_SET_METHOD(target, &quot;sieveFilter&quot;, sieveFilter);
+	NODE_SET_METHOD(target, &quot;checksumImage&quot;, checksumImage);
+	NODE_SET_METHOD(target, &quot;polygonize&quot;, polygonize);
+}
+
+/**
+ * Fill raster regions by interpolation from edges.
+ *
+ * @throws Error
+ * @method fillNodata
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src If provided, this band will be updated in-place.
+ * @param {gdal.RasterBand} options.mask Mask band
+ * @param {Number} options.searchDist
+ * @param {integer} options.smoothingIterations
+ */
+NAN_METHOD(Algorithms::fillNodata)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	RasterBand* src;
+	RasterBand* mask = NULL;
+	double search_dist;
+	int smooth_iterations = 0;
+
+	NODE_ARG_OBJECT(0, &quot;options&quot;, obj);
+
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;src&quot;, RasterBand, src);
+	NODE_WRAPPED_FROM_OBJ_OPT(obj, &quot;mask&quot;, RasterBand, mask);
+	NODE_DOUBLE_FROM_OBJ(obj, &quot;searchDist&quot;, search_dist);
+	NODE_INT_FROM_OBJ_OPT(obj, &quot;smoothIterations&quot;, smooth_iterations)
+
+	CPLErr err = GDALFillNodata(src-&gt;get(), mask ? mask-&gt;get() : NULL, search_dist, 0, smooth_iterations, NULL, NULL, NULL);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Create vector contours from raster DEM.
+ *
+ * This algorithm will generate contour vectors for the input raster band on the
+ * requested set of contour levels. The vector contours are written to the passed
+ * in vector layer. Also, a NODATA value may be specified to identify pixels
+ * that should not be considered in contour line generation.
+ *
+ * @throws Error
+ * @method contourGenerate
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.Layer} options.dst
+ * @param {Number} options.base
+ * @param {Number} options.interval
+ * @param {Number[]} options.fixedLevels
+ * @param {Number} options.noData
+ * @param {integer} options.idField
+ * @param {integer} options.elevField
+ */
+NAN_METHOD(Algorithms::contourGenerate)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	Handle&lt;Value&gt; prop;
+	RasterBand* src;
+	Layer* dst;
+	double interval = 100, base = 0;
+	double *fixed_levels = NULL;
+	DoubleList fixed_level_array;
+	int n_fixed_levels = 0;
+	int use_nodata = 0;
+	double nodata = 0;
+	int id_field, elev_field;
+
+	NODE_ARG_OBJECT(0, &quot;options&quot;, obj);
+
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;src&quot;, RasterBand, src);
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;dst&quot;, Layer, dst);
+	NODE_INT_FROM_OBJ(obj, &quot;idField&quot;, id_field);
+	NODE_INT_FROM_OBJ(obj, &quot;elevField&quot;, elev_field);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;interval&quot;, interval);
+	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;offset&quot;, base);
+	if(obj-&gt;HasOwnProperty(NanNew(&quot;fixedLevels&quot;))){
+		if(fixed_level_array.parse(obj-&gt;Get(NanNew(&quot;fixedLevels&quot;)))){
+			NanReturnUndefined(); //error parsing double list
+		} else {
+			fixed_levels = fixed_level_array.get();
+			n_fixed_levels = fixed_level_array.length();
+		}
+	}
+	if(obj-&gt;HasOwnProperty(NanNew(&quot;nodata&quot;))){
+		prop = obj-&gt;Get(NanNew(&quot;nodata&quot;));
+		if(prop-&gt;IsNumber()){
+			use_nodata = 1;
+			nodata = prop-&gt;NumberValue();
+		} else if(!prop-&gt;IsNull() &amp;&amp; !prop-&gt;IsUndefined()){
+			NanThrowTypeError(&quot;nodata property must be a number&quot;);
+		}
+	}
+
+	CPLErr err = GDALContourGenerate(src-&gt;get(), interval, base, n_fixed_levels, fixed_levels, use_nodata, nodata, dst-&gt;get(), id_field, elev_field, NULL, NULL);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Removes small raster polygons.
+ *
+ * @throws Error
+ * @method sieveFilter
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.RasterBand} options.dst Output raster band. It may be the same as src band to update the source in place.
+ * @param {gdal.RasterBand} [options.mask] All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.
+ * @param {Number} options.threshold Raster polygons with sizes smaller than this will be merged into their largest neighbour.
+ * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ */
+NAN_METHOD(Algorithms::sieveFilter)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	RasterBand* src;
+	RasterBand* dst;
+	RasterBand* mask = NULL;
+	int threshold;
+	int connectedness = 4;
+
+	NODE_ARG_OBJECT(0, &quot;options&quot;, obj);
+
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;src&quot;, RasterBand, src);
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;dst&quot;, RasterBand, dst);
+	NODE_WRAPPED_FROM_OBJ_OPT(obj, &quot;mask&quot;, RasterBand, mask);
+	NODE_INT_FROM_OBJ(obj, &quot;threshold&quot;, threshold);
+	NODE_INT_FROM_OBJ_OPT(obj, &quot;connectedness&quot;, connectedness);
+
+	if(connectedness != 4 &amp;&amp; connectedness != 8){
+		NanThrowError(&quot;connectedness option must be 4 or 8&quot;);
+		NanReturnUndefined();
+	}
+
+	CPLErr err = GDALSieveFilter(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), threshold, connectedness, NULL, NULL, NULL);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Compute checksum for image region.
+ *
+ * @throws Error
+ * @method checksumImage
+ * @for gdal
+ * @param {gdal.RasterBand} src
+ * @param {integer} [x=0]
+ * @param {integer} [y=0]
+ * @param {integer} [w=src.width]
+ * @param {integer} [h=src.height]
+ * @return integer
+ */
+NAN_METHOD(Algorithms::checksumImage)
+{
+	NanScope();
+
+	RasterBand* src;
+	int x = 0, y = 0, w, h, bandw, bandh;
+
+	NODE_ARG_WRAPPED(0, &quot;src&quot;, RasterBand, src);
+
+	w = bandw = src-&gt;get()-&gt;GetXSize();
+	h = bandh = src-&gt;get()-&gt;GetYSize();
+
+	NODE_ARG_INT_OPT(1, &quot;x&quot;, x);
+	NODE_ARG_INT_OPT(2, &quot;y&quot;, y);
+	NODE_ARG_INT_OPT(3, &quot;xSize&quot;, w);
+	NODE_ARG_INT_OPT(4, &quot;ySize&quot;, h);
+
+	if(x &lt; 0 || y &lt; 0 || x &gt;= bandw || y &gt;= bandh){
+		NanThrowRangeError(&quot;offset invalid for given band&quot;);
+		NanReturnUndefined();
+	}
+	if(w &lt; 0 || h &lt; 0 || w &gt; bandw || h &gt; bandh){
+		NanThrowRangeError(&quot;x and y size must be smaller than band dimensions and greater than 0&quot;);
+		NanReturnUndefined();
+	}
+	if(x+w-1 &gt;= bandw || y+h-1 &gt;= bandh){
+		NanThrowRangeError(&quot;given range is outside bounds of given band&quot;);
+		NanReturnUndefined();
+	}
+
+	int checksum = GDALChecksumImage(src-&gt;get(), x, y, w, h);
+
+	NanReturnValue(NanNew&lt;Integer&gt;(checksum));
+}
+
+/**
+ * Creates vector polygons for all connected regions of pixels in the raster
+ * sharing a common pixel value. Each polygon is created with an attribute
+ * indicating the pixel value of that polygon. A raster mask may also be
+ * provided to determine which pixels are eligible for processing.
+ *
+ * @throws Error
+ * @method polygonize
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.Layer} options.dst
+ * @param {gdal.RasterBand} [options.mask]
+ * @param {integer} options.pixValField The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.
+ * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {Boolean} options.useFloats Use floating point buffers instead of int buffers.
+ */
+NAN_METHOD(Algorithms::polygonize)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; obj;
+	RasterBand* src;
+	RasterBand* mask = NULL;
+	Layer* dst;
+	int connectedness = 4;
+	int pix_val_field = 0;
+	char** papszOptions = NULL;
+
+	NODE_ARG_OBJECT(0, &quot;options&quot;, obj);
+
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;src&quot;, RasterBand, src);
+	NODE_WRAPPED_FROM_OBJ(obj, &quot;dst&quot;, Layer, dst);
+	NODE_WRAPPED_FROM_OBJ_OPT(obj, &quot;mask&quot;, RasterBand, mask);
+	NODE_INT_FROM_OBJ_OPT(obj, &quot;connectedness&quot;, connectedness)
+	NODE_INT_FROM_OBJ(obj, &quot;pixValField&quot;, pix_val_field);
+
+	if(connectedness == 8) {
+		papszOptions = CSLSetNameValue(papszOptions, &quot;8CONNECTED&quot;, &quot;8&quot;);
+	} else if (connectedness != 4) {
+		NanThrowError(&quot;connectedness must be 4 or 8&quot;);
+		NanReturnUndefined();
+	}
+
+	CPLErr err;
+	if(obj-&gt;HasOwnProperty(NanNew(&quot;useFloats&quot;)) &amp;&amp; obj-&gt;Get(NanNew(&quot;useFloats&quot;))-&gt;BooleanValue()){
+		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), pix_val_field, papszOptions, NULL, NULL);
+	} else {
+		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), pix_val_field, papszOptions, NULL, NULL);
+	}
+
+	if(papszOptions) CSLDestroy(papszOptions);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+} //node_gdal namespace
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_dataset.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_dataset.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_majorobject.hpp&quot;
+#include &quot;gdal_dataset.hpp&quot;
+#include &quot;gdal_rasterband.hpp&quot;
+#include &quot;gdal_driver.hpp&quot;
+#include &quot;gdal_spatial_reference.hpp&quot;
+#include &quot;gdal_layer.hpp&quot;
+#include &quot;gdal_geometry.hpp&quot;
+#include &quot;collections/dataset_bands.hpp&quot;
+#include &quot;collections/dataset_layers.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; Dataset::constructor;
+ObjectCache&lt;GDALDataset, Dataset&gt; Dataset::dataset_cache;
+#if GDAL_VERSION_MAJOR &lt; 2
+ObjectCache&lt;OGRDataSource, Dataset&gt; Dataset::datasource_cache;
+#endif
+
+void Dataset::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(Dataset::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;Dataset&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setGCPs&quot;, setGCPs);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGCPs&quot;, getGCPs);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGCPProjection&quot;, getGCPProjection);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getFileList&quot;, getFileList);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;flush&quot;, flush);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;close&quot;, close);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getMetadata&quot;, getMetadata);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;testCapability&quot;, testCapability);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;executeSQL&quot;, executeSQL);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;buildOverviews&quot;, buildOverviews);
+
+	ATTR(lcons, &quot;description&quot;, descriptionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;bands&quot;, bandsGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;layers&quot;, layersGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;rasterSize&quot;, rasterSizeGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;driver&quot;, driverGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;srs&quot;, srsGetter, srsSetter);
+	ATTR(lcons, &quot;geoTransform&quot;, geoTransformGetter, geoTransformSetter);
+
+	target-&gt;Set(NanNew(&quot;Dataset&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+
+
+#if GDAL_VERSION_MAJOR &lt; 2
+Dataset::Dataset(GDALDataset *ds)
+	: ObjectWrap(),
+	  uses_ogr(false),
+	  this_dataset(ds),
+	  this_datasource(0),
+	  result_sets()
+{
+	LOG(&quot;Created Dataset [%p]&quot;, ds);
+}
+Dataset::Dataset(OGRDataSource *ds)
+	: ObjectWrap(),
+	  uses_ogr(true),
+	  this_dataset(0),
+	  this_datasource(ds),
+	  result_sets()
+{
+	LOG(&quot;Created Datasource [%p]&quot;, ds);
+}
+#else
+Dataset::Dataset(GDALDataset *ds)
+	: ObjectWrap(),
+	  this_dataset(ds),
+	  result_sets()
+{
+	LOG(&quot;Created Dataset [%p]&quot;, ds);
+}
+#endif
+
+Dataset::~Dataset()
+{
+	//Destroy at garbage collection time if not already explicitly destroyed
+	dispose();
+}
+
+void Dataset::dispose()
+{
+	GDALRasterBand *band;
+	OGRLayer *lyr;
+	Layer *lyr_wrapped;
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+	GDALDataset* this_datasource = this_dataset;
+	#endif
+
+	if (this_datasource) {
+		LOG(&quot;Disposing Datasource [%p]&quot;, this_datasource);
+
+		#if GDAL_VERSION_MAJOR &lt; 2
+		datasource_cache.erase(this_datasource);
+		#endif
+
+		//dispose of all wrapped child layers
+		int n = this_datasource-&gt;GetLayerCount();
+		for(int i = 0; i &lt; n; i++) {
+			lyr = this_datasource-&gt;GetLayer(i);
+			if (Layer::cache.has(lyr)) {
+				lyr_wrapped = ObjectWrap::Unwrap&lt;Layer&gt;(Layer::cache.get(lyr));
+				lyr_wrapped-&gt;dispose();
+			}
+		}
+
+		//dispose of all result sets
+		n = result_sets.size();
+		for(int i = 0; i &lt; n; i++) {
+			lyr = result_sets[i];
+			if (Layer::cache.has(lyr)) {
+				lyr_wrapped = ObjectWrap::Unwrap&lt;Layer&gt;(Layer::cache.get(lyr));
+				lyr_wrapped-&gt;dispose();
+			}
+		}
+		result_sets.clear();
+
+		#if GDAL_VERSION_MAJOR &lt; 2
+		OGRDataSource::DestroyDataSource(this_datasource);	//this is done with GDALClose in GDAL 2.0
+		#endif
+
+		LOG(&quot;Disposed Datasource [%p]&quot;, this_datasource);
+
+		this_datasource = NULL;
+	}
+
+	if (this_dataset) {
+		LOG(&quot;Disposing Dataset [%p]&quot;, this_dataset);
+
+		dataset_cache.erase(this_dataset);
+
+		//dispose of all wrapped child bands
+		int n = this_dataset-&gt;GetRasterCount();
+		for(int i = 1; i &lt;= n; i++) {
+			band = this_dataset-&gt;GetRasterBand(i);
+			if (RasterBand::cache.has(band)) {
+				RasterBand *band_wrapped = ObjectWrap::Unwrap&lt;RasterBand&gt;(RasterBand::cache.get(band));
+				band_wrapped-&gt;dispose();
+			}
+		}
+
+		GDALClose(this_dataset);
+
+		LOG(&quot;Disposed Dataset [%p]&quot;, this_dataset);
+
+		this_dataset = NULL;
+	}
+}
+
+/**
+ * A set of associated raster bands, usually from one file.
+ *
+ * @class gdal.Dataset
+ */
+NAN_METHOD(Dataset::New)
+{
+	NanScope();
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		Dataset *f =  static_cast&lt;Dataset *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+
+		Handle&lt;Value&gt; bands = DatasetBands::New(args.This());
+		args.This()-&gt;SetHiddenValue(NanNew(&quot;bands_&quot;), bands);
+
+		Handle&lt;Value&gt; layers = DatasetLayers::New(args.This());
+		args.This()-&gt;SetHiddenValue(NanNew(&quot;layers_&quot;), layers);
+
+		NanReturnValue(args.This());
+	} else {
+		NanThrowError(&quot;Cannot create dataset directly&quot;);
+		NanReturnUndefined();
+	}
+}
+
+Handle&lt;Value&gt; Dataset::New(GDALDataset *raw)
+{
+	NanEscapableScope();
+
+	if (!raw) {
+		return NanEscapeScope(NanNull());
+	}
+	if (dataset_cache.has(raw)) {
+		return NanEscapeScope(NanNew(dataset_cache.get(raw)));
+	}
+
+	Dataset *wrapped = new Dataset(raw);
+
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(Dataset::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	dataset_cache.add(raw, obj);
+
+	return NanEscapeScope(obj);
+}
+
+#if GDAL_VERSION_MAJOR &lt; 2
+Handle&lt;Value&gt; Dataset::New(OGRDataSource *raw)
+{
+	NanEscapableScope();
+
+	if (!raw) {
+		return NanEscapeScope(NanNull());
+	}
+	if (datasource_cache.has(raw)) {
+		return NanEscapeScope(NanNew(datasource_cache.get(raw)));
+	}
+
+	Dataset *wrapped = new Dataset(raw);
+
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(Dataset::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	datasource_cache.add(raw, obj);
+
+	return NanEscapeScope(obj);
+}
+#endif
+
+NAN_METHOD(Dataset::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;Dataset&quot;));
+}
+
+/**
+ * Fetch metadata.
+ *
+ * @method getMetadata
+ * @param {string} [domain]
+ * @return {Object}
+ */
+NAN_METHOD(Dataset::getMetadata)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(NanNew&lt;Object&gt;());
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	std::string domain(&quot;&quot;);
+	NODE_ARG_OPT_STR(0, &quot;domain&quot;, domain);
+	NanReturnValue(MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str()));
+}
+
+/**
+ * Determines if the dataset supports the indicated operation.
+ *
+ * @method testCapability
+ * @param {string} capability (see {{#crossLink &quot;Constants (ODsC)&quot;}}capability list{{/crossLink}})
+ * @return {Boolean}
+ */
+NAN_METHOD(Dataset::testCapability)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr &amp;&amp; raw) {
+			NanReturnValue(NanFalse());
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	std::string capability(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;capability&quot;, capability);
+
+	NanReturnValue(NanNew&lt;Boolean&gt;(raw-&gt;TestCapability(capability.c_str())));
+}
+
+/**
+ * Get output projection for GCPs.
+ *
+ * @method getGCPProjection
+ * @return {String}
+ */
+NAN_METHOD(Dataset::getGCPProjection)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnNull();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(SafeString::New(raw-&gt;GetGCPProjection()));
+}
+
+/**
+ * Closes the dataset to further operations.
+ *
+ * @method close
+ */
+NAN_METHOD(Dataset::close)
+{
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (!ds-&gt;getDataset() &amp;&amp; !ds-&gt;getDatasource()) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	#else
+	if (!ds-&gt;getDataset()) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	#endif
+
+	ds-&gt;dispose();
+
+	NanReturnUndefined();
+}
+
+/**
+ * Flushes all changes to disk.
+ *
+ * @method flush
+ */
+NAN_METHOD(Dataset::flush)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr){
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		OGRErr err = raw-&gt;SyncToDisk();
+		if(err) {
+			NODE_THROW_OGRERR(err);
+			NanReturnUndefined();
+		}
+		NanReturnUndefined();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	raw-&gt;FlushCache();
+
+	NanReturnUndefined();
+}
+
+/**
+ * Execute an SQL statement against the data store.
+ *
+ * @method executeSQL
+ * @param {String} statement
+ * @param {gdal.Geometry} [spatial_filter]
+ * @param {String} [dialect]
+ * @return {gdal.Layer}
+ */
+NAN_METHOD(Dataset::executeSQL)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset* raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!ds-&gt;uses_ogr){
+			NanThrowError(&quot;Dataset does not support executing a SQL query&quot;);
+			NanReturnUndefined();
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	std::string sql;
+	std::string sql_dialect;
+	Geometry *spatial_filter = NULL;
+
+	NODE_ARG_STR(0, &quot;sql text&quot;, sql);
+	NODE_ARG_WRAPPED_OPT(1, &quot;spatial filter geometry&quot;, Geometry, spatial_filter);
+	NODE_ARG_OPT_STR(2, &quot;sql dialect&quot;, sql_dialect);
+
+	OGRLayer *layer = raw-&gt;ExecuteSQL(sql.c_str(),
+											spatial_filter ? spatial_filter-&gt;get() : NULL,
+											sql_dialect.empty() ? NULL : sql_dialect.c_str());
+
+	if (layer) {
+		ds-&gt;result_sets.push_back(layer);
+		NanReturnValue(Layer::New(layer, raw, true));
+	} else {
+		NanThrowError(&quot;Error executing SQL&quot;);
+		NanReturnUndefined();
+	}
+}
+
+/**
+ * Fetch files forming dataset.
+ *
+ * Returns a list of files believed to be part of this dataset. If it returns an
+ * empty list of files it means there is believed to be no local file system files
+ * associated with the dataset (for instance a virtual dataset).
+ *
+ * @method getFileList
+ * @return {String[]}
+ */
+NAN_METHOD(Dataset::getFileList)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	Handle&lt;Array&gt; results = NanNew&lt;Array&gt;(0);
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(results);
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	char **list = raw-&gt;GetFileList();
+	if (!list) {
+		NanReturnValue(results);
+	}
+
+	int i = 0;
+	while (list[i]) {
+		results-&gt;Set(i, SafeString::New(list[i]));
+		i++;
+	}
+
+	CSLDestroy(list);
+
+	NanReturnValue(results);
+}
+
+/**
+ * Fetches GCPs.
+ *
+ * @method getGCPs
+ * @return {Object[]}
+ */
+NAN_METHOD(Dataset::getGCPs)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	Handle&lt;Array&gt; results = NanNew&lt;Array&gt;(0);
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(results);
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int n = raw-&gt;GetGCPCount();
+	const GDAL_GCP *gcps = raw-&gt;GetGCPs();
+
+	if (!gcps) {
+		NanReturnValue(results);
+	}
+
+	for (int i = 0; i &lt; n; i++) {
+		GDAL_GCP gcp = gcps[i];
+		Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
+		obj-&gt;Set(NanNew(&quot;pszId&quot;), NanNew(gcp.pszId));
+		obj-&gt;Set(NanNew(&quot;pszInfo&quot;), NanNew(gcp.pszInfo));
+		obj-&gt;Set(NanNew(&quot;dfGCPPixel&quot;), NanNew&lt;Number&gt;(gcp.dfGCPPixel));
+		obj-&gt;Set(NanNew(&quot;dfGCPLine&quot;), NanNew&lt;Number&gt;(gcp.dfGCPLine));
+		obj-&gt;Set(NanNew(&quot;dfGCPX&quot;), NanNew&lt;Number&gt;(gcp.dfGCPX));
+		obj-&gt;Set(NanNew(&quot;dfGCPY&quot;), NanNew&lt;Number&gt;(gcp.dfGCPY));
+		obj-&gt;Set(NanNew(&quot;dfGCPZ&quot;), NanNew&lt;Number&gt;(gcp.dfGCPZ));
+		results-&gt;Set(i, obj);
+	}
+
+	NanReturnValue(results);
+}
+
+/**
+ * Sets GCPs.
+ *
+ * @method setGCPs
+ * @param {Object[]} gcps
+ * @param {String} projection
+ */
+NAN_METHOD(Dataset::setGCPs)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		NanThrowError(&quot;Dataset does not support setting GCPs&quot;);
+		NanReturnUndefined();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	Handle&lt;Array&gt; gcps;
+	std::string projection(&quot;&quot;);
+	NODE_ARG_ARRAY(0, &quot;gcps&quot;, gcps);
+	NODE_ARG_OPT_STR(1, &quot;projection&quot;, projection);
+
+	GDAL_GCP *list = new GDAL_GCP [gcps-&gt;Length()];
+	std::string *pszId_list = new std::string [gcps-&gt;Length()];
+	std::string *pszInfo_list = new std::string [gcps-&gt;Length()];
+	GDAL_GCP *gcp = list;
+	for (unsigned int i = 0; i &lt; gcps-&gt;Length(); ++i) {
+		Local&lt;Value&gt; val = gcps-&gt;Get(i);
+		if (!val-&gt;IsObject()) {
+			if (list) {
+				delete [] list;
+				delete [] pszId_list;
+				delete [] pszInfo_list;
+			}
+			NanThrowError(&quot;GCP array must only include objects&quot;);
+			NanReturnUndefined();
+		}
+		Local&lt;Object&gt; obj = val.As&lt;Object&gt;();
+
+		NODE_DOUBLE_FROM_OBJ(obj, &quot;dfGCPPixel&quot;, gcp-&gt;dfGCPPixel);
+		NODE_DOUBLE_FROM_OBJ(obj, &quot;dfGCPLine&quot;, gcp-&gt;dfGCPLine);
+		NODE_DOUBLE_FROM_OBJ(obj, &quot;dfGCPX&quot;, gcp-&gt;dfGCPX);
+		NODE_DOUBLE_FROM_OBJ(obj, &quot;dfGCPY&quot;, gcp-&gt;dfGCPY);
+		NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;dfGCPZ&quot;, gcp-&gt;dfGCPZ);
+		NODE_STR_FROM_OBJ_OPT(obj, &quot;pszId&quot;, pszId_list[i]);
+		NODE_STR_FROM_OBJ_OPT(obj, &quot;pszInfo&quot;, pszInfo_list[i]);
+
+		gcp-&gt;pszId = (char*) pszId_list[i].c_str();
+		gcp-&gt;pszInfo = (char*) pszInfo_list[i].c_str();
+
+		gcp++;
+	}
+
+	if (list) {
+		delete [] list;
+		delete [] pszId_list;
+		delete [] pszInfo_list;
+	}
+
+	CPLErr err = raw-&gt;SetGCPs(gcps-&gt;Length(), list, projection.c_str());
+	if (err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Builds dataset overviews.
+ *
+ * @method buildOverviews
+ * @param {String} resampling &#x60;&quot;NEAREST&quot;&#x60;, &#x60;&quot;GAUSS&quot;&#x60;, &#x60;&quot;CUBIC&quot;&#x60;, &#x60;&quot;AVERAGE&quot;&#x60;, &#x60;&quot;MODE&quot;&#x60;, &#x60;&quot;AVERAGE_MAGPHASE&quot;&#x60; or &#x60;&quot;NONE&quot;&#x60;
+ * @param {int[]} overviews
+ * @param {int[]} [bands]
+ */
+NAN_METHOD(Dataset::buildOverviews)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		NanThrowError(&quot;Dataset does not support building overviews&quot;);
+		NanReturnUndefined();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+
+	std::string resampling = &quot;&quot;;
+	Handle&lt;Array&gt; overviews;
+	Handle&lt;Array&gt; bands;
+
+	NODE_ARG_STR(0, &quot;resampling&quot;, resampling);
+	NODE_ARG_ARRAY(1, &quot;overviews&quot;, overviews);
+	NODE_ARG_ARRAY_OPT(2, &quot;bands&quot;, bands);
+
+	int *o, *b = NULL;
+	int n_overviews = overviews-&gt;Length();
+	int i, n_bands = 0;
+
+	o = new int[n_overviews];
+	for(i = 0; i&lt;n_overviews; i++){
+		Handle&lt;Value&gt; val = overviews-&gt;Get(i);
+		if(!val-&gt;IsNumber()) {
+			delete [] o;
+			NanThrowError(&quot;overviews array must only contain numbers&quot;);
+			NanReturnUndefined();
+		}
+		o[i] = val-&gt;Int32Value();
+	}
+
+	if(!bands.IsEmpty()){
+		n_bands = bands-&gt;Length();
+		b = new int[n_bands];
+		for(i = 0; i&lt;n_bands; i++){
+			Handle&lt;Value&gt; val = bands-&gt;Get(i);
+			if(!val-&gt;IsNumber()) {
+				delete [] o;
+				delete [] b;
+				NanThrowError(&quot;band array must only contain numbers&quot;);
+				NanReturnUndefined();
+			}
+			b[i] = val-&gt;Int32Value();
+			if(b[i] &gt; raw-&gt;GetRasterCount() || b[i] &lt; 1) {
+				//BuildOverviews prints an error but segfaults before returning
+				delete [] o;
+				delete [] b;
+				NanThrowError(&quot;invalid band id&quot;);
+				NanReturnUndefined();
+			}
+		}
+	}
+
+	CPLErr err = raw-&gt;BuildOverviews(resampling.c_str(), n_overviews, o, n_bands, b, NULL, NULL);
+
+	delete [] o;
+	if(b) delete [] b;
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * @readOnly
+ * @attribute description
+ * @type String
+ */
+NAN_GETTER(Dataset::descriptionGetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(SafeString::New(raw-&gt;GetName()));
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(SafeString::New(raw-&gt;GetDescription()));
+}
+
+/**
+ * @readOnly
+ * @attribute rasterSize
+ * @type Object containing &#x60;x&#x60; and &#x60;y&#x60; properties.
+ */
+NAN_GETTER(Dataset::rasterSizeGetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnNull();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	//GDAL 2.x will return 512x512 for vector datasets... which doesn&#x27;t really make sense in JS where we can return null instead of a number
+	//https://github.com/OSGeo/gdal/blob/beef45c130cc2778dcc56d85aed1104a9b31f7e6/gdal/gcore/gdaldataset.cpp#L173-L174
+	#if GDAL_VERSION_MAJOR &gt;= 2
+	if(!raw-&gt;GetDriver()-&gt;GetMetadataItem(GDAL_DCAP_RASTER)){
+		NanReturnNull();
+	}
+	#endif
+
+	Local&lt;Object&gt; result = NanNew&lt;Object&gt;();
+	result-&gt;Set(NanNew(&quot;x&quot;), NanNew&lt;Integer&gt;(raw-&gt;GetRasterXSize()));
+	result-&gt;Set(NanNew(&quot;y&quot;), NanNew&lt;Integer&gt;(raw-&gt;GetRasterYSize()));
+	NanReturnValue(result);
+}
+
+/**
+ * @attribute srs
+ * @type {gdal.SpatialReference}
+ */
+NAN_GETTER(Dataset::srsGetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnNull();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	//get projection wkt and return null if not set
+	char* wkt = (char*) raw-&gt;GetProjectionRef();
+	if (*wkt == &#x27;\0&#x27;) {
+		//getProjectionRef returns string of length 0 if no srs set
+		NanReturnNull();
+	}
+	//otherwise construct and return SpatialReference from wkt
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromWkt(&amp;wkt);
+
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * @attribute geoTransform
+ * @type {Array}
+ */
+NAN_GETTER(Dataset::geoTransformGetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnNull();
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	double transform[6];
+	CPLErr err = raw-&gt;GetGeoTransform(transform);
+	if(err) {
+		// This is mostly (always?) a sign that it has not been set
+		NanReturnNull();
+		//NODE_THROW_CPLERR(err);
+		//NanReturnUndefined();
+	}
+
+	Handle&lt;Array&gt; result = NanNew&lt;Array&gt;(6);
+	result-&gt;Set(0, NanNew&lt;Number&gt;(transform[0]));
+	result-&gt;Set(1, NanNew&lt;Number&gt;(transform[1]));
+	result-&gt;Set(2, NanNew&lt;Number&gt;(transform[2]));
+	result-&gt;Set(3, NanNew&lt;Number&gt;(transform[3]));
+	result-&gt;Set(4, NanNew&lt;Number&gt;(transform[4]));
+	result-&gt;Set(5, NanNew&lt;Number&gt;(transform[5]));
+
+	NanReturnValue(result);
+}
+
+/**
+ * @readOnly
+ * @attribute driver
+ * @type {gdal.Driver}
+ */
+NAN_GETTER(Dataset::driverGetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		OGRDataSource* raw = ds-&gt;getDatasource();
+		if (!raw) {
+			NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+			NanReturnUndefined();
+		}
+		NanReturnValue(Driver::New(raw-&gt;GetDriver()));
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+	NanReturnValue(Driver::New(raw-&gt;GetDriver()));
+}
+
+NAN_SETTER(Dataset::srsSetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		NanThrowError(&quot;Dataset doesnt support setting a spatial reference&quot;);
+		return;
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		return;
+	}
+
+	std::string wkt(&quot;&quot;);
+	if (IS_WRAPPED(value, SpatialReference)) {
+
+		SpatialReference *srs_obj = ObjectWrap::Unwrap&lt;SpatialReference&gt;(value.As&lt;Object&gt;());
+		OGRSpatialReference *srs = srs_obj-&gt;get();
+		//Get wkt from OGRSpatialReference
+		char* str;
+		if (srs-&gt;exportToWkt(&amp;str)) {
+			NanThrowError(&quot;Error exporting srs to wkt&quot;);
+			return;
+		}
+		wkt = str; //copy string
+		CPLFree(str);
+
+	} else if (!value-&gt;IsNull() &amp;&amp; !value-&gt;IsUndefined()) {
+		NanThrowError(&quot;srs must be SpatialReference object&quot;);
+		return;
+	}
+
+	CPLErr err = raw-&gt;SetProjection(wkt.c_str());
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+NAN_SETTER(Dataset::geoTransformSetter)
+{
+	NanScope();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args.This());
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	if (ds-&gt;uses_ogr) {
+		NanThrowError(&quot;Dataset doesnt support setting a geotransform&quot;);
+		return;
+	}
+	#endif
+
+	GDALDataset* raw = ds-&gt;getDataset();
+	if (!raw) {
+		NanThrowError(&quot;Dataset object has already been destroyed&quot;);
+		return;
+	}
+
+	if (!value-&gt;IsArray()) {
+		NanThrowError(&quot;Transform must be an array&quot;);
+		return;
+	}
+	Handle&lt;Array&gt; transform = value.As&lt;Array&gt;();
+
+	if (transform-&gt;Length() != 6) {
+		NanThrowError(&quot;Transform array must have 6 elements&quot;);
+		return;
+	}
+
+	double buffer[6];
+	for (int i = 0; i &lt; 6; i++) {
+		Local&lt;Value&gt; val = transform-&gt;Get(i);
+		if (!val-&gt;IsNumber()) {
+			NanThrowError(&quot;Transform array must only contain numbers&quot;);
+			return;
+		}
+		buffer[i] = val-&gt;NumberValue();
+	}
+
+	CPLErr err = raw-&gt;SetGeoTransform(buffer);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+	}
+}
+
+/**
+ * @readOnly
+ * @attribute bands
+ * @type {gdal.DatasetBands}
+ */
+NAN_GETTER(Dataset::bandsGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;bands_&quot;)));
+}
+
+/**
+ * @readOnly
+ * @attribute layers
+ * @type {gdal.DatasetLayers}
+ */
+NAN_GETTER(Dataset::layersGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;layers_&quot;)));
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

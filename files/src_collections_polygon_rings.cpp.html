@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_multilinestring.cpp - node-gdal</title>
+    <title>src/collections/polygon_rings.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -134,166 +134,196 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_multilinestring.cpp <small>File</small></h1>
+    <h1>src/collections/polygon_rings.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_geometry.hpp&quot;
-#include &quot;gdal_geometrycollection.hpp&quot;
-#include &quot;gdal_multilinestring.hpp&quot;
-#include &quot;gdal_linestring.hpp&quot;
-#include &quot;collections/geometry_collection_children.hpp&quot;
-
-#include &lt;stdlib.h&gt;
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_geometry.hpp&quot;
+#include &quot;../gdal_polygon.hpp&quot;
+#include &quot;../gdal_linearring.hpp&quot;
+#include &quot;polygon_rings.hpp&quot;
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; MultiLineString::constructor;
+Persistent&lt;FunctionTemplate&gt; PolygonRings::constructor;
 
-void MultiLineString::Initialize(Handle&lt;Object&gt; target)
+void PolygonRings::Initialize(Handle&lt;Object&gt; target)
 {
 	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(MultiLineString::New);
-	lcons-&gt;Inherit(NanNew(GeometryCollection::constructor));
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(PolygonRings::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;MultiLineString&quot;));
+	lcons-&gt;SetClassName(NanNew(&quot;PolygonRings&quot;));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;polygonize&quot;, polygonize);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGeometry&quot;, getGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
 
-	target-&gt;Set(NanNew(&quot;MultiLineString&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(NanNew(&quot;PolygonRings&quot;), lcons-&gt;GetFunction());
 
 	NanAssignPersistent(constructor, lcons);
 }
 
-MultiLineString::MultiLineString(OGRMultiLineString *geom)
-	: ObjectWrap(),
-	  this_(geom),
-	  owned_(true),
-	  size_(0)
-{
-	LOG(&quot;Created MultiLineString [%p]&quot;, geom);
-}
+PolygonRings::PolygonRings()
+	: ObjectWrap()
+{}
 
-MultiLineString::MultiLineString()
-	: ObjectWrap(),
-	  this_(NULL),
-	  owned_(true),
-	  size_(0)
-{
-}
-
-MultiLineString::~MultiLineString()
-{
-	if(this_) {
-		LOG(&quot;Disposing GeometryCollection [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if (owned_) {
-			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
-		}
-		LOG(&quot;Disposed GeometryCollection [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
+PolygonRings::~PolygonRings()
+{}
 
 /**
+ * A collection of polygon rings, used by {{#crossLink &quot;gdal.Polygon&quot;}}gdal.Polygon{{/crossLink}}.
+ *
  * @constructor
- * @class gdal.MultiLineString
- * @extends gdal.GeometryCollection
+ * @class gdal.PolygonRings
  */
-NAN_METHOD(MultiLineString::New)
+NAN_METHOD(PolygonRings::New)
 {
 	NanScope();
-	MultiLineString *f;
 
 	if (!args.IsConstructCall()) {
 		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
 		NanReturnUndefined();
 	}
-
 	if (args[0]-&gt;IsExternal()) {
 		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
-		f = static_cast&lt;MultiLineString *&gt;(ptr);
-
+		PolygonRings *geom =  static_cast&lt;PolygonRings *&gt;(ptr);
+		geom-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError(&quot;MultiLineString constructor doesn&#x27;t take any arguments&quot;);
-			NanReturnUndefined();
-		}
-		f = new MultiLineString(new OGRMultiLineString());
+		NanThrowError(&quot;Cannot create PolygonRings directly&quot;);
+		NanReturnUndefined();
 	}
-
-	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
-	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
-
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
 }
 
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom)
-{
-	NanEscapableScope();
-	return NanEscapeScope(MultiLineString::New(geom, true));
-}
-
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom, bool owned)
+Handle&lt;Value&gt; PolygonRings::New(Handle&lt;Value&gt; geom)
 {
 	NanEscapableScope();
 
-	if (!geom) {
-		return NanEscapeScope(NanNull());
-	}
+	PolygonRings *wrapped = new PolygonRings();
 
-	//make a copy of geometry owned by a feature
-	// + no need to track when a feature is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only geometry
-	// - is slower
-
-	if (!owned) {
-		geom = static_cast&lt;OGRMultiLineString*&gt;(geom-&gt;clone());
-	};
-
-	MultiLineString *wrapped = new MultiLineString(geom);
-	wrapped-&gt;owned_ = true;
-
-	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
-
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(MultiLineString::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(PolygonRings::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), geom);
 
 	return NanEscapeScope(obj);
 }
 
-NAN_METHOD(MultiLineString::toString)
+NAN_METHOD(PolygonRings::toString)
 {
 	NanScope();
-	NanReturnValue(NanNew(&quot;MultiLineString&quot;));
+	NanReturnValue(NanNew(&quot;PolygonRings&quot;));
 }
 
-NAN_METHOD(MultiLineString::polygonize)
+/**
+ * Returns the number of rings that exist in the collection.
+ *
+ * @method count
+ * @return Integer
+ */
+NAN_METHOD(PolygonRings::count)
 {
 	NanScope();
 
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Polygonize()));
+	int i = geom-&gt;get()-&gt;getExteriorRing() ? 1 : 0;
+	i += geom-&gt;get()-&gt;getNumInteriorRings();
+
+	NanReturnValue(NanNew&lt;Integer&gt;(i));
 }
 
-NAN_METHOD(MultiLineString::getGeometry)
+/**
+ * Returns the ring at the specified index. The ring
+ * at index &#x60;0&#x60; will always be the polygon&#x27;s exterior ring.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var exterior = polygon.rings.get(0);
+ * var interior = polygon.rings.get(1);&#x60;&#x60;&#x60;
+ *
+ * @method get
+ * @return {gdal.LinearRing}
+ */
+NAN_METHOD(PolygonRings::get)
 {
 	NanScope();
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	int i;
 	NODE_ARG_INT(0, &quot;index&quot;, i);
 
-	NanReturnValue(LineString::New(static_cast&lt;OGRLineString*&gt;(geom-&gt;this_-&gt;getGeometryRef(i)), false));
+	if(i == 0) {
+		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getExteriorRing(), false));
+	} else {
+		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getInteriorRing(i-1), false));
+	}
+}
+
+/**
+ * Adds a ring to the collection.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var ring1 = new gdal.LinearRing();
+ * ring1.points.add(0,0);
+ * ring1.points.add(1,0);
+ * ring1.points.add(1,1);
+ * ring1.points.add(0,1);
+ * ring1.points.add(0,0);
+ *
+ * // one at a time:
+ * polygon.rings.add(ring1);
+ *
+ * // many at once:
+ * polygon.rings.add([ring1, ...]);&#x60;&#x60;&#x60;
+ *
+ * @method get
+ * @param {gdal.LinearRing} ring
+ */
+NAN_METHOD(PolygonRings::add)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+
+	LinearRing *ring;
+
+	if (args.Length() &lt; 1) {
+		NanThrowError(&quot;ring(s) must be given&quot;);
+		NanReturnUndefined();
+	}
+	if (args[0]-&gt;IsArray()){
+		//set from array of geometry objects
+		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+		int length = array-&gt;Length();
+		for (int i = 0; i &lt; length; i++){
+			Handle&lt;Value&gt; element = array-&gt;Get(i);
+			if (IS_WRAPPED(element, LinearRing)){
+				ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(element.As&lt;Object&gt;());
+				geom-&gt;get()-&gt;addRing(ring-&gt;get());
+			} else {
+				NanThrowError(&quot;All array elements must be LinearRings&quot;);
+				NanReturnUndefined();
+			}
+		}
+	} else if (IS_WRAPPED(args[0], LinearRing)){
+		ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(args[0].As&lt;Object&gt;());
+		geom-&gt;get()-&gt;addRing(ring-&gt;get());
+	} else {
+		NanThrowError(&quot;ring(s) must be a LinearRing or array of LinearRings&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
 }
 
 } // namespace node_gdal

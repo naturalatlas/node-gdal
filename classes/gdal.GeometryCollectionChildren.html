@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Constants (ODsC) - node-gdal</title>
+    <title>gdal.GeometryCollectionChildren - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -134,7 +134,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>Constants (ODsC)</h1>
+    <h1>gdal.GeometryCollectionChildren</h1>
 </div>
 
     
@@ -148,28 +148,46 @@
 
 
 
+<div class="yuidoc-class-description">
+    <p>A collection of Geometries, used by <a href="../classes/gdal.GeometryCollection.html" class="crosslink">gdal.GeometryCollection</a>.</p>
+
+</div>
 
 
 
 
 
-
-
-    <div id="properties" class="page-section">
-        <h2 class="off-left">Properties</h2>
-
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
         <div class="item-list">
-        
-            <div id="property_gdal.ODrCCreateDataSource" class="property item">
-    <h3 class="name"><code>gdal.ODrCCreateDataSource</code></h3>
-    <span class="type">String</span>
+       		
+        	
+            <div id="method_add" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>add</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>geometry</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
 
     
 
     
 
     
-        <span class="flag final">const</span>
+
     
 
     
@@ -185,9 +203,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l367"><code>src&#x2F;node_gdal.cpp:367</code></a>
+        <a href="../files/src_collections_geometry_collection_children.cpp.html#l141"><code>src&#x2F;collections&#x2F;geometry_collection_children.cpp:141</code></a>
         
         </p>
+
 
         
 
@@ -195,7 +214,71 @@
     </div>
 
     <div class="description">
+        <p>Adds geometry(s) to the collection.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">geometry</code>
+                        <span class="type">Mixed</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>// one at a time:
+geometryCollection.children.add(new Point(0,0,0));
+
+// add many at once:
+geometryCollection.children.add([
+    new Point(1,0,0),
+    new Point(1,0,0)
+]);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
         
+        	
+            <div id="method_count" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>count</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
     </div>
 
     
@@ -203,19 +286,7 @@
     
 
     
-</div>
 
-        
-            <div id="property_gdal.ODrCDeleteDataSource" class="property item">
-    <h3 class="name"><code>gdal.ODrCDeleteDataSource</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -231,9 +302,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l373"><code>src&#x2F;node_gdal.cpp:373</code></a>
+        <a href="../files/src_collections_geometry_collection_children.cpp.html#l80"><code>src&#x2F;collections&#x2F;geometry_collection_children.cpp:80</code></a>
         
         </p>
+
 
         
 
@@ -241,7 +313,54 @@
     </div>
 
     <div class="description">
+        <p>Returns the number of items.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>Integer</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
         
+        	
+            <div id="method_get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>get</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+        </span>
+    
     </div>
 
     
@@ -249,19 +368,7 @@
     
 
     
-</div>
 
-        
-            <div id="property_gdal.ODsCCreateLayer" class="property item">
-    <h3 class="name"><code>gdal.ODsCCreateLayer</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -277,9 +384,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l355"><code>src&#x2F;node_gdal.cpp:355</code></a>
+        <a href="../files/src_collections_geometry_collection_children.cpp.html#l96"><code>src&#x2F;collections&#x2F;geometry_collection_children.cpp:96</code></a>
         
         </p>
+
 
         
 
@@ -287,7 +395,74 @@
     </div>
 
     <div class="description">
+        <p>Returns the geometry at the specified index.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>0-based index</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
         
+        	
+            <div id="method_remove" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>remove</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
     </div>
 
     
@@ -295,19 +470,7 @@
     
 
     
-</div>
 
-        
-            <div id="property_gdal.ODsCDeleteLayer" class="property item">
-    <h3 class="name"><code>gdal.ODsCDeleteLayer</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -323,9 +486,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l361"><code>src&#x2F;node_gdal.cpp:361</code></a>
+        <a href="../files/src_collections_geometry_collection_children.cpp.html#l116"><code>src&#x2F;collections&#x2F;geometry_collection_children.cpp:116</code></a>
         
         </p>
+
 
         
 
@@ -333,9 +497,34 @@
     </div>
 
     <div class="description">
-        
+        <p>Removes the geometry at the specified index.</p>
+
     </div>
 
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>0-based index</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
     
 
     
@@ -343,9 +532,13 @@
     
 </div>
 
+            
         
         </div>
     </div>
+
+
+
 
 
 

@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -74,6 +76,10 @@
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
             
@@ -90,6 +96,8 @@
                 <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
             
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
             
         </ul>
     </div>
@@ -198,6 +206,14 @@ LineString::~LineString()
 }
 
 /**
+ * Concrete representation of a multi-vertex line.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var lineString = new gdal.LineString();
+ * lineString.points.add(new gdal.Point(0,0));
+ * lineString.points.add(new gdal.Point(0,10));&#x60;&#x60;&#x60;
+ *
  * @constructor
  * @class gdal.LineString
  * @extends gdal.Geometry
@@ -272,9 +288,29 @@ NAN_METHOD(LineString::toString)
 	NanReturnValue(NanNew(&quot;LineString&quot;));
 }
 
+/**
+ * Computes the length of the line string.
+ *
+ * @method getLength
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getLength, Number, get_Length);
+
+/**
+ * Returns the number of the points that make up the line string.
+ *
+ * @method getNumPoints
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getNumPoints, Integer, getNumPoints);
 
+/**
+ * Returns the point at an index.
+ *
+ * @method getPoint
+ * @param {integer} index 0-based index
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineString::getPoint)
 {
 	NanScope();
@@ -291,6 +327,13 @@ NAN_METHOD(LineString::getPoint)
 	NanReturnValue(Point::New(pt));
 }
 
+/**
+ * Returns the point at the specified distance along the line string.
+ *
+ * @method value
+ * @param {Number} distance
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineString::value)
 {
 	NanScope();
@@ -306,7 +349,6 @@ NAN_METHOD(LineString::value)
 
 	NanReturnValue(Point::New(pt));
 }
-
 
 NAN_METHOD(LineString::addPoint)
 {
@@ -337,6 +379,12 @@ NAN_METHOD(LineString::addPoint)
 	NanReturnUndefined();
 }
 
+/**
+ * Points that make up the line string.
+ *
+ * @attribute points
+ * @type {gdal.PointCollection}
+ */
 NAN_GETTER(LineString::pointsGetter)
 {
 	NanScope();

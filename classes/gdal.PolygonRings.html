@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_multilinestring.cpp - node-gdal</title>
+    <title>gdal.PolygonRings - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -134,171 +134,366 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_multilinestring.cpp <small>File</small></h1>
+    <h1>gdal.PolygonRings</h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
+    
 
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_geometry.hpp&quot;
-#include &quot;gdal_geometrycollection.hpp&quot;
-#include &quot;gdal_multilinestring.hpp&quot;
-#include &quot;gdal_linestring.hpp&quot;
-#include &quot;collections/geometry_collection_children.hpp&quot;
+    
 
-#include &lt;stdlib.h&gt;
+    
 
-namespace node_gdal {
+    
 
-Persistent&lt;FunctionTemplate&gt; MultiLineString::constructor;
 
-void MultiLineString::Initialize(Handle&lt;Object&gt; target)
-{
-	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(MultiLineString::New);
-	lcons-&gt;Inherit(NanNew(GeometryCollection::constructor));
-	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;MultiLineString&quot;));
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;polygonize&quot;, polygonize);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGeometry&quot;, getGeometry);
+<div class="yuidoc-class-description">
+    <p>A collection of polygon rings, used by <a href="../classes/gdal.Polygon.html" class="crosslink">gdal.Polygon</a>.</p>
 
-	target-&gt;Set(NanNew(&quot;MultiLineString&quot;), lcons-&gt;GetFunction());
-
-	NanAssignPersistent(constructor, lcons);
-}
-
-MultiLineString::MultiLineString(OGRMultiLineString *geom)
-	: ObjectWrap(),
-	  this_(geom),
-	  owned_(true),
-	  size_(0)
-{
-	LOG(&quot;Created MultiLineString [%p]&quot;, geom);
-}
-
-MultiLineString::MultiLineString()
-	: ObjectWrap(),
-	  this_(NULL),
-	  owned_(true),
-	  size_(0)
-{
-}
-
-MultiLineString::~MultiLineString()
-{
-	if(this_) {
-		LOG(&quot;Disposing GeometryCollection [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if (owned_) {
-			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
-		}
-		LOG(&quot;Disposed GeometryCollection [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
-
-/**
- * @constructor
- * @class gdal.MultiLineString
- * @extends gdal.GeometryCollection
- */
-NAN_METHOD(MultiLineString::New)
-{
-	NanScope();
-	MultiLineString *f;
-
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
-	}
-
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
-		void* ptr = ext-&gt;Value();
-		f = static_cast&lt;MultiLineString *&gt;(ptr);
-
-	} else {
-		if (args.Length() != 0) {
-			NanThrowError(&quot;MultiLineString constructor doesn&#x27;t take any arguments&quot;);
-			NanReturnUndefined();
-		}
-		f = new MultiLineString(new OGRMultiLineString());
-	}
-
-	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
-	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
-
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
-}
-
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom)
-{
-	NanEscapableScope();
-	return NanEscapeScope(MultiLineString::New(geom, true));
-}
-
-Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom, bool owned)
-{
-	NanEscapableScope();
-
-	if (!geom) {
-		return NanEscapeScope(NanNull());
-	}
-
-	//make a copy of geometry owned by a feature
-	// + no need to track when a feature is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only geometry
-	// - is slower
-
-	if (!owned) {
-		geom = static_cast&lt;OGRMultiLineString*&gt;(geom-&gt;clone());
-	};
-
-	MultiLineString *wrapped = new MultiLineString(geom);
-	wrapped-&gt;owned_ = true;
-
-	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
-
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(MultiLineString::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-
-	return NanEscapeScope(obj);
-}
-
-NAN_METHOD(MultiLineString::toString)
-{
-	NanScope();
-	NanReturnValue(NanNew(&quot;MultiLineString&quot;));
-}
-
-NAN_METHOD(MultiLineString::polygonize)
-{
-	NanScope();
-
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
-
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Polygonize()));
-}
-
-NAN_METHOD(MultiLineString::getGeometry)
-{
-	NanScope();
-	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
-
-	int i;
-	NODE_ARG_INT(0, &quot;index&quot;, i);
-
-	NanReturnValue(LineString::New(static_cast&lt;OGRLineString*&gt;(geom-&gt;this_-&gt;getGeometryRef(i)), false));
-}
-
-} // namespace node_gdal
-    </pre>
 </div>
+
+
+
+    <div class="constructor yuidoc-class-constructor">
+        <h2>Constructor</h2>
+        <div class="item-list">
+        <div id="method_gdal.PolygonRings" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>gdal.PolygonRings</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_polygon_rings.cpp.html#l36"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:36</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        </div>
+    </div>
+
+
+
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
+        <div class="item-list">
+       		
+        	
+            <div id="method_count" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>count</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_polygon_rings.cpp.html#l81"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:81</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the number of rings that exist in the collection.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>Integer</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>get</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_polygon_rings.cpp.html#l100"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:100</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the ring at the specified index. The ring
+at index <code>0</code> will always be the polygon&#39;s exterior ring.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var exterior = polygon.rings.get(0);
+var interior = polygon.rings.get(1);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
+            <div id="method_get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>get</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>ring</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_polygon_rings.cpp.html#l129"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:129</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Adds a ring to the collection.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">ring</code>
+                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var ring1 = new gdal.LinearRing();
+ring1.points.add(0,0);
+ring1.points.add(1,0);
+ring1.points.add(1,1);
+ring1.points.add(0,1);
+ring1.points.add(0,0);
+
+// one at a time:
+polygon.rings.add(ring1);
+
+// many at once:
+polygon.rings.add([ring1, ...]);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
 
                     </div>
                 </div>
