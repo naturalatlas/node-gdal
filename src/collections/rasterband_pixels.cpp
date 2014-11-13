@@ -37,6 +37,11 @@ RasterBandPixels::RasterBandPixels()
 RasterBandPixels::~RasterBandPixels()
 {}
 
+/**
+ * A representation of a {{#crossLink "gdal.RasterBand"}}RasterBand{{/crossLink}}'s pixels.
+ *
+ * @class gdal.RasterBandPixels
+ */
 NAN_METHOD(RasterBandPixels::New)
 {
 	NanScope();
@@ -76,6 +81,14 @@ NAN_METHOD(RasterBandPixels::toString)
 	NanReturnValue(NanNew("RasterBandPixels"));
 }
 
+/**
+ * Returns the value at the x, y coordinate.
+ *
+ * @method get
+ * @param {Integer} x
+ * @param {Integer} y
+ * @return {Number}
+ */
 NAN_METHOD(RasterBandPixels::get)
 {
 	NanScope();
@@ -102,6 +115,14 @@ NAN_METHOD(RasterBandPixels::get)
 	NanReturnValue(NanNew<Number>(val));
 }
 
+/**
+ * Sets the value at the x, y coordinate.
+ *
+ * @method set
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Number} value
+ */
 NAN_METHOD(RasterBandPixels::set)
 {
 	NanScope();
@@ -129,6 +150,24 @@ NAN_METHOD(RasterBandPixels::set)
 	NanReturnUndefined();
 }
 
+/**
+ * Reads a region of pixels.
+ *
+ * @method read
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Integer} width
+ * @param {Integer} height
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Object} [options]
+ * @param {Integer} [options.buffer_width=x_size]
+ * @param {Integer} [options.buffer_height=y_size]
+ * @param {String} [options.data_type] See {{#crossLink "Constants (GDT)"}}GDT constants{{/crossLink}}.
+ * @param {Integer} [options.pixel_space]
+ * @param {Integer} [options.line_space]
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
 NAN_METHOD(RasterBandPixels::read)
 {
 	NanScope();
@@ -204,7 +243,7 @@ NAN_METHOD(RasterBandPixels::read)
 			NanReturnUndefined(); //TypedArray::New threw an error
 		}
 		obj = array.As<Object>();
-	} 
+	}
 
 	data = TypedArray::Validate(obj, type, min_length);
 	if(!data) {
@@ -220,6 +259,22 @@ NAN_METHOD(RasterBandPixels::read)
 	NanReturnValue(obj);
 }
 
+/**
+ * Writes a region of pixels.
+ *
+ * @method write
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Integer} width
+ * @param {Integer} height
+ * @param {TypedArray} data The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to write to the band.
+ * @param {Object} [options]
+ * @param {Integer} [options.buffer_width=x_size]
+ * @param {Integer} [options.buffer_height=y_size]
+ * @param {Integer} [options.pixel_space]
+ * @param {Integer} [options.line_space]
+ */
 NAN_METHOD(RasterBandPixels::write)
 {
 	NanScope();
@@ -290,6 +345,16 @@ NAN_METHOD(RasterBandPixels::write)
 	NanReturnUndefined();
 }
 
+/**
+ * Reads a block of pixels.
+ *
+ * @method readBlock
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
 NAN_METHOD(RasterBandPixels::readBlock)
 {
 	NanScope();
@@ -338,6 +403,15 @@ NAN_METHOD(RasterBandPixels::readBlock)
 	NanReturnValue(array);
 }
 
+/**
+ * Writes a block of pixels.
+ *
+ * @method writeBlock
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {TypedArray} data The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values to write to the band.
+ */
 NAN_METHOD(RasterBandPixels::writeBlock)
 {
 	NanScope();

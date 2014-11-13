@@ -36,7 +36,6 @@ PolygonRings::~PolygonRings()
 /**
  * A collection of polygon rings, used by {{#crossLink "gdal.Polygon"}}gdal.Polygon{{/crossLink}}.
  *
- * @constructor
  * @class gdal.PolygonRings
  */
 NAN_METHOD(PolygonRings::New)

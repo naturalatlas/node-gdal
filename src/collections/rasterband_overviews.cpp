@@ -28,9 +28,12 @@ RasterBandOverviews::RasterBandOverviews()
 	: ObjectWrap()
 {}
 
-RasterBandOverviews::~RasterBandOverviews() 
+RasterBandOverviews::~RasterBandOverviews()
 {}
 
+/**
+ * @class gdal.RasterBandOverviews
+ */
 NAN_METHOD(RasterBandOverviews::New)
 {
 	NanScope();
@@ -83,7 +86,7 @@ NAN_METHOD(RasterBandOverviews::get)
 
 	int id;
 	NODE_ARG_INT(0, "id", id);
-	
+
 	GDALRasterBand *result = band->get()->GetOverview(id);
 
 	if (result == NULL) {
@@ -107,7 +110,7 @@ NAN_METHOD(RasterBandOverviews::getBySampleCount)
 
 	int n_samples;
 	NODE_ARG_INT(0, "minimum number of samples", n_samples);
-	
+
 	GDALRasterBand *result = band->get()->GetRasterSampleOverview(n_samples);
 
 	NanReturnValue(RasterBand::New(result, band->getParent()));
@@ -123,7 +126,7 @@ NAN_METHOD(RasterBandOverviews::count)
 		NanThrowError("RasterBand object has already been destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	NanReturnValue(NanNew<Integer>(band->get()->GetOverviewCount()));
 }
 

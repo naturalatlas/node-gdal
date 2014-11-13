@@ -27,7 +27,7 @@ void LayerFeatures::Initialize(Handle<Object> target)
 	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
 	target->Set(NanNew("LayerFeatures"), lcons->GetFunction());
-	
+
 	NanAssignPersistent(constructor, lcons);
 }
 
@@ -35,9 +35,12 @@ LayerFeatures::LayerFeatures()
 	: ObjectWrap()
 {}
 
-LayerFeatures::~LayerFeatures() 
+LayerFeatures::~LayerFeatures()
 {}
 
+/**
+ * @class gdal.LayerFeatures
+ */
 NAN_METHOD(LayerFeatures::New)
 {
 	NanScope();
@@ -141,7 +144,7 @@ NAN_METHOD(LayerFeatures::add)
 
 	Feature *f;
 	NODE_ARG_WRAPPED(0, "feature", Feature, f)
-	
+
 	int err = layer->get()->CreateFeature(f->get());
 	if(err) {
 		NODE_THROW_OGRERR(err);
@@ -221,7 +224,7 @@ NAN_METHOD(LayerFeatures::remove)
 		NanThrowError("Layer object already destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	int i;
 	NODE_ARG_INT(0, "feature id", i);
 	int err = layer->get()->DeleteFeature(i);

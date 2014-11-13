@@ -36,9 +36,12 @@ FeatureDefnFields::FeatureDefnFields()
 	: ObjectWrap()
 {}
 
-FeatureDefnFields::~FeatureDefnFields() 
+FeatureDefnFields::~FeatureDefnFields()
 {}
 
+/**
+ * @class gdal.FeatureDefnFields
+ */
 NAN_METHOD(FeatureDefnFields::New)
 {
 	NanScope();
@@ -124,7 +127,7 @@ NAN_METHOD(FeatureDefnFields::get)
 		NanThrowError("Field index or name must be given");
 		NanReturnUndefined();
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
@@ -142,7 +145,7 @@ NAN_METHOD(FeatureDefnFields::getNames)
 		NanReturnUndefined();
 	}
 
-	int n = feature_def->get()->GetFieldCount();	
+	int n = feature_def->get()->GetFieldCount();
 	Handle<Array> result = NanNew<Array>(n);
 
 	for (int i = 0; i < n;  i++) {
@@ -168,7 +171,7 @@ NAN_METHOD(FeatureDefnFields::remove)
 		NanThrowError("Field index or name must be given");
 		NanReturnUndefined();
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
@@ -243,7 +246,7 @@ NAN_METHOD(FeatureDefnFields::reorder)
 		NanThrowError("Array length must match field count");
 		NanReturnUndefined();
 	}
-	
+
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i < n; i++) {
@@ -251,19 +254,19 @@ NAN_METHOD(FeatureDefnFields::reorder)
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
 			NanThrowError("Array must only contain integers");
-			NanReturnUndefined(); 
+			NanReturnUndefined();
 		}
-		
+
 		int key = val->IntegerValue();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
 			NanThrowError("Values must be between 0 and field count - 1");
 			NanReturnUndefined();
 		}
-		
+
 		field_map_array[i] = key;
 	}
-	
+
 	err = feature_def->get()->ReorderFieldDefns(field_map_array);
 
 	delete [] field_map_array;

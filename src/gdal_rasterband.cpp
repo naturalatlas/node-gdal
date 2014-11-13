@@ -33,7 +33,7 @@ void RasterBand::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getMaskBand", getMaskBand);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getMaskFlags", getMaskFlags);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "createMaskBand", createMaskBand);
-	
+
 	// unimplemented methods
 	//NODE_SET_PROTOTYPE_METHOD(lcons, "buildOverviews", buildOverviews);
 	//NODE_SET_PROTOTYPE_METHOD(lcons, "rasterIO", rasterIO);
@@ -115,7 +115,11 @@ void RasterBand::dispose()
 	}
 }
 
-
+/**
+ * A single raster band (or channel).
+ *
+ * @class gdal.RasterBand
+ */
 NAN_METHOD(RasterBand::New)
 {
 	NanScope();
@@ -131,10 +135,10 @@ NAN_METHOD(RasterBand::New)
 		RasterBand *f = static_cast<RasterBand *>(ptr);
 		f->Wrap(args.This());
 
-		Handle<Value> overviews = RasterBandOverviews::New(args.This()); 
-		args.This()->SetHiddenValue(NanNew("overviews_"), overviews); 
-		Handle<Value> pixels = RasterBandPixels::New(args.This()); 
-		args.This()->SetHiddenValue(NanNew("pixels_"), pixels); 
+		Handle<Value> overviews = RasterBandOverviews::New(args.This());
+		args.This()->SetHiddenValue(NanNew("overviews_"), overviews);
+		Handle<Value> pixels = RasterBandPixels::New(args.This());
+		args.This()->SetHiddenValue(NanNew("pixels_"), pixels);
 
 		NanReturnValue(args.This());
 	} else {
@@ -188,10 +192,48 @@ NAN_METHOD(RasterBand::toString)
 	NanReturnValue(NanNew("RasterBand"));
 }
 
+/**
+ * Saves changes to disk.
+ *
+ * @method flush
+ */
 NODE_WRAPPED_METHOD(RasterBand, flush, FlushCache);
-NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskFlags, Integer, GetMaskFlags);
-NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(RasterBand, createMaskBand, CreateMaskBand, "number of desired samples");
 
+/**
+ * Return the status flags of the mask band associated with the band.
+ *
+ * The result will be a bitwise OR-ed set of status flags with the following
+ * available definitions that may be extended in the future:
+ *
+ *   - `GMF_ALL_VALID` (`0x01`): There are no invalid pixels, all mask values will be 255. When used this will normally be the only flag set.
+ *   - `GMF_PER_DATASET` (`0x02`): The mask band is shared between all bands on the dataset.
+ *   - `GMF_ALPHA` (`0x04`): The mask band is actually an alpha band and may have values other than 0 and 255.
+ *   - `GMF_NODATA` (`0x08`): Indicates the mask is actually being generated from nodata values. (mutually exclusive of `GMF_ALPHA`)
+ *
+ * @method getMaskFlags
+ * @return {Integer} Mask flags
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(RasterBand, getMaskFlags, Integer, GetMaskFlags);
+// TODO: expose GMF constants in API
+// ({{#crossLink "Constants (GMF)"}}see flags{{/crossLink}})
+
+/**
+ * Adds a mask band to the current band.
+ *
+ * @throws Error
+ * @method createMaskBand
+ * @param {Integer} flags Mask flags
+ */
+NODE_WRAPPED_METHOD_WITH_CPLERR_RESULT_1_INTEGER_PARAM(RasterBand, createMaskBand, CreateMaskBand, "mask flags");
+// TODO: expose GMF constants in API
+// ({{#crossLink "Constants (GMF)"}}see flags{{/crossLink}})
+
+/**
+ * Return the mask band associated with the band.
+ *
+ * @method getMaskBand
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(RasterBand::getMaskBand)
 {
 	NanScope();
@@ -209,6 +251,14 @@ NAN_METHOD(RasterBand::getMaskBand)
 	NanReturnValue(RasterBand::New(mask_band, band->getParent()));
 }
 
+/**
+ * Fill this band with a constant value.
+ *
+ * @throws Error
+ * @method fill
+ * @param {Number} real_value
+ * @param {Number} [imaginary_value]
+ */
 NAN_METHOD(RasterBand::fill)
 {
 	NanScope();
@@ -227,11 +277,11 @@ NAN_METHOD(RasterBand::fill)
 	if (err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
-	} 
+	}
 	NanReturnUndefined();
 }
 
-// --- Custom error handling to handle VRT errors --- 
+// --- Custom error handling to handle VRT errors ---
 // see: https://github.com/mapbox/mapnik-omnivore/issues/10
 
 std::string stats_file_err = "";
@@ -251,8 +301,21 @@ void popStatsErrorHandler() {
 	if(!last_err_handler) return;
 	CPLSetErrorHandler(last_err_handler);
 }
-	
 
+/**
+ * Fetch image statistics.
+ *
+ * Returns the minimum, maximum, mean and standard deviation of all pixel values
+ * in this band. If approximate statistics are sufficient, the `allow_approximation`
+ * argument can be set to `true` in which case overviews, or a subset of image tiles
+ * may be used in computing the statistics.
+ *
+ * @throws Error
+ * @method getStatistics
+ * @param {Boolean} allow_approximation If `true` statistics may be computed based on overviews or a subset of all tiles.
+ * @param {Boolean} force If `false` statistics will only be returned if it can be done without rescanning the image.
+ * @return {Object} Statistics containing `"min"`, `"max"`, `"mean"`, `"std_dev"` properties.
+ */
 NAN_METHOD(RasterBand::getStatistics)
 {
 	NanScope();
@@ -266,7 +329,7 @@ NAN_METHOD(RasterBand::getStatistics)
 		NanThrowError("RasterBand object has already been destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	pushStatsErrorHandler();
 	CPLErr err = band->this_->GetStatistics(approx, force, &min, &max, &mean, &std_dev);
 	popStatsErrorHandler();
@@ -290,6 +353,19 @@ NAN_METHOD(RasterBand::getStatistics)
 	NanReturnValue(result);
 }
 
+/**
+ * Computes image statistics.
+ *
+ * Returns the minimum, maximum, mean and standard deviation of all pixel values
+ * in this band. If approximate statistics are sufficient, the `allow_approximation`
+ * argument can be set to `true` in which case overviews, or a subset of image tiles
+ * may be used in computing the statistics.
+ *
+ * @throws Error
+ * @method getStatistics
+ * @param {Boolean} allow_approximation If `true` statistics may be computed based on overviews or a subset of all tiles.
+ * @return {Object} Statistics containing `"min"`, `"max"`, `"mean"`, `"std_dev"` properties.
+ */
 NAN_METHOD(RasterBand::computeStatistics)
 {
 	NanScope();
@@ -322,6 +398,17 @@ NAN_METHOD(RasterBand::computeStatistics)
 	NanReturnValue(result);
 }
 
+/**
+ * Set statistics on the band. This method can be used to store
+ * min/max/mean/standard deviation statistics.
+ *
+ * @throws Error
+ * @method setStatistics
+ * @param {Number} min
+ * @param {Number} max
+ * @param {Number} mean
+ * @param {Number} std_dev
+ */
 NAN_METHOD(RasterBand::setStatistics)
 {
 	NanScope();
@@ -347,24 +434,44 @@ NAN_METHOD(RasterBand::setStatistics)
 	NanReturnUndefined();
 }
 
+/**
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
 NAN_GETTER(RasterBand::dsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("ds_")));
 }
 
+/**
+ * @readOnly
+ * @attribute overviews
+ * @type {gdal.RasterBandOverviews}
+ */
 NAN_GETTER(RasterBand::overviewsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("overviews_")));
 }
 
+/**
+ * @readOnly
+ * @attribute pixels
+ * @type {gdal.RasterBandPixels}
+ */
 NAN_GETTER(RasterBand::pixelsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("pixels_")));
 }
 
+/**
+ * @readOnly
+ * @attribute id
+ * @type {Integer|null}
+ */
 NAN_GETTER(RasterBand::idGetter)
 {
 	NanScope();
@@ -383,6 +490,13 @@ NAN_GETTER(RasterBand::idGetter)
 	}
 }
 
+/**
+ * Size object containing `"x"` and `"y"` properties.
+ *
+ * @readOnly
+ * @attribute size
+ * @type {Object}
+ */
 NAN_GETTER(RasterBand::sizeGetter)
 {
 	NanScope();
@@ -398,6 +512,13 @@ NAN_GETTER(RasterBand::sizeGetter)
 	NanReturnValue(result);
 }
 
+/**
+ * Size object containing `"x"` and `"y"` properties.
+ *
+ * @readOnly
+ * @attribute blockSize
+ * @type {Object}
+ */
 NAN_GETTER(RasterBand::blockSizeGetter)
 {
 	NanScope();
@@ -416,6 +537,13 @@ NAN_GETTER(RasterBand::blockSizeGetter)
 	NanReturnValue(result);
 }
 
+/**
+ * Minimum value for this band.
+ *
+ * @readOnly
+ * @attribute minimum
+ * @type {Number}
+ */
 NAN_GETTER(RasterBand::minimumGetter)
 {
 	NanScope();
@@ -430,6 +558,13 @@ NAN_GETTER(RasterBand::minimumGetter)
 	NanReturnValue(NanNew<Number>(result));
 }
 
+/**
+ * Maximum value for this band.
+ *
+ * @readOnly
+ * @attribute maximum
+ * @type {Number}
+ */
 NAN_GETTER(RasterBand::maximumGetter)
 {
 	NanScope();
@@ -444,6 +579,12 @@ NAN_GETTER(RasterBand::maximumGetter)
 	NanReturnValue(NanNew<Number>(result));
 }
 
+/**
+ * Raster value offset.
+ *
+ * @attribute offset
+ * @type {Number}
+ */
 NAN_GETTER(RasterBand::offsetGetter)
 {
 	NanScope();
@@ -458,6 +599,12 @@ NAN_GETTER(RasterBand::offsetGetter)
 	NanReturnValue(NanNew<Number>(result));
 }
 
+/**
+ * Raster value scale.
+ *
+ * @attribute offset
+ * @type {Number}
+ */
 NAN_GETTER(RasterBand::scaleGetter)
 {
 	NanScope();
@@ -472,6 +619,12 @@ NAN_GETTER(RasterBand::scaleGetter)
 	NanReturnValue(NanNew<Number>(result));
 }
 
+/**
+ * No data value for this band.
+ *
+ * @attribute noDataValue
+ * @type {Number|null}
+ */
 NAN_GETTER(RasterBand::noDataValueGetter)
 {
 	NanScope();
@@ -491,6 +644,15 @@ NAN_GETTER(RasterBand::noDataValueGetter)
 	}
 }
 
+/**
+ * Raster unit type (name for the units of this raster's values).
+ * For instance, it might be `"m"` for an elevation model in meters,
+ * or `"ft"` for feet. If no units are available, a value of `""`
+ * will be returned.
+ *
+ * @attribute unitType
+ * @type {String}
+ */
 NAN_GETTER(RasterBand::unitTypeGetter)
 {
 	NanScope();
@@ -504,6 +666,13 @@ NAN_GETTER(RasterBand::unitTypeGetter)
 	NanReturnValue(SafeString::New(result));
 }
 
+/**
+ * Pixel data type ({{#crossLink "Constants (GDT)"}}see GDT constants{{/crossLink}}) used for this band.
+ *
+ * @readOnly
+ * @attribute dataType
+ * @type {String|Undefined}
+ */
 NAN_GETTER(RasterBand::dataTypeGetter)
 {
 	NanScope();
@@ -514,11 +683,18 @@ NAN_GETTER(RasterBand::dataTypeGetter)
 	}
 
 	GDALDataType type = band->this_->GetRasterDataType();
-	
+
 	if(type == GDT_Unknown) NanReturnUndefined();
 	NanReturnValue(SafeString::New(GDALGetDataTypeName(type)));
 }
 
+/**
+ * Indicates if the band is read-only.
+ *
+ * @readOnly
+ * @attribute readOnly
+ * @type {Boolean}
+ */
 NAN_GETTER(RasterBand::readOnlyGetter)
 {
 	NanScope();
@@ -532,6 +708,17 @@ NAN_GETTER(RasterBand::readOnlyGetter)
 	NanReturnValue(result == GA_Update ? NanFalse() : NanTrue());
 }
 
+/**
+ * An indicator if the underlying datastore can compute arbitrary overviews
+ * efficiently, such as is the case with OGDI over a network. Datastores with
+ * arbitrary overviews don't generally have any fixed overviews, but GDAL's
+ * `RasterIO()` method can be used in downsampling mode to get overview
+ * data efficiently.
+ *
+ * @readOnly
+ * @attribute hasArbitraryOverviews
+ * @type {Boolean}
+ */
 NAN_GETTER(RasterBand::hasArbitraryOverviewsGetter)
 {
 	NanScope();
@@ -545,6 +732,12 @@ NAN_GETTER(RasterBand::hasArbitraryOverviewsGetter)
 	NanReturnValue(NanNew<Boolean>(result));
 }
 
+/**
+ * List of list of category names for this raster.
+ *
+ * @attribute categoryNames
+ * @type {Array}
+ */
 NAN_GETTER(RasterBand::categoryNamesGetter)
 {
 	NanScope();
@@ -569,6 +762,12 @@ NAN_GETTER(RasterBand::categoryNamesGetter)
 	NanReturnValue(results);
 }
 
+/**
+ * Color interpretation mode ({{#crossLink "Constants (GCI)"}}see GCI constants{{/crossLink}}).
+ *
+ * @attribute colorInterpretation
+ * @type {Array}
+ */
 NAN_GETTER(RasterBand::colorInterpretationGetter)
 {
 	NanScope();
@@ -607,12 +806,12 @@ NAN_SETTER(RasterBand::noDataValueSetter)
 	NanScope();
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
 	if (!band->this_) {
-		NanThrowError("RasterBand object has already been destroyed"); 
+		NanThrowError("RasterBand object has already been destroyed");
 		return;
 	}
-	
+
 	double input;
-	
+
 	if (value->IsNull() || value -> IsUndefined()){
 		input = std::numeric_limits<double>::quiet_NaN();
 	} else if (value->IsNumber()) {
@@ -653,7 +852,7 @@ NAN_SETTER(RasterBand::offsetSetter)
 	NanScope();
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
 	if (!band->this_) {
-		NanThrowError("RasterBand object has already been destroyed"); 
+		NanThrowError("RasterBand object has already been destroyed");
 		return;
 	}
 
@@ -673,12 +872,12 @@ NAN_SETTER(RasterBand::categoryNamesSetter)
 	NanScope();
 	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(args.This());
 	if (!band->this_) {
-		NanThrowError("RasterBand object has already been destroyed"); 
+		NanThrowError("RasterBand object has already been destroyed");
 		return;
 	}
 
 	if(!value->IsArray()){
-		NanThrowError("Category names must be an array"); 
+		NanThrowError("Category names must be an array");
 		return;
 	}
 	Handle<Array> names = value.As<Array>();
@@ -718,7 +917,7 @@ NAN_SETTER(RasterBand::colorInterpretationSetter)
 	}
 
 	GDALColorInterp ci = GCI_Undefined;
-	
+
 	if (value->IsString()) {
 		NanUtf8String name = NanUtf8String(value);
 		ci = GDALGetColorInterpretationByName(*name);

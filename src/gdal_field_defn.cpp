@@ -52,6 +52,13 @@ FieldDefn::~FieldDefn()
 	}
 }
 
+
+/**
+ * @constructor
+ * @class gdal.FieldDefn
+ * @param {String} field_name
+ * @param {String} field_name
+ */
 NAN_METHOD(FieldDefn::New)
 {
 	NanScope();
@@ -199,14 +206,14 @@ NAN_SETTER(FieldDefn::typeSetter)
 	} else {
 		def->this_->SetType(OGRFieldType(type));
 	}
-	
+
 }
 
 NAN_SETTER(FieldDefn::justificationSetter)
 {
 	NanScope();
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	
+
 
 	OGRJustification justification;
 	std::string str = *NanUtf8String(value);
@@ -216,7 +223,7 @@ NAN_SETTER(FieldDefn::justificationSetter)
 		} else if (str == "Right") {
 			justification = OJRight;
 		} else if (str == "Undefined") {
-			justification = OJUndefined; 
+			justification = OJUndefined;
 		} else {
 			NanThrowError("Unrecognized justification");
 			return;
@@ -227,7 +234,7 @@ NAN_SETTER(FieldDefn::justificationSetter)
 		NanThrowError("justification must be a string or undefined");
 		return;
 	}
-	
+
 	def->this_->SetJustify(justification);
 }
 

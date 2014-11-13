@@ -28,7 +28,7 @@ void LayerFields::Initialize(Handle<Object> target)
 	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
 	target->Set(NanNew("LayerFields"), lcons->GetFunction());
-	
+
 	NanAssignPersistent(constructor, lcons);
 }
 
@@ -39,6 +39,9 @@ LayerFields::LayerFields()
 LayerFields::~LayerFields()
 {}
 
+/**
+ * @class gdal.LayerFields
+ */
 NAN_METHOD(LayerFields::New)
 {
 	NanScope();
@@ -78,6 +81,13 @@ NAN_METHOD(LayerFields::toString)
 	NanReturnValue(NanNew("LayerFields"));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @throws Error
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(LayerFields::count)
 {
 	NanScope();
@@ -98,6 +108,14 @@ NAN_METHOD(LayerFields::count)
 	NanReturnValue(NanNew<Integer>(def->GetFieldCount()));
 }
 
+/**
+ * Find the index of field in the layer.
+ *
+ * @throws Error
+ * @method indexOf
+ * @param {String} field
+ * @return {Integer} Field index, or -1 if the field doesn't exist
+ */
 NAN_METHOD(LayerFields::indexOf)
 {
 	NanScope();
@@ -121,6 +139,14 @@ NAN_METHOD(LayerFields::indexOf)
 	NanReturnValue(NanNew<Integer>(def->GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Returns a field definition.
+ *
+ * @throws Error
+ * @method get
+ * @param {String|integer} field Field name or index (0-based)
+ * @return {gdal.FieldDefn}
+ */
 NAN_METHOD(LayerFields::get)
 {
 	NanScope();
@@ -149,6 +175,13 @@ NAN_METHOD(LayerFields::get)
 	NanReturnValue(FieldDefn::New(def->GetFieldDefn(field_index)));
 }
 
+/**
+ * Returns a list of field names.
+ *
+ * @throws Error
+ * @method getNames
+ * @return {Array} List of strings.
+ */
 NAN_METHOD(LayerFields::getNames)
 {
 	NanScope();
@@ -177,6 +210,13 @@ NAN_METHOD(LayerFields::getNames)
 	NanReturnValue(result);
 }
 
+/**
+ * Removes a field.
+ *
+ * @throws Error
+ * @method remove
+ * @param {String|integer} field Field name or index (0-based)
+ */
 NAN_METHOD(LayerFields::remove)
 {
 	NanScope();
@@ -211,6 +251,14 @@ NAN_METHOD(LayerFields::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds field(s).
+ *
+ * @throws Error
+ * @method add
+ * @param {gdal.FieldDefn|Array} def A field definition, or array of field definitions.
+ * @param {Boolean} [approx=true]
+ */
 NAN_METHOD(LayerFields::add)
 {
 	NanScope();
@@ -263,6 +311,18 @@ NAN_METHOD(LayerFields::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Reorders fields.
+ *
+ * @example
+ * ```
+ * // reverse field order
+ * layer.fields.reorder([2,1,0]);```
+ *
+ * @throws Error
+ * @method reorder
+ * @param {Array} map An array of new indexes (integers)
+ */
 NAN_METHOD(LayerFields::reorder)
 {
 	NanScope();
@@ -322,6 +382,13 @@ NAN_METHOD(LayerFields::reorder)
 	NanReturnUndefined();
 }
 
+/**
+ * Parent layer
+ *
+ * @readOnly
+ * @attribute layer
+ * @type {gdal.Layer}
+ */
 NAN_GETTER(LayerFields::layerGetter)
 {
 	NanScope();
