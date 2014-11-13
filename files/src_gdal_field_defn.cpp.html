@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_field_defn.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_field_defn.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_field_defn.hpp&quot;
+#include &quot;utils/field_types.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; FieldDefn::constructor;
+
+void FieldDefn::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(FieldDefn::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;FieldDefn&quot;));
+
+	ATTR(lcons, &quot;name&quot;, nameGetter, nameSetter);
+	ATTR(lcons, &quot;type&quot;, typeGetter, typeSetter);
+	ATTR(lcons, &quot;justification&quot;, justificationGetter, justificationSetter);
+	ATTR(lcons, &quot;width&quot;, widthGetter, widthSetter);
+	ATTR(lcons, &quot;precision&quot;, precisionGetter, precisionSetter);
+	ATTR(lcons, &quot;ignored&quot;, ignoredGetter, ignoredSetter);
+
+	target-&gt;Set(NanNew(&quot;FieldDefn&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+FieldDefn::FieldDefn(OGRFieldDefn *def)
+	: ObjectWrap(),
+	  this_(def),
+	  owned_(false)
+{
+	LOG(&quot;Created FieldDefn [%p]&quot;, def);
+}
+
+FieldDefn::FieldDefn()
+	: ObjectWrap(),
+	  this_(0),
+	  owned_(false)
+{
+}
+
+FieldDefn::~FieldDefn()
+{
+	if(this_){
+		LOG(&quot;Disposing FieldDefn [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		if(owned_) delete this_;
+		LOG(&quot;Disposed FieldDefn [%p]&quot;, this_);
+		this_ = NULL;
+	}
+}
+
+
+/**
+ * @constructor
+ * @class gdal.FieldDefn
+ * @param {String} field_name
+ * @param {String} field_name
+ */
+NAN_METHOD(FieldDefn::New)
+{
+	NanScope();
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		FieldDefn *f = static_cast&lt;FieldDefn *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
+	} else {
+		std::string field_name(&quot;&quot;);
+		std::string type_name(&quot;string&quot;);
+
+		NODE_ARG_STR(0, &quot;field name&quot;, field_name);
+		NODE_ARG_STR(1, &quot;field type&quot;, type_name);
+
+		int field_type = getFieldTypeByName(type_name);
+		if (field_type &lt; 0) {
+			NanThrowError(&quot;Unrecognized field type&quot;);
+			NanReturnUndefined();
+		}
+
+		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), static_cast&lt;OGRFieldType&gt;(field_type)));
+		def-&gt;owned_ = true;
+		def-&gt;Wrap(args.This());
+	}
+
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def)
+{
+	NanEscapableScope();
+	return NanEscapeScope(FieldDefn::New(def, false));
+}
+
+Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def, bool owned)
+{
+	NanEscapableScope();
+
+	if (!def) {
+		return NanEscapeScope(NanNull());
+	}
+
+	//make a copy of fielddefn owned by a featuredefn
+	// + no need to track when a featuredefn is destroyed
+	// + no need to throw errors when a method trys to modify an owned read-only fielddefn
+	// - is slower
+
+	if (!owned) {
+		def = new OGRFieldDefn(def);
+	}
+
+	FieldDefn *wrapped = new FieldDefn(def);
+	wrapped-&gt;owned_ = true;
+
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(FieldDefn::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(FieldDefn::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;FieldDefn&quot;));
+}
+
+
+NAN_GETTER(FieldDefn::nameGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	NanReturnValue(SafeString::New(def-&gt;this_-&gt;GetNameRef()));
+}
+
+NAN_GETTER(FieldDefn::typeGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	NanReturnValue(SafeString::New(getFieldTypeName(def-&gt;this_-&gt;GetType())));
+}
+
+NAN_GETTER(FieldDefn::ignoredGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsIgnored()));
+}
+
+NAN_GETTER(FieldDefn::justificationGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	OGRJustification justification = def-&gt;this_-&gt;GetJustify();
+	if (justification == OJRight) NanReturnValue(NanNew(&quot;Right&quot;));
+	if (justification == OJLeft)  NanReturnValue(NanNew(&quot;Left&quot;));
+	NanReturnValue(NanUndefined());
+}
+
+NAN_GETTER(FieldDefn::widthGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetWidth()));
+}
+
+NAN_GETTER(FieldDefn::precisionGetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetPrecision()));
+}
+
+NAN_SETTER(FieldDefn::nameSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	if(!value-&gt;IsString()){
+		NanThrowError(&quot;Name must be string&quot;);
+		return;
+	}
+	NanUtf8String name = NanUtf8String(value);
+	def-&gt;this_-&gt;SetName(*name);
+}
+
+NAN_SETTER(FieldDefn::typeSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	if(!value-&gt;IsString()){
+		NanThrowError(&quot;type must be a string&quot;);
+		return;
+	}
+	NanUtf8String name = NanUtf8String(value);
+	int type = getFieldTypeByName(*name);
+	if(type &lt; 0){
+		NanThrowError(&quot;Unrecognized field type&quot;);
+	} else {
+		def-&gt;this_-&gt;SetType(OGRFieldType(type));
+	}
+
+}
+
+NAN_SETTER(FieldDefn::justificationSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+
+
+	OGRJustification justification;
+	std::string str = *NanUtf8String(value);
+	if(value-&gt;IsString()){
+		if(str == &quot;Left&quot;) {
+			justification = OJLeft;
+		} else if (str == &quot;Right&quot;) {
+			justification = OJRight;
+		} else if (str == &quot;Undefined&quot;) {
+			justification = OJUndefined;
+		} else {
+			NanThrowError(&quot;Unrecognized justification&quot;);
+			return;
+		}
+	} else if (value-&gt;IsNull() || value-&gt;IsUndefined()){
+		justification = OJUndefined;
+	} else {
+		NanThrowError(&quot;justification must be a string or undefined&quot;);
+		return;
+	}
+
+	def-&gt;this_-&gt;SetJustify(justification);
+}
+
+NAN_SETTER(FieldDefn::widthSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	if(!value-&gt;IsInt32()){
+		NanThrowError(&quot;width must be an integer&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetWidth(value-&gt;IntegerValue());
+}
+
+NAN_SETTER(FieldDefn::precisionSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	if(!value-&gt;IsInt32()){
+		NanThrowError(&quot;precision must be an integer&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetPrecision(value-&gt;IntegerValue());
+}
+
+NAN_SETTER(FieldDefn::ignoredSetter)
+{
+	NanScope();
+	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
+	if(!value-&gt;IsBoolean()){
+		NanThrowError(&quot;ignored must be a boolean&quot;);
+		return;
+	}
+	def-&gt;this_-&gt;SetIgnored(value-&gt;IntegerValue());
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

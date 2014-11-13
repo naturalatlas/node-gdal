@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
@@ -75,6 +77,12 @@
             
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
                 <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
@@ -82,6 +90,10 @@
                 <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
             
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
@@ -98,6 +110,14 @@
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
             
                 <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
             
         </ul>
     </div>
@@ -229,7 +249,8 @@ void Layer::dispose()
 };
 
 /**
- * @constructor
+ * A representation of a layer of simple vector features, with access methods.
+ *
  * @class gdal.Layer
  */
 NAN_METHOD(Layer::New)
@@ -336,9 +357,31 @@ NAN_METHOD(Layer::toString)
 	NanReturnValue(SafeString::New(ss.str().c_str()));
 }
 
+/**
+ * Flush pending changes to disk.
+ *
+ * @throws Error
+ * @method syncToDisk
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
+
+/**
+ * Determines if the dataset supports the indicated operation.
+ *
+ * @method testCapability
+ * @param {string} capability (see {{#crossLink &quot;Constants (OLC)&quot;}}capability list{{/crossLink}})
+ * @return {Boolean}
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, &quot;capability&quot;);
 
+/**
+ * Fetch the extent of this layer.
+ *
+ * @throws Error
+ * @method getExtent
+ * @param {Boolean} [force=true]
+ * @return {Object} An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, &#x60;maxY&#x60; properties.
+ */
 NAN_METHOD(Layer::getExtent)
 {
 	NanScope();
@@ -359,6 +402,7 @@ NAN_METHOD(Layer::getExtent)
 		NanReturnUndefined();
 	}
 
+	// TODO: return Envelope object
 	Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
 	obj-&gt;Set(NanNew(&quot;minX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinX));
 	obj-&gt;Set(NanNew(&quot;maxX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxX));
@@ -370,6 +414,13 @@ NAN_METHOD(Layer::getExtent)
 	NanReturnValue(obj);
 }
 
+/**
+ * This method returns the current spatial filter for this layer.
+ *
+ * @throws Error
+ * @method getSpatialFilter
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(Layer::getSpatialFilter)
 {
 	NanScope();
@@ -383,6 +434,22 @@ NAN_METHOD(Layer::getSpatialFilter)
 	NanReturnValue(Geometry::New(layer-&gt;this_-&gt;GetSpatialFilter(), false));
 }
 
+/**
+ * This method sets the geometry to be used as a spatial filter when fetching
+ * features via the &#x60;layer.features.next()&#x60; method. Only features that geometrically
+ * intersect the filter geometry will be returned.
+ *
+ * Alernatively you can pass it envelope bounds as individual arguments.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * layer.setSpatialFilter(geometry);
+ * layer.setSpatialFilter(minX, minY, maxX, maxY);&#x60;&#x60;&#x60;
+ *
+ * @throws Error
+ * @method setSpatialFilter
+ * @param {gdal.Geometry} filter
+ */
 NAN_METHOD(Layer::setSpatialFilter)
 {
 	NanScope();
@@ -418,6 +485,28 @@ NAN_METHOD(Layer::setSpatialFilter)
 	NanReturnUndefined();
 }
 
+/**
+ * Sets the attribute query string to be used when fetching features via the
+ * &#x60;layer.features.next()&#x60; method. Only features for which the query evaluates as
+ * &#x60;true&#x60; will be returned.
+ *
+ * The query string should be in the format of an SQL WHERE clause. For instance
+ * &quot;population &gt; 1000000 and population &lt; 5000000&quot; where &#x60;population&#x60; is an
+ * attribute in the layer. The query format is normally a restricted form of
+ * SQL WHERE clause as described in the &quot;WHERE&quot; section of the [OGR SQL
+ * tutorial](http://www.gdal.org/ogr_sql.html). In some cases (RDBMS backed
+ * drivers) the native capabilities of the database may be used to interprete
+ * the WHERE clause in which case the capabilities will be broader than those
+ * of OGR SQL.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * layer.setAttributeFilter(&#x27;population &gt; 1000000 and population &lt; 5000000&#x27;);&#x60;&#x60;&#x60;
+ *
+ * @throws Error
+ * @method setAttributeFilter
+ * @param {String} filter
+ */
 NAN_METHOD(Layer::setAttributeFilter)
 {
 	NanScope();
@@ -445,6 +534,7 @@ NAN_METHOD(Layer::setAttributeFilter)
 
 	NanReturnUndefined();
 }
+
 /*
 NAN_METHOD(Layer::getLayerDefn)
 {
@@ -460,12 +550,22 @@ NAN_METHOD(Layer::getLayerDefn)
 	NanReturnValue(FeatureDefn::New(layer-&gt;this_-&gt;GetLayerDefn(), false));
 }*/
 
+/**
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
 NAN_GETTER(Layer::dsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;ds_&quot;)));
 }
 
+/**
+ * @readOnly
+ * @attribute srs
+ * @type {gdal.SpatialReference}
+ */
 NAN_GETTER(Layer::srsGetter)
 {
 	NanScope();
@@ -477,6 +577,11 @@ NAN_GETTER(Layer::srsGetter)
 	NanReturnValue(SpatialReference::New(layer-&gt;this_-&gt;GetSpatialRef(), false));
 }
 
+/**
+ * @readOnly
+ * @attribute name
+ * @type {String}
+ */
 NAN_GETTER(Layer::nameGetter)
 {
 	NanScope();
@@ -488,6 +593,11 @@ NAN_GETTER(Layer::nameGetter)
 	NanReturnValue(SafeString::New(layer-&gt;this_-&gt;GetName()));
 }
 
+/**
+ * @readOnly
+ * @attribute geomColumn
+ * @type {String}
+ */
 NAN_GETTER(Layer::geomColumnGetter)
 {
 	NanScope();
@@ -499,6 +609,11 @@ NAN_GETTER(Layer::geomColumnGetter)
 	NanReturnValue(SafeString::New(layer-&gt;this_-&gt;GetGeometryColumn()));
 }
 
+/**
+ * @readOnly
+ * @attribute fidColumn
+ * @type {String}
+ */
 NAN_GETTER(Layer::fidColumnGetter)
 {
 	NanScope();
@@ -510,6 +625,11 @@ NAN_GETTER(Layer::fidColumnGetter)
 	NanReturnValue(SafeString::New(layer-&gt;this_-&gt;GetFIDColumn()));
 }
 
+/**
+ * @readOnly
+ * @attribute geomType
+ * @type {Integer}
+ */
 NAN_GETTER(Layer::geomTypeGetter)
 {
 	NanScope();
@@ -521,12 +641,22 @@ NAN_GETTER(Layer::geomTypeGetter)
 	NanReturnValue(NanNew&lt;Integer&gt;(layer-&gt;this_-&gt;GetGeomType()));
 }
 
+/**
+ * @readOnly
+ * @attribute features
+ * @type {gdal.LayerFeatures}
+ */
 NAN_GETTER(Layer::featuresGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;features_&quot;)));
 }
 
+/**
+ * @readOnly
+ * @attribute features
+ * @type {gdal.LayerFields}
+ */
 NAN_GETTER(Layer::fieldsGetter)
 {
 	NanScope();

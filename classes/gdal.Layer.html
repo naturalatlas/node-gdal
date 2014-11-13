@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
@@ -75,6 +77,12 @@
             
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
                 <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
@@ -82,6 +90,10 @@
                 <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
             
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
@@ -98,6 +110,14 @@
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
             
                 <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
             
         </ul>
     </div>
@@ -148,14 +168,413 @@
 
 
 
+<div class="yuidoc-class-description">
+    <p>A representation of a layer of simple vector features, with access methods.</p>
+
+</div>
 
 
-    <div class="constructor yuidoc-class-constructor">
-        <h2>Constructor</h2>
+
+
+
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
         <div class="item-list">
-        <div id="method_gdal.Layer" class="method item">
+       		
+        	
+            <div id="method_getExtent" class="method item">
     <div class="method-signature">
-    <span class="name"><code>gdal.Layer</code></span>
+    <span class="name"><code>getExtent</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code class="optional">force=true</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l216"><code>src&#x2F;gdal_layer.cpp:216</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Fetch the extent of this layer.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[force=true]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                    <p>An object containing <code>minX</code>, <code>maxX</code>, <code>minY</code>, <code>maxY</code> properties.</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_getSpatialFilter" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getSpatialFilter</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l256"><code>src&#x2F;gdal_layer.cpp:256</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>This method returns the current spatial filter for this layer.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_setAttributeFilter" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>setAttributeFilter</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>filter</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l327"><code>src&#x2F;gdal_layer.cpp:327</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Sets the attribute query string to be used when fetching features via the
+<code>layer.features.next()</code> method. Only features for which the query evaluates as
+<code>true</code> will be returned.</p>
+<p>The query string should be in the format of an SQL WHERE clause. For instance
+"population &gt; 1000000 and population &lt; 5000000" where <code>population</code> is an
+attribute in the layer. The query format is normally a restricted form of
+SQL WHERE clause as described in the "WHERE" section of the <a href="http://www.gdal.org/ogr_sql.html">OGR SQL
+tutorial</a>. In some cases (RDBMS backed
+drivers) the native capabilities of the database may be used to interprete
+the WHERE clause in which case the capabilities will be broader than those
+of OGR SQL.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">filter</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>layer.setAttributeFilter(&#39;population &gt; 1000000 and population &lt; 5000000&#39;);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
+            <div id="method_setSpatialFilter" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>setSpatialFilter</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>filter</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l276"><code>src&#x2F;gdal_layer.cpp:276</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>This method sets the geometry to be used as a spatial filter when fetching
+features via the <code>layer.features.next()</code> method. Only features that geometrically
+intersect the filter geometry will be returned.</p>
+<p>Alernatively you can pass it envelope bounds as individual arguments.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">filter</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>layer.setSpatialFilter(geometry);
+layer.setSpatialFilter(minX, minY, maxX, maxY);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
+            <div id="method_syncToDisk" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>syncToDisk</code></span>
 
     
         <span class="paren">()</span>
@@ -184,10 +603,183 @@
             
         
         
-        <a href="../files/src_gdal_layer.cpp.html#l90"><code>src&#x2F;gdal_layer.cpp:90</code></a>
+        <a href="../files/src_gdal_layer.cpp.html#l199"><code>src&#x2F;gdal_layer.cpp:199</code></a>
         
         </p>
 
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Flush pending changes to disk.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_testCapability" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>testCapability</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>capability</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l207"><code>src&#x2F;gdal_layer.cpp:207</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Determines if the dataset supports the indicated operation.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">capability</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>(see <a href="../classes/Constants (OLC).html" class="crosslink">capability list</a>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        </div>
+    </div>
+
+
+
+
+
+
+    <div id="attrs" class="page-section">
+        <h2 class="off-left">Attributes</h2>
+
+        
+            <div id="attr_ds" class="attr item">
+    <a name="config_ds"></a> 
+    <h3 class="name"><code>ds</code></h3>
+    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l392"><code>src&#x2F;gdal_layer.cpp:392</code></a>
+        
+        </p>
 
         
 
@@ -205,15 +797,379 @@
     
 </div>
 
-        </div>
+        
+            <div id="attr_features" class="attr item">
+    <a name="config_features"></a> 
+    <h3 class="name"><code>features</code></h3>
+    <span class="type"><a href="../classes/gdal.LayerFeatures.html" class="crosslink">gdal.LayerFeatures</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l483"><code>src&#x2F;gdal_layer.cpp:483</code></a>
+        
+        </p>
+
+        
+
+        
     </div>
 
+    <div class="description">
+        
+    </div>
 
+    
 
+    
 
+    
+</div>
 
+        
+            <div id="attr_features" class="attr item">
+    <a name="config_features"></a> 
+    <h3 class="name"><code>features</code></h3>
+    <span class="type"><a href="../classes/gdal.LayerFields.html" class="crosslink">gdal.LayerFields</a></span>
 
+    
 
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l494"><code>src&#x2F;gdal_layer.cpp:494</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_fidColumn" class="attr item">
+    <a name="config_fidColumn"></a> 
+    <h3 class="name"><code>fidColumn</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l451"><code>src&#x2F;gdal_layer.cpp:451</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_geomColumn" class="attr item">
+    <a name="config_geomColumn"></a> 
+    <h3 class="name"><code>geomColumn</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l435"><code>src&#x2F;gdal_layer.cpp:435</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_geomType" class="attr item">
+    <a name="config_geomType"></a> 
+    <h3 class="name"><code>geomType</code></h3>
+    <span class="type">Integer</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l467"><code>src&#x2F;gdal_layer.cpp:467</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_name" class="attr item">
+    <a name="config_name"></a> 
+    <h3 class="name"><code>name</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l419"><code>src&#x2F;gdal_layer.cpp:419</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_srs" class="attr item">
+    <a name="config_srs"></a> 
+    <h3 class="name"><code>srs</code></h3>
+    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l403"><code>src&#x2F;gdal_layer.cpp:403</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+    </div>
 
 
 

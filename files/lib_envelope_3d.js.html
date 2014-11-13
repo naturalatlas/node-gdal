@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
@@ -75,6 +77,12 @@
             
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
                 <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
@@ -82,6 +90,10 @@
                 <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
             
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
@@ -98,6 +110,14 @@
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
             
                 <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
             
         </ul>
     </div>
@@ -139,138 +159,144 @@
 
 <div class="file">
     <pre class="prettyprint linenums">
-/**
- * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
- *
- * (Pure-javascript implementation of [OGREnvelope3D](http://www.gdal.org/classOGREnvelope3D.html))
- *
- * @constructor
- * @class gdal.Envelope3D
- * @param {Object} bounds An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, &#x60;maxY&#x60;, &#x60;minZ&#x60;, and &#x60;maxZ&#x60; values.
- */
-var Envelope3D = module.exports = function Envelope3D(envelope) {
-	if (envelope) {
-		this.minX = envelope.minX;
-		this.minY = envelope.minY;
-		this.minZ = envelope.minZ || 0;
-		this.maxX = envelope.maxX;
-		this.maxY = envelope.maxY;
-		this.maxZ = envelope.maxZ || 0;
-	} else {
-		this.minX = 0;
-		this.minY = 0;
-		this.minZ = 0;
-		this.maxX = 0;
-		this.maxY = 0;
-		this.maxZ = 0;
-	}
-};
+module.exports = function(gdal) {
 
-/**
- * Determines if the envelope has not been set yet.
- *
- * @method isEmpty
- * @return {Boolean}
- */
-Envelope3D.prototype.isEmpty = function() {
-	return !(this.minX || this.minY || this.minZ || this.maxX || this.maxY || this.maxZ);
-};
-
-/**
- * Unions the provided envelope with the current envelope.
- *
- * @method merge
- * @param {gdal.Envelope3D} envelope
- * @return {void}
- */
-Envelope3D.prototype.merge = function(envelope) {
- 	if (arguments.length == 1) {
-		if (this.isEmpty()) {
+	/**
+	 * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
+	 *
+	 * (Pure-javascript implementation of [OGREnvelope3D](http://www.gdal.org/classOGREnvelope3D.html))
+	 *
+	 * @constructor
+	 * @class gdal.Envelope3D
+	 * @param {Object} bounds An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, &#x60;maxY&#x60;, &#x60;minZ&#x60;, and &#x60;maxZ&#x60; values.
+	 */
+	var Envelope3D = module.exports = function Envelope3D(envelope) {
+		if (envelope) {
 			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
 			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
-		} else {
-			this.minX = Math.min(envelope.minX, this.minX);
-			this.maxX = Math.max(envelope.maxX, this.maxX);
-			this.minY = Math.min(envelope.minY, this.minY);
-			this.maxY = Math.max(envelope.maxY, this.maxY);
-			this.minZ = Math.min(envelope.minZ, this.minZ);
-			this.maxZ = Math.max(envelope.maxZ, this.maxZ);
-		}
-	} else {
-		var x = arguments[0];
-		var y = arguments[1];
-		var z = arguments[2];
-		if (this.isEmpty()) {
-			this.minX = this.maxX = x;
-			this.minY = this.maxY = y;
-			this.minZ = this.maxZ = z;
-		} else {
-			this.minX = Math.min(x, this.minX);
-			this.maxX = Math.max(x, this.maxX);
-			this.minY = Math.min(y, this.minY);
-			this.maxY = Math.max(y, this.maxY);
-			this.minZ = Math.min(z, this.minZ);
-			this.maxZ = Math.max(z, this.maxZ);
-		}
-	}
-};
-
-/**
- * Determines if the provided envelope touches it.
- *
- * @method intersects
- * @param {gdal.Envelope3D} envelope
- * @return {Boolean}
- */
-Envelope3D.prototype.intersects = function(envelope) {
-	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
-	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY &amp;&amp;
-	       this.minZ &lt;= envelope.maxZ &amp;&amp; this.maxZ &gt;= envelope.minZ;
-};
-
-/**
- * Updates the envelope to the intersection of the two envelopes.
- *
- * @method intersect
- * @param {gdal.Envelope3D} envelope
- * @return {void}
- */
-Envelope3D.prototype.intersect = function(envelope) {
-	if (this.intersects(envelope)) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
+			this.minZ = envelope.minZ || 0;
 			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
 			this.maxY = envelope.maxY;
-			this.minZ = envelope.minZ;
-			this.maxZ = envelope.maxZ;
+			this.maxZ = envelope.maxZ || 0;
 		} else {
-			this.minX = Math.max(envelope.minX, this.minX);
-			this.maxX = Math.min(envelope.maxX, this.maxX);
-			this.minY = Math.max(envelope.minY, this.minY);
-			this.maxY = Math.min(envelope.maxY, this.maxY);
-			this.minZ = Math.max(envelope.minZ, this.minZ);
-			this.maxZ = Math.min(envelope.maxZ, this.maxZ);
+			this.minX = 0;
+			this.minY = 0;
+			this.minZ = 0;
+			this.maxX = 0;
+			this.maxY = 0;
+			this.maxZ = 0;
 		}
-	} else {
-		this.minX = this.maxX = this.minY = this.maxY = this.minZ = this.maxZ = 0;
-	}
-};
+	};
 
-/**
- * Determines if the provided envelope is wholly-contained by the current envelope.
- *
- * @method contains
- * @param {gdal.Envelope3D} envelope
- * @return {Boolean}
- */
-Envelope3D.prototype.contains = function(envelope) {
-	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp; this.minZ &lt;= envelope.minZ &amp;&amp;
-	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY &amp;&amp; this.maxZ &gt;= envelope.maxZ;
+	/**
+	 * Determines if the envelope has not been set yet.
+	 *
+	 * @method isEmpty
+	 * @return {Boolean}
+	 */
+	Envelope3D.prototype.isEmpty = function() {
+		return !(this.minX || this.minY || this.minZ || this.maxX || this.maxY || this.maxZ);
+	};
+
+	/**
+	 * Unions the provided envelope with the current envelope.
+	 *
+	 * @method merge
+	 * @param {gdal.Envelope3D} envelope
+	 * @return {void}
+	 */
+	Envelope3D.prototype.merge = function(envelope) {
+	 	if (arguments.length == 1) {
+			if (this.isEmpty()) {
+				this.minX = envelope.minX;
+				this.maxX = envelope.maxX;
+				this.minY = envelope.minY;
+				this.maxY = envelope.maxY;
+				this.minZ = envelope.minZ;
+				this.maxZ = envelope.maxZ;
+			} else {
+				this.minX = Math.min(envelope.minX, this.minX);
+				this.maxX = Math.max(envelope.maxX, this.maxX);
+				this.minY = Math.min(envelope.minY, this.minY);
+				this.maxY = Math.max(envelope.maxY, this.maxY);
+				this.minZ = Math.min(envelope.minZ, this.minZ);
+				this.maxZ = Math.max(envelope.maxZ, this.maxZ);
+			}
+		} else {
+			var x = arguments[0];
+			var y = arguments[1];
+			var z = arguments[2];
+			if (this.isEmpty()) {
+				this.minX = this.maxX = x;
+				this.minY = this.maxY = y;
+				this.minZ = this.maxZ = z;
+			} else {
+				this.minX = Math.min(x, this.minX);
+				this.maxX = Math.max(x, this.maxX);
+				this.minY = Math.min(y, this.minY);
+				this.maxY = Math.max(y, this.maxY);
+				this.minZ = Math.min(z, this.minZ);
+				this.maxZ = Math.max(z, this.maxZ);
+			}
+		}
+	};
+
+	/**
+	 * Determines if the provided envelope touches it.
+	 *
+	 * @method intersects
+	 * @param {gdal.Envelope3D} envelope
+	 * @return {Boolean}
+	 */
+	Envelope3D.prototype.intersects = function(envelope) {
+		return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
+		       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY &amp;&amp;
+		       this.minZ &lt;= envelope.maxZ &amp;&amp; this.maxZ &gt;= envelope.minZ;
+	};
+
+	/**
+	 * Updates the envelope to the intersection of the two envelopes.
+	 *
+	 * @method intersect
+	 * @param {gdal.Envelope3D} envelope
+	 * @return {void}
+	 */
+	Envelope3D.prototype.intersect = function(envelope) {
+		if (this.intersects(envelope)) {
+			if (this.isEmpty()) {
+				this.minX = envelope.minX;
+				this.maxX = envelope.maxX;
+				this.minY = envelope.minY;
+				this.maxY = envelope.maxY;
+				this.minZ = envelope.minZ;
+				this.maxZ = envelope.maxZ;
+			} else {
+				this.minX = Math.max(envelope.minX, this.minX);
+				this.maxX = Math.min(envelope.maxX, this.maxX);
+				this.minY = Math.max(envelope.minY, this.minY);
+				this.maxY = Math.min(envelope.maxY, this.maxY);
+				this.minZ = Math.max(envelope.minZ, this.minZ);
+				this.maxZ = Math.min(envelope.maxZ, this.maxZ);
+			}
+		} else {
+			this.minX = this.maxX = this.minY = this.maxY = this.minZ = this.maxZ = 0;
+		}
+	};
+
+	/**
+	 * Determines if the provided envelope is wholly-contained by the current envelope.
+	 *
+	 * @method contains
+	 * @param {gdal.Envelope3D} envelope
+	 * @return {Boolean}
+	 */
+	Envelope3D.prototype.contains = function(envelope) {
+		return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp; this.minZ &lt;= envelope.minZ &amp;&amp;
+		       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY &amp;&amp; this.maxZ &gt;= envelope.maxZ;
+	};
+
+	return Envelope3D;
+
 };
     </pre>
 </div>

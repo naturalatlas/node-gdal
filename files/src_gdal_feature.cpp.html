@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -63,6 +63,8 @@
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
@@ -75,6 +77,12 @@
             
                 <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
             
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
                 <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
@@ -82,6 +90,10 @@
                 <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
             
                 <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
             
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
@@ -98,6 +110,14 @@
                 <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
             
                 <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
             
         </ul>
     </div>
@@ -353,10 +373,32 @@ NAN_METHOD(Feature::getFieldDefn)
 
 	NanReturnValue(FieldDefn::New(feature-&gt;this_-&gt;GetFieldDefnRef(field_index), false));
 }
+
 //NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
+
+/**
+ * Sets the feature&#x27;s geometry.
+ *
+ * @method setGeometry
+ * @param {gdal.Geometry} geometry
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, &quot;geometry&quot;);
+
+/**
+ * Determines if the features are the same.
+ *
+ * @method setGeometry
+ * @param {gdal.Feature} feature
+ * @return {Boolean} &#x60;true&#x60; if the features are the same, &#x60;false&#x60; if different
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equals, Boolean, Equal, Feature, &quot;feature&quot;);
 
+/**
+ * Clones the feature.
+ *
+ * @method clone
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(Feature::clone)
 {
 	NanScope();
@@ -368,6 +410,11 @@ NAN_METHOD(Feature::clone)
 	NanReturnValue(Feature::New(feature-&gt;this_-&gt;Clone()));
 }
 
+/**
+ * Releases the feature from memory.
+ *
+ * @method destroy
+ */
 NAN_METHOD(Feature::destroy)
 {
 	NanScope();
@@ -380,6 +427,23 @@ NAN_METHOD(Feature::destroy)
 	NanReturnUndefined();
 }
 
+/**
+ * Set one feature from another. Overwrites the contents of this feature
+ * from the geometry and attributes of another.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var feature1 = new gdal.Feature(defn);
+ * var feature2 = new gdal.Feature(defn);
+ * feature1.setGeometry(new gdal.Point(5, 10));
+ * feature1.fields.set([5, &#x27;test&#x27;, 3.14]);
+ * feature2.setFrom(feature1);&#x60;&#x60;&#x60;
+ *
+ * @method setFrom
+ * @param {gdal.Feature} feature
+ * @param {Array} [*index_map] Array of the indices (integers) of the feature&#x27;s fields stored at the corresponding index of the source feature&#x27;s fields. A value of -1 should be used to ignore the source&#x27;s field. The array should not be &#x60;null&#x60; and be as long as the number of fields in the source feature.
+ * @param {Boolean} [forgiving=true] &#x60;true&#x60; if the operation should continue despite lacking output fields matching some of the source fields.
+ */
 NAN_METHOD(Feature::setFrom)
 {
 	NanScope();
@@ -437,12 +501,21 @@ NAN_METHOD(Feature::setFrom)
 	NanReturnUndefined();
 }
 
+/**
+ * @readOnly
+ * @attribute fields
+ * @type {gdal.FeatureFields}
+ */
 NAN_GETTER(Feature::fieldsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;fields_&quot;)));
 }
 
+/**
+ * @attribute fid
+ * @type {Integer}
+ */
 NAN_GETTER(Feature::fidGetter)
 {
 	NanScope();
@@ -454,6 +527,11 @@ NAN_GETTER(Feature::fidGetter)
 	NanReturnValue(NanNew&lt;Integer&gt;(feature-&gt;this_-&gt;GetFID()));
 }
 
+/**
+ * @readOnly
+ * @attribute defn
+ * @type {gdal.FeatureDefn}
+ */
 NAN_GETTER(Feature::defnGetter)
 {
 	NanScope();

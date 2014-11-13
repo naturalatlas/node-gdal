@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_spatial_reference.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_spatial_reference.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_spatial_reference.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; SpatialReference::constructor;
+ObjectCache&lt;OGRSpatialReference, SpatialReference&gt; SpatialReference::cache;
+
+void SpatialReference::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(SpatialReference::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;SpatialReference&quot;));
+
+	NODE_SET_METHOD(lcons, &quot;fromUserInput&quot;, fromUserInput);
+	NODE_SET_METHOD(lcons, &quot;fromWKT&quot;, fromWKT);
+	NODE_SET_METHOD(lcons, &quot;fromProj4&quot;, fromProj4);
+	NODE_SET_METHOD(lcons, &quot;fromEPSG&quot;, fromEPSG);
+	NODE_SET_METHOD(lcons, &quot;fromEPSGA&quot;, fromEPSGA);
+	NODE_SET_METHOD(lcons, &quot;fromWMSAUTO&quot;, fromWMSAUTO);
+	NODE_SET_METHOD(lcons, &quot;fromXML&quot;, fromXML);
+	NODE_SET_METHOD(lcons, &quot;fromURN&quot;, fromURN);
+	NODE_SET_METHOD(lcons, &quot;fromCRSURL&quot;, fromCRSURL);
+	NODE_SET_METHOD(lcons, &quot;fromURL&quot;, fromURL);
+	NODE_SET_METHOD(lcons, &quot;fromMICoordSys&quot;, fromMICoordSys);
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toWKT&quot;, exportToWKT);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toPrettyWKT&quot;, exportToPrettyWKT);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toProj4&quot;, exportToProj4);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toXML&quot;, exportToXML);
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;cloneGeogCS&quot;, clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setWellKnownGeogCS&quot;, setWellKnownGeogCS);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;morphToESRI&quot;, morphToESRI);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;morphFromESRI&quot;, morphFromESRI);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;EPSGTreatsAsLatLong&quot;, EPSGTreatsAsLatLong);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;EPSGTreatsAsNorthingEasting&quot;, EPSGTreatsAsNorthingEasting);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getLinearUnits&quot;, getLinearUnits);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAngularUnits&quot;, getAngularUnits);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isGeocentric&quot;, isGeocentric);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isProjected&quot;, isProjected);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isLocal&quot;, isLocal);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isVectical&quot;, isVertical);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isCompound&quot;, isCompound);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isSameGeogCS&quot;, isSameGeogCS);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isSameVertCS&quot;, isSameVertCS);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isSame&quot;, isSame);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAuthorityName&quot;, getAuthorityName);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAuthorityCode&quot;, getAuthorityCode);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAttrValue&quot;, getAttrValue);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;autoIdentifyEPSG&quot;, autoIdentifyEPSG);
+
+	target-&gt;Set(NanNew(&quot;SpatialReference&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+SpatialReference::SpatialReference(OGRSpatialReference *srs)
+	: ObjectWrap(),
+	  this_(srs),
+	  owned_(false)
+{
+	LOG(&quot;Created SpatialReference [%p]&quot;, srs);
+}
+
+SpatialReference::SpatialReference()
+	: ObjectWrap(),
+	  this_(0),
+	  owned_(false)
+{
+}
+
+SpatialReference::~SpatialReference()
+{
+	dispose();
+}
+
+void SpatialReference::dispose()
+{
+	if (this_) {
+		LOG(&quot;Disposing SpatialReference [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		cache.erase(this_);
+		if (owned_) {
+			//Decrements the reference count by one, and destroy if zero.
+			this_-&gt;Release();
+		}
+		LOG(&quot;Disposed SpatialReference [%p]&quot;, this_);
+		this_ = NULL;
+	}
+}
+
+/**
+ * This class respresents a OpenGIS Spatial Reference System, and contains methods
+ * for converting between this object organization and well known text (WKT)
+ * format.
+ *
+ * @constructor
+ * @class gdal.SpatialReference
+ * @param {String} [wkt]
+ */
+NAN_METHOD(SpatialReference::New)
+{
+	NanScope();
+	SpatialReference *f;
+	OGRSpatialReference *srs;
+	std::string wkt(&quot;&quot;);
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		f = static_cast&lt;SpatialReference *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+	} else {
+		NODE_ARG_OPT_STR(0, &quot;wkt&quot;, wkt);
+		//sets reference count to one
+		srs = new OGRSpatialReference(wkt.empty() ? 0 : wkt.c_str());
+		if (!wkt.empty()) {
+			char* wkt_c = (char*) wkt.c_str();
+			int err = srs-&gt;importFromWkt(&amp;wkt_c);
+			if (err) {
+				NODE_THROW_OGRERR(err);
+				NanReturnUndefined();
+			}
+		}
+		f = new SpatialReference(srs);
+		f-&gt;owned_ = true;
+		f-&gt;Wrap(args.This());
+
+		cache.add(srs, args.This());
+	}
+
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; SpatialReference::New(OGRSpatialReference *srs)
+{
+	NanEscapableScope();
+	return NanEscapeScope(SpatialReference::New(srs, false));
+}
+
+Handle&lt;Value&gt; SpatialReference::New(OGRSpatialReference *raw, bool owned)
+{
+	NanEscapableScope();
+
+	if (!raw) {
+		return NanEscapeScope(NanNull());
+	}
+	if (cache.has(raw)) {
+		return NanEscapeScope(NanNew(cache.get(raw)));
+	}
+
+	//make a copy of spatialreference owned by a layer, feature, etc
+	// + no need to track when a layer is destroyed
+	// + no need to throw errors when a method trys to modify an owned read-only srs
+	// - is slower
+
+	OGRSpatialReference* cloned_srs = raw-&gt;Clone();
+
+	SpatialReference *wrapped = new SpatialReference(cloned_srs);
+	wrapped-&gt;owned_ = true;
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(SpatialReference::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	cache.add(cloned_srs, raw, obj);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(SpatialReference::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;SpatialReference&quot;));
+}
+
+/**
+ * Set a GeogCS based on well known name.
+ *
+ * @method setWellKnownGeogCS
+ * @param {String} name
+ */
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_STRING_PARAM(SpatialReference, setWellKnownGeogCS, SetWellKnownGeogCS, &quot;input&quot;);
+
+/**
+ * Convert in place to ESRI WKT format.
+ *
+ * @throws Error
+ * @method morphToESRI
+ */
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphToESRI, morphToESRI);
+
+/**
+ * Convert in place from ESRI WKT format.
+ *
+ * @throws Error
+ * @method morphFromESRI
+ */
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, morphFromESRI, morphFromESRI);
+
+/**
+ * This method returns &#x60;true&#x60; if EPSG feels this geographic coordinate system
+ * should be treated as having lat/long coordinate ordering.
+ *
+ * Currently this returns &#x60;true&#x60; for all geographic coordinate systems with an
+ * EPSG code set, and AXIS values set defining it as lat, long. Note that
+ * coordinate systems with an EPSG code and no axis settings will be assumed
+ * to not be lat/long.
+ *
+ * &#x60;false&#x60; will be returned for all coordinate systems that are not geographic,
+ * or that do not have an EPSG code set.
+ *
+ * @method EPSGTreatsAsLatLong
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsLatLong, Boolean, EPSGTreatsAsLatLong);
+
+/**
+ * This method returns &#x60;true&#x60; if EPSG feels this projected coordinate system should
+ * be treated as having northing/easting coordinate ordering.
+ *
+ * @method EPSGTreatsAsNorthingEasting
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsNorthingEasting, Boolean, EPSGTreatsAsNorthingEasting);
+
+/**
+ * Check if geocentric coordinate system.
+ *
+ * @method isGeocentric
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeocentric, Boolean, IsGeocentric);
+
+/**
+ * Check if geocentric coordinate system.
+ *
+ * @method isProjected
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isProjected, Boolean, IsProjected);
+
+/**
+ * Check if local coordinate system.
+ *
+ * @method isLocal
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isLocal, Boolean, IsLocal);
+
+/**
+ * Check if vertical coordinate system.
+ *
+ * @method isVertical
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isVertical, Boolean, IsVertical);
+
+/**
+ * Check if compound coordinate system.
+ *
+ * @method isCompound
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isCompound, Boolean, IsCompound);
+
+/**
+ * Do the GeogCS&#x27;es match?
+ *
+ * @method isSameGeogCS
+ * @param {gdal.SpatialReference} srs
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(SpatialReference, isSameGeogCS, Boolean, IsSameGeogCS, SpatialReference, &quot;srs&quot;);
+
+/**
+ * Do the VertCS&#x27;es match?
+ *
+ * @method isSameVertCS
+ * @param {gdal.SpatialReference} srs
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(SpatialReference, isSameVertCS, Boolean, IsSameVertCS, SpatialReference, &quot;srs&quot;);
+
+/**
+ * Do these two spatial references describe the same system?
+ *
+ * @method isSame
+ * @param {gdal.SpatialReference} srs
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(SpatialReference, isSame, Boolean, IsSame, SpatialReference, &quot;srs&quot;);
+
+/**
+ * Set EPSG authority info if possible.
+ *
+ * @throws Error
+ * @method autoIdentifyEPSG
+ */
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(SpatialReference, autoIdentifyEPSG, AutoIdentifyEPSG);
+
+/**
+ * Clones the spatial reference.
+ *
+ * @method clone
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::clone)
+{
+	NanScope();
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	NanReturnValue(SpatialReference::New(srs-&gt;this_-&gt;Clone()));
+}
+
+/**
+ * Make a duplicate of the GEOGCS node of this OGRSpatialReference object.
+ *
+ * @method clone
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::cloneGeogCS)
+{
+	NanScope();
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	NanReturnValue(SpatialReference::New(srs-&gt;this_-&gt;CloneGeogCS()));
+}
+
+/**
+ * Get the authority name for a node. The most common authority is &quot;EPSG&quot;.
+ *
+ * @method getAuthorityName
+ * @param {string} target_key The partial or complete path to the node to get an authority from. ie. &#x60;&quot;PROJCS&quot;&#x60;, &#x60;&quot;GEOGCS&quot;&#x60;, &quot;&#x60;GEOGCS|UNIT&quot;&#x60; or &#x60;null&#x60; to search for an authority node on the root element.
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::getAuthorityName)
+{
+	NanScope();
+
+	std::string key = &quot;&quot;;
+	NODE_ARG_STR(0, &quot;target key&quot;, key);
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+
+	NanReturnValue(SafeString::New(srs-&gt;this_-&gt;GetAuthorityName(key.c_str())));
+}
+
+/**
+ * Get the authority code for a node.
+ *
+ * @method getAuthorityCode
+ * @param {string} target_key The partial or complete path to the node to get an authority from. ie. &#x60;&quot;PROJCS&quot;&#x60;, &#x60;&quot;GEOGCS&quot;&#x60;, &quot;&#x60;GEOGCS|UNIT&quot;&#x60; or &#x60;null&#x60; to search for an authority node on the root element.
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::getAuthorityCode)
+{
+	NanScope();
+
+	std::string key = &quot;&quot;;
+	NODE_ARG_STR(0, &quot;target key&quot;, key);
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+
+	NanReturnValue(SafeString::New(srs-&gt;this_-&gt;GetAuthorityCode(key.c_str())));
+}
+
+/**
+ * Convert this SRS into WKT format.
+ *
+ * @throws Error
+ * @method toWKT
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::exportToWKT)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	char* str;
+	Handle&lt;Value&gt; result;
+
+	int err = srs-&gt;this_-&gt;exportToWkt(&amp;str);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	result = SafeString::New(str);
+	CPLFree(str);
+
+	NanReturnValue(result);
+}
+
+/**
+ * Convert this SRS into a a nicely formatted WKT string for display to a person.
+ *
+ * @throws Error
+ * @method toPrettyWKT
+ * @param {Boolean} [simplify=false]
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::exportToPrettyWKT)
+{
+	NanScope();
+
+	int simplify = 0;
+	NODE_ARG_BOOL_OPT(0, &quot;simplify&quot;, simplify);
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	char* str;
+	Handle&lt;Value&gt; result;
+
+	int err = srs-&gt;this_-&gt;exportToPrettyWkt(&amp;str, simplify);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	result = SafeString::New(str);
+	CPLFree(str);
+
+	NanReturnValue(result);
+}
+
+/**
+ * Export coordinate system in PROJ.4 format.
+ *
+ * @throws Error
+ * @method toProj4
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::exportToProj4)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	char* str;
+	Handle&lt;Value&gt; result;
+
+	int err = srs-&gt;this_-&gt;exportToProj4(&amp;str);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	if(str){
+		result = NanNew(CPLString(str).Trim().c_str());
+	} else {
+		result = NanNull();
+	}
+	CPLFree(str);
+
+	NanReturnValue(result);
+}
+
+/**
+ * Export coordinate system in XML format.
+ *
+ * @throws Error
+ * @method toXML
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::exportToXML)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	char* str;
+	Handle&lt;Value&gt; result;
+
+	int err = srs-&gt;this_-&gt;exportToXML(&amp;str);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	result = SafeString::New(str);
+	CPLFree(str);
+
+	NanReturnValue(result);
+}
+
+/**
+ * Fetch indicated attribute of named node.
+ *
+ * @method getAttrValue
+ * @param {String} node_name
+ * @param {Integer} [attr_index=0]
+ * @return {string}
+ */
+NAN_METHOD(SpatialReference::getAttrValue)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+	std::string node_name(&quot;&quot;);
+	int child = 0;
+	NODE_ARG_STR(0, &quot;node name&quot;, node_name);
+	NODE_ARG_INT_OPT(1, &quot;child&quot;, child);
+	NanReturnValue(SafeString::New(srs-&gt;this_-&gt;GetAttrValue(node_name.c_str(), child)));
+}
+
+/**
+ * Creates a spatial reference from a WKT string.
+ *
+ * @static
+ * @throws Error
+ * @method fromWKT
+ * @param {String} wkt
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromWKT)
+{
+	NanScope();
+
+	std::string wkt(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;wkt&quot;, wkt);
+	char* str = (char*) wkt.c_str();
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromWkt(&amp;str);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Creates a spatial reference from a Proj.4 string.
+ *
+ * @static
+ * @throws Error
+ * @method fromProj4
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromProj4)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;input&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromProj4(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Creates a spatial reference from a WMSAUTO string.
+ *
+ * Note that the WMS 1.3 specification does not include the units code, while
+ * apparently earlier specs do. GDAL tries to guess around this.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var wms = &#x27;AUTO:42001,99,8888&#x27;;
+ * var ref = gdal.SpatialReference.fromWMSAUTO(wms);&#x60;&#x60;&#x60;
+ *
+ * @static
+ * @throws Error
+ * @method fromWMSAUTO
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromWMSAUTO)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;input&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromWMSAUTO(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Import coordinate system from XML format (GML only currently).
+ *
+ * @static
+ * @throws Error
+ * @method fromXML
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromXML)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;xml&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromXML(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from OGC URN.
+ *
+ * The OGC URN should be prefixed with &quot;urn:ogc:def:crs:&quot; per recommendation
+ * paper 06-023r1. Currently EPSG and OGC authority values are supported,
+ * including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).
+ *
+ * @static
+ * @throws Error
+ * @method fromURN
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromURN)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;input&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromURN(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from OGC URL.
+ *
+ * The OGC URL should be prefixed with &quot;http://opengis.net/def/crs&quot; per best
+ * practice paper 11-135. Currently EPSG and OGC authority values are supported,
+ * including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).
+ *
+ * @static
+ * @throws Error
+ * @method fromCRSURL
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromCRSURL)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;url&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromCRSURL(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize spatial reference from a URL.
+ *
+ * This method will download the spatial reference from the given URL.
+ *
+ * @static
+ * @throws Error
+ * @method fromURL
+ * @param {String} url
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromURL)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;url&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromUrl(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from a Mapinfo style CoordSys definition.
+ *
+ * @static
+ * @throws Error
+ * @method fromMICoordSys
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromMICoordSys)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;input&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromMICoordSys(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from an arbitrary spatial reference string.
+ *
+ * This method will examine the provided input, and try to deduce the format,
+ * and then use it to initialize the spatial reference system.
+ *
+ * @static
+ * @throws Error
+ * @method fromUserInput
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromUserInput)
+{
+	NanScope();
+
+	std::string input(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;input&quot;, input);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;SetFromUserInput(input.c_str());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from EPSG GCS or PCS code.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var ref = gdal.SpatialReference.fromEPSGA(4326);&#x60;&#x60;&#x60;
+ *
+ * @static
+ * @throws Error
+ * @method fromEPSG
+ * @param {String} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromEPSG)
+{
+	NanScope();
+
+	int epsg;
+	NODE_ARG_INT(0, &quot;epsg&quot;, epsg);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromEPSG(epsg);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Initialize from EPSG GCS or PCS code.
+ *
+ * This method is similar to &#x60;fromEPSG()&#x60; except that EPSG preferred axis ordering
+ * *will* be applied for geographic and projected coordinate systems. EPSG normally
+ * defines geographic coordinate systems to use lat/long, and also there are also
+ * a few projected coordinate systems that use northing/easting order contrary
+ * to typical GIS use).
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var ref = gdal.SpatialReference.fromEPSGA(26910);&#x60;&#x60;&#x60;
+ *
+ * @static
+ * @throws Error
+ * @method fromEPSG
+ * @param {Integer} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromEPSGA)
+{
+	NanScope();
+
+	int epsg;
+	NODE_ARG_INT(0, &quot;epsg&quot;, epsg);
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromEPSGA(epsg);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
+ * Fetch linear geographic coordinate system units.
+ *
+ * @method getLinearUnits
+ * @return {Object} An object containing &#x60;value&#x60; and &#x60;unit&#x60; properties.
+ */
+NAN_METHOD(SpatialReference::getLinearUnits)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+
+	char* unit_name;
+	double units = srs-&gt;this_-&gt;GetLinearUnits(&amp;unit_name);
+
+	Handle&lt;Object&gt; result = NanNew&lt;Object&gt;();
+	result-&gt;Set(NanNew(&quot;value&quot;), NanNew&lt;Number&gt;(units));
+	result-&gt;Set(NanNew(&quot;units&quot;), SafeString::New(unit_name));
+
+	NanReturnValue(result);
+}
+
+/**
+ * Fetch angular geographic coordinate system units.
+ *
+ * @method getAngularUnits
+ * @return {Object} An object containing &#x60;value&#x60; and &#x60;unit&#x60; properties.
+ */
+NAN_METHOD(SpatialReference::getAngularUnits)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+
+	char* unit_name;
+	double units = srs-&gt;this_-&gt;GetAngularUnits(&amp;unit_name);
+
+	Handle&lt;Object&gt; result = NanNew&lt;Object&gt;();
+	result-&gt;Set(NanNew(&quot;value&quot;), NanNew&lt;Number&gt;(units));
+	result-&gt;Set(NanNew(&quot;units&quot;), SafeString::New(unit_name));
+
+	NanReturnValue(result);
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

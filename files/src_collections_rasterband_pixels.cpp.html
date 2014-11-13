@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/collections/rasterband_pixels.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/collections/rasterband_pixels.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_rasterband.hpp&quot;
+#include &quot;rasterband_pixels.hpp&quot;
+#include &quot;../utils/typed_array.hpp&quot;
+
+#include &lt;sstream&gt;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; RasterBandPixels::constructor;
+
+void RasterBandPixels::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(RasterBandPixels::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;RasterBandPixels&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;set&quot;, set);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;read&quot;, read);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;write&quot;, write);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;readBlock&quot;, readBlock);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;writeBlock&quot;, writeBlock);
+
+	target-&gt;Set(NanNew(&quot;RasterBandPixels&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+RasterBandPixels::RasterBandPixels()
+	: ObjectWrap()
+{}
+
+RasterBandPixels::~RasterBandPixels()
+{}
+
+/**
+ * A representation of a {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}&#x27;s pixels.
+ *
+ * @class gdal.RasterBandPixels
+ */
+NAN_METHOD(RasterBandPixels::New)
+{
+	NanScope();
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		RasterBandPixels *f = static_cast&lt;RasterBandPixels *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
+	} else {
+		NanThrowError(&quot;Cannot create RasterBandPixels directly&quot;);
+		NanReturnUndefined();
+	}
+}
+
+Handle&lt;Value&gt; RasterBandPixels::New(Handle&lt;Value&gt; band_obj)
+{
+	NanEscapableScope();
+
+	RasterBandPixels *wrapped = new RasterBandPixels();
+
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(RasterBandPixels::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), band_obj);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(RasterBandPixels::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;RasterBandPixels&quot;));
+}
+
+/**
+ * Returns the value at the x, y coordinate.
+ *
+ * @method get
+ * @param {Integer} x
+ * @param {Integer} y
+ * @return {Number}
+ */
+NAN_METHOD(RasterBandPixels::get)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y;
+	double val;
+
+	NODE_ARG_INT(0, &quot;x&quot;, x);
+	NODE_ARG_INT(1, &quot;y&quot;, y);
+
+	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Read, x, y, 1, 1, &amp;val, 1, 1, GDT_Float64, 0, 0);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(NanNew&lt;Number&gt;(val));
+}
+
+/**
+ * Sets the value at the x, y coordinate.
+ *
+ * @method set
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Number} value
+ */
+NAN_METHOD(RasterBandPixels::set)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y;
+	double val;
+
+	NODE_ARG_INT(0, &quot;x&quot;, x);
+	NODE_ARG_INT(1, &quot;y&quot;, y);
+	NODE_ARG_DOUBLE(2, &quot;val&quot;, val);
+
+	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Write, x, y, 1, 1, &amp;val, 1, 1, GDT_Float64, 0, 0);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Reads a region of pixels.
+ *
+ * @method read
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Integer} width
+ * @param {Integer} height
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Object} [options]
+ * @param {Integer} [options.buffer_width=x_size]
+ * @param {Integer} [options.buffer_height=y_size]
+ * @param {String} [options.data_type] See {{#crossLink &quot;Constants (GDT)&quot;}}GDT constants{{/crossLink}}.
+ * @param {Integer} [options.pixel_space]
+ * @param {Integer} [options.line_space]
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
+NAN_METHOD(RasterBandPixels::read)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y, w, h;
+	int buffer_w, buffer_h;
+	int bytes_per_pixel;
+	int pixel_space, line_space;
+	int size, length, min_size, min_length;
+	void *data;
+	Handle&lt;Value&gt;  array;
+	Handle&lt;Object&gt; obj;
+	GDALDataType type;
+
+
+	NODE_ARG_INT(0, &quot;x_offset&quot;, x);
+	NODE_ARG_INT(1, &quot;y_offset&quot;, y);
+	NODE_ARG_INT(2, &quot;x_size&quot;, w);
+	NODE_ARG_INT(3, &quot;y_size&quot;, h);
+
+	std::string type_name = &quot;&quot;;
+
+	buffer_w = w;
+	buffer_h = h;
+	type     = band-&gt;get()-&gt;GetRasterDataType();
+	NODE_ARG_INT_OPT(5, &quot;buffer_width&quot;, buffer_w);
+	NODE_ARG_INT_OPT(6, &quot;buffer_height&quot;, buffer_h);
+	NODE_ARG_OPT_STR(7, &quot;data_type&quot;, type_name);
+	if(!type_name.empty()) {
+		type = GDALGetDataTypeByName(type_name.c_str());
+	}
+
+	if(args.Length() &gt;= 5 &amp;&amp; !args[4]-&gt;IsUndefined() &amp;&amp; !args[4]-&gt;IsNull()) {
+		NODE_ARG_OBJECT(4, &quot;data&quot;, obj);
+		type = TypedArray::Identify(obj);
+		if(type == GDT_Unknown) {
+			NanThrowError(&quot;Invalid array&quot;);
+			NanReturnUndefined();
+		}
+	}
+
+	bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
+	pixel_space = bytes_per_pixel;
+	NODE_ARG_INT_OPT(8, &quot;pixel_space&quot;, pixel_space);
+	line_space = pixel_space * buffer_w;
+	NODE_ARG_INT_OPT(9, &quot;line_space&quot;, line_space);
+
+	if(pixel_space &lt; bytes_per_pixel) {
+		NanThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
+		NanReturnUndefined();
+	}
+	if(line_space &lt; pixel_space * buffer_w) {
+		NanThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
+		NanReturnUndefined();
+	}
+
+	size       = line_space * buffer_h; //bytes
+	min_size   = size - (pixel_space - bytes_per_pixel); //subtract away padding on last pixel that wont be written
+	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+
+	//create array if no array was passed
+	if(obj.IsEmpty()){
+		array = TypedArray::New(type, length);
+		if(array.IsEmpty() || !array-&gt;IsObject()) {
+			NanReturnUndefined(); //TypedArray::New threw an error
+		}
+		obj = array.As&lt;Object&gt;();
+	}
+
+	data = TypedArray::Validate(obj, type, min_length);
+	if(!data) {
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
+
+	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Read, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(obj);
+}
+
+/**
+ * Writes a region of pixels.
+ *
+ * @method write
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {Integer} width
+ * @param {Integer} height
+ * @param {TypedArray} data The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to write to the band.
+ * @param {Object} [options]
+ * @param {Integer} [options.buffer_width=x_size]
+ * @param {Integer} [options.buffer_height=y_size]
+ * @param {Integer} [options.pixel_space]
+ * @param {Integer} [options.line_space]
+ */
+NAN_METHOD(RasterBandPixels::write)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y, w, h;
+	int buffer_w, buffer_h;
+	int bytes_per_pixel;
+	int pixel_space, line_space;
+	int size, min_size, min_length;
+	void *data;
+	Handle&lt;Object&gt; passed_array;
+	GDALDataType type;
+
+	NODE_ARG_INT(0, &quot;x_offset&quot;, x);
+	NODE_ARG_INT(1, &quot;y_offset&quot;, y);
+	NODE_ARG_INT(2, &quot;x_size&quot;, w);
+	NODE_ARG_INT(3, &quot;y_size&quot;, h);
+	NODE_ARG_OBJECT(4, &quot;data&quot;, passed_array);
+
+	buffer_w = w;
+	buffer_h = h;
+	NODE_ARG_INT_OPT(5, &quot;buffer_width&quot;, buffer_w);
+	NODE_ARG_INT_OPT(6, &quot;buffer_height&quot;, buffer_h);
+
+	type = TypedArray::Identify(passed_array);
+	if(type == GDT_Unknown) {
+		NanThrowError(&quot;Invalid array&quot;);
+		NanReturnUndefined();
+	}
+
+	bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
+	pixel_space = bytes_per_pixel;
+	NODE_ARG_INT_OPT(7, &quot;pixel_space&quot;, pixel_space);
+	line_space = pixel_space * buffer_w;
+	NODE_ARG_INT_OPT(8, &quot;line_space&quot;, line_space);
+
+	size       = line_space * buffer_h; //bytes
+	min_size   = size - (pixel_space - bytes_per_pixel); //subtract away padding on last pixel that wont be read
+	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+
+	if(pixel_space &lt; bytes_per_pixel) {
+		NanThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
+		NanReturnUndefined();
+	}
+	if(line_space &lt; pixel_space * buffer_w) {
+		NanThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
+		NanReturnUndefined();
+	}
+
+	data = TypedArray::Validate(passed_array, type, min_length);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
+
+	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Write, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Reads a block of pixels.
+ *
+ * @method readBlock
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
+NAN_METHOD(RasterBandPixels::readBlock)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y, w = 0, h = 0;
+	NODE_ARG_INT(0, &quot;block_x_offset&quot;, x);
+	NODE_ARG_INT(1, &quot;block_y_offset&quot;, y);
+
+	band-&gt;get()-&gt;GetBlockSize(&amp;w, &amp;h);
+
+	GDALDataType type = band-&gt;get()-&gt;GetRasterDataType();
+
+	Handle&lt;Value&gt; array;
+	Handle&lt;Object&gt; obj;
+
+	if(args.Length() == 3 &amp;&amp; !args[2]-&gt;IsUndefined() &amp;&amp; !args[2]-&gt;IsNull()) {
+		NODE_ARG_OBJECT(2, &quot;data&quot;, obj);
+ 		array = obj;
+	} else {
+		array = TypedArray::New(type, w * h);
+		if(array.IsEmpty() || !array-&gt;IsObject()) {
+			NanReturnUndefined(); //TypedArray::New threw an error
+		}
+		obj = array.As&lt;Object&gt;();
+	}
+
+
+	void* data = TypedArray::Validate(obj, type, w*h);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
+
+	CPLErr err = band-&gt;get()-&gt;ReadBlock(x, y, data);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(array);
+}
+
+/**
+ * Writes a block of pixels.
+ *
+ * @method writeBlock
+ * @throws Error
+ * @param {Integer} x
+ * @param {Integer} y
+ * @param {TypedArray} data The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values to write to the band.
+ */
+NAN_METHOD(RasterBandPixels::writeBlock)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;get()) {
+		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	int x, y, w = 0, h = 0;
+
+	band-&gt;get()-&gt;GetBlockSize(&amp;w, &amp;h);
+
+	NODE_ARG_INT(0, &quot;block_x_offset&quot;, x);
+	NODE_ARG_INT(1, &quot;block_y_offset&quot;, y);
+
+	Handle&lt;Object&gt; obj;
+	NODE_ARG_OBJECT(2, &quot;data&quot;, obj);
+
+	// validate array
+	void* data = TypedArray::Validate(obj, band-&gt;get()-&gt;GetRasterDataType(), w*h);
+	if(!data){
+		NanReturnUndefined(); //TypedArray::Validate threw an error
+	}
+
+	CPLErr err = band-&gt;get()-&gt;WriteBlock(x, y, data);
+
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+
+}
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

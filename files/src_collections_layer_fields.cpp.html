@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/collections/layer_fields.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.CoordinateTransformation.html">gdal.CoordinateTransformation</a></li>
+            
+                <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefnFields.html">gdal.FeatureDefnFields</a></li>
+            
+                <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
+            
+                <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollection.html">gdal.GeometryCollection</a></li>
+            
+                <li><a href="../classes/gdal.GeometryCollectionChildren.html">gdal.GeometryCollectionChildren</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LayerFeatures.html">gdal.LayerFeatures</a></li>
+            
+                <li><a href="../classes/gdal.LayerFields.html">gdal.LayerFields</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+                <li><a href="../classes/gdal.PolygonRings.html">gdal.PolygonRings</a></li>
+            
+                <li><a href="../classes/gdal.RasterBand.html">gdal.RasterBand</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandOverviews.html">gdal.RasterBandOverviews</a></li>
+            
+                <li><a href="../classes/gdal.RasterBandPixels.html">gdal.RasterBandPixels</a></li>
+            
+                <li><a href="../classes/gdal.SpatialReference.html">gdal.SpatialReference</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/collections/layer_fields.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_field_defn.hpp&quot;
+#include &quot;../gdal_layer.hpp&quot;
+#include &quot;layer_fields.hpp&quot;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; LayerFields::constructor;
+
+void LayerFields::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(LayerFields::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;LayerFields&quot;));
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;remove&quot;, remove);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getNames&quot;, getNames);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;indexOf&quot;, indexOf);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;reorder&quot;, reorder);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
+	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;alter&quot;, alter);
+
+	ATTR_DONT_ENUM(lcons, &quot;layer&quot;, layerGetter, READ_ONLY_SETTER);
+
+	target-&gt;Set(NanNew(&quot;LayerFields&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+LayerFields::LayerFields()
+	: ObjectWrap()
+{}
+
+LayerFields::~LayerFields()
+{}
+
+/**
+ * @class gdal.LayerFields
+ */
+NAN_METHOD(LayerFields::New)
+{
+	NanScope();
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		LayerFields *layer =  static_cast&lt;LayerFields *&gt;(ptr);
+		layer-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
+	} else {
+		NanThrowError(&quot;Cannot create LayerFields directly&quot;);
+		NanReturnUndefined();
+	}
+}
+
+Handle&lt;Value&gt; LayerFields::New(Handle&lt;Value&gt; layer_obj)
+{
+	NanEscapableScope();
+
+	LayerFields *wrapped = new LayerFields();
+
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(LayerFields::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), layer_obj);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(LayerFields::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;LayerFields&quot;));
+}
+
+/**
+ * Returns the number of fields.
+ *
+ * @throws Error
+ * @method count
+ * @return {Integer}
+ */
+NAN_METHOD(LayerFields::count)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;GetFieldCount()));
+}
+
+/**
+ * Find the index of field in the layer.
+ *
+ * @throws Error
+ * @method indexOf
+ * @param {String} field
+ * @return {Integer} Field index, or -1 if the field doesn&#x27;t exist
+ */
+NAN_METHOD(LayerFields::indexOf)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	std::string name(&quot;&quot;);
+	NODE_ARG_STR(0, &quot;field name&quot;, name);
+
+	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;GetFieldIndex(name.c_str())));
+}
+
+/**
+ * Returns a field definition.
+ *
+ * @throws Error
+ * @method get
+ * @param {String|integer} field Field name or index (0-based)
+ * @return {gdal.FieldDefn}
+ */
+NAN_METHOD(LayerFields::get)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args.Length() &lt; 1) {
+		NanThrowError(&quot;Field index or name must be given&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	int field_index;
+	ARG_FIELD_ID(0, def, field_index);
+
+	NanReturnValue(FieldDefn::New(def-&gt;GetFieldDefn(field_index)));
+}
+
+/**
+ * Returns a list of field names.
+ *
+ * @throws Error
+ * @method getNames
+ * @return {Array} List of strings.
+ */
+NAN_METHOD(LayerFields::getNames)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	int n = def-&gt;GetFieldCount();
+	Handle&lt;Array&gt; result = NanNew&lt;Array&gt;(n);
+
+	for (int i = 0; i &lt; n;  i++) {
+		OGRFieldDefn *field_def = def-&gt;GetFieldDefn(i);
+		result-&gt;Set(i, SafeString::New(field_def-&gt;GetNameRef()));
+	}
+
+	NanReturnValue(result);
+}
+
+/**
+ * Removes a field.
+ *
+ * @throws Error
+ * @method remove
+ * @param {String|integer} field Field name or index (0-based)
+ */
+NAN_METHOD(LayerFields::remove)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args.Length() &lt; 1) {
+		NanThrowError(&quot;Field index or name must be given&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	int field_index;
+	ARG_FIELD_ID(0, def, field_index);
+
+	int err = layer-&gt;get()-&gt;DeleteField(field_index);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Adds field(s).
+ *
+ * @throws Error
+ * @method add
+ * @param {gdal.FieldDefn|Array} def A field definition, or array of field definitions.
+ * @param {Boolean} [approx=true]
+ */
+NAN_METHOD(LayerFields::add)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+	if (args.Length() &lt; 1) {
+		NanThrowError(&quot;field definition(s) must be given&quot;);
+		NanReturnUndefined();
+	}
+
+	FieldDefn *field_def;
+	int err;
+	int approx = 1;
+	NODE_ARG_BOOL_OPT(1, &quot;approx&quot;, approx);
+
+	if (args[0]-&gt;IsArray()) {
+		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+		int n = array-&gt;Length();
+		for (int i = 0; i &lt; n; i++) {
+			Handle&lt;Value&gt; element = array-&gt;Get(i);
+			if (IS_WRAPPED(element, FieldDefn)) {
+				field_def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(element.As&lt;Object&gt;());
+				err = layer-&gt;get()-&gt;CreateField(field_def-&gt;get(), approx);
+				if(err) {
+					NODE_THROW_OGRERR(err);
+					NanReturnUndefined();
+				}
+			} else {
+				NanThrowError(&quot;All array elements must be FieldDefn objects&quot;);
+				NanReturnUndefined();
+			}
+		}
+	} else if (IS_WRAPPED(args[0], FieldDefn)) {
+		field_def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args[0].As&lt;Object&gt;());
+		err = layer-&gt;get()-&gt;CreateField(field_def-&gt;get(), approx);
+		if(err) {
+			NODE_THROW_OGRERR(err);
+			NanReturnUndefined();
+		}
+	} else {
+		NanThrowError(&quot;field definition(s) must be a FieldDefn object or array of FieldDefn objects&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Reorders fields.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * // reverse field order
+ * layer.fields.reorder([2,1,0]);&#x60;&#x60;&#x60;
+ *
+ * @throws Error
+ * @method reorder
+ * @param {Array} map An array of new indexes (integers)
+ */
+NAN_METHOD(LayerFields::reorder)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;get()) {
+		NanThrowError(&quot;Layer object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRFeatureDefn *def = layer-&gt;get()-&gt;GetLayerDefn();
+	if (!def) {
+		NanThrowError(&quot;Layer has no layer definition set&quot;);
+		NanReturnUndefined();
+	}
+
+	Handle&lt;Array&gt; field_map = NanNew&lt;Array&gt;(0);
+	NODE_ARG_ARRAY(0, &quot;field map&quot;, field_map);
+
+	int n = def-&gt;GetFieldCount();
+	OGRErr err = 0;
+
+	if ((int)field_map-&gt;Length() != n) {
+		NanThrowError(&quot;Array length must match field count&quot;);
+		NanReturnUndefined();
+	}
+
+	int *field_map_array = new int[n];
+
+	for (int i = 0; i &lt; n; i++) {
+		Handle&lt;Value&gt; val = field_map-&gt;Get(i);
+		if (!val-&gt;IsNumber()) {
+			delete [] field_map_array;
+			NanThrowError(&quot;Array must only contain integers&quot;);
+			NanReturnUndefined();
+		}
+
+		int key = val-&gt;IntegerValue();
+		if (key &lt; 0 || key &gt;= n) {
+			delete [] field_map_array;
+			NanThrowError(&quot;Values must be between 0 and field count - 1&quot;);
+			NanReturnUndefined();
+		}
+
+		field_map_array[i] = key;
+	}
+
+	err = layer-&gt;get()-&gt;ReorderFields(field_map_array);
+
+	delete [] field_map_array;
+
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	NanReturnUndefined();
+}
+
+/**
+ * Parent layer
+ *
+ * @readOnly
+ * @attribute layer
+ * @type {gdal.Layer}
+ */
+NAN_GETTER(LayerFields::layerGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)));
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

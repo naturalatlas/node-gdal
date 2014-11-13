@@ -25,11 +25,47 @@
             "fors": {},
             "namespaces": {}
         },
+        "src/collections/feature_defn_fields.cpp": {
+            "name": "src/collections/feature_defn_fields.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.FeatureDefnFields": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/collections/feature_fields.cpp": {
+            "name": "src/collections/feature_fields.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.FeatureFields": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "src/collections/geometry_collection_children.cpp": {
             "name": "src/collections/geometry_collection_children.cpp",
             "modules": {},
             "classes": {
                 "gdal.GeometryCollectionChildren": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/collections/layer_features.cpp": {
+            "name": "src/collections/layer_features.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.LayerFeatures": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/collections/layer_fields.cpp": {
+            "name": "src/collections/layer_fields.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.LayerFields": 1
             },
             "fors": {},
             "namespaces": {}
@@ -43,6 +79,24 @@
             "fors": {},
             "namespaces": {}
         },
+        "src/collections/rasterband_overviews.cpp": {
+            "name": "src/collections/rasterband_overviews.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.RasterBandOverviews": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/collections/rasterband_pixels.cpp": {
+            "name": "src/collections/rasterband_pixels.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.RasterBandPixels": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "src/gdal_algorithms.cpp": {
             "name": "src/gdal_algorithms.cpp",
             "modules": {},
@@ -50,6 +104,15 @@
             "fors": {
                 "gdal": 1
             },
+            "namespaces": {}
+        },
+        "src/gdal_coordinate_transformation.cpp": {
+            "name": "src/gdal_coordinate_transformation.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.CoordinateTransformation": 1
+            },
+            "fors": {},
             "namespaces": {}
         },
         "src/gdal_dataset.cpp": {
@@ -84,6 +147,15 @@
             "modules": {},
             "classes": {
                 "gdal.FeatureDefn": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal_field_defn.cpp": {
+            "name": "src/gdal_field_defn.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.FieldDefn": 1
             },
             "fors": {},
             "namespaces": {}
@@ -178,6 +250,24 @@
             "fors": {},
             "namespaces": {}
         },
+        "src/gdal_rasterband.cpp": {
+            "name": "src/gdal_rasterband.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.RasterBand": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal_spatial_reference.cpp": {
+            "name": "src/gdal_spatial_reference.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.SpatialReference": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "src/gdal_warper.cpp": {
             "name": "src/gdal_warper.cpp",
             "modules": {},
@@ -220,7 +310,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "lib/envelope.js",
-            "line": 1,
+            "line": 3,
             "description": "A 2D bounding box. For 3D envelopes, see {{#crossLink \"gdal.Envelope3D\"}}gdal.Envelope3D{{/crossLink}}.\n\n(Pure-javascript implementation of [OGREnvelope](http://www.gdal.org/classOGREnvelope.html))",
             "is_constructor": 1,
             "params": [
@@ -241,7 +331,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "lib/envelope_3d.js",
-            "line": 1,
+            "line": 3,
             "description": "A 3D bounding box. For 2D envelopes, see {{#crossLink \"gdal.Envelope\"}}gdal.Envelope{{/crossLink}}.\n\n(Pure-javascript implementation of [OGREnvelope3D](http://www.gdal.org/classOGREnvelope3D.html))",
             "is_constructor": 1,
             "params": [
@@ -251,6 +341,28 @@
                     "type": "Object"
                 }
             ]
+        },
+        "gdal.FeatureDefnFields": {
+            "name": "gdal.FeatureDefnFields",
+            "shortname": "gdal.FeatureDefnFields",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 42
+        },
+        "gdal.FeatureFields": {
+            "name": "gdal.FeatureFields",
+            "shortname": "gdal.FeatureFields",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/feature_fields.cpp",
+            "line": 42
         },
         "gdal.GeometryCollectionChildren": {
             "name": "gdal.GeometryCollectionChildren",
@@ -264,6 +376,28 @@
             "line": 36,
             "description": "A collection of Geometries, used by {{#crossLink \"gdal.GeometryCollection\"}}gdal.GeometryCollection{{/crossLink}}."
         },
+        "gdal.LayerFeatures": {
+            "name": "gdal.LayerFeatures",
+            "shortname": "gdal.LayerFeatures",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/layer_features.cpp",
+            "line": 41
+        },
+        "gdal.LayerFields": {
+            "name": "gdal.LayerFields",
+            "shortname": "gdal.LayerFields",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/layer_fields.cpp",
+            "line": 42
+        },
         "gdal.PolygonRings": {
             "name": "gdal.PolygonRings",
             "shortname": "gdal.PolygonRings",
@@ -274,8 +408,30 @@
             "extension_for": [],
             "file": "src/collections/polygon_rings.cpp",
             "line": 36,
-            "description": "A collection of polygon rings, used by {{#crossLink \"gdal.Polygon\"}}gdal.Polygon{{/crossLink}}.",
-            "is_constructor": 1
+            "description": "A collection of polygon rings, used by {{#crossLink \"gdal.Polygon\"}}gdal.Polygon{{/crossLink}}."
+        },
+        "gdal.RasterBandOverviews": {
+            "name": "gdal.RasterBandOverviews",
+            "shortname": "gdal.RasterBandOverviews",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/rasterband_overviews.cpp",
+            "line": 34
+        },
+        "gdal.RasterBandPixels": {
+            "name": "gdal.RasterBandPixels",
+            "shortname": "gdal.RasterBandPixels",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 40,
+            "description": "A representation of a {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}'s pixels."
         },
         "gdal": {
             "name": "gdal",
@@ -288,6 +444,31 @@
             "file": "src/node_gdal.cpp",
             "line": 1,
             "description": "This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for\nNode.js provides a feature-complete way of reading, writing, and manipulating\ngeospatial data (raster and vector)."
+        },
+        "gdal.CoordinateTransformation": {
+            "name": "gdal.CoordinateTransformation",
+            "shortname": "gdal.CoordinateTransformation",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_coordinate_transformation.cpp",
+            "line": 50,
+            "description": "Object for transforming between coordinate systems.\n\nIf the `target` is a Dataset, the conversion will represent\na conversion to pixel coordinates.",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "source",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                },
+                {
+                    "name": "target",
+                    "description": "",
+                    "type": "gdal.SpatialReference|gdal.Dataset"
+                }
+            ]
         },
         "gdal.Dataset": {
             "name": "gdal.Dataset",
@@ -346,6 +527,30 @@
             "description": "Definition of a feature class or feature layer.",
             "is_constructor": 1
         },
+        "gdal.FieldDefn": {
+            "name": "gdal.FieldDefn",
+            "shortname": "gdal.FieldDefn",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_field_defn.cpp",
+            "line": 56,
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "field_name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "field_name",
+                    "description": "",
+                    "type": "String"
+                }
+            ]
+        },
         "gdal.Geometry": {
             "name": "gdal.Geometry",
             "shortname": "gdal.Geometry",
@@ -382,7 +587,7 @@
             "extension_for": [],
             "file": "src/gdal_layer.cpp",
             "line": 90,
-            "is_constructor": 1
+            "description": "A representation of a layer of simple vector features, with access methods."
         },
         "gdal.LinearRing": {
             "name": "gdal.LinearRing",
@@ -500,6 +705,39 @@
             "is_constructor": 1,
             "extends": "gdal.Geometry"
         },
+        "gdal.RasterBand": {
+            "name": "gdal.RasterBand",
+            "shortname": "gdal.RasterBand",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_rasterband.cpp",
+            "line": 118,
+            "description": "A single raster band (or channel)."
+        },
+        "gdal.SpatialReference": {
+            "name": "gdal.SpatialReference",
+            "shortname": "gdal.SpatialReference",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 97,
+            "description": "This class respresents a OpenGIS Spatial Reference System, and contains methods\nfor converting between this object organization and well known text (WKT)\nformat.",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "wkt",
+                    "description": "",
+                    "type": "String",
+                    "optional": true
+                }
+            ]
+        },
         "Constants (DMD)": {
             "name": "Constants (DMD)",
             "shortname": "Constants (DMD)",
@@ -616,7 +854,7 @@
     "classitems": [
         {
             "file": "lib/envelope.js",
-            "line": 24,
+            "line": 26,
             "description": "Determines if the envelope has not been set yet.",
             "itemtype": "method",
             "name": "isEmpty",
@@ -628,7 +866,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 34,
+            "line": 36,
             "description": "Unions the provided envelope with the current envelope.",
             "itemtype": "method",
             "name": "merge",
@@ -647,7 +885,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 69,
+            "line": 71,
             "description": "Determines if the provided envelope touches it.",
             "itemtype": "method",
             "name": "intersects",
@@ -666,7 +904,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 81,
+            "line": 83,
             "description": "Updates the envelope to the intersection of the two envelopes.",
             "itemtype": "method",
             "name": "intersect",
@@ -685,7 +923,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 106,
+            "line": 108,
             "description": "Determines if the provided envelope is wholly-contained by the current envelope.",
             "itemtype": "method",
             "name": "contains",
@@ -704,7 +942,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 118,
+            "line": 120,
             "description": "Converts the envelope to a polygon.",
             "itemtype": "method",
             "name": "toPolygon",
@@ -716,7 +954,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 28,
+            "line": 30,
             "description": "Determines if the envelope has not been set yet.",
             "itemtype": "method",
             "name": "isEmpty",
@@ -728,7 +966,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 38,
+            "line": 40,
             "description": "Unions the provided envelope with the current envelope.",
             "itemtype": "method",
             "name": "merge",
@@ -747,7 +985,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 81,
+            "line": 83,
             "description": "Determines if the provided envelope touches it.",
             "itemtype": "method",
             "name": "intersects",
@@ -766,7 +1004,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 94,
+            "line": 96,
             "description": "Updates the envelope to the intersection of the two envelopes.",
             "itemtype": "method",
             "name": "intersect",
@@ -785,7 +1023,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 123,
+            "line": 125,
             "description": "Determines if the provided envelope is wholly-contained by the current envelope.",
             "itemtype": "method",
             "name": "contains",
@@ -866,8 +1104,156 @@
             "class": "gdal.GeometryCollectionChildren"
         },
         {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 84,
+            "description": "Returns the number of fields.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 111,
+            "description": "Find the index of field in the layer.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "indexOf",
+            "params": [
+                {
+                    "name": "field",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Field index, or -1 if the field doesn't exist",
+                "type": "Integer"
+            },
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 142,
+            "description": "Returns a field definition.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "field",
+                    "description": "Field name or index (0-based)",
+                    "type": "String|integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.FieldDefn"
+            },
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 178,
+            "description": "Returns a list of field names.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "getNames",
+            "return": {
+                "description": "List of strings.",
+                "type": "Array"
+            },
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 213,
+            "description": "Removes a field.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "remove",
+            "params": [
+                {
+                    "name": "field",
+                    "description": "Field name or index (0-based)",
+                    "type": "String|integer"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 254,
+            "description": "Adds field(s).",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "add",
+            "params": [
+                {
+                    "name": "def",
+                    "description": "A field definition, or array of field definitions.",
+                    "type": "gdal.FieldDefn|Array"
+                },
+                {
+                    "name": "approx",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "true"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 314,
+            "description": "Reorders fields.",
+            "example": [
+                "\n```\n// reverse field order\nlayer.fields.reorder([2,1,0]);```"
+            ],
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "reorder",
+            "params": [
+                {
+                    "name": "map",
+                    "description": "An array of new indexes (integers)",
+                    "type": "Array"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/layer_fields.cpp",
+            "line": 385,
+            "description": "Parent layer",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "layer",
+            "type": "{gdal.Layer}",
+            "class": "gdal.LayerFields"
+        },
+        {
             "file": "src/collections/polygon_rings.cpp",
-            "line": 81,
+            "line": 80,
             "description": "Returns the number of rings that exist in the collection.",
             "itemtype": "method",
             "name": "count",
@@ -878,7 +1264,7 @@
         },
         {
             "file": "src/collections/polygon_rings.cpp",
-            "line": 100,
+            "line": 99,
             "description": "Returns the ring at the specified index. The ring\nat index `0` will always be the polygon's exterior ring.",
             "example": [
                 "\n```\nvar exterior = polygon.rings.get(0);\nvar interior = polygon.rings.get(1);```"
@@ -893,7 +1279,7 @@
         },
         {
             "file": "src/collections/polygon_rings.cpp",
-            "line": 129,
+            "line": 128,
             "description": "Adds a ring to the collection.",
             "example": [
                 "\n```\nvar ring1 = new gdal.LinearRing();\nring1.points.add(0,0);\nring1.points.add(1,0);\nring1.points.add(1,1);\nring1.points.add(0,1);\nring1.points.add(0,0);\n\n// one at a time:\npolygon.rings.add(ring1);\n\n// many at once:\npolygon.rings.add([ring1, ...]);```"
@@ -908,6 +1294,271 @@
                 }
             ],
             "class": "gdal.PolygonRings"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 84,
+            "description": "Returns the value at the x, y coordinate.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Number"
+            },
+            "class": "gdal.RasterBandPixels"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 118,
+            "description": "Sets the value at the x, y coordinate.",
+            "itemtype": "method",
+            "name": "set",
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "class": "gdal.RasterBandPixels"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 153,
+            "description": "Reads a region of pixels.",
+            "itemtype": "method",
+            "name": "read",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "width",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "height",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "data",
+                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
+                    "type": "TypedArray",
+                    "optional": true
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "buffer_width",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "x_size"
+                        },
+                        {
+                            "name": "buffer_height",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "y_size"
+                        },
+                        {
+                            "name": "data_type",
+                            "description": "See {{#crossLink \"Constants (GDT)\"}}GDT constants{{/crossLink}}.",
+                            "type": "String",
+                            "optional": true
+                        },
+                        {
+                            "name": "pixel_space",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "line_space",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true
+                        }
+                    ]
+                }
+            ],
+            "return": {
+                "description": "A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.",
+                "type": "TypedArray"
+            },
+            "class": "gdal.RasterBandPixels"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 262,
+            "description": "Writes a region of pixels.",
+            "itemtype": "method",
+            "name": "write",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "width",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "height",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "data",
+                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to write to the band.",
+                    "type": "TypedArray"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object",
+                    "optional": true,
+                    "props": [
+                        {
+                            "name": "buffer_width",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "x_size"
+                        },
+                        {
+                            "name": "buffer_height",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true,
+                            "optdefault": "y_size"
+                        },
+                        {
+                            "name": "pixel_space",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true
+                        },
+                        {
+                            "name": "line_space",
+                            "description": "",
+                            "type": "Integer",
+                            "optional": true
+                        }
+                    ]
+                }
+            ],
+            "class": "gdal.RasterBandPixels"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 348,
+            "description": "Reads a block of pixels.",
+            "itemtype": "method",
+            "name": "readBlock",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "data",
+                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
+                    "type": "TypedArray",
+                    "optional": true
+                }
+            ],
+            "return": {
+                "description": "A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.",
+                "type": "TypedArray"
+            },
+            "class": "gdal.RasterBandPixels"
+        },
+        {
+            "file": "src/collections/rasterband_pixels.cpp",
+            "line": 406,
+            "description": "Writes a block of pixels.",
+            "itemtype": "method",
+            "name": "writeBlock",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Integer"
+                },
+                {
+                    "name": "data",
+                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values to write to the band.",
+                    "type": "TypedArray"
+                }
+            ],
+            "class": "gdal.RasterBandPixels"
         },
         {
             "file": "src/gdal_algorithms.cpp",
@@ -1154,6 +1805,39 @@
                 }
             ],
             "class": "gdal"
+        },
+        {
+            "file": "src/gdal_coordinate_transformation.cpp",
+            "line": 171,
+            "description": "Transform point from source to destination space.",
+            "example": [
+                "\n```\npt = transform.transformPoint(0, 0, 0);\npt = transform.transformPoint({x: 0, y: 0, z: 0});```"
+            ],
+            "itemtype": "method",
+            "name": "transformPoint",
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "z",
+                    "description": "",
+                    "type": "Number",
+                    "optional": true
+                }
+            ],
+            "return": {
+                "description": "A regular object containing `x`, `y`, `z` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.CoordinateTransformation"
         },
         {
             "file": "src/gdal_dataset.cpp",
@@ -1625,6 +2309,117 @@
                 "description": "",
                 "type": "gdal.FieldDefn"
             },
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 218,
+            "description": "Sets the feature's geometry.",
+            "itemtype": "method",
+            "name": "setGeometry",
+            "params": [
+                {
+                    "name": "geometry",
+                    "description": "",
+                    "type": "gdal.Geometry"
+                }
+            ],
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 226,
+            "description": "Determines if the features are the same.",
+            "itemtype": "method",
+            "name": "setGeometry",
+            "params": [
+                {
+                    "name": "feature",
+                    "description": "",
+                    "type": "gdal.Feature"
+                }
+            ],
+            "return": {
+                "description": "`true` if the features are the same, `false` if different",
+                "type": "Boolean"
+            },
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 235,
+            "description": "Clones the feature.",
+            "itemtype": "method",
+            "name": "clone",
+            "return": {
+                "description": "",
+                "type": "gdal.Feature"
+            },
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 252,
+            "description": "Releases the feature from memory.",
+            "itemtype": "method",
+            "name": "destroy",
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 269,
+            "description": "Set one feature from another. Overwrites the contents of this feature\nfrom the geometry and attributes of another.",
+            "example": [
+                "\n```\nvar feature1 = new gdal.Feature(defn);\nvar feature2 = new gdal.Feature(defn);\nfeature1.setGeometry(new gdal.Point(5, 10));\nfeature1.fields.set([5, 'test', 3.14]);\nfeature2.setFrom(feature1);```"
+            ],
+            "itemtype": "method",
+            "name": "setFrom",
+            "params": [
+                {
+                    "name": "feature",
+                    "description": "",
+                    "type": "gdal.Feature"
+                },
+                {
+                    "name": "*index_map",
+                    "description": "Array of the indices (integers) of the feature's fields stored at the corresponding index of the source feature's fields. A value of -1 should be used to ignore the source's field. The array should not be `null` and be as long as the number of fields in the source feature.",
+                    "type": "Array",
+                    "optional": true
+                },
+                {
+                    "name": "forgiving",
+                    "description": "`true` if the operation should continue despite lacking output fields matching some of the source fields.",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "true"
+                }
+            ],
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 343,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "fields",
+            "type": "{gdal.FeatureFields}",
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 354,
+            "itemtype": "attribute",
+            "name": "fid",
+            "type": "{Integer}",
+            "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature.cpp",
+            "line": 369,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "defn",
+            "type": "{gdal.FeatureDefn}",
             "class": "gdal.Feature"
         },
         {
@@ -2356,6 +3151,189 @@
             "class": "gdal.GeometryCollection"
         },
         {
+            "file": "src/gdal_layer.cpp",
+            "line": 199,
+            "description": "Flush pending changes to disk.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "syncToDisk",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 207,
+            "description": "Determines if the dataset supports the indicated operation.",
+            "itemtype": "method",
+            "name": "testCapability",
+            "params": [
+                {
+                    "name": "capability",
+                    "description": "(see {{#crossLink \"Constants (OLC)\"}}capability list{{/crossLink}})",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 216,
+            "description": "Fetch the extent of this layer.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "getExtent",
+            "params": [
+                {
+                    "name": "force",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "true"
+                }
+            ],
+            "return": {
+                "description": "An object containing `minX`, `maxX`, `minY`, `maxY` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 256,
+            "description": "This method returns the current spatial filter for this layer.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "getSpatialFilter",
+            "return": {
+                "description": "",
+                "type": "gdal.Geometry"
+            },
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 276,
+            "description": "This method sets the geometry to be used as a spatial filter when fetching\nfeatures via the `layer.features.next()` method. Only features that geometrically\nintersect the filter geometry will be returned.\n\nAlernatively you can pass it envelope bounds as individual arguments.",
+            "example": [
+                "\n```\nlayer.setSpatialFilter(geometry);\nlayer.setSpatialFilter(minX, minY, maxX, maxY);```"
+            ],
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "setSpatialFilter",
+            "params": [
+                {
+                    "name": "filter",
+                    "description": "",
+                    "type": "gdal.Geometry"
+                }
+            ],
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 327,
+            "description": "Sets the attribute query string to be used when fetching features via the\n`layer.features.next()` method. Only features for which the query evaluates as\n`true` will be returned.\n\nThe query string should be in the format of an SQL WHERE clause. For instance\n\"population > 1000000 and population < 5000000\" where `population` is an\nattribute in the layer. The query format is normally a restricted form of\nSQL WHERE clause as described in the \"WHERE\" section of the [OGR SQL\ntutorial](http://www.gdal.org/ogr_sql.html). In some cases (RDBMS backed\ndrivers) the native capabilities of the database may be used to interprete\nthe WHERE clause in which case the capabilities will be broader than those\nof OGR SQL.",
+            "example": [
+                "\n```\nlayer.setAttributeFilter('population > 1000000 and population < 5000000');```"
+            ],
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "setAttributeFilter",
+            "params": [
+                {
+                    "name": "filter",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 392,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "ds",
+            "type": "{gdal.Dataset}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 403,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "srs",
+            "type": "{gdal.SpatialReference}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 419,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "name",
+            "type": "{String}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 435,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "geomColumn",
+            "type": "{String}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 451,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "fidColumn",
+            "type": "{String}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 467,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "geomType",
+            "type": "{Integer}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 483,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "features",
+            "type": "{gdal.LayerFeatures}",
+            "class": "gdal.Layer"
+        },
+        {
+            "file": "src/gdal_layer.cpp",
+            "line": 494,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "features",
+            "type": "{gdal.LayerFields}",
+            "class": "gdal.Layer"
+        },
+        {
             "file": "src/gdal_linearring.cpp",
             "line": 139,
             "description": "Computes the area enclosed by the ring.",
@@ -2478,6 +3456,954 @@
             "name": "rings",
             "type": "{gdal.PolygonRings}",
             "class": "gdal.Polygon"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 195,
+            "description": "Saves changes to disk.",
+            "itemtype": "method",
+            "name": "flush",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 202,
+            "description": "Return the status flags of the mask band associated with the band.\n\nThe result will be a bitwise OR-ed set of status flags with the following\navailable definitions that may be extended in the future:\n\n  - `GMF_ALL_VALID` (`0x01`): There are no invalid pixels, all mask values will be 255. When used this will normally be the only flag set.\n  - `GMF_PER_DATASET` (`0x02`): The mask band is shared between all bands on the dataset.\n  - `GMF_ALPHA` (`0x04`): The mask band is actually an alpha band and may have values other than 0 and 255.\n  - `GMF_NODATA` (`0x08`): Indicates the mask is actually being generated from nodata values. (mutually exclusive of `GMF_ALPHA`)",
+            "itemtype": "method",
+            "name": "getMaskFlags",
+            "return": {
+                "description": "Mask flags",
+                "type": "Integer"
+            },
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 220,
+            "description": "Adds a mask band to the current band.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "createMaskBand",
+            "params": [
+                {
+                    "name": "flags",
+                    "description": "Mask flags",
+                    "type": "Integer"
+                }
+            ],
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 231,
+            "description": "Return the mask band associated with the band.",
+            "itemtype": "method",
+            "name": "getMaskBand",
+            "return": {
+                "description": "",
+                "type": "gdal.RasterBand"
+            },
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 254,
+            "description": "Fill this band with a constant value.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fill",
+            "params": [
+                {
+                    "name": "real_value",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "imaginary_value",
+                    "description": "",
+                    "type": "Number",
+                    "optional": true
+                }
+            ],
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 305,
+            "description": "Fetch image statistics.\n\nReturns the minimum, maximum, mean and standard deviation of all pixel values\nin this band. If approximate statistics are sufficient, the `allow_approximation`\nargument can be set to `true` in which case overviews, or a subset of image tiles\nmay be used in computing the statistics.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "getStatistics",
+            "params": [
+                {
+                    "name": "allow_approximation",
+                    "description": "If `true` statistics may be computed based on overviews or a subset of all tiles.",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "force",
+                    "description": "If `false` statistics will only be returned if it can be done without rescanning the image.",
+                    "type": "Boolean"
+                }
+            ],
+            "return": {
+                "description": "Statistics containing `\"min\"`, `\"max\"`, `\"mean\"`, `\"std_dev\"` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 356,
+            "description": "Computes image statistics.\n\nReturns the minimum, maximum, mean and standard deviation of all pixel values\nin this band. If approximate statistics are sufficient, the `allow_approximation`\nargument can be set to `true` in which case overviews, or a subset of image tiles\nmay be used in computing the statistics.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "getStatistics",
+            "params": [
+                {
+                    "name": "allow_approximation",
+                    "description": "If `true` statistics may be computed based on overviews or a subset of all tiles.",
+                    "type": "Boolean"
+                }
+            ],
+            "return": {
+                "description": "Statistics containing `\"min\"`, `\"max\"`, `\"mean\"`, `\"std_dev\"` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 401,
+            "description": "Set statistics on the band. This method can be used to store\nmin/max/mean/standard deviation statistics.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "setStatistics",
+            "params": [
+                {
+                    "name": "min",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "max",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "mean",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "std_dev",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 437,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "ds",
+            "type": "{gdal.Dataset}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 448,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "overviews",
+            "type": "{gdal.RasterBandOverviews}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 459,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "pixels",
+            "type": "{gdal.RasterBandPixels}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 470,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "id",
+            "type": "{Integer|null}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 493,
+            "description": "Size object containing `\"x\"` and `\"y\"` properties.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "size",
+            "type": "{Object}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 515,
+            "description": "Size object containing `\"x\"` and `\"y\"` properties.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "blockSize",
+            "type": "{Object}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 540,
+            "description": "Minimum value for this band.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "minimum",
+            "type": "{Number}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 561,
+            "description": "Maximum value for this band.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "maximum",
+            "type": "{Number}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 582,
+            "description": "Raster value offset.",
+            "itemtype": "attribute",
+            "name": "offset",
+            "type": "{Number}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 602,
+            "description": "Raster value scale.",
+            "itemtype": "attribute",
+            "name": "offset",
+            "type": "{Number}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 622,
+            "description": "No data value for this band.",
+            "itemtype": "attribute",
+            "name": "noDataValue",
+            "type": "{Number|null}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 647,
+            "description": "Raster unit type (name for the units of this raster's values).\nFor instance, it might be `\"m\"` for an elevation model in meters,\nor `\"ft\"` for feet. If no units are available, a value of `\"\"`\nwill be returned.",
+            "itemtype": "attribute",
+            "name": "unitType",
+            "type": "{String}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 669,
+            "description": "Pixel data type ({{#crossLink \"Constants (GDT)\"}}see GDT constants{{/crossLink}}) used for this band.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "dataType",
+            "type": "{String|Undefined}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 691,
+            "description": "Indicates if the band is read-only.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "readOnly",
+            "type": "{Boolean}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 711,
+            "description": "An indicator if the underlying datastore can compute arbitrary overviews\nefficiently, such as is the case with OGDI over a network. Datastores with\narbitrary overviews don't generally have any fixed overviews, but GDAL's\n`RasterIO()` method can be used in downsampling mode to get overview\ndata efficiently.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "hasArbitraryOverviews",
+            "type": "{Boolean}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 735,
+            "description": "List of list of category names for this raster.",
+            "itemtype": "attribute",
+            "name": "categoryNames",
+            "type": "{Array}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_rasterband.cpp",
+            "line": 765,
+            "description": "Color interpretation mode ({{#crossLink \"Constants (GCI)\"}}see GCI constants{{/crossLink}}).",
+            "itemtype": "attribute",
+            "name": "colorInterpretation",
+            "type": "{Array}",
+            "class": "gdal.RasterBand"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 185,
+            "description": "Set a GeogCS based on well known name.",
+            "itemtype": "method",
+            "name": "setWellKnownGeogCS",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 193,
+            "description": "Convert in place to ESRI WKT format.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "morphToESRI",
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 201,
+            "description": "Convert in place from ESRI WKT format.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "morphFromESRI",
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 209,
+            "description": "This method returns `true` if EPSG feels this geographic coordinate system\nshould be treated as having lat/long coordinate ordering.\n\nCurrently this returns `true` for all geographic coordinate systems with an\nEPSG code set, and AXIS values set defining it as lat, long. Note that\ncoordinate systems with an EPSG code and no axis settings will be assumed\nto not be lat/long.\n\n`false` will be returned for all coordinate systems that are not geographic,\nor that do not have an EPSG code set.",
+            "itemtype": "method",
+            "name": "EPSGTreatsAsLatLong",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 226,
+            "description": "This method returns `true` if EPSG feels this projected coordinate system should\nbe treated as having northing/easting coordinate ordering.",
+            "itemtype": "method",
+            "name": "EPSGTreatsAsNorthingEasting",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 235,
+            "description": "Check if geocentric coordinate system.",
+            "itemtype": "method",
+            "name": "isGeocentric",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 243,
+            "description": "Check if geocentric coordinate system.",
+            "itemtype": "method",
+            "name": "isProjected",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 251,
+            "description": "Check if local coordinate system.",
+            "itemtype": "method",
+            "name": "isLocal",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 259,
+            "description": "Check if vertical coordinate system.",
+            "itemtype": "method",
+            "name": "isVertical",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 267,
+            "description": "Check if compound coordinate system.",
+            "itemtype": "method",
+            "name": "isCompound",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 275,
+            "description": "Do the GeogCS'es match?",
+            "itemtype": "method",
+            "name": "isSameGeogCS",
+            "params": [
+                {
+                    "name": "srs",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 284,
+            "description": "Do the VertCS'es match?",
+            "itemtype": "method",
+            "name": "isSameVertCS",
+            "params": [
+                {
+                    "name": "srs",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 293,
+            "description": "Do these two spatial references describe the same system?",
+            "itemtype": "method",
+            "name": "isSame",
+            "params": [
+                {
+                    "name": "srs",
+                    "description": "",
+                    "type": "gdal.SpatialReference"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 302,
+            "description": "Set EPSG authority info if possible.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "autoIdentifyEPSG",
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 310,
+            "description": "Clones the spatial reference.",
+            "itemtype": "method",
+            "name": "clone",
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 323,
+            "description": "Make a duplicate of the GEOGCS node of this OGRSpatialReference object.",
+            "itemtype": "method",
+            "name": "clone",
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 336,
+            "description": "Get the authority name for a node. The most common authority is \"EPSG\".",
+            "itemtype": "method",
+            "name": "getAuthorityName",
+            "params": [
+                {
+                    "name": "target_key",
+                    "description": "The partial or complete path to the node to get an authority from. ie. `\"PROJCS\"`, `\"GEOGCS\"`, \"`GEOGCS|UNIT\"` or `null` to search for an authority node on the root element.",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 355,
+            "description": "Get the authority code for a node.",
+            "itemtype": "method",
+            "name": "getAuthorityCode",
+            "params": [
+                {
+                    "name": "target_key",
+                    "description": "The partial or complete path to the node to get an authority from. ie. `\"PROJCS\"`, `\"GEOGCS\"`, \"`GEOGCS|UNIT\"` or `null` to search for an authority node on the root element.",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 374,
+            "description": "Convert this SRS into WKT format.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toWKT",
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 400,
+            "description": "Convert this SRS into a a nicely formatted WKT string for display to a person.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toPrettyWKT",
+            "params": [
+                {
+                    "name": "simplify",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "false"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 430,
+            "description": "Export coordinate system in PROJ.4 format.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toProj4",
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 461,
+            "description": "Export coordinate system in XML format.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toXML",
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 487,
+            "description": "Fetch indicated attribute of named node.",
+            "itemtype": "method",
+            "name": "getAttrValue",
+            "params": [
+                {
+                    "name": "node_name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "attr_index",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "0"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 507,
+            "description": "Creates a spatial reference from a WKT string.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromWKT",
+            "params": [
+                {
+                    "name": "wkt",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 534,
+            "description": "Creates a spatial reference from a Proj.4 string.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromProj4",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 560,
+            "description": "Creates a spatial reference from a WMSAUTO string.\n\nNote that the WMS 1.3 specification does not include the units code, while\napparently earlier specs do. GDAL tries to guess around this.",
+            "example": [
+                "\n```\nvar wms = 'AUTO:42001,99,8888';\nvar ref = gdal.SpatialReference.fromWMSAUTO(wms);```"
+            ],
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromWMSAUTO",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 594,
+            "description": "Import coordinate system from XML format (GML only currently).",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromXML",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 620,
+            "description": "Initialize from OGC URN.\n\nThe OGC URN should be prefixed with \"urn:ogc:def:crs:\" per recommendation\npaper 06-023r1. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromURN",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 650,
+            "description": "Initialize from OGC URL.\n\nThe OGC URL should be prefixed with \"http://opengis.net/def/crs\" per best\npractice paper 11-135. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromCRSURL",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 680,
+            "description": "Initialize spatial reference from a URL.\n\nThis method will download the spatial reference from the given URL.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromURL",
+            "params": [
+                {
+                    "name": "url",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 708,
+            "description": "Initialize from a Mapinfo style CoordSys definition.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromMICoordSys",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 734,
+            "description": "Initialize from an arbitrary spatial reference string.\n\nThis method will examine the provided input, and try to deduce the format,\nand then use it to initialize the spatial reference system.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromUserInput",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 763,
+            "description": "Initialize from EPSG GCS or PCS code.",
+            "example": [
+                "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(4326);```"
+            ],
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromEPSG",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 793,
+            "description": "Initialize from EPSG GCS or PCS code.\n\nThis method is similar to `fromEPSG()` except that EPSG preferred axis ordering\n*will* be applied for geographic and projected coordinate systems. EPSG normally\ndefines geographic coordinate systems to use lat/long, and also there are also\na few projected coordinate systems that use northing/easting order contrary\nto typical GIS use).",
+            "example": [
+                "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(26910);```"
+            ],
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromEPSG",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 829,
+            "description": "Fetch linear geographic coordinate system units.",
+            "itemtype": "method",
+            "name": "getLinearUnits",
+            "return": {
+                "description": "An object containing `value` and `unit` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 851,
+            "description": "Fetch angular geographic coordinate system units.",
+            "itemtype": "method",
+            "name": "getAngularUnits",
+            "return": {
+                "description": "An object containing `value` and `unit` properties.",
+                "type": "Object"
+            },
+            "class": "gdal.SpatialReference"
         },
         {
             "file": "src/gdal_warper.cpp",
