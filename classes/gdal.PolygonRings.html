@@ -220,6 +220,115 @@
         <div class="item-list">
        		
         	
+            <div id="method_add" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>add</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>ring(s)</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_polygon_rings.cpp.html#l129"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:129</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Adds a ring to the collection.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">ring(s)</code>
+                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var ring1 = new gdal.LinearRing();
+ring1.points.add(0,0);
+ring1.points.add(1,0);
+ring1.points.add(1,1);
+ring1.points.add(0,1);
+ring1.points.add(0,0);
+
+// one at a time:
+polygon.rings.add(ring1);
+
+// many at once:
+polygon.rings.add([ring1, ...]);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
             <div id="method_count" class="method item">
     <div class="method-signature">
     <span class="name"><code>count</code></span>
@@ -366,115 +475,6 @@ at index <code>0</code> will always be the polygon&#39;s exterior ring.</p>
             <div class="example-content">
                 <pre class="code prettyprint"><code>var exterior = polygon.rings.get(0);
 var interior = polygon.rings.get(1);</code></pre>
-
-            </div>
-        </div>
-    
-</div>
-
-            
-        
-        	
-            <div id="method_get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>ring</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_polygon_rings.cpp.html#l129"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:129</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Adds a ring to the collection.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">ring</code>
-                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var ring1 = new gdal.LinearRing();
-ring1.points.add(0,0);
-ring1.points.add(1,0);
-ring1.points.add(1,1);
-ring1.points.add(0,1);
-ring1.points.add(0,0);
-
-// one at a time:
-polygon.rings.add(ring1);
-
-// many at once:
-polygon.rings.add([ring1, ...]);</code></pre>
 
             </div>
         </div>

@@ -899,10 +899,10 @@
                 "\n```\nvar ring1 = new gdal.LinearRing();\nring1.points.add(0,0);\nring1.points.add(1,0);\nring1.points.add(1,1);\nring1.points.add(0,1);\nring1.points.add(0,0);\n\n// one at a time:\npolygon.rings.add(ring1);\n\n// many at once:\npolygon.rings.add([ring1, ...]);```"
             ],
             "itemtype": "method",
-            "name": "get",
+            "name": "add",
             "params": [
                 {
-                    "name": "ring",
+                    "name": "ring(s)",
                     "description": "",
                     "type": "gdal.LinearRing"
                 }
