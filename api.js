@@ -17,7 +17,15 @@ YUI.add("yuidoc-meta", function(Y) {
         "gdal.Envelope3D",
         "gdal.Feature",
         "gdal.FeatureDefn",
-        "gdal.Layer"
+        "gdal.Geometry",
+        "gdal.Layer",
+        "gdal.LineString",
+        "gdal.LinearRing",
+        "gdal.MultiLineString",
+        "gdal.MultiPoint",
+        "gdal.MultiPolygon",
+        "gdal.Point",
+        "gdal.Polygon"
     ],
     "modules": [],
     "allModules": []

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib/envelope.js - node-gdal</title>
+    <title>src/gdal_multilinestring.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -126,146 +126,169 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>lib/envelope.js <small>File</small></h1>
+    <h1>src/gdal_multilinestring.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-//js implementation of OGREnvelope class
-var gdal = require(&#x27;./gdal.js&#x27;);
 
-/**
- * A 2D bounding box. For 3D envelopes, see {{#crossLink &quot;gdal.Envelope3D&quot;}}gdal.Envelope3D{{/crossLink}}.
- *
- * @constructor
- * @class gdal.Envelope
- * @param {Object} [bounds] An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, and &#x60;maxY&#x60; values.
- */
-var Envelope = module.exports = function Envelope(envelope) {
-	if (envelope) {
-		this.minX = envelope.minX;
-		this.minY = envelope.minY;
-		this.maxX = envelope.maxX;
-		this.maxY = envelope.maxY;
-	} else {
-		this.minX = 0;
-		this.minY = 0;
-		this.maxX = 0;
-		this.maxY = 0;
-	}
-};
+#include &quot;gdal_common.hpp&quot;
+#include &quot;gdal_geometry.hpp&quot;
+#include &quot;gdal_geometrycollection.hpp&quot;
+#include &quot;gdal_multilinestring.hpp&quot;
+#include &quot;gdal_linestring.hpp&quot;
+#include &quot;collections/geometry_collection_children.hpp&quot;
 
-/**
- * Determines if the envelope has not been set yet.
- *
- * @method isEmpty
- * @return {Boolean}
- */
-Envelope.prototype.isEmpty = function() {
-	return !(this.minX || this.minY || this.maxX || this.maxY);
-};
+#include &lt;stdlib.h&gt;
 
-/**
- * Unions the provided envelope with the current envelope.
- *
- * @method merge
- * @param {gdal.Envelope} envelope
- * @return {void}
- */
-Envelope.prototype.merge = function(envelope) {
- 	if (arguments.length == 1) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-		} else {
-			this.minX = Math.min(envelope.minX, this.minX);
-			this.maxX = Math.max(envelope.maxX, this.maxX);
-			this.minY = Math.min(envelope.minY, this.minY);
-			this.maxY = Math.max(envelope.maxY, this.maxY);
-		}
-	} else {
-		var x = arguments[0];
-		var y = arguments[1];
-		if (this.isEmpty()) {
-			this.minX = this.maxX = x;
-			this.minY = this.maxY = y;
-		} else {
-			this.minX = Math.min(x, this.minX);
-			this.maxX = Math.max(x, this.maxX);
-			this.minY = Math.min(y, this.minY);
-			this.maxY = Math.max(y, this.maxY);
-		}
-	}
-};
+namespace node_gdal {
 
-/**
- * Determines if the provided envelope touches it.
- *
- * @method intersects
- * @param {gdal.Envelope} envelope
- * @return {Boolean}
- */
-Envelope.prototype.intersects = function(envelope) {
-	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
-	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY;
-};
+Persistent&lt;FunctionTemplate&gt; MultiLineString::constructor;
 
-/**
- * Updates the envelope to the intersection of the two envelopes.
- *
- * @method intersect
- * @param {gdal.Envelope} envelope
- * @return {void}
- */
-Envelope.prototype.intersect = function(envelope) {
-	if (this.intersects(envelope)) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-		} else {
-			this.minX = Math.max(envelope.minX, this.minX);
-			this.maxX = Math.min(envelope.maxX, this.maxX);
-			this.minY = Math.max(envelope.minY, this.minY);
-			this.maxY = Math.min(envelope.maxY, this.maxY);
-		}
-	} else {
-		this.minX = this.maxX = this.minY = this.maxY = 0;
-	}
-};
+void MultiLineString::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
 
-/**
- * Determines if the provided envelope is wholly-contained by the current envelope.
- *
- * @method contains
- * @param {gdal.Envelope} envelope
- * @return {Boolean}
- */
-Envelope.prototype.contains = function(envelope) {
-	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp;
-	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY;
-};
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(MultiLineString::New);
+	lcons-&gt;Inherit(NanNew(GeometryCollection::constructor));
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;MultiLineString&quot;));
 
-/**
- * Converts the envelope to a polygon.
- *
- * @method toPolygon
- * @return {gdal.Polygon}
- */
-Envelope.prototype.toPolygon = function() {
-	var polygon = new gdal.Polygon();
-	var ring    = new gdal.LinearRing();
-	ring.points.add(this.minX, this.minY);
-	ring.points.add(this.maxX, this.minY);
-	ring.points.add(this.maxX, this.maxY);
-	ring.points.add(this.minX, this.maxY);
-	ring.points.add(this.minX, this.minY);
-	polygon.rings.add(ring);
-	return polygon;
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;polygonize&quot;, polygonize);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getGeometry&quot;, getGeometry);
+
+	target-&gt;Set(NanNew(&quot;MultiLineString&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
 }
+
+MultiLineString::MultiLineString(OGRMultiLineString *geom)
+	: ObjectWrap(),
+	  this_(geom),
+	  owned_(true),
+	  size_(0)
+{
+	LOG(&quot;Created MultiLineString [%p]&quot;, geom);
+}
+
+MultiLineString::MultiLineString()
+	: ObjectWrap(),
+	  this_(NULL),
+	  owned_(true),
+	  size_(0)
+{
+}
+
+MultiLineString::~MultiLineString()
+{
+	if(this_) {
+		LOG(&quot;Disposing GeometryCollection [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			NanAdjustExternalMemory(-size_);
+		}
+		LOG(&quot;Disposed GeometryCollection [%p]&quot;, this_);
+		this_ = NULL;
+	}
+}
+
+/**
+ * @constructor
+ * @class gdal.MultiLineString
+ * @extends gdal.GeometryCollection
+ */
+NAN_METHOD(MultiLineString::New)
+{
+	NanScope();
+	MultiLineString *f;
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		f = static_cast&lt;MultiLineString *&gt;(ptr);
+
+	} else {
+		if (args.Length() != 0) {
+			NanThrowError(&quot;MultiLineString constructor doesn&#x27;t take any arguments&quot;);
+			NanReturnUndefined();
+		}
+		f = new MultiLineString(new OGRMultiLineString());
+	}
+
+	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
+	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
+
+	f-&gt;Wrap(args.This());
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom)
+{
+	NanEscapableScope();
+	return NanEscapeScope(MultiLineString::New(geom, true));
+}
+
+Handle&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom, bool owned)
+{
+	NanEscapableScope();
+
+	if (!geom) {
+		return NanEscapeScope(NanNull());
+	}
+
+	//make a copy of geometry owned by a feature
+	// + no need to track when a feature is destroyed
+	// + no need to throw errors when a method trys to modify an owned read-only geometry
+	// - is slower
+
+	if (!owned) {
+		geom = static_cast&lt;OGRMultiLineString*&gt;(geom-&gt;clone());
+	};
+
+	MultiLineString *wrapped = new MultiLineString(geom);
+	wrapped-&gt;owned_ = true;
+
+	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
+
+	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	Handle&lt;Object&gt; obj = NanNew(MultiLineString::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+
+	return NanEscapeScope(obj);
+}
+
+NAN_METHOD(MultiLineString::toString)
+{
+	NanScope();
+	NanReturnValue(NanNew(&quot;MultiLineString&quot;));
+}
+
+NAN_METHOD(MultiLineString::polygonize)
+{
+	NanScope();
+
+	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Polygonize()));
+}
+
+NAN_METHOD(MultiLineString::getGeometry)
+{
+	NanScope();
+	MultiLineString *geom = ObjectWrap::Unwrap&lt;MultiLineString&gt;(args.This());
+
+	int i;
+	NODE_ARG_INT(0, &quot;index&quot;, i);
+
+	NanReturnValue(LineString::New(static_cast&lt;OGRLineString*&gt;(geom-&gt;this_-&gt;getGeometryRef(i)), false));
+}
+
+} // namespace node_gdal
     </pre>
 </div>
 

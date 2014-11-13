@@ -1,0 +1,2623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>gdal.Geometry - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>gdal.Geometry</h1>
+</div>
+
+    
+
+    
+
+    
+
+    
+
+
+
+
+
+
+    <div class="constructor yuidoc-class-constructor">
+        <h2>Constructor</h2>
+        <div class="item-list">
+        <div id="method_gdal.Geometry" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>gdal.Geometry</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l121"><code>src&#x2F;gdal_geometry.cpp:121</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        </div>
+    </div>
+
+
+
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
+        <div class="item-list">
+       		
+        	
+            <div id="method_boundary" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>boundary</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l265"><code>src&#x2F;gdal_geometry.cpp:265</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute boundary.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_buffer" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>buffer</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>distance</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>segments</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l394"><code>src&#x2F;gdal_geometry.cpp:394</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Buffers the geometry by the given distance.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">distance</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">segments</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_centroid" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>centroid</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l571"><code>src&#x2F;gdal_geometry.cpp:571</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute the centroid of the geometry.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Point</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_clone" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>clone</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l239"><code>src&#x2F;gdal_geometry.cpp:239</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Clones the instance.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_convexHull" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>convexHull</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l252"><code>src&#x2F;gdal_geometry.cpp:252</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute convex hull.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            
+        
+        	
+            
+        
+        	
+            
+        
+        	
+            <div id="method_difference" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>difference</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>geometry</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l316"><code>src&#x2F;gdal_geometry.cpp:316</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute the difference of this geometry with another.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">geometry</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_exportToGML" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>exportToGML</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l527"><code>src&#x2F;gdal_geometry.cpp:527</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert a geometry into GML format.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_exportToJSON" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>exportToJSON</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l549"><code>src&#x2F;gdal_geometry.cpp:549</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert a geometry into JSON format.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_exportToKML" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>exportToKML</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l505"><code>src&#x2F;gdal_geometry.cpp:505</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert a geometry into KML format.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_exportToWKT" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>exportToWKT</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l417"><code>src&#x2F;gdal_geometry.cpp:417</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert a geometry into well known text format.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_exportToWKT" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>exportToWKT</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l443"><code>src&#x2F;gdal_geometry.cpp:443</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert a geometry into well known binary format.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            
+        
+        	
+            <div id="method_getEnvelope" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getEnvelope</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l590"><code>src&#x2F;gdal_geometry.cpp:590</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Computes the bounding box (envelope).</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>Object</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_getEnvelope" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getEnvelope</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l618"><code>src&#x2F;gdal_geometry.cpp:618</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Computes the 3D bounding box (envelope).</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>Object</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            
+        
+        	
+            <div id="method_intersection" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>intersection</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>geometry</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l278"><code>src&#x2F;gdal_geometry.cpp:278</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute intersection with another geometry.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">geometry</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_simplify" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>simplify</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>tolerance</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l354"><code>src&#x2F;gdal_geometry.cpp:354</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Reduces the geometry complexity.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">tolerance</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_simplifyPreserveTopology" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>simplifyPreserveTopology</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>tolerance</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l374"><code>src&#x2F;gdal_geometry.cpp:374</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Reduces the geometry complexity while preserving the topology.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">tolerance</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_symDifference" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>symDifference</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>geometry</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l335"><code>src&#x2F;gdal_geometry.cpp:335</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Computes the symmetric difference of this geometry and the second geometry.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">geometry</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method_unionGeometry" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>unionGeometry</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>geometry</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l297"><code>src&#x2F;gdal_geometry.cpp:297</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute the union of this geometry with another.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">geometry</code>
+                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        </div>
+    </div>
+
+
+
+
+
+
+    <div id="attrs" class="page-section">
+        <h2 class="off-left">Attributes</h2>
+
+        
+            <div id="attr_name" class="attr item">
+    <a name="config_name"></a> 
+    <h3 class="name"><code>name</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l776"><code>src&#x2F;gdal_geometry.cpp:776</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_srs" class="attr item">
+    <a name="config_srs"></a> 
+    <h3 class="name"><code>srs</code></h3>
+    <span class="type">gdal.SpatialReference</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l748"><code>src&#x2F;gdal_geometry.cpp:748</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_type" class="attr item">
+    <a name="config_type"></a> 
+    <h3 class="name"><code>type</code></h3>
+    <span class="type">Function</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l787"><code>src&#x2F;gdal_geometry.cpp:787</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr_wkbSize" class="attr item">
+    <a name="config_wkbSize"></a> 
+    <h3 class="name"><code>wkbSize</code></h3>
+    <span class="type">Integer</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l798"><code>src&#x2F;gdal_geometry.cpp:798</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+    </div>
+
+
+
+
+
+    <div id="static-methods" class="page-section">
+        <h2 class="off-left">Static Methods</h2>
+        <div class="item-list">
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+    	        <div id="method_create" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>create</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l730"><code>src&#x2F;gdal_geometry.cpp:730</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Creates an empty Geometry from a WKB type.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">type</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>WKB geometry type (<a href="../classes/Constants (WKB).html" class="crosslink">available options</a>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+    	        <div id="method_createFromWkb" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>createFromWkb</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>wkb</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">src</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l685"><code>src&#x2F;gdal_geometry.cpp:685</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Creates a Geometry from a WKB string.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">wkb</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[src]</code>
+                        <span class="type">gdal.SpatialReference</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+    	        <div id="method_createFromWkt" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>createFromWkt</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>wkt</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">src</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l650"><code>src&#x2F;gdal_geometry.cpp:650</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Creates a Geometry from a WKT string.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">wkt</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[src]</code>
+                        <span class="type">gdal.SpatialReference</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>gdal.Geometry</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+    	        <div id="method_getConstructor" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getConstructor</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l840"><code>src&#x2F;gdal_geometry.cpp:840</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the Geometry subclass that matches the
+given WKB geometry type.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">type</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>WKB geometry type (<a href="../classes/Constants (WKB).html" class="crosslink">available options</a>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>Function</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+        
+			
+        
+			
+    	        <div id="method_getName" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getName</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_geometry.cpp.html#l856"><code>src&#x2F;gdal_geometry.cpp:856</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the Geometry subclass name that matches the
+given WKB geometry type.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">type</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>WKB geometry type (<a href="../classes/Constants (WKB).html" class="crosslink">available options</a>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                    <p>String</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+        
+        </div>
+    </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

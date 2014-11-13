@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/gdal_geometry.cpp - node-gdal</title>
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" href="../assets/css/lucid.css">
+    <link rel="stylesheet" href="../assets/vendor/bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="yui3-skin-sam">
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <h1 class="brand" style="padding: 10px 16px 10px; height: 20px; line-height: 20px; margin-left: 0;">
+        
+	    <img alt="node-gdal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png" style="max-height: 65%;" title="node-gdal">
+        
+            node-gdal
+        </h1>
+	<div class="nav">
+            <li class="divider-vertical"></li>
+            <li>
+                <p class="navbar-text">
+                    API Docs for Version: <b>0.3.0</b>
+                </p>
+            </li>
+        </div>
+        <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.Geometry", "classes/gdal.Layer", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon"]'>
+        </form>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="span3">
+	    <div>
+    <div id="sidebar">
+    <div id="classes">
+        <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
+            
+                <li><a href="../classes/Constants (DMD).html">Constants (DMD)</a></li>
+            
+                <li><a href="../classes/Constants (GCI).html">Constants (GCI)</a></li>
+            
+                <li><a href="../classes/Constants (GDT).html">Constants (GDT)</a></li>
+            
+                <li><a href="../classes/Constants (GRA).html">Constants (GRA)</a></li>
+            
+                <li><a href="../classes/Constants (ODsC).html">Constants (ODsC)</a></li>
+            
+                <li><a href="../classes/Constants (OFT).html">Constants (OFT)</a></li>
+            
+                <li><a href="../classes/Constants (OJ).html">Constants (OJ)</a></li>
+            
+                <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
+            
+                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+            
+                <li><a href="../classes/gdal.html">gdal</a></li>
+            
+                <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
+            
+                <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
+            
+                <li><a href="../classes/gdal.Envelope3D.html">gdal.Envelope3D</a></li>
+            
+                <li><a href="../classes/gdal.Feature.html">gdal.Feature</a></li>
+            
+                <li><a href="../classes/gdal.FeatureDefn.html">gdal.FeatureDefn</a></li>
+            
+                <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
+            
+                <li><a href="../classes/gdal.Layer.html">gdal.Layer</a></li>
+            
+                <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
+            
+                <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
+            
+                <li><a href="../classes/gdal.MultiPoint.html">gdal.MultiPoint</a></li>
+            
+                <li><a href="../classes/gdal.MultiPolygon.html">gdal.MultiPolygon</a></li>
+            
+                <li><a href="../classes/gdal.Point.html">gdal.Point</a></li>
+            
+                <li><a href="../classes/gdal.Polygon.html">gdal.Polygon</a></li>
+            
+        </ul>
+    </div>
+    </div>
+</div>
+
+        </div>
+        <div class="span9">
+                <form id="options-form" class="form-inline pull-right">
+        Show:
+        <label for="api-show-inherited" class="checkbox">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected" class="checkbox">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private" class="checkbox">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated" class="checkbox">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </form>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <div class="page-header">
+    <h1>src/gdal_geometry.cpp <small>File</small></h1>
+</div>
+
+<div class="file">
+    <pre class="prettyprint linenums">
+#include &quot;gdal_common.hpp&quot;
+
+#include &quot;gdal_spatial_reference.hpp&quot;
+#include &quot;gdal_coordinate_transformation.hpp&quot;
+#include &quot;gdal_geometry.hpp&quot;
+#include &quot;gdal_geometrycollection.hpp&quot;
+#include &quot;gdal_point.hpp&quot;
+#include &quot;gdal_linestring.hpp&quot;
+#include &quot;gdal_linearring.hpp&quot;
+#include &quot;gdal_polygon.hpp&quot;
+#include &quot;gdal_multipoint.hpp&quot;
+#include &quot;gdal_multilinestring.hpp&quot;
+#include &quot;gdal_multipolygon.hpp&quot;
+
+#include &quot;utils/fast_buffer.hpp&quot;
+
+#include &lt;node_buffer.h&gt;
+#include &lt;sstream&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ogr_core.h&gt;
+
+namespace node_gdal {
+
+Persistent&lt;FunctionTemplate&gt; Geometry::constructor;
+
+void Geometry::Initialize(Handle&lt;Object&gt; target)
+{
+	NanScope();
+
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(Geometry::New);
+	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
+	lcons-&gt;SetClassName(NanNew(&quot;Geometry&quot;));
+
+	//NODE_SET_METHOD(constructor, &quot;fromWKBType&quot;, Geometry::create);
+	NODE_SET_METHOD(lcons, &quot;fromWKT&quot;, Geometry::createFromWkt);
+	NODE_SET_METHOD(lcons, &quot;fromWKB&quot;, Geometry::createFromWkb);
+	NODE_SET_METHOD(lcons, &quot;getName&quot;, Geometry::getName);
+	NODE_SET_METHOD(lcons, &quot;getConstructor&quot;, Geometry::getConstructor);
+
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toKML&quot;, exportToKML);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toGML&quot;, exportToGML);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toJSON&quot;, exportToJSON);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toWKT&quot;, exportToWKT);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toWKB&quot;, exportToWKB);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isEmpty&quot;, isEmpty);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isValid&quot;, isValid);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isSimple&quot;, isSimple);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isRing&quot;, isRing);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;empty&quot;, empty);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;closeRings&quot;, closeRings);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;intersects&quot;, intersects);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;equals&quot;, equals);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;disjoint&quot;, disjoint);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;touches&quot;, touches);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;crosses&quot;, crosses);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;within&quot;, within);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;contains&quot;, contains);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;overlaps&quot;, overlaps);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;boundary&quot;, boundary);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;distance&quot;, distance);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;convexHull&quot;, convexHull);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;buffer&quot;, buffer);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;intersection&quot;, intersection);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;union&quot;, unionGeometry);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;difference&quot;, difference);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;symDifference&quot;, symDifference);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;centroid&quot;, centroid);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;simplify&quot;, simplify);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;simplifyPreserveTopology&quot;, simplifyPreserveTopology);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;segmentize&quot;, segmentize);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;swapXY&quot;, swapXY);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getEnvelope&quot;, getEnvelope);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getEnvelope3D&quot;, getEnvelope3D);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;transform&quot;, transform);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;transformTo&quot;, transformTo);
+
+	ATTR(lcons, &quot;srs&quot;, srsGetter, srsSetter);
+	ATTR(lcons, &quot;wkbSize&quot;, wkbSizeGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;dimension&quot;, dimensionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;coordinateDimension&quot;, coordinateDimensionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;wkbType&quot;, typeGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;name&quot;, nameGetter, READ_ONLY_SETTER);
+
+	target-&gt;Set(NanNew(&quot;Geometry&quot;), lcons-&gt;GetFunction());
+
+	NanAssignPersistent(constructor, lcons);
+}
+
+Geometry::Geometry(OGRGeometry *geom)
+	: ObjectWrap(),
+	  this_(geom),
+	  owned_(true),
+	  size_(0)
+{
+	LOG(&quot;Created Geometry [%p]&quot;, geom);
+}
+
+Geometry::Geometry()
+	: ObjectWrap(),
+	  this_(NULL),
+	  owned_(true),
+	  size_(0)
+{
+}
+
+Geometry::~Geometry()
+{
+	if(this_) {
+		LOG(&quot;Disposing Geometry [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
+		if (owned_) {
+			OGRGeometryFactory::destroyGeometry(this_);
+			NanAdjustExternalMemory(-size_);
+		}
+		LOG(&quot;Disposed Geometry [%p]&quot;, this_)
+		this_ = NULL;
+	}
+}
+
+/**
+ * @constructor
+ * @class gdal.Geometry
+ */
+NAN_METHOD(Geometry::New)
+{
+	NanScope();
+	Geometry *f;
+
+	if (!args.IsConstructCall()) {
+		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		NanReturnUndefined();
+	}
+
+	if (args[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+		void* ptr = ext-&gt;Value();
+		f = static_cast&lt;Geometry *&gt;(ptr);
+
+	} else {
+		NanThrowError(&quot;Geometry doesnt have a constructor, use Geometry.fromWKT(), Geometry.fromWKB() or type-specific constructor. ie. new ogr.Point()&quot;);
+		NanReturnUndefined();
+		//OGRwkbGeometryType geometry_type;
+		//NODE_ARG_ENUM(0, &quot;geometry type&quot;, OGRwkbGeometryType, geometry_type);
+		//OGRGeometry *geom = OGRGeometryFactory::createGeometry(geometry_type);
+		//f = new Geometry(geom);
+	}
+
+	f-&gt;Wrap(args.This());
+	NanReturnValue(args.This());
+}
+
+Handle&lt;Value&gt; Geometry::New(OGRGeometry *geom)
+{
+	NanEscapableScope();
+	return NanEscapeScope(Geometry::New(geom, true));
+}
+
+Handle&lt;Value&gt; Geometry::New(OGRGeometry *geom, bool owned)
+{
+	NanEscapableScope();
+
+	if (!geom) {
+		return NanEscapeScope(NanNull());
+	}
+
+	OGRwkbGeometryType type = getGeometryType_fixed(geom);
+	type = wkbFlatten(type);
+
+	switch (type) {
+		case wkbPoint:
+			return NanEscapeScope(Point::New(static_cast&lt;OGRPoint*&gt;(geom), owned));
+		case wkbLineString:
+			return NanEscapeScope(LineString::New(static_cast&lt;OGRLineString*&gt;(geom), owned));
+		case wkbLinearRing:
+			return NanEscapeScope(LinearRing::New(static_cast&lt;OGRLinearRing*&gt;(geom), owned));
+		case wkbPolygon:
+			return NanEscapeScope(Polygon::New(static_cast&lt;OGRPolygon*&gt;(geom), owned));
+		case wkbGeometryCollection:
+			return NanEscapeScope(GeometryCollection::New(static_cast&lt;OGRGeometryCollection*&gt;(geom), owned));
+		case wkbMultiPoint:
+			return NanEscapeScope(MultiPoint::New(static_cast&lt;OGRMultiPoint*&gt;(geom), owned));
+		case wkbMultiLineString:
+			return NanEscapeScope(MultiLineString::New(static_cast&lt;OGRMultiLineString*&gt;(geom), owned));
+		case wkbMultiPolygon:
+			return NanEscapeScope(MultiPolygon::New(static_cast&lt;OGRMultiPolygon*&gt;(geom), owned));
+		default:
+			NanThrowError(&quot;Tried to create unsupported geometry type&quot;);
+			return NanEscapeScope(NanUndefined());
+	}
+}
+
+OGRwkbGeometryType Geometry::getGeometryType_fixed(OGRGeometry* geom)
+{
+	//For some reason OGRLinearRing::getGeometryType uses OGRLineString&#x27;s method...
+	//meaning OGRLinearRing::getGeometryType returns wkbLineString
+
+	//http://trac.osgeo.org/gdal/ticket/1755
+
+	OGRwkbGeometryType type = geom-&gt;getGeometryType();
+
+	if (std::string(geom-&gt;getGeometryName()) == &quot;LINEARRING&quot;) {
+		type = (OGRwkbGeometryType) (wkbLinearRing | (type &amp; wkb25DBit));
+	}
+
+	return type;
+}
+
+NAN_METHOD(Geometry::toString)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	std::ostringstream ss;
+	ss &lt;&lt; &quot;Geometry (&quot; &lt;&lt; geom-&gt;this_-&gt;getGeometryName() &lt;&lt; &quot;)&quot;;
+	NanReturnValue(NanNew(ss.str().c_str()));
+}
+
+
+NODE_WRAPPED_METHOD(Geometry, closeRings, closeRings);
+NODE_WRAPPED_METHOD(Geometry, empty, empty);
+NODE_WRAPPED_METHOD(Geometry, swapXY, swapXY);
+NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isEmpty, Boolean, IsEmpty);
+NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isValid, Boolean, IsValid);
+NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isSimple, Boolean, IsSimple);
+NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isRing, Boolean, IsRing);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, intersects, Boolean, Intersects, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, equals, Boolean, Equals, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, disjoint, Boolean, Disjoint, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, touches, Boolean, Touches, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, crosses, Boolean, Crosses, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, within, Boolean, Within, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, contains, Boolean, Contains, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, overlaps, Boolean, Overlaps, Geometry, &quot;geometry to compare&quot;);
+NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, distance, Number, Distance, Geometry, &quot;geometry to use for distance calculation&quot;);
+NODE_WRAPPED_METHOD_WITH_1_DOUBLE_PARAM(Geometry, segmentize, segmentize, &quot;segment length&quot;);
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transform, transform, CoordinateTransformation, &quot;transform&quot;);
+NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transformTo, transformTo, SpatialReference, &quot;spatial reference&quot;);
+
+/**
+ * Clones the instance.
+ *
+ * @method clone
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::clone)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;clone()));
+}
+
+/**
+ * Compute convex hull.
+ *
+ * @method convexHull
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::convexHull)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;ConvexHull()));
+}
+
+/**
+ * Compute boundary.
+ *
+ * @method boundary
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::boundary)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Boundary()));
+}
+
+/**
+ * Compute intersection with another geometry.
+ *
+ * @method intersection
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::intersection)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *x = NULL;
+
+	NODE_ARG_WRAPPED(0, &quot;geometry to use for intersection&quot;, Geometry, x);
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Intersection(x-&gt;this_)));
+}
+
+/**
+ * Compute the union of this geometry with another.
+ *
+ * @method unionGeometry
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::unionGeometry)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *x = NULL;
+
+	NODE_ARG_WRAPPED(0, &quot;geometry to use for union&quot;, Geometry, x);
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Union(x-&gt;this_)));
+}
+
+/**
+ * Compute the difference of this geometry with another.
+ *
+ * @method difference
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::difference)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *x = NULL;
+
+	NODE_ARG_WRAPPED(0, &quot;geometry to use for difference&quot;, Geometry, x);
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Difference(x-&gt;this_)));
+}
+
+/**
+ * Computes the symmetric difference of this geometry and the second geometry.
+ *
+ * @method symDifference
+ * @param {gdal.Geometry} geometry
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::symDifference)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *x = NULL;
+
+	NODE_ARG_WRAPPED(0, &quot;geometry to use for symDifference&quot;, Geometry, x);
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;SymDifference(x-&gt;this_)));
+}
+
+/**
+ * Reduces the geometry complexity.
+ *
+ * @method simplify
+ * @param {Number} tolerance
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::simplify)
+{
+	NanScope();
+
+	double tolerance;
+
+	NODE_ARG_DOUBLE(0, &quot;tolerance&quot;, tolerance);
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Simplify(tolerance)));
+}
+
+/**
+ * Reduces the geometry complexity while preserving the topology.
+ *
+ * @method simplifyPreserveTopology
+ * @param {Number} tolerance
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::simplifyPreserveTopology)
+{
+	NanScope();
+
+	double tolerance;
+
+	NODE_ARG_DOUBLE(0, &quot;tolerance&quot;, tolerance);
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;SimplifyPreserveTopology(tolerance)));
+}
+
+/**
+ * Buffers the geometry by the given distance.
+ *
+ * @method buffer
+ * @param {Number} distance
+ * @param {integer} segments
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::buffer)
+{
+	NanScope();
+
+	double distance;
+	int number_of_segments = 30;
+
+	NODE_ARG_DOUBLE(0, &quot;distance&quot;, distance);
+	NODE_ARG_INT_OPT(1, &quot;number of segments&quot;, number_of_segments);
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Buffer(distance, number_of_segments)));
+}
+
+/**
+ * Convert a geometry into well known text format.
+ *
+ * @method exportToWKT
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::exportToWKT)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	char *text = NULL;
+	OGRErr err = geom-&gt;this_-&gt;exportToWkt(&amp;text);
+
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+	if (text) {
+		NanReturnValue(SafeString::New(text));
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Convert a geometry into well known binary format.
+ *
+ * @method exportToWKT
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::exportToWKB)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	int size = geom-&gt;this_-&gt;WkbSize();
+	unsigned char *data = (unsigned char*) malloc(size);
+
+	//byte order
+	OGRwkbByteOrder byte_order;
+	std::string order = &quot;MSB&quot;;
+	NODE_ARG_OPT_STR(0, &quot;byte order&quot;, order);
+	if (order == &quot;MSB&quot;) {
+		byte_order = wkbXDR;
+	} else if (order == &quot;LSB&quot;) {
+		byte_order = wkbNDR;
+	} else {
+		NanThrowError(&quot;byte order must be &#x27;MSB&#x27; or &#x27;LSB&#x27;&quot;);
+		NanReturnUndefined();
+	}
+
+	#if GDAL_VERSION_MAJOR &gt; 1 || (GDAL_VERSION_MINOR &gt; 10)
+	//wkb variant
+	OGRwkbVariant wkb_variant;
+	std::string variant = &quot;OGC&quot;;
+	NODE_ARG_OPT_STR(1, &quot;wkb variant&quot;, variant);
+	if (variant == &quot;OGC&quot;) {
+		wkb_variant = wkbVariantOgc;
+	} else if (order == &quot;ISO&quot;) {
+		wkb_variant = wkbVariantIso;
+	} else {
+		NanThrowError(&quot;byte order must be &#x27;OGC&#x27; or &#x27;ISO&#x27;&quot;);
+		NanReturnUndefined();
+	}
+	OGRErr err = geom-&gt;this_-&gt;exportToWkb(byte_order, data, wkb_variant);
+	#else
+	OGRErr err = geom-&gt;this_-&gt;exportToWkb(byte_order, data);
+	#endif
+
+	//^^ export to wkb and fill buffer ^^
+	//TODO: avoid extra memcpy in FastBuffer::New and have exportToWkb write directly into buffer
+
+	if(err) {
+		free(data);
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	Handle&lt;Value&gt; result = FastBuffer::New(data, size);
+	free(data);
+
+	NanReturnValue(result);
+
+}
+
+/**
+ * Convert a geometry into KML format.
+ *
+ * @method exportToKML
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::exportToKML)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	char *text = geom-&gt;this_-&gt;exportToKML();
+	if (text) {
+		Handle&lt;Value&gt; result = NanNew(text);
+		CPLFree(text);
+		NanReturnValue(result);
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Convert a geometry into GML format.
+ *
+ * @method exportToGML
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::exportToGML)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	char *text = geom-&gt;this_-&gt;exportToGML();
+	if (text) {
+		Handle&lt;Value&gt; result = NanNew(text);
+		CPLFree(text);
+		NanReturnValue(result);
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Convert a geometry into JSON format.
+ *
+ * @method exportToJSON
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::exportToJSON)
+{
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	char *text = geom-&gt;this_-&gt;exportToJson();
+	if (text) {
+		Handle&lt;Value&gt; result = NanNew(text);
+		CPLFree(text);
+		NanReturnValue(result);
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Compute the centroid of the geometry.
+ *
+ * @method centroid
+ * @returns gdal.Point
+ */
+NAN_METHOD(Geometry::centroid)
+{
+	// The Centroid method wants the caller to create the point to fill in. Instead
+	// of requiring the caller to create the point geometry to fill in, we new up an
+	// OGRPoint and put the result into it and return that.
+	NanScope();
+	OGRPoint *point = new OGRPoint();
+
+	ObjectWrap::Unwrap&lt;Geometry&gt;(args.This())-&gt;this_-&gt;Centroid(point);
+
+	NanReturnValue(Point::New(point));
+}
+
+/**
+ * Computes the bounding box (envelope).
+ *
+ * @method getEnvelope
+ * @returns Object
+ */
+NAN_METHOD(Geometry::getEnvelope)
+{
+	//returns object containing boundaries until complete OGREnvelope binding is built
+
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	OGREnvelope *envelope = new OGREnvelope();
+	geom-&gt;this_-&gt;getEnvelope(envelope);
+
+	Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
+	obj-&gt;Set(NanNew(&quot;minX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinX));
+	obj-&gt;Set(NanNew(&quot;maxX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxX));
+	obj-&gt;Set(NanNew(&quot;minY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinY));
+	obj-&gt;Set(NanNew(&quot;maxY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxY));
+
+	delete envelope;
+
+	NanReturnValue(obj);
+}
+
+/**
+ * Computes the 3D bounding box (envelope).
+ *
+ * @method getEnvelope
+ * @returns Object
+ */
+NAN_METHOD(Geometry::getEnvelope3D)
+{
+	//returns object containing boundaries until complete OGREnvelope binding is built
+
+	NanScope();
+
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	OGREnvelope3D *envelope = new OGREnvelope3D();
+	geom-&gt;this_-&gt;getEnvelope(envelope);
+
+	Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
+	obj-&gt;Set(NanNew(&quot;minX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinX));
+	obj-&gt;Set(NanNew(&quot;maxX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxX));
+	obj-&gt;Set(NanNew(&quot;minY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinY));
+	obj-&gt;Set(NanNew(&quot;maxY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxY));
+	obj-&gt;Set(NanNew(&quot;minZ&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinZ));
+	obj-&gt;Set(NanNew(&quot;maxZ&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxZ));
+
+	delete envelope;
+
+	NanReturnValue(obj);
+}
+
+// --- JS static methods (OGRGeometryFactory) ---
+
+/**
+ * Creates a Geometry from a WKT string.
+ *
+ * @static
+ * @method createFromWkt
+ * @param {String} wkt
+ * @param {gdal.SpatialReference} [src]
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::createFromWkt)
+{
+	NanScope();
+
+	std::string wkt_string;
+	SpatialReference *srs = NULL;
+
+	NODE_ARG_STR(0, &quot;wkt&quot;, wkt_string);
+	NODE_ARG_WRAPPED_OPT(1, &quot;srs&quot;, SpatialReference, srs);
+
+	char *wkt = (char*) wkt_string.c_str();
+	OGRGeometry *geom = NULL;
+	OGRSpatialReference *ogr_srs = NULL;
+	if (srs) {
+		ogr_srs = srs-&gt;get();
+	}
+
+	OGRErr err = OGRGeometryFactory::createFromWkt(&amp;wkt, ogr_srs, &amp;geom);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Geometry::New(geom, true));
+}
+
+/**
+ * Creates a Geometry from a WKB string.
+ *
+ * @static
+ * @method createFromWkb
+ * @param {Object} wkb
+ * @param {gdal.SpatialReference} [src]
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::createFromWkb)
+{
+	NanScope();
+
+	std::string wkb_string;
+	SpatialReference *srs = NULL;
+
+	Handle&lt;Object&gt; wkb_obj;
+	NODE_ARG_OBJECT(0, &quot;wkb&quot;, wkb_obj);
+	NODE_ARG_WRAPPED_OPT(1, &quot;srs&quot;, SpatialReference, srs);
+
+	std::string obj_type = *NanUtf8String(wkb_obj-&gt;GetConstructorName());
+
+	if(obj_type != &quot;Buffer&quot;){
+		NanThrowError(&quot;Argument must be a buffer object&quot;);
+		NanReturnUndefined();
+	}
+
+	unsigned char* data = (unsigned char *) Buffer::Data(wkb_obj);
+	size_t length = Buffer::Length(wkb_obj);
+
+	OGRGeometry *geom = NULL;
+	OGRSpatialReference *ogr_srs = NULL;
+	if (srs) {
+		ogr_srs = srs-&gt;get();
+	}
+
+	OGRErr err = OGRGeometryFactory::createFromWkb(data, ogr_srs, &amp;geom, length);
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Geometry::New(geom, true));
+}
+
+/**
+ * Creates an empty Geometry from a WKB type.
+ *
+ * @static
+ * @method create
+ * @param {Object} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @returns gdal.Geometry
+ */
+NAN_METHOD(Geometry::create)
+{
+	NanScope();
+
+	OGRwkbGeometryType type = wkbUnknown;
+	NODE_ARG_ENUM(0, &quot;type&quot;, OGRwkbGeometryType, type);
+
+	NanReturnValue(Geometry::New(OGRGeometryFactory::createGeometry(type), true));
+}
+
+/**
+ * @attribute srs
+ * @type gdal.SpatialReference
+ */
+NAN_GETTER(Geometry::srsGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(SpatialReference::New(geom-&gt;this_-&gt;getSpatialReference(), false));
+}
+
+NAN_SETTER(Geometry::srsSetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+
+	OGRSpatialReference *srs = NULL;
+	if (IS_WRAPPED(value, SpatialReference)) {
+		SpatialReference *srs_obj = ObjectWrap::Unwrap&lt;SpatialReference&gt;(value.As&lt;Object&gt;());
+		srs = srs_obj-&gt;get();
+	} else if (!value-&gt;IsNull() &amp;&amp; !value-&gt;IsUndefined()) {
+		NanThrowError(&quot;srs must be SpatialReference object&quot;);
+		return;
+	}
+
+	geom-&gt;this_-&gt;assignSpatialReference(srs);
+}
+
+/**
+ * @attribute name
+ * @type String
+ */
+NAN_GETTER(Geometry::nameGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(SafeString::New(geom-&gt;this_-&gt;getGeometryName()));
+}
+
+/**
+ * @attribute type
+ * @type Function
+ */
+NAN_GETTER(Geometry::typeGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(getGeometryType_fixed(geom-&gt;this_)));
+}
+
+/**
+ * @attribute wkbSize
+ * @type Integer
+ */
+NAN_GETTER(Geometry::wkbSizeGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;WkbSize()));
+}
+
+NAN_GETTER(Geometry::dimensionGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;getDimension()));
+}
+
+NAN_GETTER(Geometry::coordinateDimensionGetter)
+{
+	NanScope();
+	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;getCoordinateDimension()));
+}
+
+Handle&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
+	NanEscapableScope();
+
+	type = wkbFlatten(type);
+	switch (type) {
+		case wkbPoint:              return NanEscapeScope(NanNew(Point::constructor)-&gt;GetFunction());
+		case wkbLineString:         return NanEscapeScope(NanNew(LineString::constructor)-&gt;GetFunction());
+		case wkbLinearRing:         return NanEscapeScope(NanNew(LinearRing::constructor)-&gt;GetFunction());
+		case wkbPolygon:            return NanEscapeScope(NanNew(Polygon::constructor)-&gt;GetFunction());
+		case wkbGeometryCollection: return NanEscapeScope(NanNew(GeometryCollection::constructor)-&gt;GetFunction());
+		case wkbMultiPoint:         return NanEscapeScope(NanNew(MultiPoint::constructor)-&gt;GetFunction());
+		case wkbMultiLineString:    return NanEscapeScope(NanNew(MultiLineString::constructor)-&gt;GetFunction());
+		case wkbMultiPolygon:       return NanEscapeScope(NanNew(MultiPolygon::constructor)-&gt;GetFunction());
+		default:                    return NanEscapeScope(NanNull());
+	}
+}
+
+/**
+ * Returns the Geometry subclass that matches the
+ * given WKB geometry type.
+ *
+ * @static
+ * @method getConstructor
+ * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @returns Function
+ */
+NAN_METHOD(Geometry::getConstructor){
+	NanScope();
+	OGRwkbGeometryType type;
+	NODE_ARG_ENUM(0, &quot;wkbType&quot;, OGRwkbGeometryType, type);
+	NanReturnValue(getConstructor(type));
+}
+
+/**
+ * Returns the Geometry subclass name that matches the
+ * given WKB geometry type.
+ *
+ * @static
+ * @method getName
+ * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @returns String
+ */
+NAN_METHOD(Geometry::getName){
+	NanScope();
+	OGRwkbGeometryType type;
+	NODE_ARG_ENUM(0, &quot;wkbType&quot;, OGRwkbGeometryType, type);
+	NanReturnValue(SafeString::New(OGRGeometryTypeToName(type)));
+}
+
+} // namespace node_gdal
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/jquery/jquery-1.8.2.min.js"></script>
+<script src="../assets/vendor/bootstrap/js/bootstrap.js"></script>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script src="../assets/js/yuidoc-bootstrap.js"></script>
+<script>prettyPrint();</script>
+</body>
+</html>

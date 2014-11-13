@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>lib/envelope.js - node-gdal</title>
+    <title>gdal.MultiLineString - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -126,148 +126,96 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>lib/envelope.js <small>File</small></h1>
+    <h1>gdal.MultiLineString</h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
-//js implementation of OGREnvelope class
-var gdal = require(&#x27;./gdal.js&#x27;);
+    
 
-/**
- * A 2D bounding box. For 3D envelopes, see {{#crossLink &quot;gdal.Envelope3D&quot;}}gdal.Envelope3D{{/crossLink}}.
- *
- * @constructor
- * @class gdal.Envelope
- * @param {Object} [bounds] An object containing &#x60;minX&#x60;, &#x60;maxX&#x60;, &#x60;minY&#x60;, and &#x60;maxY&#x60; values.
- */
-var Envelope = module.exports = function Envelope(envelope) {
-	if (envelope) {
-		this.minX = envelope.minX;
-		this.minY = envelope.minY;
-		this.maxX = envelope.maxX;
-		this.maxY = envelope.maxY;
-	} else {
-		this.minX = 0;
-		this.minY = 0;
-		this.maxX = 0;
-		this.maxY = 0;
-	}
-};
+    
+	<div class="well well-small">
+        <div class="extends">
+            Extends gdal.GeometryCollection
+        </div>
+    </div>
+    
 
-/**
- * Determines if the envelope has not been set yet.
- *
- * @method isEmpty
- * @return {Boolean}
- */
-Envelope.prototype.isEmpty = function() {
-	return !(this.minX || this.minY || this.maxX || this.maxY);
-};
+    
 
-/**
- * Unions the provided envelope with the current envelope.
- *
- * @method merge
- * @param {gdal.Envelope} envelope
- * @return {void}
- */
-Envelope.prototype.merge = function(envelope) {
- 	if (arguments.length == 1) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-		} else {
-			this.minX = Math.min(envelope.minX, this.minX);
-			this.maxX = Math.max(envelope.maxX, this.maxX);
-			this.minY = Math.min(envelope.minY, this.minY);
-			this.maxY = Math.max(envelope.maxY, this.maxY);
-		}
-	} else {
-		var x = arguments[0];
-		var y = arguments[1];
-		if (this.isEmpty()) {
-			this.minX = this.maxX = x;
-			this.minY = this.maxY = y;
-		} else {
-			this.minX = Math.min(x, this.minX);
-			this.maxX = Math.max(x, this.maxX);
-			this.minY = Math.min(y, this.minY);
-			this.maxY = Math.max(y, this.maxY);
-		}
-	}
-};
+    
 
-/**
- * Determines if the provided envelope touches it.
- *
- * @method intersects
- * @param {gdal.Envelope} envelope
- * @return {Boolean}
- */
-Envelope.prototype.intersects = function(envelope) {
-	return this.minX &lt;= envelope.maxX &amp;&amp; this.maxX &gt;= envelope.minX &amp;&amp;
-	       this.minY &lt;= envelope.maxY &amp;&amp; this.maxY &gt;= envelope.minY;
-};
 
-/**
- * Updates the envelope to the intersection of the two envelopes.
- *
- * @method intersect
- * @param {gdal.Envelope} envelope
- * @return {void}
- */
-Envelope.prototype.intersect = function(envelope) {
-	if (this.intersects(envelope)) {
-		if (this.isEmpty()) {
-			this.minX = envelope.minX;
-			this.maxX = envelope.maxX;
-			this.minY = envelope.minY;
-			this.maxY = envelope.maxY;
-		} else {
-			this.minX = Math.max(envelope.minX, this.minX);
-			this.maxX = Math.min(envelope.maxX, this.maxX);
-			this.minY = Math.max(envelope.minY, this.minY);
-			this.maxY = Math.min(envelope.maxY, this.maxY);
-		}
-	} else {
-		this.minX = this.maxX = this.minY = this.maxY = 0;
-	}
-};
 
-/**
- * Determines if the provided envelope is wholly-contained by the current envelope.
- *
- * @method contains
- * @param {gdal.Envelope} envelope
- * @return {Boolean}
- */
-Envelope.prototype.contains = function(envelope) {
-	return this.minX &lt;= envelope.minX &amp;&amp; this.minY &lt;= envelope.minY &amp;&amp;
-	       this.maxX &gt;= envelope.maxX &amp;&amp; this.maxY &gt;= envelope.maxY;
-};
 
-/**
- * Converts the envelope to a polygon.
- *
- * @method toPolygon
- * @return {gdal.Polygon}
- */
-Envelope.prototype.toPolygon = function() {
-	var polygon = new gdal.Polygon();
-	var ring    = new gdal.LinearRing();
-	ring.points.add(this.minX, this.minY);
-	ring.points.add(this.maxX, this.minY);
-	ring.points.add(this.maxX, this.maxY);
-	ring.points.add(this.minX, this.maxY);
-	ring.points.add(this.minX, this.minY);
-	polygon.rings.add(ring);
-	return polygon;
-}
-    </pre>
+
+
+    <div class="constructor yuidoc-class-constructor">
+        <h2>Constructor</h2>
+        <div class="item-list">
+        <div id="method_gdal.MultiLineString" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>gdal.MultiLineString</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_multilinestring.cpp.html#l63"><code>src&#x2F;gdal_multilinestring.cpp:63</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
 </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
 
                     </div>
                 </div>
