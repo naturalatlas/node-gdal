@@ -47,3 +47,7 @@ ul.inline > li, ol.inline > li {
 	font-weight: bold !important;
 	color: #F74E04 !important;
 }
+
+.page-section {
+	margin: 0 0 100px 0;
+}
