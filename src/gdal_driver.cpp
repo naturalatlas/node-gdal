@@ -409,6 +409,14 @@ NAN_METHOD(Driver::copyFiles)
 	NanReturnUndefined();
 }
 
+/**
+ * Renames the dataset.
+ *
+ * @throws Error
+ * @method rename
+ * @param {String} new_name New name for the dataset.
+ * @param {String} old_name Old name of the dataset.
+ */
 NAN_METHOD(Driver::rename)
 {
 	NanScope();
@@ -435,6 +443,14 @@ NAN_METHOD(Driver::rename)
 	NanReturnUndefined();
 }
 
+/**
+ * Returns metadata about the driver.
+ *
+ * @throws Error
+ * @method getMetadata
+ * @param {String} [domain]
+ * @return Object
+ */
 NAN_METHOD(Driver::getMetadata)
 {
 	NanScope();
@@ -461,6 +477,15 @@ NAN_METHOD(Driver::getMetadata)
 	NanReturnValue(result);
 }
 
+/**
+ * Opens a dataset.
+ *
+ * @throws Error
+ * @method open
+ * @param {String} path
+ * @param {String} mode The mode to use to open the file: `"r"` or `"r+"`
+ * @return {gdal.Dataset}
+ */
 NAN_METHOD(Driver::open)
 {
 	NanScope();

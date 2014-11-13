@@ -16,7 +16,7 @@ void Warper::Initialize(Handle<Object> target)
 /**
  * @throws Error
  * @method reprojectImage
- * @forclass gdal
+ * @for gdal
  * @param {gdal.Dataset} src
  * @param {gdal.Dataset} dst
  * @param {gdal.SpatialReference} s_srs

@@ -1,3 +1,11 @@
+/**
+ * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
+ * Node.js provides a feature-complete way of reading, writing, and manipulating
+ * geospatial data (raster and vector).
+ *
+ * @class gdal
+ */
+
 // node
 #include <node.h>
 #include <node_buffer.h>
@@ -376,7 +384,7 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, GF_Write);
 
 			/**
-			 * Pixel data types. ([reference](http://www.gdal.org/gdal_8h.html#a22e22ce0a55036a96f652765793fb7a4))
+			 * Pixel data types.
 			 *
 			 * @class Constants (GDT)
 			 */
@@ -821,7 +829,7 @@ namespace node_gdal {
 			target->Set(NanNew("OFTDateTime"), NanNew(getFieldTypeName(OFTDateTime)));
 
 			/**
-			 * Resampling options that can be used with the gdal.reprojectImage() method. ([reference](http://www.gdal.org/gdalwarper_8h.html#a4775b029869df1f9270ad554c0633843))
+			 * Resampling options that can be used with the gdal.reprojectImage() method.
 			 *
 			 * @class Constants (GRA)
 			 */
@@ -870,15 +878,8 @@ namespace node_gdal {
 			target->Set(NanNew("GRA_Mode"), NanNew("Mode"));
 
 			/**
-			 * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
-			 * Node.js provides a feature-complete way of reading, writing, and manipulating
-			 * geospatial data (raster and vector).
-			 *
-			 * @class gdal
-			 */
-
-			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.version
 			 * @type {String}
 			 */
@@ -886,12 +887,15 @@ namespace node_gdal {
 
 			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.CreateDataSourceOption
 			 * @type {mixed}
 			 */
 			target->Set(NanNew("CreateDataSourceOption"), NanNew(ODrCCreateDataSource));
+
 			/**
 			 * @final
+			 * @for gdal
 			 * @property gdal.DeleteDataSourceOption
 			 * @type {mixed}
 			 */
@@ -905,11 +909,16 @@ namespace node_gdal {
 
 			/**
 			 * Disables all output.
+			 *
+			 * @for gdal
 			 * @method quiet
 			 */
 			NODE_SET_METHOD(target, "quiet", QuietOutput);
+
 			/**
 			 * Displays extra debugging information from GDAL.
+			 *
+			 * @for gdal
 			 * @method verbose
 			 */
 			NODE_SET_METHOD(target, "verbose", VerboseOutput);

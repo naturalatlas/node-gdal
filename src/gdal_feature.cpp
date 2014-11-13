@@ -165,7 +165,7 @@ NAN_METHOD(Feature::toString)
  * Returns the geometry of the feature.
  *
  * @method getGeometry
- * @returns {gdal.Geometry}
+ * @return {gdal.Geometry}
  */
 NAN_METHOD(Feature::getGeometry)
 {
@@ -191,7 +191,7 @@ NAN_METHOD(Feature::getGeometry)
  *
  * @method getFieldDefn
  * @param {int} index Field index (0-based)
- * @returns {gdal.FieldDefn}
+ * @return {gdal.FieldDefn}
  */
 NAN_METHOD(Feature::getFieldDefn)
 {

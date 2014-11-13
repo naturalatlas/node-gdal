@@ -7,7 +7,6 @@
 
 namespace node_gdal {
 
-
 void Algorithms::Initialize(Handle<Object> target)
 {
 	NODE_SET_METHOD(target, "fillNodata", fillNodata);
@@ -17,8 +16,18 @@ void Algorithms::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(target, "polygonize", polygonize);
 }
 
-
-
+/**
+ * Fill raster regions by interpolation from edges.
+ *
+ * @throws Error
+ * @method fillNodata
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src If provided, this band will be updated in-place.
+ * @param {gdal.RasterBand} options.mask Mask band
+ * @param {Number} options.searchDist
+ * @param {integer} options.smoothingIterations
+ */
 NAN_METHOD(Algorithms::fillNodata)
 {
 	NanScope();
@@ -37,7 +46,7 @@ NAN_METHOD(Algorithms::fillNodata)
 	NODE_INT_FROM_OBJ_OPT(obj, "smoothIterations", smooth_iterations)
 
 	CPLErr err = GDALFillNodata(src->get(), mask ? mask->get() : NULL, search_dist, 0, smooth_iterations, NULL, NULL, NULL);
-	
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
@@ -46,6 +55,27 @@ NAN_METHOD(Algorithms::fillNodata)
 	NanReturnUndefined();
 }
 
+/**
+ * Create vector contours from raster DEM.
+ *
+ * This algorithm will generate contour vectors for the input raster band on the
+ * requested set of contour levels. The vector contours are written to the passed
+ * in vector layer. Also, a NODATA value may be specified to identify pixels
+ * that should not be considered in contour line generation.
+ *
+ * @throws Error
+ * @method contourGenerate
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.Layer} options.dst
+ * @param {Number} options.base
+ * @param {Number} options.interval
+ * @param {Number[]} options.fixedLevels
+ * @param {Number} options.noData
+ * @param {integer} options.idField
+ * @param {integer} options.elevField
+ */
 NAN_METHOD(Algorithms::contourGenerate)
 {
 	NanScope();
@@ -53,7 +83,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	Handle<Object> obj;
 	Handle<Value> prop;
 	RasterBand* src;
-	Layer* dst; 
+	Layer* dst;
 	double interval = 100, base = 0;
 	double *fixed_levels = NULL;
 	DoubleList fixed_level_array;
@@ -89,7 +119,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	}
 
 	CPLErr err = GDALContourGenerate(src->get(), interval, base, n_fixed_levels, fixed_levels, use_nodata, nodata, dst->get(), id_field, elev_field, NULL, NULL);
-	
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
@@ -98,6 +128,19 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NanReturnUndefined();
 }
 
+/**
+ * Removes small raster polygons.
+ *
+ * @throws Error
+ * @method sieveFilter
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.RasterBand} options.dst Output raster band. It may be the same as src band to update the source in place.
+ * @param {gdal.RasterBand} [options.mask] All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.
+ * @param {Number} options.threshold Raster polygons with sizes smaller than this will be merged into their largest neighbour.
+ * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ */
 NAN_METHOD(Algorithms::sieveFilter)
 {
 	NanScope();
@@ -106,7 +149,7 @@ NAN_METHOD(Algorithms::sieveFilter)
 	RasterBand* src;
 	RasterBand* dst;
 	RasterBand* mask = NULL;
-	int threshold; 
+	int threshold;
 	int connectedness = 4;
 
 	NODE_ARG_OBJECT(0, "options", obj);
@@ -123,7 +166,7 @@ NAN_METHOD(Algorithms::sieveFilter)
 	}
 
 	CPLErr err = GDALSieveFilter(src->get(), mask ? mask->get() : NULL, dst->get(), threshold, connectedness, NULL, NULL, NULL);
-	
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
@@ -132,6 +175,19 @@ NAN_METHOD(Algorithms::sieveFilter)
 	NanReturnUndefined();
 }
 
+/**
+ * Compute checksum for image region.
+ *
+ * @throws Error
+ * @method checksumImage
+ * @for gdal
+ * @param {gdal.RasterBand} src
+ * @param {integer} [x=0]
+ * @param {integer} [y=0]
+ * @param {integer} [w=src.width]
+ * @param {integer} [h=src.height]
+ * @return integer
+ */
 NAN_METHOD(Algorithms::checksumImage)
 {
 	NanScope();
@@ -163,10 +219,27 @@ NAN_METHOD(Algorithms::checksumImage)
 	}
 
 	int checksum = GDALChecksumImage(src->get(), x, y, w, h);
-	
+
 	NanReturnValue(NanNew<Integer>(checksum));
 }
 
+/**
+ * Creates vector polygons for all connected regions of pixels in the raster
+ * sharing a common pixel value. Each polygon is created with an attribute
+ * indicating the pixel value of that polygon. A raster mask may also be
+ * provided to determine which pixels are eligible for processing.
+ *
+ * @throws Error
+ * @method polygonize
+ * @for gdal
+ * @param {Object} options
+ * @param {gdal.RasterBand} options.src
+ * @param {gdal.Layer} options.dst
+ * @param {gdal.RasterBand} [options.mask]
+ * @param {integer} options.pixValField The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.
+ * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {Boolean} options.useFloats Use floating point buffers instead of int buffers.
+ */
 NAN_METHOD(Algorithms::polygonize)
 {
 	NanScope();
@@ -174,7 +247,7 @@ NAN_METHOD(Algorithms::polygonize)
 	Handle<Object> obj;
 	RasterBand* src;
 	RasterBand* mask = NULL;
-	Layer* dst; 
+	Layer* dst;
 	int connectedness = 4;
 	int pix_val_field = 0;
 	char** papszOptions = NULL;
@@ -200,7 +273,7 @@ NAN_METHOD(Algorithms::polygonize)
 	} else {
 		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, dst->get(), pix_val_field, papszOptions, NULL, NULL);
 	}
-	
+
 	if(papszOptions) CSLDestroy(papszOptions);
 
 	if(err) {

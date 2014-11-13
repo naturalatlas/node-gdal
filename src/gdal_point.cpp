@@ -61,9 +61,14 @@ Point::~Point()
 }
 
 /**
+ * Point class.
+ *
  * @constructor
  * @class gdal.Point
  * @extends gdal.Geometry
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} [z]
  */
 NAN_METHOD(Point::New)
 {
@@ -145,6 +150,10 @@ NAN_METHOD(Point::toString)
 	NanReturnValue(NanNew("Point"));
 }
 
+/**
+ * @attribute x
+ * @type Number
+ */
 NAN_GETTER(Point::xGetter)
 {
 	NanScope();
@@ -166,6 +175,10 @@ NAN_SETTER(Point::xSetter)
 	((OGRPoint* )geom->this_)->setX(x);
 }
 
+/**
+ * @attribute y
+ * @type Number
+ */
 NAN_GETTER(Point::yGetter)
 {
 	NanScope();
@@ -187,6 +200,10 @@ NAN_SETTER(Point::ySetter)
 	((OGRPoint* )geom->this_)->setY(y);
 }
 
+/**
+ * @attribute z
+ * @type Number
+ */
 NAN_GETTER(Point::zGetter)
 {
 	NanScope();

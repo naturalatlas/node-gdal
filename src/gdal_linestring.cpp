@@ -65,6 +65,14 @@ LineString::~LineString()
 }
 
 /**
+ * Concrete representation of a multi-vertex line.
+ *
+ * @example
+ * ```
+ * var lineString = new gdal.LineString();
+ * lineString.points.add(new gdal.Point(0,0));
+ * lineString.points.add(new gdal.Point(0,10));```
+ *
  * @constructor
  * @class gdal.LineString
  * @extends gdal.Geometry
@@ -139,9 +147,29 @@ NAN_METHOD(LineString::toString)
 	NanReturnValue(NanNew("LineString"));
 }
 
+/**
+ * Computes the length of the line string.
+ *
+ * @method getLength
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getLength, Number, get_Length);
+
+/**
+ * Returns the number of the points that make up the line string.
+ *
+ * @method getNumPoints
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getNumPoints, Integer, getNumPoints);
 
+/**
+ * Returns the point at an index.
+ *
+ * @method getPoint
+ * @param {integer} index 0-based index
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineString::getPoint)
 {
 	NanScope();
@@ -158,6 +186,13 @@ NAN_METHOD(LineString::getPoint)
 	NanReturnValue(Point::New(pt));
 }
 
+/**
+ * Returns the point at the specified distance along the line string.
+ *
+ * @method value
+ * @param {Number} distance
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineString::value)
 {
 	NanScope();
@@ -173,7 +208,6 @@ NAN_METHOD(LineString::value)
 
 	NanReturnValue(Point::New(pt));
 }
-
 
 NAN_METHOD(LineString::addPoint)
 {
@@ -204,6 +238,12 @@ NAN_METHOD(LineString::addPoint)
 	NanReturnUndefined();
 }
 
+/**
+ * Points that make up the line string.
+ *
+ * @attribute points
+ * @type {gdal.PointCollection}
+ */
 NAN_GETTER(LineString::pointsGetter)
 {
 	NanScope();

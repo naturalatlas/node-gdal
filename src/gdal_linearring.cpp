@@ -60,6 +60,8 @@ LinearRing::~LinearRing()
 }
 
 /**
+ * Concrete representation of a closed ring.
+ *
  * @constructor
  * @class gdal.LinearRing
  * @extends gdal.LineString
@@ -134,6 +136,12 @@ NAN_METHOD(LinearRing::toString)
 	NanReturnValue(NanNew("LinearRing"));
 }
 
+/**
+ * Computes the area enclosed by the ring.
+ *
+ * @method getArea
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LinearRing, getArea, Number, get_Area);
 
 } // namespace node_gdal

@@ -119,7 +119,8 @@ Geometry::~Geometry()
 }
 
 /**
- * @constructor
+ * Abstract base class for all geometry classes.
+ *
  * @class gdal.Geometry
  */
 NAN_METHOD(Geometry::New)
@@ -215,32 +216,182 @@ NAN_METHOD(Geometry::toString)
 	NanReturnValue(NanNew(ss.str().c_str()));
 }
 
-
+/**
+ * Closes any un-closed rings.
+ *
+ * @method closeRings
+ */
 NODE_WRAPPED_METHOD(Geometry, closeRings, closeRings);
+
+/**
+ * Clears the geometry.
+ *
+ * @method empty
+ */
 NODE_WRAPPED_METHOD(Geometry, empty, empty);
+
+/**
+ * Swaps x, y coordinates.
+ *
+ * @method swapXY
+ */
 NODE_WRAPPED_METHOD(Geometry, swapXY, swapXY);
+
+/**
+ * Determines if the geometry is empty.
+ *
+ * @method isEmpty
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isEmpty, Boolean, IsEmpty);
+
+/**
+ * Determines if the geometry is valid.
+ *
+ * @method isValid
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isValid, Boolean, IsValid);
+
+/**
+ * Determines if the geometry is simple.
+ *
+ * @method isSimple
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isSimple, Boolean, IsSimple);
+
+/**
+ * Determines if the geometry is a ring.
+ *
+ * @method isRing
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(Geometry, isRing, Boolean, IsRing);
+
+/**
+ * Determines if the two geometries intersect.
+ *
+ * @method intersects
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, intersects, Boolean, Intersects, Geometry, "geometry to compare");
+
+/**
+ * Determines if the two geometries equal each other.
+ *
+ * @method equals
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, equals, Boolean, Equals, Geometry, "geometry to compare");
+
+/**
+ * Determines if the two geometries are disjoint.
+ *
+ * @method disjoint
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, disjoint, Boolean, Disjoint, Geometry, "geometry to compare");
+
+/**
+ * Determines if the two geometries touch.
+ *
+ * @method touches
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, touches, Boolean, Touches, Geometry, "geometry to compare");
+
+/**
+ * Determines if the two geometries cross.
+ *
+ * @method crosses
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, crosses, Boolean, Crosses, Geometry, "geometry to compare");
+
+/**
+ * Determines if the current geometry is within the provided geometry.
+ *
+ * @method within
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, within, Boolean, Within, Geometry, "geometry to compare");
+
+/**
+ * Determines if the current geometry contains the provided geometry.
+ *
+ * @method contains
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, contains, Boolean, Contains, Geometry, "geometry to compare");
+
+/**
+ * Determines if the current geometry overlaps the provided geometry.
+ *
+ * @method overlaps
+ * @param {gdal.Geometry} geometry
+ * @return Boolean
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, overlaps, Boolean, Overlaps, Geometry, "geometry to compare");
+
+/**
+ * Computes the distance between the two geometries.
+ *
+ * @method distance
+ * @param {gdal.Geometry} geometry
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Geometry, distance, Number, Distance, Geometry, "geometry to use for distance calculation");
+
+/**
+ * Modify the geometry such it has no segment longer then the given distance.
+ *
+ * @method segmentize
+ * @param {Number} segment_length
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_1_DOUBLE_PARAM(Geometry, segmentize, segmentize, "segment length");
+
+/**
+ * Apply arbitrary coordinate transformation to the geometry.
+ *
+ * This method will transform the coordinates of a geometry from their current
+ * spatial reference system to a new target spatial reference system. Normally
+ * this means reprojecting the vectors, but it could include datum shifts,
+ * and changes of units.
+ *
+ * Note that this method does not require that the geometry already have a
+ * spatial reference system. It will be assumed that they can be treated as
+ * having the source spatial reference system of the {{#crossLink "gdal.CoordinateTransformation"}}CoordinateTransformation{{/crossLink}}
+ * object, and the actual SRS of the geometry will be ignored.
+ *
+ * @throws Error
+ * @method transform
+ * @param {gdal.CoordinateTransformation} transformation
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transform, transform, CoordinateTransformation, "transform");
+
+/**
+ * Transforms the geometry to match the provided {{#crossLink "gdal.SpatialReference"}}SpatialReference{{/crossLink}}.
+ *
+ * @throws Error
+ * @method transformTo
+ * @param {gdal.SpatialReference} srs
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transformTo, transformTo, SpatialReference, "spatial reference");
 
 /**
  * Clones the instance.
  *
  * @method clone
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::clone)
 {
@@ -253,7 +404,7 @@ NAN_METHOD(Geometry::clone)
  * Compute convex hull.
  *
  * @method convexHull
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::convexHull)
 {
@@ -266,7 +417,7 @@ NAN_METHOD(Geometry::convexHull)
  * Compute boundary.
  *
  * @method boundary
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::boundary)
 {
@@ -280,7 +431,7 @@ NAN_METHOD(Geometry::boundary)
  *
  * @method intersection
  * @param {gdal.Geometry} geometry
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::intersection)
 {
@@ -299,7 +450,7 @@ NAN_METHOD(Geometry::intersection)
  *
  * @method unionGeometry
  * @param {gdal.Geometry} geometry
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::unionGeometry)
 {
@@ -318,7 +469,7 @@ NAN_METHOD(Geometry::unionGeometry)
  *
  * @method difference
  * @param {gdal.Geometry} geometry
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::difference)
 {
@@ -337,7 +488,7 @@ NAN_METHOD(Geometry::difference)
  *
  * @method symDifference
  * @param {gdal.Geometry} geometry
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::symDifference)
 {
@@ -356,7 +507,7 @@ NAN_METHOD(Geometry::symDifference)
  *
  * @method simplify
  * @param {Number} tolerance
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::simplify)
 {
@@ -376,7 +527,7 @@ NAN_METHOD(Geometry::simplify)
  *
  * @method simplifyPreserveTopology
  * @param {Number} tolerance
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::simplifyPreserveTopology)
 {
@@ -397,7 +548,7 @@ NAN_METHOD(Geometry::simplifyPreserveTopology)
  * @method buffer
  * @param {Number} distance
  * @param {integer} segments
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::buffer)
 {
@@ -417,8 +568,8 @@ NAN_METHOD(Geometry::buffer)
 /**
  * Convert a geometry into well known text format.
  *
- * @method exportToWKT
- * @returns gdal.Geometry
+ * @method toWKT
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToWKT)
 {
@@ -443,8 +594,8 @@ NAN_METHOD(Geometry::exportToWKT)
 /**
  * Convert a geometry into well known binary format.
  *
- * @method exportToWKT
- * @returns gdal.Geometry
+ * @method toWKB
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToWKB)
 {
@@ -505,8 +656,8 @@ NAN_METHOD(Geometry::exportToWKB)
 /**
  * Convert a geometry into KML format.
  *
- * @method exportToKML
- * @returns gdal.Geometry
+ * @method toKML
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToKML)
 {
@@ -527,8 +678,8 @@ NAN_METHOD(Geometry::exportToKML)
 /**
  * Convert a geometry into GML format.
  *
- * @method exportToGML
- * @returns gdal.Geometry
+ * @method toGML
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToGML)
 {
@@ -549,8 +700,8 @@ NAN_METHOD(Geometry::exportToGML)
 /**
  * Convert a geometry into JSON format.
  *
- * @method exportToJSON
- * @returns gdal.Geometry
+ * @method toJSON
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToJSON)
 {
@@ -572,7 +723,7 @@ NAN_METHOD(Geometry::exportToJSON)
  * Compute the centroid of the geometry.
  *
  * @method centroid
- * @returns gdal.Point
+ * @return gdal.Point
  */
 NAN_METHOD(Geometry::centroid)
 {
@@ -591,7 +742,7 @@ NAN_METHOD(Geometry::centroid)
  * Computes the bounding box (envelope).
  *
  * @method getEnvelope
- * @returns Object
+ * @return Object
  */
 NAN_METHOD(Geometry::getEnvelope)
 {
@@ -618,8 +769,8 @@ NAN_METHOD(Geometry::getEnvelope)
 /**
  * Computes the 3D bounding box (envelope).
  *
- * @method getEnvelope
- * @returns Object
+ * @method getEnvelope3D
+ * @return Object
  */
 NAN_METHOD(Geometry::getEnvelope3D)
 {
@@ -651,10 +802,10 @@ NAN_METHOD(Geometry::getEnvelope3D)
  * Creates a Geometry from a WKT string.
  *
  * @static
- * @method createFromWkt
+ * @method fromWKT
  * @param {String} wkt
  * @param {gdal.SpatialReference} [src]
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkt)
 {
@@ -686,10 +837,10 @@ NAN_METHOD(Geometry::createFromWkt)
  * Creates a Geometry from a WKB string.
  *
  * @static
- * @method createFromWkb
+ * @method fromWKB
  * @param {Object} wkb
  * @param {gdal.SpatialReference} [src]
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkb)
 {
@@ -733,7 +884,7 @@ NAN_METHOD(Geometry::createFromWkb)
  * @static
  * @method create
  * @param {Object} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
- * @returns gdal.Geometry
+ * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::create)
 {
@@ -774,6 +925,7 @@ NAN_SETTER(Geometry::srsSetter)
 }
 
 /**
+ * @readOnly
  * @attribute name
  * @type String
  */
@@ -785,8 +937,10 @@ NAN_GETTER(Geometry::nameGetter)
 }
 
 /**
- * @attribute type
- * @type Function
+ * See {{#crossLink "Constants (WKB)"}}wkbGeometryTypes{{/crossLink}}.
+ * @readOnly
+ * @attribute wkbType
+ * @type integer
  */
 NAN_GETTER(Geometry::typeGetter)
 {
@@ -796,6 +950,7 @@ NAN_GETTER(Geometry::typeGetter)
 }
 
 /**
+ * @readOnly
  * @attribute wkbSize
  * @type Integer
  */
@@ -806,6 +961,11 @@ NAN_GETTER(Geometry::wkbSizeGetter)
 	NanReturnValue(NanNew<Integer>(geom->this_->WkbSize()));
 }
 
+/**
+ * @readOnly
+ * @attribute dimension
+ * @type Integer
+ */
 NAN_GETTER(Geometry::dimensionGetter)
 {
 	NanScope();
@@ -813,6 +973,11 @@ NAN_GETTER(Geometry::dimensionGetter)
 	NanReturnValue(NanNew<Integer>(geom->this_->getDimension()));
 }
 
+/**
+ * @readOnly
+ * @attribute coordinateDimension
+ * @type Integer
+ */
 NAN_GETTER(Geometry::coordinateDimensionGetter)
 {
 	NanScope();
@@ -844,9 +1009,10 @@ Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
  * @static
  * @method getConstructor
  * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
- * @returns Function
+ * @return Function
  */
-NAN_METHOD(Geometry::getConstructor){
+NAN_METHOD(Geometry::getConstructor)
+{
 	NanScope();
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);
@@ -860,9 +1026,10 @@ NAN_METHOD(Geometry::getConstructor){
  * @static
  * @method getName
  * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
- * @returns String
+ * @return String
  */
-NAN_METHOD(Geometry::getName){
+NAN_METHOD(Geometry::getName)
+{
 	NanScope();
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, "wkbType", OGRwkbGeometryType, type);

@@ -61,6 +61,13 @@ GeometryCollection::~GeometryCollection()
 	}
 }
 
+/**
+ * A collection of 1 or more geometry objects.
+ *
+ * @constructor
+ * @class gdal.GeometryCollection
+ * @extends gdal.Geometry
+ */
 NAN_METHOD(GeometryCollection::New)
 {
 	NanScope();
@@ -84,8 +91,8 @@ NAN_METHOD(GeometryCollection::New)
 		f = new GeometryCollection(new OGRGeometryCollection());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
@@ -132,10 +139,28 @@ NAN_METHOD(GeometryCollection::toString)
 	NanReturnValue(NanNew("GeometryCollection"));
 }
 
-
+/**
+ * Computes the combined area of the geometries.
+ *
+ * @method getArea
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getArea, Number, get_Area);
+
+/**
+ * Compute the length of a multicurve.
+ *
+ * @method getLength
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getLength, Number, get_Length);
 
+/**
+ * All geometries represented by this collection.
+ *
+ * @attribute children
+ * @type {gdal.GeometryCollectionChildren}
+ */
 NAN_GETTER(GeometryCollection::childrenGetter)
 {
 	NanScope();

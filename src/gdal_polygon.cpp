@@ -61,6 +61,8 @@ Polygon::~Polygon()
 }
 
 /**
+ * Concrete class representing polygons.
+ *
  * @constructor
  * @class gdal.Polygon
  * @extends gdal.Geometry
@@ -135,8 +137,20 @@ NAN_METHOD(Polygon::toString)
 	NanReturnValue(NanNew("Polygon"));
 }
 
+/**
+ * Computes the area of the polygon.
+ *
+ * @method getArea
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getArea, Number, get_Area);
 
+/**
+ * The rings that make up the polygon geometry.
+ *
+ * @attribute rings
+ * @type {gdal.PolygonRings}
+ */
 NAN_GETTER(Polygon::ringsGetter)
 {
 	NanScope();
