@@ -7,7 +7,7 @@
 	"options": {
 		"paths": ["./lib","./src"],
 		"outdir": "./yuidocs",
-		"themedir": "node_modules/yuidoc-bootstrap-theme",
-		"helpers": ["node_modules/yuidoc-bootstrap-theme/helpers/helpers.js"]
+		"themedir": "node_modules/yuidoc-lucid-theme",
+		"helpers": ["node_modules/yuidoc-lucid-theme/helpers/helpers.js"]
 	}
 }
