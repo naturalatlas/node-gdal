@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -217,8 +223,8 @@ FieldDefn::~FieldDefn()
 /**
  * @constructor
  * @class gdal.FieldDefn
- * @param {String} field_name
- * @param {String} field_name
+ * @param {String} name Field name
+ * @param {String} type Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
  */
 NAN_METHOD(FieldDefn::New)
 {
@@ -294,7 +300,10 @@ NAN_METHOD(FieldDefn::toString)
 	NanReturnValue(NanNew(&quot;FieldDefn&quot;));
 }
 
-
+/**
+ * @attribute name
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::nameGetter)
 {
 	NanScope();
@@ -302,6 +311,12 @@ NAN_GETTER(FieldDefn::nameGetter)
 	NanReturnValue(SafeString::New(def-&gt;this_-&gt;GetNameRef()));
 }
 
+/**
+ * Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
+ *
+ * @attribute type
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::typeGetter)
 {
 	NanScope();
@@ -309,6 +324,10 @@ NAN_GETTER(FieldDefn::typeGetter)
 	NanReturnValue(SafeString::New(getFieldTypeName(def-&gt;this_-&gt;GetType())));
 }
 
+/**
+ * @attribute ignored
+ * @type {Boolean}
+ */
 NAN_GETTER(FieldDefn::ignoredGetter)
 {
 	NanScope();
@@ -316,6 +335,12 @@ NAN_GETTER(FieldDefn::ignoredGetter)
 	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsIgnored()));
 }
 
+/**
+ * Field justification (see {{#crossLink &quot;Constants (OJ)&quot;}}OJ constants{{/crossLink}})
+ *
+ * @attribute justification
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::justificationGetter)
 {
 	NanScope();
@@ -326,6 +351,10 @@ NAN_GETTER(FieldDefn::justificationGetter)
 	NanReturnValue(NanUndefined());
 }
 
+/**
+ * @attribute width
+ * @type {Integer}
+ */
 NAN_GETTER(FieldDefn::widthGetter)
 {
 	NanScope();
@@ -333,6 +362,10 @@ NAN_GETTER(FieldDefn::widthGetter)
 	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetWidth()));
 }
 
+/**
+ * @attribute precision
+ * @type {Integer}
+ */
 NAN_GETTER(FieldDefn::precisionGetter)
 {
 	NanScope();

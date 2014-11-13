@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -174,11 +180,56 @@
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-clone"><span class="im">clone</span>()</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-fields"><span class="iattr">fields</span></a></li>
+				
+				<li><a href="#attr-geomIgnored"><span class="iattr">geomIgnored</span></a></li>
+				
+				<li><a href="#attr-geomType"><span class="iattr">geomType</span></a></li>
+				
+				<li><a href="#attr-name"><span class="iattr">name</span></a></li>
+				
+				<li><a href="#attr-styleIgnored"><span class="iattr">styleIgnored</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
     <div class="constructor yuidoc-class-constructor">
         <h2>Constructor</h2>
         <div class="item-list">
-        <div id="method_gdal.FeatureDefn" class="method item">
+        <div id="method-gdal.FeatureDefn" class="method item">
     <div class="method-signature">
     <span class="name"><code>gdal.FeatureDefn</code></span>
 
@@ -235,10 +286,354 @@
 
 
 
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
+        <div class="item-list">
+       		
+        	
+            <div id="method-clone" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>clone</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.FeatureDefn.html" class="crosslink">gdal.FeatureDefn</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l136"><code>src&#x2F;gdal_feature_defn.cpp:136</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Clones the feature definition.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.FeatureDefn.html" class="crosslink">gdal.FeatureDefn</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        </div>
+    </div>
 
 
 
 
+
+    <div id="attrs" class="page-section">
+        <h2 class="off-left">Attributes</h2>
+
+        
+            <div id="attr-fields" class="attr item">
+    <a name="config_fields"></a> 
+    <h3 class="name"><code>fields</code></h3>
+    <span class="type"><a href="../classes/gdal.FeatureDefnFields.html" class="crosslink">gdal.FeatureDefnFields</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l196"><code>src&#x2F;gdal_feature_defn.cpp:196</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr-geomIgnored" class="attr item">
+    <a name="config_geomIgnored"></a> 
+    <h3 class="name"><code>geomIgnored</code></h3>
+    <span class="type">Boolean</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l174"><code>src&#x2F;gdal_feature_defn.cpp:174</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr-geomType" class="attr item">
+    <a name="config_geomType"></a> 
+    <h3 class="name"><code>geomType</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l161"><code>src&#x2F;gdal_feature_defn.cpp:161</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>WKB geometry type (<a href="../classes/Constants (WKB).html" class="crosslink">see table</a>)</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr-name" class="attr item">
+    <a name="config_name"></a> 
+    <h3 class="name"><code>name</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l149"><code>src&#x2F;gdal_feature_defn.cpp:149</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr-styleIgnored" class="attr item">
+    <a name="config_styleIgnored"></a> 
+    <h3 class="name"><code>styleIgnored</code></h3>
+    <span class="type">Boolean</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_feature_defn.cpp.html#l185"><code>src&#x2F;gdal_feature_defn.cpp:185</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+    </div>
 
 
 

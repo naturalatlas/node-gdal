@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/collections/polygon_rings.cpp - node-gdal</title>
+    <title>src/collections/linestring_points.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -160,52 +160,55 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/collections/polygon_rings.cpp <small>File</small></h1>
+    <h1>src/collections/linestring_points.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
 #include &quot;../gdal_common.hpp&quot;
 #include &quot;../gdal_geometry.hpp&quot;
-#include &quot;../gdal_polygon.hpp&quot;
-#include &quot;../gdal_linearring.hpp&quot;
-#include &quot;polygon_rings.hpp&quot;
+#include &quot;../gdal_linestring.hpp&quot;
+#include &quot;../gdal_point.hpp&quot;
+#include &quot;linestring_points.hpp&quot;
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; PolygonRings::constructor;
+Persistent&lt;FunctionTemplate&gt; LineStringPoints::constructor;
 
-void PolygonRings::Initialize(Handle&lt;Object&gt; target)
+void LineStringPoints::Initialize(Handle&lt;Object&gt; target)
 {
 	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(PolygonRings::New);
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(LineStringPoints::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;PolygonRings&quot;));
+	lcons-&gt;SetClassName(NanNew(&quot;LineStringPoints&quot;));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;set&quot;, set);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;reverse&quot;, reverse);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;resize&quot;, resize);
 
-	target-&gt;Set(NanNew(&quot;PolygonRings&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(NanNew(&quot;LineStringPoints&quot;), lcons-&gt;GetFunction());
 
 	NanAssignPersistent(constructor, lcons);
 }
 
-PolygonRings::PolygonRings()
+LineStringPoints::LineStringPoints()
 	: ObjectWrap()
 {}
 
-PolygonRings::~PolygonRings()
+LineStringPoints::~LineStringPoints()
 {}
 
 /**
- * A collection of polygon rings, used by {{#crossLink &quot;gdal.Polygon&quot;}}gdal.Polygon{{/crossLink}}.
+ * An encapsulation of a {{#crossLink &quot;gdal.LineString&quot;}}LineString{{/crossLink}}&#x27;s points.
  *
- * @class gdal.PolygonRings
+ * @class gdal.LineStringPoints
  */
-NAN_METHOD(PolygonRings::New)
+NAN_METHOD(LineStringPoints::New)
 {
 	NanScope();
 
@@ -216,136 +219,307 @@ NAN_METHOD(PolygonRings::New)
 	if (args[0]-&gt;IsExternal()) {
 		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
-		PolygonRings *geom =  static_cast&lt;PolygonRings *&gt;(ptr);
+		LineStringPoints *geom =  static_cast&lt;LineStringPoints *&gt;(ptr);
 		geom-&gt;Wrap(args.This());
 		NanReturnValue(args.This());
 	} else {
-		NanThrowError(&quot;Cannot create PolygonRings directly&quot;);
+		NanThrowError(&quot;Cannot create LineStringPoints directly&quot;);
 		NanReturnUndefined();
 	}
 }
 
-Handle&lt;Value&gt; PolygonRings::New(Handle&lt;Value&gt; geom)
+Handle&lt;Value&gt; LineStringPoints::New(Handle&lt;Value&gt; geom)
 {
 	NanEscapableScope();
 
-	PolygonRings *wrapped = new PolygonRings();
+	LineStringPoints *wrapped = new LineStringPoints();
 
 	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(PolygonRings::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(LineStringPoints::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
 	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), geom);
 
 	return NanEscapeScope(obj);
 }
 
-NAN_METHOD(PolygonRings::toString)
+NAN_METHOD(LineStringPoints::toString)
 {
 	NanScope();
-	NanReturnValue(NanNew(&quot;PolygonRings&quot;));
+	NanReturnValue(NanNew(&quot;LineStringPoints&quot;));
 }
 
 /**
- * Returns the number of rings that exist in the collection.
+ * Returns the number of points that are part of the line string.
  *
  * @method count
- * @return Integer
+ * @return {Integer}
  */
-NAN_METHOD(PolygonRings::count)
+NAN_METHOD(LineStringPoints::count)
 {
 	NanScope();
 
 	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
 
-	int i = geom-&gt;get()-&gt;getExteriorRing() ? 1 : 0;
-	i += geom-&gt;get()-&gt;getNumInteriorRings();
-
-	NanReturnValue(NanNew&lt;Integer&gt;(i));
+	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;get()-&gt;getNumPoints()));
 }
 
 /**
- * Returns the ring at the specified index. The ring
- * at index &#x60;0&#x60; will always be the polygon&#x27;s exterior ring.
+ * Reverses the order of all the points.
+ *
+ * @method reverse
+ */
+NAN_METHOD(LineStringPoints::reverse)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
+
+	geom-&gt;get()-&gt;reversePoints();
+
+	NanReturnUndefined();
+}
+
+/**
+ * Adjusts the number of points that make up the line string.
+ *
+ * @method resize
+ * @param {Integer} count
+ */
+NAN_METHOD(LineStringPoints::resize)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
+
+	int count;
+	NODE_ARG_INT(0, &quot;point count&quot;, count)
+	geom-&gt;get()-&gt;setNumPoints(count);
+
+	NanReturnUndefined();
+}
+
+/**
+ * Returns the point at the specified index.
+ *
+ * @method get
+ * @param {Integer} index 0-based index
+ * @return {gdal.Point}
+ */
+NAN_METHOD(LineStringPoints::get)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
+
+	OGRPoint *pt = new OGRPoint();
+	int i;
+
+	NODE_ARG_INT(0, &quot;index&quot;, i);
+	if(i &lt; 0 || i &gt;= geom-&gt;get()-&gt;getNumPoints()) {
+		NanReturnValue(NanNull());
+	}
+
+	geom-&gt;get()-&gt;getPoint(i, pt);
+
+	NanReturnValue(Point::New(pt));
+}
+
+/**
+ * Sets the point at the specified index.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * var exterior = polygon.rings.get(0);
- * var interior = polygon.rings.get(1);&#x60;&#x60;&#x60;
+ * lineString.points.set(0, new gdal.Point(1, 2));&#x60;&#x60;&#x60;
  *
- * @method get
- * @return {gdal.LinearRing}
+ * @method set
+ * @throws Error
+ * @param {Integer} index 0-based index
+ * @param {gdal.Point} point
  */
-NAN_METHOD(PolygonRings::get)
+NAN_METHOD(LineStringPoints::set)
 {
 	NanScope();
 
 	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
 
 	int i;
 	NODE_ARG_INT(0, &quot;index&quot;, i);
-
-	if(i == 0) {
-		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getExteriorRing(), false));
-	} else {
-		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getInteriorRing(i-1), false));
+	if(i &lt; 0 || i &gt;= geom-&gt;get()-&gt;getNumPoints()) {
+		NanThrowError(&quot;Point index out of range&quot;);
+		NanReturnUndefined();
 	}
+
+	int n = args.Length() - 1;
+
+	if(n == 0) {
+		NanThrowError(&quot;Point must be given&quot;);
+		NanReturnUndefined();
+	} else if(n == 1) {
+		if(!args[1]-&gt;IsObject()) {
+			NanThrowError(&quot;Point or object expected for second argument&quot;);
+			NanReturnUndefined();
+		}
+		if(IS_WRAPPED(args[1], Point)){
+			//set from Point object
+			Point* pt = ObjectWrap::Unwrap&lt;Point&gt;(args[1].As&lt;Object&gt;());
+			geom-&gt;get()-&gt;setPoint(i, pt-&gt;get());
+		} else {
+			Handle&lt;Object&gt; obj = args[1].As&lt;Object&gt;();
+			//set from object {x: 0, y: 5}
+			double x, y;
+			NODE_DOUBLE_FROM_OBJ(obj, &quot;x&quot;, x);
+			NODE_DOUBLE_FROM_OBJ(obj, &quot;y&quot;, y);
+
+			Handle&lt;String&gt; z_prop_name = NanNew(&quot;z&quot;);
+			if (obj-&gt;HasOwnProperty(z_prop_name)) {
+				Handle&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
+				if (!z_val-&gt;IsNumber()) {
+					NanThrowError(&quot;z property must be number&quot;);
+					NanReturnUndefined();
+				}
+				geom-&gt;get()-&gt;setPoint(i, x, y, z_val-&gt;NumberValue());
+			} else {
+				geom-&gt;get()-&gt;setPoint(i, x, y);
+			}
+		}
+	} else {
+		//set x, y, z from numeric arguments
+		if(!args[1]-&gt;IsNumber()){
+			NanThrowError(&quot;Number expected for second argument&quot;);
+			NanReturnUndefined();
+		}
+		if(!args[2]-&gt;IsNumber()){
+			NanThrowError(&quot;Number expected for third argument&quot;);
+			NanReturnUndefined();
+		}
+		if(n == 2){
+			geom-&gt;get()-&gt;setPoint(i, args[1]-&gt;NumberValue(), args[2]-&gt;NumberValue());
+		} else {
+			if(!args[3]-&gt;IsNumber()){
+				NanThrowError(&quot;Number expected for fourth argument&quot;);
+				NanReturnUndefined();
+			}
+
+			geom-&gt;get()-&gt;setPoint(i, args[1]-&gt;NumberValue(), args[2]-&gt;NumberValue(), args[3]-&gt;NumberValue());
+		}
+	}
+
+	NanReturnUndefined();
 }
 
 /**
- * Adds a ring to the collection.
+ * Adds point(s) to the line string.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * var ring1 = new gdal.LinearRing();
- * ring1.points.add(0,0);
- * ring1.points.add(1,0);
- * ring1.points.add(1,1);
- * ring1.points.add(0,1);
- * ring1.points.add(0,0);
- *
- * // one at a time:
- * polygon.rings.add(ring1);
- *
- * // many at once:
- * polygon.rings.add([ring1, ...]);&#x60;&#x60;&#x60;
+ * lineString.points.add(new gdal.Point(1, 2));
+ * lineString.points.add([
+ *     new gdal.Point(1, 2)
+ *     new gdal.Point(3, 4)
+ * ]);&#x60;&#x60;&#x60;
  *
  * @method add
- * @param {gdal.LinearRing} ring(s)
+ * @throws Error
+ * @param {gdal.Point|Array} point(s)
  */
-NAN_METHOD(PolygonRings::add)
+NAN_METHOD(LineStringPoints::add)
 {
 	NanScope();
 
 	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(parent);
 
-	LinearRing *ring;
+	int n = args.Length();
 
-	if (args.Length() &lt; 1) {
-		NanThrowError(&quot;ring(s) must be given&quot;);
+	if(n == 0) {
+		NanThrowError(&quot;Point must be given&quot;);
 		NanReturnUndefined();
-	}
-	if (args[0]-&gt;IsArray()){
-		//set from array of geometry objects
-		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
-		int length = array-&gt;Length();
-		for (int i = 0; i &lt; length; i++){
-			Handle&lt;Value&gt; element = array-&gt;Get(i);
-			if (IS_WRAPPED(element, LinearRing)){
-				ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(element.As&lt;Object&gt;());
-				geom-&gt;get()-&gt;addRing(ring-&gt;get());
+	} else if(n == 1) {
+		if(!args[0]-&gt;IsObject()) {
+			NanThrowError(&quot;Point, object, or array of points expected&quot;);
+			NanReturnUndefined();
+		}
+		if(IS_WRAPPED(args[0], Point)){
+			//set from Point object
+			Point* pt = ObjectWrap::Unwrap&lt;Point&gt;(args[0].As&lt;Object&gt;());
+			geom-&gt;get()-&gt;addPoint(pt-&gt;get());
+		} else if (args[0]-&gt;IsArray()) {
+			//set from array of points
+			Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+			int length = array-&gt;Length();
+			for (int i = 0; i &lt; length; i++){
+				Handle&lt;Value&gt; element = array-&gt;Get(i);
+				if(!element-&gt;IsObject()) {
+					NanThrowError(&quot;All points must be Point objects or objects&quot;);
+					NanReturnUndefined();
+				}
+				Handle&lt;Object&gt; element_obj = element.As&lt;Object&gt;();
+				if(IS_WRAPPED(element_obj, Point)){
+					//set from Point object
+					Point* pt = ObjectWrap::Unwrap&lt;Point&gt;(element_obj);
+					geom-&gt;get()-&gt;addPoint(pt-&gt;get());
+				} else {
+					//set from object {x: 0, y: 5}
+					double x, y;
+					NODE_DOUBLE_FROM_OBJ(element_obj, &quot;x&quot;, x);
+					NODE_DOUBLE_FROM_OBJ(element_obj, &quot;y&quot;, y);
+
+					Handle&lt;String&gt; z_prop_name = NanNew(&quot;z&quot;);
+					if (element_obj-&gt;HasOwnProperty(z_prop_name)) {
+						Handle&lt;Value&gt; z_val = element_obj-&gt;Get(z_prop_name);
+						if (!z_val-&gt;IsNumber()) {
+							NanThrowError(&quot;z property must be number&quot;);
+							NanReturnUndefined();
+						}
+						geom-&gt;get()-&gt;addPoint(x, y, z_val-&gt;NumberValue());
+					} else {
+						geom-&gt;get()-&gt;addPoint(x, y);
+					}
+				}
+			}
+		} else {
+			//set from object {x: 0, y: 5}
+			Handle&lt;Object&gt; obj = args[0].As&lt;Object&gt;();
+			double x, y;
+			NODE_DOUBLE_FROM_OBJ(obj, &quot;x&quot;, x);
+			NODE_DOUBLE_FROM_OBJ(obj, &quot;y&quot;, y);
+
+			Handle&lt;String&gt; z_prop_name = NanNew(&quot;z&quot;);
+			if (obj-&gt;HasOwnProperty(z_prop_name)) {
+				Handle&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
+				if (!z_val-&gt;IsNumber()) {
+					NanThrowError(&quot;z property must be number&quot;);
+					NanReturnUndefined();
+				}
+				geom-&gt;get()-&gt;addPoint(x, y, z_val-&gt;NumberValue());
 			} else {
-				NanThrowError(&quot;All array elements must be LinearRings&quot;);
-				NanReturnUndefined();
+				geom-&gt;get()-&gt;addPoint(x, y);
 			}
 		}
-	} else if (IS_WRAPPED(args[0], LinearRing)){
-		ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(args[0].As&lt;Object&gt;());
-		geom-&gt;get()-&gt;addRing(ring-&gt;get());
 	} else {
-		NanThrowError(&quot;ring(s) must be a LinearRing or array of LinearRings&quot;);
-		NanReturnUndefined();
+		//set x, y, z from numeric arguments
+		if(!args[0]-&gt;IsNumber()){
+			NanThrowError(&quot;Number expected for first argument&quot;);
+			NanReturnUndefined();
+		}
+		if(!args[1]-&gt;IsNumber()){
+			NanThrowError(&quot;Number expected for second argument&quot;);
+			NanReturnUndefined();
+		}
+		if(n == 2){
+			geom-&gt;get()-&gt;addPoint(args[0]-&gt;NumberValue(), args[1]-&gt;NumberValue());
+		} else {
+			if(!args[2]-&gt;IsNumber()){
+				NanThrowError(&quot;Number expected for third argument&quot;);
+				NanReturnUndefined();
+			}
+
+			geom-&gt;get()-&gt;addPoint(args[0]-&gt;NumberValue(), args[1]-&gt;NumberValue(), args[2]-&gt;NumberValue());
+		}
 	}
 
 	NanReturnUndefined();

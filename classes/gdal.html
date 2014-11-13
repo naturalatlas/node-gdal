@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -169,22 +175,177 @@
 
 
 <div class="yuidoc-class-description">
-    <p>This <a href="https://github.com/naturalatlas/node-gdal">node-gdal</a> GDAL binding for
+    <p>This <a href="https://github.com/naturalatlas/node-gdal">node-gdal</a> binding for
 Node.js provides a feature-complete way of reading, writing, and manipulating
-geospatial data (raster and vector).</p>
+geospatial data (raster and vector) using <a href="http://www.gdal.org/">GDAL</a>.</p>
+<pre class="code prettyprint"><code>// sample: open a shapefile and display all features as geojson
+var dataset = gdal.open("states.shp");
 
+dataset.layers.get(0).features.forEach(function(feature) {
+    console.log(feature.getGeometry().toJSON());
+});</code></pre>
+<iframe src="http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20" style="margin-top:20px"></iframe>
+<iframe src="http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="200" height="20"></iframe>
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.version"><span class="ip">gdal.version</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Static Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-checksumImage"><span class="im">checksumImage</span>(<span class="ia">src</span><span class="ia">x</span><span class="ia">y</span><span class="ia">w</span><span class="ia">h</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-config.get"><span class="im">config.get</span>(<span class="ia">key</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-config.set"><span class="im">config.set</span>(<span class="ia">key</span><span class="ia">value</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-contourGenerate"><span class="im">contourGenerate</span>(<span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-decToDMS"><span class="im">decToDMS</span>(<span class="ia">angle</span><span class="ia">axis</span><span class="ia">precision</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fillNodata"><span class="im">fillNodata</span>(<span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-open"><span class="im">open</span>(<span class="ia">path</span><span class="ia">mode</span><span class="ia">drivers</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-polygonize"><span class="im">polygonize</span>(<span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-quiet"><span class="im">quiet</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-reprojectImage"><span class="im">reprojectImage</span>(<span class="ia">src</span><span class="ia">dst</span><span class="ia">s_srs</span><span class="ia">t_srs</span><span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-sieveFilter"><span class="im">sieveFilter</span>(<span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-suggestedWarpOutput"><span class="im">suggestedWarpOutput</span>(<span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-verbose"><span class="im">verbose</span>()</a></li>
+				
+				
+			</ul>
+		</li>
+		
+	</ul>
+</div>
+
+<!-- details -->
 
 
 
-    <div id="methods" class="page-section">
-        <h2 class="off-left">Methods</h2>
+
+
+
+    <div id="properties" class="page-section">
+        <h2 class="off-left">Properties</h2>
+
         <div class="item-list">
-       		
-        	
-            <div id="method_checksumImage" class="method item">
+        
+            <div id="prop-gdal.version" class="property item">
+    <h3 class="name"><code>gdal.version</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l890"><code>src&#x2F;node_gdal.cpp:890</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>GDAL version (not the binding version)</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <div id="static-methods" class="page-section">
+        <h2 class="off-left">Static Methods</h2>
+        <div class="item-list">
+        
+			
+    	        <div id="method-checksumImage" class="method item">
     <div class="method-signature">
     <span class="name"><code>checksumImage</code></span>
 
@@ -253,7 +414,7 @@ geospatial data (raster and vector).</p>
             
         
         
-        <a href="../files/src_gdal_algorithms.cpp.html#l178"><code>src&#x2F;gdal_algorithms.cpp:178</code></a>
+        <a href="../files/src_gdal_algorithms.cpp.html#l181"><code>src&#x2F;gdal_algorithms.cpp:181</code></a>
         
         </p>
 
@@ -376,8 +537,257 @@ geospatial data (raster and vector).</p>
 
             
         
-        	
-            <div id="method_contourGenerate" class="method item">
+			
+    	        <div id="method-config.get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>config.get</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>key</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l18"><code>lib&#x2F;gdal.js:18</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Gets a GDAL configuration setting.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">key</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">String</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>data_path = gdal.config.get(&#39;GDAL_DATA&#39;);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+			
+    	        <div id="method-config.set" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>config.set</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>key</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>value</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Mixed</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l33"><code>lib&#x2F;gdal.js:33</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Sets a GDAL configuration setting.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">key</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">value</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Mixed</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>gdal.config.set(&#39;GDAL_DATA&#39;, data_path);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+			
+    	        <div id="method-contourGenerate" class="method item">
     <div class="method-signature">
     <span class="name"><code>contourGenerate</code></span>
 
@@ -418,7 +828,7 @@ geospatial data (raster and vector).</p>
             
         
         
-        <a href="../files/src_gdal_algorithms.cpp.html#l58"><code>src&#x2F;gdal_algorithms.cpp:58</code></a>
+        <a href="../files/src_gdal_algorithms.cpp.html#l59"><code>src&#x2F;gdal_algorithms.cpp:59</code></a>
         
         </p>
 
@@ -577,8 +987,159 @@ that should not be considered in contour line generation.</p>
 
             
         
-        	
-            <div id="method_fillNodata" class="method item">
+			
+    	        <div id="method-decToDMS" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>decToDMS</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>angle</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>axis</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">precision=2</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal.hpp.html#l111"><code>src&#x2F;gdal.hpp:111</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Convert decimal degrees to degrees, minutes, and seconds string</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">angle</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">axis</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p><code>"lat"</code> or <code>"long"</code></p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[precision=2]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">String</span>:
+                    
+                    <p>A string nndnn&#39;nn.nn&#39;"L where n is a number and L is either N or E</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+    	        <div id="method-fillNodata" class="method item">
     <div class="method-signature">
     <span class="name"><code>fillNodata</code></span>
 
@@ -724,8 +1285,283 @@ that should not be considered in contour line generation.</p>
 
             
         
-        	
-            <div id="method_polygonize" class="method item">
+			
+    	        <div id="method-open" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>open</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>path</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>mode</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">drivers</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">x_size</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">y_size</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">band_count</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">data_type</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">control_options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l293"><code>lib&#x2F;gdal.js:293</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Creates or opens a dataset.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">path</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Path to dataset to open</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">mode</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The mode to use to open the file: <code>"r"</code>, <code>"r+"</code>, or <code>"w"</code></p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[drivers]</code>
+                        <span class="type">String | Array</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Driver name, or list of driver names to attempt to use.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[x_size]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[y_size]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[band_count]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[data_type]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[control_options]</code>
+                        <span class="type">String</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var dataset = gdal.open(&#39;./data.shp&#39;);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+			
+    	        <div id="method-polygonize" class="method item">
     <div class="method-signature">
     <span class="name"><code>polygonize</code></span>
 
@@ -766,7 +1602,7 @@ that should not be considered in contour line generation.</p>
             
         
         
-        <a href="../files/src_gdal_algorithms.cpp.html#l226"><code>src&#x2F;gdal_algorithms.cpp:226</code></a>
+        <a href="../files/src_gdal_algorithms.cpp.html#l230"><code>src&#x2F;gdal_algorithms.cpp:230</code></a>
         
         </p>
 
@@ -902,8 +1738,8 @@ provided to determine which pixels are eligible for processing.</p>
 
             
         
-        	
-            <div id="method_quiet" class="method item">
+			
+    	        <div id="method-quiet" class="method item">
     <div class="method-signature">
     <span class="name"><code>quiet</code></span>
 
@@ -934,7 +1770,7 @@ provided to determine which pixels are eligible for processing.</p>
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l910"><code>src&#x2F;node_gdal.cpp:910</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l905"><code>src&#x2F;node_gdal.cpp:905</code></a>
         
         </p>
 
@@ -958,8 +1794,8 @@ provided to determine which pixels are eligible for processing.</p>
 
             
         
-        	
-            <div id="method_reprojectImage" class="method item">
+			
+    	        <div id="method-reprojectImage" class="method item">
     <div class="method-signature">
     <span class="name"><code>reprojectImage</code></span>
 
@@ -1035,7 +1871,8 @@ provided to determine which pixels are eligible for processing.</p>
     </div>
 
     <div class="description">
-        
+        <p>Reprojects a dataset.</p>
+
     </div>
 
     
@@ -1278,8 +2115,8 @@ provided to determine which pixels are eligible for processing.</p>
 
             
         
-        	
-            <div id="method_sieveFilter" class="method item">
+			
+    	        <div id="method-sieveFilter" class="method item">
     <div class="method-signature">
     <span class="name"><code>sieveFilter</code></span>
 
@@ -1320,7 +2157,7 @@ provided to determine which pixels are eligible for processing.</p>
             
         
         
-        <a href="../files/src_gdal_algorithms.cpp.html#l131"><code>src&#x2F;gdal_algorithms.cpp:131</code></a>
+        <a href="../files/src_gdal_algorithms.cpp.html#l133"><code>src&#x2F;gdal_algorithms.cpp:133</code></a>
         
         </p>
 
@@ -1441,8 +2278,160 @@ provided to determine which pixels are eligible for processing.</p>
 
             
         
-        	
-            <div id="method_verbose" class="method item">
+			
+    	        <div id="method-suggestedWarpOutput" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>suggestedWarpOutput</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_warper.cpp.html#l94"><code>src&#x2F;gdal_warper.cpp:94</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Used to determine the bounds and resolution of the output virtual file which
+should be large enough to include all the input image.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Warp options</p>
+
+                    </div>
+
+                    
+                        <ul class="params-list">
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">src</code>
+                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">s_srs</code>
+                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">t_srs</code>
+                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                    <p>An object containing <code>"rasterSize"</code> and <code>"geoTransform"</code> properties.</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+			
+    	        <div id="method-verbose" class="method item">
     <div class="method-signature">
     <span class="name"><code>verbose</code></span>
 
@@ -1473,7 +2462,7 @@ provided to determine which pixels are eligible for processing.</p>
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l918"><code>src&#x2F;node_gdal.cpp:918</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l914"><code>src&#x2F;node_gdal.cpp:914</code></a>
         
         </p>
 
@@ -1499,161 +2488,6 @@ provided to determine which pixels are eligible for processing.</p>
         
         </div>
     </div>
-
-
-
-
-    <div id="properties" class="page-section">
-        <h2 class="off-left">Properties</h2>
-
-        <div class="item-list">
-        
-            <div id="property_gdal.CreateDataSourceOption" class="property item">
-    <h3 class="name"><code>gdal.CreateDataSourceOption</code></h3>
-    <span class="type">Mixed</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l888"><code>src&#x2F;node_gdal.cpp:888</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="property_gdal.DeleteDataSourceOption" class="property item">
-    <h3 class="name"><code>gdal.DeleteDataSourceOption</code></h3>
-    <span class="type">Mixed</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l896"><code>src&#x2F;node_gdal.cpp:896</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="property_gdal.version" class="property item">
-    <h3 class="name"><code>gdal.version</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l880"><code>src&#x2F;node_gdal.cpp:880</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-        </div>
-    </div>
-
-
-
-
-
-
 
                     </div>
                 </div>

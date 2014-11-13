@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Constants (OLC) - node-gdal</title>
+    <title>gdal.LineStringPoints - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -160,7 +160,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>Constants (OLC)</h1>
+    <h1>gdal.LineStringPoints</h1>
 </div>
 
     
@@ -174,6 +174,11 @@
 
 
 
+<div class="yuidoc-class-description">
+    <p>An encapsulation of a <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a>&#39;s points.</p>
+
+</div>
+
 
 <!-- table of contents -->
 
@@ -181,48 +186,46 @@
 	<h2>Table of Contents</h2>
     <ul>
 		
-
-		
 		<li>
-			<strong>Properties</strong>
+			<strong>Methods</strong>
 			<ul>
 				
-				<li><a href="#prop-gdal.ODsCCreateGeomFieldAfterCreateLayer"><span class="ip">gdal.ODsCCreateGeomFieldAfterCreateLayer</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCAlterFieldDefn"><span class="ip">gdal.OLCAlterFieldDefn</span></a></li>
+				<li><a href="#method-add"><span class="im">add</span>(<span class="ia">point(s)</span>)</a></li>
 				
-				<li><a href="#prop-gdal.OLCCreateField"><span class="ip">gdal.OLCCreateField</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCCreateGeomField"><span class="ip">gdal.OLCCreateGeomField</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCDeleteFeature"><span class="ip">gdal.OLCDeleteFeature</span></a></li>
+				<li><a href="#method-count"><span class="im">count</span>()</a></li>
 				
-				<li><a href="#prop-gdal.OLCDeleteField"><span class="ip">gdal.OLCDeleteField</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCFastFeatureCount"><span class="ip">gdal.OLCFastFeatureCount</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCFastGetExtent"><span class="ip">gdal.OLCFastGetExtent</span></a></li>
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">iterator</span>)</a></li>
 				
-				<li><a href="#prop-gdal.OLCFastSetNextByIndex"><span class="ip">gdal.OLCFastSetNextByIndex</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCFastSpatialFilter"><span class="ip">gdal.OLCFastSpatialFilter</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCIgnoreFields"><span class="ip">gdal.OLCIgnoreFields</span></a></li>
+				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">index</span>)</a></li>
 				
-				<li><a href="#prop-gdal.OLCRandomRead"><span class="ip">gdal.OLCRandomRead</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCRandomWrite"><span class="ip">gdal.OLCRandomWrite</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCReorderFields"><span class="ip">gdal.OLCReorderFields</span></a></li>
+				<li><a href="#method-resize"><span class="im">resize</span>(<span class="ia">count</span>)</a></li>
 				
-				<li><a href="#prop-gdal.OLCSequentialWrite"><span class="ip">gdal.OLCSequentialWrite</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCStringsAsUTF8"><span class="ip">gdal.OLCStringsAsUTF8</span></a></li>
 				
-				<li><a href="#prop-gdal.OLCTransactions"><span class="ip">gdal.OLCTransactions</span></a></li>
+				<li><a href="#method-reverse"><span class="im">reverse</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-set"><span class="im">set</span>(<span class="ia">index</span><span class="ia">point</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-toArray"><span class="im">toArray</span>()</a></li>
+				
 				
 			</ul>
 		</li>
+		
+
 		
 
 		
@@ -236,23 +239,37 @@
 
 
 
-
-
-    <div id="properties" class="page-section">
-        <h2 class="off-left">Properties</h2>
-
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
         <div class="item-list">
-        
-            <div id="prop-gdal.ODsCCreateGeomFieldAfterCreateLayer" class="property item">
-    <h3 class="name"><code>gdal.ODsCCreateGeomFieldAfterCreateLayer</code></h3>
-    <span class="type">String</span>
+       		
+        	
+            <div id="method-add" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>add</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>point(s)</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
 
     
 
     
 
     
-        <span class="flag final">const</span>
+
     
 
     
@@ -268,9 +285,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l354"><code>src&#x2F;node_gdal.cpp:354</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l247"><code>src&#x2F;collections&#x2F;linestring_points.cpp:247</code></a>
         
         </p>
+
 
         
 
@@ -278,7 +296,68 @@
     </div>
 
     <div class="description">
+        <p>Adds point(s) to the line string.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">point(s)</code>
+                        <span class="type"><a href="../classes/gdal.Point.html" class="crosslink">gdal.Point</a> | Array</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>lineString.points.add(new gdal.Point(1, 2));
+lineString.points.add([
+    new gdal.Point(1, 2)
+    new gdal.Point(3, 4)
+]);</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
         
+        	
+            <div id="method-count" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>count</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Integer</span>
+        </span>
+    
     </div>
 
     
@@ -286,19 +365,7 @@
     
 
     
-</div>
 
-        
-            <div id="prop-gdal.OLCAlterFieldDefn" class="property item">
-    <h3 class="name"><code>gdal.OLCAlterFieldDefn</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -314,9 +381,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l308"><code>src&#x2F;node_gdal.cpp:308</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l83"><code>src&#x2F;collections&#x2F;linestring_points.cpp:83</code></a>
         
         </p>
+
 
         
 
@@ -324,7 +392,50 @@
     </div>
 
     <div class="description">
+        <p>Returns the number of points that are part of the line string.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Integer</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
         
+        	
+            <div id="method-forEach" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>forEach</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>iterator</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
     </div>
 
     
@@ -332,19 +443,7 @@
     
 
     
-</div>
 
-        
-            <div id="prop-gdal.OLCCreateField" class="property item">
-    <h3 class="name"><code>gdal.OLCCreateField</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -360,9 +459,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l290"><code>src&#x2F;node_gdal.cpp:290</code></a>
+        <a href="../files/lib_gdal.js.html#l225"><code>lib&#x2F;gdal.js:225</code></a>
         
         </p>
+
 
         
 
@@ -370,7 +470,75 @@
     </div>
 
     <div class="description">
+        <p>Iterates through all points using a callback function.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">iterator</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The callback to be called with each <a href="../classes/gdal.Point.html" class="crosslink">Point</a></p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>lineString.points.forEach(function(point) { ... });</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
         
+        	
+            <div id="method-get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>get</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Point.html" class="crosslink">gdal.Point</a></span>
+        </span>
+    
     </div>
 
     
@@ -378,19 +546,7 @@
     
 
     
-</div>
 
-        
-            <div id="prop-gdal.OLCCreateGeomField" class="property item">
-    <h3 class="name"><code>gdal.OLCCreateGeomField</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -406,9 +562,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l346"><code>src&#x2F;node_gdal.cpp:346</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l136"><code>src&#x2F;collections&#x2F;linestring_points.cpp:136</code></a>
         
         </p>
+
 
         
 
@@ -416,7 +573,74 @@
     </div>
 
     <div class="description">
+        <p>Returns the point at the specified index.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>0-based index</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Point.html" class="crosslink">gdal.Point</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
         
+        	
+            <div id="method-resize" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>resize</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>count</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
     </div>
 
     
@@ -424,19 +648,7 @@
     
 
     
-</div>
 
-        
-            <div id="prop-gdal.OLCDeleteFeature" class="property item">
-    <h3 class="name"><code>gdal.OLCDeleteFeature</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -452,9 +664,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l320"><code>src&#x2F;node_gdal.cpp:320</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l116"><code>src&#x2F;collections&#x2F;linestring_points.cpp:116</code></a>
         
         </p>
+
 
         
 
@@ -462,9 +675,33 @@
     </div>
 
     <div class="description">
-        
+        <p>Adjusts the number of points that make up the line string.</p>
+
     </div>
 
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">count</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
     
 
     
@@ -472,17 +709,25 @@
     
 </div>
 
+            
         
-            <div id="prop-gdal.OLCDeleteField" class="property item">
-    <h3 class="name"><code>gdal.OLCDeleteField</code></h3>
-    <span class="type">String</span>
+        	
+            <div id="method-reverse" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>reverse</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
 
     
 
     
 
     
-        <span class="flag final">const</span>
+
     
 
     
@@ -498,9 +743,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l296"><code>src&#x2F;node_gdal.cpp:296</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l99"><code>src&#x2F;collections&#x2F;linestring_points.cpp:99</code></a>
         
         </p>
+
 
         
 
@@ -508,7 +754,8 @@
     </div>
 
     <div class="description">
-        
+        <p>Reverses the order of all the points.</p>
+
     </div>
 
     
@@ -518,17 +765,41 @@
     
 </div>
 
+            
         
-            <div id="prop-gdal.OLCFastFeatureCount" class="property item">
-    <h3 class="name"><code>gdal.OLCFastFeatureCount</code></h3>
-    <span class="type">String</span>
+        	
+            <div id="method-set" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>set</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>point</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
 
     
 
     
 
     
-        <span class="flag final">const</span>
+
     
 
     
@@ -544,9 +815,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l278"><code>src&#x2F;node_gdal.cpp:278</code></a>
+        <a href="../files/src_collections_linestring_points.cpp.html#l163"><code>src&#x2F;collections&#x2F;linestring_points.cpp:163</code></a>
         
         </p>
+
 
         
 
@@ -554,7 +826,80 @@
     </div>
 
     <div class="description">
+        <p>Sets the point at the specified index.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>0-based index</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">point</code>
+                        <span class="type"><a href="../classes/gdal.Point.html" class="crosslink">gdal.Point</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>lineString.points.set(0, new gdal.Point(1, 2));</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
         
+        	
+            <div id="method-toArray" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>toArray</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+    
     </div>
 
     
@@ -562,19 +907,7 @@
     
 
     
-</div>
 
-        
-            <div id="prop-gdal.OLCFastGetExtent" class="property item">
-    <h3 class="name"><code>gdal.OLCFastGetExtent</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
     
 
     
@@ -590,9 +923,10 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l284"><code>src&#x2F;node_gdal.cpp:284</code></a>
+        <a href="../files/lib_gdal.js.html#l275"><code>lib&#x2F;gdal.js:275</code></a>
         
         </p>
+
 
         
 
@@ -600,433 +934,37 @@
     </div>
 
     <div class="description">
-        
+        <p>Outputs all points as a regular javascript array.</p>
+
     </div>
 
     
 
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Array</span>:
+                    
+                    <p>List of <a href="../classes/gdal.Point.html" class="crosslink">Point</a> instances.</p>
+
+                
+            </div>
+        </div>
     
 
     
 </div>
 
-        
-            <div id="prop-gdal.OLCFastSetNextByIndex" class="property item">
-    <h3 class="name"><code>gdal.OLCFastSetNextByIndex</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
             
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l326"><code>src&#x2F;node_gdal.cpp:326</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCFastSpatialFilter" class="property item">
-    <h3 class="name"><code>gdal.OLCFastSpatialFilter</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l272"><code>src&#x2F;node_gdal.cpp:272</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCIgnoreFields" class="property item">
-    <h3 class="name"><code>gdal.OLCIgnoreFields</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l338"><code>src&#x2F;node_gdal.cpp:338</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCRandomRead" class="property item">
-    <h3 class="name"><code>gdal.OLCRandomRead</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l254"><code>src&#x2F;node_gdal.cpp:254</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCRandomWrite" class="property item">
-    <h3 class="name"><code>gdal.OLCRandomWrite</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l266"><code>src&#x2F;node_gdal.cpp:266</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCReorderFields" class="property item">
-    <h3 class="name"><code>gdal.OLCReorderFields</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l302"><code>src&#x2F;node_gdal.cpp:302</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCSequentialWrite" class="property item">
-    <h3 class="name"><code>gdal.OLCSequentialWrite</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l260"><code>src&#x2F;node_gdal.cpp:260</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCStringsAsUTF8" class="property item">
-    <h3 class="name"><code>gdal.OLCStringsAsUTF8</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l332"><code>src&#x2F;node_gdal.cpp:332</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.OLCTransactions" class="property item">
-    <h3 class="name"><code>gdal.OLCTransactions</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l314"><code>src&#x2F;node_gdal.cpp:314</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
         
         </div>
     </div>
+
+
 
 
 

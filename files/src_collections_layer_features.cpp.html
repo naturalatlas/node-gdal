@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -200,6 +206,8 @@ LayerFeatures::~LayerFeatures()
 {}
 
 /**
+ * An encapsulation of a {{#crossLink &quot;gdal.Layer&quot;}}Layer{{/crossLink}}&#x27;s features.
+ *
  * @class gdal.LayerFeatures
  */
 NAN_METHOD(LayerFeatures::New)
@@ -241,6 +249,16 @@ NAN_METHOD(LayerFeatures::toString)
 	NanReturnValue(NanNew(&quot;LayerFeatures&quot;));
 }
 
+/**
+ * Fetch a feature by its identifier.
+ *
+ * **Important:** The &#x60;id&#x60; argument is not an index. In most cases it will be zero-based,
+ * but in some cases it will not. If iterating, it&#x27;s best to use the &#x60;next()&#x60; method.
+ *
+ * @method get
+ * @param {Integer} id The feature ID of the feature to read.
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::get)
 {
 	NanScope();
@@ -259,6 +277,13 @@ NAN_METHOD(LayerFeatures::get)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Resets the feature pointer used by &#x60;next()&#x60; and
+ * returns the first feature in the layer.
+ *
+ * @method first
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::first)
 {
 	NanScope();
@@ -276,6 +301,16 @@ NAN_METHOD(LayerFeatures::first)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Returns the next feature in the layer.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * while (feature = layer.features.next()) { ... }&#x60;&#x60;&#x60;
+ *
+ * @method first
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::next)
 {
 	NanScope();
@@ -292,6 +327,13 @@ NAN_METHOD(LayerFeatures::next)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Adds a feature to the layer.
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.Feature} feature
+ */
 NAN_METHOD(LayerFeatures::add)
 {
 	NanScope();
@@ -314,6 +356,14 @@ NAN_METHOD(LayerFeatures::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Returns the number of features in the layer.
+ *
+ * @method add
+ * @throws Error
+ * @param {Boolean} [force=true]
+ * @return {Integer} Number of features in the layer.
+ */
 NAN_METHOD(LayerFeatures::count)
 {
 	NanScope();
@@ -331,6 +381,14 @@ NAN_METHOD(LayerFeatures::count)
 	NanReturnValue(NanNew&lt;Integer&gt;(layer-&gt;get()-&gt;GetFeatureCount(force)));
 }
 
+/**
+ * Sets a feature in the layer.
+ *
+ * @method set
+ * @throws Error
+ * @param {Integer} [id]
+ * @param {gdal.Feature} feature
+ */
 NAN_METHOD(LayerFeatures::set)
 {
 	NanScope();
@@ -374,7 +432,13 @@ NAN_METHOD(LayerFeatures::set)
 	NanReturnUndefined();
 }
 
-
+/**
+ * Removes a feature from the layer.
+ *
+ * @method remove
+ * @throws Error
+ * @param {Integer} id
+ */
 NAN_METHOD(LayerFeatures::remove)
 {
 	NanScope();
@@ -397,6 +461,12 @@ NAN_METHOD(LayerFeatures::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Parent layer
+ *
+ * @attribute layer
+ * @type {gdal.Layer}
+ */
 NAN_GETTER(LayerFeatures::layerGetter)
 {
 	NanScope();

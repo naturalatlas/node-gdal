@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -169,6 +175,53 @@
 
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.OFTBinary"><span class="ip">gdal.OFTBinary</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTDate"><span class="ip">gdal.OFTDate</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTDateTime"><span class="ip">gdal.OFTDateTime</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTInteger"><span class="ip">gdal.OFTInteger</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTIntegerList"><span class="ip">gdal.OFTIntegerList</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTReal"><span class="ip">gdal.OFTReal</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTRealList"><span class="ip">gdal.OFTRealList</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTString"><span class="ip">gdal.OFTString</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTStringList"><span class="ip">gdal.OFTStringList</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTTime"><span class="ip">gdal.OFTTime</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTWideString"><span class="ip">gdal.OFTWideString</span></a></li>
+				
+				<li><a href="#prop-gdal.OFTWideStringList"><span class="ip">gdal.OFTWideStringList</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
 
 
 
@@ -180,7 +233,7 @@
 
         <div class="item-list">
         
-            <div id="property_gdal.OFTBinary" class="property item">
+            <div id="prop-gdal.OFTBinary" class="property item">
     <h3 class="name"><code>gdal.OFTBinary</code></h3>
     <span class="type">String</span>
 
@@ -205,7 +258,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l806"><code>src&#x2F;node_gdal.cpp:806</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l816"><code>src&#x2F;node_gdal.cpp:816</code></a>
         
         </p>
 
@@ -226,7 +279,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTDate" class="property item">
+            <div id="prop-gdal.OFTDate" class="property item">
     <h3 class="name"><code>gdal.OFTDate</code></h3>
     <span class="type">String</span>
 
@@ -251,7 +304,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l812"><code>src&#x2F;node_gdal.cpp:812</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l822"><code>src&#x2F;node_gdal.cpp:822</code></a>
         
         </p>
 
@@ -272,7 +325,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTDateTime" class="property item">
+            <div id="prop-gdal.OFTDateTime" class="property item">
     <h3 class="name"><code>gdal.OFTDateTime</code></h3>
     <span class="type">String</span>
 
@@ -297,7 +350,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l824"><code>src&#x2F;node_gdal.cpp:824</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l834"><code>src&#x2F;node_gdal.cpp:834</code></a>
         
         </p>
 
@@ -318,7 +371,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTInteger" class="property item">
+            <div id="prop-gdal.OFTInteger" class="property item">
     <h3 class="name"><code>gdal.OFTInteger</code></h3>
     <span class="type">String</span>
 
@@ -343,7 +396,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l758"><code>src&#x2F;node_gdal.cpp:758</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l768"><code>src&#x2F;node_gdal.cpp:768</code></a>
         
         </p>
 
@@ -364,7 +417,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTIntegerList" class="property item">
+            <div id="prop-gdal.OFTIntegerList" class="property item">
     <h3 class="name"><code>gdal.OFTIntegerList</code></h3>
     <span class="type">String</span>
 
@@ -389,7 +442,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l764"><code>src&#x2F;node_gdal.cpp:764</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l774"><code>src&#x2F;node_gdal.cpp:774</code></a>
         
         </p>
 
@@ -410,7 +463,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTReal" class="property item">
+            <div id="prop-gdal.OFTReal" class="property item">
     <h3 class="name"><code>gdal.OFTReal</code></h3>
     <span class="type">String</span>
 
@@ -435,7 +488,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l770"><code>src&#x2F;node_gdal.cpp:770</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l780"><code>src&#x2F;node_gdal.cpp:780</code></a>
         
         </p>
 
@@ -456,7 +509,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTRealList" class="property item">
+            <div id="prop-gdal.OFTRealList" class="property item">
     <h3 class="name"><code>gdal.OFTRealList</code></h3>
     <span class="type">String</span>
 
@@ -481,7 +534,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l776"><code>src&#x2F;node_gdal.cpp:776</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l786"><code>src&#x2F;node_gdal.cpp:786</code></a>
         
         </p>
 
@@ -502,7 +555,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTString" class="property item">
+            <div id="prop-gdal.OFTString" class="property item">
     <h3 class="name"><code>gdal.OFTString</code></h3>
     <span class="type">String</span>
 
@@ -527,7 +580,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l782"><code>src&#x2F;node_gdal.cpp:782</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l792"><code>src&#x2F;node_gdal.cpp:792</code></a>
         
         </p>
 
@@ -548,7 +601,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTStringList" class="property item">
+            <div id="prop-gdal.OFTStringList" class="property item">
     <h3 class="name"><code>gdal.OFTStringList</code></h3>
     <span class="type">String</span>
 
@@ -573,7 +626,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l788"><code>src&#x2F;node_gdal.cpp:788</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l798"><code>src&#x2F;node_gdal.cpp:798</code></a>
         
         </p>
 
@@ -594,7 +647,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTTime" class="property item">
+            <div id="prop-gdal.OFTTime" class="property item">
     <h3 class="name"><code>gdal.OFTTime</code></h3>
     <span class="type">String</span>
 
@@ -619,7 +672,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l818"><code>src&#x2F;node_gdal.cpp:818</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l828"><code>src&#x2F;node_gdal.cpp:828</code></a>
         
         </p>
 
@@ -640,7 +693,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTWideString" class="property item">
+            <div id="prop-gdal.OFTWideString" class="property item">
     <h3 class="name"><code>gdal.OFTWideString</code></h3>
     <span class="type">String</span>
 
@@ -665,7 +718,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l794"><code>src&#x2F;node_gdal.cpp:794</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l804"><code>src&#x2F;node_gdal.cpp:804</code></a>
         
         </p>
 
@@ -686,7 +739,7 @@
 </div>
 
         
-            <div id="property_gdal.OFTWideStringList" class="property item">
+            <div id="prop-gdal.OFTWideStringList" class="property item">
     <h3 class="name"><code>gdal.OFTWideStringList</code></h3>
     <span class="type">String</span>
 
@@ -711,7 +764,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l800"><code>src&#x2F;node_gdal.cpp:800</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l810"><code>src&#x2F;node_gdal.cpp:810</code></a>
         
         </p>
 

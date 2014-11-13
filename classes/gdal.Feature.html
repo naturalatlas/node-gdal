@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -174,11 +180,76 @@
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-clone"><span class="im">clone</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-destroy"><span class="im">destroy</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getFieldDefn"><span class="im">getFieldDefn</span>(<span class="ia">index</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getGeometry"><span class="im">getGeometry</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-setFrom"><span class="im">setFrom</span>(<span class="ia">feature</span><span class="ia">*index_map</span><span class="ia">forgiving</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-setGeometry"><span class="im">setGeometry</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-setGeometry"><span class="im">setGeometry</span>(<span class="ia">feature</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-defn"><span class="iattr">defn</span></a></li>
+				
+				<li><a href="#attr-fid"><span class="iattr">fid</span></a></li>
+				
+				<li><a href="#attr-fields"><span class="iattr">fields</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
     <div class="constructor yuidoc-class-constructor">
         <h2>Constructor</h2>
         <div class="item-list">
-        <div id="method_gdal.Feature" class="method item">
+        <div id="method-gdal.Feature" class="method item">
     <div class="method-signature">
     <span class="name"><code>gdal.Feature</code></span>
 
@@ -273,7 +344,7 @@
         <div class="item-list">
        		
         	
-            <div id="method_clone" class="method item">
+            <div id="method-clone" class="method item">
     <div class="method-signature">
     <span class="name"><code>clone</code></span>
 
@@ -345,7 +416,7 @@
             
         
         	
-            <div id="method_destroy" class="method item">
+            <div id="method-destroy" class="method item">
     <div class="method-signature">
     <span class="name"><code>destroy</code></span>
 
@@ -401,7 +472,7 @@
             
         
         	
-            <div id="method_getFieldDefn" class="method item">
+            <div id="method-getFieldDefn" class="method item">
     <div class="method-signature">
     <span class="name"><code>getFieldDefn</code></span>
 
@@ -507,7 +578,7 @@
             
         
         	
-            <div id="method_getGeometry" class="method item">
+            <div id="method-getGeometry" class="method item">
     <div class="method-signature">
     <span class="name"><code>getGeometry</code></span>
 
@@ -579,7 +650,7 @@
             
         
         	
-            <div id="method_setFrom" class="method item">
+            <div id="method-setFrom" class="method item">
     <div class="method-signature">
     <span class="name"><code>setFrom</code></span>
 
@@ -728,7 +799,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         	
-            <div id="method_setGeometry" class="method item">
+            <div id="method-setGeometry" class="method item">
     <div class="method-signature">
     <span class="name"><code>setGeometry</code></span>
 
@@ -817,7 +888,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         	
-            <div id="method_setGeometry" class="method item">
+            <div id="method-setGeometry" class="method item">
     <div class="method-signature">
     <span class="name"><code>setGeometry</code></span>
 
@@ -930,12 +1001,11 @@ feature2.setFrom(feature1);</code></pre>
 
 
 
-
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
 
         
-            <div id="attr_defn" class="attr item">
+            <div id="attr-defn" class="attr item">
     <a name="config_defn"></a> 
     <h3 class="name"><code>defn</code></h3>
     <span class="type"><a href="../classes/gdal.FeatureDefn.html" class="crosslink">gdal.FeatureDefn</a></span>
@@ -988,7 +1058,7 @@ feature2.setFrom(feature1);</code></pre>
 </div>
 
         
-            <div id="attr_fid" class="attr item">
+            <div id="attr-fid" class="attr item">
     <a name="config_fid"></a> 
     <h3 class="name"><code>fid</code></h3>
     <span class="type">Integer</span>
@@ -1039,7 +1109,7 @@ feature2.setFrom(feature1);</code></pre>
 </div>
 
         
-            <div id="attr_fields" class="attr item">
+            <div id="attr-fields" class="attr item">
     <a name="config_fields"></a> 
     <h3 class="name"><code>fields</code></h3>
     <span class="type"><a href="../classes/gdal.FeatureFields.html" class="crosslink">gdal.FeatureFields</a></span>

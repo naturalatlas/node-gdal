@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -178,6 +184,67 @@ be gateways to many formats through a secondary multi-library.</p>
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-copyFiles"><span class="im">copyFiles</span>(<span class="ia">name_old</span><span class="ia">name_new</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-create"><span class="im">create</span>(<span class="ia">filename</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-createCopy"><span class="im">createCopy</span>(<span class="ia">filename</span><span class="ia">src</span><span class="ia">strict</span><span class="ia">options</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-deleteDataset"><span class="im">deleteDataset</span>(<span class="ia">filename</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getMetadata"><span class="im">getMetadata</span>(<span class="ia">domain</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-open"><span class="im">open</span>(<span class="ia">path</span><span class="ia">mode</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-rename"><span class="im">rename</span>(<span class="ia">new_name</span><span class="ia">old_name</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-description"><span class="iattr">description</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
 
 
@@ -186,7 +253,7 @@ be gateways to many formats through a secondary multi-library.</p>
         <div class="item-list">
        		
         	
-            <div id="method_copyFiles" class="method item">
+            <div id="method-copyFiles" class="method item">
     <div class="method-signature">
     <span class="name"><code>copyFiles</code></span>
 
@@ -298,7 +365,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_create" class="method item">
+            <div id="method-create" class="method item">
     <div class="method-signature">
     <span class="name"><code>create</code></span>
 
@@ -513,7 +580,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_createCopy" class="method item">
+            <div id="method-createCopy" class="method item">
     <div class="method-signature">
     <span class="name"><code>createCopy</code></span>
 
@@ -684,7 +751,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_deleteDataset" class="method item">
+            <div id="method-deleteDataset" class="method item">
     <div class="method-signature">
     <span class="name"><code>deleteDataset</code></span>
 
@@ -772,7 +839,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_getMetadata" class="method item">
+            <div id="method-getMetadata" class="method item">
     <div class="method-signature">
     <span class="name"><code>getMetadata</code></span>
 
@@ -878,7 +945,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_open" class="method item">
+            <div id="method-open" class="method item">
     <div class="method-signature">
     <span class="name"><code>open</code></span>
 
@@ -1005,7 +1072,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
         
         	
-            <div id="method_rename" class="method item">
+            <div id="method-rename" class="method item">
     <div class="method-signature">
     <span class="name"><code>rename</code></span>
 
@@ -1123,12 +1190,11 @@ be gateways to many formats through a secondary multi-library.</p>
 
 
 
-
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
 
         
-            <div id="attr_description" class="attr item">
+            <div id="attr-description" class="attr item">
     <a name="config_description"></a> 
     <h3 class="name"><code>description</code></h3>
     <span class="type">String</span>

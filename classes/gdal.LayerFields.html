@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -169,6 +175,101 @@
 
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-add"><span class="im">add</span>(<span class="ia">def(s)</span><span class="ia">approx</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-count"><span class="im">count</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">iterator</span>)</a></li>
+				
+				
+				
+				
+				
+				
+				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">field</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getNames"><span class="im">getNames</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-indexOf"><span class="im">indexOf</span>(<span class="ia">field</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-remove"><span class="im">remove</span>(<span class="ia">field</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-reorder"><span class="im">reorder</span>(<span class="ia">map</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-layer"><span class="iattr">layer</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+		<li>
+			<strong>Static Methods</strong>
+			<ul>
+				
+				
+				
+				
+				
+				
+				
+				
+				<li><a href="#method-fromJSON"><span class="im">fromJSON</span>(<span class="ia">object</span><span class="ia">approx_ok</span>)</a></li>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			</ul>
+		</li>
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
 
 
@@ -177,7 +278,7 @@
         <div class="item-list">
        		
         	
-            <div id="method_add" class="method item">
+            <div id="method-add" class="method item">
     <div class="method-signature">
     <span class="name"><code>add</code></span>
 
@@ -187,7 +288,7 @@
             
                 <li class="arg">
                     
-                        <code>def</code>
+                        <code>def(s)</code>
                     
                 </li>
             
@@ -247,7 +348,7 @@
             
                 <li class="param">
                     
-                        <code class="param-name">def</code>
+                        <code class="param-name">def(s)</code>
                         <span class="type"><a href="../classes/gdal.FieldDefn.html" class="crosslink">gdal.FieldDefn</a> | Array</span>
                     
 
@@ -289,7 +390,7 @@
             
         
         	
-            <div id="method_count" class="method item">
+            <div id="method-count" class="method item">
     <div class="method-signature">
     <span class="name"><code>count</code></span>
 
@@ -361,7 +462,109 @@
             
         
         	
-            <div id="method_get" class="method item">
+            <div id="method-forEach" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>forEach</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>iterator</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l173"><code>lib&#x2F;gdal.js:173</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Iterates through all fields using a callback function.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">iterator</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>The callback to be called with each <a href="../classes/gdal.FieldDefn.html" class="crosslink">FieldDefn</a></p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>layer.fields.forEach(function(field) { ... });</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
+            
+        
+        	
+            <div id="method-get" class="method item">
     <div class="method-signature">
     <span class="name"><code>get</code></span>
 
@@ -467,7 +670,7 @@
             
         
         	
-            <div id="method_getNames" class="method item">
+            <div id="method-getNames" class="method item">
     <div class="method-signature">
     <span class="name"><code>getNames</code></span>
 
@@ -541,7 +744,7 @@
             
         
         	
-            <div id="method_indexOf" class="method item">
+            <div id="method-indexOf" class="method item">
     <div class="method-signature">
     <span class="name"><code>indexOf</code></span>
 
@@ -648,7 +851,7 @@
             
         
         	
-            <div id="method_remove" class="method item">
+            <div id="method-remove" class="method item">
     <div class="method-signature">
     <span class="name"><code>remove</code></span>
 
@@ -738,7 +941,7 @@
             
         
         	
-            <div id="method_reorder" class="method item">
+            <div id="method-reorder" class="method item">
     <div class="method-signature">
     <span class="name"><code>reorder</code></span>
 
@@ -844,12 +1047,11 @@ layer.fields.reorder([2,1,0]);</code></pre>
 
 
 
-
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
 
         
-            <div id="attr_layer" class="attr item">
+            <div id="attr-layer" class="attr item">
     <a name="config_layer"></a> 
     <h3 class="name"><code>layer</code></h3>
     <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
@@ -908,6 +1110,140 @@ layer.fields.reorder([2,1,0]);</code></pre>
 
 
 
+
+    <div id="static-methods" class="page-section">
+        <h2 class="off-left">Static Methods</h2>
+        <div class="item-list">
+        
+			
+        
+			
+        
+			
+        
+			
+    	        <div id="method-fromJSON" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>fromJSON</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>object</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">approx_ok=false</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l396"><code>lib&#x2F;gdal.js:396</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Creates a LayerFields instance from an object of keys and values.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">object</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[approx_ok=false]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+            
+        
+			
+        
+			
+        
+			
+        
+			
+        
+			
+        
+        </div>
+    </div>
 
                     </div>
                 </div>

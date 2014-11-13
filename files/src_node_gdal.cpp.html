@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -160,9 +166,20 @@
 <div class="file">
     <pre class="prettyprint linenums">
 /**
- * This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for
+ * This [node-gdal](https://github.com/naturalatlas/node-gdal) binding for
  * Node.js provides a feature-complete way of reading, writing, and manipulating
- * geospatial data (raster and vector).
+ * geospatial data (raster and vector) using [GDAL](http://www.gdal.org/).
+ * &#x60;&#x60;&#x60;
+ * // sample: open a shapefile and display all features as geojson
+ * var dataset = gdal.open(&quot;states.shp&quot;);
+ *
+ * dataset.layers.get(0).features.forEach(function(feature) {
+ *     console.log(feature.getGeometry().toJSON());
+ * });
+ * &#x60;&#x60;&#x60;
+ *
+ * &lt;iframe src=&quot;http://ghbtns.com/github-btn.html?user=naturalatlas&amp;repo=node-gdal&amp;type=watch&amp;count=true&quot; allowtransparency=&quot;true&quot; frameborder=&quot;0&quot; scrolling=&quot;0&quot; width=&quot;90&quot; height=&quot;20&quot; style=&quot;margin-top:20px&quot;&gt;&lt;/iframe&gt;
+ * &lt;iframe src=&quot;http://ghbtns.com/github-btn.html?user=naturalatlas&amp;repo=node-gdal&amp;type=fork&amp;count=true&quot; allowtransparency=&quot;true&quot; frameborder=&quot;0&quot; scrolling=&quot;0&quot; width=&quot;200&quot; height=&quot;20&quot;&gt;&lt;/iframe&gt;
  *
  * @class gdal
  */
@@ -537,7 +554,6 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;ODrCDeleteDataSource&quot;), NanNew(ODrCDeleteDataSource));
-
 
 			NODE_DEFINE_CONSTANT(target, GA_ReadOnly);
 			NODE_DEFINE_CONSTANT(target, GA_Update);
@@ -1039,29 +1055,14 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;GRA_Mode&quot;), NanNew(&quot;Mode&quot;));
 
 			/**
+			 * GDAL version (not the binding version)
+			 *
 			 * @final
 			 * @for gdal
 			 * @property gdal.version
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;version&quot;), NanNew(GDAL_RELEASE_NAME));
-
-			/**
-			 * @final
-			 * @for gdal
-			 * @property gdal.CreateDataSourceOption
-			 * @type {mixed}
-			 */
-			target-&gt;Set(NanNew(&quot;CreateDataSourceOption&quot;), NanNew(ODrCCreateDataSource));
-
-			/**
-			 * @final
-			 * @for gdal
-			 * @property gdal.DeleteDataSourceOption
-			 * @type {mixed}
-			 */
-			target-&gt;Set(NanNew(&quot;DeleteDataSourceOption&quot;), NanNew(ODrCDeleteDataSource));
-
 
 			// Local&lt;Object&gt; versions = NanNew&lt;Object&gt;();
 			// versions-&gt;Set(NanNew(&quot;node&quot;), NanNew(NODE_VERSION+1));
@@ -1072,6 +1073,7 @@ namespace node_gdal {
 			 * Disables all output.
 			 *
 			 * @for gdal
+			 * @static
 			 * @method quiet
 			 */
 			NODE_SET_METHOD(target, &quot;quiet&quot;, QuietOutput);
@@ -1080,6 +1082,7 @@ namespace node_gdal {
 			 * Displays extra debugging information from GDAL.
 			 *
 			 * @for gdal
+			 * @static
 			 * @method verbose
 			 */
 			NODE_SET_METHOD(target, &quot;verbose&quot;, VerboseOutput);

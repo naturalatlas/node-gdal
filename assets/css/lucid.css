@@ -120,3 +120,15 @@ body .apidocs .item:first-child:last-child, body .apidocs .constructor .item:fir
 .page-header {
 	border-bottom: 0 none !important;
 }
+
+.yuidoc-class-description pre {
+	margin-top: 15px !important;
+}
+
+.ia + .ia:before {
+	content: ', ';
+}
+
+#class-toc ul li {
+	line-height: 18px;
+}

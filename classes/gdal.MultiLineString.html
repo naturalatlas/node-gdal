@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -175,11 +181,224 @@
 
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-boundary"><span class="im">boundary</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-buffer"><span class="im">buffer</span>(<span class="ia">distance</span><span class="ia">segments</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-centroid"><span class="im">centroid</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-clone"><span class="im">clone</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-closeRings"><span class="im">closeRings</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-contains"><span class="im">contains</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-convexHull"><span class="im">convexHull</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-crosses"><span class="im">crosses</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-difference"><span class="im">difference</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-disjoint"><span class="im">disjoint</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-distance"><span class="im">distance</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-empty"><span class="im">empty</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-equals"><span class="im">equals</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getArea"><span class="im">getArea</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getEnvelope"><span class="im">getEnvelope</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getEnvelope3D"><span class="im">getEnvelope3D</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getGeometry"><span class="im">getGeometry</span>(<span class="ia">index</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getLength"><span class="im">getLength</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-intersection"><span class="im">intersection</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-intersects"><span class="im">intersects</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-isEmpty"><span class="im">isEmpty</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isRing"><span class="im">isRing</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isSimple"><span class="im">isSimple</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isValid"><span class="im">isValid</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-overlaps"><span class="im">overlaps</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-polygonize"><span class="im">polygonize</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-segmentize"><span class="im">segmentize</span>(<span class="ia">segment_length</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-simplify"><span class="im">simplify</span>(<span class="ia">tolerance</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-simplifyPreserveTopology"><span class="im">simplifyPreserveTopology</span>(<span class="ia">tolerance</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-swapXY"><span class="im">swapXY</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-symDifference"><span class="im">symDifference</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-toGML"><span class="im">toGML</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toJSON"><span class="im">toJSON</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toKML"><span class="im">toKML</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toObject"><span class="im">toObject</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-touches"><span class="im">touches</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-toWKB"><span class="im">toWKB</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toWKT"><span class="im">toWKT</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-transform"><span class="im">transform</span>(<span class="ia">transformation</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-transformTo"><span class="im">transformTo</span>(<span class="ia">srs</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-unionGeometry"><span class="im">unionGeometry</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-within"><span class="im">within</span>(<span class="ia">geometry</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-children"><span class="iattr">children</span></a></li>
+				
+				<li><a href="#attr-coordinateDimension"><span class="iattr">coordinateDimension</span></a></li>
+				
+				<li><a href="#attr-dimension"><span class="iattr">dimension</span></a></li>
+				
+				<li><a href="#attr-name"><span class="iattr">name</span></a></li>
+				
+				<li><a href="#attr-srs"><span class="iattr">srs</span></a></li>
+				
+				<li><a href="#attr-wkbSize"><span class="iattr">wkbSize</span></a></li>
+				
+				<li><a href="#attr-wkbType"><span class="iattr">wkbType</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
     <div class="constructor yuidoc-class-constructor">
         <h2>Constructor</h2>
         <div class="item-list">
-        <div id="method_gdal.MultiLineString" class="method item">
+        <div id="method-gdal.MultiLineString" class="method item">
     <div class="method-signature">
     <span class="name"><code>gdal.MultiLineString</code></span>
 
@@ -241,7 +460,7 @@
         <div class="item-list">
        		
         	
-            <div id="method_boundary" class="method item inherited">
+            <div id="method-boundary" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>boundary</code></span>
 
@@ -310,7 +529,7 @@
             
         
         	
-            <div id="method_buffer" class="method item inherited">
+            <div id="method-buffer" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>buffer</code></span>
 
@@ -433,7 +652,7 @@
             
         
         	
-            <div id="method_centroid" class="method item inherited">
+            <div id="method-centroid" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>centroid</code></span>
 
@@ -502,7 +721,7 @@
             
         
         	
-            <div id="method_clone" class="method item inherited">
+            <div id="method-clone" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>clone</code></span>
 
@@ -571,7 +790,7 @@
             
         
         	
-            <div id="method_closeRings" class="method item inherited">
+            <div id="method-closeRings" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>closeRings</code></span>
 
@@ -624,7 +843,7 @@
             
         
         	
-            <div id="method_contains" class="method item inherited">
+            <div id="method-contains" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>contains</code></span>
 
@@ -726,7 +945,7 @@
             
         
         	
-            <div id="method_convexHull" class="method item inherited">
+            <div id="method-convexHull" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>convexHull</code></span>
 
@@ -795,7 +1014,7 @@
             
         
         	
-            <div id="method_crosses" class="method item inherited">
+            <div id="method-crosses" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>crosses</code></span>
 
@@ -897,7 +1116,7 @@
             
         
         	
-            <div id="method_difference" class="method item inherited">
+            <div id="method-difference" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>difference</code></span>
 
@@ -999,7 +1218,7 @@
             
         
         	
-            <div id="method_disjoint" class="method item inherited">
+            <div id="method-disjoint" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>disjoint</code></span>
 
@@ -1101,7 +1320,7 @@
             
         
         	
-            <div id="method_distance" class="method item inherited">
+            <div id="method-distance" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>distance</code></span>
 
@@ -1203,7 +1422,7 @@
             
         
         	
-            <div id="method_empty" class="method item inherited">
+            <div id="method-empty" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>empty</code></span>
 
@@ -1256,7 +1475,7 @@
             
         
         	
-            <div id="method_equals" class="method item inherited">
+            <div id="method-equals" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>equals</code></span>
 
@@ -1358,7 +1577,7 @@
             
         
         	
-            <div id="method_getArea" class="method item inherited">
+            <div id="method-getArea" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>getArea</code></span>
 
@@ -1427,7 +1646,7 @@
             
         
         	
-            <div id="method_getEnvelope" class="method item inherited">
+            <div id="method-getEnvelope" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>getEnvelope</code></span>
 
@@ -1436,7 +1655,7 @@
     
     
         <span class="returns-inline">
-            <span class="type"></span>
+            <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>
         </span>
     
     </div>
@@ -1483,7 +1702,9 @@
             <div class="returns-description">
                 
                     
-                    <p>Object</p>
+                        <span class="type"><a href="../classes/gdal.Envelope.html" class="crosslink">gdal.Envelope</a></span>:
+                    
+                    <p>Bounding envelope</p>
 
                 
             </div>
@@ -1496,7 +1717,7 @@
             
         
         	
-            <div id="method_getEnvelope3D" class="method item inherited">
+            <div id="method-getEnvelope3D" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>getEnvelope3D</code></span>
 
@@ -1505,7 +1726,7 @@
     
     
         <span class="returns-inline">
-            <span class="type"></span>
+            <span class="type"><a href="../classes/gdal.Envelope3D.html" class="crosslink">gdal.Envelope3D</a></span>
         </span>
     
     </div>
@@ -1552,7 +1773,9 @@
             <div class="returns-description">
                 
                     
-                    <p>Object</p>
+                        <span class="type"><a href="../classes/gdal.Envelope3D.html" class="crosslink">gdal.Envelope3D</a></span>:
+                    
+                    <p>Bounding envelope</p>
 
                 
             </div>
@@ -1565,7 +1788,112 @@
             
         
         	
-            <div id="method_getLength" class="method item inherited">
+            <div id="method-getGeometry" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getGeometry</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.LineString.html" class="crosslink">gdal.LineString</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_multilinestring.cpp.html#l153"><code>src&#x2F;gdal_multilinestring.cpp:153</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the child LineString at an index.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.LineString.html" class="crosslink">gdal.LineString</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method-getLength" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>getLength</code></span>
 
@@ -1634,7 +1962,7 @@
             
         
         	
-            <div id="method_intersection" class="method item inherited">
+            <div id="method-intersection" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>intersection</code></span>
 
@@ -1736,7 +2064,7 @@
             
         
         	
-            <div id="method_intersects" class="method item inherited">
+            <div id="method-intersects" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>intersects</code></span>
 
@@ -1838,7 +2166,7 @@
             
         
         	
-            <div id="method_isEmpty" class="method item inherited">
+            <div id="method-isEmpty" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>isEmpty</code></span>
 
@@ -1907,7 +2235,7 @@
             
         
         	
-            <div id="method_isRing" class="method item inherited">
+            <div id="method-isRing" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>isRing</code></span>
 
@@ -1976,7 +2304,7 @@
             
         
         	
-            <div id="method_isSimple" class="method item inherited">
+            <div id="method-isSimple" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>isSimple</code></span>
 
@@ -2045,7 +2373,7 @@
             
         
         	
-            <div id="method_isValid" class="method item inherited">
+            <div id="method-isValid" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>isValid</code></span>
 
@@ -2114,7 +2442,7 @@
             
         
         	
-            <div id="method_overlaps" class="method item inherited">
+            <div id="method-overlaps" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>overlaps</code></span>
 
@@ -2216,7 +2544,79 @@
             
         
         	
-            <div id="method_segmentize" class="method item inherited">
+            <div id="method-polygonize" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>polygonize</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Polygon.html" class="crosslink">gdal.Polygon</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_multilinestring.cpp.html#l138"><code>src&#x2F;gdal_multilinestring.cpp:138</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Converts it to a polygon.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Polygon.html" class="crosslink">gdal.Polygon</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method-segmentize" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>segmentize</code></span>
 
@@ -2318,7 +2718,7 @@
             
         
         	
-            <div id="method_simplify" class="method item inherited">
+            <div id="method-simplify" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>simplify</code></span>
 
@@ -2420,7 +2820,7 @@
             
         
         	
-            <div id="method_simplifyPreserveTopology" class="method item inherited">
+            <div id="method-simplifyPreserveTopology" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>simplifyPreserveTopology</code></span>
 
@@ -2522,7 +2922,7 @@
             
         
         	
-            <div id="method_swapXY" class="method item inherited">
+            <div id="method-swapXY" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>swapXY</code></span>
 
@@ -2575,7 +2975,7 @@
             
         
         	
-            <div id="method_symDifference" class="method item inherited">
+            <div id="method-symDifference" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>symDifference</code></span>
 
@@ -2677,7 +3077,7 @@
             
         
         	
-            <div id="method_toGML" class="method item inherited">
+            <div id="method-toGML" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>toGML</code></span>
 
@@ -2746,7 +3146,7 @@
             
         
         	
-            <div id="method_toJSON" class="method item inherited">
+            <div id="method-toJSON" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>toJSON</code></span>
 
@@ -2815,7 +3215,7 @@
             
         
         	
-            <div id="method_toKML" class="method item inherited">
+            <div id="method-toKML" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>toKML</code></span>
 
@@ -2884,7 +3284,78 @@
             
         
         	
-            <div id="method_touches" class="method item inherited">
+            <div id="method-toObject" class="method item inherited">
+    <div class="method-signature">
+    <span class="name"><code>toObject</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                <p>Inherited from
+                <a href="../classes/gdal.Geometry.html#method_toObject">gdal.Geometry</a>:
+            
+        
+        
+        <a href="../files/lib_gdal.js.html#l162"><code>lib&#x2F;gdal.js:162</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Converts the geometry to a GeoJSON object representation.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                    <p>GeoJSON</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method-touches" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>touches</code></span>
 
@@ -2986,7 +3457,7 @@
             
         
         	
-            <div id="method_toWKB" class="method item inherited">
+            <div id="method-toWKB" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>toWKB</code></span>
 
@@ -3055,7 +3526,7 @@
             
         
         	
-            <div id="method_toWKT" class="method item inherited">
+            <div id="method-toWKT" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>toWKT</code></span>
 
@@ -3124,7 +3595,7 @@
             
         
         	
-            <div id="method_transform" class="method item inherited">
+            <div id="method-transform" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>transform</code></span>
 
@@ -3218,7 +3689,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         	
-            <div id="method_transformTo" class="method item inherited">
+            <div id="method-transformTo" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>transformTo</code></span>
 
@@ -3304,7 +3775,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         	
-            <div id="method_unionGeometry" class="method item inherited">
+            <div id="method-unionGeometry" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>unionGeometry</code></span>
 
@@ -3406,7 +3877,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         	
-            <div id="method_within" class="method item inherited">
+            <div id="method-within" class="method item inherited">
     <div class="method-signature">
     <span class="name"><code>within</code></span>
 
@@ -3514,12 +3985,11 @@ object, and the actual SRS of the geometry will be ignored.</p>
 
 
 
-
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
 
         
-            <div id="attr_children" class="attr item inherited">
+            <div id="attr-children" class="attr item inherited">
     <a name="config_children"></a> 
     <h3 class="name"><code>children</code></h3>
     <span class="type"><a href="../classes/gdal.GeometryCollectionChildren.html" class="crosslink">gdal.GeometryCollectionChildren</a></span>
@@ -3568,7 +4038,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_coordinateDimension" class="attr item inherited">
+            <div id="attr-coordinateDimension" class="attr item inherited">
     <a name="config_coordinateDimension"></a> 
     <h3 class="name"><code>coordinateDimension</code></h3>
     <span class="type">Integer</span>
@@ -3618,7 +4088,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_dimension" class="attr item inherited">
+            <div id="attr-dimension" class="attr item inherited">
     <a name="config_dimension"></a> 
     <h3 class="name"><code>dimension</code></h3>
     <span class="type">Integer</span>
@@ -3668,7 +4138,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_name" class="attr item inherited">
+            <div id="attr-name" class="attr item inherited">
     <a name="config_name"></a> 
     <h3 class="name"><code>name</code></h3>
     <span class="type">String</span>
@@ -3718,7 +4188,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_srs" class="attr item inherited">
+            <div id="attr-srs" class="attr item inherited">
     <a name="config_srs"></a> 
     <h3 class="name"><code>srs</code></h3>
     <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
@@ -3766,7 +4236,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_wkbSize" class="attr item inherited">
+            <div id="attr-wkbSize" class="attr item inherited">
     <a name="config_wkbSize"></a> 
     <h3 class="name"><code>wkbSize</code></h3>
     <span class="type">Integer</span>
@@ -3816,7 +4286,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 </div>
 
         
-            <div id="attr_wkbType" class="attr item inherited">
+            <div id="attr-wkbType" class="attr item inherited">
     <a name="config_wkbType"></a> 
     <h3 class="name"><code>wkbType</code></h3>
     <span class="type">Integer</span>

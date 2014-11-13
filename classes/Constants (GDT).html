@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -174,6 +180,53 @@
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.GDT_Byte"><span class="ip">gdal.GDT_Byte</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_CFloat32"><span class="ip">gdal.GDT_CFloat32</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_CFloat64"><span class="ip">gdal.GDT_CFloat64</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_CInt16"><span class="ip">gdal.GDT_CInt16</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_CInt32"><span class="ip">gdal.GDT_CInt32</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_Float32"><span class="ip">gdal.GDT_Float32</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_Float64"><span class="ip">gdal.GDT_Float64</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_Int16"><span class="ip">gdal.GDT_Int16</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_Int32"><span class="ip">gdal.GDT_Int32</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_UInt16"><span class="ip">gdal.GDT_UInt16</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_UInt32"><span class="ip">gdal.GDT_UInt32</span></a></li>
+				
+				<li><a href="#prop-gdal.GDT_Unknown"><span class="ip">gdal.GDT_Unknown</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
 
 
 
@@ -185,7 +238,7 @@
 
         <div class="item-list">
         
-            <div id="property_gdal.GDT_Byte" class="property item">
+            <div id="prop-gdal.GDT_Byte" class="property item">
     <h3 class="name"><code>gdal.GDT_Byte</code></h3>
     <span class="type">String</span>
 
@@ -210,7 +263,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l399"><code>src&#x2F;node_gdal.cpp:399</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l409"><code>src&#x2F;node_gdal.cpp:409</code></a>
         
         </p>
 
@@ -232,7 +285,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_CFloat32" class="property item">
+            <div id="prop-gdal.GDT_CFloat32" class="property item">
     <h3 class="name"><code>gdal.GDT_CFloat32</code></h3>
     <span class="type">String</span>
 
@@ -257,7 +310,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l462"><code>src&#x2F;node_gdal.cpp:462</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l472"><code>src&#x2F;node_gdal.cpp:472</code></a>
         
         </p>
 
@@ -279,7 +332,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_CFloat64" class="property item">
+            <div id="prop-gdal.GDT_CFloat64" class="property item">
     <h3 class="name"><code>gdal.GDT_CFloat64</code></h3>
     <span class="type">String</span>
 
@@ -304,7 +357,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l469"><code>src&#x2F;node_gdal.cpp:469</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l479"><code>src&#x2F;node_gdal.cpp:479</code></a>
         
         </p>
 
@@ -326,7 +379,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_CInt16" class="property item">
+            <div id="prop-gdal.GDT_CInt16" class="property item">
     <h3 class="name"><code>gdal.GDT_CInt16</code></h3>
     <span class="type">String</span>
 
@@ -351,7 +404,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l448"><code>src&#x2F;node_gdal.cpp:448</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l458"><code>src&#x2F;node_gdal.cpp:458</code></a>
         
         </p>
 
@@ -373,7 +426,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_CInt32" class="property item">
+            <div id="prop-gdal.GDT_CInt32" class="property item">
     <h3 class="name"><code>gdal.GDT_CInt32</code></h3>
     <span class="type">String</span>
 
@@ -398,7 +451,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l455"><code>src&#x2F;node_gdal.cpp:455</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l465"><code>src&#x2F;node_gdal.cpp:465</code></a>
         
         </p>
 
@@ -420,7 +473,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_Float32" class="property item">
+            <div id="prop-gdal.GDT_Float32" class="property item">
     <h3 class="name"><code>gdal.GDT_Float32</code></h3>
     <span class="type">String</span>
 
@@ -445,7 +498,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l434"><code>src&#x2F;node_gdal.cpp:434</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l444"><code>src&#x2F;node_gdal.cpp:444</code></a>
         
         </p>
 
@@ -467,7 +520,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_Float64" class="property item">
+            <div id="prop-gdal.GDT_Float64" class="property item">
     <h3 class="name"><code>gdal.GDT_Float64</code></h3>
     <span class="type">String</span>
 
@@ -492,7 +545,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l441"><code>src&#x2F;node_gdal.cpp:441</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l451"><code>src&#x2F;node_gdal.cpp:451</code></a>
         
         </p>
 
@@ -514,7 +567,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_Int16" class="property item">
+            <div id="prop-gdal.GDT_Int16" class="property item">
     <h3 class="name"><code>gdal.GDT_Int16</code></h3>
     <span class="type">String</span>
 
@@ -539,7 +592,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l413"><code>src&#x2F;node_gdal.cpp:413</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l423"><code>src&#x2F;node_gdal.cpp:423</code></a>
         
         </p>
 
@@ -561,7 +614,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_Int32" class="property item">
+            <div id="prop-gdal.GDT_Int32" class="property item">
     <h3 class="name"><code>gdal.GDT_Int32</code></h3>
     <span class="type">String</span>
 
@@ -586,7 +639,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l427"><code>src&#x2F;node_gdal.cpp:427</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l437"><code>src&#x2F;node_gdal.cpp:437</code></a>
         
         </p>
 
@@ -608,7 +661,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_UInt16" class="property item">
+            <div id="prop-gdal.GDT_UInt16" class="property item">
     <h3 class="name"><code>gdal.GDT_UInt16</code></h3>
     <span class="type">String</span>
 
@@ -633,7 +686,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l406"><code>src&#x2F;node_gdal.cpp:406</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l416"><code>src&#x2F;node_gdal.cpp:416</code></a>
         
         </p>
 
@@ -655,7 +708,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_UInt32" class="property item">
+            <div id="prop-gdal.GDT_UInt32" class="property item">
     <h3 class="name"><code>gdal.GDT_UInt32</code></h3>
     <span class="type">String</span>
 
@@ -680,7 +733,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l420"><code>src&#x2F;node_gdal.cpp:420</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l430"><code>src&#x2F;node_gdal.cpp:430</code></a>
         
         </p>
 
@@ -702,7 +755,7 @@
 </div>
 
         
-            <div id="property_gdal.GDT_Unknown" class="property item">
+            <div id="prop-gdal.GDT_Unknown" class="property item">
     <h3 class="name"><code>gdal.GDT_Unknown</code></h3>
     <span class="type">String</span>
 
@@ -727,7 +780,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l392"><code>src&#x2F;node_gdal.cpp:392</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l402"><code>src&#x2F;node_gdal.cpp:402</code></a>
         
         </p>
 

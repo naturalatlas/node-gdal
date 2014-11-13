@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -176,11 +182,269 @@ format.</p>
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-autoIdentifyEPSG"><span class="im">autoIdentifyEPSG</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-clone"><span class="im">clone</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-clone"><span class="im">clone</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-EPSGTreatsAsLatLong"><span class="im">EPSGTreatsAsLatLong</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-EPSGTreatsAsNorthingEasting"><span class="im">EPSGTreatsAsNorthingEasting</span>()</a></li>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				<li><a href="#method-getAngularUnits"><span class="im">getAngularUnits</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getAttrValue"><span class="im">getAttrValue</span>(<span class="ia">node_name</span><span class="ia">attr_index</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getAuthorityCode"><span class="im">getAuthorityCode</span>(<span class="ia">target_key</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getAuthorityName"><span class="im">getAuthorityName</span>(<span class="ia">target_key</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getLinearUnits"><span class="im">getLinearUnits</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isCompound"><span class="im">isCompound</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isGeocentric"><span class="im">isGeocentric</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isLocal"><span class="im">isLocal</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isProjected"><span class="im">isProjected</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-isSame"><span class="im">isSame</span>(<span class="ia">srs</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-isSameGeogCS"><span class="im">isSameGeogCS</span>(<span class="ia">srs</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-isSameVertCS"><span class="im">isSameVertCS</span>(<span class="ia">srs</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-isVertical"><span class="im">isVertical</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-morphFromESRI"><span class="im">morphFromESRI</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-morphToESRI"><span class="im">morphToESRI</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-setWellKnownGeogCS"><span class="im">setWellKnownGeogCS</span>(<span class="ia">name</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-toPrettyWKT"><span class="im">toPrettyWKT</span>(<span class="ia">simplify</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-toProj4"><span class="im">toProj4</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toWKT"><span class="im">toWKT</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-toXML"><span class="im">toXML</span>()</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+
+		
+		<li>
+			<strong>Static Methods</strong>
+			<ul>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				<li><a href="#method-fromCRSURL"><span class="im">fromCRSURL</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromEPSG"><span class="im">fromEPSG</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromEPSG"><span class="im">fromEPSG</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromMICoordSys"><span class="im">fromMICoordSys</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromProj4"><span class="im">fromProj4</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromURL"><span class="im">fromURL</span>(<span class="ia">url</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromURN"><span class="im">fromURN</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromUserInput"><span class="im">fromUserInput</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromWKT"><span class="im">fromWKT</span>(<span class="ia">wkt</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromWMSAUTO"><span class="im">fromWMSAUTO</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fromXML"><span class="im">fromXML</span>(<span class="ia">input</span>)</a></li>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			</ul>
+		</li>
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
     <div class="constructor yuidoc-class-constructor">
         <h2>Constructor</h2>
         <div class="item-list">
-        <div id="method_gdal.SpatialReference" class="method item">
+        <div id="method-gdal.SpatialReference" class="method item">
     <div class="method-signature">
     <span class="name"><code>gdal.SpatialReference</code></span>
 
@@ -276,7 +540,7 @@ format.</p>
         <div class="item-list">
        		
         	
-            <div id="method_autoIdentifyEPSG" class="method item">
+            <div id="method-autoIdentifyEPSG" class="method item">
     <div class="method-signature">
     <span class="name"><code>autoIdentifyEPSG</code></span>
 
@@ -332,7 +596,7 @@ format.</p>
             
         
         	
-            <div id="method_clone" class="method item">
+            <div id="method-clone" class="method item">
     <div class="method-signature">
     <span class="name"><code>clone</code></span>
 
@@ -404,7 +668,7 @@ format.</p>
             
         
         	
-            <div id="method_clone" class="method item">
+            <div id="method-clone" class="method item">
     <div class="method-signature">
     <span class="name"><code>clone</code></span>
 
@@ -476,7 +740,7 @@ format.</p>
             
         
         	
-            <div id="method_EPSGTreatsAsLatLong" class="method item">
+            <div id="method-EPSGTreatsAsLatLong" class="method item">
     <div class="method-signature">
     <span class="name"><code>EPSGTreatsAsLatLong</code></span>
 
@@ -555,7 +819,7 @@ or that do not have an EPSG code set.</p>
             
         
         	
-            <div id="method_EPSGTreatsAsNorthingEasting" class="method item">
+            <div id="method-EPSGTreatsAsNorthingEasting" class="method item">
     <div class="method-signature">
     <span class="name"><code>EPSGTreatsAsNorthingEasting</code></span>
 
@@ -661,7 +925,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_getAngularUnits" class="method item">
+            <div id="method-getAngularUnits" class="method item">
     <div class="method-signature">
     <span class="name"><code>getAngularUnits</code></span>
 
@@ -735,7 +999,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_getAttrValue" class="method item">
+            <div id="method-getAttrValue" class="method item">
     <div class="method-signature">
     <span class="name"><code>getAttrValue</code></span>
 
@@ -862,7 +1126,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_getAuthorityCode" class="method item">
+            <div id="method-getAuthorityCode" class="method item">
     <div class="method-signature">
     <span class="name"><code>getAuthorityCode</code></span>
 
@@ -968,7 +1232,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_getAuthorityName" class="method item">
+            <div id="method-getAuthorityName" class="method item">
     <div class="method-signature">
     <span class="name"><code>getAuthorityName</code></span>
 
@@ -1074,7 +1338,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_getLinearUnits" class="method item">
+            <div id="method-getLinearUnits" class="method item">
     <div class="method-signature">
     <span class="name"><code>getLinearUnits</code></span>
 
@@ -1148,7 +1412,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isCompound" class="method item">
+            <div id="method-isCompound" class="method item">
     <div class="method-signature">
     <span class="name"><code>isCompound</code></span>
 
@@ -1220,7 +1484,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isGeocentric" class="method item">
+            <div id="method-isGeocentric" class="method item">
     <div class="method-signature">
     <span class="name"><code>isGeocentric</code></span>
 
@@ -1292,7 +1556,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isLocal" class="method item">
+            <div id="method-isLocal" class="method item">
     <div class="method-signature">
     <span class="name"><code>isLocal</code></span>
 
@@ -1364,7 +1628,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isProjected" class="method item">
+            <div id="method-isProjected" class="method item">
     <div class="method-signature">
     <span class="name"><code>isProjected</code></span>
 
@@ -1436,7 +1700,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isSame" class="method item">
+            <div id="method-isSame" class="method item">
     <div class="method-signature">
     <span class="name"><code>isSame</code></span>
 
@@ -1541,7 +1805,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isSameGeogCS" class="method item">
+            <div id="method-isSameGeogCS" class="method item">
     <div class="method-signature">
     <span class="name"><code>isSameGeogCS</code></span>
 
@@ -1646,7 +1910,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isSameVertCS" class="method item">
+            <div id="method-isSameVertCS" class="method item">
     <div class="method-signature">
     <span class="name"><code>isSameVertCS</code></span>
 
@@ -1751,7 +2015,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_isVertical" class="method item">
+            <div id="method-isVertical" class="method item">
     <div class="method-signature">
     <span class="name"><code>isVertical</code></span>
 
@@ -1823,7 +2087,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_morphFromESRI" class="method item">
+            <div id="method-morphFromESRI" class="method item">
     <div class="method-signature">
     <span class="name"><code>morphFromESRI</code></span>
 
@@ -1879,7 +2143,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_morphToESRI" class="method item">
+            <div id="method-morphToESRI" class="method item">
     <div class="method-signature">
     <span class="name"><code>morphToESRI</code></span>
 
@@ -1935,7 +2199,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_setWellKnownGeogCS" class="method item">
+            <div id="method-setWellKnownGeogCS" class="method item">
     <div class="method-signature">
     <span class="name"><code>setWellKnownGeogCS</code></span>
 
@@ -2024,7 +2288,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_toPrettyWKT" class="method item">
+            <div id="method-toPrettyWKT" class="method item">
     <div class="method-signature">
     <span class="name"><code>toPrettyWKT</code></span>
 
@@ -2130,7 +2394,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_toProj4" class="method item">
+            <div id="method-toProj4" class="method item">
     <div class="method-signature">
     <span class="name"><code>toProj4</code></span>
 
@@ -2202,7 +2466,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_toWKT" class="method item">
+            <div id="method-toWKT" class="method item">
     <div class="method-signature">
     <span class="name"><code>toWKT</code></span>
 
@@ -2274,7 +2538,7 @@ be treated as having northing/easting coordinate ordering.</p>
             
         
         	
-            <div id="method_toXML" class="method item">
+            <div id="method-toXML" class="method item">
     <div class="method-signature">
     <span class="name"><code>toXML</code></span>
 
@@ -2356,7 +2620,6 @@ be treated as having northing/easting coordinate ordering.</p>
 
 
 
-
     <div id="static-methods" class="page-section">
         <h2 class="off-left">Static Methods</h2>
         <div class="item-list">
@@ -2372,7 +2635,7 @@ be treated as having northing/easting coordinate ordering.</p>
 			
         
 			
-    	        <div id="method_fromCRSURL" class="method item">
+    	        <div id="method-fromCRSURL" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromCRSURL</code></span>
 
@@ -2480,7 +2743,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
             
         
 			
-    	        <div id="method_fromEPSG" class="method item">
+    	        <div id="method-fromEPSG" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromEPSG</code></span>
 
@@ -2599,7 +2862,7 @@ to typical GIS use).</p>
             
         
 			
-    	        <div id="method_fromEPSG" class="method item">
+    	        <div id="method-fromEPSG" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromEPSG</code></span>
 
@@ -2713,7 +2976,7 @@ to typical GIS use).</p>
             
         
 			
-    	        <div id="method_fromMICoordSys" class="method item">
+    	        <div id="method-fromMICoordSys" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromMICoordSys</code></span>
 
@@ -2818,7 +3081,7 @@ to typical GIS use).</p>
             
         
 			
-    	        <div id="method_fromProj4" class="method item">
+    	        <div id="method-fromProj4" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromProj4</code></span>
 
@@ -2923,7 +3186,7 @@ to typical GIS use).</p>
             
         
 			
-    	        <div id="method_fromURL" class="method item">
+    	        <div id="method-fromURL" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromURL</code></span>
 
@@ -3029,7 +3292,7 @@ to typical GIS use).</p>
             
         
 			
-    	        <div id="method_fromURN" class="method item">
+    	        <div id="method-fromURN" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromURN</code></span>
 
@@ -3137,7 +3400,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
             
         
 			
-    	        <div id="method_fromUserInput" class="method item">
+    	        <div id="method-fromUserInput" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromUserInput</code></span>
 
@@ -3244,7 +3507,7 @@ and then use it to initialize the spatial reference system.</p>
             
         
 			
-    	        <div id="method_fromWKT" class="method item">
+    	        <div id="method-fromWKT" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromWKT</code></span>
 
@@ -3349,7 +3612,7 @@ and then use it to initialize the spatial reference system.</p>
             
         
 			
-    	        <div id="method_fromWMSAUTO" class="method item">
+    	        <div id="method-fromWMSAUTO" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromWMSAUTO</code></span>
 
@@ -3466,7 +3729,7 @@ var ref = gdal.SpatialReference.fromWMSAUTO(wms);</code></pre>
             
         
 			
-    	        <div id="method_fromXML" class="method item">
+    	        <div id="method-fromXML" class="method item">
     <div class="method-signature">
     <span class="name"><code>fromXML</code></span>
 

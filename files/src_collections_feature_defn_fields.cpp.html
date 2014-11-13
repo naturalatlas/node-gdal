@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -201,6 +207,8 @@ FeatureDefnFields::~FeatureDefnFields()
 {}
 
 /**
+ * An encapsulation of a {{#crossLink &quot;gdal.FeatureDefn&quot;}}FeatureDefn{{/crossLink}}&#x27;s fields.
+ *
  * @class gdal.FeatureDefnFields
  */
 NAN_METHOD(FeatureDefnFields::New)
@@ -242,6 +250,12 @@ NAN_METHOD(FeatureDefnFields::toString)
 	NanReturnValue(NanNew(&quot;FeatureDefnFields&quot;));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureDefnFields::count)
 {
 	NanScope();
@@ -256,6 +270,13 @@ NAN_METHOD(FeatureDefnFields::count)
 	NanReturnValue(NanNew&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldCount()));
 }
 
+/**
+ * Returns the index of field definition.
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or &#x60;-1&#x60; if not found.
+ */
 NAN_METHOD(FeatureDefnFields::indexOf)
 {
 	NanScope();
@@ -273,6 +294,13 @@ NAN_METHOD(FeatureDefnFields::indexOf)
 	NanReturnValue(NanNew&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Returns a field definition.
+ *
+ * @method get
+ * @param {String|Integer} key Field name or index
+ * @return {gdal.FieldDefn}
+ */
 NAN_METHOD(FeatureDefnFields::get)
 {
 	NanScope();
@@ -295,6 +323,12 @@ NAN_METHOD(FeatureDefnFields::get)
 	NanReturnValue(FieldDefn::New(feature_def-&gt;get()-&gt;GetFieldDefn(field_index)));
 }
 
+/**
+ * Returns a list of field names.
+ *
+ * @method getNames
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureDefnFields::getNames)
 {
 	NanScope();
@@ -317,6 +351,13 @@ NAN_METHOD(FeatureDefnFields::getNames)
 	NanReturnValue(result);
 }
 
+/**
+ * Removes a field definition.
+ *
+ * @method remove
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ */
 NAN_METHOD(FeatureDefnFields::remove)
 {
 	NanScope();
@@ -345,6 +386,13 @@ NAN_METHOD(FeatureDefnFields::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds field definition(s).
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.FieldDefn|Array} field(s)
+ */
 NAN_METHOD(FeatureDefnFields::add)
 {
 	NanScope();
@@ -386,6 +434,18 @@ NAN_METHOD(FeatureDefnFields::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Reorders the fields.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * // reverse fields:
+ * featureDef.fields.reorder([2, 1, 0]);&#x60;&#x60;&#x60;
+ *
+ * @method reorder
+ * @throws Error
+ * @param {Array} map An array representing the new field order.
+ */
 NAN_METHOD(FeatureDefnFields::reorder)
 {
 	NanScope();
@@ -439,7 +499,13 @@ NAN_METHOD(FeatureDefnFields::reorder)
 	NanReturnUndefined();
 }
 
-
+/**
+ * Parent feature definition.
+ *
+ * @readOnly
+ * @attribute featureDefn
+ * @type {gdal.FeatureDefn}
+ */
 NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
 	NanScope();

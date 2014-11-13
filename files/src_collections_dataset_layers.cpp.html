@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_geometrycollection.cpp - node-gdal</title>
+    <title>src/collections/dataset_layers.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -160,178 +160,341 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_geometrycollection.cpp <small>File</small></h1>
+    <h1>src/collections/dataset_layers.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_geometry.hpp&quot;
-#include &quot;gdal_geometrycollection.hpp&quot;
-#include &quot;collections/geometry_collection_children.hpp&quot;
-
-#include &lt;stdlib.h&gt;
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_dataset.hpp&quot;
+#include &quot;../gdal_layer.hpp&quot;
+#include &quot;../gdal_spatial_reference.hpp&quot;
+#include &quot;dataset_layers.hpp&quot;
+#include &quot;../utils/string_list.hpp&quot;
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; GeometryCollection::constructor;
+Persistent&lt;FunctionTemplate&gt; DatasetLayers::constructor;
 
-void GeometryCollection::Initialize(Handle&lt;Object&gt; target)
+void DatasetLayers::Initialize(Handle&lt;Object&gt; target)
 {
 	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(GeometryCollection::New);
-	lcons-&gt;Inherit(NanNew(Geometry::constructor));
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(DatasetLayers::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;GeometryCollection&quot;));
+	lcons-&gt;SetClassName(NanNew(&quot;DatasetLayers&quot;));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getArea&quot;, getArea);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getLength&quot;, getLength);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;create&quot;, create);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;copy&quot;, copy);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;remove&quot;, remove);
 
-	ATTR(lcons, &quot;children&quot;, childrenGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, &quot;ds&quot;, dsGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(NanNew(&quot;GeometryCollection&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(NanNew(&quot;DatasetLayers&quot;), lcons-&gt;GetFunction());
 
 	NanAssignPersistent(constructor, lcons);
 }
 
-GeometryCollection::GeometryCollection(OGRGeometryCollection *geom)
-	: ObjectWrap(),
-	  this_(geom),
-	  owned_(true),
-	  size_(0)
-{
-	LOG(&quot;Created GeometryCollection [%p]&quot;, geom);
-}
+DatasetLayers::DatasetLayers()
+	: ObjectWrap()
+{}
 
-GeometryCollection::GeometryCollection()
-	: ObjectWrap(),
-	  this_(NULL),
-	  owned_(true),
-	  size_(0)
-{
-}
-
-
-GeometryCollection::~GeometryCollection()
-{
-	if(this_) {
-		LOG(&quot;Disposing GeometryCollection [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if (owned_) {
-			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
-		}
-		LOG(&quot;Disposed GeometryCollection [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
+DatasetLayers::~DatasetLayers()
+{}
 
 /**
- * A collection of 1 or more geometry objects.
+ * An encapsulation of a {{#crossLink &quot;gdal.Dataset&quot;}}Dataset{{/crossLink}}&#x27;s vector layers.
  *
- * @constructor
- * @class gdal.GeometryCollection
- * @extends gdal.Geometry
+ * &#x60;&#x60;&#x60;
+ * var layers = dataset.layers;&#x60;&#x60;&#x60;
+ *
+ * @class gdal.DatasetLayers
  */
-NAN_METHOD(GeometryCollection::New)
+NAN_METHOD(DatasetLayers::New)
 {
 	NanScope();
-	GeometryCollection *f;
 
 	if (!args.IsConstructCall()) {
 		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
 		NanReturnUndefined();
 	}
-
 	if (args[0]-&gt;IsExternal()) {
 		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
-		f = static_cast&lt;GeometryCollection *&gt;(ptr);
-
+		DatasetLayers *f =  static_cast&lt;DatasetLayers *&gt;(ptr);
+		f-&gt;Wrap(args.This());
+		NanReturnValue(args.This());
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError(&quot;GeometryCollection constructor doesn&#x27;t take any arguments&quot;);
-			NanReturnUndefined();
-		}
-		f = new GeometryCollection(new OGRGeometryCollection());
+		NanThrowError(&quot;Cannot create DatasetLayers directly&quot;);
+		NanReturnUndefined();
 	}
-
-	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
-	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
-
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
 }
 
-Handle&lt;Value&gt; GeometryCollection::New(OGRGeometryCollection *geom)
-{
-	NanEscapableScope();
-	return NanEscapeScope(GeometryCollection::New(geom, true));
-}
-
-Handle&lt;Value&gt; GeometryCollection::New(OGRGeometryCollection *geom, bool owned)
+Handle&lt;Value&gt; DatasetLayers::New(Handle&lt;Value&gt; ds_obj)
 {
 	NanEscapableScope();
 
-	if (!geom) {
-		return NanEscapeScope(NanNull());
-	}
+	DatasetLayers *wrapped = new DatasetLayers();
 
-	//make a copy of geometry owned by a feature
-	// + no need to track when a feature is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only geometry
-	// - is slower
-
-	if (!owned) {
-		geom = static_cast&lt;OGRGeometryCollection*&gt;(geom-&gt;clone());
-	};
-
-	GeometryCollection *wrapped = new GeometryCollection(geom);
-	wrapped-&gt;owned_ = true;
-
-	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
-
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(GeometryCollection::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(DatasetLayers::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), ds_obj);
 
 	return NanEscapeScope(obj);
 }
 
-
-NAN_METHOD(GeometryCollection::toString)
+NAN_METHOD(DatasetLayers::toString)
 {
 	NanScope();
-	NanReturnValue(NanNew(&quot;GeometryCollection&quot;));
+	NanReturnValue(NanNew(&quot;DatasetLayers&quot;));
 }
 
 /**
- * Computes the combined area of the geometries.
+ * Returns the layer with the given name or identifier.
  *
- * @method getArea
- * @return Number
+ * @method get
+ * @param {String|Integer} key Layer name or ID.
+ * @return {gdal.Layer}
  */
-NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getArea, Number, get_Area);
-
-/**
- * Compute the length of a multicurve.
- *
- * @method getLength
- * @return Number
- */
-NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getLength, Number, get_Length);
-
-/**
- * All geometries represented by this collection.
- *
- * @attribute children
- * @type {gdal.GeometryCollectionChildren}
- */
-NAN_GETTER(GeometryCollection::childrenGetter)
+NAN_METHOD(DatasetLayers::get)
 {
 	NanScope();
-	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;children_&quot;)));
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr &amp;&amp; ds-&gt;getDataset()) {
+			NanReturnNull();
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	if(args.Length() &lt; 1) {
+		NanThrowError(&quot;method must be given integer or string&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRLayer *lyr;
+
+	if(args[0]-&gt;IsString()) {
+		NanUtf8String layer_name = NanUtf8String(args[0]);
+		lyr = raw-&gt;GetLayerByName(*layer_name);
+	} else if(args[0]-&gt;IsNumber()) {
+		lyr = raw-&gt;GetLayer(args[0]-&gt;IntegerValue());
+	} else {
+		NanThrowTypeError(&quot;method must be given integer or string&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(Layer::New(lyr, raw));
+}
+
+/**
+ * Adds a new layer.
+ *
+ * @method create
+ * @throws Error
+ * @param {String} name Layer name
+ * @param {gdal.SpatialReference} srs Layer projection
+ * @param {Integer} geomType Geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}see WKB constants{{/crossLink}})
+ * @return {gdal.Layer}
+ */
+NAN_METHOD(DatasetLayers::create)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr) {
+			NanThrowError(&quot;Dataset does not support creating layers&quot;);
+			NanReturnUndefined();
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	std::string layer_name;
+	SpatialReference *spatial_ref = NULL;
+	OGRwkbGeometryType geom_type = wkbUnknown;
+	StringList options;
+
+	NODE_ARG_STR(0, &quot;layer name&quot;, layer_name);
+	NODE_ARG_WRAPPED_OPT(1, &quot;spatial reference&quot;, SpatialReference, spatial_ref);
+	NODE_ARG_ENUM_OPT(2, &quot;geometry type&quot;, OGRwkbGeometryType, geom_type);
+	if(args.Length() &gt; 3 &amp;&amp; options.parse(args[3])){
+		NanReturnUndefined(); //error parsing string list
+	}
+
+	OGRSpatialReference *srs = NULL;
+	if(spatial_ref) srs = spatial_ref-&gt;get();
+
+	OGRLayer *layer = raw-&gt;CreateLayer(layer_name.c_str(),
+					  srs,
+					  geom_type,
+					  options.get());
+
+	if (layer) {
+		NanReturnValue(Layer::New(layer, raw, false));
+	} else {
+		NanThrowError(&quot;Error creating layer&quot;);
+		NanReturnUndefined();
+	}
+}
+
+/**
+ * Returns the number of layers.
+ *
+ * @method count
+ * @return {Integer}
+ */
+NAN_METHOD(DatasetLayers::count)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr &amp;&amp; ds-&gt;getDataset()) {
+			NanReturnValue(NanNew&lt;Integer&gt;(0));
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(NanNew&lt;Integer&gt;(raw-&gt;GetLayerCount()));
+}
+
+/**
+ * Copies a layer.
+ *
+ * @method copy
+ * @param {String} src_lyr_name
+ * @param {String} dst_lyr_name
+ * @param {Array} [options=null]
+ * @return {gdal.Layer}
+ */
+NAN_METHOD(DatasetLayers::copy)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr) {
+			NanThrowError(&quot;Dataset does not support copying layers&quot;);
+			NanReturnUndefined();
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	Layer *layer_to_copy;
+	std::string new_name = &quot;&quot;;
+	StringList options;
+
+	NODE_ARG_WRAPPED(0, &quot;layer to copy&quot;, Layer, layer_to_copy);
+	NODE_ARG_STR(1, &quot;new layer name&quot;, new_name);
+	if(args.Length() &gt; 2 &amp;&amp; options.parse(args[2])){
+		NanReturnUndefined(); //error parsing string list
+	}
+
+	OGRLayer *layer = raw-&gt;CopyLayer(layer_to_copy-&gt;get(),
+										   new_name.c_str(),
+										   options.get());
+
+	if (layer) {
+		NanReturnValue(Layer::New(layer, raw));
+	} else {
+		NanThrowError(&quot;Error copying layer&quot;);
+		NanReturnUndefined();
+	}
+}
+
+/**
+ * Removes a layer.
+ *
+ * @method remove
+ * @throws Error
+ * @param {Integer} index
+ */
+NAN_METHOD(DatasetLayers::remove)
+{
+	NanScope();
+
+	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
+	Dataset *ds = ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
+
+	#if GDAL_VERSION_MAJOR &gt;= 2
+		GDALDataset *raw = ds-&gt;getDataset();
+	#else
+		OGRDataSource *raw = ds-&gt;getDatasource();
+		if(!ds-&gt;uses_ogr) {
+			NanThrowError(&quot;Dataset does not support removing layers&quot;);
+			NanReturnUndefined();
+		}
+	#endif
+
+	if (!raw) {
+		NanThrowError(&quot;Dataset object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+
+	int i;
+	NODE_ARG_INT(0, &quot;layer index&quot;, i);
+	OGRErr err = raw-&gt;DeleteLayer(i);
+	if(err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnUndefined();
+}
+
+/**
+ * Parent dataset
+ *
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
+NAN_GETTER(DatasetLayers::dsGetter)
+{
+	NanScope();
+	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)));
 }
 
 } // namespace node_gdal

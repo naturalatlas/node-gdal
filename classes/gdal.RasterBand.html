@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -174,6 +180,103 @@
 </div>
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-createMaskBand"><span class="im">createMaskBand</span>(<span class="ia">flags</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-fill"><span class="im">fill</span>(<span class="ia">real_value</span><span class="ia">imaginary_value</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-flush"><span class="im">flush</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getMaskBand"><span class="im">getMaskBand</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getMaskFlags"><span class="im">getMaskFlags</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-getStatistics"><span class="im">getStatistics</span>(<span class="ia">allow_approximation</span><span class="ia">force</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getStatistics"><span class="im">getStatistics</span>(<span class="ia">allow_approximation</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-setStatistics"><span class="im">setStatistics</span>(<span class="ia">min</span><span class="ia">max</span><span class="ia">mean</span><span class="ia">std_dev</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-blockSize"><span class="iattr">blockSize</span></a></li>
+				
+				<li><a href="#attr-categoryNames"><span class="iattr">categoryNames</span></a></li>
+				
+				<li><a href="#attr-colorInterpretation"><span class="iattr">colorInterpretation</span></a></li>
+				
+				<li><a href="#attr-dataType"><span class="iattr">dataType</span></a></li>
+				
+				<li><a href="#attr-ds"><span class="iattr">ds</span></a></li>
+				
+				<li><a href="#attr-hasArbitraryOverviews"><span class="iattr">hasArbitraryOverviews</span></a></li>
+				
+				<li><a href="#attr-id"><span class="iattr">id</span></a></li>
+				
+				<li><a href="#attr-maximum"><span class="iattr">maximum</span></a></li>
+				
+				<li><a href="#attr-minimum"><span class="iattr">minimum</span></a></li>
+				
+				<li><a href="#attr-noDataValue"><span class="iattr">noDataValue</span></a></li>
+				
+				<li><a href="#attr-offset"><span class="iattr">offset</span></a></li>
+				
+				<li><a href="#attr-offset"><span class="iattr">offset</span></a></li>
+				
+				<li><a href="#attr-overviews"><span class="iattr">overviews</span></a></li>
+				
+				<li><a href="#attr-pixels"><span class="iattr">pixels</span></a></li>
+				
+				<li><a href="#attr-readOnly"><span class="iattr">readOnly</span></a></li>
+				
+				<li><a href="#attr-size"><span class="iattr">size</span></a></li>
+				
+				<li><a href="#attr-unitType"><span class="iattr">unitType</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
 
 
 
@@ -182,7 +285,7 @@
         <div class="item-list">
        		
         	
-            <div id="method_createMaskBand" class="method item">
+            <div id="method-createMaskBand" class="method item">
     <div class="method-signature">
     <span class="name"><code>createMaskBand</code></span>
 
@@ -272,7 +375,7 @@
             
         
         	
-            <div id="method_fill" class="method item">
+            <div id="method-fill" class="method item">
     <div class="method-signature">
     <span class="name"><code>fill</code></span>
 
@@ -383,7 +486,7 @@
             
         
         	
-            <div id="method_flush" class="method item">
+            <div id="method-flush" class="method item">
     <div class="method-signature">
     <span class="name"><code>flush</code></span>
 
@@ -439,7 +542,7 @@
             
         
         	
-            <div id="method_getMaskBand" class="method item">
+            <div id="method-getMaskBand" class="method item">
     <div class="method-signature">
     <span class="name"><code>getMaskBand</code></span>
 
@@ -511,7 +614,7 @@
             
         
         	
-            <div id="method_getMaskFlags" class="method item">
+            <div id="method-getMaskFlags" class="method item">
     <div class="method-signature">
     <span class="name"><code>getMaskFlags</code></span>
 
@@ -593,7 +696,7 @@ available definitions that may be extended in the future:</p>
             
         
         	
-            <div id="method_getStatistics" class="method item">
+            <div id="method-getStatistics" class="method item">
     <div class="method-signature">
     <span class="name"><code>getStatistics</code></span>
 
@@ -727,7 +830,7 @@ may be used in computing the statistics.</p>
             
         
         	
-            <div id="method_getStatistics" class="method item">
+            <div id="method-getStatistics" class="method item">
     <div class="method-signature">
     <span class="name"><code>getStatistics</code></span>
 
@@ -839,7 +942,7 @@ may be used in computing the statistics.</p>
             
         
         	
-            <div id="method_setStatistics" class="method item">
+            <div id="method-setStatistics" class="method item">
     <div class="method-signature">
     <span class="name"><code>setStatistics</code></span>
 
@@ -998,12 +1101,11 @@ min/max/mean/standard deviation statistics.</p>
 
 
 
-
     <div id="attrs" class="page-section">
         <h2 class="off-left">Attributes</h2>
 
         
-            <div id="attr_blockSize" class="attr item">
+            <div id="attr-blockSize" class="attr item">
     <a name="config_blockSize"></a> 
     <h3 class="name"><code>blockSize</code></h3>
     <span class="type">Object</span>
@@ -1057,7 +1159,7 @@ min/max/mean/standard deviation statistics.</p>
 </div>
 
         
-            <div id="attr_categoryNames" class="attr item">
+            <div id="attr-categoryNames" class="attr item">
     <a name="config_categoryNames"></a> 
     <h3 class="name"><code>categoryNames</code></h3>
     <span class="type">Array</span>
@@ -1109,7 +1211,7 @@ min/max/mean/standard deviation statistics.</p>
 </div>
 
         
-            <div id="attr_colorInterpretation" class="attr item">
+            <div id="attr-colorInterpretation" class="attr item">
     <a name="config_colorInterpretation"></a> 
     <h3 class="name"><code>colorInterpretation</code></h3>
     <span class="type">Array</span>
@@ -1161,7 +1263,7 @@ min/max/mean/standard deviation statistics.</p>
 </div>
 
         
-            <div id="attr_dataType" class="attr item">
+            <div id="attr-dataType" class="attr item">
     <a name="config_dataType"></a> 
     <h3 class="name"><code>dataType</code></h3>
     <span class="type">String | Undefined</span>
@@ -1215,7 +1317,7 @@ min/max/mean/standard deviation statistics.</p>
 </div>
 
         
-            <div id="attr_ds" class="attr item">
+            <div id="attr-ds" class="attr item">
     <a name="config_ds"></a> 
     <h3 class="name"><code>ds</code></h3>
     <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
@@ -1268,7 +1370,7 @@ min/max/mean/standard deviation statistics.</p>
 </div>
 
         
-            <div id="attr_hasArbitraryOverviews" class="attr item">
+            <div id="attr-hasArbitraryOverviews" class="attr item">
     <a name="config_hasArbitraryOverviews"></a> 
     <h3 class="name"><code>hasArbitraryOverviews</code></h3>
     <span class="type">Boolean</span>
@@ -1326,7 +1428,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_id" class="attr item">
+            <div id="attr-id" class="attr item">
     <a name="config_id"></a> 
     <h3 class="name"><code>id</code></h3>
     <span class="type">Integer | Null</span>
@@ -1379,7 +1481,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_maximum" class="attr item">
+            <div id="attr-maximum" class="attr item">
     <a name="config_maximum"></a> 
     <h3 class="name"><code>maximum</code></h3>
     <span class="type">Number</span>
@@ -1433,7 +1535,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_minimum" class="attr item">
+            <div id="attr-minimum" class="attr item">
     <a name="config_minimum"></a> 
     <h3 class="name"><code>minimum</code></h3>
     <span class="type">Number</span>
@@ -1487,7 +1589,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_noDataValue" class="attr item">
+            <div id="attr-noDataValue" class="attr item">
     <a name="config_noDataValue"></a> 
     <h3 class="name"><code>noDataValue</code></h3>
     <span class="type">Number | Null</span>
@@ -1539,7 +1641,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_offset" class="attr item">
+            <div id="attr-offset" class="attr item">
     <a name="config_offset"></a> 
     <h3 class="name"><code>offset</code></h3>
     <span class="type">Number</span>
@@ -1591,7 +1693,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_offset" class="attr item">
+            <div id="attr-offset" class="attr item">
     <a name="config_offset"></a> 
     <h3 class="name"><code>offset</code></h3>
     <span class="type">Number</span>
@@ -1643,7 +1745,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_overviews" class="attr item">
+            <div id="attr-overviews" class="attr item">
     <a name="config_overviews"></a> 
     <h3 class="name"><code>overviews</code></h3>
     <span class="type"><a href="../classes/gdal.RasterBandOverviews.html" class="crosslink">gdal.RasterBandOverviews</a></span>
@@ -1696,7 +1798,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_pixels" class="attr item">
+            <div id="attr-pixels" class="attr item">
     <a name="config_pixels"></a> 
     <h3 class="name"><code>pixels</code></h3>
     <span class="type"><a href="../classes/gdal.RasterBandPixels.html" class="crosslink">gdal.RasterBandPixels</a></span>
@@ -1749,7 +1851,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_readOnly" class="attr item">
+            <div id="attr-readOnly" class="attr item">
     <a name="config_readOnly"></a> 
     <h3 class="name"><code>readOnly</code></h3>
     <span class="type">Boolean</span>
@@ -1803,7 +1905,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_size" class="attr item">
+            <div id="attr-size" class="attr item">
     <a name="config_size"></a> 
     <h3 class="name"><code>size</code></h3>
     <span class="type">Object</span>
@@ -1857,7 +1959,7 @@ data efficiently.</p>
 </div>
 
         
-            <div id="attr_unitType" class="attr item">
+            <div id="attr-unitType" class="attr item">
     <a name="config_unitType"></a> 
     <h3 class="name"><code>unitType</code></h3>
     <span class="type">String</span>

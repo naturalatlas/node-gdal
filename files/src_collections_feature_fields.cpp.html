@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -201,6 +207,8 @@ FeatureFields::~FeatureFields()
 {}
 
 /**
+ * An encapsulation of all field data that makes up a {{#crossLink &quot;gdal.Feature&quot;}}Feature{{/crossLink}}.
+ *
  * @class gdal.FeatureFields
  */
 NAN_METHOD(FeatureFields::New)
@@ -242,7 +250,6 @@ NAN_METHOD(FeatureFields::toString)
 	NanReturnValue(NanNew(&quot;FeatureFields&quot;));
 }
 
-
 inline bool setField(OGRFeature* f, int field_index, Handle&lt;Value&gt; val){
 	if (val-&gt;IsInt32()) {
 		f-&gt;SetField(field_index, val-&gt;Int32Value());
@@ -259,6 +266,25 @@ inline bool setField(OGRFeature* f, int field_index, Handle&lt;Value&gt; val){
 	return false;
 }
 
+/**
+ * Sets feature field(s).
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * // most-efficient, least flexible. requires you to know the ordering of the fields:
+ * feature.fields.set([&#x27;Something&#x27;]);
+ * feature.fields.set(0, &#x27;Something&#x27;);
+ *
+ * // most flexible.
+ * feature.fields.set({name: &#x27;Something&#x27;});
+ * feature.fields.set(&#x27;name&#x27;, &#x27;Something&#x27;);
+ * &#x60;&#x60;&#x60;
+ *
+ * @method set
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::set)
 {
 	NanScope();
@@ -346,6 +372,18 @@ NAN_METHOD(FeatureFields::set)
 	}
 }
 
+/**
+ * Resets all fields.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * feature.fields.reset();&#x60;&#x60;&#x60;
+ *
+ * @method reset
+ * @throws Error
+ * @param {Object} [values]
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::reset)
 {
 	NanScope();
@@ -396,6 +434,16 @@ NAN_METHOD(FeatureFields::reset)
 	NanReturnValue(NanNew&lt;Integer&gt;(n));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * feature.fields.count();&#x60;&#x60;&#x60;
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureFields::count)
 {
 	NanScope();
@@ -410,6 +458,17 @@ NAN_METHOD(FeatureFields::count)
 	NanReturnValue(NanNew&lt;Integer&gt;(f-&gt;get()-&gt;GetFieldCount()));
 }
 
+/**
+ * Returns the index of a field, given its name.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var index = feature.fields.indexOf(&#x27;field&#x27;);&#x60;&#x60;&#x60;
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or, &#x60;-1&#x60; if it cannot be found.
+ */
 NAN_METHOD(FeatureFields::indexOf)
 {
 	NanScope();
@@ -427,6 +486,13 @@ NAN_METHOD(FeatureFields::indexOf)
 	NanReturnValue(NanNew&lt;Integer&gt;(f-&gt;get()-&gt;GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Outputs the field data as a pure JS object.
+ *
+ * @throws Error
+ * @method toObject
+ * @return {Object}
+ */
 NAN_METHOD(FeatureFields::toObject)
 {
 	NanScope();
@@ -462,6 +528,13 @@ NAN_METHOD(FeatureFields::toObject)
 	NanReturnValue(obj);
 }
 
+/**
+ * Outputs the field values as a pure JS array.
+ *
+ * @throws Error
+ * @method toArray
+ * @return {Array}
+ */
 NAN_METHOD(FeatureFields::toArray)
 {
 	NanScope();
@@ -487,7 +560,6 @@ NAN_METHOD(FeatureFields::toArray)
 	}
 	NanReturnValue(array);
 }
-
 
 Handle&lt;Value&gt; FeatureFields::get(OGRFeature *f, int field_index)
 {
@@ -521,6 +593,19 @@ Handle&lt;Value&gt; FeatureFields::get(OGRFeature *f, int field_index)
 			return NanEscapeScope(NanUndefined());
 	}
 }
+
+/**
+ * Returns a field&#x27;s value.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * value = feature.fields.get(0);
+ * value = feature.fields.get(&#x27;field&#x27;);&#x60;&#x60;&#x60;
+ *
+ * @method get
+ * @param {String|Integer} key Feature name or index.
+ * @return {mixed|Undefined}
+ */
 NAN_METHOD(FeatureFields::get)
 {
 	NanScope();
@@ -549,6 +634,13 @@ NAN_METHOD(FeatureFields::get)
 	}
 }
 
+/**
+ * Returns a list of field name.
+ *
+ * @method getNames
+ * @throws Error
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureFields::getNames)
 {
 	NanScope();
@@ -689,6 +781,13 @@ Handle&lt;Value&gt; FeatureFields::getFieldAsDateTime(OGRFeature* feature, int f
 	}
 }
 
+/**
+ * Parent feature
+ *
+ * @readOnly
+ * @attribute feature
+ * @type {gdal.Feature}
+ */
 NAN_GETTER(FeatureFields::featureGetter)
 {
 	NanScope();

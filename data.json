@@ -25,6 +25,44 @@
             "fors": {},
             "namespaces": {}
         },
+        "lib/gdal.js": {
+            "name": "lib/gdal.js",
+            "modules": {},
+            "classes": {},
+            "fors": {
+                "gdal": 1,
+                "gdal.DatasetBands": 1,
+                "gdal.LayerFeatures": 1,
+                "gdal.FeatureFields": 1,
+                "gdal.Geometry": 1,
+                "gdal.LayerFields": 1,
+                "gdal.DatasetLayers": 1,
+                "gdal.FeatureDefnFields": 1,
+                "gdal.PolygonRings": 1,
+                "gdal.LineStringPoints": 1,
+                "gdal.GeometryCollectionChildren": 1,
+                "gdal.RasterBandOverviews": 1
+            },
+            "namespaces": {}
+        },
+        "src/collections/dataset_bands.cpp": {
+            "name": "src/collections/dataset_bands.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.DatasetBands": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/collections/dataset_layers.cpp": {
+            "name": "src/collections/dataset_layers.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.DatasetLayers": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "src/collections/feature_defn_fields.cpp": {
             "name": "src/collections/feature_defn_fields.cpp",
             "modules": {},
@@ -70,6 +108,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "src/collections/linestring_points.cpp": {
+            "name": "src/collections/linestring_points.cpp",
+            "modules": {},
+            "classes": {
+                "gdal.LineStringPoints": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "src/collections/polygon_rings.cpp": {
             "name": "src/collections/polygon_rings.cpp",
             "modules": {},
@@ -95,6 +142,15 @@
                 "gdal.RasterBandPixels": 1
             },
             "fors": {},
+            "namespaces": {}
+        },
+        "src/gdal.hpp": {
+            "name": "src/gdal.hpp",
+            "modules": {},
+            "classes": {},
+            "fors": {
+                "gdal": 1
+            },
             "namespaces": {}
         },
         "src/gdal_algorithms.cpp": {
@@ -342,39 +398,29 @@
                 }
             ]
         },
-        "gdal.FeatureDefnFields": {
-            "name": "gdal.FeatureDefnFields",
-            "shortname": "gdal.FeatureDefnFields",
+        "gdal": {
+            "name": "gdal",
+            "shortname": "gdal",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "src/collections/feature_defn_fields.cpp",
-            "line": 42
+            "file": "src/node_gdal.cpp",
+            "line": 1,
+            "description": "This [node-gdal](https://github.com/naturalatlas/node-gdal) binding for\nNode.js provides a feature-complete way of reading, writing, and manipulating\ngeospatial data (raster and vector) using [GDAL](http://www.gdal.org/).\n```\n// sample: open a shapefile and display all features as geojson\nvar dataset = gdal.open(\"states.shp\");\n\ndataset.layers.get(0).features.forEach(function(feature) {\n    console.log(feature.getGeometry().toJSON());\n});\n```\n\n<iframe src=\"http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=watch&count=true\" allowtransparency=\"true\" frameborder=\"0\" scrolling=\"0\" width=\"90\" height=\"20\" style=\"margin-top:20px\"></iframe>\n<iframe src=\"http://ghbtns.com/github-btn.html?user=naturalatlas&repo=node-gdal&type=fork&count=true\" allowtransparency=\"true\" frameborder=\"0\" scrolling=\"0\" width=\"200\" height=\"20\"></iframe>"
         },
-        "gdal.FeatureFields": {
-            "name": "gdal.FeatureFields",
-            "shortname": "gdal.FeatureFields",
+        "gdal.DatasetBands": {
+            "name": "gdal.DatasetBands",
+            "shortname": "gdal.DatasetBands",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "src/collections/feature_fields.cpp",
-            "line": 42
-        },
-        "gdal.GeometryCollectionChildren": {
-            "name": "gdal.GeometryCollectionChildren",
-            "shortname": "gdal.GeometryCollectionChildren",
-            "classitems": [],
-            "plugins": [],
-            "extensions": [],
-            "plugin_for": [],
-            "extension_for": [],
-            "file": "src/collections/geometry_collection_children.cpp",
-            "line": 36,
-            "description": "A collection of Geometries, used by {{#crossLink \"gdal.GeometryCollection\"}}gdal.GeometryCollection{{/crossLink}}."
+            "file": "src/collections/dataset_bands.cpp",
+            "line": 38,
+            "description": "An encapsulation of a {{#crossLink \"gdal.Dataset\"}}Dataset{{/crossLink}}'s raster bands.\n\n```\nvar bands = dataset.bands;```"
         },
         "gdal.LayerFeatures": {
             "name": "gdal.LayerFeatures",
@@ -385,7 +431,32 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/collections/layer_features.cpp",
-            "line": 41
+            "line": 41,
+            "description": "An encapsulation of a {{#crossLink \"gdal.Layer\"}}Layer{{/crossLink}}'s features."
+        },
+        "gdal.FeatureFields": {
+            "name": "gdal.FeatureFields",
+            "shortname": "gdal.FeatureFields",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/feature_fields.cpp",
+            "line": 42,
+            "description": "An encapsulation of all field data that makes up a {{#crossLink \"gdal.Feature\"}}Feature{{/crossLink}}."
+        },
+        "gdal.Geometry": {
+            "name": "gdal.Geometry",
+            "shortname": "gdal.Geometry",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/gdal_geometry.cpp",
+            "line": 121,
+            "description": "Abstract base class for all geometry classes."
         },
         "gdal.LayerFields": {
             "name": "gdal.LayerFields",
@@ -397,6 +468,30 @@
             "extension_for": [],
             "file": "src/collections/layer_fields.cpp",
             "line": 42
+        },
+        "gdal.DatasetLayers": {
+            "name": "gdal.DatasetLayers",
+            "shortname": "gdal.DatasetLayers",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 41,
+            "description": "An encapsulation of a {{#crossLink \"gdal.Dataset\"}}Dataset{{/crossLink}}'s vector layers.\n\n```\nvar layers = dataset.layers;```"
+        },
+        "gdal.FeatureDefnFields": {
+            "name": "gdal.FeatureDefnFields",
+            "shortname": "gdal.FeatureDefnFields",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 42,
+            "description": "An encapsulation of a {{#crossLink \"gdal.FeatureDefn\"}}FeatureDefn{{/crossLink}}'s fields."
         },
         "gdal.PolygonRings": {
             "name": "gdal.PolygonRings",
@@ -410,6 +505,30 @@
             "line": 36,
             "description": "A collection of polygon rings, used by {{#crossLink \"gdal.Polygon\"}}gdal.Polygon{{/crossLink}}."
         },
+        "gdal.LineStringPoints": {
+            "name": "gdal.LineStringPoints",
+            "shortname": "gdal.LineStringPoints",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/linestring_points.cpp",
+            "line": 39,
+            "description": "An encapsulation of a {{#crossLink \"gdal.LineString\"}}LineString{{/crossLink}}'s points."
+        },
+        "gdal.GeometryCollectionChildren": {
+            "name": "gdal.GeometryCollectionChildren",
+            "shortname": "gdal.GeometryCollectionChildren",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/collections/geometry_collection_children.cpp",
+            "line": 36,
+            "description": "A collection of Geometries, used by {{#crossLink \"gdal.GeometryCollection\"}}gdal.GeometryCollection{{/crossLink}}."
+        },
         "gdal.RasterBandOverviews": {
             "name": "gdal.RasterBandOverviews",
             "shortname": "gdal.RasterBandOverviews",
@@ -419,7 +538,8 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/collections/rasterband_overviews.cpp",
-            "line": 34
+            "line": 34,
+            "description": "An encapsulation of a {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}\noverview functionality."
         },
         "gdal.RasterBandPixels": {
             "name": "gdal.RasterBandPixels",
@@ -433,18 +553,6 @@
             "line": 40,
             "description": "A representation of a {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}'s pixels."
         },
-        "gdal": {
-            "name": "gdal",
-            "shortname": "gdal",
-            "classitems": [],
-            "plugins": [],
-            "extensions": [],
-            "plugin_for": [],
-            "extension_for": [],
-            "file": "src/node_gdal.cpp",
-            "line": 1,
-            "description": "This [node-gdal](https://github.com/naturalatlas/node-gdal) GDAL binding for\nNode.js provides a feature-complete way of reading, writing, and manipulating\ngeospatial data (raster and vector)."
-        },
         "gdal.CoordinateTransformation": {
             "name": "gdal.CoordinateTransformation",
             "shortname": "gdal.CoordinateTransformation",
@@ -455,7 +563,7 @@
             "extension_for": [],
             "file": "src/gdal_coordinate_transformation.cpp",
             "line": 50,
-            "description": "Object for transforming between coordinate systems.\n\nIf the `target` is a Dataset, the conversion will represent\na conversion to pixel coordinates.",
+            "description": "Object for transforming between coordinate systems.",
             "is_constructor": 1,
             "params": [
                 {
@@ -465,7 +573,7 @@
                 },
                 {
                     "name": "target",
-                    "description": "",
+                    "description": "If a Dataset, the conversion will represent a conversion to pixel coordinates.",
                     "type": "gdal.SpatialReference|gdal.Dataset"
                 }
             ]
@@ -480,7 +588,7 @@
             "extension_for": [],
             "file": "src/gdal_dataset.cpp",
             "line": 160,
-            "description": "A set of associated raster bands, usually from one file."
+            "description": "A set of associated raster bands, usually from one file.\n\n```\n// raster dataset:\ndataset = gdal.open('file.tif');\nbands = dataset.bands;\n\n// vector dataset:\ndataset = gdal.open('file.shp');\nlayers = dataset.layers;```"
         },
         "gdal.Driver": {
             "name": "gdal.Driver",
@@ -540,28 +648,16 @@
             "is_constructor": 1,
             "params": [
                 {
-                    "name": "field_name",
-                    "description": "",
+                    "name": "name",
+                    "description": "Field name",
                     "type": "String"
                 },
                 {
-                    "name": "field_name",
-                    "description": "",
+                    "name": "type",
+                    "description": "Data type (see {{#crossLink \"Constants (OFT)\"}}OFT constants{{/crossLink}})",
                     "type": "String"
                 }
             ]
-        },
-        "gdal.Geometry": {
-            "name": "gdal.Geometry",
-            "shortname": "gdal.Geometry",
-            "classitems": [],
-            "plugins": [],
-            "extensions": [],
-            "plugin_for": [],
-            "extension_for": [],
-            "file": "src/gdal_geometry.cpp",
-            "line": 121,
-            "description": "Abstract base class for all geometry classes."
         },
         "gdal.GeometryCollection": {
             "name": "gdal.GeometryCollection",
@@ -747,7 +843,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 175
+            "line": 186
         },
         "Constants (DCAP)": {
             "name": "Constants (DCAP)",
@@ -758,7 +854,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 216
+            "line": 227
         },
         "Constants (OLC)": {
             "name": "Constants (OLC)",
@@ -769,7 +865,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 239
+            "line": 250
         },
         "Constants (ODsC)": {
             "name": "Constants (ODsC)",
@@ -780,7 +876,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 351
+            "line": 362
         },
         "Constants (GDT)": {
             "name": "Constants (GDT)",
@@ -791,7 +887,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 386,
+            "line": 396,
             "description": "Pixel data types."
         },
         "Constants (OJ)": {
@@ -803,7 +899,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 477
+            "line": 487
         },
         "Constants (GCI)": {
             "name": "Constants (GCI)",
@@ -814,7 +910,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 500
+            "line": 510
         },
         "Constants (WKB)": {
             "name": "Constants (WKB)",
@@ -825,7 +921,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 607
+            "line": 617
         },
         "Constants (OFT)": {
             "name": "Constants (OFT)",
@@ -836,7 +932,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 754
+            "line": 764
         },
         "Constants (GRA)": {
             "name": "Constants (GRA)",
@@ -847,7 +943,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 831,
+            "line": 841,
             "description": "Resampling options that can be used with the gdal.reprojectImage() method."
         }
     },
@@ -1041,6 +1137,868 @@
             "class": "gdal.Envelope3D"
         },
         {
+            "file": "lib/gdal.js",
+            "line": 18,
+            "description": "Gets a GDAL configuration setting.",
+            "example": [
+                "\n```\ndata_path = gdal.config.get('GDAL_DATA');```"
+            ],
+            "static": 1,
+            "itemtype": "method",
+            "name": "config.get",
+            "params": [
+                {
+                    "name": "key",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "String"
+            },
+            "class": "gdal"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 33,
+            "description": "Sets a GDAL configuration setting.",
+            "example": [
+                "\n```\ngdal.config.set('GDAL_DATA', data_path);```"
+            ],
+            "static": 1,
+            "itemtype": "method",
+            "name": "config.set",
+            "params": [
+                {
+                    "name": "key",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Mixed"
+            },
+            "class": "gdal"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 92,
+            "description": "Iterates through all bands using a callback function.",
+            "example": [
+                "\n```\ndataset.bands.forEach(function(band) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 110,
+            "description": "Iterates through all features using a callback function.",
+            "example": [
+                "\n```\nlayer.features.forEach(function(features) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Feature\"}}Feature{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 129,
+            "description": "Iterates through all fields using a callback function.",
+            "example": [
+                "\n```\nlayer.features.get(0).fields.forEach(function(value, key) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each feature `value` and `key`.",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 151,
+            "description": "Outputs the fields as a serialized JSON string.",
+            "itemtype": "method",
+            "name": "toJSON",
+            "return": {
+                "description": "Serialized JSON",
+                "type": "String"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 162,
+            "description": "Converts the geometry to a GeoJSON object representation.",
+            "itemtype": "method",
+            "name": "toObject",
+            "return": {
+                "description": "GeoJSON",
+                "type": "Object"
+            },
+            "class": "gdal.Geometry"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 173,
+            "description": "Iterates through all fields using a callback function.",
+            "example": [
+                "\n```\nlayer.fields.forEach(function(field) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 186,
+            "description": "Iterates through all layers using a callback function.",
+            "example": [
+                "\n```\ndataset.layers.forEach(function(layer) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Layer\"}}Layer{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 199,
+            "description": "Iterates through all fields using a callback function.",
+            "example": [
+                "\n```\nfeatureDefn.forEach(function(field) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 212,
+            "description": "Iterates through all rings using a callback function.",
+            "example": [
+                "\n```\npolygon.rings.forEach(function(ring) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.LineString\"}}LineString{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.PolygonRings"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 225,
+            "description": "Iterates through all points using a callback function.",
+            "example": [
+                "\n```\nlineString.points.forEach(function(point) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Point\"}}Point{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 238,
+            "description": "Iterates through all child geometries using a callback function.",
+            "example": [
+                "\n```\ngeometryCollection.children.forEach(function(geometry) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Geometry\"}}Geometry{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.GeometryCollectionChildren"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 251,
+            "description": "Iterates through all overviews using a callback function.",
+            "example": [
+                "\n```\nband.overviews.forEach(function(overviewBand) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "iterator",
+                    "description": "",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.RasterBandOverviews"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 266,
+            "description": "Outputs all geometries as a regular javascript array.",
+            "itemtype": "method",
+            "name": "toArray",
+            "return": {
+                "description": "List of {{#crossLink \"gdal.Geometry\"}}Geometry{{/crossLink}} instances.",
+                "type": "Array"
+            },
+            "class": "gdal.GeometryCollectionChildren"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 275,
+            "description": "Outputs all points as a regular javascript array.",
+            "itemtype": "method",
+            "name": "toArray",
+            "return": {
+                "description": "List of {{#crossLink \"gdal.Point\"}}Point{{/crossLink}} instances.",
+                "type": "Array"
+            },
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 284,
+            "description": "Outputs all rings as a regular javascript array.",
+            "itemtype": "method",
+            "name": "toArray",
+            "return": {
+                "description": "List of {{#crossLink \"gdal.LineString\"}}LineString{{/crossLink}} instances.",
+                "type": "Array"
+            },
+            "class": "gdal.PolygonRings"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 293,
+            "description": "Creates or opens a dataset.",
+            "example": [
+                "\n```\nvar dataset = gdal.open('./data.shp');```"
+            ],
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "open",
+            "static": 1,
+            "params": [
+                {
+                    "name": "path",
+                    "description": "Path to dataset to open",
+                    "type": "String"
+                },
+                {
+                    "name": "mode",
+                    "description": "The mode to use to open the file: `\"r\"`, `\"r+\"`, or `\"w\"`",
+                    "type": "String"
+                },
+                {
+                    "name": "drivers",
+                    "description": "Driver name, or list of driver names to attempt to use.",
+                    "type": "String|Array",
+                    "optional": true
+                },
+                {
+                    "name": "x_size",
+                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "y_size",
+                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "band_count",
+                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "data_type",
+                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "control_options",
+                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "type": "String[]",
+                    "optional": true
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Dataset"
+            },
+            "class": "gdal"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 396,
+            "description": "Creates a LayerFields instance from an object of keys and values.",
+            "static": 1,
+            "itemtype": "method",
+            "name": "fromJSON",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "approx_ok",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "false"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "src/collections/dataset_bands.cpp",
+            "line": 85,
+            "description": "Returns the band with the given ID.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "id",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.RasterBand"
+            },
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "src/collections/dataset_bands.cpp",
+            "line": 125,
+            "description": "Adds a new band.",
+            "itemtype": "method",
+            "name": "create",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "dataType",
+                    "description": "Type of band ({{#crossLink \"Constants (GDT)\"}}see GDT constants{{/crossLink}}).",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.RasterBand"
+            },
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "src/collections/dataset_bands.cpp",
+            "line": 185,
+            "description": "Returns the number of bands.",
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "src/collections/dataset_bands.cpp",
+            "line": 217,
+            "description": "Parent dataset",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "ds",
+            "type": "{gdal.Dataset}",
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 88,
+            "description": "Returns the layer with the given name or identifier.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "key",
+                    "description": "Layer name or ID.",
+                    "type": "String|Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Layer"
+            },
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 136,
+            "description": "Adds a new layer.",
+            "itemtype": "method",
+            "name": "create",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "name",
+                    "description": "Layer name",
+                    "type": "String"
+                },
+                {
+                    "name": "srs",
+                    "description": "Layer projection",
+                    "type": "gdal.SpatialReference"
+                },
+                {
+                    "name": "geomType",
+                    "description": "Geometry type ({{#crossLink \"Constants (WKB)\"}}see WKB constants{{/crossLink}})",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Layer"
+            },
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 196,
+            "description": "Returns the number of layers.",
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 226,
+            "description": "Copies a layer.",
+            "itemtype": "method",
+            "name": "copy",
+            "params": [
+                {
+                    "name": "src_lyr_name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "dst_lyr_name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Array",
+                    "optional": true,
+                    "optdefault": "null"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Layer"
+            },
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 279,
+            "description": "Removes a layer.",
+            "itemtype": "method",
+            "name": "remove",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/dataset_layers.cpp",
+            "line": 320,
+            "description": "Parent dataset",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "ds",
+            "type": "{gdal.Dataset}",
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 86,
+            "description": "Returns the number of fields.",
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 106,
+            "description": "Returns the index of field definition.",
+            "itemtype": "method",
+            "name": "indexOf",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Index or `-1` if not found.",
+                "type": "Integer"
+            },
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 130,
+            "description": "Returns a field definition.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "key",
+                    "description": "Field name or index",
+                    "type": "String|Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.FieldDefn"
+            },
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 159,
+            "description": "Returns a list of field names.",
+            "itemtype": "method",
+            "name": "getNames",
+            "return": {
+                "description": "List of field names.",
+                "type": "Array"
+            },
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 187,
+            "description": "Removes a field definition.",
+            "itemtype": "method",
+            "name": "remove",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "key",
+                    "description": "Field name or index",
+                    "type": "String|Integer"
+                }
+            ],
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 222,
+            "description": "Adds field definition(s).",
+            "itemtype": "method",
+            "name": "add",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "field(s)",
+                    "description": "",
+                    "type": "gdal.FieldDefn|Array"
+                }
+            ],
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 270,
+            "description": "Reorders the fields.",
+            "example": [
+                "\n```\n// reverse fields:\nfeatureDef.fields.reorder([2, 1, 0]);```"
+            ],
+            "itemtype": "method",
+            "name": "reorder",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "map",
+                    "description": "An array representing the new field order.",
+                    "type": "Array"
+                }
+            ],
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_defn_fields.cpp",
+            "line": 335,
+            "description": "Parent feature definition.",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "featureDefn",
+            "type": "{gdal.FeatureDefn}",
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 102,
+            "description": "Sets feature field(s).",
+            "example": [
+                "\n```\n// most-efficient, least flexible. requires you to know the ordering of the fields:\nfeature.fields.set(['Something']);\nfeature.fields.set(0, 'Something');\n\n// most flexible.\nfeature.fields.set({name: 'Something'});\nfeature.fields.set('name', 'Something');\n```"
+            ],
+            "itemtype": "method",
+            "name": "set",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "key",
+                    "description": "Field name or index",
+                    "type": "String|Integer"
+                },
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "Mixed"
+                }
+            ],
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 208,
+            "description": "Resets all fields.",
+            "example": [
+                "\n```\nfeature.fields.reset();```"
+            ],
+            "itemtype": "method",
+            "name": "reset",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "values",
+                    "description": "",
+                    "type": "Object",
+                    "optional": true
+                },
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "Mixed"
+                }
+            ],
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 270,
+            "description": "Returns the number of fields.",
+            "example": [
+                "\n```\nfeature.fields.count();```"
+            ],
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 294,
+            "description": "Returns the index of a field, given its name.",
+            "example": [
+                "\n```\nvar index = feature.fields.indexOf('field');```"
+            ],
+            "itemtype": "method",
+            "name": "indexOf",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Index or, `-1` if it cannot be found.",
+                "type": "Integer"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 322,
+            "description": "Outputs the field data as a pure JS object.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toObject",
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 364,
+            "description": "Outputs the field values as a pure JS array.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "toArray",
+            "return": {
+                "description": "",
+                "type": "Array"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 430,
+            "description": "Returns a field's value.",
+            "example": [
+                "\n```\nvalue = feature.fields.get(0);\nvalue = feature.fields.get('field');```"
+            ],
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "key",
+                    "description": "Feature name or index.",
+                    "type": "String|Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Mixed|Undefined"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 470,
+            "description": "Returns a list of field name.",
+            "itemtype": "method",
+            "name": "getNames",
+            "throws": {
+                "description": "Error"
+            },
+            "return": {
+                "description": "List of field names.",
+                "type": "Array"
+            },
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "src/collections/feature_fields.cpp",
+            "line": 617,
+            "description": "Parent feature",
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "feature",
+            "type": "{gdal.Feature}",
+            "class": "gdal.FeatureFields"
+        },
+        {
             "file": "src/collections/geometry_collection_children.cpp",
             "line": 80,
             "description": "Returns the number of items.",
@@ -1102,6 +2060,145 @@
                 }
             ],
             "class": "gdal.GeometryCollectionChildren"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 85,
+            "description": "Fetch a feature by its identifier.\n\n**Important:** The `id` argument is not an index. In most cases it will be zero-based,\nbut in some cases it will not. If iterating, it's best to use the `next()` method.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "id",
+                    "description": "The feature ID of the feature to read.",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Feature"
+            },
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 113,
+            "description": "Resets the feature pointer used by `next()` and\nreturns the first feature in the layer.",
+            "itemtype": "method",
+            "name": "first",
+            "return": {
+                "description": "",
+                "type": "gdal.Feature"
+            },
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 137,
+            "description": "Returns the next feature in the layer.",
+            "example": [
+                "\n```\nwhile (feature = layer.features.next()) { ... }```"
+            ],
+            "itemtype": "method",
+            "name": "first",
+            "return": {
+                "description": "",
+                "type": "gdal.Feature"
+            },
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 163,
+            "description": "Adds a feature to the layer.",
+            "itemtype": "method",
+            "name": "add",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "feature",
+                    "description": "",
+                    "type": "gdal.Feature"
+                }
+            ],
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 192,
+            "description": "Returns the number of features in the layer.",
+            "itemtype": "method",
+            "name": "add",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "force",
+                    "description": "",
+                    "type": "Boolean",
+                    "optional": true,
+                    "optdefault": "true"
+                }
+            ],
+            "return": {
+                "description": "Number of features in the layer.",
+                "type": "Integer"
+            },
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 217,
+            "description": "Sets a feature in the layer.",
+            "itemtype": "method",
+            "name": "set",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "id",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true
+                },
+                {
+                    "name": "feature",
+                    "description": "",
+                    "type": "gdal.Feature"
+                }
+            ],
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 268,
+            "description": "Removes a feature from the layer.",
+            "itemtype": "method",
+            "name": "remove",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "id",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "src/collections/layer_features.cpp",
+            "line": 297,
+            "description": "Parent layer",
+            "itemtype": "attribute",
+            "name": "layer",
+            "type": "{gdal.Layer}",
+            "class": "gdal.LayerFeatures"
         },
         {
             "file": "src/collections/layer_fields.cpp",
@@ -1206,7 +2303,7 @@
             "name": "add",
             "params": [
                 {
-                    "name": "def",
+                    "name": "def(s)",
                     "description": "A field definition, or array of field definitions.",
                     "type": "gdal.FieldDefn|Array"
                 },
@@ -1252,6 +2349,107 @@
             "class": "gdal.LayerFields"
         },
         {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 83,
+            "description": "Returns the number of points that are part of the line string.",
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 99,
+            "description": "Reverses the order of all the points.",
+            "itemtype": "method",
+            "name": "reverse",
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 116,
+            "description": "Adjusts the number of points that make up the line string.",
+            "itemtype": "method",
+            "name": "resize",
+            "params": [
+                {
+                    "name": "count",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 136,
+            "description": "Returns the point at the specified index.",
+            "itemtype": "method",
+            "name": "get",
+            "params": [
+                {
+                    "name": "index",
+                    "description": "0-based index",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Point"
+            },
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 163,
+            "description": "Sets the point at the specified index.",
+            "example": [
+                "\n```\nlineString.points.set(0, new gdal.Point(1, 2));```"
+            ],
+            "itemtype": "method",
+            "name": "set",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "index",
+                    "description": "0-based index",
+                    "type": "Integer"
+                },
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "gdal.Point"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "src/collections/linestring_points.cpp",
+            "line": 247,
+            "description": "Adds point(s) to the line string.",
+            "example": [
+                "\n```\nlineString.points.add(new gdal.Point(1, 2));\nlineString.points.add([\n    new gdal.Point(1, 2)\n    new gdal.Point(3, 4)\n]);```"
+            ],
+            "itemtype": "method",
+            "name": "add",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "point(s)",
+                    "description": "",
+                    "type": "gdal.Point|Array"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
             "file": "src/collections/polygon_rings.cpp",
             "line": 80,
             "description": "Returns the number of rings that exist in the collection.",
@@ -1294,6 +2492,59 @@
                 }
             ],
             "class": "gdal.PolygonRings"
+        },
+        {
+            "file": "src/collections/rasterband_overviews.cpp",
+            "line": 79,
+            "description": "Fetches the overview at the provided index.",
+            "itemtype": "method",
+            "name": "get",
+            "throws": {
+                "description": "Error"
+            },
+            "params": [
+                {
+                    "name": "index",
+                    "description": "0-based index",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.RasterBand"
+            },
+            "class": "gdal.RasterBandOverviews"
+        },
+        {
+            "file": "src/collections/rasterband_overviews.cpp",
+            "line": 112,
+            "description": "Fetch best sampling overview.\n\nReturns the most reduced overview of the given band that still satisfies the\ndesired number of samples. This function can be used with zero as the number\nof desired samples to fetch the most reduced overview. The same band as was\npassed in will be returned if it has not overviews, or if none of the overviews\nhave enough samples.",
+            "itemtype": "method",
+            "name": "getBySampleCount",
+            "params": [
+                {
+                    "name": "samples",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.RasterBand"
+            },
+            "class": "gdal.RasterBandOverviews"
+        },
+        {
+            "file": "src/collections/rasterband_overviews.cpp",
+            "line": 144,
+            "description": "Returns the number of overviews.",
+            "itemtype": "method",
+            "name": "count",
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "gdal.RasterBandOverviews"
         },
         {
             "file": "src/collections/rasterband_pixels.cpp",
@@ -1561,6 +2812,38 @@
             "class": "gdal.RasterBandPixels"
         },
         {
+            "file": "src/gdal.hpp",
+            "line": 111,
+            "description": "Convert decimal degrees to degrees, minutes, and seconds string",
+            "static": 1,
+            "itemtype": "method",
+            "name": "decToDMS",
+            "params": [
+                {
+                    "name": "angle",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "axis",
+                    "description": "`\"lat\"` or `\"long\"`",
+                    "type": "String"
+                },
+                {
+                    "name": "precision",
+                    "description": "",
+                    "type": "Integer",
+                    "optional": true,
+                    "optdefault": "2"
+                }
+            ],
+            "return": {
+                "description": "A string nndnn'nn.nn'\"L where n is a number and L is either N or E",
+                "type": "String"
+            },
+            "class": "gdal"
+        },
+        {
             "file": "src/gdal_algorithms.cpp",
             "line": 19,
             "description": "Fill raster regions by interpolation from edges.",
@@ -1569,6 +2852,7 @@
             },
             "itemtype": "method",
             "name": "fillNodata",
+            "static": 1,
             "params": [
                 {
                     "name": "options",
@@ -1602,13 +2886,14 @@
         },
         {
             "file": "src/gdal_algorithms.cpp",
-            "line": 58,
+            "line": 59,
             "description": "Create vector contours from raster DEM.\n\nThis algorithm will generate contour vectors for the input raster band on the\nrequested set of contour levels. The vector contours are written to the passed\nin vector layer. Also, a NODATA value may be specified to identify pixels\nthat should not be considered in contour line generation.",
             "throws": {
                 "description": "Error"
             },
             "itemtype": "method",
             "name": "contourGenerate",
+            "static": 1,
             "params": [
                 {
                     "name": "options",
@@ -1662,13 +2947,14 @@
         },
         {
             "file": "src/gdal_algorithms.cpp",
-            "line": 131,
+            "line": 133,
             "description": "Removes small raster polygons.",
             "throws": {
                 "description": "Error"
             },
             "itemtype": "method",
             "name": "sieveFilter",
+            "static": 1,
             "params": [
                 {
                     "name": "options",
@@ -1708,13 +2994,14 @@
         },
         {
             "file": "src/gdal_algorithms.cpp",
-            "line": 178,
+            "line": 181,
             "description": "Compute checksum for image region.",
             "throws": {
                 "description": "Error"
             },
             "itemtype": "method",
             "name": "checksumImage",
+            "static": 1,
             "params": [
                 {
                     "name": "src",
@@ -1757,13 +3044,14 @@
         },
         {
             "file": "src/gdal_algorithms.cpp",
-            "line": 226,
+            "line": 230,
             "description": "Creates vector polygons for all connected regions of pixels in the raster\nsharing a common pixel value. Each polygon is created with an attribute\nindicating the pixel value of that polygon. A raster mask may also be\nprovided to determine which pixels are eligible for processing.",
             "throws": {
                 "description": "Error"
             },
             "itemtype": "method",
             "name": "polygonize",
+            "static": 1,
             "params": [
                 {
                     "name": "options",
@@ -1808,7 +3096,7 @@
         },
         {
             "file": "src/gdal_coordinate_transformation.cpp",
-            "line": 171,
+            "line": 168,
             "description": "Transform point from source to destination space.",
             "example": [
                 "\n```\npt = transform.transformPoint(0, 0, 0);\npt = transform.transformPoint({x: 0, y: 0, z: 0});```"
@@ -1841,7 +3129,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 242,
+            "line": 251,
             "description": "Fetch metadata.",
             "itemtype": "method",
             "name": "getMetadata",
@@ -1861,7 +3149,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 276,
+            "line": 285,
             "description": "Determines if the dataset supports the indicated operation.",
             "itemtype": "method",
             "name": "testCapability",
@@ -1880,7 +3168,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 308,
+            "line": 317,
             "description": "Get output projection for GCPs.",
             "itemtype": "method",
             "name": "getGCPProjection",
@@ -1892,7 +3180,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 338,
+            "line": 347,
             "description": "Closes the dataset to further operations.",
             "itemtype": "method",
             "name": "close",
@@ -1900,7 +3188,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 364,
+            "line": 373,
             "description": "Flushes all changes to disk.",
             "itemtype": "method",
             "name": "flush",
@@ -1908,27 +3196,29 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 400,
+            "line": 409,
             "description": "Execute an SQL statement against the data store.",
             "itemtype": "method",
             "name": "executeSQL",
             "params": [
                 {
                     "name": "statement",
-                    "description": "",
+                    "description": "SQL statement to execute.",
                     "type": "String"
                 },
                 {
                     "name": "spatial_filter",
-                    "description": "",
+                    "description": "Geometry which represents a spatial filter.",
                     "type": "gdal.Geometry",
-                    "optional": true
+                    "optional": true,
+                    "optdefault": "null"
                 },
                 {
                     "name": "dialect",
-                    "description": "",
+                    "description": "Allows control of the statement dialect. If set to `null`, the OGR SQL engine will be used, except for RDBMS drivers that will use their dedicated SQL engine, unless `\"OGRSQL\"` is explicitely passed as the dialect. Starting with OGR 1.10, the `\"SQLITE\"` dialect can also be used.",
                     "type": "String",
-                    "optional": true
+                    "optional": true,
+                    "optdefault": "null"
                 }
             ],
             "return": {
@@ -1939,7 +3229,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 450,
+            "line": 459,
             "description": "Fetch files forming dataset.\n\nReturns a list of files believed to be part of this dataset. If it returns an\nempty list of files it means there is believed to be no local file system files\nassociated with the dataset (for instance a virtual dataset).",
             "itemtype": "method",
             "name": "getFileList",
@@ -1951,7 +3241,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 500,
+            "line": 509,
             "description": "Fetches GCPs.",
             "itemtype": "method",
             "name": "getGCPs",
@@ -1963,7 +3253,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 553,
+            "line": 562,
             "description": "Sets GCPs.",
             "itemtype": "method",
             "name": "setGCPs",
@@ -1983,7 +3273,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 629,
+            "line": 638,
             "description": "Builds dataset overviews.",
             "itemtype": "method",
             "name": "buildOverviews",
@@ -2009,7 +3299,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 714,
+            "line": 723,
             "readonly": "",
             "itemtype": "attribute",
             "name": "description",
@@ -2018,7 +3308,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 743,
+            "line": 752,
             "readonly": "",
             "itemtype": "attribute",
             "name": "rasterSize",
@@ -2027,7 +3317,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 784,
+            "line": 793,
             "itemtype": "attribute",
             "name": "srs",
             "type": "{gdal.SpatialReference}",
@@ -2035,7 +3325,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 827,
+            "line": 836,
             "itemtype": "attribute",
             "name": "geoTransform",
             "type": "{Array}",
@@ -2043,7 +3333,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 872,
+            "line": 881,
             "readonly": "",
             "itemtype": "attribute",
             "name": "driver",
@@ -2052,7 +3342,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 990,
+            "line": 999,
             "readonly": "",
             "itemtype": "attribute",
             "name": "bands",
@@ -2061,7 +3351,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 1001,
+            "line": 1010,
             "readonly": "",
             "itemtype": "attribute",
             "name": "layers",
@@ -2421,6 +3711,111 @@
             "name": "defn",
             "type": "{gdal.FeatureDefn}",
             "class": "gdal.Feature"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 136,
+            "description": "Clones the feature definition.",
+            "itemtype": "method",
+            "name": "clone",
+            "return": {
+                "description": "",
+                "type": "gdal.FeatureDefn"
+            },
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 149,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "name",
+            "type": "{String}",
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 161,
+            "description": "WKB geometry type ({{#crossLink \"Constants (WKB)\"}}see table{{/crossLink}})",
+            "itemtype": "attribute",
+            "name": "geomType",
+            "type": "{String}",
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 174,
+            "itemtype": "attribute",
+            "name": "geomIgnored",
+            "type": "{Boolean}",
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 185,
+            "itemtype": "attribute",
+            "name": "styleIgnored",
+            "type": "{Boolean}",
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_feature_defn.cpp",
+            "line": 196,
+            "readonly": "",
+            "itemtype": "attribute",
+            "name": "fields",
+            "type": "{gdal.FeatureDefnFields}",
+            "class": "gdal.FeatureDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 136,
+            "itemtype": "attribute",
+            "name": "name",
+            "type": "{String}",
+            "class": "gdal.FieldDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 147,
+            "description": "Data type (see {{#crossLink \"Constants (OFT)\"}}OFT constants{{/crossLink}})",
+            "itemtype": "attribute",
+            "name": "type",
+            "type": "{String}",
+            "class": "gdal.FieldDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 160,
+            "itemtype": "attribute",
+            "name": "ignored",
+            "type": "{Boolean}",
+            "class": "gdal.FieldDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 171,
+            "description": "Field justification (see {{#crossLink \"Constants (OJ)\"}}OJ constants{{/crossLink}})",
+            "itemtype": "attribute",
+            "name": "justification",
+            "type": "{String}",
+            "class": "gdal.FieldDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 187,
+            "itemtype": "attribute",
+            "name": "width",
+            "type": "{Integer}",
+            "class": "gdal.FieldDefn"
+        },
+        {
+            "file": "src/gdal_field_defn.cpp",
+            "line": 198,
+            "itemtype": "attribute",
+            "name": "precision",
+            "type": "{Integer}",
+            "class": "gdal.FieldDefn"
         },
         {
             "file": "src/gdal_geometry.cpp",
@@ -2943,7 +4338,8 @@
             "itemtype": "method",
             "name": "getEnvelope",
             "return": {
-                "description": "Object"
+                "description": "Bounding envelope",
+                "type": "gdal.Envelope"
             },
             "class": "gdal.Geometry"
         },
@@ -2954,7 +4350,8 @@
             "itemtype": "method",
             "name": "getEnvelope3D",
             "return": {
-                "description": "Object"
+                "description": "Bounding envelope",
+                "type": "gdal.Envelope3D"
             },
             "class": "gdal.Geometry"
         },
@@ -3199,14 +4596,14 @@
                 }
             ],
             "return": {
-                "description": "An object containing `minX`, `maxX`, `minY`, `maxY` properties.",
-                "type": "Object"
+                "description": "Bounding envelope",
+                "type": "gdal.Envelope"
             },
             "class": "gdal.Layer"
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 256,
+            "line": 255,
             "description": "This method returns the current spatial filter for this layer.",
             "throws": {
                 "description": "Error"
@@ -3221,7 +4618,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 276,
+            "line": 275,
             "description": "This method sets the geometry to be used as a spatial filter when fetching\nfeatures via the `layer.features.next()` method. Only features that geometrically\nintersect the filter geometry will be returned.\n\nAlernatively you can pass it envelope bounds as individual arguments.",
             "example": [
                 "\n```\nlayer.setSpatialFilter(geometry);\nlayer.setSpatialFilter(minX, minY, maxX, maxY);```"
@@ -3242,7 +4639,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 327,
+            "line": 326,
             "description": "Sets the attribute query string to be used when fetching features via the\n`layer.features.next()` method. Only features for which the query evaluates as\n`true` will be returned.\n\nThe query string should be in the format of an SQL WHERE clause. For instance\n\"population > 1000000 and population < 5000000\" where `population` is an\nattribute in the layer. The query format is normally a restricted form of\nSQL WHERE clause as described in the \"WHERE\" section of the [OGR SQL\ntutorial](http://www.gdal.org/ogr_sql.html). In some cases (RDBMS backed\ndrivers) the native capabilities of the database may be used to interprete\nthe WHERE clause in which case the capabilities will be broader than those\nof OGR SQL.",
             "example": [
                 "\n```\nlayer.setAttributeFilter('population > 1000000 and population < 5000000');```"
@@ -3263,7 +4660,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 392,
+            "line": 391,
             "readonly": "",
             "itemtype": "attribute",
             "name": "ds",
@@ -3272,7 +4669,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 403,
+            "line": 402,
             "readonly": "",
             "itemtype": "attribute",
             "name": "srs",
@@ -3281,7 +4678,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 419,
+            "line": 418,
             "readonly": "",
             "itemtype": "attribute",
             "name": "name",
@@ -3290,7 +4687,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 435,
+            "line": 434,
             "readonly": "",
             "itemtype": "attribute",
             "name": "geomColumn",
@@ -3299,7 +4696,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 451,
+            "line": 450,
             "readonly": "",
             "itemtype": "attribute",
             "name": "fidColumn",
@@ -3308,7 +4705,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 467,
+            "line": 466,
             "readonly": "",
             "itemtype": "attribute",
             "name": "geomType",
@@ -3317,7 +4714,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 483,
+            "line": 482,
             "readonly": "",
             "itemtype": "attribute",
             "name": "features",
@@ -3326,7 +4723,7 @@
         },
         {
             "file": "src/gdal_layer.cpp",
-            "line": 494,
+            "line": 493,
             "readonly": "",
             "itemtype": "attribute",
             "name": "features",
@@ -3410,8 +4807,101 @@
             "description": "Points that make up the line string.",
             "itemtype": "attribute",
             "name": "points",
-            "type": "{gdal.PointCollection}",
+            "type": "{gdal.LineStringPoints}",
             "class": "gdal.LineString"
+        },
+        {
+            "file": "src/gdal_multilinestring.cpp",
+            "line": 138,
+            "description": "Converts it to a polygon.",
+            "itemtype": "method",
+            "name": "polygonize",
+            "return": {
+                "description": "",
+                "type": "gdal.Polygon"
+            },
+            "class": "gdal.MultiLineString"
+        },
+        {
+            "file": "src/gdal_multilinestring.cpp",
+            "line": 153,
+            "description": "Returns the child LineString at an index.",
+            "itemtype": "method",
+            "name": "getGeometry",
+            "params": [
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.LineString"
+            },
+            "class": "gdal.MultiLineString"
+        },
+        {
+            "file": "src/gdal_multipoint.cpp",
+            "line": 138,
+            "description": "Returns the child Point at an index.",
+            "itemtype": "method",
+            "name": "getGeometry",
+            "params": [
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Polygon"
+            },
+            "class": "gdal.MultiPoint"
+        },
+        {
+            "file": "src/gdal_multipolygon.cpp",
+            "line": 138,
+            "description": "Unions all the geometries and returns the result.",
+            "itemtype": "method",
+            "name": "unionCascaded",
+            "return": {
+                "description": "",
+                "type": "gdal.Geometry"
+            },
+            "class": "gdal.MultiPolygon"
+        },
+        {
+            "file": "src/gdal_multipolygon.cpp",
+            "line": 153,
+            "description": "Computes the combined area of the collection.",
+            "itemtype": "method",
+            "name": "getArea",
+            "return": {
+                "description": "",
+                "type": "Number"
+            },
+            "class": "gdal.MultiPolygon"
+        },
+        {
+            "file": "src/gdal_multipolygon.cpp",
+            "line": 161,
+            "description": "Returns the child Polygon at an index.",
+            "itemtype": "method",
+            "name": "getGeometry",
+            "params": [
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Integer"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.Polygon"
+            },
+            "class": "gdal.MultiPolygon"
         },
         {
             "file": "src/gdal_point.cpp",
@@ -4408,11 +5898,13 @@
         {
             "file": "src/gdal_warper.cpp",
             "line": 16,
+            "description": "Reprojects a dataset.",
             "throws": {
                 "description": "Error"
             },
             "itemtype": "method",
             "name": "reprojectImage",
+            "static": 1,
             "params": [
                 {
                     "name": "src",
@@ -4506,8 +5998,48 @@
             "class": "gdal"
         },
         {
+            "file": "src/gdal_warper.cpp",
+            "line": 94,
+            "description": "Used to determine the bounds and resolution of the output virtual file which\nshould be large enough to include all the input image.",
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "suggestedWarpOutput",
+            "static": 1,
+            "params": [
+                {
+                    "name": "options",
+                    "description": "Warp options",
+                    "type": "Object",
+                    "props": [
+                        {
+                            "name": "src",
+                            "description": "",
+                            "type": "gdal.Dataset"
+                        },
+                        {
+                            "name": "s_srs",
+                            "description": "",
+                            "type": "gdal.SpatialReference"
+                        },
+                        {
+                            "name": "t_srs",
+                            "description": "",
+                            "type": "gdal.SpatialReference"
+                        }
+                    ]
+                }
+            ],
+            "return": {
+                "description": "An object containing `\"rasterSize\"` and `\"geoTransform\"` properties.",
+                "type": "Object"
+            },
+            "class": "gdal"
+        },
+        {
             "file": "src/node_gdal.cpp",
-            "line": 179,
+            "line": 190,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_LONGNAME",
@@ -4516,7 +6048,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 185,
+            "line": 196,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_MIMETYPE",
@@ -4525,7 +6057,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 191,
+            "line": 202,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_HELPTOPIC",
@@ -4534,7 +6066,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 197,
+            "line": 208,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_EXTENSION",
@@ -4543,7 +6075,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 203,
+            "line": 214,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_CREATIONOPTIONLIST",
@@ -4552,7 +6084,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 209,
+            "line": 220,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_CREATIONDATATYPES",
@@ -4561,7 +6093,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 220,
+            "line": 231,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_CREATE",
@@ -4570,7 +6102,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 226,
+            "line": 237,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_CREATECOPY",
@@ -4579,7 +6111,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 232,
+            "line": 243,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_VIRTUALIO",
@@ -4588,7 +6120,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 243,
+            "line": 254,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCRandomRead",
@@ -4597,7 +6129,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 249,
+            "line": 260,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCSequentialWrite",
@@ -4606,7 +6138,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 255,
+            "line": 266,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCRandomWrite",
@@ -4615,7 +6147,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 261,
+            "line": 272,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastSpatialFilter",
@@ -4624,7 +6156,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 267,
+            "line": 278,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastFeatureCount",
@@ -4633,7 +6165,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 273,
+            "line": 284,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastGetExtent",
@@ -4642,7 +6174,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 279,
+            "line": 290,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCCreateField",
@@ -4651,7 +6183,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 285,
+            "line": 296,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCDeleteField",
@@ -4660,7 +6192,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 291,
+            "line": 302,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCReorderFields",
@@ -4669,7 +6201,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 297,
+            "line": 308,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCAlterFieldDefn",
@@ -4678,7 +6210,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 303,
+            "line": 314,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCTransactions",
@@ -4687,7 +6219,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 309,
+            "line": 320,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCDeleteFeature",
@@ -4696,7 +6228,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 315,
+            "line": 326,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastSetNextByIndex",
@@ -4705,7 +6237,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 321,
+            "line": 332,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCStringsAsUTF8",
@@ -4714,7 +6246,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 327,
+            "line": 338,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCIgnoreFields",
@@ -4723,7 +6255,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 335,
+            "line": 346,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCCreateGeomField",
@@ -4732,7 +6264,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 343,
+            "line": 354,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCCreateGeomFieldAfterCreateLayer",
@@ -4741,7 +6273,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 355,
+            "line": 366,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCCreateLayer",
@@ -4750,7 +6282,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 361,
+            "line": 372,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCDeleteLayer",
@@ -4759,7 +6291,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 367,
+            "line": 378,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODrCCreateDataSource",
@@ -4768,7 +6300,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 373,
+            "line": 384,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODrCDeleteDataSource",
@@ -4777,7 +6309,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 392,
+            "line": 402,
             "description": "Unknown or unspecified type",
             "final": 1,
             "itemtype": "property",
@@ -4787,7 +6319,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 399,
+            "line": 409,
             "description": "Eight bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -4797,7 +6329,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 406,
+            "line": 416,
             "description": "Sixteen bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -4807,7 +6339,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 413,
+            "line": 423,
             "description": "Sixteen bit signed integer",
             "final": 1,
             "itemtype": "property",
@@ -4817,7 +6349,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 420,
+            "line": 430,
             "description": "Thirty two bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -4827,7 +6359,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 427,
+            "line": 437,
             "description": "Thirty two bit signed integer",
             "final": 1,
             "itemtype": "property",
@@ -4837,7 +6369,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 434,
+            "line": 444,
             "description": "Thirty two bit floating point",
             "final": 1,
             "itemtype": "property",
@@ -4847,7 +6379,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 441,
+            "line": 451,
             "description": "Sixty four bit floating point",
             "final": 1,
             "itemtype": "property",
@@ -4857,7 +6389,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 448,
+            "line": 458,
             "description": "Complex Int16",
             "final": 1,
             "itemtype": "property",
@@ -4867,7 +6399,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 455,
+            "line": 465,
             "description": "Complex Int32",
             "final": 1,
             "itemtype": "property",
@@ -4877,7 +6409,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 462,
+            "line": 472,
             "description": "Complex Float32",
             "final": 1,
             "itemtype": "property",
@@ -4887,7 +6419,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 469,
+            "line": 479,
             "description": "Complex Float64",
             "final": 1,
             "itemtype": "property",
@@ -4897,7 +6429,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 481,
+            "line": 491,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJUndefined",
@@ -4906,7 +6438,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 487,
+            "line": 497,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJLeft",
@@ -4915,7 +6447,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 493,
+            "line": 503,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJRight",
@@ -4924,7 +6456,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 504,
+            "line": 514,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_Undefined",
@@ -4933,7 +6465,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 510,
+            "line": 520,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_GrayIndex",
@@ -4942,7 +6474,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 516,
+            "line": 526,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_PaletteIndex",
@@ -4951,7 +6483,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 522,
+            "line": 532,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_RedBand",
@@ -4960,7 +6492,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 528,
+            "line": 538,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_GreenBand",
@@ -4969,7 +6501,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 534,
+            "line": 544,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_BlueBand",
@@ -4978,7 +6510,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 540,
+            "line": 550,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_AlphaBand",
@@ -4987,7 +6519,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 546,
+            "line": 556,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_HueBand",
@@ -4996,7 +6528,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 552,
+            "line": 562,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_SaturationBand",
@@ -5005,7 +6537,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 558,
+            "line": 568,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_LightnessBand",
@@ -5014,7 +6546,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 564,
+            "line": 574,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_CyanBand",
@@ -5023,7 +6555,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 570,
+            "line": 580,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_MagentaBand",
@@ -5032,7 +6564,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 576,
+            "line": 586,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YellowBand",
@@ -5041,7 +6573,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 582,
+            "line": 592,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_BlackBand",
@@ -5050,7 +6582,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 588,
+            "line": 598,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_YBand",
@@ -5059,7 +6591,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 594,
+            "line": 604,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_CbBand",
@@ -5068,7 +6600,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 600,
+            "line": 610,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_CrBand",
@@ -5077,7 +6609,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 611,
+            "line": 621,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbVariantOgc",
@@ -5086,7 +6618,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 617,
+            "line": 627,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbVariantIso",
@@ -5095,7 +6627,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 623,
+            "line": 633,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbXDR",
@@ -5104,7 +6636,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 629,
+            "line": 639,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbNDR",
@@ -5113,7 +6645,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 636,
+            "line": 646,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkb25DBit",
@@ -5122,7 +6654,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 645,
+            "line": 655,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbUnknown",
@@ -5131,7 +6663,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 651,
+            "line": 661,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPoint",
@@ -5140,7 +6672,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 657,
+            "line": 667,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLineString",
@@ -5149,7 +6681,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 663,
+            "line": 673,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPolygon",
@@ -5158,7 +6690,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 669,
+            "line": 679,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPoint",
@@ -5167,7 +6699,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 675,
+            "line": 685,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiLineString",
@@ -5176,7 +6708,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 681,
+            "line": 691,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPolygon",
@@ -5185,7 +6717,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 687,
+            "line": 697,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbGeometryCollection",
@@ -5194,7 +6726,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 693,
+            "line": 703,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbNone",
@@ -5203,7 +6735,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 699,
+            "line": 709,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLinearRing",
@@ -5212,7 +6744,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 705,
+            "line": 715,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPoint25D",
@@ -5221,7 +6753,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 711,
+            "line": 721,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLineString25D",
@@ -5230,7 +6762,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 717,
+            "line": 727,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPolygon25D",
@@ -5239,7 +6771,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 723,
+            "line": 733,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPoint25D",
@@ -5248,7 +6780,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 729,
+            "line": 739,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiLineString25D",
@@ -5257,7 +6789,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 735,
+            "line": 745,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPolygon25D",
@@ -5266,7 +6798,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 741,
+            "line": 751,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbGeometryCollection25D",
@@ -5275,7 +6807,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 747,
+            "line": 757,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLinearRing25D",
@@ -5284,7 +6816,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 758,
+            "line": 768,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTInteger",
@@ -5293,7 +6825,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 764,
+            "line": 774,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTIntegerList",
@@ -5302,7 +6834,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 770,
+            "line": 780,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTReal",
@@ -5311,7 +6843,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 776,
+            "line": 786,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTRealList",
@@ -5320,7 +6852,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 782,
+            "line": 792,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTString",
@@ -5329,7 +6861,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 788,
+            "line": 798,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTStringList",
@@ -5338,7 +6870,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 794,
+            "line": 804,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTWideString",
@@ -5347,7 +6879,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 800,
+            "line": 810,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTWideStringList",
@@ -5356,7 +6888,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 806,
+            "line": 816,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTBinary",
@@ -5365,7 +6897,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 812,
+            "line": 822,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTDate",
@@ -5374,7 +6906,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 818,
+            "line": 828,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTTime",
@@ -5383,7 +6915,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 824,
+            "line": 834,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTDateTime",
@@ -5392,7 +6924,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 837,
+            "line": 847,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_NearestNeighbor",
@@ -5401,7 +6933,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 843,
+            "line": 853,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Bilinear",
@@ -5410,7 +6942,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 849,
+            "line": 859,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Cubic",
@@ -5419,7 +6951,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 855,
+            "line": 865,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_CubicSpline",
@@ -5428,7 +6960,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 861,
+            "line": 871,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Lanczos",
@@ -5437,7 +6969,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 867,
+            "line": 877,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Average",
@@ -5446,7 +6978,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 873,
+            "line": 883,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Mode",
@@ -5455,7 +6987,8 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 880,
+            "line": 890,
+            "description": "GDAL version (not the binding version)",
             "final": 1,
             "itemtype": "property",
             "name": "gdal.version",
@@ -5464,34 +6997,18 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 888,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.CreateDataSourceOption",
-            "type": "{mixed}",
-            "class": "gdal"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 896,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.DeleteDataSourceOption",
-            "type": "{mixed}",
-            "class": "gdal"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 910,
+            "line": 905,
             "description": "Disables all output.",
+            "static": 1,
             "itemtype": "method",
             "name": "quiet",
             "class": "gdal"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 918,
+            "line": 914,
             "description": "Displays extra debugging information from GDAL.",
+            "static": 1,
             "itemtype": "method",
             "name": "verbose",
             "class": "gdal"

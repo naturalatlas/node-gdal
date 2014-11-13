@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -193,6 +199,9 @@ RasterBandOverviews::~RasterBandOverviews()
 {}
 
 /**
+ * An encapsulation of a {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}
+ * overview functionality.
+ *
  * @class gdal.RasterBandOverviews
  */
 NAN_METHOD(RasterBandOverviews::New)
@@ -234,6 +243,14 @@ NAN_METHOD(RasterBandOverviews::toString)
 	NanReturnValue(NanNew(&quot;RasterBandOverviews&quot;));
 }
 
+/**
+ * Fetches the overview at the provided index.
+ *
+ * @method get
+ * @throws Error
+ * @param {Integer} index 0-based index
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(RasterBandOverviews::get)
 {
 	NanScope();
@@ -250,6 +267,7 @@ NAN_METHOD(RasterBandOverviews::get)
 
 	GDALRasterBand *result = band-&gt;get()-&gt;GetOverview(id);
 
+	// TODO: return null instead?
 	if (result == NULL) {
 		NanThrowError(&quot;Specified overview not found&quot;);
 		NanReturnUndefined();
@@ -258,6 +276,19 @@ NAN_METHOD(RasterBandOverviews::get)
 	NanReturnValue(RasterBand::New(result, band-&gt;getParent()));
 }
 
+/**
+ * Fetch best sampling overview.
+ *
+ * Returns the most reduced overview of the given band that still satisfies the
+ * desired number of samples. This function can be used with zero as the number
+ * of desired samples to fetch the most reduced overview. The same band as was
+ * passed in will be returned if it has not overviews, or if none of the overviews
+ * have enough samples.
+ *
+ * @method getBySampleCount
+ * @param {Integer} samples
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(RasterBandOverviews::getBySampleCount)
 {
 	NanScope();
@@ -277,6 +308,12 @@ NAN_METHOD(RasterBandOverviews::getBySampleCount)
 	NanReturnValue(RasterBand::New(result, band-&gt;getParent()));
 }
 
+/**
+ * Returns the number of overviews.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(RasterBandOverviews::count)
 {
 	NanScope();

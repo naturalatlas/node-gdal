@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -170,17 +176,43 @@
 
 <div class="yuidoc-class-description">
     <p>Object for transforming between coordinate systems.</p>
-<p>If the <code>target</code> is a Dataset, the conversion will represent
-a conversion to pixel coordinates.</p>
 
 </div>
 
+
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-transformPoint"><span class="im">transformPoint</span>(<span class="ia">x</span><span class="ia">y</span><span class="ia">z</span>)</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
 
 
     <div class="constructor yuidoc-class-constructor">
         <h2>Constructor</h2>
         <div class="item-list">
-        <div id="method_gdal.CoordinateTransformation" class="method item">
+        <div id="method-gdal.CoordinateTransformation" class="method item">
     <div class="method-signature">
     <span class="name"><code>gdal.CoordinateTransformation</code></span>
 
@@ -271,7 +303,8 @@ a conversion to pixel coordinates.</p>
                     
 
                     <div class="param-description">
-                         
+                        <p>If a Dataset, the conversion will represent a conversion to pixel coordinates.</p>
+
                     </div>
 
                     
@@ -296,7 +329,7 @@ a conversion to pixel coordinates.</p>
         <div class="item-list">
        		
         	
-            <div id="method_transformPoint" class="method item">
+            <div id="method-transformPoint" class="method item">
     <div class="method-signature">
     <span class="name"><code>transformPoint</code></span>
 
@@ -353,7 +386,7 @@ a conversion to pixel coordinates.</p>
             
         
         
-        <a href="../files/src_gdal_coordinate_transformation.cpp.html#l171"><code>src&#x2F;gdal_coordinate_transformation.cpp:171</code></a>
+        <a href="../files/src_gdal_coordinate_transformation.cpp.html#l168"><code>src&#x2F;gdal_coordinate_transformation.cpp:168</code></a>
         
         </p>
 
@@ -457,7 +490,6 @@ pt = transform.transformPoint({x: 0, y: 0, z: 0});</code></pre>
         
         </div>
     </div>
-
 
 
 

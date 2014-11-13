@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -67,6 +67,10 @@
             
                 <li><a href="../classes/gdal.Dataset.html">gdal.Dataset</a></li>
             
+                <li><a href="../classes/gdal.DatasetBands.html">gdal.DatasetBands</a></li>
+            
+                <li><a href="../classes/gdal.DatasetLayers.html">gdal.DatasetLayers</a></li>
+            
                 <li><a href="../classes/gdal.Driver.html">gdal.Driver</a></li>
             
                 <li><a href="../classes/gdal.Envelope.html">gdal.Envelope</a></li>
@@ -98,6 +102,8 @@
                 <li><a href="../classes/gdal.LinearRing.html">gdal.LinearRing</a></li>
             
                 <li><a href="../classes/gdal.LineString.html">gdal.LineString</a></li>
+            
+                <li><a href="../classes/gdal.LineStringPoints.html">gdal.LineStringPoints</a></li>
             
                 <li><a href="../classes/gdal.MultiLineString.html">gdal.MultiLineString</a></li>
             
@@ -169,6 +175,75 @@
 
 
 
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.wkb25DBit"><span class="ip">gdal.wkb25DBit</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbGeometryCollection"><span class="ip">gdal.wkbGeometryCollection</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbGeometryCollection25D"><span class="ip">gdal.wkbGeometryCollection25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbLinearRing"><span class="ip">gdal.wkbLinearRing</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbLinearRing25D"><span class="ip">gdal.wkbLinearRing25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbLineString"><span class="ip">gdal.wkbLineString</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbLineString25D"><span class="ip">gdal.wkbLineString25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiLineString"><span class="ip">gdal.wkbMultiLineString</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiLineString25D"><span class="ip">gdal.wkbMultiLineString25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiPoint"><span class="ip">gdal.wkbMultiPoint</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiPoint25D"><span class="ip">gdal.wkbMultiPoint25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiPolygon"><span class="ip">gdal.wkbMultiPolygon</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbMultiPolygon25D"><span class="ip">gdal.wkbMultiPolygon25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbNDR"><span class="ip">gdal.wkbNDR</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbNone"><span class="ip">gdal.wkbNone</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbPoint"><span class="ip">gdal.wkbPoint</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbPoint25D"><span class="ip">gdal.wkbPoint25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbPolygon"><span class="ip">gdal.wkbPolygon</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbPolygon25D"><span class="ip">gdal.wkbPolygon25D</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbUnknown"><span class="ip">gdal.wkbUnknown</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbVariantIso"><span class="ip">gdal.wkbVariantIso</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbVariantOgc"><span class="ip">gdal.wkbVariantOgc</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbXDR"><span class="ip">gdal.wkbXDR</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
 
 
 
@@ -180,7 +255,7 @@
 
         <div class="item-list">
         
-            <div id="property_gdal.wkb25DBit" class="property item">
+            <div id="prop-gdal.wkb25DBit" class="property item">
     <h3 class="name"><code>gdal.wkb25DBit</code></h3>
     <span class="type">Integer</span>
 
@@ -205,7 +280,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l636"><code>src&#x2F;node_gdal.cpp:636</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l646"><code>src&#x2F;node_gdal.cpp:646</code></a>
         
         </p>
 
@@ -226,7 +301,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbGeometryCollection" class="property item">
+            <div id="prop-gdal.wkbGeometryCollection" class="property item">
     <h3 class="name"><code>gdal.wkbGeometryCollection</code></h3>
     <span class="type">Integer</span>
 
@@ -251,7 +326,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l687"><code>src&#x2F;node_gdal.cpp:687</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l697"><code>src&#x2F;node_gdal.cpp:697</code></a>
         
         </p>
 
@@ -272,7 +347,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbGeometryCollection25D" class="property item">
+            <div id="prop-gdal.wkbGeometryCollection25D" class="property item">
     <h3 class="name"><code>gdal.wkbGeometryCollection25D</code></h3>
     <span class="type">Integer</span>
 
@@ -297,7 +372,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l741"><code>src&#x2F;node_gdal.cpp:741</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l751"><code>src&#x2F;node_gdal.cpp:751</code></a>
         
         </p>
 
@@ -318,7 +393,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbLinearRing" class="property item">
+            <div id="prop-gdal.wkbLinearRing" class="property item">
     <h3 class="name"><code>gdal.wkbLinearRing</code></h3>
     <span class="type">String</span>
 
@@ -343,7 +418,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l699"><code>src&#x2F;node_gdal.cpp:699</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l709"><code>src&#x2F;node_gdal.cpp:709</code></a>
         
         </p>
 
@@ -364,7 +439,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbLinearRing25D" class="property item">
+            <div id="prop-gdal.wkbLinearRing25D" class="property item">
     <h3 class="name"><code>gdal.wkbLinearRing25D</code></h3>
     <span class="type">Integer</span>
 
@@ -389,7 +464,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l747"><code>src&#x2F;node_gdal.cpp:747</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l757"><code>src&#x2F;node_gdal.cpp:757</code></a>
         
         </p>
 
@@ -410,7 +485,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbLineString" class="property item">
+            <div id="prop-gdal.wkbLineString" class="property item">
     <h3 class="name"><code>gdal.wkbLineString</code></h3>
     <span class="type">Integer</span>
 
@@ -435,7 +510,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l657"><code>src&#x2F;node_gdal.cpp:657</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l667"><code>src&#x2F;node_gdal.cpp:667</code></a>
         
         </p>
 
@@ -456,7 +531,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbLineString25D" class="property item">
+            <div id="prop-gdal.wkbLineString25D" class="property item">
     <h3 class="name"><code>gdal.wkbLineString25D</code></h3>
     <span class="type">Integer</span>
 
@@ -481,7 +556,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l711"><code>src&#x2F;node_gdal.cpp:711</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l721"><code>src&#x2F;node_gdal.cpp:721</code></a>
         
         </p>
 
@@ -502,7 +577,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiLineString" class="property item">
+            <div id="prop-gdal.wkbMultiLineString" class="property item">
     <h3 class="name"><code>gdal.wkbMultiLineString</code></h3>
     <span class="type">Integer</span>
 
@@ -527,7 +602,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l675"><code>src&#x2F;node_gdal.cpp:675</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l685"><code>src&#x2F;node_gdal.cpp:685</code></a>
         
         </p>
 
@@ -548,7 +623,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiLineString25D" class="property item">
+            <div id="prop-gdal.wkbMultiLineString25D" class="property item">
     <h3 class="name"><code>gdal.wkbMultiLineString25D</code></h3>
     <span class="type">Integer</span>
 
@@ -573,7 +648,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l729"><code>src&#x2F;node_gdal.cpp:729</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l739"><code>src&#x2F;node_gdal.cpp:739</code></a>
         
         </p>
 
@@ -594,7 +669,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiPoint" class="property item">
+            <div id="prop-gdal.wkbMultiPoint" class="property item">
     <h3 class="name"><code>gdal.wkbMultiPoint</code></h3>
     <span class="type">Integer</span>
 
@@ -619,7 +694,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l669"><code>src&#x2F;node_gdal.cpp:669</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l679"><code>src&#x2F;node_gdal.cpp:679</code></a>
         
         </p>
 
@@ -640,7 +715,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiPoint25D" class="property item">
+            <div id="prop-gdal.wkbMultiPoint25D" class="property item">
     <h3 class="name"><code>gdal.wkbMultiPoint25D</code></h3>
     <span class="type">Integer</span>
 
@@ -665,7 +740,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l723"><code>src&#x2F;node_gdal.cpp:723</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l733"><code>src&#x2F;node_gdal.cpp:733</code></a>
         
         </p>
 
@@ -686,7 +761,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiPolygon" class="property item">
+            <div id="prop-gdal.wkbMultiPolygon" class="property item">
     <h3 class="name"><code>gdal.wkbMultiPolygon</code></h3>
     <span class="type">Integer</span>
 
@@ -711,7 +786,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l681"><code>src&#x2F;node_gdal.cpp:681</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l691"><code>src&#x2F;node_gdal.cpp:691</code></a>
         
         </p>
 
@@ -732,7 +807,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbMultiPolygon25D" class="property item">
+            <div id="prop-gdal.wkbMultiPolygon25D" class="property item">
     <h3 class="name"><code>gdal.wkbMultiPolygon25D</code></h3>
     <span class="type">Integer</span>
 
@@ -757,7 +832,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l735"><code>src&#x2F;node_gdal.cpp:735</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l745"><code>src&#x2F;node_gdal.cpp:745</code></a>
         
         </p>
 
@@ -778,7 +853,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbNDR" class="property item">
+            <div id="prop-gdal.wkbNDR" class="property item">
     <h3 class="name"><code>gdal.wkbNDR</code></h3>
     <span class="type">String</span>
 
@@ -803,7 +878,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l629"><code>src&#x2F;node_gdal.cpp:629</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l639"><code>src&#x2F;node_gdal.cpp:639</code></a>
         
         </p>
 
@@ -824,7 +899,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbNone" class="property item">
+            <div id="prop-gdal.wkbNone" class="property item">
     <h3 class="name"><code>gdal.wkbNone</code></h3>
     <span class="type">Integer</span>
 
@@ -849,7 +924,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l693"><code>src&#x2F;node_gdal.cpp:693</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l703"><code>src&#x2F;node_gdal.cpp:703</code></a>
         
         </p>
 
@@ -870,7 +945,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbPoint" class="property item">
+            <div id="prop-gdal.wkbPoint" class="property item">
     <h3 class="name"><code>gdal.wkbPoint</code></h3>
     <span class="type">Integer</span>
 
@@ -895,7 +970,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l651"><code>src&#x2F;node_gdal.cpp:651</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l661"><code>src&#x2F;node_gdal.cpp:661</code></a>
         
         </p>
 
@@ -916,7 +991,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbPoint25D" class="property item">
+            <div id="prop-gdal.wkbPoint25D" class="property item">
     <h3 class="name"><code>gdal.wkbPoint25D</code></h3>
     <span class="type">Integer</span>
 
@@ -941,7 +1016,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l705"><code>src&#x2F;node_gdal.cpp:705</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l715"><code>src&#x2F;node_gdal.cpp:715</code></a>
         
         </p>
 
@@ -962,7 +1037,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbPolygon" class="property item">
+            <div id="prop-gdal.wkbPolygon" class="property item">
     <h3 class="name"><code>gdal.wkbPolygon</code></h3>
     <span class="type">Integer</span>
 
@@ -987,7 +1062,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l663"><code>src&#x2F;node_gdal.cpp:663</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l673"><code>src&#x2F;node_gdal.cpp:673</code></a>
         
         </p>
 
@@ -1008,7 +1083,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbPolygon25D" class="property item">
+            <div id="prop-gdal.wkbPolygon25D" class="property item">
     <h3 class="name"><code>gdal.wkbPolygon25D</code></h3>
     <span class="type">Integer</span>
 
@@ -1033,7 +1108,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l717"><code>src&#x2F;node_gdal.cpp:717</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l727"><code>src&#x2F;node_gdal.cpp:727</code></a>
         
         </p>
 
@@ -1054,7 +1129,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbUnknown" class="property item">
+            <div id="prop-gdal.wkbUnknown" class="property item">
     <h3 class="name"><code>gdal.wkbUnknown</code></h3>
     <span class="type">Integer</span>
 
@@ -1079,7 +1154,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l645"><code>src&#x2F;node_gdal.cpp:645</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l655"><code>src&#x2F;node_gdal.cpp:655</code></a>
         
         </p>
 
@@ -1100,7 +1175,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbVariantIso" class="property item">
+            <div id="prop-gdal.wkbVariantIso" class="property item">
     <h3 class="name"><code>gdal.wkbVariantIso</code></h3>
     <span class="type">String</span>
 
@@ -1125,7 +1200,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l617"><code>src&#x2F;node_gdal.cpp:617</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l627"><code>src&#x2F;node_gdal.cpp:627</code></a>
         
         </p>
 
@@ -1146,7 +1221,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbVariantOgc" class="property item">
+            <div id="prop-gdal.wkbVariantOgc" class="property item">
     <h3 class="name"><code>gdal.wkbVariantOgc</code></h3>
     <span class="type">String</span>
 
@@ -1171,7 +1246,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l611"><code>src&#x2F;node_gdal.cpp:611</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l621"><code>src&#x2F;node_gdal.cpp:621</code></a>
         
         </p>
 
@@ -1192,7 +1267,7 @@
 </div>
 
         
-            <div id="property_gdal.wkbXDR" class="property item">
+            <div id="prop-gdal.wkbXDR" class="property item">
     <h3 class="name"><code>gdal.wkbXDR</code></h3>
     <span class="type">String</span>
 
@@ -1217,7 +1292,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l623"><code>src&#x2F;node_gdal.cpp:623</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l633"><code>src&#x2F;node_gdal.cpp:633</code></a>
         
         </p>
 
