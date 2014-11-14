@@ -21,7 +21,7 @@
   "binary": {
     "module_name": "gdal",
     "module_path": "./lib/binding/",
-    "remote_path": "./{module_name}/v{version}",
+    "remote_path": "./{module_name}/v{version}/{toolset}/",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
   },
@@ -51,7 +51,7 @@
   "devDependencies": {
     "mocha": "~1.x",
     "chai": "~1.9.1",
-    "aws-sdk": "~2.0.7"
+    "aws-sdk": "~2.0.25"
   },
   "bundledDependencies": [
     "node-pre-gyp"
