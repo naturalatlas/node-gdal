@@ -159,7 +159,7 @@ void Dataset::dispose()
 
 /**
  * A set of associated raster bands and/or vector layers, usually from one file.
- * 
+ *
  * ```
  * // raster dataset:
  * dataset = gdal.open('file.tif');
@@ -466,7 +466,7 @@ NAN_METHOD(Dataset::executeSQL)
  * associated with the dataset (for instance a virtual dataset).
  *
  * Returns an empty array for vector datasets if GDAL version is below 2.0
- * 
+ *
  * @method getFileList
  * @return {String[]}
  */
@@ -756,9 +756,11 @@ NAN_GETTER(Dataset::descriptionGetter)
 }
 
 /**
+ * Raster dimensions. An object containing `x` and `y` properties.
+ *
  * @readOnly
  * @attribute rasterSize
- * @type Object containing `x` and `y` properties.
+ * @type Object
  */
 NAN_GETTER(Dataset::rasterSizeGetter)
 {
@@ -850,7 +852,7 @@ NAN_GETTER(Dataset::srsGetter)
  * var GT = dataset.geoTransform;
  * var Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];
  * var Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];```
- * 
+ *
  * @attribute geoTransform
  * @type {Array}
  */
