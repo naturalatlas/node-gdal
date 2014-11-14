@@ -36,9 +36,14 @@ FeatureFields::FeatureFields()
 	: ObjectWrap()
 {}
 
-FeatureFields::~FeatureFields() 
+FeatureFields::~FeatureFields()
 {}
 
+/**
+ * An encapsulation of all field data that makes up a {{#crossLink "gdal.Feature"}}Feature{{/crossLink}}.
+ *
+ * @class gdal.FeatureFields
+ */
 NAN_METHOD(FeatureFields::New)
 {
 	NanScope();
@@ -78,7 +83,6 @@ NAN_METHOD(FeatureFields::toString)
 	NanReturnValue(NanNew("FeatureFields"));
 }
 
-
 inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	if (val->IsInt32()) {
 		f->SetField(field_index, val->Int32Value());
@@ -95,6 +99,25 @@ inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	return false;
 }
 
+/**
+ * Sets feature field(s).
+ *
+ * @example
+ * ```
+ * // most-efficient, least flexible. requires you to know the ordering of the fields:
+ * feature.fields.set(['Something']);
+ * feature.fields.set(0, 'Something');
+ *
+ * // most flexible.
+ * feature.fields.set({name: 'Something'});
+ * feature.fields.set('name', 'Something');
+ * ```
+ *
+ * @method set
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::set)
 {
 	NanScope();
@@ -107,10 +130,10 @@ NAN_METHOD(FeatureFields::set)
 		NanThrowError("Feature object already destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	if(args.Length() == 1) {
 		if(args[0]->IsArray()) {
-			//set([]) 
+			//set([])
 			Handle<Array> values = args[0].As<Array>();
 
 			n = f->get()->GetFieldCount();
@@ -128,23 +151,23 @@ NAN_METHOD(FeatureFields::set)
 
 			NanReturnValue(NanNew<Integer>(n));
 		} else if (args[0]->IsObject()) {
-			//set({}) 
+			//set({})
 			Handle<Object> values = args[0].As<Object>();
-		
+
 			n = f->get()->GetFieldCount();
 			n_fields_set = 0;
-			
+
 			for (i = 0; i < n; i++) {
 				//iterate through field names from field defn,
 				//grabbing values from passed object, if not undefined
-				 
+
 				OGRFieldDefn* field_def = f->get()->GetFieldDefnRef(i);
-				
+
 				const char* field_name = field_def->GetNameRef();
-				
+
 				field_index = f->get()->GetFieldIndex(field_name);
 
-				//skip value if field name doesnt exist 
+				//skip value if field name doesnt exist
 				//both in the feature definition and the passed object
 				if (field_index == -1 || !values->HasOwnProperty(NanNew(field_name))) {
 					continue;
@@ -175,13 +198,25 @@ NAN_METHOD(FeatureFields::set)
 			NanReturnUndefined();
 		}
 
-		NanReturnValue(NanNew<Integer>(1));	
+		NanReturnValue(NanNew<Integer>(1));
 	} else {
 		NanThrowError("Invalid number of arguments");
 		NanReturnUndefined();
 	}
 }
 
+/**
+ * Resets all fields.
+ *
+ * @example
+ * ```
+ * feature.fields.reset();```
+ *
+ * @method reset
+ * @throws Error
+ * @param {Object} [values]
+ * @param {mixed} value
+ */
 NAN_METHOD(FeatureFields::reset)
 {
 	NanScope();
@@ -194,7 +229,7 @@ NAN_METHOD(FeatureFields::reset)
 		NanThrowError("Feature object already destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	n = f->get()->GetFieldCount();
 
 	if (args.Length() == 0) {
@@ -214,11 +249,11 @@ NAN_METHOD(FeatureFields::reset)
 	for (i = 0; i < n; i++) {
 		//iterate through field names from field defn,
 		//grabbing values from passed object
-		 
+
 		OGRFieldDefn* field_def = f->get()->GetFieldDefnRef(i);
-		
+
 		const char* field_name = field_def->GetNameRef();
-		
+
 		field_index = f->get()->GetFieldIndex(field_name);
 		if(field_index == -1) continue;
 
@@ -232,6 +267,16 @@ NAN_METHOD(FeatureFields::reset)
 	NanReturnValue(NanNew<Integer>(n));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @example
+ * ```
+ * feature.fields.count();```
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureFields::count)
 {
 	NanScope();
@@ -246,6 +291,17 @@ NAN_METHOD(FeatureFields::count)
 	NanReturnValue(NanNew<Integer>(f->get()->GetFieldCount()));
 }
 
+/**
+ * Returns the index of a field, given its name.
+ *
+ * @example
+ * ```
+ * var index = feature.fields.indexOf('field');```
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or, `-1` if it cannot be found.
+ */
 NAN_METHOD(FeatureFields::indexOf)
 {
 	NanScope();
@@ -263,6 +319,13 @@ NAN_METHOD(FeatureFields::indexOf)
 	NanReturnValue(NanNew<Integer>(f->get()->GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Outputs the field data as a pure JS object.
+ *
+ * @throws Error
+ * @method toObject
+ * @return {Object}
+ */
 NAN_METHOD(FeatureFields::toObject)
 {
 	NanScope();
@@ -278,19 +341,19 @@ NAN_METHOD(FeatureFields::toObject)
 
 	int n = f->get()->GetFieldCount();
 	for(int i = 0; i < n; i++) {
-		
+
 		//get field name
 		OGRFieldDefn *field_def = f->get()->GetFieldDefnRef(i);
 		const char *key = field_def->GetNameRef();
 		if (!key) {
 			NanThrowError("Error getting field name");
 			NanReturnUndefined();
-		} 
+		}
 
 		//get field value
 		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			NanReturnUndefined(); //get method threw an exception	
+			NanReturnUndefined(); //get method threw an exception
 		}
 
 		obj->Set(NanNew(key), val);
@@ -298,6 +361,13 @@ NAN_METHOD(FeatureFields::toObject)
 	NanReturnValue(obj);
 }
 
+/**
+ * Outputs the field values as a pure JS array.
+ *
+ * @throws Error
+ * @method toArray
+ * @return {Array}
+ */
 NAN_METHOD(FeatureFields::toArray)
 {
 	NanScope();
@@ -316,14 +386,13 @@ NAN_METHOD(FeatureFields::toArray)
 		//get field value
 		Handle<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			NanReturnUndefined(); //get method threw an exception	
+			NanReturnUndefined(); //get method threw an exception
 		}
-		
+
 		array->Set(i, val);
 	}
 	NanReturnValue(array);
 }
-
 
 Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 {
@@ -357,6 +426,19 @@ Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 			return NanEscapeScope(NanUndefined());
 	}
 }
+
+/**
+ * Returns a field's value.
+ *
+ * @example
+ * ```
+ * value = feature.fields.get(0);
+ * value = feature.fields.get('field');```
+ *
+ * @method get
+ * @param {String|Integer} key Feature name or index.
+ * @return {mixed|Undefined}
+ */
 NAN_METHOD(FeatureFields::get)
 {
 	NanScope();
@@ -371,13 +453,13 @@ NAN_METHOD(FeatureFields::get)
 	if (args.Length() < 1) {
 		NanThrowError("Field index or name must be given");
 		NanReturnUndefined();
-	} 
-	
+	}
+
 	int field_index;
 	ARG_FIELD_ID(0, f->get(), field_index);
 
 	Handle<Value> result = FeatureFields::get(f->get(), field_index);
-	
+
 	if(result.IsEmpty()) {
 		NanReturnUndefined();
 	} else {
@@ -385,6 +467,13 @@ NAN_METHOD(FeatureFields::get)
 	}
 }
 
+/**
+ * Returns a list of field name.
+ *
+ * @method getNames
+ * @throws Error
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureFields::getNames)
 {
 	NanScope();
@@ -400,7 +489,7 @@ NAN_METHOD(FeatureFields::getNames)
 	Handle<Array> result = NanNew<Array>(n);
 
 	for(int i = 0; i < n; i++) {
-		
+
 		//get field name
 		OGRFieldDefn *field_def = f->get()->GetFieldDefnRef(i);
 		const char *field_name = field_def->GetNameRef();
@@ -417,7 +506,7 @@ NAN_METHOD(FeatureFields::getNames)
 Handle<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int field_index)
 {
 	NanEscapableScope();
-	
+
 	int count_of_values = 0;
 
 	const int *values = feature->GetFieldAsIntegerList(field_index, &count_of_values);
@@ -435,7 +524,7 @@ Handle<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int fiel
 Handle<Value> FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int field_index)
 {
 	NanEscapableScope();
-	
+
 	int count_of_values = 0;
 
 	const double *values = feature->GetFieldAsDoubleList(field_index, &count_of_values);
@@ -470,7 +559,7 @@ Handle<Value> FeatureFields::getFieldAsStringList(OGRFeature* feature, int field
 Handle<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_index)
 {
 	NanEscapableScope();
-	
+
 	int count_of_bytes = 0;
 
 	unsigned char *data = (unsigned char*) feature->GetFieldAsBinary(field_index, &count_of_bytes);
@@ -525,6 +614,13 @@ Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_i
 	}
 }
 
+/**
+ * Parent feature
+ *
+ * @readOnly
+ * @attribute feature
+ * @type {gdal.Feature}
+ */
 NAN_GETTER(FeatureFields::featureGetter)
 {
 	NanScope();

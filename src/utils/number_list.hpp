@@ -14,11 +14,7 @@ using namespace v8;
 
 namespace node_gdal {
 
-/**
- * Classes for parsing a V8::Value and constructing a list of numbers. Destroys the list when the list goes out of scope
- */
-
-
+// Classes for parsing a V8::Value and constructing a list of numbers. Destroys the list when the list goes out of scope
 
 class IntegerList {
 public:

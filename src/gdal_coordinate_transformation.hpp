@@ -42,16 +42,6 @@ private:
 	OGRCoordinateTransformation *this_;
 };
 
-
-
-
-/************************************************************************/
-/*                      GeoTransformTransformer()                       */
-/*                                                                      */
-/*      Convert points from georef coordinates to pixel/line based      */
-/*      on a geotransform.                                              */
-/************************************************************************/
-
 // adapted from gdalwarp source
 
 class GeoTransformTransformer : public OGRCoordinateTransformation
@@ -63,7 +53,7 @@ public:
     virtual OGRSpatialReference *GetSourceCS() { return NULL; }
     virtual OGRSpatialReference *GetTargetCS() { return NULL; }
 
-    virtual int Transform( int nCount, 
+    virtual int Transform( int nCount,
                            double *x, double *y, double *z = NULL ) {
         int nResult;
 
@@ -74,10 +64,10 @@ public:
         return nResult;
     }
 
-    virtual int TransformEx( int nCount, 
+    virtual int TransformEx( int nCount,
                              double *x, double *y, double *z = NULL,
                              int *pabSuccess = NULL ) {
-        return GDALGenImgProjTransform( hSrcImageTransformer, TRUE, 
+        return GDALGenImgProjTransform( hSrcImageTransformer, TRUE,
                                         nCount, x, y, z, pabSuccess );
     }
 

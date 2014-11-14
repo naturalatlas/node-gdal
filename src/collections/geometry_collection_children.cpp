@@ -22,7 +22,7 @@ void GeometryCollectionChildren::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
 
 	target->Set(NanNew("GeometryCollectionChildren"), lcons->GetFunction());
-	
+
 	NanAssignPersistent(constructor, lcons);
 }
 
@@ -30,9 +30,14 @@ GeometryCollectionChildren::GeometryCollectionChildren()
 	: ObjectWrap()
 {}
 
-GeometryCollectionChildren::~GeometryCollectionChildren() 
+GeometryCollectionChildren::~GeometryCollectionChildren()
 {}
 
+/**
+ * A collection of Geometries, used by {{#crossLink "gdal.GeometryCollection"}}gdal.GeometryCollection{{/crossLink}}.
+ *
+ * @class gdal.GeometryCollectionChildren
+ */
 NAN_METHOD(GeometryCollectionChildren::New)
 {
 	NanScope();
@@ -72,6 +77,12 @@ NAN_METHOD(GeometryCollectionChildren::toString)
 	NanReturnValue(NanNew("GeometryCollectionChildren"));
 }
 
+/**
+ * Returns the number of items.
+ *
+ * @method count
+ * @return Integer
+ */
 NAN_METHOD(GeometryCollectionChildren::count)
 {
 	NanScope();
@@ -82,19 +93,32 @@ NAN_METHOD(GeometryCollectionChildren::count)
 	NanReturnValue(NanNew<Integer>(geom->get()->getNumGeometries()));
 }
 
+/**
+ * Returns the geometry at the specified index.
+ *
+ * @method get
+ * @param {Integer} index 0-based index
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(GeometryCollectionChildren::get)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
-	
+
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
 	NanReturnValue(Geometry::New(geom->get()->getGeometryRef(i), false));
 }
 
+/**
+ * Removes the geometry at the specified index.
+ *
+ * @method remove
+ * @param {Integer} index 0-based index
+ */
 NAN_METHOD(GeometryCollectionChildren::remove)
 {
 	NanScope();
@@ -114,13 +138,30 @@ NAN_METHOD(GeometryCollectionChildren::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds geometry(s) to the collection.
+ *
+ * @example
+ * ```
+ * // one at a time:
+ * geometryCollection.children.add(new Point(0,0,0));
+ *
+ * // add many at once:
+ * geometryCollection.children.add([
+ *     new Point(1,0,0),
+ *     new Point(1,0,0)
+ * ]);```
+ *
+ * @method add
+ * @param {mixed} geometry
+ */
 NAN_METHOD(GeometryCollectionChildren::add)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
-	
+
 	Geometry *child;
 
 	if (args.Length() < 1) {

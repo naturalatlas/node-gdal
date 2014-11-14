@@ -15,15 +15,13 @@ using namespace v8;
 
 namespace node_gdal {
 
-/**
- * A class for parsing a V8::Value and constructing a GDAL string list
- *
- * inputs: 
- * {key: value, ...}, ["key=value", ...]
- *
- * outputs:
- * ["key=value", ...]
- */
+// A class for parsing a V8::Value and constructing a GDAL string list
+//
+// inputs:
+// {key: value, ...}, ["key=value", ...]
+//
+// outputs:
+// ["key=value", ...]
 
 class StringList {
 public:

@@ -47,6 +47,15 @@ CoordinateTransformation::~CoordinateTransformation()
 	}
 }
 
+/**
+ * Object for transforming between coordinate systems.
+ *
+ * @throws Error
+ * @constructor
+ * @class gdal.CoordinateTransformation
+ * @param {gdal.SpatialReference} source
+ * @param {gdal.SpatialReference|gdal.Dataset} target If a raster Dataset, the conversion will represent a conversion to pixel coordinates.
+ */
 NAN_METHOD(CoordinateTransformation::New)
 {
 	NanScope();
@@ -87,7 +96,7 @@ NAN_METHOD(CoordinateTransformation::New)
 		} else if(NanHasInstance(Dataset::constructor, args[1])) {
 			// srs -> px/line
 			// todo: allow additional options using StringList
-			
+
 			Dataset *ds;
 			char** papszTO = NULL;
 			char* src_wkt;
@@ -157,7 +166,20 @@ NAN_METHOD(CoordinateTransformation::toString)
 	NanReturnValue(NanNew("CoordinateTransformation"));
 }
 
-
+/**
+ * Transform point from source to destination space.
+ *
+ * @example
+ * ```
+ * pt = transform.transformPoint(0, 0, 0);
+ * pt = transform.transformPoint({x: 0, y: 0, z: 0});```
+ *
+ * @method transformPoint
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} [z]
+ * @return {Object} A regular object containing `x`, `y`, `z` properties.
+ */
 NAN_METHOD(CoordinateTransformation::transformPoint)
 {
 	NanScope();

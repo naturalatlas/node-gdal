@@ -57,7 +57,7 @@ namespace node_gdal {
 			if (mode == "r+") {
 				flags |= GDAL_OF_UPDATE;
 			} else if (mode == "r") {
-				flags |= GDAL_OF_READONLY; 
+				flags |= GDAL_OF_READONLY;
 			} else {
 				NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
 				NanReturnUndefined();
@@ -78,7 +78,7 @@ namespace node_gdal {
 		NanScope();
 
 		std::string name;
-		
+
 		NODE_ARG_STR(0, "name", name);
 
 		if (args.Length() < 2) {
@@ -108,6 +108,17 @@ namespace node_gdal {
 		NanReturnValue(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
 	}
 
+	/**
+	 * Convert decimal degrees to degrees, minutes, and seconds string
+	 *
+	 * @for gdal
+	 * @static
+	 * @method decToDMS
+	 * @param {Number} angle
+	 * @param {String} axis `"lat"` or `"long"`
+	 * @param {Integer} [precision=2]
+	 * @return {String} A string nndnn'nn.nn'"L where n is a number and L is either N or E
+	 */
 	static NAN_METHOD(decToDMS){
 		NanScope();
 

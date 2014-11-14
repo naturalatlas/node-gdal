@@ -73,7 +73,29 @@ void Feature::dispose()
 	}
 }
 
-
+/**
+ * A simple feature, including geometry and attributes. It's fields and geometry type is defined by the given definition. 
+ *
+ * @example
+ * ```
+ * //create layer and specify geometry type
+ * var layer = dataset.layers.create('mylayer', null, gdal.Point);
+ * 
+ * //setup fields for the given layer
+ * layer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));
+ * layer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));
+ *
+ * //create feature using layer definition and then add it to the layer
+ * var feature = new gdal.Feature(layer);
+ * feature.fields.set('elevation', 13775);
+ * feature.fields.set('elevation', 13775);
+ * feature.setGeometry(new gdal.Point(43.741208, -110.802414));
+ * layer.features.add(feature);```
+ *
+ * @constructor
+ * @class gdal.Feature
+ * @param {gdal.Layer|gdal.FeatureDefn} definition
+ */
 NAN_METHOD(Feature::New)
 {
 	NanScope();
@@ -155,6 +177,12 @@ NAN_METHOD(Feature::toString)
 	NanReturnValue(NanNew("Feature"));
 }
 
+/**
+ * Returns the geometry of the feature.
+ *
+ * @method getGeometry
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(Feature::getGeometry)
 {
 	NanScope();
@@ -174,6 +202,13 @@ NAN_METHOD(Feature::getGeometry)
 	NanReturnValue(Geometry::New(geom, false));
 }
 
+/**
+ * Returns the definition of a particular field at an index.
+ *
+ * @method getFieldDefn
+ * @param {int} index Field index (0-based)
+ * @return {gdal.FieldDefn}
+ */
 NAN_METHOD(Feature::getFieldDefn)
 {
 	NanScope();
@@ -193,10 +228,33 @@ NAN_METHOD(Feature::getFieldDefn)
 
 	NanReturnValue(FieldDefn::New(feature->this_->GetFieldDefnRef(field_index), false));
 }
+
 //NODE_WRAPPED_METHOD_WITH_RESULT(Feature, stealGeometry, Geometry, StealGeometry);
+
+/**
+ * Sets the feature's geometry.
+ *
+ * @throws Error
+ * @method setGeometry
+ * @param {gdal.Geometry} geometry
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
+
+/**
+ * Determines if the features are the same.
+ *
+ * @method equals
+ * @param {gdal.Feature} feature
+ * @return {Boolean} `true` if the features are the same, `false` if different
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_WRAPPED_PARAM(Feature, equals, Boolean, Equal, Feature, "feature");
 
+/**
+ * Clones the feature.
+ *
+ * @method clone
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(Feature::clone)
 {
 	NanScope();
@@ -208,6 +266,11 @@ NAN_METHOD(Feature::clone)
 	NanReturnValue(Feature::New(feature->this_->Clone()));
 }
 
+/**
+ * Releases the feature from memory.
+ *
+ * @method destroy
+ */
 NAN_METHOD(Feature::destroy)
 {
 	NanScope();
@@ -220,6 +283,24 @@ NAN_METHOD(Feature::destroy)
 	NanReturnUndefined();
 }
 
+/**
+ * Set one feature from another. Overwrites the contents of this feature
+ * from the geometry and attributes of another.
+ *
+ * @example
+ * ```
+ * var feature1 = new gdal.Feature(defn);
+ * var feature2 = new gdal.Feature(defn);
+ * feature1.setGeometry(new gdal.Point(5, 10));
+ * feature1.fields.set([5, 'test', 3.14]);
+ * feature2.setFrom(feature1);```
+ *
+ * @throws Error
+ * @method setFrom
+ * @param {gdal.Feature} feature
+ * @param {Array} [*index_map] Array of the indices (integers) of the feature's fields stored at the corresponding index of the source feature's fields. A value of -1 should be used to ignore the source's field. The array should not be `null` and be as long as the number of fields in the source feature.
+ * @param {Boolean} [forgiving=true] `true` if the operation should continue despite lacking output fields matching some of the source fields.
+ */
 NAN_METHOD(Feature::setFrom)
 {
 	NanScope();
@@ -277,12 +358,21 @@ NAN_METHOD(Feature::setFrom)
 	NanReturnUndefined();
 }
 
+/**
+ * @readOnly
+ * @attribute fields
+ * @type {gdal.FeatureFields}
+ */
 NAN_GETTER(Feature::fieldsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("fields_")));
 }
 
+/**
+ * @attribute fid
+ * @type {Integer}
+ */
 NAN_GETTER(Feature::fidGetter)
 {
 	NanScope();
@@ -294,6 +384,11 @@ NAN_GETTER(Feature::fidGetter)
 	NanReturnValue(NanNew<Integer>(feature->this_->GetFID()));
 }
 
+/**
+ * @readOnly
+ * @attribute defn
+ * @type {gdal.FeatureDefn}
+ */
 NAN_GETTER(Feature::defnGetter)
 {
 	NanScope();

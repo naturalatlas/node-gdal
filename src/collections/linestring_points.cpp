@@ -36,6 +36,11 @@ LineStringPoints::LineStringPoints()
 LineStringPoints::~LineStringPoints()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.LineString"}}LineString{{/crossLink}}'s points.
+ *
+ * @class gdal.LineStringPoints
+ */
 NAN_METHOD(LineStringPoints::New)
 {
 	NanScope();
@@ -75,6 +80,12 @@ NAN_METHOD(LineStringPoints::toString)
 	NanReturnValue(NanNew("LineStringPoints"));
 }
 
+/**
+ * Returns the number of points that are part of the line string.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(LineStringPoints::count)
 {
 	NanScope();
@@ -85,6 +96,11 @@ NAN_METHOD(LineStringPoints::count)
 	NanReturnValue(NanNew<Integer>(geom->get()->getNumPoints()));
 }
 
+/**
+ * Reverses the order of all the points.
+ *
+ * @method reverse
+ */
 NAN_METHOD(LineStringPoints::reverse)
 {
 	NanScope();
@@ -97,6 +113,12 @@ NAN_METHOD(LineStringPoints::reverse)
 	NanReturnUndefined();
 }
 
+/**
+ * Adjusts the number of points that make up the line string.
+ *
+ * @method resize
+ * @param {Integer} count
+ */
 NAN_METHOD(LineStringPoints::resize)
 {
 	NanScope();
@@ -111,6 +133,13 @@ NAN_METHOD(LineStringPoints::resize)
 	NanReturnUndefined();
 }
 
+/**
+ * Returns the point at the specified index.
+ *
+ * @method get
+ * @param {Integer} index 0-based index
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineStringPoints::get)
 {
 	NanScope();
@@ -131,6 +160,18 @@ NAN_METHOD(LineStringPoints::get)
 	NanReturnValue(Point::New(pt));
 }
 
+/**
+ * Sets the point at the specified index.
+ *
+ * @example
+ * ```
+ * lineString.points.set(0, new gdal.Point(1, 2));```
+ *
+ * @method set
+ * @throws Error
+ * @param {Integer} index 0-based index
+ * @param {gdal.Point} point
+ */
 NAN_METHOD(LineStringPoints::set)
 {
 	NanScope();
@@ -203,6 +244,21 @@ NAN_METHOD(LineStringPoints::set)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds point(s) to the line string. Also accepts any object with an x and y property.
+ *
+ * @example
+ * ```
+ * lineString.points.add(new gdal.Point(1, 2));
+ * lineString.points.add([
+ *     new gdal.Point(1, 2)
+ *     new gdal.Point(3, 4)
+ * ]);```
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.Point|object|Array} point(s)
+ */
 NAN_METHOD(LineStringPoints::add)
 {
 	NanScope();

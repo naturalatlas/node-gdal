@@ -47,7 +47,6 @@ MultiLineString::MultiLineString()
 {
 }
 
-
 MultiLineString::~MultiLineString()
 {
 	if(this_) {
@@ -61,6 +60,11 @@ MultiLineString::~MultiLineString()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.MultiLineString
+ * @extends gdal.GeometryCollection
+ */
 NAN_METHOD(MultiLineString::New)
 {
 	NanScope();
@@ -84,8 +88,8 @@ NAN_METHOD(MultiLineString::New)
 		f = new MultiLineString(new OGRMultiLineString());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
@@ -131,6 +135,12 @@ NAN_METHOD(MultiLineString::toString)
 	NanReturnValue(NanNew("MultiLineString"));
 }
 
+/**
+ * Converts it to a polygon.
+ *
+ * @method polygonize
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiLineString::polygonize)
 {
 	NanScope();
@@ -140,6 +150,13 @@ NAN_METHOD(MultiLineString::polygonize)
 	NanReturnValue(Geometry::New(geom->this_->Polygonize()));
 }
 
+/**
+ * Returns the child LineString at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.LineString}
+ */
 NAN_METHOD(MultiLineString::getGeometry)
 {
 	NanScope();

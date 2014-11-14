@@ -36,9 +36,14 @@ FeatureDefnFields::FeatureDefnFields()
 	: ObjectWrap()
 {}
 
-FeatureDefnFields::~FeatureDefnFields() 
+FeatureDefnFields::~FeatureDefnFields()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.FeatureDefn"}}FeatureDefn{{/crossLink}}'s fields.
+ *
+ * @class gdal.FeatureDefnFields
+ */
 NAN_METHOD(FeatureDefnFields::New)
 {
 	NanScope();
@@ -78,6 +83,12 @@ NAN_METHOD(FeatureDefnFields::toString)
 	NanReturnValue(NanNew("FeatureDefnFields"));
 }
 
+/**
+ * Returns the number of fields.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(FeatureDefnFields::count)
 {
 	NanScope();
@@ -92,6 +103,13 @@ NAN_METHOD(FeatureDefnFields::count)
 	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldCount()));
 }
 
+/**
+ * Returns the index of field definition.
+ *
+ * @method indexOf
+ * @param {String} name
+ * @return {Integer} Index or `-1` if not found.
+ */
 NAN_METHOD(FeatureDefnFields::indexOf)
 {
 	NanScope();
@@ -109,6 +127,13 @@ NAN_METHOD(FeatureDefnFields::indexOf)
 	NanReturnValue(NanNew<Integer>(feature_def->get()->GetFieldIndex(name.c_str())));
 }
 
+/**
+ * Returns a field definition.
+ *
+ * @method get
+ * @param {String|Integer} key Field name or index
+ * @return {gdal.FieldDefn}
+ */
 NAN_METHOD(FeatureDefnFields::get)
 {
 	NanScope();
@@ -124,13 +149,19 @@ NAN_METHOD(FeatureDefnFields::get)
 		NanThrowError("Field index or name must be given");
 		NanReturnUndefined();
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
 	NanReturnValue(FieldDefn::New(feature_def->get()->GetFieldDefn(field_index)));
 }
 
+/**
+ * Returns a list of field names.
+ *
+ * @method getNames
+ * @return {Array} List of field names.
+ */
 NAN_METHOD(FeatureDefnFields::getNames)
 {
 	NanScope();
@@ -142,7 +173,7 @@ NAN_METHOD(FeatureDefnFields::getNames)
 		NanReturnUndefined();
 	}
 
-	int n = feature_def->get()->GetFieldCount();	
+	int n = feature_def->get()->GetFieldCount();
 	Handle<Array> result = NanNew<Array>(n);
 
 	for (int i = 0; i < n;  i++) {
@@ -153,6 +184,13 @@ NAN_METHOD(FeatureDefnFields::getNames)
 	NanReturnValue(result);
 }
 
+/**
+ * Removes a field definition.
+ *
+ * @method remove
+ * @throws Error
+ * @param {String|Integer} key Field name or index
+ */
 NAN_METHOD(FeatureDefnFields::remove)
 {
 	NanScope();
@@ -168,7 +206,7 @@ NAN_METHOD(FeatureDefnFields::remove)
 		NanThrowError("Field index or name must be given");
 		NanReturnUndefined();
 	}
-	
+
 	int field_index;
 	ARG_FIELD_ID(0, feature_def->get(), field_index);
 
@@ -181,6 +219,13 @@ NAN_METHOD(FeatureDefnFields::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Adds field definition(s).
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.FieldDefn|Array} field(s)
+ */
 NAN_METHOD(FeatureDefnFields::add)
 {
 	NanScope();
@@ -222,6 +267,18 @@ NAN_METHOD(FeatureDefnFields::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Reorders the fields.
+ *
+ * @example
+ * ```
+ * // reverse fields:
+ * featureDef.fields.reorder([2, 1, 0]);```
+ *
+ * @method reorder
+ * @throws Error
+ * @param {Array} map An array representing the new field order.
+ */
 NAN_METHOD(FeatureDefnFields::reorder)
 {
 	NanScope();
@@ -243,7 +300,7 @@ NAN_METHOD(FeatureDefnFields::reorder)
 		NanThrowError("Array length must match field count");
 		NanReturnUndefined();
 	}
-	
+
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i < n; i++) {
@@ -251,19 +308,19 @@ NAN_METHOD(FeatureDefnFields::reorder)
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
 			NanThrowError("Array must only contain integers");
-			NanReturnUndefined(); 
+			NanReturnUndefined();
 		}
-		
+
 		int key = val->IntegerValue();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
 			NanThrowError("Values must be between 0 and field count - 1");
 			NanReturnUndefined();
 		}
-		
+
 		field_map_array[i] = key;
 	}
-	
+
 	err = feature_def->get()->ReorderFieldDefns(field_map_array);
 
 	delete [] field_map_array;
@@ -275,7 +332,13 @@ NAN_METHOD(FeatureDefnFields::reorder)
 	NanReturnUndefined();
 }
 
-
+/**
+ * Parent feature definition.
+ *
+ * @readOnly
+ * @attribute featureDefn
+ * @type {gdal.FeatureDefn}
+ */
 NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
 	NanScope();

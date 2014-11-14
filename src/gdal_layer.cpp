@@ -87,6 +87,11 @@ void Layer::dispose()
 	}
 };
 
+/**
+ * A representation of a layer of simple vector features, with access methods.
+ *
+ * @class gdal.Layer
+ */
 NAN_METHOD(Layer::New)
 {
 	NanScope();
@@ -191,9 +196,31 @@ NAN_METHOD(Layer::toString)
 	NanReturnValue(SafeString::New(ss.str().c_str()));
 }
 
+/**
+ * Flush pending changes to disk.
+ *
+ * @throws Error
+ * @method flush
+ */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
+
+/**
+ * Determines if the dataset supports the indicated operation.
+ *
+ * @method testCapability
+ * @param {string} capability (see {{#crossLink "Constants (OLC)"}}capability list{{/crossLink}})
+ * @return {Boolean}
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, TestCapability, "capability");
 
+/**
+ * Fetch the extent of this layer.
+ *
+ * @throws Error
+ * @method getExtent
+ * @param {Boolean} [force=true]
+ * @return {gdal.Envelope} Bounding envelope
+ */
 NAN_METHOD(Layer::getExtent)
 {
 	NanScope();
@@ -225,6 +252,13 @@ NAN_METHOD(Layer::getExtent)
 	NanReturnValue(obj);
 }
 
+/**
+ * This method returns the current spatial filter for this layer.
+ *
+ * @throws Error
+ * @method getSpatialFilter
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(Layer::getSpatialFilter)
 {
 	NanScope();
@@ -238,6 +272,22 @@ NAN_METHOD(Layer::getSpatialFilter)
 	NanReturnValue(Geometry::New(layer->this_->GetSpatialFilter(), false));
 }
 
+/**
+ * This method sets the geometry to be used as a spatial filter when fetching
+ * features via the `layer.features.next()` method. Only features that geometrically
+ * intersect the filter geometry will be returned.
+ *
+ * Alernatively you can pass it envelope bounds as individual arguments.
+ *
+ * @example
+ * ```
+ * layer.setSpatialFilter(geometry);
+ * layer.setSpatialFilter(minX, minY, maxX, maxY);```
+ *
+ * @throws Error
+ * @method setSpatialFilter
+ * @param {gdal.Geometry} filter
+ */
 NAN_METHOD(Layer::setSpatialFilter)
 {
 	NanScope();
@@ -251,7 +301,7 @@ NAN_METHOD(Layer::setSpatialFilter)
 	if(args.Length() == 1) {
 		Geometry *filter = NULL;
 		NODE_ARG_WRAPPED_OPT(0, "filter", Geometry, filter);
-		
+
 		if(filter) {
 			layer->this_->SetSpatialFilter(filter->get());
 		} else {
@@ -273,6 +323,28 @@ NAN_METHOD(Layer::setSpatialFilter)
 	NanReturnUndefined();
 }
 
+/**
+ * Sets the attribute query string to be used when fetching features via the
+ * `layer.features.next()` method. Only features for which the query evaluates as
+ * `true` will be returned.
+ *
+ * The query string should be in the format of an SQL WHERE clause. For instance
+ * "population > 1000000 and population < 5000000" where `population` is an
+ * attribute in the layer. The query format is normally a restricted form of
+ * SQL WHERE clause as described in the "WHERE" section of the [OGR SQL
+ * tutorial](http://www.gdal.org/ogr_sql.html). In some cases (RDBMS backed
+ * drivers) the native capabilities of the database may be used to interprete
+ * the WHERE clause in which case the capabilities will be broader than those
+ * of OGR SQL.
+ *
+ * @example
+ * ```
+ * layer.setAttributeFilter('population > 1000000 and population < 5000000');```
+ *
+ * @throws Error
+ * @method setAttributeFilter
+ * @param {String} filter
+ */
 NAN_METHOD(Layer::setAttributeFilter)
 {
 	NanScope();
@@ -297,9 +369,10 @@ NAN_METHOD(Layer::setAttributeFilter)
 		NODE_THROW_OGRERR(err);
 		NanReturnUndefined();
 	}
-	
+
 	NanReturnUndefined();
 }
+
 /*
 NAN_METHOD(Layer::getLayerDefn)
 {
@@ -315,12 +388,22 @@ NAN_METHOD(Layer::getLayerDefn)
 	NanReturnValue(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
 }*/
 
+/**
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
 NAN_GETTER(Layer::dsGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("ds_")));
 }
 
+/**
+ * @readOnly
+ * @attribute srs
+ * @type {gdal.SpatialReference}
+ */
 NAN_GETTER(Layer::srsGetter)
 {
 	NanScope();
@@ -332,6 +415,11 @@ NAN_GETTER(Layer::srsGetter)
 	NanReturnValue(SpatialReference::New(layer->this_->GetSpatialRef(), false));
 }
 
+/**
+ * @readOnly
+ * @attribute name
+ * @type {String}
+ */
 NAN_GETTER(Layer::nameGetter)
 {
 	NanScope();
@@ -343,6 +431,11 @@ NAN_GETTER(Layer::nameGetter)
 	NanReturnValue(SafeString::New(layer->this_->GetName()));
 }
 
+/**
+ * @readOnly
+ * @attribute geomColumn
+ * @type {String}
+ */
 NAN_GETTER(Layer::geomColumnGetter)
 {
 	NanScope();
@@ -354,6 +447,11 @@ NAN_GETTER(Layer::geomColumnGetter)
 	NanReturnValue(SafeString::New(layer->this_->GetGeometryColumn()));
 }
 
+/**
+ * @readOnly
+ * @attribute fidColumn
+ * @type {String}
+ */
 NAN_GETTER(Layer::fidColumnGetter)
 {
 	NanScope();
@@ -365,6 +463,11 @@ NAN_GETTER(Layer::fidColumnGetter)
 	NanReturnValue(SafeString::New(layer->this_->GetFIDColumn()));
 }
 
+/**
+ * @readOnly
+ * @attribute geomType
+ * @type {Integer} (see {{#crossLink "Constants (wkb)"}}geometry types{{/crossLink}})
+ */
 NAN_GETTER(Layer::geomTypeGetter)
 {
 	NanScope();
@@ -376,12 +479,22 @@ NAN_GETTER(Layer::geomTypeGetter)
 	NanReturnValue(NanNew<Integer>(layer->this_->GetGeomType()));
 }
 
+/**
+ * @readOnly
+ * @attribute features
+ * @type {gdal.LayerFeatures}
+ */
 NAN_GETTER(Layer::featuresGetter)
 {
 	NanScope();
 	NanReturnValue(args.This()->GetHiddenValue(NanNew("features_")));
 }
 
+/**
+ * @readOnly
+ * @attribute fields
+ * @type {gdal.LayerFields}
+ */
 NAN_GETTER(Layer::fieldsGetter)
 {
 	NanScope();

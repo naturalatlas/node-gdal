@@ -28,9 +28,15 @@ RasterBandOverviews::RasterBandOverviews()
 	: ObjectWrap()
 {}
 
-RasterBandOverviews::~RasterBandOverviews() 
+RasterBandOverviews::~RasterBandOverviews()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.RasterBand"}}RasterBand{{/crossLink}}
+ * overview functionality.
+ *
+ * @class gdal.RasterBandOverviews
+ */
 NAN_METHOD(RasterBandOverviews::New)
 {
 	NanScope();
@@ -70,6 +76,14 @@ NAN_METHOD(RasterBandOverviews::toString)
 	NanReturnValue(NanNew("RasterBandOverviews"));
 }
 
+/**
+ * Fetches the overview at the provided index.
+ *
+ * @method get
+ * @throws Error
+ * @param {Integer} index 0-based index
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(RasterBandOverviews::get)
 {
 	NanScope();
@@ -83,9 +97,10 @@ NAN_METHOD(RasterBandOverviews::get)
 
 	int id;
 	NODE_ARG_INT(0, "id", id);
-	
+
 	GDALRasterBand *result = band->get()->GetOverview(id);
 
+	// TODO: return null instead?
 	if (result == NULL) {
 		NanThrowError("Specified overview not found");
 		NanReturnUndefined();
@@ -94,6 +109,19 @@ NAN_METHOD(RasterBandOverviews::get)
 	NanReturnValue(RasterBand::New(result, band->getParent()));
 }
 
+/**
+ * Fetch best sampling overview.
+ *
+ * Returns the most reduced overview of the given band that still satisfies the
+ * desired number of samples. This function can be used with zero as the number
+ * of desired samples to fetch the most reduced overview. The same band as was
+ * passed in will be returned if it has not overviews, or if none of the overviews
+ * have enough samples.
+ *
+ * @method getBySampleCount
+ * @param {Integer} samples
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(RasterBandOverviews::getBySampleCount)
 {
 	NanScope();
@@ -107,12 +135,18 @@ NAN_METHOD(RasterBandOverviews::getBySampleCount)
 
 	int n_samples;
 	NODE_ARG_INT(0, "minimum number of samples", n_samples);
-	
+
 	GDALRasterBand *result = band->get()->GetRasterSampleOverview(n_samples);
 
 	NanReturnValue(RasterBand::New(result, band->getParent()));
 }
 
+/**
+ * Returns the number of overviews.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(RasterBandOverviews::count)
 {
 	NanScope();
@@ -123,7 +157,7 @@ NAN_METHOD(RasterBandOverviews::count)
 		NanThrowError("RasterBand object has already been destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	NanReturnValue(NanNew<Integer>(band->get()->GetOverviewCount()));
 }
 

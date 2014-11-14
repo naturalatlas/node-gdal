@@ -13,6 +13,29 @@ void Warper::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(target, "suggestedWarpOutput", suggestedWarpOutput);
 }
 
+/**
+ * Reprojects a dataset.
+ *
+ * @throws Error
+ * @method reprojectImage
+ * @static
+ * @for gdal
+ * @param {gdal.Dataset} src
+ * @param {gdal.Dataset} dst
+ * @param {gdal.SpatialReference} s_srs
+ * @param {gdal.SpatialReference} t_srs
+ * @param {object} [options] Warp options
+ * @param {String} [options.resampling] Resampling algorithm ({{#crossLink "Constants (GRA)"}}available options{{/crossLink}})
+ * @param {gdal.Geometry} [options.cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
+ * @param {int[]} [options.srcBands]
+ * @param {int[]} [options.dstBands]
+ * @param {int} [options.srcAlphaBand]
+ * @param {int} [options.dstAlphaBand]
+ * @param {Number} [options.srcNodata]
+ * @param {Number} [options.dstNodata]
+ * @param {int} [options.memoryLimit]
+ * @param {Number} [options.maxError]
+ */
 NAN_METHOD(Warper::reprojectImage)
 {
 	NanScope();
@@ -56,7 +79,7 @@ NAN_METHOD(Warper::reprojectImage)
 	}
 
 	CPLErr err = GDALReprojectImage(opts->hSrcDS, s_srs_wkt, opts->hDstDS, t_srs_wkt, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
-	
+
 	CPLFree(s_srs_wkt);
 	CPLFree(t_srs_wkt);
 
@@ -68,6 +91,20 @@ NAN_METHOD(Warper::reprojectImage)
 	NanReturnUndefined();
 }
 
+/**
+ * Used to determine the bounds and resolution of the output virtual file which
+ * should be large enough to include all the input image.
+ *
+ * @throws Error
+ * @method suggestedWarpOutput
+ * @static
+ * @for gdal
+ * @param {object} options Warp options
+ * @param {gdal.Dataset} options.src
+ * @param {gdal.SpatialReference} options.s_srs
+ * @param {gdal.SpatialReference} options.t_srs
+ * @return {Object} An object containing `"rasterSize"` and `"geoTransform"` properties.
+ */
 NAN_METHOD(Warper::suggestedWarpOutput)
 {
 	NanScope();
@@ -78,7 +115,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	Dataset* ds;
 	SpatialReference* s_srs;
 	SpatialReference* t_srs;
-	double maxError = 0;	
+	double maxError = 0;
 	double geotransform[6];
 	int w = 0, h = 0;
 
@@ -150,7 +187,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
 	}
-	
+
 	Handle<Array> result_geotransform = NanNew<Array>();
 	result_geotransform->Set(0, NanNew<Number>(geotransform[0]));
 	result_geotransform->Set(1, NanNew<Number>(geotransform[1]));

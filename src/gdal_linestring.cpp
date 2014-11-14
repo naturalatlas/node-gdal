@@ -51,7 +51,6 @@ LineString::LineString()
 {
 }
 
-
 LineString::~LineString()
 {
 	if(this_) {
@@ -65,6 +64,19 @@ LineString::~LineString()
 	}
 }
 
+/**
+ * Concrete representation of a multi-vertex line.
+ *
+ * @example
+ * ```
+ * var lineString = new gdal.LineString();
+ * lineString.points.add(new gdal.Point(0,0));
+ * lineString.points.add(new gdal.Point(0,10));```
+ *
+ * @constructor
+ * @class gdal.LineString
+ * @extends gdal.Geometry
+ */
 NAN_METHOD(LineString::New)
 {
 	NanScope();
@@ -88,8 +100,8 @@ NAN_METHOD(LineString::New)
 		f = new LineString(new OGRLineString());
 	}
 
-	Handle<Value> points = LineStringPoints::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("points_"), points); 
+	Handle<Value> points = LineStringPoints::New(args.This());
+	args.This()->SetHiddenValue(NanNew("points_"), points);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
@@ -135,25 +147,21 @@ NAN_METHOD(LineString::toString)
 	NanReturnValue(NanNew("LineString"));
 }
 
+/**
+ * Computes the length of the line string.
+ *
+ * @method getLength
+ * @return Number
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getLength, Number, get_Length);
-NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getNumPoints, Integer, getNumPoints);
 
-NAN_METHOD(LineString::getPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap<LineString>(args.This());
-
-	OGRPoint *pt = new OGRPoint();
-	int i;
-
-	NODE_ARG_INT(0, "i", i);
-
-	geom->this_->getPoint(i, pt);
-
-	NanReturnValue(Point::New(pt));
-}
-
+/**
+ * Returns the point at the specified distance along the line string.
+ *
+ * @method value
+ * @param {Number} distance
+ * @return {gdal.Point}
+ */
 NAN_METHOD(LineString::value)
 {
 	NanScope();
@@ -170,36 +178,12 @@ NAN_METHOD(LineString::value)
 	NanReturnValue(Point::New(pt));
 }
 
-
-NAN_METHOD(LineString::addPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap<LineString>(args.This());
-
-	if (args[0]->IsNumber()) {
-
-		double x = 0, y = 0, z = 0;
-		NODE_ARG_DOUBLE(0, "x", x);
-		NODE_ARG_DOUBLE(1, "y", y);
-		NODE_ARG_DOUBLE_OPT(2, "z", z);
-		if (args.Length() < 3) {
-			geom->this_->addPoint(x, y);
-		} else {
-			geom->this_->addPoint(x, y, z);
-		}
-
-	} else {
-
-		Point* pt;
-		NODE_ARG_WRAPPED(0, "point", Point, pt);
-		geom->this_->addPoint(pt->get());
-
-	}
-
-	NanReturnUndefined();
-}
-
+/**
+ * Points that make up the line string.
+ *
+ * @attribute points
+ * @type {gdal.LineStringPoints}
+ */
 NAN_GETTER(LineString::pointsGetter)
 {
 	NanScope();

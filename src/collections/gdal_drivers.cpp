@@ -36,6 +36,11 @@ GDALDrivers::GDALDrivers()
 GDALDrivers::~GDALDrivers()
 {}
 
+/**
+ * An collection of all {{#crossLink "gdal.Driver"}}drivers{{/crossLink}} registered with GDAL.
+ *
+ * @class gdal.GDALDrivers
+ */
 NAN_METHOD(GDALDrivers::New)
 {
 	NanScope();
@@ -74,6 +79,16 @@ NAN_METHOD(GDALDrivers::toString)
 	NanReturnValue(NanNew("GDALDrivers"));
 }
 
+/**
+ * Returns a driver with the specified name.
+ *
+ * Note: Prior to GDAL2.x there is a separate driver for vector VRTs and raster VRTs.
+ *       Use `"VRT:vector"` to fetch the vector VRT driver and `"VRT:raster"` to fetch the raster VRT driver.
+ * 
+ * @method get
+ * @param {Integer|string} index 0-based index or driver name
+ * @return {gdal.Driver}
+ */
 NAN_METHOD(GDALDrivers::get)
 {
 	NanScope();
@@ -148,6 +163,12 @@ NAN_METHOD(GDALDrivers::get)
 	NanReturnValue(NanNull());
 }
 
+/**
+ * Returns an array with the names of all the drivers registered with GDAL.
+ *
+ * @method getNames
+ * @return {string[]}
+ */
 NAN_METHOD(GDALDrivers::getNames)
 {
 	NanScope();
@@ -185,6 +206,12 @@ NAN_METHOD(GDALDrivers::getNames)
 	NanReturnValue(driver_names);
 }
 
+/**
+ * Returns the number of drivers registered with GDAL.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(GDALDrivers::count)
 {
 	NanScope();

@@ -52,6 +52,13 @@ FieldDefn::~FieldDefn()
 	}
 }
 
+
+/**
+ * @constructor
+ * @class gdal.FieldDefn
+ * @param {String} name Field name
+ * @param {String} type Data type (see {{#crossLink "Constants (OFT)"}}OFT constants{{/crossLink}})
+ */
 NAN_METHOD(FieldDefn::New)
 {
 	NanScope();
@@ -126,7 +133,10 @@ NAN_METHOD(FieldDefn::toString)
 	NanReturnValue(NanNew("FieldDefn"));
 }
 
-
+/**
+ * @attribute name
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::nameGetter)
 {
 	NanScope();
@@ -134,6 +144,12 @@ NAN_GETTER(FieldDefn::nameGetter)
 	NanReturnValue(SafeString::New(def->this_->GetNameRef()));
 }
 
+/**
+ * Data type (see {{#crossLink "Constants (OFT)"}}OFT constants{{/crossLink}})
+ *
+ * @attribute type
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::typeGetter)
 {
 	NanScope();
@@ -141,6 +157,10 @@ NAN_GETTER(FieldDefn::typeGetter)
 	NanReturnValue(SafeString::New(getFieldTypeName(def->this_->GetType())));
 }
 
+/**
+ * @attribute ignored
+ * @type {Boolean}
+ */
 NAN_GETTER(FieldDefn::ignoredGetter)
 {
 	NanScope();
@@ -148,6 +168,12 @@ NAN_GETTER(FieldDefn::ignoredGetter)
 	NanReturnValue(NanNew<Boolean>(def->this_->IsIgnored()));
 }
 
+/**
+ * Field justification (see {{#crossLink "Constants (OJ)"}}OJ constants{{/crossLink}})
+ *
+ * @attribute justification
+ * @type {String}
+ */
 NAN_GETTER(FieldDefn::justificationGetter)
 {
 	NanScope();
@@ -158,6 +184,10 @@ NAN_GETTER(FieldDefn::justificationGetter)
 	NanReturnValue(NanUndefined());
 }
 
+/**
+ * @attribute width
+ * @type {Integer}
+ */
 NAN_GETTER(FieldDefn::widthGetter)
 {
 	NanScope();
@@ -165,6 +195,10 @@ NAN_GETTER(FieldDefn::widthGetter)
 	NanReturnValue(NanNew<Integer>(def->this_->GetWidth()));
 }
 
+/**
+ * @attribute precision
+ * @type {Integer}
+ */
 NAN_GETTER(FieldDefn::precisionGetter)
 {
 	NanScope();
@@ -199,14 +233,14 @@ NAN_SETTER(FieldDefn::typeSetter)
 	} else {
 		def->this_->SetType(OGRFieldType(type));
 	}
-	
+
 }
 
 NAN_SETTER(FieldDefn::justificationSetter)
 {
 	NanScope();
 	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	
+
 
 	OGRJustification justification;
 	std::string str = *NanUtf8String(value);
@@ -216,7 +250,7 @@ NAN_SETTER(FieldDefn::justificationSetter)
 		} else if (str == "Right") {
 			justification = OJRight;
 		} else if (str == "Undefined") {
-			justification = OJUndefined; 
+			justification = OJUndefined;
 		} else {
 			NanThrowError("Unrecognized justification");
 			return;
@@ -227,7 +261,7 @@ NAN_SETTER(FieldDefn::justificationSetter)
 		NanThrowError("justification must be a string or undefined");
 		return;
 	}
-	
+
 	def->this_->SetJustify(justification);
 }
 

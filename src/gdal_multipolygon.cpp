@@ -47,7 +47,6 @@ MultiPolygon::MultiPolygon()
 {
 }
 
-
 MultiPolygon::~MultiPolygon()
 {
 	if(this_) {
@@ -61,6 +60,11 @@ MultiPolygon::~MultiPolygon()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.MultiPolygon
+ * @extends gdal.GeometryCollection
+ */
 NAN_METHOD(MultiPolygon::New)
 {
 	NanScope();
@@ -84,8 +88,8 @@ NAN_METHOD(MultiPolygon::New)
 		f = new MultiPolygon(new OGRMultiPolygon());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
@@ -131,6 +135,12 @@ NAN_METHOD(MultiPolygon::toString)
 	NanReturnValue(NanNew("MultiPolygon"));
 }
 
+/**
+ * Unions all the geometries and returns the result.
+ *
+ * @method unionCascaded
+ * @return {gdal.Geometry}
+ */
 NAN_METHOD(MultiPolygon::unionCascaded)
 {
 	NanScope();
@@ -140,8 +150,21 @@ NAN_METHOD(MultiPolygon::unionCascaded)
 	NanReturnValue(Geometry::New(geom->this_->UnionCascaded()));
 }
 
+/**
+ * Computes the combined area of the collection.
+ *
+ * @method getArea
+ * @return {Number}
+ */
 NODE_WRAPPED_METHOD_WITH_RESULT(MultiPolygon, getArea, Number, get_Area);
 
+/**
+ * Returns the child Polygon at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiPolygon::getGeometry)
 {
 	NanScope();

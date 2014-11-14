@@ -82,7 +82,7 @@ void Driver::dispose()
 			this_ogrdriver = NULL;
 		}
 		return;
-	} 
+	}
 	#endif
 	if(this_gdaldriver) {
 		LOG("Disposing GDAL Driver [%p]", this_gdaldriver);
@@ -92,6 +92,18 @@ void Driver::dispose()
 	}
 }
 
+
+/**
+ * Format specific driver.
+ *
+ * An instance of this class is created for each supported format, and
+ * manages information about the format.
+ *
+ * This roughly corresponds to a file format, though some drivers may
+ * be gateways to many formats through a secondary multi-library.
+ *
+ * @class gdal.Driver
+ */
 NAN_METHOD(Driver::New)
 {
 	NanScope();
@@ -162,6 +174,11 @@ NAN_METHOD(Driver::toString)
 	NanReturnValue(NanNew("Driver"));
 }
 
+/**
+ * @readOnly
+ * @attribute description
+ * @type String
+ */
 NAN_GETTER(Driver::descriptionGetter)
 {
 	NanScope();
@@ -170,12 +187,17 @@ NAN_GETTER(Driver::descriptionGetter)
 	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		NanReturnValue(SafeString::New(driver->getOGRSFDriver()->GetName()));
-	} 
+	}
 	#endif
 
 	NanReturnValue(SafeString::New(driver->getGDALDriver()->GetDescription()));
 }
 
+/**
+ * @throws Error
+ * @method deleteDataset
+ * @param {string} filename
+ */
 NAN_METHOD(Driver::deleteDataset)
 {
 	NanScope();
@@ -184,7 +206,7 @@ NAN_METHOD(Driver::deleteDataset)
 	NODE_ARG_STR(0, "dataset name", name);
 
 	Driver* driver = ObjectWrap::Unwrap<Driver>(args.This());
-	
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		OGRErr err = driver->getOGRSFDriver()->DeleteDataSource(name.c_str());
@@ -193,17 +215,30 @@ NAN_METHOD(Driver::deleteDataset)
 			NanReturnUndefined();
 		}
 		NanReturnUndefined();
-	} 
+	}
 	#endif
 
 	CPLErr err = driver->getGDALDriver()->Delete(name.c_str());
 	if (err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
-	} 
+	}
 	NanReturnUndefined();
 }
 
+/**
+ * Create a new dataset with this driver.
+ *
+ * @throws Error
+ * @method create
+ * @param {String} filename
+ * @param {Integer} [x_size=0] raster width in pixels (ignored for vector datasets)
+ * @param {Integer} [y_size=0] raster height in pixels (ignored for vector datasets)
+ * @param {Integer} [band_count=0]
+ * @param {Integer} [data_type=gdal.GDT_Byte] pixel data type (ignored for vector datasets) (see {{#crossLink "Constants (GDT)"}}data types{{/crossLink}})
+ * @param {String[]|object} [creation_options] An array or object containing driver-specific dataset creation options
+ * @return gdal.Dataset
+ */
 NAN_METHOD(Driver::create)
 {
 	NanScope();
@@ -216,7 +251,7 @@ NAN_METHOD(Driver::create)
 	StringList options;
 
 	NODE_ARG_STR(0, "filename", filename);
-	
+
 	if(args.Length() < 3){
 		if(args.Length() > 1 && options.parse(args[1])){
 			NanReturnUndefined(); //error parsing string list
@@ -246,7 +281,7 @@ NAN_METHOD(Driver::create)
 		}
 
 		NanReturnValue(Dataset::New(ds));
-	} 
+	}
 	#endif
 
 	GDALDriver *raw = driver->getGDALDriver();
@@ -259,6 +294,18 @@ NAN_METHOD(Driver::create)
 
 	NanReturnValue(Dataset::New(ds));
 }
+
+/**
+ * Create a copy of a dataset.
+ *
+ * @throws Error
+ * @method createCopy
+ * @param {String} filename
+ * @param {gdal.Dataset} src
+ * @param {Boolean} [strict=false]
+ * @param {String[]|object} [options=null] An array or object containing driver-specific dataset creation options
+ * @return gdal.Dataset
+ */
 NAN_METHOD(Driver::createCopy)
 {
 	NanScope();
@@ -281,7 +328,7 @@ NAN_METHOD(Driver::createCopy)
 	} else {
 		NanThrowError("source dataset must be a Dataset object");
 		NanReturnUndefined();
-	}	
+	}
 
 
 	if(args.Length() > 2 && options.parse(args[2])){
@@ -328,6 +375,14 @@ NAN_METHOD(Driver::createCopy)
 	NanReturnValue(Dataset::New(ds));
 }
 
+/**
+ * Copy the files of a dataset.
+ *
+ * @throws Error
+ * @method copyFiles
+ * @param {String} name_old New name for the dataset.
+ * @param {String} name_new Old name of the dataset.
+ */
 NAN_METHOD(Driver::copyFiles)
 {
 	NanScope();
@@ -349,11 +404,19 @@ NAN_METHOD(Driver::copyFiles)
 	if (err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
-	} 
+	}
 
 	NanReturnUndefined();
 }
 
+/**
+ * Renames the dataset.
+ *
+ * @throws Error
+ * @method rename
+ * @param {String} new_name New name for the dataset.
+ * @param {String} old_name Old name of the dataset.
+ */
 NAN_METHOD(Driver::rename)
 {
 	NanScope();
@@ -375,17 +438,25 @@ NAN_METHOD(Driver::rename)
 	if (err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
-	} 
+	}
 
 	NanReturnUndefined();
 }
 
+/**
+ * Returns metadata about the driver.
+ *
+ * @throws Error
+ * @method getMetadata
+ * @param {String} [domain]
+ * @return Object
+ */
 NAN_METHOD(Driver::getMetadata)
 {
 	NanScope();
 	Driver *driver = ObjectWrap::Unwrap<Driver>(args.This());
-	
-	Handle<Object> result; 
+
+	Handle<Object> result;
 
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
@@ -406,6 +477,15 @@ NAN_METHOD(Driver::getMetadata)
 	NanReturnValue(result);
 }
 
+/**
+ * Opens a dataset.
+ *
+ * @throws Error
+ * @method open
+ * @param {String} path
+ * @param {String} [mode=`"r"`] The mode to use to open the file: `"r"` or `"r+"`
+ * @return {gdal.Dataset}
+ */
 NAN_METHOD(Driver::open)
 {
 	NanScope();
@@ -437,7 +517,7 @@ NAN_METHOD(Driver::open)
 	}
 	#endif
 
-	GDALDriver  *raw = driver->getGDALDriver();
+	GDALDriver *raw = driver->getGDALDriver();
 	GDALOpenInfo *info = new GDALOpenInfo(path.c_str(), access);
 	GDALDataset *ds = raw->pfnOpen(info);
 	delete info;

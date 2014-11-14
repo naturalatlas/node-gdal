@@ -22,28 +22,26 @@ using namespace v8;
 
 namespace node_gdal {
 
-/**
- * A class for parsing a V8::Value and constructing a GDALWarpOptions struct
- * 
- * see: http://www.gdal.org/structGDALWarpOptions.html
- * 
- * {
- *   options : string[] | object
- *   memoryLimit : int
- *   resampleAlg : string
- *   src: Dataset
- *   dst: Dataset
- *   srcBands: int | int[]
- *   dstBands: int | int[]
- *   nBands: int
- *   srcAlphaBand: int
- *   dstAlphaBand: int
- *   srcNoData: double
- *   dstNoData: double
- *   cutline: geometry
- *   blend: double
- * }
- */
+// A class for parsing a V8::Value and constructing a GDALWarpOptions struct
+//
+// see: http://www.gdal.org/structGDALWarpOptions.html
+//
+// {
+//   options : string[] | object
+//   memoryLimit : int
+//   resampleAlg : string
+//   src: Dataset
+//   dst: Dataset
+//   srcBands: int | int[]
+//   dstBands: int | int[]
+//   nBands: int
+//   srcAlphaBand: int
+//   dstAlphaBand: int
+//   srcNoData: double
+//   dstNoData: double
+//   cutline: geometry
+//   blend: double
+// }
 
 class WarpOptions {
 public:

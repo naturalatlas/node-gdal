@@ -32,9 +32,17 @@ DatasetBands::DatasetBands()
 	: ObjectWrap()
 {}
 
-DatasetBands::~DatasetBands() 
+DatasetBands::~DatasetBands()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.Dataset"}}Dataset{{/crossLink}}'s raster bands.
+ *
+ * ```
+ * var bands = dataset.bands;```
+ *
+ * @class gdal.DatasetBands
+ */
 NAN_METHOD(DatasetBands::New)
 {
 	NanScope();
@@ -74,13 +82,20 @@ NAN_METHOD(DatasetBands::toString)
 	NanReturnValue(NanNew("DatasetBands"));
 }
 
+/**
+ * Returns the band with the given ID.
+ *
+ * @method get
+ * @param {Integer} id
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(DatasetBands::get)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		OGRDataSource* raw = ds->getDatasource();
@@ -100,25 +115,33 @@ NAN_METHOD(DatasetBands::get)
 		}
 		int band_id;
 		NODE_ARG_INT(0, "band id", band_id);
-	
+
 		GDALRasterBand *band = raw->GetRasterBand(band_id);
 
 		NanReturnValue(RasterBand::New(band, raw));
 	}
 }
 
+/**
+ * Adds a new band.
+ *
+ * @method create
+ * @throws Error
+ * @param {Integer} dataType Type of band ({{#crossLink "Constants (GDT)"}}see GDT constants{{/crossLink}}).
+ * @return {gdal.RasterBand}
+ */
 NAN_METHOD(DatasetBands::create)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		NanThrowError("Dataset does not support getting creating bands");
 		NanReturnUndefined();
-	} 
+	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
@@ -150,7 +173,7 @@ NAN_METHOD(DatasetBands::create)
 	}
 
 	CPLErr err = raw->AddBand(type, options.get());
-	
+
 	if(err) {
 		NODE_THROW_CPLERR(err);
 		NanReturnUndefined();
@@ -159,13 +182,19 @@ NAN_METHOD(DatasetBands::create)
 	NanReturnValue(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount()), raw));
 }
 
+/**
+ * Returns the number of bands.
+ *
+ * @method count
+ * @return {Integer}
+ */
 NAN_METHOD(DatasetBands::count)
 {
 	NanScope();
 
 	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
 	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
-	
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		OGRDataSource* raw = ds->getDatasource();
@@ -185,6 +214,13 @@ NAN_METHOD(DatasetBands::count)
 	NanReturnValue(NanNew<Integer>(raw->GetRasterCount()));
 }
 
+/**
+ * Parent dataset
+ *
+ * @readOnly
+ * @attribute ds
+ * @type {gdal.Dataset}
+ */
 NAN_GETTER(DatasetBands::dsGetter)
 {
 	NanScope();

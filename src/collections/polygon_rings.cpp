@@ -33,6 +33,11 @@ PolygonRings::PolygonRings()
 PolygonRings::~PolygonRings()
 {}
 
+/**
+ * A collection of polygon rings, used by {{#crossLink "gdal.Polygon"}}gdal.Polygon{{/crossLink}}.
+ *
+ * @class gdal.PolygonRings
+ */
 NAN_METHOD(PolygonRings::New)
 {
 	NanScope();
@@ -72,6 +77,12 @@ NAN_METHOD(PolygonRings::toString)
 	NanReturnValue(NanNew("PolygonRings"));
 }
 
+/**
+ * Returns the number of rings that exist in the collection.
+ *
+ * @method count
+ * @return Integer
+ */
 NAN_METHOD(PolygonRings::count)
 {
 	NanScope();
@@ -85,6 +96,18 @@ NAN_METHOD(PolygonRings::count)
 	NanReturnValue(NanNew<Integer>(i));
 }
 
+/**
+ * Returns the ring at the specified index. The ring
+ * at index `0` will always be the polygon's exterior ring.
+ *
+ * @example
+ * ```
+ * var exterior = polygon.rings.get(0);
+ * var interior = polygon.rings.get(1);```
+ *
+ * @method get
+ * @return {gdal.LinearRing}
+ */
 NAN_METHOD(PolygonRings::get)
 {
 	NanScope();
@@ -102,6 +125,27 @@ NAN_METHOD(PolygonRings::get)
 	}
 }
 
+/**
+ * Adds a ring to the collection.
+ *
+ * @example
+ * ```
+ * var ring1 = new gdal.LinearRing();
+ * ring1.points.add(0,0);
+ * ring1.points.add(1,0);
+ * ring1.points.add(1,1);
+ * ring1.points.add(0,1);
+ * ring1.points.add(0,0);
+ *
+ * // one at a time:
+ * polygon.rings.add(ring1);
+ *
+ * // many at once:
+ * polygon.rings.add([ring1, ...]);```
+ *
+ * @method add
+ * @param {gdal.LinearRing} ring(s)
+ */
 NAN_METHOD(PolygonRings::add)
 {
 	NanScope();

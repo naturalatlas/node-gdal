@@ -27,7 +27,7 @@ void LayerFeatures::Initialize(Handle<Object> target)
 	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
 	target->Set(NanNew("LayerFeatures"), lcons->GetFunction());
-	
+
 	NanAssignPersistent(constructor, lcons);
 }
 
@@ -35,9 +35,14 @@ LayerFeatures::LayerFeatures()
 	: ObjectWrap()
 {}
 
-LayerFeatures::~LayerFeatures() 
+LayerFeatures::~LayerFeatures()
 {}
 
+/**
+ * An encapsulation of a {{#crossLink "gdal.Layer"}}Layer{{/crossLink}}'s features.
+ *
+ * @class gdal.LayerFeatures
+ */
 NAN_METHOD(LayerFeatures::New)
 {
 	NanScope();
@@ -77,6 +82,16 @@ NAN_METHOD(LayerFeatures::toString)
 	NanReturnValue(NanNew("LayerFeatures"));
 }
 
+/**
+ * Fetch a feature by its identifier.
+ *
+ * **Important:** The `id` argument is not an index. In most cases it will be zero-based,
+ * but in some cases it will not. If iterating, it's best to use the `next()` method.
+ *
+ * @method get
+ * @param {Integer} id The feature ID of the feature to read.
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::get)
 {
 	NanScope();
@@ -95,6 +110,13 @@ NAN_METHOD(LayerFeatures::get)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Resets the feature pointer used by `next()` and
+ * returns the first feature in the layer.
+ *
+ * @method first
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::first)
 {
 	NanScope();
@@ -112,6 +134,16 @@ NAN_METHOD(LayerFeatures::first)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Returns the next feature in the layer. Returns null if no more features.
+ *
+ * @example
+ * ```
+ * while (feature = layer.features.next()) { ... }```
+ *
+ * @method next
+ * @return {gdal.Feature}
+ */
 NAN_METHOD(LayerFeatures::next)
 {
 	NanScope();
@@ -128,6 +160,20 @@ NAN_METHOD(LayerFeatures::next)
 	NanReturnValue(Feature::New(feature));
 }
 
+/**
+ * Adds a feature to the layer. The feature should be created using the current layer as the definition.
+ *
+ * @example
+ * ```
+ * var feature = new gdal.Feature(layer);
+ * feature.setGeometry(new gdal.Point(0, 1));
+ * feature.fields.set('name', 'somestring');
+ * layer.features.add(feature);```
+ *
+ * @method add
+ * @throws Error
+ * @param {gdal.Feature} feature
+ */
 NAN_METHOD(LayerFeatures::add)
 {
 	NanScope();
@@ -141,7 +187,7 @@ NAN_METHOD(LayerFeatures::add)
 
 	Feature *f;
 	NODE_ARG_WRAPPED(0, "feature", Feature, f)
-	
+
 	int err = layer->get()->CreateFeature(f->get());
 	if(err) {
 		NODE_THROW_OGRERR(err);
@@ -150,6 +196,13 @@ NAN_METHOD(LayerFeatures::add)
 	NanReturnUndefined();
 }
 
+/**
+ * Returns the number of features in the layer.
+ *
+ * @method count
+ * @param {Boolean} [force=true]
+ * @return {Integer} Number of features in the layer.
+ */
 NAN_METHOD(LayerFeatures::count)
 {
 	NanScope();
@@ -167,6 +220,14 @@ NAN_METHOD(LayerFeatures::count)
 	NanReturnValue(NanNew<Integer>(layer->get()->GetFeatureCount(force)));
 }
 
+/**
+ * Sets a feature in the layer.
+ *
+ * @method set
+ * @throws Error
+ * @param {Integer} [id]
+ * @param {gdal.Feature} feature
+ */
 NAN_METHOD(LayerFeatures::set)
 {
 	NanScope();
@@ -210,7 +271,13 @@ NAN_METHOD(LayerFeatures::set)
 	NanReturnUndefined();
 }
 
-
+/**
+ * Removes a feature from the layer.
+ *
+ * @method remove
+ * @throws Error
+ * @param {Integer} id
+ */
 NAN_METHOD(LayerFeatures::remove)
 {
 	NanScope();
@@ -221,7 +288,7 @@ NAN_METHOD(LayerFeatures::remove)
 		NanThrowError("Layer object already destroyed");
 		NanReturnUndefined();
 	}
-	
+
 	int i;
 	NODE_ARG_INT(0, "feature id", i);
 	int err = layer->get()->DeleteFeature(i);
@@ -233,6 +300,12 @@ NAN_METHOD(LayerFeatures::remove)
 	NanReturnUndefined();
 }
 
+/**
+ * Parent layer
+ *
+ * @attribute layer
+ * @type {gdal.Layer}
+ */
 NAN_GETTER(LayerFeatures::layerGetter)
 {
 	NanScope();

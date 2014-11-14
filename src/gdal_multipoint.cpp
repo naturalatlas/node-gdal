@@ -60,6 +60,11 @@ MultiPoint::~MultiPoint()
 	}
 }
 
+/**
+ * @constructor
+ * @class gdal.MultiPoint
+ * @extends gdal.GeometryCollection
+ */
 NAN_METHOD(MultiPoint::New)
 {
 	NanScope();
@@ -83,8 +88,8 @@ NAN_METHOD(MultiPoint::New)
 		f = new MultiPoint(new OGRMultiPoint());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This()); 
-	args.This()->SetHiddenValue(NanNew("children_"), children); 
+	Handle<Value> children = GeometryCollectionChildren::New(args.This());
+	args.This()->SetHiddenValue(NanNew("children_"), children);
 
 	f->Wrap(args.This());
 	NanReturnValue(args.This());
@@ -130,6 +135,13 @@ NAN_METHOD(MultiPoint::toString)
 	NanReturnValue(NanNew("MultiPoint"));
 }
 
+/**
+ * Returns the child Point at an index.
+ *
+ * @method getGeometry
+ * @param {Integer} index
+ * @return {gdal.Polygon}
+ */
 NAN_METHOD(MultiPoint::getGeometry)
 {
 	NanScope();
