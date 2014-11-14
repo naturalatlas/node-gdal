@@ -62,7 +62,6 @@
 					"VCCLCompilerTool": {
 						"ExceptionHandling": 2, # /EHsc
 						"RuntimeTypeInfo": "true",
-						"RuntimeLibrary": "2", # 0:/MT, 1:/MTd, 2:/MD, 3:/MDd
 						"DebugInformationFormat": "0"
 					},
 					"VCLinkerTool": {
