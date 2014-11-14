@@ -21,9 +21,6 @@ void LineString::Initialize(Handle<Object> target)
 	lcons->SetClassName(NanNew("LineString"));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "addPoint", addPoint);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getPoint", getPoint);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getNumPoints", getNumPoints);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getLength", getLength);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "value", value);
 

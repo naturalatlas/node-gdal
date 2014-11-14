@@ -29,10 +29,7 @@ public:
 	static Handle<Value> New(OGRLineString *geom);
 	static Handle<Value> New(OGRLineString *geom, bool owned);
 	static NAN_METHOD(toString);
-	static NAN_METHOD(addPoint);
-	static NAN_METHOD(getPoint);
 	static NAN_METHOD(getLength);
-	static NAN_METHOD(getNumPoints);
 	static NAN_METHOD(value);
 
 	static NAN_GETTER(pointsGetter);
