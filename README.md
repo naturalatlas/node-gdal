@@ -20,11 +20,11 @@ $ npm install gdal --build-from-source --shared_gdal
 ### Links
 
 - [**Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html)
-- [**Examples**](examples/)
+- [Examples](examples/)
 
-### Sample Usage
+## Sample Usage
 
-##### Raster
+#### Raster
 ```js
 var gdal = require("gdal");
 var dataset = gdal.open("sample.tif");
@@ -35,7 +35,7 @@ console.log("height: " + dataset.rasterSize.y);
 console.log("geotransform: " + dataset.geoTransform);
 console.log("srs: " + (ds.srs ? ds.srs.toWKT() : 'null'));
 ```
-##### Vector
+#### Vector
 ```js
 var gdal = require("gdal");
 var dataset = gdal.open("sample.shp");
