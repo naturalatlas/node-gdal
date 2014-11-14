@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.0</b>
+                    API Docs for Version: <b>0.3.1</b>
                 </p>
             </li>
         </div>
@@ -328,7 +328,7 @@ void Dataset::dispose()
 
 /**
  * A set of associated raster bands and/or vector layers, usually from one file.
- * 
+ *
  * &#x60;&#x60;&#x60;
  * // raster dataset:
  * dataset = gdal.open(&#x27;file.tif&#x27;);
@@ -635,7 +635,7 @@ NAN_METHOD(Dataset::executeSQL)
  * associated with the dataset (for instance a virtual dataset).
  *
  * Returns an empty array for vector datasets if GDAL version is below 2.0
- * 
+ *
  * @method getFileList
  * @return {String[]}
  */
@@ -925,9 +925,11 @@ NAN_GETTER(Dataset::descriptionGetter)
 }
 
 /**
+ * Raster dimensions. An object containing &#x60;x&#x60; and &#x60;y&#x60; properties.
+ *
  * @readOnly
  * @attribute rasterSize
- * @type Object containing &#x60;x&#x60; and &#x60;y&#x60; properties.
+ * @type Object
  */
 NAN_GETTER(Dataset::rasterSizeGetter)
 {
@@ -1019,7 +1021,7 @@ NAN_GETTER(Dataset::srsGetter)
  * var GT = dataset.geoTransform;
  * var Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];
  * var Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];&#x60;&#x60;&#x60;
- * 
+ *
  * @attribute geoTransform
  * @type {Array}
  */

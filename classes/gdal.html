@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.0</b>
+                    API Docs for Version: <b>0.3.1</b>
                 </p>
             </li>
         </div>
@@ -219,55 +219,55 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			<ul>
 				
 				
-				<li><a href="#method-checksumImage"><span class="im">checksumImage</span>(<span class="ia">src</span><span class="ia">x</span><span class="ia">y</span><span class="ia">w</span><span class="ia">h</span>)</a></li>
+				<li><a href="#method-checksumImage"><span class="im">gdal.checksumImage</span>(<span class="ia">src</span><span class="ia">x</span><span class="ia">y</span><span class="ia">w</span><span class="ia">h</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-config.get"><span class="im">config.get</span>(<span class="ia">key</span>)</a></li>
+				<li><a href="#method-config.get"><span class="im">gdal.config.get</span>(<span class="ia">key</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-config.set"><span class="im">config.set</span>(<span class="ia">key</span><span class="ia">value</span>)</a></li>
+				<li><a href="#method-config.set"><span class="im">gdal.config.set</span>(<span class="ia">key</span><span class="ia">value</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-contourGenerate"><span class="im">contourGenerate</span>(<span class="ia">options</span>)</a></li>
+				<li><a href="#method-contourGenerate"><span class="im">gdal.contourGenerate</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-decToDMS"><span class="im">decToDMS</span>(<span class="ia">angle</span><span class="ia">axis</span><span class="ia">precision</span>)</a></li>
+				<li><a href="#method-decToDMS"><span class="im">gdal.decToDMS</span>(<span class="ia">angle</span><span class="ia">axis</span><span class="ia">precision</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fillNodata"><span class="im">fillNodata</span>(<span class="ia">options</span>)</a></li>
+				<li><a href="#method-fillNodata"><span class="im">gdal.fillNodata</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-open"><span class="im">open</span>(<span class="ia">path</span><span class="ia">mode</span><span class="ia">drivers</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
+				<li><a href="#method-open"><span class="im">gdal.open</span>(<span class="ia">path</span><span class="ia">mode</span><span class="ia">drivers</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-polygonize"><span class="im">polygonize</span>(<span class="ia">options</span>)</a></li>
+				<li><a href="#method-polygonize"><span class="im">gdal.polygonize</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-quiet"><span class="im">quiet</span>()</a></li>
+				<li><a href="#method-quiet"><span class="im">gdal.quiet</span>()</a></li>
 				
 				
 				
-				<li><a href="#method-reprojectImage"><span class="im">reprojectImage</span>(<span class="ia">src</span><span class="ia">dst</span><span class="ia">s_srs</span><span class="ia">t_srs</span><span class="ia">options</span>)</a></li>
+				<li><a href="#method-reprojectImage"><span class="im">gdal.reprojectImage</span>(<span class="ia">src</span><span class="ia">dst</span><span class="ia">s_srs</span><span class="ia">t_srs</span><span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-sieveFilter"><span class="im">sieveFilter</span>(<span class="ia">options</span>)</a></li>
+				<li><a href="#method-sieveFilter"><span class="im">gdal.sieveFilter</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-suggestedWarpOutput"><span class="im">suggestedWarpOutput</span>(<span class="ia">options</span>)</a></li>
+				<li><a href="#method-suggestedWarpOutput"><span class="im">gdal.suggestedWarpOutput</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-verbose"><span class="im">verbose</span>()</a></li>
+				<li><a href="#method-verbose"><span class="im">gdal.verbose</span>()</a></li>
 				
 				
 			</ul>
@@ -398,7 +398,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			
     	        <div id="method-checksumImage" class="method item">
     <div class="method-signature">
-    <span class="name"><code>checksumImage</code></span>
+    <span class="name"><code>gdal.checksumImage</code></span>
 
     
         <div class="args">
@@ -475,10 +475,12 @@ dataset.layers.get(0).features.forEach(function(feature) {
         
     </div>
 
+    
     <div class="description">
         <p>Compute checksum for image region.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -494,9 +496,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -510,9 +510,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -526,9 +524,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -542,9 +538,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -558,9 +552,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -591,7 +583,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			
     	        <div id="method-config.get" class="method item">
     <div class="method-signature">
-    <span class="name"><code>config.get</code></span>
+    <span class="name"><code>gdal.config.get</code></span>
 
     
         <div class="args">
@@ -644,10 +636,12 @@ dataset.layers.get(0).features.forEach(function(feature) {
         
     </div>
 
+    
     <div class="description">
         <p>Gets a GDAL configuration setting.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -663,9 +657,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -681,7 +673,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -705,7 +697,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			
     	        <div id="method-config.set" class="method item">
     <div class="method-signature">
-    <span class="name"><code>config.set</code></span>
+    <span class="name"><code>gdal.config.set</code></span>
 
     
         <div class="args">
@@ -764,10 +756,12 @@ dataset.layers.get(0).features.forEach(function(feature) {
         
     </div>
 
+    
     <div class="description">
         <p>Sets a GDAL configuration setting.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -783,9 +777,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -798,9 +790,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -816,7 +806,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
             <div class="returns-description">
                 
                     
-                        <span class="type">Mixed</span>:
+                        <span class="type">Mixed</span>
                     
                 
             </div>
@@ -840,7 +830,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			
     	        <div id="method-contourGenerate" class="method item">
     <div class="method-signature">
-    <span class="name"><code>contourGenerate</code></span>
+    <span class="name"><code>gdal.contourGenerate</code></span>
 
     
         <div class="args">
@@ -889,6 +879,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
         
     </div>
 
+    
     <div class="description">
         <p>Create vector contours from raster DEM.</p>
 <p>This algorithm will generate contour vectors for the input raster band on the
@@ -897,6 +888,7 @@ in vector layer. Also, a NODATA value may be specified to identify pixels
 that should not be considered in contour line generation.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -912,9 +904,7 @@ that should not be considered in contour line generation.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                         <ul class="params-list">
@@ -1053,7 +1043,7 @@ that should not be considered in contour line generation.</p>
 			
     	        <div id="method-decToDMS" class="method item">
     <div class="method-signature">
-    <span class="name"><code>decToDMS</code></span>
+    <span class="name"><code>gdal.decToDMS</code></span>
 
     
         <div class="args">
@@ -1118,10 +1108,12 @@ that should not be considered in contour line generation.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Convert decimal degrees to degrees, minutes, and seconds string</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1137,9 +1129,7 @@ that should not be considered in contour line generation.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1152,10 +1142,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p><code>"lat"</code> or <code>"long"</code></p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1169,9 +1161,7 @@ that should not be considered in contour line generation.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1204,7 +1194,7 @@ that should not be considered in contour line generation.</p>
 			
     	        <div id="method-fillNodata" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fillNodata</code></span>
+    <span class="name"><code>gdal.fillNodata</code></span>
 
     
         <div class="args">
@@ -1253,10 +1243,12 @@ that should not be considered in contour line generation.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Fill raster regions by interpolation from edges.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1272,9 +1264,7 @@ that should not be considered in contour line generation.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                         <ul class="params-list">
@@ -1355,7 +1345,7 @@ that should not be considered in contour line generation.</p>
 			
     	        <div id="method-open" class="method item">
     <div class="method-signature">
-    <span class="name"><code>open</code></span>
+    <span class="name"><code>gdal.open</code></span>
 
     
         <div class="args">
@@ -1450,10 +1440,12 @@ that should not be considered in contour line generation.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Creates or opens a dataset.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1469,10 +1461,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Path to dataset to open</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1485,10 +1479,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>The mode to use to open the file: <code>"r"</code>, <code>"r+"</code>, or <code>"w"</code></p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1502,10 +1498,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Driver name, or list of driver names to attempt to use.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1519,10 +1517,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1536,10 +1536,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1553,10 +1555,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1570,10 +1574,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1587,10 +1593,12 @@ that should not be considered in contour line generation.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1606,7 +1614,7 @@ that should not be considered in contour line generation.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>:
+                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
                     
                 
             </div>
@@ -1630,7 +1638,7 @@ that should not be considered in contour line generation.</p>
 			
     	        <div id="method-polygonize" class="method item">
     <div class="method-signature">
-    <span class="name"><code>polygonize</code></span>
+    <span class="name"><code>gdal.polygonize</code></span>
 
     
         <div class="args">
@@ -1679,6 +1687,7 @@ that should not be considered in contour line generation.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Creates vector polygons for all connected regions of pixels in the raster
 sharing a common pixel value. Each polygon is created with an attribute
@@ -1686,6 +1695,7 @@ indicating the pixel value of that polygon. A raster mask may also be
 provided to determine which pixels are eligible for processing.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1701,9 +1711,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                         <ul class="params-list">
@@ -1810,7 +1818,7 @@ provided to determine which pixels are eligible for processing.</p>
 			
     	        <div id="method-quiet" class="method item">
     <div class="method-signature">
-    <span class="name"><code>quiet</code></span>
+    <span class="name"><code>gdal.quiet</code></span>
 
     
         <span class="paren">()</span>
@@ -1849,10 +1857,12 @@ provided to determine which pixels are eligible for processing.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Disables all output.</p>
 
     </div>
+    
 
     
 
@@ -1866,7 +1876,7 @@ provided to determine which pixels are eligible for processing.</p>
 			
     	        <div id="method-reprojectImage" class="method item">
     <div class="method-signature">
-    <span class="name"><code>reprojectImage</code></span>
+    <span class="name"><code>gdal.reprojectImage</code></span>
 
     
         <div class="args">
@@ -1939,10 +1949,12 @@ provided to determine which pixels are eligible for processing.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Reprojects a dataset.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1958,9 +1970,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1973,9 +1983,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1988,9 +1996,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2003,9 +2009,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2019,10 +2023,12 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Warp options</p>
 
                     </div>
+                    
 
                     
                         <ul class="params-list">
@@ -2187,7 +2193,7 @@ provided to determine which pixels are eligible for processing.</p>
 			
     	        <div id="method-sieveFilter" class="method item">
     <div class="method-signature">
-    <span class="name"><code>sieveFilter</code></span>
+    <span class="name"><code>gdal.sieveFilter</code></span>
 
     
         <div class="args">
@@ -2236,10 +2242,12 @@ provided to determine which pixels are eligible for processing.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Removes small raster polygons.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2255,9 +2263,7 @@ provided to determine which pixels are eligible for processing.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                         <ul class="params-list">
@@ -2351,7 +2357,7 @@ provided to determine which pixels are eligible for processing.</p>
 			
     	        <div id="method-suggestedWarpOutput" class="method item">
     <div class="method-signature">
-    <span class="name"><code>suggestedWarpOutput</code></span>
+    <span class="name"><code>gdal.suggestedWarpOutput</code></span>
 
     
         <div class="args">
@@ -2404,11 +2410,13 @@ provided to determine which pixels are eligible for processing.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Used to determine the bounds and resolution of the output virtual file which
 should be large enough to include all the input image.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2424,10 +2432,12 @@ should be large enough to include all the input image.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>Warp options</p>
 
                     </div>
+                    
 
                     
                         <ul class="params-list">
@@ -2503,7 +2513,7 @@ should be large enough to include all the input image.</p>
 			
     	        <div id="method-verbose" class="method item">
     <div class="method-signature">
-    <span class="name"><code>verbose</code></span>
+    <span class="name"><code>gdal.verbose</code></span>
 
     
         <span class="paren">()</span>
@@ -2542,10 +2552,12 @@ should be large enough to include all the input image.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Displays extra debugging information from GDAL.</p>
 
     </div>
+    
 
     
 

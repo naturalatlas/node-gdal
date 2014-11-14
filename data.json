@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -3402,15 +3402,16 @@
         {
             "file": "src/gdal_dataset.cpp",
             "line": 758,
+            "description": "Raster dimensions. An object containing `x` and `y` properties.",
             "readonly": "",
             "itemtype": "attribute",
             "name": "rasterSize",
-            "type": "Object containing `x` and `y` properties.",
+            "type": "Object",
             "class": "gdal.Dataset"
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 799,
+            "line": 801,
             "description": "Spatial reference associated with raster dataset",
             "throws": {
                 "description": "Error"
@@ -3422,7 +3423,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 845,
+            "line": 847,
             "description": "An affine transform which maps pixel/line coordinates into georeferenced space using the following relationship:",
             "example": [
                 "\n```\nvar GT = dataset.geoTransform;\nvar Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];\nvar Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];```"
@@ -3434,7 +3435,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 898,
+            "line": 900,
             "readonly": "",
             "itemtype": "attribute",
             "name": "driver",
@@ -3443,7 +3444,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 1016,
+            "line": 1018,
             "readonly": "",
             "itemtype": "attribute",
             "name": "bands",
@@ -3452,7 +3453,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 1027,
+            "line": 1029,
             "readonly": "",
             "itemtype": "attribute",
             "name": "layers",

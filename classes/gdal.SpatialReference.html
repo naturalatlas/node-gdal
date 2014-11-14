@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.0</b>
+                    API Docs for Version: <b>0.3.1</b>
                 </p>
             </li>
         </div>
@@ -351,47 +351,47 @@ format.</p>
 				
 				
 				
-				<li><a href="#method-fromCRSURL"><span class="im">fromCRSURL</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromCRSURL"><span class="im">gdal.SpatialReference.fromCRSURL</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromEPSG"><span class="im">fromEPSG</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromEPSG"><span class="im">gdal.SpatialReference.fromEPSG</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromEPSGA"><span class="im">fromEPSGA</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromEPSGA"><span class="im">gdal.SpatialReference.fromEPSGA</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromMICoordSys"><span class="im">fromMICoordSys</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromMICoordSys"><span class="im">gdal.SpatialReference.fromMICoordSys</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromProj4"><span class="im">fromProj4</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromProj4"><span class="im">gdal.SpatialReference.fromProj4</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromURL"><span class="im">fromURL</span>(<span class="ia">url</span>)</a></li>
+				<li><a href="#method-fromURL"><span class="im">gdal.SpatialReference.fromURL</span>(<span class="ia">url</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromURN"><span class="im">fromURN</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromURN"><span class="im">gdal.SpatialReference.fromURN</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromUserInput"><span class="im">fromUserInput</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromUserInput"><span class="im">gdal.SpatialReference.fromUserInput</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromWKT"><span class="im">fromWKT</span>(<span class="ia">wkt</span>)</a></li>
+				<li><a href="#method-fromWKT"><span class="im">gdal.SpatialReference.fromWKT</span>(<span class="ia">wkt</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromWMSAUTO"><span class="im">fromWMSAUTO</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromWMSAUTO"><span class="im">gdal.SpatialReference.fromWMSAUTO</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
-				<li><a href="#method-fromXML"><span class="im">fromXML</span>(<span class="ia">input</span>)</a></li>
+				<li><a href="#method-fromXML"><span class="im">gdal.SpatialReference.fromXML</span>(<span class="ia">input</span>)</a></li>
 				
 				
 				
@@ -443,7 +443,7 @@ format.</p>
 <!-- details -->
 
 
-    <div class="constructor yuidoc-class-constructor">
+    <div class="constructor yuidoc-class-constructor page-section">
         <h2>Constructor</h2>
         <div class="item-list">
         <div id="method-gdal.SpatialReference" class="method item">
@@ -497,9 +497,7 @@ format.</p>
         
     </div>
 
-    <div class="description">
-        
-    </div>
+    
 
     
         <div class="params">
@@ -516,9 +514,7 @@ format.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -583,10 +579,12 @@ format.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Set EPSG authority info if possible.</p>
 
     </div>
+    
 
     
 
@@ -643,10 +641,12 @@ format.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Clones the spatial reference.</p>
 
     </div>
+    
 
     
 
@@ -657,7 +657,7 @@ format.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -715,10 +715,12 @@ format.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Make a duplicate of the GEOGCS node of this OGRSpatialReference object.</p>
 
     </div>
+    
 
     
 
@@ -729,7 +731,7 @@ format.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -787,6 +789,7 @@ format.</p>
         
     </div>
 
+    
     <div class="description">
         <p>This method returns <code>true</code> if EPSG feels this geographic coordinate system
 should be treated as having lat/long coordinate ordering.</p>
@@ -798,6 +801,7 @@ to not be lat/long.</p>
 or that do not have an EPSG code set.</p>
 
     </div>
+    
 
     
 
@@ -808,7 +812,7 @@ or that do not have an EPSG code set.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -866,11 +870,13 @@ or that do not have an EPSG code set.</p>
         
     </div>
 
+    
     <div class="description">
         <p>This method returns <code>true</code> if EPSG feels this projected coordinate system should
 be treated as having northing/easting coordinate ordering.</p>
 
     </div>
+    
 
     
 
@@ -881,7 +887,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -972,10 +978,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Fetch angular geographic coordinate system units.</p>
 
     </div>
+    
 
     
 
@@ -1062,10 +1070,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Fetch indicated attribute of named node.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1081,9 +1091,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1097,9 +1105,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1115,7 +1121,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -1183,10 +1189,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Get the authority code for a node.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1202,10 +1210,12 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>The partial or complete path to the node to get an authority from. ie. <code>"PROJCS"</code>, <code>"GEOGCS"</code>, "<code>GEOGCS|UNIT"</code> or <code>null</code> to search for an authority node on the root element.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1221,7 +1231,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -1289,10 +1299,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Get the authority name for a node. The most common authority is "EPSG".</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1308,10 +1320,12 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
+                    
                     <div class="param-description">
                         <p>The partial or complete path to the node to get an authority from. ie. <code>"PROJCS"</code>, <code>"GEOGCS"</code>, "<code>GEOGCS|UNIT"</code> or <code>null</code> to search for an authority node on the root element.</p>
 
                     </div>
+                    
 
                     
                 </li>
@@ -1327,7 +1341,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -1385,10 +1399,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Fetch linear geographic coordinate system units.</p>
 
     </div>
+    
 
     
 
@@ -1459,10 +1475,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Check if compound coordinate system.</p>
 
     </div>
+    
 
     
 
@@ -1473,7 +1491,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1531,10 +1549,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Check if geocentric coordinate system.</p>
 
     </div>
+    
 
     
 
@@ -1545,7 +1565,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1603,10 +1623,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Check if local coordinate system.</p>
 
     </div>
+    
 
     
 
@@ -1617,7 +1639,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1675,10 +1697,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Check if geocentric coordinate system.</p>
 
     </div>
+    
 
     
 
@@ -1689,7 +1713,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1757,10 +1781,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Do these two spatial references describe the same system?</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1776,9 +1802,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1794,7 +1818,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1862,10 +1886,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Do the GeogCS&#39;es match?</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1881,9 +1907,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -1899,7 +1923,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -1967,10 +1991,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Do the VertCS&#39;es match?</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -1986,9 +2012,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2004,7 +2028,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -2062,10 +2086,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Check if vertical coordinate system.</p>
 
     </div>
+    
 
     
 
@@ -2076,7 +2102,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Boolean</span>
                     
                 
             </div>
@@ -2130,10 +2156,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Convert in place from ESRI WKT format.</p>
 
     </div>
+    
 
     
 
@@ -2186,10 +2214,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Convert in place to ESRI WKT format.</p>
 
     </div>
+    
 
     
 
@@ -2252,10 +2282,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Set a GeogCS based on well known name.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2271,9 +2303,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2345,10 +2375,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Convert this SRS into a a nicely formatted WKT string for display to a person.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2365,9 +2397,7 @@ be treated as having northing/easting coordinate ordering.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2383,7 +2413,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -2441,10 +2471,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Export coordinate system in PROJ.4 format.</p>
 
     </div>
+    
 
     
 
@@ -2455,7 +2487,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -2513,10 +2545,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Convert this SRS into WKT format.</p>
 
     </div>
+    
 
     
 
@@ -2527,7 +2561,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -2585,10 +2619,12 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Export coordinate system in XML format.</p>
 
     </div>
+    
 
     
 
@@ -2599,7 +2635,7 @@ be treated as having northing/easting coordinate ordering.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type">String</span>:
+                        <span class="type">String</span>
                     
                 
             </div>
@@ -2639,7 +2675,7 @@ be treated as having northing/easting coordinate ordering.</p>
 			
     	        <div id="method-fromCRSURL" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromCRSURL</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromCRSURL</code></span>
 
     
         <div class="args">
@@ -2692,6 +2728,7 @@ be treated as having northing/easting coordinate ordering.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from OGC URL.</p>
 <p>The OGC URL should be prefixed with "<a href="http://opengis.net/def/crs">http://opengis.net/def/crs</a>" per best
@@ -2699,6 +2736,7 @@ practice paper 11-135. Currently EPSG and OGC authority values are supported,
 including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2714,9 +2752,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2732,7 +2768,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -2747,7 +2783,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 			
     	        <div id="method-fromEPSG" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromEPSG</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromEPSG</code></span>
 
     
         <div class="args">
@@ -2800,10 +2836,12 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from EPSG GCS or PCS code.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2819,9 +2857,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2837,7 +2873,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -2861,7 +2897,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 			
     	        <div id="method-fromEPSGA" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromEPSGA</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromEPSGA</code></span>
 
     
         <div class="args">
@@ -2914,6 +2950,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from EPSG GCS or PCS code.</p>
 <p>This method is similar to <code>fromEPSG()</code> except that EPSG preferred axis ordering
@@ -2923,6 +2960,7 @@ a few projected coordinate systems that use northing/easting order contrary
 to typical GIS use).</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -2938,9 +2976,7 @@ to typical GIS use).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -2956,7 +2992,7 @@ to typical GIS use).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -2980,7 +3016,7 @@ to typical GIS use).</p>
 			
     	        <div id="method-fromMICoordSys" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromMICoordSys</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromMICoordSys</code></span>
 
     
         <div class="args">
@@ -3033,10 +3069,12 @@ to typical GIS use).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from a Mapinfo style CoordSys definition.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3052,9 +3090,7 @@ to typical GIS use).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3070,7 +3106,7 @@ to typical GIS use).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3085,7 +3121,7 @@ to typical GIS use).</p>
 			
     	        <div id="method-fromProj4" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromProj4</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromProj4</code></span>
 
     
         <div class="args">
@@ -3138,10 +3174,12 @@ to typical GIS use).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Creates a spatial reference from a Proj.4 string.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3157,9 +3195,7 @@ to typical GIS use).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3175,7 +3211,7 @@ to typical GIS use).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3190,7 +3226,7 @@ to typical GIS use).</p>
 			
     	        <div id="method-fromURL" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromURL</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromURL</code></span>
 
     
         <div class="args">
@@ -3243,11 +3279,13 @@ to typical GIS use).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize spatial reference from a URL.</p>
 <p>This method will download the spatial reference from the given URL.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3263,9 +3301,7 @@ to typical GIS use).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3281,7 +3317,7 @@ to typical GIS use).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3296,7 +3332,7 @@ to typical GIS use).</p>
 			
     	        <div id="method-fromURN" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromURN</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromURN</code></span>
 
     
         <div class="args">
@@ -3349,6 +3385,7 @@ to typical GIS use).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from OGC URN.</p>
 <p>The OGC URN should be prefixed with "urn:ogc:def:crs:" per recommendation
@@ -3356,6 +3393,7 @@ paper 06-023r1. Currently EPSG and OGC authority values are supported,
 including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3371,9 +3409,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3389,7 +3425,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3404,7 +3440,7 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
 			
     	        <div id="method-fromUserInput" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromUserInput</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromUserInput</code></span>
 
     
         <div class="args">
@@ -3457,12 +3493,14 @@ including OGC auto codes, but not including CRS1 or CRS88 (NAVD88).</p>
         
     </div>
 
+    
     <div class="description">
         <p>Initialize from an arbitrary spatial reference string.</p>
 <p>This method will examine the provided input, and try to deduce the format,
 and then use it to initialize the spatial reference system.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3478,9 +3516,7 @@ and then use it to initialize the spatial reference system.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3496,7 +3532,7 @@ and then use it to initialize the spatial reference system.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3511,7 +3547,7 @@ and then use it to initialize the spatial reference system.</p>
 			
     	        <div id="method-fromWKT" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromWKT</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromWKT</code></span>
 
     
         <div class="args">
@@ -3564,10 +3600,12 @@ and then use it to initialize the spatial reference system.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Creates a spatial reference from a WKT string.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3583,9 +3621,7 @@ and then use it to initialize the spatial reference system.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3601,7 +3637,7 @@ and then use it to initialize the spatial reference system.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3616,7 +3652,7 @@ and then use it to initialize the spatial reference system.</p>
 			
     	        <div id="method-fromWMSAUTO" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromWMSAUTO</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromWMSAUTO</code></span>
 
     
         <div class="args">
@@ -3669,12 +3705,14 @@ and then use it to initialize the spatial reference system.</p>
         
     </div>
 
+    
     <div class="description">
         <p>Creates a spatial reference from a WMSAUTO string.</p>
 <p>Note that the WMS 1.3 specification does not include the units code, while
 apparently earlier specs do. GDAL tries to guess around this.</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3690,9 +3728,7 @@ apparently earlier specs do. GDAL tries to guess around this.</p>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3708,7 +3744,7 @@ apparently earlier specs do. GDAL tries to guess around this.</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>
@@ -3733,7 +3769,7 @@ var ref = gdal.SpatialReference.fromWMSAUTO(wms);</code></pre>
 			
     	        <div id="method-fromXML" class="method item">
     <div class="method-signature">
-    <span class="name"><code>fromXML</code></span>
+    <span class="name"><code>gdal.SpatialReference.fromXML</code></span>
 
     
         <div class="args">
@@ -3786,10 +3822,12 @@ var ref = gdal.SpatialReference.fromWMSAUTO(wms);</code></pre>
         
     </div>
 
+    
     <div class="description">
         <p>Import coordinate system from XML format (GML only currently).</p>
 
     </div>
+    
 
     
         <div class="params">
@@ -3805,9 +3843,7 @@ var ref = gdal.SpatialReference.fromWMSAUTO(wms);</code></pre>
 
                     
 
-                    <div class="param-description">
-                         
-                    </div>
+                    
 
                     
                 </li>
@@ -3823,7 +3859,7 @@ var ref = gdal.SpatialReference.fromWMSAUTO(wms);</code></pre>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>:
+                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
                     
                 
             </div>

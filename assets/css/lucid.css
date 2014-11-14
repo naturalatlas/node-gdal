@@ -40,12 +40,19 @@ ul.inline > li, ol.inline > li {
 	padding: 0 !important;
 }
 
-.method-signature {
-	line-height: 23px !important;
+.method-signature, .method-signature code {
+	line-height: 20px !important;
+	font-size: 15px;
+	background: 0 none;
+	padding: 0;
+	border: 0 none;
 }
 .method-signature .name code {
 	font-weight: bold !important;
 	color: #4CA0E7 !important;
+}
+.method-signature {
+	margin-bottom: 2px;
 }
 
 
@@ -98,9 +105,8 @@ body .apidocs .item:first-child:last-child, body .apidocs .constructor .item:fir
 	padding: 0 !important;
 	background: none !important;
 }
-.method-signature .optional:after {
-	content: ' (optional)';
-	color: #BAB7B1;
+.method-signature .optional {
+	color: #bbb !important;
 }
 
 .paren {
@@ -131,4 +137,19 @@ body .apidocs .item:first-child:last-child, body .apidocs .constructor .item:fir
 
 #class-toc ul li {
 	line-height: 18px;
+}
+
+.apidocs .param .param-description {
+	padding-top: 5px;
+}
+
+.apidocs .item h4, .apidocs .item h5, .apidocs .item h6 {
+	color: #626262;
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.params-list li:last-child {
+	margin-bottom: 0 !important;
 }
