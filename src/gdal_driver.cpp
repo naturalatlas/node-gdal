@@ -232,11 +232,11 @@ NAN_METHOD(Driver::deleteDataset)
  * @throws Error
  * @method create
  * @param {String} filename
- * @param {Integer} [x_size]
- * @param {Integer} [y_size]
- * @param {Integer} [band_count]
- * @param {Integer} [data_type]
- * @param {String[]} [control_options]
+ * @param {Integer} [x_size=0] raster width in pixels (ignored for vector datasets)
+ * @param {Integer} [y_size=0] raster height in pixels (ignored for vector datasets)
+ * @param {Integer} [band_count=0]
+ * @param {Integer} [data_type=gdal.GDT_Byte] pixel data type (ignored for vector datasets) (see {{#crossLink "Constants (GDT)"}}data types{{/crossLink}})
+ * @param {String[]|object} [creation_options] An array or object containing driver-specific dataset creation options
  * @return gdal.Dataset
  */
 NAN_METHOD(Driver::create)
@@ -303,7 +303,7 @@ NAN_METHOD(Driver::create)
  * @param {String} filename
  * @param {gdal.Dataset} src
  * @param {Boolean} [strict=false]
- * @param {String[]} [options=null] An array of creation options.
+ * @param {String[]|object} [options=null] An array or object containing driver-specific dataset creation options
  * @return gdal.Dataset
  */
 NAN_METHOD(Driver::createCopy)
@@ -483,7 +483,7 @@ NAN_METHOD(Driver::getMetadata)
  * @throws Error
  * @method open
  * @param {String} path
- * @param {String} mode The mode to use to open the file: `"r"` or `"r+"`
+ * @param {String} [mode=`"r"`] The mode to use to open the file: `"r"` or `"r+"`
  * @return {gdal.Dataset}
  */
 NAN_METHOD(Driver::open)

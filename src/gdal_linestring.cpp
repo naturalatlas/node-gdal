@@ -156,37 +156,6 @@ NAN_METHOD(LineString::toString)
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getLength, Number, get_Length);
 
 /**
- * Returns the number of the points that make up the line string.
- *
- * @method getNumPoints
- * @return Number
- */
-NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getNumPoints, Integer, getNumPoints);
-
-/**
- * Returns the point at an index.
- *
- * @method getPoint
- * @param {integer} index 0-based index
- * @return {gdal.Point}
- */
-NAN_METHOD(LineString::getPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap<LineString>(args.This());
-
-	OGRPoint *pt = new OGRPoint();
-	int i;
-
-	NODE_ARG_INT(0, "i", i);
-
-	geom->this_->getPoint(i, pt);
-
-	NanReturnValue(Point::New(pt));
-}
-
-/**
  * Returns the point at the specified distance along the line string.
  *
  * @method value
@@ -207,35 +176,6 @@ NAN_METHOD(LineString::value)
 	geom->this_->Value(dist, pt);
 
 	NanReturnValue(Point::New(pt));
-}
-
-NAN_METHOD(LineString::addPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap<LineString>(args.This());
-
-	if (args[0]->IsNumber()) {
-
-		double x = 0, y = 0, z = 0;
-		NODE_ARG_DOUBLE(0, "x", x);
-		NODE_ARG_DOUBLE(1, "y", y);
-		NODE_ARG_DOUBLE_OPT(2, "z", z);
-		if (args.Length() < 3) {
-			geom->this_->addPoint(x, y);
-		} else {
-			geom->this_->addPoint(x, y, z);
-		}
-
-	} else {
-
-		Point* pt;
-		NODE_ARG_WRAPPED(0, "point", Point, pt);
-		geom->this_->addPoint(pt->get());
-
-	}
-
-	NanReturnUndefined();
 }
 
 /**

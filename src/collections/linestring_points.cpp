@@ -245,7 +245,7 @@ NAN_METHOD(LineStringPoints::set)
 }
 
 /**
- * Adds point(s) to the line string.
+ * Adds point(s) to the line string. Also accepts any object with an x and y property.
  *
  * @example
  * ```
@@ -257,7 +257,7 @@ NAN_METHOD(LineStringPoints::set)
  *
  * @method add
  * @throws Error
- * @param {gdal.Point|Array} point(s)
+ * @param {gdal.Point|object|Array} point(s)
  */
 NAN_METHOD(LineStringPoints::add)
 {

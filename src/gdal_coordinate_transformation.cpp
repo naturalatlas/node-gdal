@@ -50,10 +50,11 @@ CoordinateTransformation::~CoordinateTransformation()
 /**
  * Object for transforming between coordinate systems.
  *
+ * @throws Error
  * @constructor
  * @class gdal.CoordinateTransformation
  * @param {gdal.SpatialReference} source
- * @param {gdal.SpatialReference|gdal.Dataset} target If a Dataset, the conversion will represent a conversion to pixel coordinates.
+ * @param {gdal.SpatialReference|gdal.Dataset} target If a raster Dataset, the conversion will represent a conversion to pixel coordinates.
  */
 NAN_METHOD(CoordinateTransformation::New)
 {

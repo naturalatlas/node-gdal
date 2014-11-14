@@ -158,8 +158,8 @@ void Dataset::dispose()
 }
 
 /**
- * A set of associated raster bands, usually from one file.
- *
+ * A set of associated raster bands and/or vector layers, usually from one file.
+ * 
  * ```
  * // raster dataset:
  * dataset = gdal.open('file.tif');
@@ -373,6 +373,7 @@ NAN_METHOD(Dataset::close)
 /**
  * Flushes all changes to disk.
  *
+ * @throws Error
  * @method flush
  */
 NAN_METHOD(Dataset::flush)
@@ -409,6 +410,7 @@ NAN_METHOD(Dataset::flush)
 /**
  * Execute an SQL statement against the data store.
  *
+ * @throws Error
  * @method executeSQL
  * @param {String} statement SQL statement to execute.
  * @param {gdal.Geometry} [spatial_filter=null] Geometry which represents a spatial filter.
@@ -463,6 +465,8 @@ NAN_METHOD(Dataset::executeSQL)
  * empty list of files it means there is believed to be no local file system files
  * associated with the dataset (for instance a virtual dataset).
  *
+ * Returns an empty array for vector datasets if GDAL version is below 2.0
+ * 
  * @method getFileList
  * @return {String[]}
  */
@@ -562,6 +566,7 @@ NAN_METHOD(Dataset::getGCPs)
 /**
  * Sets GCPs.
  *
+ * @throws Error
  * @method setGCPs
  * @param {Object[]} gcps
  * @param {String} projection
@@ -638,6 +643,7 @@ NAN_METHOD(Dataset::setGCPs)
 /**
  * Builds dataset overviews.
  *
+ * @throws Error
  * @method buildOverviews
  * @param {String} resampling `"NEAREST"`, `"GAUSS"`, `"CUBIC"`, `"AVERAGE"`, `"MODE"`, `"AVERAGE_MAGPHASE"` or `"NONE"`
  * @param {int[]} overviews
@@ -791,6 +797,9 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 }
 
 /**
+ * Spatial reference associated with raster dataset
+ *
+ * @throws Error
  * @attribute srs
  * @type {gdal.SpatialReference}
  */
@@ -834,6 +843,14 @@ NAN_GETTER(Dataset::srsGetter)
 }
 
 /**
+ * An affine transform which maps pixel/line coordinates into georeferenced space using the following relationship:
+ *
+ * @example
+ * ```
+ * var GT = dataset.geoTransform;
+ * var Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];
+ * var Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];```
+ * 
  * @attribute geoTransform
  * @type {Array}
  */

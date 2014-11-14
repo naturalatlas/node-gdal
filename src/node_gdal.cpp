@@ -179,8 +179,15 @@ namespace node_gdal {
 			RasterBandOverviews::Initialize(target);
 			RasterBandPixels::Initialize(target);
 
-			//calls GDALRegisterAll()
-			GDALDrivers::Initialize(target);
+			/**
+			 * The collection of all drivers registered with GDAL
+			 *
+			 * @final
+			 * @for gdal
+			 * @property gdal.drivers
+			 * @type {gdal.GDALDrivers}
+			 */
+			GDALDrivers::Initialize(target); //calls GDALRegisterAll()
 			target->Set(NanNew("drivers"), GDALDrivers::New());
 
 			/**
@@ -351,13 +358,6 @@ namespace node_gdal {
 			target->Set(NanNew("OLCCreateGeomField"), NanNew(OLCCreateGeomField));
 			#endif
 			#ifdef ODsCCreateGeomFieldAfterCreateLayer
-			/**
-			 * @final
-			 * @property gdal.ODsCCreateGeomFieldAfterCreateLayer
-			 * @type {String}
-			 */
-			target->Set(NanNew("ODsCCreateGeomFieldAfterCreateLayer"), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
-			#endif
 
 			/**
 			 * @class Constants (ODsC)
@@ -375,6 +375,13 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target->Set(NanNew("ODsCDeleteLayer"), NanNew(ODsCDeleteLayer));
+			/**
+			 * @final
+			 * @property gdal.ODsCCreateGeomFieldAfterCreateLayer
+			 * @type {String}
+			 */
+			target->Set(NanNew("ODsCCreateGeomFieldAfterCreateLayer"), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
+			#endif
 			/**
 			 * @final
 			 * @property gdal.ODrCCreateDataSource

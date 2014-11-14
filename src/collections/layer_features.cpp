@@ -135,13 +135,13 @@ NAN_METHOD(LayerFeatures::first)
 }
 
 /**
- * Returns the next feature in the layer.
+ * Returns the next feature in the layer. Returns null if no more features.
  *
  * @example
  * ```
  * while (feature = layer.features.next()) { ... }```
  *
- * @method first
+ * @method next
  * @return {gdal.Feature}
  */
 NAN_METHOD(LayerFeatures::next)
@@ -161,7 +161,14 @@ NAN_METHOD(LayerFeatures::next)
 }
 
 /**
- * Adds a feature to the layer.
+ * Adds a feature to the layer. The feature should be created using the current layer as the definition.
+ *
+ * @example
+ * ```
+ * var feature = new gdal.Feature(layer);
+ * feature.setGeometry(new gdal.Point(0, 1));
+ * feature.fields.set('name', 'somestring');
+ * layer.features.add(feature);```
  *
  * @method add
  * @throws Error
@@ -192,8 +199,7 @@ NAN_METHOD(LayerFeatures::add)
 /**
  * Returns the number of features in the layer.
  *
- * @method add
- * @throws Error
+ * @method count
  * @param {Boolean} [force=true]
  * @return {Integer} Number of features in the layer.
  */

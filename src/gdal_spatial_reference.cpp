@@ -323,7 +323,7 @@ NAN_METHOD(SpatialReference::clone)
 /**
  * Make a duplicate of the GEOGCS node of this OGRSpatialReference object.
  *
- * @method clone
+ * @method cloneGeogCS
  * @return {gdal.SpatialReference}
  */
 NAN_METHOD(SpatialReference::cloneGeogCS)
@@ -805,7 +805,7 @@ NAN_METHOD(SpatialReference::fromEPSG)
  *
  * @static
  * @throws Error
- * @method fromEPSG
+ * @method fromEPSGA
  * @param {Integer} input
  * @return {gdal.SpatialReference}
  */

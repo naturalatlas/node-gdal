@@ -84,7 +84,6 @@ NAN_METHOD(LayerFields::toString)
 /**
  * Returns the number of fields.
  *
- * @throws Error
  * @method count
  * @return {Integer}
  */
@@ -111,7 +110,6 @@ NAN_METHOD(LayerFields::count)
 /**
  * Find the index of field in the layer.
  *
- * @throws Error
  * @method indexOf
  * @param {String} field
  * @return {Integer} Field index, or -1 if the field doesn't exist

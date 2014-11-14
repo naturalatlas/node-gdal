@@ -24,10 +24,10 @@ void Algorithms::Initialize(Handle<Object> target)
  * @static
  * @for gdal
  * @param {Object} options
- * @param {gdal.RasterBand} options.src If provided, this band will be updated in-place.
- * @param {gdal.RasterBand} options.mask Mask band
- * @param {Number} options.searchDist
- * @param {integer} options.smoothingIterations
+ * @param {gdal.RasterBand} options.src This band to be updated in-place.
+ * @param {gdal.RasterBand} [options.mask] Mask band
+ * @param {Number} options.searchDist The maximum distance (in pixels) that the algorithm will search out for values to interpolate.
+ * @param {integer} [options.smoothingIterations=0] The number of 3x3 average filter smoothing iterations to run after the interpolation to dampen artifacts.
  */
 NAN_METHOD(Algorithms::fillNodata)
 {
@@ -71,12 +71,12 @@ NAN_METHOD(Algorithms::fillNodata)
  * @param {Object} options
  * @param {gdal.RasterBand} options.src
  * @param {gdal.Layer} options.dst
- * @param {Number} options.base
- * @param {Number} options.interval
- * @param {Number[]} options.fixedLevels
- * @param {Number} options.noData
- * @param {integer} options.idField
- * @param {integer} options.elevField
+ * @param {Number} [options.offset=0] The "offset" relative to which contour intervals are applied. This is normally zero, but could be different. To generate 10m contours at 5, 15, 25, ... the offset would be 5.
+ * @param {Number} [options.interval=100] The elevation interval between contours generated.
+ * @param {Number[]} [options.fixedLevels] A list of fixed contour levels at which contours should be generated. Overrides interval/base options if set.
+ * @param {Number} [options.nodata] The value to use as a "nodata" value. That is, a pixel value which should be ignored in generating contours as if the value of the pixel were not known.
+ * @param {integer} [options.idField] A field index to indicate where a unique id should be written for each feature (contour) written.
+ * @param {integer} [options.elevField] A field index to indicate where the elevation value of the contour should be written.
  */
 NAN_METHOD(Algorithms::contourGenerate)
 {
@@ -92,14 +92,14 @@ NAN_METHOD(Algorithms::contourGenerate)
 	int n_fixed_levels = 0;
 	int use_nodata = 0;
 	double nodata = 0;
-	int id_field, elev_field;
+	int id_field = -1, elev_field = -1;
 
 	NODE_ARG_OBJECT(0, "options", obj);
 
 	NODE_WRAPPED_FROM_OBJ(obj, "src", RasterBand, src);
 	NODE_WRAPPED_FROM_OBJ(obj, "dst", Layer, dst);
-	NODE_INT_FROM_OBJ(obj, "idField", id_field);
-	NODE_INT_FROM_OBJ(obj, "elevField", elev_field);
+	NODE_INT_FROM_OBJ_OPT(obj, "idField", id_field);
+	NODE_INT_FROM_OBJ_OPT(obj, "elevField", elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "interval", interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "offset", base);
 	if(obj->HasOwnProperty(NanNew("fixedLevels"))){
@@ -142,7 +142,7 @@ NAN_METHOD(Algorithms::contourGenerate)
  * @param {gdal.RasterBand} options.dst Output raster band. It may be the same as src band to update the source in place.
  * @param {gdal.RasterBand} [options.mask] All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.
  * @param {Number} options.threshold Raster polygons with sizes smaller than this will be merged into their largest neighbour.
- * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {integer} [options.connectedness=4] Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
  */
 NAN_METHOD(Algorithms::sieveFilter)
 {
@@ -242,8 +242,8 @@ NAN_METHOD(Algorithms::checksumImage)
  * @param {gdal.Layer} options.dst
  * @param {gdal.RasterBand} [options.mask]
  * @param {integer} options.pixValField The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.
- * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
- * @param {Boolean} options.useFloats Use floating point buffers instead of int buffers.
+ * @param {integer} [options.connectedness=4] Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {Boolean} [options.useFloats=false] Use floating point buffers instead of int buffers.
  */
 NAN_METHOD(Algorithms::polygonize)
 {

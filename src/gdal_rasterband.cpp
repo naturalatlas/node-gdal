@@ -602,7 +602,7 @@ NAN_GETTER(RasterBand::offsetGetter)
 /**
  * Raster value scale.
  *
- * @attribute offset
+ * @attribute scale
  * @type {Number}
  */
 NAN_GETTER(RasterBand::scaleGetter)
@@ -766,7 +766,7 @@ NAN_GETTER(RasterBand::categoryNamesGetter)
  * Color interpretation mode ({{#crossLink "Constants (GCI)"}}see GCI constants{{/crossLink}}).
  *
  * @attribute colorInterpretation
- * @type {Array}
+ * @type {string}
  */
 NAN_GETTER(RasterBand::colorInterpretationGetter)
 {

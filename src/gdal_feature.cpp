@@ -74,7 +74,23 @@ void Feature::dispose()
 }
 
 /**
- * A simple feature, including geometry and attributes.
+ * A simple feature, including geometry and attributes. It's fields and geometry type is defined by the given definition. 
+ *
+ * @example
+ * ```
+ * //create layer and specify geometry type
+ * var layer = dataset.layers.create('mylayer', null, gdal.Point);
+ * 
+ * //setup fields for the given layer
+ * layer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));
+ * layer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));
+ *
+ * //create feature using layer definition and then add it to the layer
+ * var feature = new gdal.Feature(layer);
+ * feature.fields.set('elevation', 13775);
+ * feature.fields.set('elevation', 13775);
+ * feature.setGeometry(new gdal.Point(43.741208, -110.802414));
+ * layer.features.add(feature);```
  *
  * @constructor
  * @class gdal.Feature
@@ -218,6 +234,7 @@ NAN_METHOD(Feature::getFieldDefn)
 /**
  * Sets the feature's geometry.
  *
+ * @throws Error
  * @method setGeometry
  * @param {gdal.Geometry} geometry
  */
@@ -226,7 +243,7 @@ NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, Set
 /**
  * Determines if the features are the same.
  *
- * @method setGeometry
+ * @method equals
  * @param {gdal.Feature} feature
  * @return {Boolean} `true` if the features are the same, `false` if different
  */
@@ -278,6 +295,7 @@ NAN_METHOD(Feature::destroy)
  * feature1.fields.set([5, 'test', 3.14]);
  * feature2.setFrom(feature1);```
  *
+ * @throws Error
  * @method setFrom
  * @param {gdal.Feature} feature
  * @param {Array} [*index_map] Array of the indices (integers) of the feature's fields stored at the corresponding index of the source feature's fields. A value of -1 should be used to ignore the source's field. The array should not be `null` and be as long as the number of fields in the source feature.

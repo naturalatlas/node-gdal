@@ -200,7 +200,7 @@ NAN_METHOD(Layer::toString)
  * Flush pending changes to disk.
  *
  * @throws Error
- * @method syncToDisk
+ * @method flush
  */
 NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT(Layer, syncToDisk, SyncToDisk);
 
@@ -466,7 +466,7 @@ NAN_GETTER(Layer::fidColumnGetter)
 /**
  * @readOnly
  * @attribute geomType
- * @type {Integer}
+ * @type {Integer} (see {{#crossLink "Constants (wkb)"}}geometry types{{/crossLink}})
  */
 NAN_GETTER(Layer::geomTypeGetter)
 {
@@ -492,7 +492,7 @@ NAN_GETTER(Layer::featuresGetter)
 
 /**
  * @readOnly
- * @attribute features
+ * @attribute fields
  * @type {gdal.LayerFields}
  */
 NAN_GETTER(Layer::fieldsGetter)
