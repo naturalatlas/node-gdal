@@ -23,7 +23,6 @@ void MultiPolygon::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "unionCascaded", unionCascaded);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getArea", getArea);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
 
 	target->Set(NanNew("MultiPolygon"), lcons->GetFunction());
 
@@ -157,23 +156,5 @@ NAN_METHOD(MultiPolygon::unionCascaded)
  * @return {Number}
  */
 NODE_WRAPPED_METHOD_WITH_RESULT(MultiPolygon, getArea, Number, get_Area);
-
-/**
- * Returns the child Polygon at an index.
- *
- * @method getGeometry
- * @param {Integer} index
- * @return {gdal.Polygon}
- */
-NAN_METHOD(MultiPolygon::getGeometry)
-{
-	NanScope();
-	MultiPolygon *geom = ObjectWrap::Unwrap<MultiPolygon>(args.This());
-
-	int i;
-	NODE_ARG_INT(0, "index", i);
-
-	NanReturnValue(Polygon::New(static_cast<OGRPolygon*>(geom->this_->getGeometryRef(i)), false));
-}
 
 } // namespace node_gdal

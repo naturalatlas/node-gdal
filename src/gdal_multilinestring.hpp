@@ -30,7 +30,6 @@ public:
 	static Handle<Value> New(OGRMultiLineString *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(polygonize);
-	static NAN_METHOD(getGeometry);
 
 
 	MultiLineString();

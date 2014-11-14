@@ -22,7 +22,6 @@ void MultiPoint::Initialize(Handle<Object> target)
 	lcons->SetClassName(NanNew("MultiPoint"));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
 
 	target->Set(NanNew("MultiPoint"), lcons->GetFunction());
 
@@ -133,24 +132,6 @@ NAN_METHOD(MultiPoint::toString)
 {
 	NanScope();
 	NanReturnValue(NanNew("MultiPoint"));
-}
-
-/**
- * Returns the child Point at an index.
- *
- * @method getGeometry
- * @param {Integer} index
- * @return {gdal.Polygon}
- */
-NAN_METHOD(MultiPoint::getGeometry)
-{
-	NanScope();
-	MultiPoint *geom = ObjectWrap::Unwrap<MultiPoint>(args.This());
-
-	int i;
-	NODE_ARG_INT(0, "index", i);
-
-	NanReturnValue(Point::New(static_cast<OGRPoint*>(geom->this_->getGeometryRef(i)), false));
 }
 
 } // namespace node_gdal

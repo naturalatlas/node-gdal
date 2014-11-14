@@ -23,7 +23,6 @@ void MultiLineString::Initialize(Handle<Object> target)
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "polygonize", polygonize);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getGeometry", getGeometry);
 
 	target->Set(NanNew("MultiLineString"), lcons->GetFunction());
 
@@ -148,24 +147,6 @@ NAN_METHOD(MultiLineString::polygonize)
 	MultiLineString *geom = ObjectWrap::Unwrap<MultiLineString>(args.This());
 
 	NanReturnValue(Geometry::New(geom->this_->Polygonize()));
-}
-
-/**
- * Returns the child LineString at an index.
- *
- * @method getGeometry
- * @param {Integer} index
- * @return {gdal.LineString}
- */
-NAN_METHOD(MultiLineString::getGeometry)
-{
-	NanScope();
-	MultiLineString *geom = ObjectWrap::Unwrap<MultiLineString>(args.This());
-
-	int i;
-	NODE_ARG_INT(0, "index", i);
-
-	NanReturnValue(LineString::New(static_cast<OGRLineString*>(geom->this_->getGeometryRef(i)), false));
 }
 
 } // namespace node_gdal

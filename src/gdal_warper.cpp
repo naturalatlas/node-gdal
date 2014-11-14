@@ -20,11 +20,11 @@ void Warper::Initialize(Handle<Object> target)
  * @method reprojectImage
  * @static
  * @for gdal
- * @param {gdal.Dataset} src
- * @param {gdal.Dataset} dst
- * @param {gdal.SpatialReference} s_srs
- * @param {gdal.SpatialReference} t_srs
- * @param {object} [options] Warp options
+ * @param {object} options
+ * @param {gdal.Dataset} options.src
+ * @param {gdal.Dataset} options.dst
+ * @param {gdal.SpatialReference} options.s_srs
+ * @param {gdal.SpatialReference} options.t_srs
  * @param {String} [options.resampling] Resampling algorithm ({{#crossLink "Constants (GRA)"}}available options{{/crossLink}})
  * @param {gdal.Geometry} [options.cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
  * @param {int[]} [options.srcBands]
@@ -35,6 +35,7 @@ void Warper::Initialize(Handle<Object> target)
  * @param {Number} [options.dstNodata]
  * @param {int} [options.memoryLimit]
  * @param {Number} [options.maxError]
+ * @param {string[]|object} [options.options] Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))
  */
 NAN_METHOD(Warper::reprojectImage)
 {

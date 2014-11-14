@@ -74,9 +74,8 @@ void Feature::dispose()
 }
 
 /**
- * A simple feature, including geometry and attributes. It's fields and geometry type is defined by the given definition. 
+ * A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition. 
  *
- * @example
  * ```
  * //create layer and specify geometry type
  * var layer = dataset.layers.create('mylayer', null, gdal.Point);
@@ -88,7 +87,7 @@ void Feature::dispose()
  * //create feature using layer definition and then add it to the layer
  * var feature = new gdal.Feature(layer);
  * feature.fields.set('elevation', 13775);
- * feature.fields.set('elevation', 13775);
+ * feature.fields.set('name', 'Grand Teton');
  * feature.setGeometry(new gdal.Point(43.741208, -110.802414));
  * layer.features.add(feature);```
  *

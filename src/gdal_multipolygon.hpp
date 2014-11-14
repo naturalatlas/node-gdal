@@ -31,7 +31,6 @@ public:
 	static NAN_METHOD(toString);
 	static NAN_METHOD(unionCascaded);
 	static NAN_METHOD(getArea);
-	static NAN_METHOD(getGeometry);
 
 	MultiPolygon();
 	MultiPolygon(OGRMultiPolygon *geom);

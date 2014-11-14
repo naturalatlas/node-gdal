@@ -29,7 +29,6 @@ public:
 	static Handle<Value> New(OGRMultiPoint *geom);
 	static Handle<Value> New(OGRMultiPoint *geom, bool owned);
 	static NAN_METHOD(toString);
-	static NAN_METHOD(getGeometry);
 
 	MultiPoint();
 	MultiPoint(OGRMultiPoint *geom);
