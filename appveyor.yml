@@ -4,8 +4,7 @@ environment:
   AWS_SECRET_ACCESS_KEY:
     secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
-    - nodejs_version: "0.8.26"
-    - nodejs_version: "0.10.29"
+    - nodejs_version: "0.10.32"
     - nodejs_version: "0.11.13"
 
 platform:
