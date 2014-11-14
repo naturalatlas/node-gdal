@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -323,37 +325,6 @@ NAN_METHOD(LineString::toString)
 NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getLength, Number, get_Length);
 
 /**
- * Returns the number of the points that make up the line string.
- *
- * @method getNumPoints
- * @return Number
- */
-NODE_WRAPPED_METHOD_WITH_RESULT(LineString, getNumPoints, Integer, getNumPoints);
-
-/**
- * Returns the point at an index.
- *
- * @method getPoint
- * @param {integer} index 0-based index
- * @return {gdal.Point}
- */
-NAN_METHOD(LineString::getPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(args.This());
-
-	OGRPoint *pt = new OGRPoint();
-	int i;
-
-	NODE_ARG_INT(0, &quot;i&quot;, i);
-
-	geom-&gt;this_-&gt;getPoint(i, pt);
-
-	NanReturnValue(Point::New(pt));
-}
-
-/**
  * Returns the point at the specified distance along the line string.
  *
  * @method value
@@ -374,35 +345,6 @@ NAN_METHOD(LineString::value)
 	geom-&gt;this_-&gt;Value(dist, pt);
 
 	NanReturnValue(Point::New(pt));
-}
-
-NAN_METHOD(LineString::addPoint)
-{
-	NanScope();
-
-	LineString *geom = ObjectWrap::Unwrap&lt;LineString&gt;(args.This());
-
-	if (args[0]-&gt;IsNumber()) {
-
-		double x = 0, y = 0, z = 0;
-		NODE_ARG_DOUBLE(0, &quot;x&quot;, x);
-		NODE_ARG_DOUBLE(1, &quot;y&quot;, y);
-		NODE_ARG_DOUBLE_OPT(2, &quot;z&quot;, z);
-		if (args.Length() &lt; 3) {
-			geom-&gt;this_-&gt;addPoint(x, y);
-		} else {
-			geom-&gt;this_-&gt;addPoint(x, y, z);
-		}
-
-	} else {
-
-		Point* pt;
-		NODE_ARG_WRAPPED(0, &quot;point&quot;, Point, pt);
-		geom-&gt;this_-&gt;addPoint(pt-&gt;get());
-
-	}
-
-	NanReturnUndefined();
 }
 
 /**

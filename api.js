@@ -24,6 +24,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "gdal.FeatureDefnFields",
         "gdal.FeatureFields",
         "gdal.FieldDefn",
+        "gdal.GDALDrivers",
         "gdal.Geometry",
         "gdal.GeometryCollection",
         "gdal.GeometryCollectionChildren",

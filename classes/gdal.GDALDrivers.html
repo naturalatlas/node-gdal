@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_field_defn.cpp - node-gdal</title>
+    <title>gdal.GDALDrivers - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -162,314 +162,331 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_field_defn.cpp <small>File</small></h1>
+    <h1>gdal.GDALDrivers</h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
+    
 
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_field_defn.hpp&quot;
-#include &quot;utils/field_types.hpp&quot;
+    
 
-namespace node_gdal {
+    
 
-Persistent&lt;FunctionTemplate&gt; FieldDefn::constructor;
-
-void FieldDefn::Initialize(Handle&lt;Object&gt; target)
-{
-	NanScope();
-
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(FieldDefn::New);
-	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;FieldDefn&quot;));
-
-	ATTR(lcons, &quot;name&quot;, nameGetter, nameSetter);
-	ATTR(lcons, &quot;type&quot;, typeGetter, typeSetter);
-	ATTR(lcons, &quot;justification&quot;, justificationGetter, justificationSetter);
-	ATTR(lcons, &quot;width&quot;, widthGetter, widthSetter);
-	ATTR(lcons, &quot;precision&quot;, precisionGetter, precisionSetter);
-	ATTR(lcons, &quot;ignored&quot;, ignoredGetter, ignoredSetter);
-
-	target-&gt;Set(NanNew(&quot;FieldDefn&quot;), lcons-&gt;GetFunction());
-
-	NanAssignPersistent(constructor, lcons);
-}
-
-FieldDefn::FieldDefn(OGRFieldDefn *def)
-	: ObjectWrap(),
-	  this_(def),
-	  owned_(false)
-{
-	LOG(&quot;Created FieldDefn [%p]&quot;, def);
-}
-
-FieldDefn::FieldDefn()
-	: ObjectWrap(),
-	  this_(0),
-	  owned_(false)
-{
-}
-
-FieldDefn::~FieldDefn()
-{
-	if(this_){
-		LOG(&quot;Disposing FieldDefn [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if(owned_) delete this_;
-		LOG(&quot;Disposed FieldDefn [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
+    
 
 
-/**
- * @constructor
- * @class gdal.FieldDefn
- * @param {String} name Field name
- * @param {String} type Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
- */
-NAN_METHOD(FieldDefn::New)
-{
-	NanScope();
-
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
-	}
-
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
-		void* ptr = ext-&gt;Value();
-		FieldDefn *f = static_cast&lt;FieldDefn *&gt;(ptr);
-		f-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
-	} else {
-		std::string field_name(&quot;&quot;);
-		std::string type_name(&quot;string&quot;);
-
-		NODE_ARG_STR(0, &quot;field name&quot;, field_name);
-		NODE_ARG_STR(1, &quot;field type&quot;, type_name);
-
-		int field_type = getFieldTypeByName(type_name);
-		if (field_type &lt; 0) {
-			NanThrowError(&quot;Unrecognized field type&quot;);
-			NanReturnUndefined();
-		}
-
-		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), static_cast&lt;OGRFieldType&gt;(field_type)));
-		def-&gt;owned_ = true;
-		def-&gt;Wrap(args.This());
-	}
-
-	NanReturnValue(args.This());
-}
-
-Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def)
-{
-	NanEscapableScope();
-	return NanEscapeScope(FieldDefn::New(def, false));
-}
-
-Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def, bool owned)
-{
-	NanEscapableScope();
-
-	if (!def) {
-		return NanEscapeScope(NanNull());
-	}
-
-	//make a copy of fielddefn owned by a featuredefn
-	// + no need to track when a featuredefn is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only fielddefn
-	// - is slower
-
-	if (!owned) {
-		def = new OGRFieldDefn(def);
-	}
-
-	FieldDefn *wrapped = new FieldDefn(def);
-	wrapped-&gt;owned_ = true;
-
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(FieldDefn::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-
-	return NanEscapeScope(obj);
-}
-
-NAN_METHOD(FieldDefn::toString)
-{
-	NanScope();
-	NanReturnValue(NanNew(&quot;FieldDefn&quot;));
-}
-
-/**
- * @attribute name
- * @type {String}
- */
-NAN_GETTER(FieldDefn::nameGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(SafeString::New(def-&gt;this_-&gt;GetNameRef()));
-}
-
-/**
- * Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
- *
- * @attribute type
- * @type {String}
- */
-NAN_GETTER(FieldDefn::typeGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(SafeString::New(getFieldTypeName(def-&gt;this_-&gt;GetType())));
-}
-
-/**
- * @attribute ignored
- * @type {Boolean}
- */
-NAN_GETTER(FieldDefn::ignoredGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsIgnored()));
-}
-
-/**
- * Field justification (see {{#crossLink &quot;Constants (OJ)&quot;}}OJ constants{{/crossLink}})
- *
- * @attribute justification
- * @type {String}
- */
-NAN_GETTER(FieldDefn::justificationGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	OGRJustification justification = def-&gt;this_-&gt;GetJustify();
-	if (justification == OJRight) NanReturnValue(NanNew(&quot;Right&quot;));
-	if (justification == OJLeft)  NanReturnValue(NanNew(&quot;Left&quot;));
-	NanReturnValue(NanUndefined());
-}
-
-/**
- * @attribute width
- * @type {Integer}
- */
-NAN_GETTER(FieldDefn::widthGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetWidth()));
-}
-
-/**
- * @attribute precision
- * @type {Integer}
- */
-NAN_GETTER(FieldDefn::precisionGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetPrecision()));
-}
-
-NAN_SETTER(FieldDefn::nameSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsString()){
-		NanThrowError(&quot;Name must be string&quot;);
-		return;
-	}
-	NanUtf8String name = NanUtf8String(value);
-	def-&gt;this_-&gt;SetName(*name);
-}
-
-NAN_SETTER(FieldDefn::typeSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsString()){
-		NanThrowError(&quot;type must be a string&quot;);
-		return;
-	}
-	NanUtf8String name = NanUtf8String(value);
-	int type = getFieldTypeByName(*name);
-	if(type &lt; 0){
-		NanThrowError(&quot;Unrecognized field type&quot;);
-	} else {
-		def-&gt;this_-&gt;SetType(OGRFieldType(type));
-	}
-
-}
-
-NAN_SETTER(FieldDefn::justificationSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
 
 
-	OGRJustification justification;
-	std::string str = *NanUtf8String(value);
-	if(value-&gt;IsString()){
-		if(str == &quot;Left&quot;) {
-			justification = OJLeft;
-		} else if (str == &quot;Right&quot;) {
-			justification = OJRight;
-		} else if (str == &quot;Undefined&quot;) {
-			justification = OJUndefined;
-		} else {
-			NanThrowError(&quot;Unrecognized justification&quot;);
-			return;
-		}
-	} else if (value-&gt;IsNull() || value-&gt;IsUndefined()){
-		justification = OJUndefined;
-	} else {
-		NanThrowError(&quot;justification must be a string or undefined&quot;);
-		return;
-	}
+<div class="yuidoc-class-description">
+    <p>An collection of all <a href="../classes/gdal.Driver.html" class="crosslink">drivers</a> registered with GDAL.</p>
 
-	def-&gt;this_-&gt;SetJustify(justification);
-}
-
-NAN_SETTER(FieldDefn::widthSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsInt32()){
-		NanThrowError(&quot;width must be an integer&quot;);
-		return;
-	}
-	def-&gt;this_-&gt;SetWidth(value-&gt;IntegerValue());
-}
-
-NAN_SETTER(FieldDefn::precisionSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsInt32()){
-		NanThrowError(&quot;precision must be an integer&quot;);
-		return;
-	}
-	def-&gt;this_-&gt;SetPrecision(value-&gt;IntegerValue());
-}
-
-NAN_SETTER(FieldDefn::ignoredSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsBoolean()){
-		NanThrowError(&quot;ignored must be a boolean&quot;);
-		return;
-	}
-	def-&gt;this_-&gt;SetIgnored(value-&gt;IntegerValue());
-}
-
-} // namespace node_gdal
-    </pre>
 </div>
+
+
+<!-- table of contents -->
+
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
+		<li>
+			<strong>Methods</strong>
+			<ul>
+				
+				
+				<li><a href="#method-count"><span class="im">count</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">index</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-getNames"><span class="im">getNames</span>()</a></li>
+				
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+
+		
+	</ul>
+</div>
+
+<!-- details -->
+
+
+
+
+    <div id="methods" class="page-section">
+        <h2 class="off-left">Methods</h2>
+        <div class="item-list">
+       		
+        	
+            <div id="method-count" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>count</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">Integer</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_gdal_drivers.cpp.html#l209"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:209</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the number of drivers registered with GDAL.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Integer</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method-get" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>get</code></span>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>index</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_gdal_drivers.cpp.html#l82"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:82</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns a driver with the specified name.</p>
+<p>Note: Prior to GDAL2.x there is a separate driver for vector VRTs and raster VRTs.
+      Use <code>"VRT:vector"</code> to fetch the vector VRT driver and <code>"VRT:raster"</code> to fetch the raster VRT driver.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">index</code>
+                        <span class="type">Integer | String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>0-based index or driver name</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        	
+            <div id="method-getNames" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>getNames</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_gdal_drivers.cpp.html#l166"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:166</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns an array with the names of all the drivers registered with GDAL.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">String</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+            
+        
+        </div>
+    </div>
+
+
+
+
+
+
+
+
 
                     </div>
                 </div>

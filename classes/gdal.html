@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -201,6 +203,8 @@ dataset.layers.get(0).features.forEach(function(feature) {
 			<strong>Properties</strong>
 			<ul>
 				
+				<li><a href="#prop-gdal.drivers"><span class="ip">gdal.drivers</span></a></li>
+				
 				<li><a href="#prop-gdal.version"><span class="ip">gdal.version</span></a></li>
 				
 			</ul>
@@ -284,6 +288,53 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
         <div class="item-list">
         
+            <div id="prop-gdal.drivers" class="property item">
+    <h3 class="name"><code>gdal.drivers</code></h3>
+    <span class="type"><a href="../classes/gdal.GDALDrivers.html" class="crosslink">gdal.GDALDrivers</a></span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l182"><code>src&#x2F;node_gdal.cpp:182</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>The collection of all drivers registered with GDAL</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
             <div id="prop-gdal.version" class="property item">
     <h3 class="name"><code>gdal.version</code></h3>
     <span class="type">String</span>
@@ -309,7 +360,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l890"><code>src&#x2F;node_gdal.cpp:890</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l897"><code>src&#x2F;node_gdal.cpp:897</code></a>
         
         </p>
 
@@ -896,12 +947,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">base</code>
+                                    <code class="param-name optional">[offset=0]</code>
                                     <span class="type">Number</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>The "offset" relative to which contour intervals are applied. This is normally zero, but could be different. To generate 10m contours at 5, 15, 25, ... the offset would be 5.</p>
+
                                 </div>
 
                                 
@@ -909,12 +962,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">interval</code>
+                                    <code class="param-name optional">[interval=100]</code>
                                     <span class="type">Number</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>The elevation interval between contours generated.</p>
+
                                 </div>
 
                                 
@@ -922,12 +977,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">fixedLevels</code>
+                                    <code class="param-name optional">[fixedLevels]</code>
                                     <span class="type">Number</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>A list of fixed contour levels at which contours should be generated. Overrides interval/base options if set.</p>
+
                                 </div>
 
                                 
@@ -935,12 +992,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">noData</code>
+                                    <code class="param-name optional">[nodata]</code>
                                     <span class="type">Number</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>The value to use as a "nodata" value. That is, a pixel value which should be ignored in generating contours as if the value of the pixel were not known.</p>
+
                                 </div>
 
                                 
@@ -948,12 +1007,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">idField</code>
+                                    <code class="param-name optional">[idField]</code>
                                     <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>A field index to indicate where a unique id should be written for each feature (contour) written.</p>
+
                                 </div>
 
                                 
@@ -961,12 +1022,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">elevField</code>
+                                    <code class="param-name optional">[elevField]</code>
                                     <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>A field index to indicate where the elevation value of the contour should be written.</p>
+
                                 </div>
 
                                 
@@ -1223,7 +1286,7 @@ that should not be considered in contour line generation.</p>
                                 
 
                                 <div class="param-description">
-                                    <p>If provided, this band will be updated in-place.</p>
+                                    <p>This band to be updated in-place.</p>
 
                                 </div>
 
@@ -1232,8 +1295,9 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">mask</code>
+                                    <code class="param-name optional">[mask]</code>
                                     <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
@@ -1251,7 +1315,8 @@ that should not be considered in contour line generation.</p>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>The maximum distance (in pixels) that the algorithm will search out for values to interpolate.</p>
+
                                 </div>
 
                                 
@@ -1259,12 +1324,14 @@ that should not be considered in contour line generation.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">smoothingIterations</code>
+                                    <code class="param-name optional">[smoothingIterations=0]</code>
                                     <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
-                                    
+                                    <p>The number of 3x3 average filter smoothing iterations to run after the interpolation to dampen artifacts.</p>
+
                                 </div>
 
                                 
@@ -1697,8 +1764,9 @@ provided to determine which pixels are eligible for processing.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">connectedness</code>
+                                    <code class="param-name optional">[connectedness=4]</code>
                                     <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
@@ -1711,8 +1779,9 @@ provided to determine which pixels are eligible for processing.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">useFloats</code>
+                                    <code class="param-name optional">[useFloats=false]</code>
                                     <span class="type">Boolean</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
@@ -1770,7 +1839,7 @@ provided to determine which pixels are eligible for processing.</p>
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l905"><code>src&#x2F;node_gdal.cpp:905</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l912"><code>src&#x2F;node_gdal.cpp:912</code></a>
         
         </p>
 
@@ -2251,8 +2320,9 @@ provided to determine which pixels are eligible for processing.</p>
                             
                             <li class="param">
                                 
-                                    <code class="param-name">connectedness</code>
+                                    <code class="param-name optional">[connectedness=4]</code>
                                     <span class="type">Integer</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
                                 
 
                                 <div class="param-description">
@@ -2462,7 +2532,7 @@ should be large enough to include all the input image.</p>
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l914"><code>src&#x2F;node_gdal.cpp:914</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l921"><code>src&#x2F;node_gdal.cpp:921</code></a>
         
         </p>
 

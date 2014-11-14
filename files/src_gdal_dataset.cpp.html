@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -325,8 +327,8 @@ void Dataset::dispose()
 }
 
 /**
- * A set of associated raster bands, usually from one file.
- *
+ * A set of associated raster bands and/or vector layers, usually from one file.
+ * 
  * &#x60;&#x60;&#x60;
  * // raster dataset:
  * dataset = gdal.open(&#x27;file.tif&#x27;);
@@ -540,6 +542,7 @@ NAN_METHOD(Dataset::close)
 /**
  * Flushes all changes to disk.
  *
+ * @throws Error
  * @method flush
  */
 NAN_METHOD(Dataset::flush)
@@ -576,6 +579,7 @@ NAN_METHOD(Dataset::flush)
 /**
  * Execute an SQL statement against the data store.
  *
+ * @throws Error
  * @method executeSQL
  * @param {String} statement SQL statement to execute.
  * @param {gdal.Geometry} [spatial_filter=null] Geometry which represents a spatial filter.
@@ -630,6 +634,8 @@ NAN_METHOD(Dataset::executeSQL)
  * empty list of files it means there is believed to be no local file system files
  * associated with the dataset (for instance a virtual dataset).
  *
+ * Returns an empty array for vector datasets if GDAL version is below 2.0
+ * 
  * @method getFileList
  * @return {String[]}
  */
@@ -729,6 +735,7 @@ NAN_METHOD(Dataset::getGCPs)
 /**
  * Sets GCPs.
  *
+ * @throws Error
  * @method setGCPs
  * @param {Object[]} gcps
  * @param {String} projection
@@ -805,6 +812,7 @@ NAN_METHOD(Dataset::setGCPs)
 /**
  * Builds dataset overviews.
  *
+ * @throws Error
  * @method buildOverviews
  * @param {String} resampling &#x60;&quot;NEAREST&quot;&#x60;, &#x60;&quot;GAUSS&quot;&#x60;, &#x60;&quot;CUBIC&quot;&#x60;, &#x60;&quot;AVERAGE&quot;&#x60;, &#x60;&quot;MODE&quot;&#x60;, &#x60;&quot;AVERAGE_MAGPHASE&quot;&#x60; or &#x60;&quot;NONE&quot;&#x60;
  * @param {int[]} overviews
@@ -958,6 +966,9 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 }
 
 /**
+ * Spatial reference associated with raster dataset
+ *
+ * @throws Error
  * @attribute srs
  * @type {gdal.SpatialReference}
  */
@@ -1001,6 +1012,14 @@ NAN_GETTER(Dataset::srsGetter)
 }
 
 /**
+ * An affine transform which maps pixel/line coordinates into georeferenced space using the following relationship:
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var GT = dataset.geoTransform;
+ * var Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];
+ * var Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];&#x60;&#x60;&#x60;
+ * 
  * @attribute geoTransform
  * @type {Array}
  */

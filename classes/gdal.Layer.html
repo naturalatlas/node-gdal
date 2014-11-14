@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -191,6 +193,10 @@
 			<ul>
 				
 				
+				<li><a href="#method-flush"><span class="im">flush</span>()</a></li>
+				
+				
+				
 				<li><a href="#method-getExtent"><span class="im">getExtent</span>(<span class="ia">force</span>)</a></li>
 				
 				
@@ -204,10 +210,6 @@
 				
 				
 				<li><a href="#method-setSpatialFilter"><span class="im">setSpatialFilter</span>(<span class="ia">filter</span>)</a></li>
-				
-				
-				
-				<li><a href="#method-syncToDisk"><span class="im">syncToDisk</span>()</a></li>
 				
 				
 				
@@ -229,9 +231,9 @@
 				
 				<li><a href="#attr-features"><span class="iattr">features</span></a></li>
 				
-				<li><a href="#attr-features"><span class="iattr">features</span></a></li>
-				
 				<li><a href="#attr-fidColumn"><span class="iattr">fidColumn</span></a></li>
+				
+				<li><a href="#attr-fields"><span class="iattr">fields</span></a></li>
 				
 				<li><a href="#attr-geomColumn"><span class="iattr">geomColumn</span></a></li>
 				
@@ -258,6 +260,62 @@
         <h2 class="off-left">Methods</h2>
         <div class="item-list">
        		
+        	
+            <div id="method-flush" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>flush</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l199"><code>src&#x2F;gdal_layer.cpp:199</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Flush pending changes to disk.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+            
+        
         	
             <div id="method-getExtent" class="method item">
     <div class="method-signature">
@@ -649,62 +707,6 @@ layer.setSpatialFilter(minX, minY, maxX, maxY);</code></pre>
             
         
         	
-            <div id="method-syncToDisk" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>syncToDisk</code></span>
-
-    
-        <span class="paren">()</span>
-    
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_layer.cpp.html#l199"><code>src&#x2F;gdal_layer.cpp:199</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Flush pending changes to disk.</p>
-
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-            
-        
-        	
             <div id="method-testCapability" class="method item">
     <div class="method-signature">
     <span class="name"><code>testCapability</code></span>
@@ -927,59 +929,6 @@ layer.setSpatialFilter(minX, minY, maxX, maxY);</code></pre>
 </div>
 
         
-            <div id="attr-features" class="attr item">
-    <a name="config_features"></a> 
-    <h3 class="name"><code>features</code></h3>
-    <span class="type"><a href="../classes/gdal.LayerFields.html" class="crosslink">gdal.LayerFields</a></span>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <span class="flag readonly">readonly</span>
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_layer.cpp.html#l493"><code>src&#x2F;gdal_layer.cpp:493</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
             <div id="attr-fidColumn" class="attr item">
     <a name="config_fidColumn"></a> 
     <h3 class="name"><code>fidColumn</code></h3>
@@ -1013,6 +962,59 @@ layer.setSpatialFilter(minX, minY, maxX, maxY);</code></pre>
         
         
         <a href="../files/src_gdal_layer.cpp.html#l450"><code>src&#x2F;gdal_layer.cpp:450</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="attr-fields" class="attr item">
+    <a name="config_fields"></a> 
+    <h3 class="name"><code>fields</code></h3>
+    <span class="type"><a href="../classes/gdal.LayerFields.html" class="crosslink">gdal.LayerFields</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag readonly">readonly</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_gdal_layer.cpp.html#l493"><code>src&#x2F;gdal_layer.cpp:493</code></a>
         
         </p>
 
@@ -1089,7 +1091,7 @@ layer.setSpatialFilter(minX, minY, maxX, maxY);</code></pre>
             <div id="attr-geomType" class="attr item">
     <a name="config_geomType"></a> 
     <h3 class="name"><code>geomType</code></h3>
-    <span class="type">Integer</span>
+    <span class="type">Integer (see #crossLink "Constants (wkb)"geometry types/crossLink)</span>
 
     
 

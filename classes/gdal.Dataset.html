@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -175,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>A set of associated raster bands, usually from one file.</p>
+    <p>A set of associated raster bands and/or vector layers, usually from one file.</p>
 <pre class="code prettyprint"><code>// raster dataset:
 dataset = gdal.open(&#39;file.tif&#39;);
 bands = dataset.bands;
@@ -333,7 +335,7 @@ layers = dataset.layers;</code></pre>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l638"><code>src&#x2F;gdal_dataset.cpp:638</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l643"><code>src&#x2F;gdal_dataset.cpp:643</code></a>
         
         </p>
 
@@ -526,7 +528,7 @@ layers = dataset.layers;</code></pre>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l409"><code>src&#x2F;gdal_dataset.cpp:409</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l410"><code>src&#x2F;gdal_dataset.cpp:410</code></a>
         
         </p>
 
@@ -712,7 +714,7 @@ layers = dataset.layers;</code></pre>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l459"><code>src&#x2F;gdal_dataset.cpp:459</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l461"><code>src&#x2F;gdal_dataset.cpp:461</code></a>
         
         </p>
 
@@ -727,6 +729,7 @@ layers = dataset.layers;</code></pre>
 <p>Returns a list of files believed to be part of this dataset. If it returns an
 empty list of files it means there is believed to be no local file system files
 associated with the dataset (for instance a virtual dataset).</p>
+<p>Returns an empty array for vector datasets if GDAL version is below 2.0</p>
 
     </div>
 
@@ -859,7 +862,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l509"><code>src&#x2F;gdal_dataset.cpp:509</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l513"><code>src&#x2F;gdal_dataset.cpp:513</code></a>
         
         </p>
 
@@ -1049,7 +1052,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l562"><code>src&#x2F;gdal_dataset.cpp:562</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l566"><code>src&#x2F;gdal_dataset.cpp:566</code></a>
         
         </p>
 
@@ -1260,7 +1263,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l999"><code>src&#x2F;gdal_dataset.cpp:999</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l1016"><code>src&#x2F;gdal_dataset.cpp:1016</code></a>
         
         </p>
 
@@ -1313,7 +1316,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l723"><code>src&#x2F;gdal_dataset.cpp:723</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l729"><code>src&#x2F;gdal_dataset.cpp:729</code></a>
         
         </p>
 
@@ -1366,7 +1369,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l881"><code>src&#x2F;gdal_dataset.cpp:881</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l898"><code>src&#x2F;gdal_dataset.cpp:898</code></a>
         
         </p>
 
@@ -1417,7 +1420,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l836"><code>src&#x2F;gdal_dataset.cpp:836</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l845"><code>src&#x2F;gdal_dataset.cpp:845</code></a>
         
         </p>
 
@@ -1427,13 +1430,25 @@ associated with the dataset (for instance a virtual dataset).</p>
     </div>
 
     <div class="description">
-        
+        <p>An affine transform which maps pixel/line coordinates into georeferenced space using the following relationship:</p>
+
     </div>
 
     
 
     
 
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var GT = dataset.geoTransform;
+var Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];
+var Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];</code></pre>
+
+            </div>
+        </div>
     
 </div>
 
@@ -1470,7 +1485,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l1010"><code>src&#x2F;gdal_dataset.cpp:1010</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l1027"><code>src&#x2F;gdal_dataset.cpp:1027</code></a>
         
         </p>
 
@@ -1523,7 +1538,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l752"><code>src&#x2F;gdal_dataset.cpp:752</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l758"><code>src&#x2F;gdal_dataset.cpp:758</code></a>
         
         </p>
 
@@ -1574,7 +1589,7 @@ associated with the dataset (for instance a virtual dataset).</p>
             
         
         
-        <a href="../files/src_gdal_dataset.cpp.html#l793"><code>src&#x2F;gdal_dataset.cpp:793</code></a>
+        <a href="../files/src_gdal_dataset.cpp.html#l799"><code>src&#x2F;gdal_dataset.cpp:799</code></a>
         
         </p>
 
@@ -1584,7 +1599,8 @@ associated with the dataset (for instance a virtual dataset).</p>
     </div>
 
     <div class="description">
-        
+        <p>Spatial reference associated with raster dataset</p>
+
     </div>
 
     

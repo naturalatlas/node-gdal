@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -199,7 +201,7 @@ be gateways to many formats through a secondary multi-library.</p>
 				
 				
 				
-				<li><a href="#method-create"><span class="im">create</span>(<span class="ia">filename</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
+				<li><a href="#method-create"><span class="im">create</span>(<span class="ia">filename</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">creation_options</span>)</a></li>
 				
 				
 				
@@ -381,31 +383,31 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="arg">
                     
-                        <code class="optional">x_size</code>
+                        <code class="optional">x_size=0</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">y_size</code>
+                        <code class="optional">y_size=0</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">band_count</code>
+                        <code class="optional">band_count=0</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">data_type</code>
+                        <code class="optional">data_type=gdal.GDT_Byte</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code class="optional">control_options</code>
+                        <code class="optional">creation_options</code>
                     
                 </li>
             
@@ -478,7 +480,41 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[x_size]</code>
+                        <code class="param-name optional">[x_size=0]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>raster width in pixels (ignored for vector datasets)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[y_size=0]</code>
+                        <span class="type">Integer</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>raster height in pixels (ignored for vector datasets)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[band_count=0]</code>
                         <span class="type">Integer</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
@@ -494,7 +530,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[y_size]</code>
+                        <code class="param-name optional">[data_type=gdal.GDT_Byte]</code>
                         <span class="type">Integer</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
@@ -502,7 +538,8 @@ be gateways to many formats through a secondary multi-library.</p>
                     
 
                     <div class="param-description">
-                         
+                        <p>pixel data type (ignored for vector datasets) (see <a href="../classes/Constants (GDT).html" class="crosslink">data types</a>)</p>
+
                     </div>
 
                     
@@ -510,47 +547,16 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[band_count]</code>
-                        <span class="type">Integer</span>
+                        <code class="param-name optional">[creation_options]</code>
+                        <span class="type">String | Object</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
 
                     <div class="param-description">
-                         
-                    </div>
+                        <p>An array or object containing driver-specific dataset creation options</p>
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[data_type]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[control_options]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
                     </div>
 
                     
@@ -713,14 +719,14 @@ be gateways to many formats through a secondary multi-library.</p>
                 <li class="param">
                     
                         <code class="param-name optional">[options=null]</code>
-                        <span class="type">String</span>
+                        <span class="type">String | Object</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>An array of creation options.</p>
+                        <p>An array or object containing driver-specific dataset creation options</p>
 
                     </div>
 
@@ -961,7 +967,7 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="arg">
                     
-                        <code>mode</code>
+                        <code class="optional">mode=&#x60;&quot;r&quot;&#x60;</code>
                     
                 </li>
             
@@ -1034,8 +1040,9 @@ be gateways to many formats through a secondary multi-library.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">mode</code>
+                        <code class="param-name optional">[mode=&#x60;&quot;r&quot;&#x60;]</code>
                         <span class="type">String</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     

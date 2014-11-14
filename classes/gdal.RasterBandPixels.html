@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -176,6 +178,11 @@
 
 <div class="yuidoc-class-description">
     <p>A representation of a <a href="../classes/gdal.RasterBand.html" class="crosslink">RasterBand</a>&#39;s pixels.</p>
+<p>Note: Typed arrays should be created with an external ArrayBuffer for versions of node &gt;= 0.11</p>
+<pre class="code prettyprint"><code>var n = 16*16;
+var data = new Float32Array(new ArrayBuffer(n*4));
+//read data into the existing array
+band.pixels.read(0,0,16,16,data);</code></pre>
 
 </div>
 
@@ -287,7 +294,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l84"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:84</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l92"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:92</code></a>
         
         </p>
 
@@ -437,7 +444,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l153"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:153</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l161"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:161</code></a>
         
         </p>
 
@@ -709,7 +716,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l348"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:348</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l356"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:356</code></a>
         
         </p>
 
@@ -856,7 +863,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l118"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:118</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l126"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:126</code></a>
         
         </p>
 
@@ -1005,7 +1012,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l262"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:262</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l270"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:270</code></a>
         
         </p>
 
@@ -1243,7 +1250,7 @@
             
         
         
-        <a href="../files/src_collections_rasterband_pixels.cpp.html#l406"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:406</code></a>
+        <a href="../files/src_collections_rasterband_pixels.cpp.html#l414"><code>src&#x2F;collections&#x2F;rasterband_pixels.cpp:414</code></a>
         
         </p>
 

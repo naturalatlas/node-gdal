@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -195,11 +197,7 @@
 				
 				
 				
-				<li><a href="#method-add"><span class="im">add</span>(<span class="ia">force</span>)</a></li>
-				
-				
-				
-				<li><a href="#method-first"><span class="im">first</span>()</a></li>
+				<li><a href="#method-count"><span class="im">count</span>(<span class="ia">force</span>)</a></li>
 				
 				
 				
@@ -212,6 +210,10 @@
 				
 				
 				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">id</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-next"><span class="im">next</span>()</a></li>
 				
 				
 				
@@ -305,7 +307,7 @@
     </div>
 
     <div class="description">
-        <p>Adds a feature to the layer.</p>
+        <p>Adds a feature to the layer. The feature should be created using the current layer as the definition.</p>
 
     </div>
 
@@ -337,14 +339,26 @@
     
 
     
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>var feature = new gdal.Feature(layer);
+feature.setGeometry(new gdal.Point(0, 1));
+feature.fields.set(&#39;name&#39;, &#39;somestring&#39;);
+layer.features.add(feature);</code></pre>
+
+            </div>
+        </div>
+    
 </div>
 
             
         
         	
-            <div id="method-add" class="method item">
+            <div id="method-count" class="method item">
     <div class="method-signature">
-    <span class="name"><code>add</code></span>
+    <span class="name"><code>count</code></span>
 
     
         <div class="args">
@@ -387,7 +401,7 @@
             
         
         
-        <a href="../files/src_collections_layer_features.cpp.html#l192"><code>src&#x2F;collections&#x2F;layer_features.cpp:192</code></a>
+        <a href="../files/src_collections_layer_features.cpp.html#l199"><code>src&#x2F;collections&#x2F;layer_features.cpp:199</code></a>
         
         </p>
 
@@ -517,87 +531,6 @@ returns the first feature in the layer.</p>
         </div>
     
 
-    
-</div>
-
-            
-        
-        	
-            <div id="method-first" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>first</code></span>
-
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-        </span>
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l137"><code>src&#x2F;collections&#x2F;layer_features.cpp:137</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Returns the next feature in the layer.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>while (feature = layer.features.next()) { ... }</code></pre>
-
-            </div>
-        </div>
     
 </div>
 
@@ -811,6 +744,87 @@ but in some cases it will not. If iterating, it&#39;s best to use the <code>next
             
         
         	
+            <div id="method-next" class="method item">
+    <div class="method-signature">
+    <span class="name"><code>next</code></span>
+
+    
+        <span class="paren">()</span>
+    
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+        </span>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_collections_layer_features.cpp.html#l137"><code>src&#x2F;collections&#x2F;layer_features.cpp:137</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the next feature in the layer. Returns null if no more features.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>while (feature = layer.features.next()) { ... }</code></pre>
+
+            </div>
+        </div>
+    
+</div>
+
+            
+        
+        	
             <div id="method-remove" class="method item">
     <div class="method-signature">
     <span class="name"><code>remove</code></span>
@@ -852,7 +866,7 @@ but in some cases it will not. If iterating, it&#39;s best to use the <code>next
             
         
         
-        <a href="../files/src_collections_layer_features.cpp.html#l268"><code>src&#x2F;collections&#x2F;layer_features.cpp:268</code></a>
+        <a href="../files/src_collections_layer_features.cpp.html#l274"><code>src&#x2F;collections&#x2F;layer_features.cpp:274</code></a>
         
         </p>
 
@@ -947,7 +961,7 @@ but in some cases it will not. If iterating, it&#39;s best to use the <code>next
             
         
         
-        <a href="../files/src_collections_layer_features.cpp.html#l217"><code>src&#x2F;collections&#x2F;layer_features.cpp:217</code></a>
+        <a href="../files/src_collections_layer_features.cpp.html#l223"><code>src&#x2F;collections&#x2F;layer_features.cpp:223</code></a>
         
         </p>
 
@@ -1051,7 +1065,7 @@ but in some cases it will not. If iterating, it&#39;s best to use the <code>next
             
         
         
-        <a href="../files/src_collections_layer_features.cpp.html#l297"><code>src&#x2F;collections&#x2F;layer_features.cpp:297</code></a>
+        <a href="../files/src_collections_layer_features.cpp.html#l303"><code>src&#x2F;collections&#x2F;layer_features.cpp:303</code></a>
         
         </p>
 

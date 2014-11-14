@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -241,7 +243,23 @@ void Feature::dispose()
 }
 
 /**
- * A simple feature, including geometry and attributes.
+ * A simple feature, including geometry and attributes. It&#x27;s fields and geometry type is defined by the given definition. 
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * //create layer and specify geometry type
+ * var layer = dataset.layers.create(&#x27;mylayer&#x27;, null, gdal.Point);
+ * 
+ * //setup fields for the given layer
+ * layer.fields.add(new gdal.FieldDefn(&#x27;elevation&#x27;, gdal.OFTInteger));
+ * layer.fields.add(new gdal.FieldDefn(&#x27;name&#x27;, gdal.OFTString));
+ *
+ * //create feature using layer definition and then add it to the layer
+ * var feature = new gdal.Feature(layer);
+ * feature.fields.set(&#x27;elevation&#x27;, 13775);
+ * feature.fields.set(&#x27;elevation&#x27;, 13775);
+ * feature.setGeometry(new gdal.Point(43.741208, -110.802414));
+ * layer.features.add(feature);&#x60;&#x60;&#x60;
  *
  * @constructor
  * @class gdal.Feature
@@ -385,6 +403,7 @@ NAN_METHOD(Feature::getFieldDefn)
 /**
  * Sets the feature&#x27;s geometry.
  *
+ * @throws Error
  * @method setGeometry
  * @param {gdal.Geometry} geometry
  */
@@ -393,7 +412,7 @@ NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, Set
 /**
  * Determines if the features are the same.
  *
- * @method setGeometry
+ * @method equals
  * @param {gdal.Feature} feature
  * @return {Boolean} &#x60;true&#x60; if the features are the same, &#x60;false&#x60; if different
  */
@@ -445,6 +464,7 @@ NAN_METHOD(Feature::destroy)
  * feature1.fields.set([5, &#x27;test&#x27;, 3.14]);
  * feature2.setFrom(feature1);&#x60;&#x60;&#x60;
  *
+ * @throws Error
  * @method setFrom
  * @param {gdal.Feature} feature
  * @param {Array} [*index_map] Array of the indices (integers) of the feature&#x27;s fields stored at the corresponding index of the source feature&#x27;s fields. A value of -1 should be used to ignore the source&#x27;s field. The array should not be &#x60;null&#x60; and be as long as the number of fields in the source feature.

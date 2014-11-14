@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -191,10 +193,10 @@ void Algorithms::Initialize(Handle&lt;Object&gt; target)
  * @static
  * @for gdal
  * @param {Object} options
- * @param {gdal.RasterBand} options.src If provided, this band will be updated in-place.
- * @param {gdal.RasterBand} options.mask Mask band
- * @param {Number} options.searchDist
- * @param {integer} options.smoothingIterations
+ * @param {gdal.RasterBand} options.src This band to be updated in-place.
+ * @param {gdal.RasterBand} [options.mask] Mask band
+ * @param {Number} options.searchDist The maximum distance (in pixels) that the algorithm will search out for values to interpolate.
+ * @param {integer} [options.smoothingIterations=0] The number of 3x3 average filter smoothing iterations to run after the interpolation to dampen artifacts.
  */
 NAN_METHOD(Algorithms::fillNodata)
 {
@@ -238,12 +240,12 @@ NAN_METHOD(Algorithms::fillNodata)
  * @param {Object} options
  * @param {gdal.RasterBand} options.src
  * @param {gdal.Layer} options.dst
- * @param {Number} options.base
- * @param {Number} options.interval
- * @param {Number[]} options.fixedLevels
- * @param {Number} options.noData
- * @param {integer} options.idField
- * @param {integer} options.elevField
+ * @param {Number} [options.offset=0] The &quot;offset&quot; relative to which contour intervals are applied. This is normally zero, but could be different. To generate 10m contours at 5, 15, 25, ... the offset would be 5.
+ * @param {Number} [options.interval=100] The elevation interval between contours generated.
+ * @param {Number[]} [options.fixedLevels] A list of fixed contour levels at which contours should be generated. Overrides interval/base options if set.
+ * @param {Number} [options.nodata] The value to use as a &quot;nodata&quot; value. That is, a pixel value which should be ignored in generating contours as if the value of the pixel were not known.
+ * @param {integer} [options.idField] A field index to indicate where a unique id should be written for each feature (contour) written.
+ * @param {integer} [options.elevField] A field index to indicate where the elevation value of the contour should be written.
  */
 NAN_METHOD(Algorithms::contourGenerate)
 {
@@ -259,14 +261,14 @@ NAN_METHOD(Algorithms::contourGenerate)
 	int n_fixed_levels = 0;
 	int use_nodata = 0;
 	double nodata = 0;
-	int id_field, elev_field;
+	int id_field = -1, elev_field = -1;
 
 	NODE_ARG_OBJECT(0, &quot;options&quot;, obj);
 
 	NODE_WRAPPED_FROM_OBJ(obj, &quot;src&quot;, RasterBand, src);
 	NODE_WRAPPED_FROM_OBJ(obj, &quot;dst&quot;, Layer, dst);
-	NODE_INT_FROM_OBJ(obj, &quot;idField&quot;, id_field);
-	NODE_INT_FROM_OBJ(obj, &quot;elevField&quot;, elev_field);
+	NODE_INT_FROM_OBJ_OPT(obj, &quot;idField&quot;, id_field);
+	NODE_INT_FROM_OBJ_OPT(obj, &quot;elevField&quot;, elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;interval&quot;, interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;offset&quot;, base);
 	if(obj-&gt;HasOwnProperty(NanNew(&quot;fixedLevels&quot;))){
@@ -309,7 +311,7 @@ NAN_METHOD(Algorithms::contourGenerate)
  * @param {gdal.RasterBand} options.dst Output raster band. It may be the same as src band to update the source in place.
  * @param {gdal.RasterBand} [options.mask] All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.
  * @param {Number} options.threshold Raster polygons with sizes smaller than this will be merged into their largest neighbour.
- * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {integer} [options.connectedness=4] Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
  */
 NAN_METHOD(Algorithms::sieveFilter)
 {
@@ -409,8 +411,8 @@ NAN_METHOD(Algorithms::checksumImage)
  * @param {gdal.Layer} options.dst
  * @param {gdal.RasterBand} [options.mask]
  * @param {integer} options.pixValField The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.
- * @param {integer} options.connectedness Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
- * @param {Boolean} options.useFloats Use floating point buffers instead of int buffers.
+ * @param {integer} [options.connectedness=4] Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.
+ * @param {Boolean} [options.useFloats=false] Use floating point buffers instead of int buffers.
  */
 NAN_METHOD(Algorithms::polygonize)
 {

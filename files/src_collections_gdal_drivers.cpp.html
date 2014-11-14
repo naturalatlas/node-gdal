@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/gdal_field_defn.cpp - node-gdal</title>
+    <title>src/collections/gdal_drivers.cpp - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -162,73 +162,55 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/gdal_field_defn.cpp <small>File</small></h1>
+    <h1>src/collections/gdal_drivers.cpp <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-
-#include &quot;gdal_common.hpp&quot;
-#include &quot;gdal_field_defn.hpp&quot;
-#include &quot;utils/field_types.hpp&quot;
+#include &quot;../gdal_common.hpp&quot;
+#include &quot;../gdal_driver.hpp&quot;
+#include &quot;gdal_drivers.hpp&quot;
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; FieldDefn::constructor;
+Persistent&lt;FunctionTemplate&gt; GDALDrivers::constructor;
 
-void FieldDefn::Initialize(Handle&lt;Object&gt; target)
+void GDALDrivers::Initialize(Handle&lt;Object&gt; target)
 {
 	NanScope();
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(FieldDefn::New);
+	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(GDALDrivers::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;FieldDefn&quot;));
+	lcons-&gt;SetClassName(NanNew(&quot;GDALDrivers&quot;));
 
-	ATTR(lcons, &quot;name&quot;, nameGetter, nameSetter);
-	ATTR(lcons, &quot;type&quot;, typeGetter, typeSetter);
-	ATTR(lcons, &quot;justification&quot;, justificationGetter, justificationSetter);
-	ATTR(lcons, &quot;width&quot;, widthGetter, widthSetter);
-	ATTR(lcons, &quot;precision&quot;, precisionGetter, precisionSetter);
-	ATTR(lcons, &quot;ignored&quot;, ignoredGetter, ignoredSetter);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getNames&quot;, getNames);
 
-	target-&gt;Set(NanNew(&quot;FieldDefn&quot;), lcons-&gt;GetFunction());
+	GDALAllRegister();
+	#if GDAL_VERSION_MAJOR &lt; 2
+	OGRRegisterAll();
+	#endif
 
+	target-&gt;Set(NanNew(&quot;GDALDrivers&quot;), lcons-&gt;GetFunction());
+	
 	NanAssignPersistent(constructor, lcons);
 }
 
-FieldDefn::FieldDefn(OGRFieldDefn *def)
-	: ObjectWrap(),
-	  this_(def),
-	  owned_(false)
-{
-	LOG(&quot;Created FieldDefn [%p]&quot;, def);
-}
+GDALDrivers::GDALDrivers()
+	: ObjectWrap()
+{}
 
-FieldDefn::FieldDefn()
-	: ObjectWrap(),
-	  this_(0),
-	  owned_(false)
-{
-}
-
-FieldDefn::~FieldDefn()
-{
-	if(this_){
-		LOG(&quot;Disposing FieldDefn [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
-		if(owned_) delete this_;
-		LOG(&quot;Disposed FieldDefn [%p]&quot;, this_);
-		this_ = NULL;
-	}
-}
-
+GDALDrivers::~GDALDrivers()
+{}
 
 /**
- * @constructor
- * @class gdal.FieldDefn
- * @param {String} name Field name
- * @param {String} type Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
+ * An collection of all {{#crossLink &quot;gdal.Driver&quot;}}drivers{{/crossLink}} registered with GDAL.
+ *
+ * @class gdal.GDALDrivers
  */
-NAN_METHOD(FieldDefn::New)
+NAN_METHOD(GDALDrivers::New)
 {
 	NanScope();
 
@@ -236,235 +218,180 @@ NAN_METHOD(FieldDefn::New)
 		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
 		NanReturnUndefined();
 	}
-
 	if (args[0]-&gt;IsExternal()) {
 		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
-		FieldDefn *f = static_cast&lt;FieldDefn *&gt;(ptr);
+		GDALDrivers *f =  static_cast&lt;GDALDrivers *&gt;(ptr);
 		f-&gt;Wrap(args.This());
 		NanReturnValue(args.This());
 	} else {
-		std::string field_name(&quot;&quot;);
-		std::string type_name(&quot;string&quot;);
-
-		NODE_ARG_STR(0, &quot;field name&quot;, field_name);
-		NODE_ARG_STR(1, &quot;field type&quot;, type_name);
-
-		int field_type = getFieldTypeByName(type_name);
-		if (field_type &lt; 0) {
-			NanThrowError(&quot;Unrecognized field type&quot;);
-			NanReturnUndefined();
-		}
-
-		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), static_cast&lt;OGRFieldType&gt;(field_type)));
-		def-&gt;owned_ = true;
-		def-&gt;Wrap(args.This());
+		NanThrowError(&quot;Cannot create GDALDrivers directly&quot;);
+		NanReturnUndefined();
 	}
-
-	NanReturnValue(args.This());
 }
 
-Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def)
-{
-	NanEscapableScope();
-	return NanEscapeScope(FieldDefn::New(def, false));
-}
-
-Handle&lt;Value&gt; FieldDefn::New(OGRFieldDefn *def, bool owned)
+Handle&lt;Value&gt; GDALDrivers::New()
 {
 	NanEscapableScope();
 
-	if (!def) {
-		return NanEscapeScope(NanNull());
-	}
-
-	//make a copy of fielddefn owned by a featuredefn
-	// + no need to track when a featuredefn is destroyed
-	// + no need to throw errors when a method trys to modify an owned read-only fielddefn
-	// - is slower
-
-	if (!owned) {
-		def = new OGRFieldDefn(def);
-	}
-
-	FieldDefn *wrapped = new FieldDefn(def);
-	wrapped-&gt;owned_ = true;
+	GDALDrivers *wrapped = new GDALDrivers();
 
 	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(FieldDefn::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Handle&lt;v8::Object&gt; obj = NanNew(GDALDrivers::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
 
 	return NanEscapeScope(obj);
 }
 
-NAN_METHOD(FieldDefn::toString)
+NAN_METHOD(GDALDrivers::toString)
 {
 	NanScope();
-	NanReturnValue(NanNew(&quot;FieldDefn&quot;));
+	NanReturnValue(NanNew(&quot;GDALDrivers&quot;));
 }
 
 /**
- * @attribute name
- * @type {String}
- */
-NAN_GETTER(FieldDefn::nameGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(SafeString::New(def-&gt;this_-&gt;GetNameRef()));
-}
-
-/**
- * Data type (see {{#crossLink &quot;Constants (OFT)&quot;}}OFT constants{{/crossLink}})
+ * Returns a driver with the specified name.
  *
- * @attribute type
- * @type {String}
+ * Note: Prior to GDAL2.x there is a separate driver for vector VRTs and raster VRTs.
+ *       Use &#x60;&quot;VRT:vector&quot;&#x60; to fetch the vector VRT driver and &#x60;&quot;VRT:raster&quot;&#x60; to fetch the raster VRT driver.
+ * 
+ * @method get
+ * @param {Integer|string} index 0-based index or driver name
+ * @return {gdal.Driver}
  */
-NAN_GETTER(FieldDefn::typeGetter)
+NAN_METHOD(GDALDrivers::get)
 {
 	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(SafeString::New(getFieldTypeName(def-&gt;this_-&gt;GetType())));
-}
+	
+	#if GDAL_VERSION_MAJOR &lt; 2
+	OGRSFDriver *ogr_driver;
+	#endif
 
-/**
- * @attribute ignored
- * @type {Boolean}
- */
-NAN_GETTER(FieldDefn::ignoredGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Boolean&gt;(def-&gt;this_-&gt;IsIgnored()));
-}
+	GDALDriver *gdal_driver;
 
-/**
- * Field justification (see {{#crossLink &quot;Constants (OJ)&quot;}}OJ constants{{/crossLink}})
- *
- * @attribute justification
- * @type {String}
- */
-NAN_GETTER(FieldDefn::justificationGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	OGRJustification justification = def-&gt;this_-&gt;GetJustify();
-	if (justification == OJRight) NanReturnValue(NanNew(&quot;Right&quot;));
-	if (justification == OJLeft)  NanReturnValue(NanNew(&quot;Left&quot;));
-	NanReturnValue(NanUndefined());
-}
-
-/**
- * @attribute width
- * @type {Integer}
- */
-NAN_GETTER(FieldDefn::widthGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetWidth()));
-}
-
-/**
- * @attribute precision
- * @type {Integer}
- */
-NAN_GETTER(FieldDefn::precisionGetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(def-&gt;this_-&gt;GetPrecision()));
-}
-
-NAN_SETTER(FieldDefn::nameSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsString()){
-		NanThrowError(&quot;Name must be string&quot;);
-		return;
-	}
-	NanUtf8String name = NanUtf8String(value);
-	def-&gt;this_-&gt;SetName(*name);
-}
-
-NAN_SETTER(FieldDefn::typeSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsString()){
-		NanThrowError(&quot;type must be a string&quot;);
-		return;
-	}
-	NanUtf8String name = NanUtf8String(value);
-	int type = getFieldTypeByName(*name);
-	if(type &lt; 0){
-		NanThrowError(&quot;Unrecognized field type&quot;);
-	} else {
-		def-&gt;this_-&gt;SetType(OGRFieldType(type));
+	if (args.Length() == 0) {
+		NanThrowError(&quot;Either driver name or index must be provided&quot;);
+		NanReturnUndefined();
 	}
 
-}
+	if(args[0]-&gt;IsString()){
+		//try getting OGR driver first, and then GDAL driver if it fails
+		//A driver named &quot;VRT&quot; exists for both GDAL and OGR, so if building
+		//with &lt;2.0 require user to specify which driver to pick
+		std::string name = *NanUtf8String(args[0]);
 
-NAN_SETTER(FieldDefn::justificationSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-
-
-	OGRJustification justification;
-	std::string str = *NanUtf8String(value);
-	if(value-&gt;IsString()){
-		if(str == &quot;Left&quot;) {
-			justification = OJLeft;
-		} else if (str == &quot;Right&quot;) {
-			justification = OJRight;
-		} else if (str == &quot;Undefined&quot;) {
-			justification = OJUndefined;
-		} else {
-			NanThrowError(&quot;Unrecognized justification&quot;);
-			return;
+		#if GDAL_VERSION_MAJOR &lt; 2
+		if(name == &quot;VRT&quot;) {
+			NanThrowError(&quot;Name \&quot;VRT\&quot; is ambiguous before GDAL 2.0. Use VRT:raster or VRT:vector instead&quot;);
+			NanReturnUndefined();
 		}
-	} else if (value-&gt;IsNull() || value-&gt;IsUndefined()){
-		justification = OJUndefined;
+		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverByName(name.c_str());
+		if(ogr_driver) {
+			NanReturnValue(Driver::New(ogr_driver));
+		}
+		#endif
+
+		if(name == &quot;VRT:vector&quot;) {
+			#if GDAL_VERSION_MAJOR &lt; 2
+			ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverByName(&quot;VRT&quot;);
+			if(ogr_driver) {
+				NanReturnValue(Driver::New(ogr_driver));
+			}
+			#else
+				name = &quot;VRT&quot;;
+			#endif
+		}
+
+		if (name == &quot;VRT:raster&quot;) {
+			name = &quot;VRT&quot;;
+		}
+		gdal_driver = GetGDALDriverManager()-&gt;GetDriverByName(name.c_str());
+		if(gdal_driver) {
+			NanReturnValue(Driver::New(gdal_driver));
+		}
+
+	} else if(args[0]-&gt;IsNumber()) {
+		int i = static_cast&lt;int&gt;(args[0]-&gt;IntegerValue());
+
+		gdal_driver = GetGDALDriverManager()-&gt;GetDriver(i);
+		if(gdal_driver) {
+			NanReturnValue(Driver::New(gdal_driver));
+		}
+
+		#if GDAL_VERSION_MAJOR &lt; 2
+		i -= GetGDALDriverManager()-&gt;GetDriverCount();
+		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriver(i);
+		if(ogr_driver) {
+			NanReturnValue(Driver::New(ogr_driver));
+		}
+		#endif
 	} else {
-		NanThrowError(&quot;justification must be a string or undefined&quot;);
-		return;
+		NanThrowError(&quot;Argument must be string or integer&quot;);
+		NanReturnUndefined();
 	}
 
-	def-&gt;this_-&gt;SetJustify(justification);
+	NanReturnValue(NanNull());
 }
 
-NAN_SETTER(FieldDefn::widthSetter)
+/**
+ * Returns an array with the names of all the drivers registered with GDAL.
+ *
+ * @method getNames
+ * @return {string[]}
+ */
+NAN_METHOD(GDALDrivers::getNames)
 {
 	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsInt32()){
-		NanThrowError(&quot;width must be an integer&quot;);
-		return;
+	int gdal_count = GetGDALDriverManager()-&gt;GetDriverCount();
+	int i, ogr_count = 0;
+	std::string name;
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+		ogr_count = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverCount();
+	#endif
+
+	int n = gdal_count + ogr_count;
+
+	Local&lt;Array&gt; driver_names = NanNew&lt;Array&gt;(n);
+
+	for (i = 0; i &lt; gdal_count; ++i) {
+		GDALDriver *driver = GetGDALDriverManager()-&gt;GetDriver(i);
+		name = driver-&gt;GetDescription();
+		#if GDAL_VERSION_MAJOR &lt; 2
+		if(name == &quot;VRT&quot;) name = &quot;VRT:raster&quot;;
+		#endif
+		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
 	}
-	def-&gt;this_-&gt;SetWidth(value-&gt;IntegerValue());
+
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	for (; i &lt; n; ++i) {
+		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriver(i - gdal_count);
+		name = driver-&gt;GetName();
+		if(name == &quot;VRT&quot;) name = &quot;VRT:vector&quot;;
+		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
+	}
+	#endif
+	
+	NanReturnValue(driver_names);
 }
 
-NAN_SETTER(FieldDefn::precisionSetter)
+/**
+ * Returns the number of drivers registered with GDAL.
+ *
+ * @method count
+ * @return {Integer}
+ */
+NAN_METHOD(GDALDrivers::count)
 {
 	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsInt32()){
-		NanThrowError(&quot;precision must be an integer&quot;);
-		return;
-	}
-	def-&gt;this_-&gt;SetPrecision(value-&gt;IntegerValue());
-}
 
-NAN_SETTER(FieldDefn::ignoredSetter)
-{
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args.This());
-	if(!value-&gt;IsBoolean()){
-		NanThrowError(&quot;ignored must be a boolean&quot;);
-		return;
-	}
-	def-&gt;this_-&gt;SetIgnored(value-&gt;IntegerValue());
+	int count = GetGDALDriverManager()-&gt;GetDriverCount();
+
+	#if GDAL_VERSION_MAJOR &lt; 2
+	count += OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverCount();
+	#endif
+
+	NanReturnValue(NanNew&lt;Integer&gt;(count));
 }
 
 } // namespace node_gdal

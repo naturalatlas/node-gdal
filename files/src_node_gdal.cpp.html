@@ -29,7 +29,7 @@
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -86,6 +86,8 @@
                 <li><a href="../classes/gdal.FeatureFields.html">gdal.FeatureFields</a></li>
             
                 <li><a href="../classes/gdal.FieldDefn.html">gdal.FieldDefn</a></li>
+            
+                <li><a href="../classes/gdal.GDALDrivers.html">gdal.GDALDrivers</a></li>
             
                 <li><a href="../classes/gdal.Geometry.html">gdal.Geometry</a></li>
             
@@ -346,8 +348,15 @@ namespace node_gdal {
 			RasterBandOverviews::Initialize(target);
 			RasterBandPixels::Initialize(target);
 
-			//calls GDALRegisterAll()
-			GDALDrivers::Initialize(target);
+			/**
+			 * The collection of all drivers registered with GDAL
+			 *
+			 * @final
+			 * @for gdal
+			 * @property gdal.drivers
+			 * @type {gdal.GDALDrivers}
+			 */
+			GDALDrivers::Initialize(target); //calls GDALRegisterAll()
 			target-&gt;Set(NanNew(&quot;drivers&quot;), GDALDrivers::New());
 
 			/**
@@ -518,13 +527,6 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;OLCCreateGeomField&quot;), NanNew(OLCCreateGeomField));
 			#endif
 			#ifdef ODsCCreateGeomFieldAfterCreateLayer
-			/**
-			 * @final
-			 * @property gdal.ODsCCreateGeomFieldAfterCreateLayer
-			 * @type {String}
-			 */
-			target-&gt;Set(NanNew(&quot;ODsCCreateGeomFieldAfterCreateLayer&quot;), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
-			#endif
 
 			/**
 			 * @class Constants (ODsC)
@@ -542,6 +544,13 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;ODsCDeleteLayer&quot;), NanNew(ODsCDeleteLayer));
+			/**
+			 * @final
+			 * @property gdal.ODsCCreateGeomFieldAfterCreateLayer
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;ODsCCreateGeomFieldAfterCreateLayer&quot;), NanNew(ODsCCreateGeomFieldAfterCreateLayer));
+			#endif
 			/**
 			 * @final
 			 * @property gdal.ODrCCreateDataSource
