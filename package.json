@@ -55,7 +55,7 @@
     "mocha": "~1.x",
     "chai": "~1.9.1",
     "aws-sdk": "~2.0.25",
-    "gh-pages": "~0.1.0",
+    "gh-pages": "~0.2.0",
 	"yuidoc-lucid-theme": "~0.1.0",
 	"yuidocjs": "~0.3.50"
   },
