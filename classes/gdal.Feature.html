@@ -177,7 +177,20 @@
 
 
 <div class="yuidoc-class-description">
-    <p>A simple feature, including geometry and attributes. It&#39;s fields and geometry type is defined by the given definition.</p>
+    <p>A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition. </p>
+<pre class="code prettyprint"><code>//create layer and specify geometry type
+var layer = dataset.layers.create(&#39;mylayer&#39;, null, gdal.Point);
+
+//setup fields for the given layer
+layer.fields.add(new gdal.FieldDefn(&#39;elevation&#39;, gdal.OFTInteger));
+layer.fields.add(new gdal.FieldDefn(&#39;name&#39;, gdal.OFTString));
+
+//create feature using layer definition and then add it to the layer
+var feature = new gdal.Feature(layer);
+feature.fields.set(&#39;elevation&#39;, 13775);
+feature.fields.set(&#39;name&#39;, &#39;Grand Teton&#39;);
+feature.setGeometry(new gdal.Point(43.741208, -110.802414));
+layer.features.add(feature);</code></pre>
 
 </div>
 
@@ -330,27 +343,6 @@
     
 
     
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>//create layer and specify geometry type
-var layer = dataset.layers.create(&#39;mylayer&#39;, null, gdal.Point);
-
-//setup fields for the given layer
-layer.fields.add(new gdal.FieldDefn(&#39;elevation&#39;, gdal.OFTInteger));
-layer.fields.add(new gdal.FieldDefn(&#39;name&#39;, gdal.OFTString));
-
-//create feature using layer definition and then add it to the layer
-var feature = new gdal.Feature(layer);
-feature.fields.set(&#39;elevation&#39;, 13775);
-feature.fields.set(&#39;elevation&#39;, 13775);
-feature.setGeometry(new gdal.Point(43.741208, -110.802414));
-layer.features.add(feature);</code></pre>
-
-            </div>
-        </div>
-    
 </div>
 
         </div>
@@ -398,7 +390,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l252"><code>src&#x2F;gdal_feature.cpp:252</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l251"><code>src&#x2F;gdal_feature.cpp:251</code></a>
         
         </p>
 
@@ -468,7 +460,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l269"><code>src&#x2F;gdal_feature.cpp:269</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l268"><code>src&#x2F;gdal_feature.cpp:268</code></a>
         
         </p>
 
@@ -540,7 +532,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l243"><code>src&#x2F;gdal_feature.cpp:243</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l242"><code>src&#x2F;gdal_feature.cpp:242</code></a>
         
         </p>
 
@@ -647,7 +639,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l205"><code>src&#x2F;gdal_feature.cpp:205</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l204"><code>src&#x2F;gdal_feature.cpp:204</code></a>
         
         </p>
 
@@ -747,7 +739,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l180"><code>src&#x2F;gdal_feature.cpp:180</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l179"><code>src&#x2F;gdal_feature.cpp:179</code></a>
         
         </p>
 
@@ -839,7 +831,7 @@ layer.features.add(feature);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l286"><code>src&#x2F;gdal_feature.cpp:286</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l285"><code>src&#x2F;gdal_feature.cpp:285</code></a>
         
         </p>
 
@@ -980,7 +972,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l234"><code>src&#x2F;gdal_feature.cpp:234</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l233"><code>src&#x2F;gdal_feature.cpp:233</code></a>
         
         </p>
 
@@ -1070,7 +1062,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l387"><code>src&#x2F;gdal_feature.cpp:387</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l386"><code>src&#x2F;gdal_feature.cpp:386</code></a>
         
         </p>
 
@@ -1121,7 +1113,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l372"><code>src&#x2F;gdal_feature.cpp:372</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l371"><code>src&#x2F;gdal_feature.cpp:371</code></a>
         
         </p>
 
@@ -1174,7 +1166,7 @@ feature2.setFrom(feature1);</code></pre>
             
         
         
-        <a href="../files/src_gdal_feature.cpp.html#l361"><code>src&#x2F;gdal_feature.cpp:361</code></a>
+        <a href="../files/src_gdal_feature.cpp.html#l360"><code>src&#x2F;gdal_feature.cpp:360</code></a>
         
         </p>
 

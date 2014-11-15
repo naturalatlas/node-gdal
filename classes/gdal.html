@@ -243,7 +243,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 				
 				
 				
-				<li><a href="#method-open"><span class="im">gdal.open</span>(<span class="ia">path</span><span class="ia">mode</span><span class="ia">drivers</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">control_options</span>)</a></li>
+				<li><a href="#method-open"><span class="im">gdal.open</span>(<span class="ia">path</span><span class="ia">mode</span><span class="ia">drivers</span><span class="ia">x_size</span><span class="ia">y_size</span><span class="ia">band_count</span><span class="ia">data_type</span><span class="ia">creation_options</span>)</a></li>
 				
 				
 				
@@ -255,7 +255,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
 				
 				
 				
-				<li><a href="#method-reprojectImage"><span class="im">gdal.reprojectImage</span>(<span class="ia">src</span><span class="ia">dst</span><span class="ia">s_srs</span><span class="ia">t_srs</span><span class="ia">options</span>)</a></li>
+				<li><a href="#method-reprojectImage"><span class="im">gdal.reprojectImage</span>(<span class="ia">options</span>)</a></li>
 				
 				
 				
@@ -1395,7 +1395,7 @@ that should not be considered in contour line generation.</p>
             
                 <li class="arg">
                     
-                        <code class="optional">control_options</code>
+                        <code class="optional">creation_options</code>
                     
                 </li>
             
@@ -1519,7 +1519,7 @@ that should not be considered in contour line generation.</p>
 
                     
                     <div class="param-description">
-                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
 
                     </div>
                     
@@ -1538,7 +1538,7 @@ that should not be considered in contour line generation.</p>
 
                     
                     <div class="param-description">
-                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
 
                     </div>
                     
@@ -1557,7 +1557,7 @@ that should not be considered in contour line generation.</p>
 
                     
                     <div class="param-description">
-                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
 
                     </div>
                     
@@ -1576,7 +1576,7 @@ that should not be considered in contour line generation.</p>
 
                     
                     <div class="param-description">
-                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
 
                     </div>
                     
@@ -1586,8 +1586,8 @@ that should not be considered in contour line generation.</p>
             
                 <li class="param">
                     
-                        <code class="param-name optional">[control_options]</code>
-                        <span class="type">String</span>
+                        <code class="param-name optional">[creation_options]</code>
+                        <span class="type">String | Object</span>
                         <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
@@ -1884,31 +1884,7 @@ provided to determine which pixels are eligible for processing.</p>
             
                 <li class="arg">
                     
-                        <code>src</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>dst</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>s_srs</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>t_srs</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">options</code>
+                        <code>options</code>
                     
                 </li>
             
@@ -1964,74 +1940,68 @@ provided to determine which pixels are eligible for processing.</p>
             
                 <li class="param">
                     
-                        <code class="param-name">src</code>
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
-
-                    
-
-                    
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">dst</code>
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
-
-                    
-
-                    
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">s_srs</code>
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                    
-
-                    
-
-                    
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">t_srs</code>
-                        <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                    
-
-                    
-
-                    
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[options]</code>
+                        <code class="param-name">options</code>
                         <span class="type">Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
                     
 
                     
 
-                    
-                    <div class="param-description">
-                        <p>Warp options</p>
-
-                    </div>
                     
 
                     
                         <ul class="params-list">
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">src</code>
+                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">dst</code>
+                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">s_srs</code>
+                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name">t_srs</code>
+                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+                                
+
+                                <div class="param-description">
+                                    
+                                </div>
+
+                                
+                            </li>
                             
                             <li class="param">
                                 
@@ -2170,6 +2140,21 @@ provided to determine which pixels are eligible for processing.</p>
 
                                 <div class="param-description">
                                     
+                                </div>
+
+                                
+                            </li>
+                            
+                            <li class="param">
+                                
+                                    <code class="param-name optional">[options]</code>
+                                    <span class="type">String | Object</span>
+                                    <span class="flag optional" title="This parameter is optional.">optional</span>
+                                
+
+                                <div class="param-description">
+                                    <p>Warp options (see: <a href="http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08">reference</a>)</p>
+
                                 </div>
 
                                 
@@ -2400,7 +2385,7 @@ provided to determine which pixels are eligible for processing.</p>
             
         
         
-        <a href="../files/src_gdal_warper.cpp.html#l94"><code>src&#x2F;gdal_warper.cpp:94</code></a>
+        <a href="../files/src_gdal_warper.cpp.html#l95"><code>src&#x2F;gdal_warper.cpp:95</code></a>
         
         </p>
 

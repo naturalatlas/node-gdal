@@ -190,9 +190,6 @@ void LineString::Initialize(Handle&lt;Object&gt; target)
 	lcons-&gt;SetClassName(NanNew(&quot;LineString&quot;));
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;addPoint&quot;, addPoint);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getPoint&quot;, getPoint);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getNumPoints&quot;, getNumPoints);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getLength&quot;, getLength);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;value&quot;, value);
 

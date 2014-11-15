@@ -636,10 +636,7 @@
             "extension_for": [],
             "file": "src/gdal_feature.cpp",
             "line": 76,
-            "description": "A simple feature, including geometry and attributes. It's fields and geometry type is defined by the given definition.",
-            "example": [
-                "\n```\n//create layer and specify geometry type\nvar layer = dataset.layers.create('mylayer', null, gdal.Point);\n\n//setup fields for the given layer\nlayer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));\nlayer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));\n\n//create feature using layer definition and then add it to the layer\nvar feature = new gdal.Feature(layer);\nfeature.fields.set('elevation', 13775);\nfeature.fields.set('elevation', 13775);\nfeature.setGeometry(new gdal.Point(43.741208, -110.802414));\nlayer.features.add(feature);```"
-            ],
+            "description": "A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition. \n\n```\n//create layer and specify geometry type\nvar layer = dataset.layers.create('mylayer', null, gdal.Point);\n\n//setup fields for the given layer\nlayer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));\nlayer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));\n\n//create feature using layer definition and then add it to the layer\nvar feature = new gdal.Feature(layer);\nfeature.fields.set('elevation', 13775);\nfeature.fields.set('name', 'Grand Teton');\nfeature.setGeometry(new gdal.Point(43.741208, -110.802414));\nlayer.features.add(feature);```",
             "is_constructor": 1,
             "params": [
                 {
@@ -735,7 +732,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_linestring.cpp",
-            "line": 67,
+            "line": 64,
             "description": "Concrete representation of a multi-vertex line.",
             "example": [
                 "\n```\nvar lineString = new gdal.LineString();\nlineString.points.add(new gdal.Point(0,0));\nlineString.points.add(new gdal.Point(0,10));```"
@@ -752,7 +749,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_multilinestring.cpp",
-            "line": 63,
+            "line": 62,
             "is_constructor": 1,
             "extends": "gdal.GeometryCollection"
         },
@@ -765,7 +762,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_multipoint.cpp",
-            "line": 63,
+            "line": 62,
             "is_constructor": 1,
             "extends": "gdal.GeometryCollection"
         },
@@ -778,7 +775,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_multipolygon.cpp",
-            "line": 63,
+            "line": 62,
             "is_constructor": 1,
             "extends": "gdal.GeometryCollection"
         },
@@ -1486,32 +1483,32 @@
                 },
                 {
                     "name": "x_size",
-                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "description": "Used when creating a raster dataset with the `\"w\"` mode.",
                     "type": "Integer",
                     "optional": true
                 },
                 {
                     "name": "y_size",
-                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "description": "Used when creating a raster dataset with the `\"w\"` mode.",
                     "type": "Integer",
                     "optional": true
                 },
                 {
                     "name": "band_count",
-                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "description": "Used when creating a raster dataset with the `\"w\"` mode.",
                     "type": "Integer",
                     "optional": true
                 },
                 {
                     "name": "data_type",
-                    "description": "Used when creating a dataset with the `\"w\"` mode.",
+                    "description": "Used when creating a raster dataset with the `\"w\"` mode.",
                     "type": "Integer",
                     "optional": true
                 },
                 {
-                    "name": "control_options",
+                    "name": "creation_options",
                     "description": "Used when creating a dataset with the `\"w\"` mode.",
-                    "type": "String[]",
+                    "type": "String[]|object",
                     "optional": true
                 }
             ],
@@ -3680,7 +3677,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 180,
+            "line": 179,
             "description": "Returns the geometry of the feature.",
             "itemtype": "method",
             "name": "getGeometry",
@@ -3692,7 +3689,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 205,
+            "line": 204,
             "description": "Returns the definition of a particular field at an index.",
             "itemtype": "method",
             "name": "getFieldDefn",
@@ -3711,7 +3708,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 234,
+            "line": 233,
             "description": "Sets the feature's geometry.",
             "throws": {
                 "description": "Error"
@@ -3729,7 +3726,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 243,
+            "line": 242,
             "description": "Determines if the features are the same.",
             "itemtype": "method",
             "name": "equals",
@@ -3748,7 +3745,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 252,
+            "line": 251,
             "description": "Clones the feature.",
             "itemtype": "method",
             "name": "clone",
@@ -3760,7 +3757,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 269,
+            "line": 268,
             "description": "Releases the feature from memory.",
             "itemtype": "method",
             "name": "destroy",
@@ -3768,7 +3765,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 286,
+            "line": 285,
             "description": "Set one feature from another. Overwrites the contents of this feature\nfrom the geometry and attributes of another.",
             "example": [
                 "\n```\nvar feature1 = new gdal.Feature(defn);\nvar feature2 = new gdal.Feature(defn);\nfeature1.setGeometry(new gdal.Point(5, 10));\nfeature1.fields.set([5, 'test', 3.14]);\nfeature2.setFrom(feature1);```"
@@ -3802,7 +3799,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 361,
+            "line": 360,
             "readonly": "",
             "itemtype": "attribute",
             "name": "fields",
@@ -3811,7 +3808,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 372,
+            "line": 371,
             "itemtype": "attribute",
             "name": "fid",
             "type": "{Integer}",
@@ -3819,7 +3816,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 387,
+            "line": 386,
             "readonly": "",
             "itemtype": "attribute",
             "name": "defn",
@@ -4857,7 +4854,7 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 150,
+            "line": 147,
             "description": "Computes the length of the line string.",
             "itemtype": "method",
             "name": "getLength",
@@ -4868,7 +4865,7 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 158,
+            "line": 155,
             "description": "Returns the point at the specified distance along the line string.",
             "itemtype": "method",
             "name": "value",
@@ -4887,7 +4884,7 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 181,
+            "line": 178,
             "description": "Points that make up the line string.",
             "itemtype": "attribute",
             "name": "points",
@@ -4896,7 +4893,7 @@
         },
         {
             "file": "src/gdal_multilinestring.cpp",
-            "line": 138,
+            "line": 137,
             "description": "Converts it to a polygon.",
             "itemtype": "method",
             "name": "polygonize",
@@ -4907,46 +4904,8 @@
             "class": "gdal.MultiLineString"
         },
         {
-            "file": "src/gdal_multilinestring.cpp",
-            "line": 153,
-            "description": "Returns the child LineString at an index.",
-            "itemtype": "method",
-            "name": "getGeometry",
-            "params": [
-                {
-                    "name": "index",
-                    "description": "",
-                    "type": "Integer"
-                }
-            ],
-            "return": {
-                "description": "",
-                "type": "gdal.LineString"
-            },
-            "class": "gdal.MultiLineString"
-        },
-        {
-            "file": "src/gdal_multipoint.cpp",
-            "line": 138,
-            "description": "Returns the child Point at an index.",
-            "itemtype": "method",
-            "name": "getGeometry",
-            "params": [
-                {
-                    "name": "index",
-                    "description": "",
-                    "type": "Integer"
-                }
-            ],
-            "return": {
-                "description": "",
-                "type": "gdal.Polygon"
-            },
-            "class": "gdal.MultiPoint"
-        },
-        {
             "file": "src/gdal_multipolygon.cpp",
-            "line": 138,
+            "line": 137,
             "description": "Unions all the geometries and returns the result.",
             "itemtype": "method",
             "name": "unionCascaded",
@@ -4958,32 +4917,13 @@
         },
         {
             "file": "src/gdal_multipolygon.cpp",
-            "line": 153,
+            "line": 152,
             "description": "Computes the combined area of the collection.",
             "itemtype": "method",
             "name": "getArea",
             "return": {
                 "description": "",
                 "type": "Number"
-            },
-            "class": "gdal.MultiPolygon"
-        },
-        {
-            "file": "src/gdal_multipolygon.cpp",
-            "line": 161,
-            "description": "Returns the child Polygon at an index.",
-            "itemtype": "method",
-            "name": "getGeometry",
-            "params": [
-                {
-                    "name": "index",
-                    "description": "",
-                    "type": "Integer"
-                }
-            ],
-            "return": {
-                "description": "",
-                "type": "gdal.Polygon"
             },
             "class": "gdal.MultiPolygon"
         },
@@ -5991,31 +5931,30 @@
             "static": 1,
             "params": [
                 {
-                    "name": "src",
-                    "description": "",
-                    "type": "gdal.Dataset"
-                },
-                {
-                    "name": "dst",
-                    "description": "",
-                    "type": "gdal.Dataset"
-                },
-                {
-                    "name": "s_srs",
-                    "description": "",
-                    "type": "gdal.SpatialReference"
-                },
-                {
-                    "name": "t_srs",
-                    "description": "",
-                    "type": "gdal.SpatialReference"
-                },
-                {
                     "name": "options",
-                    "description": "Warp options",
+                    "description": "",
                     "type": "Object",
-                    "optional": true,
                     "props": [
+                        {
+                            "name": "src",
+                            "description": "",
+                            "type": "gdal.Dataset"
+                        },
+                        {
+                            "name": "dst",
+                            "description": "",
+                            "type": "gdal.Dataset"
+                        },
+                        {
+                            "name": "s_srs",
+                            "description": "",
+                            "type": "gdal.SpatialReference"
+                        },
+                        {
+                            "name": "t_srs",
+                            "description": "",
+                            "type": "gdal.SpatialReference"
+                        },
                         {
                             "name": "resampling",
                             "description": "Resampling algorithm ({{#crossLink \"Constants (GRA)\"}}available options{{/crossLink}})",
@@ -6075,6 +6014,12 @@
                             "description": "",
                             "type": "Number",
                             "optional": true
+                        },
+                        {
+                            "name": "options",
+                            "description": "Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))",
+                            "type": "String[]|object",
+                            "optional": true
                         }
                     ]
                 }
@@ -6083,7 +6028,7 @@
         },
         {
             "file": "src/gdal_warper.cpp",
-            "line": 94,
+            "line": 95,
             "description": "Used to determine the bounds and resolution of the output virtual file which\nshould be large enough to include all the input image.",
             "throws": {
                 "description": "Error"
