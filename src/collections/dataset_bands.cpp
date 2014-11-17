@@ -159,8 +159,8 @@ NAN_METHOD(DatasetBands::create)
 		NanReturnUndefined();
 	}
 	if(args[0]->IsString()){
-		NanUtf8String type_name = NanUtf8String(args[0]);
-		type = GDALGetDataTypeByName(*type_name);
+		std::string type_name = *NanUtf8String(args[0]);
+		type = GDALGetDataTypeByName(type_name.c_str());
 	} else if (args[0]->IsNull() || args[0]->IsUndefined()) {
 		type = GDT_Unknown;
 	} else {

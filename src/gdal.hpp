@@ -86,8 +86,8 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 		if(args[1]->IsString()){
-			NanUtf8String val = NanUtf8String(args[1]);
-			CPLSetConfigOption(name.c_str(), *val);
+			std::string val = *NanUtf8String(args[1]);
+			CPLSetConfigOption(name.c_str(), val.c_str());
 		} else if(args[1]->IsNull() || args[1]->IsUndefined()) {
 			CPLSetConfigOption(name.c_str(), NULL);
 		} else {

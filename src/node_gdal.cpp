@@ -99,6 +99,18 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 
+		#ifdef ENABLE_LOGGING
+		static NAN_GC_CALLBACK(beforeGC) 
+		{
+			LOG("%s", "Starting garbage collection");
+		}
+		
+		static NAN_GC_CALLBACK(afterGC) 
+		{
+			LOG("%s", "Finished garbage collection");
+		}
+		#endif
+
 		static NAN_METHOD(StartLogging)
 		{
 			NanScope();
@@ -116,6 +128,10 @@ namespace node_gdal {
 				NanThrowError("Error creating log file");
 				NanReturnUndefined();
 			}
+
+  			NanAddGCPrologueCallback(beforeGC);
+  			NanAddGCEpilogueCallback(afterGC);
+
 			#else
 			NanThrowError("Logging requires node-gdal be compiled with --enable_logging=true");
 			#endif
@@ -132,6 +148,23 @@ namespace node_gdal {
 			}
 			#endif
 
+			NanReturnUndefined();
+		}
+
+		static NAN_METHOD(Log)
+		{
+			NanScope();
+			std::string msg;
+			NODE_ARG_STR(0, "message", msg);
+			msg = msg + "\n";
+
+			#ifdef ENABLE_LOGGING
+			if (log_file) { 
+				fputs(msg.c_str(), log_file); 
+				fflush(log_file); 
+			}
+			#endif
+			
 			NanReturnUndefined();
 		}
 
@@ -929,6 +962,7 @@ namespace node_gdal {
 
 			NODE_SET_METHOD(target, "startLogging", StartLogging);
 			NODE_SET_METHOD(target, "stopLogging", StopLogging);
+			NODE_SET_METHOD(target, "log", Log);
 
 			Local<Object> supports = NanNew<Object>();
 			target->Set(NanNew("supports"), supports);

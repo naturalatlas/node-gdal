@@ -89,8 +89,8 @@ inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
 	} else if (val->IsNumber()) {
 		f->SetField(field_index, val->NumberValue());
 	} else if (val->IsString()) {
-		NanUtf8String str = NanUtf8String(val);
-		f->SetField(field_index, *str);
+		std::string str = *NanUtf8String(val);
+		f->SetField(field_index, str.c_str());
 	} else if(val->IsNull() || val->IsUndefined()) {
 		f->UnsetField(field_index);
 	} else {

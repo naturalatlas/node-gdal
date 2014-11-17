@@ -794,8 +794,8 @@ NAN_SETTER(RasterBand::unitTypeSetter)
 		NanThrowError("Unit type must be a string");
 		return;
 	}
-	NanUtf8String input = NanUtf8String(value);
-	CPLErr err = band->this_->SetUnitType(*input);
+	std::string input = *NanUtf8String(value);
+	CPLErr err = band->this_->SetUnitType(input.c_str());
 	if (err) {
 		NODE_THROW_CPLERR(err);
 	}
@@ -919,8 +919,8 @@ NAN_SETTER(RasterBand::colorInterpretationSetter)
 	GDALColorInterp ci = GCI_Undefined;
 
 	if (value->IsString()) {
-		NanUtf8String name = NanUtf8String(value);
-		ci = GDALGetColorInterpretationByName(*name);
+		std::string name = *NanUtf8String(value);
+		ci = GDALGetColorInterpretationByName(name.c_str());
 	} else if(!value->IsNull() && !value->IsUndefined()) {
 		NanThrowError("color interpretation must be a string or undefined");
 		return;

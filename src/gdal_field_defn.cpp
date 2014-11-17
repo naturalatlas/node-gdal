@@ -214,8 +214,8 @@ NAN_SETTER(FieldDefn::nameSetter)
 		NanThrowError("Name must be string");
 		return;
 	}
-	NanUtf8String name = NanUtf8String(value);
-	def->this_->SetName(*name);
+	std::string name = *NanUtf8String(value);
+	def->this_->SetName(name.c_str());
 }
 
 NAN_SETTER(FieldDefn::typeSetter)
@@ -226,8 +226,8 @@ NAN_SETTER(FieldDefn::typeSetter)
 		NanThrowError("type must be a string");
 		return;
 	}
-	NanUtf8String name = NanUtf8String(value);
-	int type = getFieldTypeByName(*name);
+	std::string name = *NanUtf8String(value);
+	int type = getFieldTypeByName(name.c_str());
 	if(type < 0){
 		NanThrowError("Unrecognized field type");
 	} else {
