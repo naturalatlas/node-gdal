@@ -36,7 +36,7 @@ void SpatialReference::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toXML", exportToXML);
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "clone", clone);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "cloneGeogCS", clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "cloneGeogCS", cloneGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "setWellKnownGeogCS", setWellKnownGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "morphToESRI", morphToESRI);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "morphFromESRI", morphFromESRI);
@@ -56,6 +56,7 @@ void SpatialReference::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getAuthorityCode", getAuthorityCode);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getAttrValue", getAttrValue);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "autoIdentifyEPSG", autoIdentifyEPSG);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "validate", validate);
 
 	target->Set(NanNew("SpatialReference"), lcons->GetFunction());
 
@@ -904,5 +905,36 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 
 	NanReturnValue(result);
 }
+
+/**
+ * Validate SRS tokens.
+ * 
+ * This method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.
+ *
+ * @method validate
+ * @return {string|null} `"corrupt"`, '"unsupported"', `null` (if fine)
+ */
+NAN_METHOD(SpatialReference::validate)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap<SpatialReference>(args.This());
+
+	OGRErr err = srs->this_->Validate();
+
+	if(err == OGRERR_NONE) {
+		NanReturnNull();
+	}
+	if(err == OGRERR_CORRUPT_DATA) {
+		NanReturnValue(NanNew("corrupt"));
+	}
+	if(err == OGRERR_UNSUPPORTED_SRS) {
+		NanReturnValue(NanNew("unsupported"));
+	}
+
+	NODE_THROW_OGRERR(err);
+	NanReturnUndefined();
+}
+
 
 } // namespace node_gdal

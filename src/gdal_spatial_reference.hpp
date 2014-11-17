@@ -54,6 +54,7 @@ public:
 	static NAN_METHOD(getAuthorityCode);
 	static NAN_METHOD(getAuthorityName);
 	static NAN_METHOD(getAttrValue);
+	static NAN_METHOD(validate);
 
 	static NAN_METHOD(fromUserInput);
 	static NAN_METHOD(fromWKT);
