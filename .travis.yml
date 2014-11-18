@@ -32,15 +32,15 @@ before_install:
   - if [ -d $NPM_CACHE ]; then sudo chown -R $USER $NPM_CACHE; fi;
 
 install:
-  - if [[ ${TARGET} == 'TRUNK' ]]; then ./scripts/gdal-trunk.sh; fi;
-  - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Linux' ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libgdal1-dev libgdal1h=1.10.0-1~precise1; fi;
-  - if [[ ${TARGET} == 'SHARED' ]] && [[ "$(uname -s)" == 'Darwin' ]]; then brew uninstall gdal; brew install gdal; fi;
-  - if [[ ${TARGET} == 'SHARED']] || [[ ${TARGET} == 'TRUNK' ]]; then npm install --build-from-source --shared_gdal; fi;
-  - if [[ ${TARGET} == 'SHARED' ]] || [[ ${TARGET} == 'TRUNK' ]]; then gdalinfo --version; fi;
-  - if [[ ${TARGET} == 'STATIC' ]]; then npm install --build-from-source > /dev/null; fi;
+  - if [[ "${TARGET}" == "TRUNK" ]]; then ./scripts/gdal-trunk.sh; fi;
+  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Linux" ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libgdal1-dev libgdal1h=1.10.0-1~precise1; fi;
+  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Darwin" ]]; then brew uninstall gdal; brew install gdal; fi;
+  - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then npm install --build-from-source --shared_gdal; fi;
+  - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then gdalinfo --version; fi;
+  - if [[ "${TARGET}" == "STATIC" ]]; then npm install --build-from-source > /dev/null; fi;
   - npm test
 
 script:
   - ./node_modules/.bin/node-pre-gyp package testpackage
   - npm test
-  - if [[ ${TARGET} == 'STATIC' && ${PUBLISH_BINARY} == 'true' ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install; npm test; fi
+  - if [[ "${TARGET}" == "STATIC" && "${PUBLISH_BINARY}" == "true" ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install; npm test; fi
