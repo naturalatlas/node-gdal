@@ -27,13 +27,13 @@ void Warper::Initialize(Handle<Object> target)
  * @param {gdal.SpatialReference} options.t_srs
  * @param {String} [options.resampling] Resampling algorithm ({{#crossLink "Constants (GRA)"}}available options{{/crossLink}})
  * @param {gdal.Geometry} [options.cutline] Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates
- * @param {int[]} [options.srcBands]
- * @param {int[]} [options.dstBands]
- * @param {int} [options.srcAlphaBand]
- * @param {int} [options.dstAlphaBand]
+ * @param {Integer[]} [options.srcBands]
+ * @param {Integer[]} [options.dstBands]
+ * @param {Integer} [options.srcAlphaBand]
+ * @param {Integer} [options.dstAlphaBand]
  * @param {Number} [options.srcNodata]
  * @param {Number} [options.dstNodata]
- * @param {int} [options.memoryLimit]
+ * @param {Integer} [options.memoryLimit]
  * @param {Number} [options.maxError]
  * @param {string[]|object} [options.options] Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))
  */

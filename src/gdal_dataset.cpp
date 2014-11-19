@@ -646,8 +646,8 @@ NAN_METHOD(Dataset::setGCPs)
  * @throws Error
  * @method buildOverviews
  * @param {String} resampling `"NEAREST"`, `"GAUSS"`, `"CUBIC"`, `"AVERAGE"`, `"MODE"`, `"AVERAGE_MAGPHASE"` or `"NONE"`
- * @param {int[]} overviews
- * @param {int[]} [bands]
+ * @param {Integer[]} overviews
+ * @param {Integer[]} [bands]
  */
 NAN_METHOD(Dataset::buildOverviews)
 {

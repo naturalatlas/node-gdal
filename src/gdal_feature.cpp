@@ -74,12 +74,12 @@ void Feature::dispose()
 }
 
 /**
- * A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition. 
+ * A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition.
  *
  * ```
  * //create layer and specify geometry type
  * var layer = dataset.layers.create('mylayer', null, gdal.Point);
- * 
+ *
  * //setup fields for the given layer
  * layer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));
  * layer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));
@@ -205,7 +205,7 @@ NAN_METHOD(Feature::getGeometry)
  * Returns the definition of a particular field at an index.
  *
  * @method getFieldDefn
- * @param {int} index Field index (0-based)
+ * @param {Integer} index Field index (0-based)
  * @return {gdal.FieldDefn}
  */
 NAN_METHOD(Feature::getFieldDefn)
