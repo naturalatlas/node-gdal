@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>An collection of all <a href="../classes/gdal.Driver.html" class="crosslink">drivers</a> registered with GDAL.</p>
+<p>An collection of all <a href="../classes/gdal.Driver.html" class="crosslink">drivers</a> registered with GDAL.</p>
 
 </div>
 
@@ -227,260 +227,252 @@
        		
         	
             <div id="method-count" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>count</code></span>
+	<div class="method-signature">
+	<span class="name"><code>count</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Integer</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Integer</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_gdal_drivers.cpp.html#l209"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:209</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_gdal_drivers.cpp.html#l209"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:209</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the number of drivers registered with GDAL.</p>
+	
+	<div class="description"><p>Returns the number of drivers registered with GDAL.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Integer</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Integer</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>get</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>index</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>index</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_gdal_drivers.cpp.html#l82"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:82</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_gdal_drivers.cpp.html#l82"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:82</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns a driver with the specified name.</p>
+	
+	<div class="description"><p>Returns a driver with the specified name.</p>
 <p>Note: Prior to GDAL2.x there is a separate driver for vector VRTs and raster VRTs.
       Use <code>"VRT:vector"</code> to fetch the vector VRT driver and <code>"VRT:raster"</code> to fetch the raster VRT driver.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">index</code>
+						<span class="type">Integer  |  String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">index</code>
-                        <span class="type">Integer | String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>0-based index or driver name</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>0-based index or driver name</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Driver.html" class="crosslink">gdal.Driver</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-getNames" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getNames</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getNames</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String[]</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_gdal_drivers.cpp.html#l166"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:166</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_gdal_drivers.cpp.html#l166"><code>src&#x2F;collections&#x2F;gdal_drivers.cpp:166</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns an array with the names of all the drivers registered with GDAL.</p>
+	
+	<div class="description"><p>Returns an array with the names of all the drivers registered with GDAL.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">String[]</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             

@@ -636,7 +636,7 @@
             "extension_for": [],
             "file": "src/gdal_feature.cpp",
             "line": 76,
-            "description": "A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition. \n\n```\n//create layer and specify geometry type\nvar layer = dataset.layers.create('mylayer', null, gdal.Point);\n\n//setup fields for the given layer\nlayer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));\nlayer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));\n\n//create feature using layer definition and then add it to the layer\nvar feature = new gdal.Feature(layer);\nfeature.fields.set('elevation', 13775);\nfeature.fields.set('name', 'Grand Teton');\nfeature.setGeometry(new gdal.Point(43.741208, -110.802414));\nlayer.features.add(feature);```",
+            "description": "A simple feature, including geometry and attributes. Its fields and geometry type is defined by the given definition.\n\n```\n//create layer and specify geometry type\nvar layer = dataset.layers.create('mylayer', null, gdal.Point);\n\n//setup fields for the given layer\nlayer.fields.add(new gdal.FieldDefn('elevation', gdal.OFTInteger));\nlayer.fields.add(new gdal.FieldDefn('name', gdal.OFTString));\n\n//create feature using layer definition and then add it to the layer\nvar feature = new gdal.Feature(layer);\nfeature.fields.set('elevation', 13775);\nfeature.fields.set('name', 'Grand Teton');\nfeature.setGeometry(new gdal.Point(43.741208, -110.802414));\nlayer.features.add(feature);```",
             "is_constructor": 1,
             "params": [
                 {
@@ -3376,12 +3376,12 @@
                 {
                     "name": "overviews",
                     "description": "",
-                    "type": "Int[]"
+                    "type": "Integer[]"
                 },
                 {
                     "name": "bands",
                     "description": "",
-                    "type": "Int[]",
+                    "type": "Integer[]",
                     "optional": true
                 }
             ],
@@ -3697,7 +3697,7 @@
                 {
                     "name": "index",
                     "description": "Field index (0-based)",
-                    "type": "Int"
+                    "type": "Integer"
                 }
             ],
             "return": {
@@ -5970,25 +5970,25 @@
                         {
                             "name": "srcBands",
                             "description": "",
-                            "type": "Int[]",
+                            "type": "Integer[]",
                             "optional": true
                         },
                         {
                             "name": "dstBands",
                             "description": "",
-                            "type": "Int[]",
+                            "type": "Integer[]",
                             "optional": true
                         },
                         {
                             "name": "srcAlphaBand",
                             "description": "",
-                            "type": "Int",
+                            "type": "Integer",
                             "optional": true
                         },
                         {
                             "name": "dstAlphaBand",
                             "description": "",
-                            "type": "Int",
+                            "type": "Integer",
                             "optional": true
                         },
                         {
@@ -6006,7 +6006,7 @@
                         {
                             "name": "memoryLimit",
                             "description": "",
-                            "type": "Int",
+                            "type": "Integer",
                             "optional": true
                         },
                         {

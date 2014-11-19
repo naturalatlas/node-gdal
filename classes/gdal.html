@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>This <a href="https://github.com/naturalatlas/node-gdal">node-gdal</a> binding for
+<p>This <a href="https://github.com/naturalatlas/node-gdal">node-gdal</a> binding for
 Node.js provides a feature-complete way of reading, writing, and manipulating
 geospatial data (raster and vector) using <a href="http://www.gdal.org/">GDAL</a>.</p>
 <pre class="code prettyprint"><code>// sample: open a shapefile and display all features as geojson
@@ -397,2158 +397,2030 @@ dataset.layers.get(0).features.forEach(function(feature) {
         
 			
     	        <div id="method-checksumImage" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.checksumImage</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.checksumImage</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>src</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">x=0</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">y=0</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">w=src.width</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">h=src.height</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>src</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">x=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">y=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">w=src.width</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">h=src.height</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_algorithms.cpp.html#l181"><code>src&#x2F;gdal_algorithms.cpp:181</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_algorithms.cpp.html#l181"><code>src&#x2F;gdal_algorithms.cpp:181</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Compute checksum for image region.</p>
+	
+	<div class="description"><p>Compute checksum for image region.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">src</code>
+						<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">src</code>
-                        <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[x=0]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[x=0]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[y=0]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[y=0]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[w=src.width]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[w=src.width]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[h=src.height]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[h=src.height]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+					<p>integer</p>
 
-            <div class="returns-description">
-                
-                    
-                    <p>integer</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-config.get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.config.get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.config.get</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>key</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>key</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l18"><code>lib&#x2F;gdal.js:18</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l18"><code>lib&#x2F;gdal.js:18</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Gets a GDAL configuration setting.</p>
+	
+	<div class="description"><p>Gets a GDAL configuration setting.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">key</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">key</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">String</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>
-                    
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>data_path = gdal.config.get(&#39;GDAL_DATA&#39;);</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>data_path = gdal.config.get(&#39;GDAL_DATA&#39;);</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
 			
     	        <div id="method-config.set" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.config.set</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.config.set</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>key</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Mixed</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>key</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>value</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Mixed</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l33"><code>lib&#x2F;gdal.js:33</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l33"><code>lib&#x2F;gdal.js:33</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Sets a GDAL configuration setting.</p>
+	
+	<div class="description"><p>Sets a GDAL configuration setting.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">key</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">key</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">value</code>
+						<span class="type">String</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Mixed</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Mixed</span>
-                    
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>gdal.config.set(&#39;GDAL_DATA&#39;, data_path);</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>gdal.config.set(&#39;GDAL_DATA&#39;, data_path);</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
 			
     	        <div id="method-contourGenerate" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.contourGenerate</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.contourGenerate</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_algorithms.cpp.html#l59"><code>src&#x2F;gdal_algorithms.cpp:59</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_algorithms.cpp.html#l59"><code>src&#x2F;gdal_algorithms.cpp:59</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Create vector contours from raster DEM.</p>
+	
+	<div class="description"><p>Create vector contours from raster DEM.</p>
 <p>This algorithm will generate contour vectors for the input raster band on the
 requested set of contour levels. The vector contours are written to the passed
 in vector layer. Also, a NODATA value may be specified to identify pixels
 that should not be considered in contour line generation.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+								
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">dst</code>
+									<span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">dst</code>
-                                    <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[offset=0]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[offset=0]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"><p>The "offset" relative to which contour intervals are applied. This is normally zero, but could be different. To generate 10m contours at 5, 15, 25, ... the offset would be 5.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>The "offset" relative to which contour intervals are applied. This is normally zero, but could be different. To generate 10m contours at 5, 15, 25, ... the offset would be 5.</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[interval=100]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>The elevation interval between contours generated.</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[interval=100]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[fixedLevels]</code>
+									<span class="type">Number[]</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                <div class="param-description">
-                                    <p>The elevation interval between contours generated.</p>
+								<div class="param-description"><p>A list of fixed contour levels at which contours should be generated. Overrides interval/base options if set.</p>
+</div>
 
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[nodata]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[fixedLevels]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"><p>The value to use as a "nodata" value. That is, a pixel value which should be ignored in generating contours as if the value of the pixel were not known.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>A list of fixed contour levels at which contours should be generated. Overrides interval/base options if set.</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[idField]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>A field index to indicate where a unique id should be written for each feature (contour) written.</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[nodata]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[elevField]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                <div class="param-description">
-                                    <p>The value to use as a "nodata" value. That is, a pixel value which should be ignored in generating contours as if the value of the pixel were not known.</p>
+								<div class="param-description"><p>A field index to indicate where the elevation value of the contour should be written.</p>
+</div>
 
-                                </div>
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[idField]</code>
-                                    <span class="type">Integer</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+	
 
-                                <div class="param-description">
-                                    <p>A field index to indicate where a unique id should be written for each feature (contour) written.</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[elevField]</code>
-                                    <span class="type">Integer</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
-
-                                <div class="param-description">
-                                    <p>A field index to indicate where the elevation value of the contour should be written.</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-decToDMS" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.decToDMS</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.decToDMS</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>angle</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>axis</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">precision=2</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>angle</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>axis</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">precision=2</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal.hpp.html#l111"><code>src&#x2F;gdal.hpp:111</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal.hpp.html#l111"><code>src&#x2F;gdal.hpp:111</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Convert decimal degrees to degrees, minutes, and seconds string</p>
+	
+	<div class="description"><p>Convert decimal degrees to degrees, minutes, and seconds string</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">angle</code>
+						<span class="type">Number</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">angle</code>
-                        <span class="type">Number</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">axis</code>
+						<span class="type">String</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">axis</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p><code>"lat"</code> or <code>"long"</code></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p><code>"lat"</code> or <code>"long"</code></p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[precision=2]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[precision=2]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type">String</span>:
+					
+					<p>A string nndnn&#39;nn.nn&#39;"L where n is a number and L is either N or E</p>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>:
-                    
-                    <p>A string nndnn&#39;nn.nn&#39;"L where n is a number and L is either N or E</p>
-
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-fillNodata" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.fillNodata</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.fillNodata</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_algorithms.cpp.html#l19"><code>src&#x2F;gdal_algorithms.cpp:19</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_algorithms.cpp.html#l19"><code>src&#x2F;gdal_algorithms.cpp:19</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Fill raster regions by interpolation from edges.</p>
+	
+	<div class="description"><p>Fill raster regions by interpolation from edges.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+								
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                
+								<div class="param-description"><p>This band to be updated in-place.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>This band to be updated in-place.</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[mask]</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>Mask band</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[mask]</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">searchDist</code>
+									<span class="type">Number</span>
+								
 
-                                <div class="param-description">
-                                    <p>Mask band</p>
+								<div class="param-description"><p>The maximum distance (in pixels) that the algorithm will search out for values to interpolate.</p>
+</div>
 
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[smoothingIterations=0]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">searchDist</code>
-                                    <span class="type">Number</span>
-                                
+								<div class="param-description"><p>The number of 3x3 average filter smoothing iterations to run after the interpolation to dampen artifacts.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>The maximum distance (in pixels) that the algorithm will search out for values to interpolate.</p>
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                </div>
+	
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[smoothingIterations=0]</code>
-                                    <span class="type">Integer</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
-
-                                <div class="param-description">
-                                    <p>The number of 3x3 average filter smoothing iterations to run after the interpolation to dampen artifacts.</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-open" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.open</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.open</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>path</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>mode</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">drivers</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">x_size</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">y_size</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">band_count</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">data_type</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">creation_options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>path</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>mode</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">drivers</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">x_size</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">y_size</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">band_count</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">data_type</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">creation_options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l293"><code>lib&#x2F;gdal.js:293</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l293"><code>lib&#x2F;gdal.js:293</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Creates or opens a dataset.</p>
+	
+	<div class="description"><p>Creates or opens a dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">path</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">path</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Path to dataset to open</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Path to dataset to open</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">mode</code>
+						<span class="type">String</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">mode</code>
-                        <span class="type">String</span>
-                    
+					
+					<div class="param-description"><p>The mode to use to open the file: <code>"r"</code>, <code>"r+"</code>, or <code>"w"</code></p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[drivers]</code>
+						<span class="type">String  |  Array</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The mode to use to open the file: <code>"r"</code>, <code>"r+"</code>, or <code>"w"</code></p>
+					
 
-                    </div>
-                    
+					
+					<div class="param-description"><p>Driver name, or list of driver names to attempt to use.</p>
+</div>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[drivers]</code>
-                        <span class="type">String | Array</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[x_size]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
+					
 
-                    
-                    <div class="param-description">
-                        <p>Driver name, or list of driver names to attempt to use.</p>
+					
+					<div class="param-description"><p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+</div>
+					
 
-                    </div>
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[y_size]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[x_size]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[band_count]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[y_size]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+					<div class="param-description"><p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[data_type]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+					
 
-                    </div>
-                    
+					
+					<div class="param-description"><p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+</div>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[band_count]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[creation_options]</code>
+						<span class="type">String[] |  Object</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
+					
 
-                    
-                    <div class="param-description">
-                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+					
+					<div class="param-description"><p>Used when creating a dataset with the <code>"w"</code> mode.</p>
+</div>
+					
 
-                    </div>
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[data_type]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-                    
-                    <div class="param-description">
-                        <p>Used when creating a raster dataset with the <code>"w"</code> mode.</p>
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-                    </div>
-                    
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var dataset = gdal.open(&#39;./data.shp&#39;);</code></pre>
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[creation_options]</code>
-                        <span class="type">String | Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    
-                    <div class="param-description">
-                        <p>Used when creating a dataset with the <code>"w"</code> mode.</p>
-
-                    </div>
-                    
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var dataset = gdal.open(&#39;./data.shp&#39;);</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
 			
     	        <div id="method-polygonize" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.polygonize</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.polygonize</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_algorithms.cpp.html#l230"><code>src&#x2F;gdal_algorithms.cpp:230</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_algorithms.cpp.html#l230"><code>src&#x2F;gdal_algorithms.cpp:230</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Creates vector polygons for all connected regions of pixels in the raster
+	
+	<div class="description"><p>Creates vector polygons for all connected regions of pixels in the raster
 sharing a common pixel value. Each polygon is created with an attribute
 indicating the pixel value of that polygon. A raster mask may also be
 provided to determine which pixels are eligible for processing.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+								
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">dst</code>
+									<span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">dst</code>
-                                    <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[mask]</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[mask]</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">pixValField</code>
+									<span class="type">Integer</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">pixValField</code>
-                                    <span class="type">Integer</span>
-                                
+								<div class="param-description"><p>The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>The attribute field index indicating the feature attribute into which the pixel value of the polygon should be written.</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[connectedness=4]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[connectedness=4]</code>
-                                    <span class="type">Integer</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[useFloats=false]</code>
+									<span class="type">Boolean</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                <div class="param-description">
-                                    <p>Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.</p>
+								<div class="param-description"><p>Use floating point buffers instead of int buffers.</p>
+</div>
 
-                                </div>
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[useFloats=false]</code>
-                                    <span class="type">Boolean</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+	
 
-                                <div class="param-description">
-                                    <p>Use floating point buffers instead of int buffers.</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-quiet" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.quiet</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.quiet</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l912"><code>src&#x2F;node_gdal.cpp:912</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_node_gdal.cpp.html#l912"><code>src&#x2F;node_gdal.cpp:912</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Disables all output.</p>
+	
+	<div class="description"><p>Disables all output.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-reprojectImage" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.reprojectImage</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.reprojectImage</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_warper.cpp.html#l16"><code>src&#x2F;gdal_warper.cpp:16</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_warper.cpp.html#l16"><code>src&#x2F;gdal_warper.cpp:16</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Reprojects a dataset.</p>
+	
+	<div class="description"><p>Reprojects a dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+								
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">dst</code>
+									<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">dst</code>
-                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">s_srs</code>
+									<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">s_srs</code>
-                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">t_srs</code>
+									<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">t_srs</code>
-                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[resampling]</code>
+									<span class="type">String</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[resampling]</code>
-                                    <span class="type">String</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"><p>Resampling algorithm (<a href="../classes/Constants (GRA).html" class="crosslink">available options</a>)</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>Resampling algorithm (<a href="../classes/Constants (GRA).html" class="crosslink">available options</a>)</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[cutline]</code>
+									<span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[cutline]</code>
-                                    <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[srcBands]</code>
+									<span class="type">Integer[]</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                <div class="param-description">
-                                    <p>Must be in src dataset pixel coordinates. Use CoordinateTransformation to convert between georeferenced coordinates and pixel coordinates</p>
+								<div class="param-description"></div>
 
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[dstBands]</code>
+									<span class="type">Integer[]</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[srcBands]</code>
-                                    <span class="type">Int</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[srcAlphaBand]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[dstBands]</code>
-                                    <span class="type">Int</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[dstAlphaBand]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[srcAlphaBand]</code>
-                                    <span class="type">Int</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[srcNodata]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[dstAlphaBand]</code>
-                                    <span class="type">Int</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[dstNodata]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[srcNodata]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[memoryLimit]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[dstNodata]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[maxError]</code>
+									<span class="type">Number</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[memoryLimit]</code>
-                                    <span class="type">Int</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[options]</code>
+									<span class="type">String[] |  Object</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[maxError]</code>
-                                    <span class="type">Number</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								<div class="param-description"><p>Warp options (see: <a href="http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08">reference</a>)</p>
+</div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[options]</code>
-                                    <span class="type">String | Object</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+	
 
-                                <div class="param-description">
-                                    <p>Warp options (see: <a href="http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08">reference</a>)</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-sieveFilter" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.sieveFilter</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.sieveFilter</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_algorithms.cpp.html#l133"><code>src&#x2F;gdal_algorithms.cpp:133</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_algorithms.cpp.html#l133"><code>src&#x2F;gdal_algorithms.cpp:133</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Removes small raster polygons.</p>
+	
+	<div class="description"><p>Removes small raster polygons.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+								
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                
+								<div class="param-description"></div>
 
-                                <div class="param-description">
-                                    
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">dst</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">dst</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                
+								<div class="param-description"><p>Output raster band. It may be the same as src band to update the source in place.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>Output raster band. It may be the same as src band to update the source in place.</p>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[mask]</code>
+									<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                </div>
+								<div class="param-description"><p>All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.</p>
+</div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[mask]</code>
-                                    <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">threshold</code>
+									<span class="type">Number</span>
+								
 
-                                <div class="param-description">
-                                    <p>All pixels in the mask band with a value other than zero will be considered suitable for inclusion in polygons.</p>
+								<div class="param-description"><p>Raster polygons with sizes smaller than this will be merged into their largest neighbour.</p>
+</div>
 
-                                </div>
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name optional">[connectedness=4]</code>
+									<span class="type">Integer</span>
+									<span class="flag optional" title="This parameter is optional.">optional</span>
+								
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">threshold</code>
-                                    <span class="type">Number</span>
-                                
+								<div class="param-description"><p>Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.</p>
+</div>
 
-                                <div class="param-description">
-                                    <p>Raster polygons with sizes smaller than this will be merged into their largest neighbour.</p>
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                </div>
+	
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name optional">[connectedness=4]</code>
-                                    <span class="type">Integer</span>
-                                    <span class="flag optional" title="This parameter is optional.">optional</span>
-                                
-
-                                <div class="param-description">
-                                    <p>Either 4 indicating that diagonal pixels are not considered directly adjacent for polygon membership purposes or 8 indicating they are.</p>
-
-                                </div>
-
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-suggestedWarpOutput" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.suggestedWarpOutput</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.suggestedWarpOutput</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Object</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Object</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_warper.cpp.html#l95"><code>src&#x2F;gdal_warper.cpp:95</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_warper.cpp.html#l95"><code>src&#x2F;gdal_warper.cpp:95</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Used to determine the bounds and resolution of the output virtual file which
+	
+	<div class="description"><p>Used to determine the bounds and resolution of the output virtual file which
 should be large enough to include all the input image.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">options</code>
+						<span class="type">Object</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Warp options</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Warp options</p>
+					
+						<ul class="params-list">
+							
+							<li class="param">
+								
+									<code class="param-name">src</code>
+									<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+								
 
-                    </div>
-                    
+								<div class="param-description"></div>
 
-                    
-                        <ul class="params-list">
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">src</code>
-                                    <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">s_srs</code>
+									<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+								
 
-                                <div class="param-description">
-                                    
-                                </div>
+								<div class="param-description"></div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">s_srs</code>
-                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                                
+								
+							</li>
+							
+							<li class="param">
+								
+									<code class="param-name">t_srs</code>
+									<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+								
 
-                                <div class="param-description">
-                                    
-                                </div>
+								<div class="param-description"></div>
 
-                                
-                            </li>
-                            
-                            <li class="param">
-                                
-                                    <code class="param-name">t_srs</code>
-                                    <span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
-                                
+								
+							</li>
+							
+						</ul>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                                <div class="param-description">
-                                    
-                                </div>
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                                
-                            </li>
-                            
-                        </ul>
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type">Object</span>:
+					
+					<p>An object containing <code>"rasterSize"</code> and <code>"geoTransform"</code> properties.</p>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Object</span>:
-                    
-                    <p>An object containing <code>"rasterSize"</code> and <code>"geoTransform"</code> properties.</p>
-
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
 			
     	        <div id="method-verbose" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>gdal.verbose</code></span>
+	<div class="method-signature">
+	<span class="name"><code>gdal.verbose</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l921"><code>src&#x2F;node_gdal.cpp:921</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_node_gdal.cpp.html#l921"><code>src&#x2F;node_gdal.cpp:921</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Displays extra debugging information from GDAL.</p>
+	
+	<div class="description"><p>Displays extra debugging information from GDAL.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </div>
 
             

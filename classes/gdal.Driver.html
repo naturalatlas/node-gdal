@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>Format specific driver.</p>
+<p>Format specific driver.</p>
 <p>An instance of this class is created for each supported format, and
 manages information about the format.</p>
 <p>This roughly corresponds to a file format, though some drivers may
@@ -256,950 +256,918 @@ be gateways to many formats through a secondary multi-library.</p>
        		
         	
             <div id="method-copyFiles" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>copyFiles</code></span>
+	<div class="method-signature">
+	<span class="name"><code>copyFiles</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>name_old</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>name_new</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>name_old</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>name_new</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l378"><code>src&#x2F;gdal_driver.cpp:378</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l378"><code>src&#x2F;gdal_driver.cpp:378</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Copy the files of a dataset.</p>
+	
+	<div class="description"><p>Copy the files of a dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">name_old</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">name_old</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>New name for the dataset.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>New name for the dataset.</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">name_new</code>
+						<span class="type">String</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">name_new</code>
-                        <span class="type">String</span>
-                    
+					
+					<div class="param-description"><p>Old name of the dataset.</p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                    <div class="param-description">
-                        <p>Old name of the dataset.</p>
+	
 
-                    </div>
-                    
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-create" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>create</code></span>
+	<div class="method-signature">
+	<span class="name"><code>create</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>filename</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">x_size=0</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">y_size=0</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">band_count=0</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">data_type=gdal.GDT_Byte</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">creation_options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>filename</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">x_size=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">y_size=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">band_count=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">data_type=gdal.GDT_Byte</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">creation_options</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l229"><code>src&#x2F;gdal_driver.cpp:229</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l229"><code>src&#x2F;gdal_driver.cpp:229</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Create a new dataset with this driver.</p>
+	
+	<div class="description"><p>Create a new dataset with this driver.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">filename</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">filename</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[x_size=0]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[x_size=0]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>raster width in pixels (ignored for vector datasets)</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>raster width in pixels (ignored for vector datasets)</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[y_size=0]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[y_size=0]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+					<div class="param-description"><p>raster height in pixels (ignored for vector datasets)</p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[band_count=0]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                    <div class="param-description">
-                        <p>raster height in pixels (ignored for vector datasets)</p>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[band_count=0]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[data_type=gdal.GDT_Byte]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>pixel data type (ignored for vector datasets) (see <a href="../classes/Constants (GDT).html" class="crosslink">data types</a>)</p>
+</div>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[data_type=gdal.GDT_Byte]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[creation_options]</code>
+						<span class="type">String[] |  Object</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
+					
 
-                    
-                    <div class="param-description">
-                        <p>pixel data type (ignored for vector datasets) (see <a href="../classes/Constants (GDT).html" class="crosslink">data types</a>)</p>
+					
+					<div class="param-description"><p>An array or object containing driver-specific dataset creation options</p>
+</div>
+					
 
-                    </div>
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[creation_options]</code>
-                        <span class="type">String | Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
+			<div class="returns-description">
+				
+					
+					<p>gdal.Dataset</p>
 
-                    
-                    <div class="param-description">
-                        <p>An array or object containing driver-specific dataset creation options</p>
+				
+			</div>
+		</div>
+	
 
-                    </div>
-                    
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                    <p>gdal.Dataset</p>
-
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-createCopy" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>createCopy</code></span>
+	<div class="method-signature">
+	<span class="name"><code>createCopy</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>filename</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>src</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">strict=false</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">options=null</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>filename</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>src</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">strict=false</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">options=null</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l298"><code>src&#x2F;gdal_driver.cpp:298</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l298"><code>src&#x2F;gdal_driver.cpp:298</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Create a copy of a dataset.</p>
+	
+	<div class="description"><p>Create a copy of a dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">filename</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">filename</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">src</code>
+						<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">src</code>
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[strict=false]</code>
+						<span class="type">Boolean</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[strict=false]</code>
-                        <span class="type">Boolean</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[options=null]</code>
+						<span class="type">String[] |  Object</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[options=null]</code>
-                        <span class="type">String | Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>An array or object containing driver-specific dataset creation options</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>An array or object containing driver-specific dataset creation options</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+					<p>gdal.Dataset</p>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                    <p>gdal.Dataset</p>
-
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-deleteDataset" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>deleteDataset</code></span>
+	<div class="method-signature">
+	<span class="name"><code>deleteDataset</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>filename</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>filename</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l196"><code>src&#x2F;gdal_driver.cpp:196</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l196"><code>src&#x2F;gdal_driver.cpp:196</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
+	
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">filename</code>
-                        <span class="type">String</span>
-                    
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">filename</code>
+						<span class="type">String</span>
+					
 
-                    
+					
 
-                    
+					
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-    
+	
 
-    
+	
 </div>
 
             
         
         	
             <div id="method-getMetadata" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getMetadata</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getMetadata</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">domain</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">domain</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l446"><code>src&#x2F;gdal_driver.cpp:446</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l446"><code>src&#x2F;gdal_driver.cpp:446</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns metadata about the driver.</p>
+	
+	<div class="description"><p>Returns metadata about the driver.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[domain]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[domain]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+					<p>Object</p>
 
-            <div class="returns-description">
-                
-                    
-                    <p>Object</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-open" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>open</code></span>
+	<div class="method-signature">
+	<span class="name"><code>open</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>path</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">mode=&#x60;&quot;r&quot;&#x60;</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>path</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">mode=&#x60;&quot;r&quot;&#x60;</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l480"><code>src&#x2F;gdal_driver.cpp:480</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l480"><code>src&#x2F;gdal_driver.cpp:480</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Opens a dataset.</p>
+	
+	<div class="description"><p>Opens a dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">path</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">path</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[mode=&#x60;&quot;r&quot;&#x60;]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[mode=&#x60;&quot;r&quot;&#x60;]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The mode to use to open the file: <code>"r"</code> or <code>"r+"</code></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The mode to use to open the file: <code>"r"</code> or <code>"r+"</code></p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Dataset.html" class="crosslink">gdal.Dataset</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-rename" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>rename</code></span>
+	<div class="method-signature">
+	<span class="name"><code>rename</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>new_name</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>old_name</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>new_name</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>old_name</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_driver.cpp.html#l412"><code>src&#x2F;gdal_driver.cpp:412</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_driver.cpp.html#l412"><code>src&#x2F;gdal_driver.cpp:412</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Renames the dataset.</p>
+	
+	<div class="description"><p>Renames the dataset.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">new_name</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">new_name</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>New name for the dataset.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>New name for the dataset.</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">old_name</code>
+						<span class="type">String</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">old_name</code>
-                        <span class="type">String</span>
-                    
+					
+					<div class="param-description"><p>Old name of the dataset.</p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                    <div class="param-description">
-                        <p>Old name of the dataset.</p>
+	
 
-                    </div>
-                    
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             

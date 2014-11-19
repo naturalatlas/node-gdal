@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>An encapsulation of all field data that makes up a <a href="../classes/gdal.Feature.html" class="crosslink">Feature</a>.</p>
+<p>An encapsulation of all field data that makes up a <a href="../classes/gdal.Feature.html" class="crosslink">Feature</a>.</p>
 
 </div>
 
@@ -264,734 +264,714 @@
        		
         	
             <div id="method-count" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>count</code></span>
+	<div class="method-signature">
+	<span class="name"><code>count</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Integer</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Integer</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l270"><code>src&#x2F;collections&#x2F;feature_fields.cpp:270</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l270"><code>src&#x2F;collections&#x2F;feature_fields.cpp:270</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the number of fields.</p>
+	
+	<div class="description"><p>Returns the number of fields.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Integer</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Integer</span>
-                    
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>feature.fields.count();</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>feature.fields.count();</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-forEach" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>forEach</code></span>
+	<div class="method-signature">
+	<span class="name"><code>forEach</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>iterator</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>iterator</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l129"><code>lib&#x2F;gdal.js:129</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l129"><code>lib&#x2F;gdal.js:129</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Iterates through all fields using a callback function.</p>
+	
+	<div class="description"><p>Iterates through all fields using a callback function.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">iterator</code>
+						<span class="type">Function</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">iterator</code>
-                        <span class="type">Function</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The callback to be called with each feature <code>value</code> and <code>key</code>.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The callback to be called with each feature <code>value</code> and <code>key</code>.</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
+			<div class="example-content">
+				<pre class="code prettyprint"><code>layer.features.get(0).fields.forEach(function(value, key) { ... });</code></pre>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>layer.features.get(0).fields.forEach(function(value, key) { ... });</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>get</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>key</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Mixed | Undefined</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>key</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Mixed  |  Undefined</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l430"><code>src&#x2F;collections&#x2F;feature_fields.cpp:430</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l430"><code>src&#x2F;collections&#x2F;feature_fields.cpp:430</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns a field&#39;s value.</p>
+	
+	<div class="description"><p>Returns a field&#39;s value.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">key</code>
+						<span class="type">String  |  Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">key</code>
-                        <span class="type">String | Integer</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Feature name or index.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Feature name or index.</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type">Mixed  |  Undefined</span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Mixed | Undefined</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>value = feature.fields.get(0);
+			<div class="example-content">
+				<pre class="code prettyprint"><code>value = feature.fields.get(0);
 value = feature.fields.get(&#39;field&#39;);</code></pre>
 
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-getNames" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getNames</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getNames</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Array</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Array</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l470"><code>src&#x2F;collections&#x2F;feature_fields.cpp:470</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l470"><code>src&#x2F;collections&#x2F;feature_fields.cpp:470</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns a list of field name.</p>
+	
+	<div class="description"><p>Returns a list of field name.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Array</span>:
+					
+					<p>List of field names.</p>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Array</span>:
-                    
-                    <p>List of field names.</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-indexOf" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>indexOf</code></span>
+	<div class="method-signature">
+	<span class="name"><code>indexOf</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>name</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Integer</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>name</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Integer</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l294"><code>src&#x2F;collections&#x2F;feature_fields.cpp:294</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l294"><code>src&#x2F;collections&#x2F;feature_fields.cpp:294</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the index of a field, given its name.</p>
+	
+	<div class="description"><p>Returns the index of a field, given its name.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">name</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">name</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Integer</span>:
+					
+					<p>Index or, <code>-1</code> if it cannot be found.</p>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Integer</span>:
-                    
-                    <p>Index or, <code>-1</code> if it cannot be found.</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var index = feature.fields.indexOf(&#39;field&#39;);</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var index = feature.fields.indexOf(&#39;field&#39;);</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-reset" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>reset</code></span>
+	<div class="method-signature">
+	<span class="name"><code>reset</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">values</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">values</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>value</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l208"><code>src&#x2F;collections&#x2F;feature_fields.cpp:208</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l208"><code>src&#x2F;collections&#x2F;feature_fields.cpp:208</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Resets all fields.</p>
+	
+	<div class="description"><p>Resets all fields.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[values]</code>
+						<span class="type">Object</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[values]</code>
-                        <span class="type">Object</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">value</code>
+						<span class="type">Mixed</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type">Mixed</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>feature.fields.reset();</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>feature.fields.reset();</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-set" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>set</code></span>
+	<div class="method-signature">
+	<span class="name"><code>set</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>key</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>key</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>value</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l102"><code>src&#x2F;collections&#x2F;feature_fields.cpp:102</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l102"><code>src&#x2F;collections&#x2F;feature_fields.cpp:102</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Sets feature field(s).</p>
+	
+	<div class="description"><p>Sets feature field(s).</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">key</code>
+						<span class="type">String  |  Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">key</code>
-                        <span class="type">String | Integer</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Field name or index</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Field name or index</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">value</code>
+						<span class="type">Mixed</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type">Mixed</span>
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>// most-efficient, least flexible. requires you to know the ordering of the fields:
+			<div class="example-content">
+				<pre class="code prettyprint"><code>// most-efficient, least flexible. requires you to know the ordering of the fields:
 feature.fields.set([&#39;Something&#39;]);
 feature.fields.set(0, &#39;Something&#39;);
 
@@ -999,233 +979,227 @@ feature.fields.set(0, &#39;Something&#39;);
 feature.fields.set({name: &#39;Something&#39;});
 feature.fields.set(&#39;name&#39;, &#39;Something&#39;);</code></pre>
 
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-toArray" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>toArray</code></span>
+	<div class="method-signature">
+	<span class="name"><code>toArray</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Array</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Array</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l364"><code>src&#x2F;collections&#x2F;feature_fields.cpp:364</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l364"><code>src&#x2F;collections&#x2F;feature_fields.cpp:364</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Outputs the field values as a pure JS array.</p>
+	
+	<div class="description"><p>Outputs the field values as a pure JS array.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Array</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Array</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-toJSON" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>toJSON</code></span>
+	<div class="method-signature">
+	<span class="name"><code>toJSON</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l151"><code>lib&#x2F;gdal.js:151</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l151"><code>lib&#x2F;gdal.js:151</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Outputs the fields as a serialized JSON string.</p>
+	
+	<div class="description"><p>Outputs the fields as a serialized JSON string.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">String</span>:
+					
+					<p>Serialized JSON</p>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>:
-                    
-                    <p>Serialized JSON</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-toObject" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>toObject</code></span>
+	<div class="method-signature">
+	<span class="name"><code>toObject</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Object</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Object</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_feature_fields.cpp.html#l322"><code>src&#x2F;collections&#x2F;feature_fields.cpp:322</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_feature_fields.cpp.html#l322"><code>src&#x2F;collections&#x2F;feature_fields.cpp:322</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Outputs the field data as a pure JS object.</p>
+	
+	<div class="description"><p>Outputs the field data as a pure JS object.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Object</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Object</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             

@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>An encapsulation of a <a href="../classes/gdal.Dataset.html" class="crosslink">Dataset</a>&#39;s raster bands.</p>
+<p>An encapsulation of a <a href="../classes/gdal.Dataset.html" class="crosslink">Dataset</a>&#39;s raster bands.</p>
 <pre class="code prettyprint"><code>var bands = dataset.bands;</code></pre>
 
 </div>
@@ -241,392 +241,380 @@
        		
         	
             <div id="method-count" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>count</code></span>
+	<div class="method-signature">
+	<span class="name"><code>count</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Integer</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Integer</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_dataset_bands.cpp.html#l185"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:185</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_dataset_bands.cpp.html#l185"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:185</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the number of bands.</p>
+	
+	<div class="description"><p>Returns the number of bands.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Integer</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Integer</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-create" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>create</code></span>
+	<div class="method-signature">
+	<span class="name"><code>create</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>dataType</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>dataType</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_dataset_bands.cpp.html#l125"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:125</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_dataset_bands.cpp.html#l125"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:125</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Adds a new band.</p>
+	
+	<div class="description"><p>Adds a new band.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">dataType</code>
+						<span class="type">Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">dataType</code>
-                        <span class="type">Integer</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>Type of band (<a href="../classes/Constants (GDT).html" class="crosslink">see GDT constants</a>).</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Type of band (<a href="../classes/Constants (GDT).html" class="crosslink">see GDT constants</a>).</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-forEach" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>forEach</code></span>
+	<div class="method-signature">
+	<span class="name"><code>forEach</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>iterator</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>iterator</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l92"><code>lib&#x2F;gdal.js:92</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l92"><code>lib&#x2F;gdal.js:92</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Iterates through all bands using a callback function.</p>
+	
+	<div class="description"><p>Iterates through all bands using a callback function.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">iterator</code>
+						<span class="type">Function</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">iterator</code>
-                        <span class="type">Function</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.RasterBand.html" class="crosslink">RasterBand</a></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The callback to be called with each <a href="../classes/gdal.RasterBand.html" class="crosslink">RasterBand</a></p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
+			<div class="example-content">
+				<pre class="code prettyprint"><code>dataset.bands.forEach(function(band) { ... });</code></pre>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>dataset.bands.forEach(function(band) { ... });</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>get</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>id</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>id</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_dataset_bands.cpp.html#l85"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:85</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_dataset_bands.cpp.html#l85"><code>src&#x2F;collections&#x2F;dataset_bands.cpp:85</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the band with the given ID.</p>
+	
+	<div class="description"><p>Returns the band with the given ID.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">id</code>
+						<span class="type">Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">id</code>
-                        <span class="type">Integer</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.RasterBand.html" class="crosslink">gdal.RasterBand</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             

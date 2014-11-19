@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>An encapsulation of a <a href="../classes/gdal.Layer.html" class="crosslink">Layer</a>&#39;s features.</p>
+<p>An encapsulation of a <a href="../classes/gdal.Layer.html" class="crosslink">Layer</a>&#39;s features.</p>
 
 </div>
 
@@ -256,780 +256,760 @@
        		
         	
             <div id="method-add" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>add</code></span>
+	<div class="method-signature">
+	<span class="name"><code>add</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>feature</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>feature</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l163"><code>src&#x2F;collections&#x2F;layer_features.cpp:163</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l163"><code>src&#x2F;collections&#x2F;layer_features.cpp:163</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Adds a feature to the layer. The feature should be created using the current layer as the definition.</p>
+	
+	<div class="description"><p>Adds a feature to the layer. The feature should be created using the current layer as the definition.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">feature</code>
+						<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">feature</code>
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var feature = new gdal.Feature(layer);
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var feature = new gdal.Feature(layer);
 feature.setGeometry(new gdal.Point(0, 1));
 feature.fields.set(&#39;name&#39;, &#39;somestring&#39;);
 layer.features.add(feature);</code></pre>
 
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-count" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>count</code></span>
+	<div class="method-signature">
+	<span class="name"><code>count</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">force=true</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Integer</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">force=true</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Integer</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l199"><code>src&#x2F;collections&#x2F;layer_features.cpp:199</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l199"><code>src&#x2F;collections&#x2F;layer_features.cpp:199</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the number of features in the layer.</p>
+	
+	<div class="description"><p>Returns the number of features in the layer.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[force=true]</code>
+						<span class="type">Boolean</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[force=true]</code>
-                        <span class="type">Boolean</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Integer</span>:
+					
+					<p>Number of features in the layer.</p>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Integer</span>:
-                    
-                    <p>Number of features in the layer.</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-first" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>first</code></span>
+	<div class="method-signature">
+	<span class="name"><code>first</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l113"><code>src&#x2F;collections&#x2F;layer_features.cpp:113</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l113"><code>src&#x2F;collections&#x2F;layer_features.cpp:113</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Resets the feature pointer used by <code>next()</code> and
+	
+	<div class="description"><p>Resets the feature pointer used by <code>next()</code> and
 returns the first feature in the layer.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-forEach" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>forEach</code></span>
+	<div class="method-signature">
+	<span class="name"><code>forEach</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>iterator</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>iterator</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l110"><code>lib&#x2F;gdal.js:110</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l110"><code>lib&#x2F;gdal.js:110</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Iterates through all features using a callback function.</p>
+	
+	<div class="description"><p>Iterates through all features using a callback function.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">iterator</code>
+						<span class="type">Function</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">iterator</code>
-                        <span class="type">Function</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.Feature.html" class="crosslink">Feature</a></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The callback to be called with each <a href="../classes/gdal.Feature.html" class="crosslink">Feature</a></p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
+			<div class="example-content">
+				<pre class="code prettyprint"><code>layer.features.forEach(function(features) { ... });</code></pre>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>layer.features.forEach(function(features) { ... });</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>get</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>id</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>id</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l85"><code>src&#x2F;collections&#x2F;layer_features.cpp:85</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l85"><code>src&#x2F;collections&#x2F;layer_features.cpp:85</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Fetch a feature by its identifier.</p>
+	
+	<div class="description"><p>Fetch a feature by its identifier.</p>
 <p><strong>Important:</strong> The <code>id</code> argument is not an index. In most cases it will be zero-based,
 but in some cases it will not. If iterating, it&#39;s best to use the <code>next()</code> method.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">id</code>
+						<span class="type">Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">id</code>
-                        <span class="type">Integer</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The feature ID of the feature to read.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The feature ID of the feature to read.</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-next" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>next</code></span>
+	<div class="method-signature">
+	<span class="name"><code>next</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l137"><code>src&#x2F;collections&#x2F;layer_features.cpp:137</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l137"><code>src&#x2F;collections&#x2F;layer_features.cpp:137</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the next feature in the layer. Returns null if no more features.</p>
+	
+	<div class="description"><p>Returns the next feature in the layer. Returns null if no more features.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-                    
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
+			<div class="example-content">
+				<pre class="code prettyprint"><code>while (feature = layer.features.next()) { ... }</code></pre>
 
-            <div class="example-content">
-                <pre class="code prettyprint"><code>while (feature = layer.features.next()) { ... }</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-remove" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>remove</code></span>
+	<div class="method-signature">
+	<span class="name"><code>remove</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>id</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>id</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l274"><code>src&#x2F;collections&#x2F;layer_features.cpp:274</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l274"><code>src&#x2F;collections&#x2F;layer_features.cpp:274</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Removes a feature from the layer.</p>
+	
+	<div class="description"><p>Removes a feature from the layer.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">id</code>
+						<span class="type">Integer</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">id</code>
-                        <span class="type">Integer</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-set" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>set</code></span>
+	<div class="method-signature">
+	<span class="name"><code>set</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">id</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>feature</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">id</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>feature</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_layer_features.cpp.html#l223"><code>src&#x2F;collections&#x2F;layer_features.cpp:223</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_layer_features.cpp.html#l223"><code>src&#x2F;collections&#x2F;layer_features.cpp:223</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Sets a feature in the layer.</p>
+	
+	<div class="description"><p>Sets a feature in the layer.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[id]</code>
+						<span class="type">Integer</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[id]</code>
-                        <span class="type">Integer</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">feature</code>
+						<span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">feature</code>
-                        <span class="type"><a href="../classes/gdal.Feature.html" class="crosslink">gdal.Feature</a></span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
-
-    
+	
 </div>
 
             

@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>A collection of polygon rings, used by <a href="../classes/gdal.Polygon.html" class="crosslink">gdal.Polygon</a>.</p>
+<p>A collection of polygon rings, used by <a href="../classes/gdal.Polygon.html" class="crosslink">gdal.Polygon</a>.</p>
 
 </div>
 
@@ -235,94 +235,92 @@
        		
         	
             <div id="method-add" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>add</code></span>
+	<div class="method-signature">
+	<span class="name"><code>add</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>ring(s)</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>ring(s)</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_polygon_rings.cpp.html#l128"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:128</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_polygon_rings.cpp.html#l128"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:128</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Adds a ring to the collection.</p>
+	
+	<div class="description"><p>Adds a ring to the collection.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">ring(s)</code>
+						<span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">ring(s)</code>
-                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var ring1 = new gdal.LinearRing();
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var ring1 = new gdal.LinearRing();
 ring1.points.add(0,0);
 ring1.points.add(1,0);
 ring1.points.add(1,1);
@@ -335,347 +333,337 @@ polygon.rings.add(ring1);
 // many at once:
 polygon.rings.add([ring1, ...]);</code></pre>
 
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-count" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>count</code></span>
+	<div class="method-signature">
+	<span class="name"><code>count</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type"></span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type"></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_polygon_rings.cpp.html#l80"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:80</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_polygon_rings.cpp.html#l80"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:80</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the number of rings that exist in the collection.</p>
+	
+	<div class="description"><p>Returns the number of rings that exist in the collection.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+					<p>Integer</p>
 
-            <div class="returns-description">
-                
-                    
-                    <p>Integer</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-forEach" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>forEach</code></span>
+	<div class="method-signature">
+	<span class="name"><code>forEach</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>iterator</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>iterator</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l212"><code>lib&#x2F;gdal.js:212</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l212"><code>lib&#x2F;gdal.js:212</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Iterates through all rings using a callback function.</p>
+	
+	<div class="description"><p>Iterates through all rings using a callback function.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">iterator</code>
+						<span class="type">Function</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">iterator</code>
-                        <span class="type">Function</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>The callback to be called with each <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a></p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
+			<div class="example-content">
+				<pre class="code prettyprint"><code>polygon.rings.forEach(function(ring) { ... });</code></pre>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>polygon.rings.forEach(function(ring) { ... });</code></pre>
-
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-get" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>get</code></span>
+	<div class="method-signature">
+	<span class="name"><code>get</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_collections_polygon_rings.cpp.html#l99"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:99</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_collections_polygon_rings.cpp.html#l99"><code>src&#x2F;collections&#x2F;polygon_rings.cpp:99</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Returns the ring at the specified index. The ring
+	
+	<div class="description"><p>Returns the ring at the specified index. The ring
 at index <code>0</code> will always be the polygon&#39;s exterior ring.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.LinearRing.html" class="crosslink">gdal.LinearRing</a></span>
-                    
-                
-            </div>
-        </div>
-    
+	
+		<div class="example">
+			<h4>Example:</h4>
 
-    
-        <div class="example">
-            <h4>Example:</h4>
-
-            <div class="example-content">
-                <pre class="code prettyprint"><code>var exterior = polygon.rings.get(0);
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var exterior = polygon.rings.get(0);
 var interior = polygon.rings.get(1);</code></pre>
 
-            </div>
-        </div>
-    
+			</div>
+		</div>
+	
 </div>
 
             
         
         	
             <div id="method-toArray" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>toArray</code></span>
+	<div class="method-signature">
+	<span class="name"><code>toArray</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Array</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Array</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/lib_gdal.js.html#l284"><code>lib&#x2F;gdal.js:284</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l284"><code>lib&#x2F;gdal.js:284</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Outputs all rings as a regular javascript array.</p>
+	
+	<div class="description"><p>Outputs all rings as a regular javascript array.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Array</span>:
+					
+					<p>List of <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a> instances.</p>
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Array</span>:
-                    
-                    <p>List of <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a> instances.</p>
+				
+			</div>
+		</div>
+	
 
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             

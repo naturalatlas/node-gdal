@@ -177,7 +177,7 @@
 
 
 <div class="yuidoc-class-description">
-    <p>A set of associated raster bands and/or vector layers, usually from one file.</p>
+<p>A set of associated raster bands and/or vector layers, usually from one file.</p>
 <pre class="code prettyprint"><code>// raster dataset:
 dataset = gdal.open(&#39;file.tif&#39;);
 bands = dataset.bands;
@@ -283,959 +283,929 @@ layers = dataset.layers;</code></pre>
        		
         	
             <div id="method-buildOverviews" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>buildOverviews</code></span>
+	<div class="method-signature">
+	<span class="name"><code>buildOverviews</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>resampling</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>overviews</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">bands</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>resampling</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>overviews</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">bands</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l643"><code>src&#x2F;gdal_dataset.cpp:643</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l643"><code>src&#x2F;gdal_dataset.cpp:643</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Builds dataset overviews.</p>
+	
+	<div class="description"><p>Builds dataset overviews.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">resampling</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">resampling</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p><code>"NEAREST"</code>, <code>"GAUSS"</code>, <code>"CUBIC"</code>, <code>"AVERAGE"</code>, <code>"MODE"</code>, <code>"AVERAGE_MAGPHASE"</code> or <code>"NONE"</code></p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p><code>"NEAREST"</code>, <code>"GAUSS"</code>, <code>"CUBIC"</code>, <code>"AVERAGE"</code>, <code>"MODE"</code>, <code>"AVERAGE_MAGPHASE"</code> or <code>"NONE"</code></p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">overviews</code>
+						<span class="type">Integer[]</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">overviews</code>
-                        <span class="type">Int</span>
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[bands]</code>
+						<span class="type">Integer[]</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[bands]</code>
-                        <span class="type">Int</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-close" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>close</code></span>
+	<div class="method-signature">
+	<span class="name"><code>close</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l347"><code>src&#x2F;gdal_dataset.cpp:347</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l347"><code>src&#x2F;gdal_dataset.cpp:347</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Closes the dataset to further operations.</p>
+	
+	<div class="description"><p>Closes the dataset to further operations.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-executeSQL" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>executeSQL</code></span>
+	<div class="method-signature">
+	<span class="name"><code>executeSQL</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>statement</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">spatial_filter=null</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">dialect=null</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>statement</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">spatial_filter=null</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">dialect=null</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l410"><code>src&#x2F;gdal_dataset.cpp:410</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l410"><code>src&#x2F;gdal_dataset.cpp:410</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Execute an SQL statement against the data store.</p>
+	
+	<div class="description"><p>Execute an SQL statement against the data store.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">statement</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">statement</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>SQL statement to execute.</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>SQL statement to execute.</p>
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[spatial_filter=null]</code>
+						<span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    </div>
-                    
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[spatial_filter=null]</code>
-                        <span class="type"><a href="../classes/gdal.Geometry.html" class="crosslink">gdal.Geometry</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+					<div class="param-description"><p>Geometry which represents a spatial filter.</p>
+</div>
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[dialect=null]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-                    
-                    <div class="param-description">
-                        <p>Geometry which represents a spatial filter.</p>
+					
 
-                    </div>
-                    
+					
+					<div class="param-description"><p>Allows control of the statement dialect. If set to <code>null</code>, the OGR SQL engine will be used, except for RDBMS drivers that will use their dedicated SQL engine, unless <code>"OGRSQL"</code> is explicitely passed as the dialect. Starting with OGR 1.10, the <code>"SQLITE"</code> dialect can also be used.</p>
+</div>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[dialect=null]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                    <div class="param-description">
-                        <p>Allows control of the statement dialect. If set to <code>null</code>, the OGR SQL engine will be used, except for RDBMS drivers that will use their dedicated SQL engine, unless <code>"OGRSQL"</code> is explicitely passed as the dialect. Starting with OGR 1.10, the <code>"SQLITE"</code> dialect can also be used.</p>
+			<div class="returns-description">
+				
+					
+						<span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
+					
+				
+			</div>
+		</div>
+	
 
-                    </div>
-                    
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/gdal.Layer.html" class="crosslink">gdal.Layer</a></span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-flush" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>flush</code></span>
+	<div class="method-signature">
+	<span class="name"><code>flush</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l373"><code>src&#x2F;gdal_dataset.cpp:373</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l373"><code>src&#x2F;gdal_dataset.cpp:373</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Flushes all changes to disk.</p>
+	
+	<div class="description"><p>Flushes all changes to disk.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-getFileList" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getFileList</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getFileList</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String[]</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l461"><code>src&#x2F;gdal_dataset.cpp:461</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l461"><code>src&#x2F;gdal_dataset.cpp:461</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Fetch files forming dataset.</p>
+	
+	<div class="description"><p>Fetch files forming dataset.</p>
 <p>Returns a list of files believed to be part of this dataset. If it returns an
 empty list of files it means there is believed to be no local file system files
 associated with the dataset (for instance a virtual dataset).</p>
 <p>Returns an empty array for vector datasets if GDAL version is below 2.0</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">String[]</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-getGCPProjection" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getGCPProjection</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getGCPProjection</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">String</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">String</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l317"><code>src&#x2F;gdal_dataset.cpp:317</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l317"><code>src&#x2F;gdal_dataset.cpp:317</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Get output projection for GCPs.</p>
+	
+	<div class="description"><p>Get output projection for GCPs.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">String</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">String</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-getGCPs" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getGCPs</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getGCPs</code></span>
 
-    
-        <span class="paren">()</span>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Object</span>
-        </span>
-    
-    </div>
+	
+		<span class="paren">()</span>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Object[]</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l513"><code>src&#x2F;gdal_dataset.cpp:513</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l513"><code>src&#x2F;gdal_dataset.cpp:513</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Fetches GCPs.</p>
+	
+	<div class="description"><p>Fetches GCPs.</p>
+</div>
+	
 
-    </div>
-    
+	
 
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Object[]</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Object</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-getMetadata" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>getMetadata</code></span>
+	<div class="method-signature">
+	<span class="name"><code>getMetadata</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">domain</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Object</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">domain</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Object</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l251"><code>src&#x2F;gdal_dataset.cpp:251</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l251"><code>src&#x2F;gdal_dataset.cpp:251</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Fetch metadata.</p>
+	
+	<div class="description"><p>Fetch metadata.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[domain]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[domain]</code>
-                        <span class="type">String</span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
+			<div class="returns-description">
+				
+					
+						<span class="type">Object</span>
+					
+				
+			</div>
+		</div>
+	
 
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Object</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-setGCPs" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>setGCPs</code></span>
+	<div class="method-signature">
+	<span class="name"><code>setGCPs</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>gcps</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>projection</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>gcps</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>projection</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l566"><code>src&#x2F;gdal_dataset.cpp:566</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l566"><code>src&#x2F;gdal_dataset.cpp:566</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Sets GCPs.</p>
+	
+	<div class="description"><p>Sets GCPs.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">gcps</code>
+						<span class="type">Object[]</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">gcps</code>
-                        <span class="type">Object</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">projection</code>
+						<span class="type">String</span>
+					
 
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">projection</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
 
-                    
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+	
 
-    
-
-    
+	
 </div>
 
             
         
         	
             <div id="method-testCapability" class="method item">
-    <div class="method-signature">
-    <span class="name"><code>testCapability</code></span>
+	<div class="method-signature">
+	<span class="name"><code>testCapability</code></span>
 
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>capability</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
-    </div>
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>capability</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Boolean</span>
+		</span>
+	
+	</div>
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_gdal_dataset.cpp.html#l285"><code>src&#x2F;gdal_dataset.cpp:285</code></a>
-        
-        </p>
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_dataset.cpp.html#l285"><code>src&#x2F;gdal_dataset.cpp:285</code></a>
+		
+		</p>
 
 
-        
+		
 
-        
-    </div>
+		
+	</div>
 
-    
-    <div class="description">
-        <p>Determines if the dataset supports the indicated operation.</p>
+	
+	<div class="description"><p>Determines if the dataset supports the indicated operation.</p>
+</div>
+	
 
-    </div>
-    
+	
+		<div class="params">
+			<h4>Parameters:</h4>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">capability</code>
+						<span class="type">String</span>
+					
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">capability</code>
-                        <span class="type">String</span>
-                    
+					
 
-                    
+					
+					<div class="param-description"><p>(see <a href="../classes/Constants (ODsC).html" class="crosslink">capability list</a>)</p>
+</div>
+					
 
-                    
-                    <div class="param-description">
-                        <p>(see <a href="../classes/Constants (ODsC).html" class="crosslink">capability list</a>)</p>
+					
+				</li>
+			
+			</ul>
+		</div>
+	
 
-                    </div>
-                    
+	
+		<div class="returns">
+			<h4>Returns:</h4>
 
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
+			<div class="returns-description">
+				
+					
+						<span class="type">Boolean</span>
+					
+				
+			</div>
+		</div>
+	
 
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>
-                    
-                
-            </div>
-        </div>
-    
-
-    
+	
 </div>
 
             
