@@ -595,6 +595,8 @@ NAN_METHOD(Geometry::exportToWKT)
  * Convert a geometry into well known binary format.
  *
  * @method toWKB
+ * @param {string} [byte_order="MSB"] ({{#crossLink "Constants (wkbByteOrder)"}}see options{{/crossLink}})
+ * @param {string} [variant="OGC"] ({{#crossLink "Constants (wkbVariant)"}}see options{{/crossLink}})
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToWKB)
@@ -834,11 +836,11 @@ NAN_METHOD(Geometry::createFromWkt)
 }
 
 /**
- * Creates a Geometry from a WKB string.
+ * Creates a Geometry from a WKB buffer.
  *
  * @static
  * @method fromWKB
- * @param {Object} wkb
+ * @param {Buffer} wkb
  * @param {gdal.SpatialReference} [src]
  * @return gdal.Geometry
  */
@@ -883,7 +885,7 @@ NAN_METHOD(Geometry::createFromWkb)
  *
  * @static
  * @method create
- * @param {Object} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink "Constants (wkbGeometryType)"}}available options{{/crossLink}})
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::create)
@@ -937,7 +939,7 @@ NAN_GETTER(Geometry::nameGetter)
 }
 
 /**
- * See {{#crossLink "Constants (WKB)"}}wkbGeometryTypes{{/crossLink}}.
+ * See {{#crossLink "Constants (wkbGeometryType)"}}wkbGeometryTypes{{/crossLink}}.
  * @readOnly
  * @attribute wkbType
  * @type integer
@@ -1008,7 +1010,7 @@ Handle<Value> Geometry::getConstructor(OGRwkbGeometryType type){
  *
  * @static
  * @method getConstructor
- * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink "Constants (wkbGeometryType)"}}available options{{/crossLink}})
  * @return Function
  */
 NAN_METHOD(Geometry::getConstructor)
@@ -1025,7 +1027,7 @@ NAN_METHOD(Geometry::getConstructor)
  *
  * @static
  * @method getName
- * @param {Integer} type WKB geometry type ({{#crossLink "Constants (WKB)"}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink "Constants (wkbGeometryType)"}}available options{{/crossLink}})
  * @return String
  */
 NAN_METHOD(Geometry::getName)

@@ -136,11 +136,17 @@ NAN_METHOD(DatasetLayers::get)
 /**
  * Adds a new layer.
  *
+ * @example
+ * ```
+ * dataset.layers.create('layername', null, gdal.Point);
+ * ```
+ * 
  * @method create
  * @throws Error
  * @param {String} name Layer name
- * @param {gdal.SpatialReference} srs Layer projection
- * @param {Integer} geomType Geometry type ({{#crossLink "Constants (WKB)"}}see WKB constants{{/crossLink}})
+ * @param {gdal.SpatialReference|null} srs Layer projection
+ * @param {Integer|Function} geomType Geometry type or constructor ({{#crossLink "Constants (wkbGeometryType)"}}see geometry types{{/crossLink}})
+ * @param {string[]|object} creation_options driver-specific layer creation options
  * @return {gdal.Layer}
  */
 NAN_METHOD(DatasetLayers::create)
@@ -229,7 +235,7 @@ NAN_METHOD(DatasetLayers::count)
  * @method copy
  * @param {String} src_lyr_name
  * @param {String} dst_lyr_name
- * @param {Array} [options=null]
+ * @param {object|string[]} [options=null] layer creation options
  * @return {gdal.Layer}
  */
 NAN_METHOD(DatasetLayers::copy)

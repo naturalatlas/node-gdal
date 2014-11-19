@@ -159,10 +159,10 @@ NAN_GETTER(FeatureDefn::nameGetter)
 }
 
 /**
- * WKB geometry type ({{#crossLink "Constants (WKB)"}}see table{{/crossLink}})
+ * WKB geometry type ({{#crossLink "Constants (wkbGeometryType)"}}see table{{/crossLink}})
  *
  * @attribute geomType
- * @type {String}
+ * @type {Integer}
  */
 NAN_GETTER(FeatureDefn::geomTypeGetter)
 {

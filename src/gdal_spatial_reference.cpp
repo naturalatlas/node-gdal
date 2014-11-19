@@ -848,6 +848,11 @@ NAN_METHOD(SpatialReference::fromESRI)
 
 	StringList list;
 
+	if(args.Length() < 1) {
+		NanThrowError("input string list must be provided");
+		NanReturnUndefined();
+	}
+
 	if(list.parse(args[0])) {
 		NanReturnUndefined(); //error parsing string list
 	}
