@@ -471,7 +471,7 @@ gdal.PolygonRings.prototype.toArray = defaultToArray;
  * @method open
  * @static
  * @param {String} path Path to dataset to open
- * @param {String} mode The mode to use to open the file: &#x60;&quot;r&quot;&#x60;, &#x60;&quot;r+&quot;&#x60;, or &#x60;&quot;w&quot;&#x60;
+ * @param {String} [mode=&quot;r&quot;] The mode to use to open the file: &#x60;&quot;r&quot;&#x60;, &#x60;&quot;r+&quot;&#x60;, or &#x60;&quot;w&quot;&#x60;
  * @param {String|Array} [drivers] Driver name, or list of driver names to attempt to use.
  *
  * @param {Integer} [x_size] Used when creating a raster dataset with the &#x60;&quot;w&quot;&#x60; mode.
@@ -490,7 +490,7 @@ gdal.open = (function() {
 		if (typeof drivers === &#x27;string&#x27;) {
 			drivers = [drivers];
 		} else if (drivers &amp;&amp; !Array.isArray(drivers)) {
-			throw new Error(&#x27;driver(s) must be a string or List of strings&#x27;)
+			throw new Error(&#x27;driver(s) must be a string or list of strings&#x27;)
 		}
 
 		if (mode === &#x27;w&#x27;) {

@@ -1473,7 +1473,9 @@
                 {
                     "name": "mode",
                     "description": "The mode to use to open the file: `\"r\"`, `\"r+\"`, or `\"w\"`",
-                    "type": "String"
+                    "type": "String",
+                    "optional": true,
+                    "optdefault": "\"r\""
                 },
                 {
                     "name": "drivers",
