@@ -50,5 +50,4 @@ install:
 
 build: off
 test: off
-test_script: off
 deploy: off
