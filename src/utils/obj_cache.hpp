@@ -13,7 +13,6 @@
 #pragma GCC diagnostic pop
 
 #include <map>
-#include <cstdlib>
 
 #include "../gdal_common.hpp"
 
@@ -22,7 +21,7 @@
 struct ObjectCacheWeakCallbackData {
 	void *key;
 	void *cache;
-	int id;
+	int uid;
 };
 
 template <typename K>
@@ -30,7 +29,7 @@ struct ObjectCacheItem {
 	_NanWeakCallbackInfo<v8::Object, ObjectCacheWeakCallbackData> *cbinfo;
 	K *key;
 	K *alias;
-	int id; // a uniq id so that the weak callback can distinguish if the object in the cache with the given key is referring to the same object as when the persistent pointer was made
+	int uid; // a uniq id so that the weak callback can distinguish if the object in the cache with the given key is referring to the same object as when the persistent pointer was made
 };
 
 // a class for maintaining a map of native pointers and persistent JS handles
@@ -61,11 +60,12 @@ private:
 	void erase(ObjectCacheItem<K> key);
 	std::map<K*, ObjectCacheItem<K> > cache;
 	std::map<K*, K*> aliases;
+	int uid;
 };
 
 template <typename K, typename W>
 ObjectCache<K, W>::ObjectCache()
-	: cache(), aliases()
+	: cache(), aliases(), uid(0)
 {
 }
 
@@ -88,8 +88,10 @@ void ObjectCache<K, W>::cacheWeakCallback(const _NanWeakCallbackData<T, P> &data
 	// dispose of the wrapped object before the handle in the cache gets deleted by NAN
 	// but do not dispose if destructor has already been called
 	if(cache->has(key)) {
+		LOG("Key still in ObjectCache [%p]", key);
 		//double check that the item in the cache isnt something new (meaning object was already disposed)
-		if(cache->getItem(key).id == info->id) { 
+		if(cache->getItem(key).uid == info->uid) { 
+			LOG("And it points to object that generated the weak callback [%p]", key);
 			W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
 			wrapped->dispose();
 		}
@@ -104,12 +106,12 @@ void ObjectCache<K, W>::add(K *key, K *alias, v8::Handle<v8::Object> obj)
 	ObjectCacheWeakCallbackData *cbdata = new ObjectCacheWeakCallbackData();
 	cbdata->cache = this;
 	cbdata->key = key;
-	cbdata->id  = rand();
+	cbdata->uid  = uid++;
 
 	ObjectCacheItem<K> item;
 	item.key    = key;
 	item.alias  = alias;
-	item.id     = cbdata->id;
+	item.uid    = cbdata->uid;
 	item.cbinfo = NanMakeWeakPersistent(obj, cbdata, cacheWeakCallback);
 
 	//add it to the map

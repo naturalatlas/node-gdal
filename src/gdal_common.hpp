@@ -206,8 +206,8 @@ NAN_SETTER(READ_ONLY_SETTER);
 
 #define ARG_FIELD_ID(num, f, var) {                                    \
   if (args[num]->IsString()) {                                         \
-    NanUtf8String field_name = NanUtf8String(args[num]);               \
-    var = f->GetFieldIndex(*field_name);                               \
+    std::string field_name = *NanUtf8String(args[num]);                \
+    var = f->GetFieldIndex(field_name.c_str());                        \
     if (field_index == -1) {                                           \
       NanThrowError("Specified field name does not exist");            \
       NanReturnUndefined();                                            \

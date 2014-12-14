@@ -121,8 +121,8 @@ NAN_METHOD(DatasetLayers::get)
 	OGRLayer *lyr;
 
 	if(args[0]->IsString()) {
-		NanUtf8String layer_name = NanUtf8String(args[0]);
-		lyr = raw->GetLayerByName(*layer_name);
+		std::string layer_name = *NanUtf8String(args[0]);
+		lyr = raw->GetLayerByName(layer_name.c_str());
 	} else if(args[0]->IsNumber()) {
 		lyr = raw->GetLayer(args[0]->IntegerValue());
 	} else {
