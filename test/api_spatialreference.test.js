@@ -52,9 +52,9 @@ describe('gdal.SpatialReference', function() {
 			assert.instanceOf(ref, gdal.SpatialReference);
 		});
 	});
-	describe.skip('fromERSI()', function() {
+	describe('fromESRI', function() {
 		it('should return SpatialReference', function() {
-			var esri = 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
+			var esri = ['GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]'];
 			var ref = gdal.SpatialReference.fromESRI(esri);
 			assert.instanceOf(ref, gdal.SpatialReference);
 		});

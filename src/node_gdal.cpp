@@ -655,7 +655,7 @@ namespace node_gdal {
 			target->Set(NanNew("GCI_YCbCr_CrBand"), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
 
 			/**
-			 * @class Constants (WKB)
+			 * @class Constants (wkbVariant)
 			 */
 
 			/**
@@ -670,6 +670,11 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target->Set(NanNew("wkbVariantIso"), NanNew("ISO"));
+
+			/**
+			 * @class Constants (wkbByteOrder)
+			 */
+
 			/**
 			 * @final
 			 * @property gdal.wkbXDR
@@ -684,7 +689,22 @@ namespace node_gdal {
 			target->Set(NanNew("wkbNDR"), NanNew("LSB"));
 
 			/**
+			 * @class Constants (wkbGeometryType)
+			 */
+
+			/**
 			 * @final
+			 *
+			 * The `wkb25DBit` constant can be used to convert between 2D types to 2.5D types
+			 *
+			 * @example
+			 * ```
+			 * // 2 -> 2.5D
+			 * wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
+			 * 
+			 * // 2.5D -> 2D (same as wkbFlatten())
+			 * wkbPoint = gdal.wkbPoint25D & (~gdal.wkb25DBit)``` 
+			 * 
 			 * @property gdal.wkb25DBit
 			 * @type {integer}
 			 */

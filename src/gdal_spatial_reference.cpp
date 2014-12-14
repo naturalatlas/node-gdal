@@ -1,6 +1,7 @@
 
 #include "gdal_common.hpp"
 #include "gdal_spatial_reference.hpp"
+#include "utils/string_list.hpp"
 
 namespace node_gdal {
 
@@ -20,6 +21,7 @@ void SpatialReference::Initialize(Handle<Object> target)
 	NODE_SET_METHOD(lcons, "fromProj4", fromProj4);
 	NODE_SET_METHOD(lcons, "fromEPSG", fromEPSG);
 	NODE_SET_METHOD(lcons, "fromEPSGA", fromEPSGA);
+	NODE_SET_METHOD(lcons, "fromESRI", fromESRI);
 	NODE_SET_METHOD(lcons, "fromWMSAUTO", fromWMSAUTO);
 	NODE_SET_METHOD(lcons, "fromXML", fromXML);
 	NODE_SET_METHOD(lcons, "fromURN", fromURN);
@@ -34,7 +36,7 @@ void SpatialReference::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toXML", exportToXML);
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, "clone", clone);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "cloneGeogCS", clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "cloneGeogCS", cloneGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "setWellKnownGeogCS", setWellKnownGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "morphToESRI", morphToESRI);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "morphFromESRI", morphFromESRI);
@@ -54,6 +56,7 @@ void SpatialReference::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getAuthorityCode", getAuthorityCode);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getAttrValue", getAttrValue);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "autoIdentifyEPSG", autoIdentifyEPSG);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "validate", validate);
 
 	target->Set(NanNew("SpatialReference"), lcons->GetFunction());
 
@@ -827,6 +830,44 @@ NAN_METHOD(SpatialReference::fromEPSGA)
 }
 
 /**
+ * Import coordinate system from ESRI .prj format(s).
+ * 
+ * This function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().
+ * 
+ * Currently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.
+ *
+ * @static
+ * @throws Error
+ * @method fromESRI
+ * @param {string[]} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromESRI)
+{
+	NanScope();
+
+	StringList list;
+
+	if(args.Length() < 1) {
+		NanThrowError("input string list must be provided");
+		NanReturnUndefined();
+	}
+
+	if(list.parse(args[0])) {
+		NanReturnUndefined(); //error parsing string list
+	}
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs->importFromESRI(list.get());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
  * Fetch linear geographic coordinate system units.
  *
  * @method getLinearUnits
@@ -869,5 +910,36 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 
 	NanReturnValue(result);
 }
+
+/**
+ * Validate SRS tokens.
+ * 
+ * This method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.
+ *
+ * @method validate
+ * @return {string|null} `"corrupt"`, '"unsupported"', `null` (if fine)
+ */
+NAN_METHOD(SpatialReference::validate)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap<SpatialReference>(args.This());
+
+	OGRErr err = srs->this_->Validate();
+
+	if(err == OGRERR_NONE) {
+		NanReturnNull();
+	}
+	if(err == OGRERR_CORRUPT_DATA) {
+		NanReturnValue(NanNew("corrupt"));
+	}
+	if(err == OGRERR_UNSUPPORTED_SRS) {
+		NanReturnValue(NanNew("unsupported"));
+	}
+
+	NODE_THROW_OGRERR(err);
+	NanReturnUndefined();
+}
+
 
 } // namespace node_gdal

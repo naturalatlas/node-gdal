@@ -54,12 +54,14 @@ public:
 	static NAN_METHOD(getAuthorityCode);
 	static NAN_METHOD(getAuthorityName);
 	static NAN_METHOD(getAttrValue);
+	static NAN_METHOD(validate);
 
 	static NAN_METHOD(fromUserInput);
 	static NAN_METHOD(fromWKT);
 	static NAN_METHOD(fromProj4);
 	static NAN_METHOD(fromEPSG);
 	static NAN_METHOD(fromEPSGA);
+	static NAN_METHOD(fromESRI);
 	static NAN_METHOD(fromWMSAUTO);
 	static NAN_METHOD(fromXML);
 	static NAN_METHOD(fromURN);
