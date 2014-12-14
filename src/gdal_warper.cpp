@@ -104,6 +104,7 @@ NAN_METHOD(Warper::reprojectImage)
  * @param {gdal.Dataset} options.src
  * @param {gdal.SpatialReference} options.s_srs
  * @param {gdal.SpatialReference} options.t_srs
+ * @param {Number} [options.maxError=0]
  * @return {Object} An object containing `"rasterSize"` and `"geoTransform"` properties.
  */
 NAN_METHOD(Warper::suggestedWarpOutput)
