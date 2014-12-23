@@ -806,7 +806,7 @@ NAN_METHOD(Geometry::getEnvelope3D)
  * @static
  * @method fromWKT
  * @param {String} wkt
- * @param {gdal.SpatialReference} [src]
+ * @param {gdal.SpatialReference} [srs]
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkt)
@@ -841,7 +841,7 @@ NAN_METHOD(Geometry::createFromWkt)
  * @static
  * @method fromWKB
  * @param {Buffer} wkb
- * @param {gdal.SpatialReference} [src]
+ * @param {gdal.SpatialReference} [srs]
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkb)
