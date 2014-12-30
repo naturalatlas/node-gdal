@@ -448,7 +448,7 @@ NAN_METHOD(Geometry::intersection)
 /**
  * Compute the union of this geometry with another.
  *
- * @method unionGeometry
+ * @method union
  * @param {gdal.Geometry} geometry
  * @return gdal.Geometry
  */
