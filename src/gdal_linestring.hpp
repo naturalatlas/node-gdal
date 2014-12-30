@@ -31,6 +31,7 @@ public:
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getLength);
 	static NAN_METHOD(value);
+	static NAN_METHOD(addSubLineString);
 
 	static NAN_GETTER(pointsGetter);
 

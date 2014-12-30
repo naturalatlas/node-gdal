@@ -21,6 +21,52 @@ describe('gdal.LineString', function() {
 				assert.closeTo(line.getLength(), Math.sqrt(10*10 + 10*10) + 10, 0.001);
 			});
 		});
+		describe('addSubLineString()', function() {
+			it('should append to current linestring', function() {
+				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
+				var b = gdal.Geometry.fromWKT('LINESTRING(0 2, 1 2, 2 2)');
+				var c = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2, 0 2, 1 2, 2 2)');
+				a.addSubLineString(b);
+				assert.isTrue(a.equals(c));
+			});
+			it('should use start option', function() {
+				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
+				var b = gdal.Geometry.fromWKT('LINESTRING(0 2, 1 2, 2 2)');
+				var c = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2, 1 2, 2 2)');
+				a.addSubLineString(b, 1);
+				assert.isTrue(a.equals(c));
+			});
+			it('should use end option', function() {
+				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
+				var b = gdal.Geometry.fromWKT('LINESTRING(0 2, 1 2, 2 2)');
+				var c = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2, 1 2)');
+				a.addSubLineString(b, 1, 1);
+				assert.isTrue(a.equals(c));
+			});
+			it('should throw if given a non-linestring', function() {
+				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
+				var b = gdal.Geometry.fromWKT('POINT(0 2)');
+				assert.throws(function(){
+					a.addSubLineString(b);
+				});
+			});
+			it('should throw if given invalid indexes', function() {
+				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
+				var b = gdal.Geometry.fromWKT('LINESTRING(1 2)');
+				assert.throws(function(){
+					a.addSubLineString(b, -1);
+				});
+				assert.throws(function(){
+					a.addSubLineString(b, 1);
+				});
+				assert.throws(function(){
+					a.addSubLineString(b, 0, 1);
+				});
+				assert.throws(function(){
+					a.addSubLineString(b, 0, -2);
+				});
+			});
+		});
 		describe('"points" property', function() {
 			describe('count()', function() {
 				it('should return number of points', function() {

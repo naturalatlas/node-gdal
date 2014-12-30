@@ -23,6 +23,7 @@ void LineString::Initialize(Handle<Object> target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "getLength", getLength);
 	NODE_SET_PROTOTYPE_METHOD(lcons, "value", value);
+	NODE_SET_PROTOTYPE_METHOD(lcons, "addSubLineString", addSubLineString);
 
 	ATTR(lcons, "points", pointsGetter, READ_ONLY_SETTER);
 
@@ -173,6 +174,44 @@ NAN_METHOD(LineString::value)
 	geom->this_->Value(dist, pt);
 
 	NanReturnValue(Point::New(pt));
+}
+
+/**
+ * Add a segment of another linestring to this one.
+ * 
+ * Adds the request range of vertices to the end of this line string in an efficient manner. If the start index is larger than the end index then the vertices will be reversed as they are copied.
+ *
+ * @method addSubLineString
+ * @param {gdal.LineString} line the other linestring
+ * @param {int} [start=0] the first vertex to copy, defaults to 0 to start with the first vertex in the other linestring
+ * @param {int} [end=-1] the last vertex to copy, defaults to -1 indicating the last vertex of the other linestring
+ * @return {void}
+ */
+NAN_METHOD(LineString::addSubLineString)
+{
+	NanScope();
+
+	LineString *geom = ObjectWrap::Unwrap<LineString>(args.This());
+	LineString *other;
+	int start = 0;
+	int end = -1;
+	
+	NODE_ARG_WRAPPED(0, "line", LineString, other);
+	NODE_ARG_INT_OPT(1, "start", start);
+	NODE_ARG_INT_OPT(2, "end", end);
+
+	int n = other->get()->getNumPoints();
+
+	if(start < 0 || end < -1 || start >= n || end >= n) {
+		NanThrowRangeError("Invalid start or end index for linestring");
+		NanReturnUndefined();
+	}
+
+	geom->this_->addSubLineString(other->get(), start, end);
+
+	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(geom);
+
+	NanReturnUndefined();
 }
 
 /**
