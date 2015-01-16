@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -202,7 +206,7 @@
 				
 				
 				
-				<li><a href="#method-create"><span class="im">create</span>(<span class="ia">name</span><span class="ia">srs</span><span class="ia">geomType</span>)</a></li>
+				<li><a href="#method-create"><span class="im">create</span>(<span class="ia">name</span><span class="ia">srs</span><span class="ia">geomType</span><span class="ia">creation_options</span>)</a></li>
 				
 				
 				
@@ -305,7 +309,7 @@
 			
 		
 		
-		<a href="../files/src_collections_dataset_layers.cpp.html#l226"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:226</code></a>
+		<a href="../files/src_collections_dataset_layers.cpp.html#l232"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:232</code></a>
 		
 		</p>
 
@@ -355,12 +359,15 @@
 				<li class="param">
 					
 						<code class="param-name optional">[options=null]</code>
-						<span class="type">Array</span>
+						<span class="type">Object  | String[]</span>
 						<span class="flag optional" title="This parameter is optional.">optional</span>
 					
 
 					
 
+					
+					<div class="param-description"><p>layer creation options</p>
+</div>
 					
 
 					
@@ -425,7 +432,7 @@
 			
 		
 		
-		<a href="../files/src_collections_dataset_layers.cpp.html#l196"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:196</code></a>
+		<a href="../files/src_collections_dataset_layers.cpp.html#l202"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:202</code></a>
 		
 		</p>
 
@@ -485,6 +492,12 @@
 				<li class="arg">
 					
 						<code>geomType</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code>creation_options</code>
 					
 				</li>
 			
@@ -559,7 +572,7 @@
 				<li class="param">
 					
 						<code class="param-name">srs</code>
-						<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a></span>
+						<span class="type"><a href="../classes/gdal.SpatialReference.html" class="crosslink">gdal.SpatialReference</a>  |  Null</span>
 					
 
 					
@@ -575,13 +588,29 @@
 				<li class="param">
 					
 						<code class="param-name">geomType</code>
-						<span class="type">Integer</span>
+						<span class="type">Integer  |  Function</span>
 					
 
 					
 
 					
-					<div class="param-description"><p>Geometry type (<a href="../classes/Constants (WKB).html" class="crosslink">see WKB constants</a>)</p>
+					<div class="param-description"><p>Geometry type or constructor (<a href="../classes/Constants (wkbGeometryType).html" class="crosslink">see geometry types</a>)</p>
+</div>
+					
+
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name">creation_options</code>
+						<span class="type">String[] |  Object</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>driver-specific layer creation options</p>
 </div>
 					
 
@@ -606,6 +635,15 @@
 		</div>
 	
 
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>dataset.layers.create(&#39;layername&#39;, null, gdal.Point);</code></pre>
+
+			</div>
+		</div>
 	
 </div>
 
@@ -858,7 +896,7 @@
 			
 		
 		
-		<a href="../files/src_collections_dataset_layers.cpp.html#l279"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:279</code></a>
+		<a href="../files/src_collections_dataset_layers.cpp.html#l285"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:285</code></a>
 		
 		</p>
 
@@ -946,7 +984,7 @@
             
         
         
-        <a href="../files/src_collections_dataset_layers.cpp.html#l320"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:320</code></a>
+        <a href="../files/src_collections_dataset_layers.cpp.html#l326"><code>src&#x2F;collections&#x2F;dataset_layers.cpp:326</code></a>
         
         </p>
 

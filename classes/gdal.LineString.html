@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -199,6 +203,10 @@
 			<ul>
 				
 				
+				<li><a href="#method-addSubLineString"><span class="im">addSubLineString</span>(<span class="ia">line</span><span class="ia">start</span><span class="ia">end</span>)</a></li>
+				
+				
+				
 				<li><a href="#method-boundary"><span class="im">boundary</span>()</a></li>
 				
 				
@@ -331,7 +339,7 @@
 				
 				
 				
-				<li><a href="#method-toWKB"><span class="im">toWKB</span>()</a></li>
+				<li><a href="#method-toWKB"><span class="im">toWKB</span>(<span class="ia">byte_order</span><span class="ia">variant</span>)</a></li>
 				
 				
 				
@@ -347,7 +355,7 @@
 				
 				
 				
-				<li><a href="#method-unionGeometry"><span class="im">unionGeometry</span>(<span class="ia">geometry</span>)</a></li>
+				<li><a href="#method-union"><span class="im">union</span>(<span class="ia">geometry</span>)</a></li>
 				
 				
 				
@@ -428,7 +436,7 @@
 			
 		
 		
-		<a href="../files/src_gdal_linestring.cpp.html#l64"><code>src&#x2F;gdal_linestring.cpp:64</code></a>
+		<a href="../files/src_gdal_linestring.cpp.html#l65"><code>src&#x2F;gdal_linestring.cpp:65</code></a>
 		
 		</p>
 
@@ -467,6 +475,159 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
         <h2 class="off-left">Methods</h2>
         <div class="item-list">
        		
+        	
+            <div id="method-addSubLineString" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>addSubLineString</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>line</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">start=0</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">end=-1</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+		<span class="returns-inline">
+			<span class="type">Void</span>
+		</span>
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/src_gdal_linestring.cpp.html#l179"><code>src&#x2F;gdal_linestring.cpp:179</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Add a segment of another linestring to this one.</p>
+<p>Adds the request range of vertices to the end of this line string in an efficient manner. If the start index is larger than the end index then the vertices will be reversed as they are copied.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">line</code>
+						<span class="type"><a href="../classes/gdal.LineString.html" class="crosslink">gdal.LineString</a></span>
+					
+
+					
+
+					
+					<div class="param-description"><p>the other linestring</p>
+</div>
+					
+
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[start=0]</code>
+						<span class="type">Int</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>the first vertex to copy, defaults to 0 to start with the first vertex in the other linestring</p>
+</div>
+					
+
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[end=-1]</code>
+						<span class="type">Int</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>the last vertex to copy, defaults to -1 indicating the last vertex of the other linestring</p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+		<div class="returns">
+			<h4>Returns:</h4>
+
+			<div class="returns-description">
+				
+					
+						<span class="type">Void</span>
+					
+				
+			</div>
+		</div>
+	
+
+	
+</div>
+
+            
+        
         	
             <div id="method-boundary" class="method item inherited">
 	<div class="method-signature">
@@ -688,7 +849,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l722"><code>src&#x2F;gdal_geometry.cpp:722</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l724"><code>src&#x2F;gdal_geometry.cpp:724</code></a>
 		
 		</p>
 
@@ -1601,7 +1762,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l741"><code>src&#x2F;gdal_geometry.cpp:741</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l743"><code>src&#x2F;gdal_geometry.cpp:743</code></a>
 		
 		</p>
 
@@ -1672,7 +1833,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l769"><code>src&#x2F;gdal_geometry.cpp:769</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l771"><code>src&#x2F;gdal_geometry.cpp:771</code></a>
 		
 		</p>
 
@@ -1746,7 +1907,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_linestring.cpp.html#l147"><code>src&#x2F;gdal_linestring.cpp:147</code></a>
+		<a href="../files/src_gdal_linestring.cpp.html#l148"><code>src&#x2F;gdal_linestring.cpp:148</code></a>
 		
 		</p>
 
@@ -2844,7 +3005,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l678"><code>src&#x2F;gdal_geometry.cpp:678</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l680"><code>src&#x2F;gdal_geometry.cpp:680</code></a>
 		
 		</p>
 
@@ -2913,7 +3074,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l700"><code>src&#x2F;gdal_geometry.cpp:700</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l702"><code>src&#x2F;gdal_geometry.cpp:702</code></a>
 		
 		</p>
 
@@ -2982,7 +3143,7 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 			
 		
 		
-		<a href="../files/src_gdal_geometry.cpp.html#l656"><code>src&#x2F;gdal_geometry.cpp:656</code></a>
+		<a href="../files/src_gdal_geometry.cpp.html#l658"><code>src&#x2F;gdal_geometry.cpp:658</code></a>
 		
 		</p>
 
@@ -3195,7 +3356,23 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 	<span class="name"><code>toWKB</code></span>
 
 	
-		<span class="paren">()</span>
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code class="optional">byte_order=&quot;MSB&quot;</code>
+					
+				</li>
+			
+				<li class="arg">
+					
+						<code class="optional">variant=&quot;OGC&quot;</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
 	
 	
 		<span class="returns-inline">
@@ -3237,6 +3414,48 @@ lineString.points.add(new gdal.Point(0,10));</code></pre>
 </div>
 	
 
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name optional">[byte_order=&quot;MSB&quot;]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>(<a href="../classes/Constants (wkbByteOrder).html" class="crosslink">see options</a>)</p>
+</div>
+					
+
+					
+				</li>
+			
+				<li class="param">
+					
+						<code class="param-name optional">[variant=&quot;OGC&quot;]</code>
+						<span class="type">String</span>
+						<span class="flag optional" title="This parameter is optional.">optional</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>(<a href="../classes/Constants (wkbVariant).html" class="crosslink">see options</a>)</p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
 	
 
 	
@@ -3504,9 +3723,9 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         	
-            <div id="method-unionGeometry" class="method item inherited">
+            <div id="method-union" class="method item inherited">
 	<div class="method-signature">
-	<span class="name"><code>unionGeometry</code></span>
+	<span class="name"><code>union</code></span>
 
 	
 		<div class="args">
@@ -3542,7 +3761,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 		
 			
 				<p>Inherited from
-				<a href="../classes/gdal.Geometry.html#method_unionGeometry">gdal.Geometry</a>:
+				<a href="../classes/gdal.Geometry.html#method_union">gdal.Geometry</a>:
 			
 		
 		
@@ -3649,7 +3868,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
 			
 		
 		
-		<a href="../files/src_gdal_linestring.cpp.html#l155"><code>src&#x2F;gdal_linestring.cpp:155</code></a>
+		<a href="../files/src_gdal_linestring.cpp.html#l156"><code>src&#x2F;gdal_linestring.cpp:156</code></a>
 		
 		</p>
 
@@ -3846,7 +4065,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l976"><code>src&#x2F;gdal_geometry.cpp:976</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l978"><code>src&#x2F;gdal_geometry.cpp:978</code></a>
         
         </p>
 
@@ -3896,7 +4115,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l964"><code>src&#x2F;gdal_geometry.cpp:964</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l966"><code>src&#x2F;gdal_geometry.cpp:966</code></a>
         
         </p>
 
@@ -3946,7 +4165,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l927"><code>src&#x2F;gdal_geometry.cpp:927</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l929"><code>src&#x2F;gdal_geometry.cpp:929</code></a>
         
         </p>
 
@@ -3997,7 +4216,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_linestring.cpp.html#l178"><code>src&#x2F;gdal_linestring.cpp:178</code></a>
+        <a href="../files/src_gdal_linestring.cpp.html#l217"><code>src&#x2F;gdal_linestring.cpp:217</code></a>
         
         </p>
 
@@ -4046,7 +4265,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l899"><code>src&#x2F;gdal_geometry.cpp:899</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l901"><code>src&#x2F;gdal_geometry.cpp:901</code></a>
         
         </p>
 
@@ -4096,7 +4315,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l952"><code>src&#x2F;gdal_geometry.cpp:952</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l954"><code>src&#x2F;gdal_geometry.cpp:954</code></a>
         
         </p>
 
@@ -4146,7 +4365,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
             
         
         
-        <a href="../files/src_gdal_geometry.cpp.html#l939"><code>src&#x2F;gdal_geometry.cpp:939</code></a>
+        <a href="../files/src_gdal_geometry.cpp.html#l941"><code>src&#x2F;gdal_geometry.cpp:941</code></a>
         
         </p>
 
@@ -4156,7 +4375,7 @@ object, and the actual SRS of the geometry will be ignored.</p>
     </div>
 
     <div class="description">
-        <p>See <a href="../classes/Constants (WKB).html" class="crosslink">wkbGeometryTypes</a>.</p>
+        <p>See <a href="../classes/Constants (wkbGeometryType).html" class="crosslink">wkbGeometryTypes</a>.</p>
 
     </div>
 

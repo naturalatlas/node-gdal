@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -170,6 +174,7 @@
 
 #include &quot;gdal_common.hpp&quot;
 #include &quot;gdal_spatial_reference.hpp&quot;
+#include &quot;utils/string_list.hpp&quot;
 
 namespace node_gdal {
 
@@ -189,6 +194,7 @@ void SpatialReference::Initialize(Handle&lt;Object&gt; target)
 	NODE_SET_METHOD(lcons, &quot;fromProj4&quot;, fromProj4);
 	NODE_SET_METHOD(lcons, &quot;fromEPSG&quot;, fromEPSG);
 	NODE_SET_METHOD(lcons, &quot;fromEPSGA&quot;, fromEPSGA);
+	NODE_SET_METHOD(lcons, &quot;fromESRI&quot;, fromESRI);
 	NODE_SET_METHOD(lcons, &quot;fromWMSAUTO&quot;, fromWMSAUTO);
 	NODE_SET_METHOD(lcons, &quot;fromXML&quot;, fromXML);
 	NODE_SET_METHOD(lcons, &quot;fromURN&quot;, fromURN);
@@ -203,7 +209,7 @@ void SpatialReference::Initialize(Handle&lt;Object&gt; target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toXML&quot;, exportToXML);
 
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;cloneGeogCS&quot;, clone);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;cloneGeogCS&quot;, cloneGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;setWellKnownGeogCS&quot;, setWellKnownGeogCS);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;morphToESRI&quot;, morphToESRI);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;morphFromESRI&quot;, morphFromESRI);
@@ -223,6 +229,7 @@ void SpatialReference::Initialize(Handle&lt;Object&gt; target)
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAuthorityCode&quot;, getAuthorityCode);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getAttrValue&quot;, getAttrValue);
 	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;autoIdentifyEPSG&quot;, autoIdentifyEPSG);
+	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;validate&quot;, validate);
 
 	target-&gt;Set(NanNew(&quot;SpatialReference&quot;), lcons-&gt;GetFunction());
 
@@ -996,6 +1003,44 @@ NAN_METHOD(SpatialReference::fromEPSGA)
 }
 
 /**
+ * Import coordinate system from ESRI .prj format(s).
+ * 
+ * This function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().
+ * 
+ * Currently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.
+ *
+ * @static
+ * @throws Error
+ * @method fromESRI
+ * @param {string[]} input
+ * @return {gdal.SpatialReference}
+ */
+NAN_METHOD(SpatialReference::fromESRI)
+{
+	NanScope();
+
+	StringList list;
+
+	if(args.Length() &lt; 1) {
+		NanThrowError(&quot;input string list must be provided&quot;);
+		NanReturnUndefined();
+	}
+
+	if(list.parse(args[0])) {
+		NanReturnUndefined(); //error parsing string list
+	}
+
+	OGRSpatialReference *srs = new OGRSpatialReference();
+	int err = srs-&gt;importFromESRI(list.get());
+	if (err) {
+		NODE_THROW_OGRERR(err);
+		NanReturnUndefined();
+	}
+
+	NanReturnValue(SpatialReference::New(srs, true));
+}
+
+/**
  * Fetch linear geographic coordinate system units.
  *
  * @method getLinearUnits
@@ -1038,6 +1083,37 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 
 	NanReturnValue(result);
 }
+
+/**
+ * Validate SRS tokens.
+ * 
+ * This method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.
+ *
+ * @method validate
+ * @return {string|null} &#x60;&quot;corrupt&quot;&#x60;, &#x27;&quot;unsupported&quot;&#x27;, &#x60;null&#x60; (if fine)
+ */
+NAN_METHOD(SpatialReference::validate)
+{
+	NanScope();
+
+	SpatialReference *srs = ObjectWrap::Unwrap&lt;SpatialReference&gt;(args.This());
+
+	OGRErr err = srs-&gt;this_-&gt;Validate();
+
+	if(err == OGRERR_NONE) {
+		NanReturnNull();
+	}
+	if(err == OGRERR_CORRUPT_DATA) {
+		NanReturnValue(NanNew(&quot;corrupt&quot;));
+	}
+	if(err == OGRERR_UNSUPPORTED_SRS) {
+		NanReturnValue(NanNew(&quot;unsupported&quot;));
+	}
+
+	NODE_THROW_OGRERR(err);
+	NanReturnUndefined();
+}
+
 
 } // namespace node_gdal
     </pre>

@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -268,6 +272,18 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 
+		#ifdef ENABLE_LOGGING
+		static NAN_GC_CALLBACK(beforeGC) 
+		{
+			LOG(&quot;%s&quot;, &quot;Starting garbage collection&quot;);
+		}
+		
+		static NAN_GC_CALLBACK(afterGC) 
+		{
+			LOG(&quot;%s&quot;, &quot;Finished garbage collection&quot;);
+		}
+		#endif
+
 		static NAN_METHOD(StartLogging)
 		{
 			NanScope();
@@ -285,6 +301,10 @@ namespace node_gdal {
 				NanThrowError(&quot;Error creating log file&quot;);
 				NanReturnUndefined();
 			}
+
+  			NanAddGCPrologueCallback(beforeGC);
+  			NanAddGCEpilogueCallback(afterGC);
+
 			#else
 			NanThrowError(&quot;Logging requires node-gdal be compiled with --enable_logging=true&quot;);
 			#endif
@@ -301,6 +321,23 @@ namespace node_gdal {
 			}
 			#endif
 
+			NanReturnUndefined();
+		}
+
+		static NAN_METHOD(Log)
+		{
+			NanScope();
+			std::string msg;
+			NODE_ARG_STR(0, &quot;message&quot;, msg);
+			msg = msg + &quot;\n&quot;;
+
+			#ifdef ENABLE_LOGGING
+			if (log_file) { 
+				fputs(msg.c_str(), log_file); 
+				fflush(log_file); 
+			}
+			#endif
+			
 			NanReturnUndefined();
 		}
 
@@ -791,7 +828,7 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;GCI_YCbCr_CrBand&quot;), NanNew(GDALGetColorInterpretationName(GCI_YCbCr_CrBand)));
 
 			/**
-			 * @class Constants (WKB)
+			 * @class Constants (wkbVariant)
 			 */
 
 			/**
@@ -806,6 +843,11 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;wkbVariantIso&quot;), NanNew(&quot;ISO&quot;));
+
+			/**
+			 * @class Constants (wkbByteOrder)
+			 */
+
 			/**
 			 * @final
 			 * @property gdal.wkbXDR
@@ -820,7 +862,22 @@ namespace node_gdal {
 			target-&gt;Set(NanNew(&quot;wkbNDR&quot;), NanNew(&quot;LSB&quot;));
 
 			/**
+			 * @class Constants (wkbGeometryType)
+			 */
+
+			/**
 			 * @final
+			 *
+			 * The &#x60;wkb25DBit&#x60; constant can be used to convert between 2D types to 2.5D types
+			 *
+			 * @example
+			 * &#x60;&#x60;&#x60;
+			 * // 2 -&gt; 2.5D
+			 * wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
+			 * 
+			 * // 2.5D -&gt; 2D (same as wkbFlatten())
+			 * wkbPoint = gdal.wkbPoint25D &amp; (~gdal.wkb25DBit)&#x60;&#x60;&#x60; 
+			 * 
 			 * @property gdal.wkb25DBit
 			 * @type {integer}
 			 */
@@ -1098,6 +1155,7 @@ namespace node_gdal {
 
 			NODE_SET_METHOD(target, &quot;startLogging&quot;, StartLogging);
 			NODE_SET_METHOD(target, &quot;stopLogging&quot;, StopLogging);
+			NODE_SET_METHOD(target, &quot;log&quot;, Log);
 
 			Local&lt;Object&gt; supports = NanNew&lt;Object&gt;();
 			target-&gt;Set(NanNew(&quot;supports&quot;), supports);

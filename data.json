@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.3.1",
+        "version": "0.4.1",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -354,7 +354,9 @@
                 "Constants (GDT)": 1,
                 "Constants (OJ)": 1,
                 "Constants (GCI)": 1,
-                "Constants (WKB)": 1,
+                "Constants (wkbVariant)": 1,
+                "Constants (wkbByteOrder)": 1,
+                "Constants (wkbGeometryType)": 1,
                 "Constants (OFT)": 1,
                 "Constants (GRA)": 1
             },
@@ -732,7 +734,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_linestring.cpp",
-            "line": 64,
+            "line": 65,
             "description": "Concrete representation of a multi-vertex line.",
             "example": [
                 "\n```\nvar lineString = new gdal.LineString();\nlineString.points.add(new gdal.Point(0,0));\nlineString.points.add(new gdal.Point(0,10));```"
@@ -846,7 +848,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 97,
+            "line": 100,
             "description": "This class respresents a OpenGIS Spatial Reference System, and contains methods\nfor converting between this object organization and well known text (WKT)\nformat.",
             "is_constructor": 1,
             "params": [
@@ -867,7 +869,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 193
+            "line": 226
         },
         "Constants (DCAP)": {
             "name": "Constants (DCAP)",
@@ -878,7 +880,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 234
+            "line": 267
         },
         "Constants (OLC)": {
             "name": "Constants (OLC)",
@@ -889,7 +891,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 257
+            "line": 290
         },
         "Constants (ODsC)": {
             "name": "Constants (ODsC)",
@@ -900,7 +902,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 362
+            "line": 395
         },
         "Constants (GDT)": {
             "name": "Constants (GDT)",
@@ -911,7 +913,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 403,
+            "line": 436,
             "description": "Pixel data types."
         },
         "Constants (OJ)": {
@@ -923,7 +925,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 494
+            "line": 527
         },
         "Constants (GCI)": {
             "name": "Constants (GCI)",
@@ -934,18 +936,40 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 517
+            "line": 550
         },
-        "Constants (WKB)": {
-            "name": "Constants (WKB)",
-            "shortname": "Constants (WKB)",
+        "Constants (wkbVariant)": {
+            "name": "Constants (wkbVariant)",
+            "shortname": "Constants (wkbVariant)",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 624
+            "line": 657
+        },
+        "Constants (wkbByteOrder)": {
+            "name": "Constants (wkbByteOrder)",
+            "shortname": "Constants (wkbByteOrder)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 674
+        },
+        "Constants (wkbGeometryType)": {
+            "name": "Constants (wkbGeometryType)",
+            "shortname": "Constants (wkbGeometryType)",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/node_gdal.cpp",
+            "line": 691
         },
         "Constants (OFT)": {
             "name": "Constants (OFT)",
@@ -956,7 +980,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 771
+            "line": 824
         },
         "Constants (GRA)": {
             "name": "Constants (GRA)",
@@ -967,7 +991,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/node_gdal.cpp",
-            "line": 848,
+            "line": 901,
             "description": "Resampling options that can be used with the gdal.reprojectImage() method."
         }
     },
@@ -1629,6 +1653,9 @@
             "file": "src/collections/dataset_layers.cpp",
             "line": 136,
             "description": "Adds a new layer.",
+            "example": [
+                "\n```\ndataset.layers.create('layername', null, gdal.Point);\n```"
+            ],
             "itemtype": "method",
             "name": "create",
             "throws": {
@@ -1643,12 +1670,17 @@
                 {
                     "name": "srs",
                     "description": "Layer projection",
-                    "type": "gdal.SpatialReference"
+                    "type": "gdal.SpatialReference|null"
                 },
                 {
                     "name": "geomType",
-                    "description": "Geometry type ({{#crossLink \"Constants (WKB)\"}}see WKB constants{{/crossLink}})",
-                    "type": "Integer"
+                    "description": "Geometry type or constructor ({{#crossLink \"Constants (wkbGeometryType)\"}}see geometry types{{/crossLink}})",
+                    "type": "Integer|Function"
+                },
+                {
+                    "name": "creation_options",
+                    "description": "driver-specific layer creation options",
+                    "type": "String[]|object"
                 }
             ],
             "return": {
@@ -1659,7 +1691,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 196,
+            "line": 202,
             "description": "Returns the number of layers.",
             "itemtype": "method",
             "name": "count",
@@ -1671,7 +1703,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 226,
+            "line": 232,
             "description": "Copies a layer.",
             "itemtype": "method",
             "name": "copy",
@@ -1688,8 +1720,8 @@
                 },
                 {
                     "name": "options",
-                    "description": "",
-                    "type": "Array",
+                    "description": "layer creation options",
+                    "type": "Object|string[]",
                     "optional": true,
                     "optdefault": "null"
                 }
@@ -1702,7 +1734,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 279,
+            "line": 285,
             "description": "Removes a layer.",
             "itemtype": "method",
             "name": "remove",
@@ -1720,7 +1752,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 320,
+            "line": 326,
             "description": "Parent dataset",
             "readonly": "",
             "itemtype": "attribute",
@@ -3849,10 +3881,10 @@
         {
             "file": "src/gdal_feature_defn.cpp",
             "line": 161,
-            "description": "WKB geometry type ({{#crossLink \"Constants (WKB)\"}}see table{{/crossLink}})",
+            "description": "WKB geometry type ({{#crossLink \"Constants (wkbGeometryType)\"}}see table{{/crossLink}})",
             "itemtype": "attribute",
             "name": "geomType",
-            "type": "{String}",
+            "type": "{Integer}",
             "class": "gdal.FeatureDefn"
         },
         {
@@ -4270,7 +4302,7 @@
             "line": 448,
             "description": "Compute the union of this geometry with another.",
             "itemtype": "method",
-            "name": "unionGeometry",
+            "name": "union",
             "params": [
                 {
                     "name": "geometry",
@@ -4395,6 +4427,22 @@
             "description": "Convert a geometry into well known binary format.",
             "itemtype": "method",
             "name": "toWKB",
+            "params": [
+                {
+                    "name": "byte_order",
+                    "description": "({{#crossLink \"Constants (wkbByteOrder)\"}}see options{{/crossLink}})",
+                    "type": "String",
+                    "optional": true,
+                    "optdefault": "\"MSB\""
+                },
+                {
+                    "name": "variant",
+                    "description": "({{#crossLink \"Constants (wkbVariant)\"}}see options{{/crossLink}})",
+                    "type": "String",
+                    "optional": true,
+                    "optdefault": "\"OGC\""
+                }
+            ],
             "return": {
                 "description": "gdal.Geometry"
             },
@@ -4402,7 +4450,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 656,
+            "line": 658,
             "description": "Convert a geometry into KML format.",
             "itemtype": "method",
             "name": "toKML",
@@ -4413,7 +4461,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 678,
+            "line": 680,
             "description": "Convert a geometry into GML format.",
             "itemtype": "method",
             "name": "toGML",
@@ -4424,7 +4472,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 700,
+            "line": 702,
             "description": "Convert a geometry into JSON format.",
             "itemtype": "method",
             "name": "toJSON",
@@ -4435,7 +4483,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 722,
+            "line": 724,
             "description": "Compute the centroid of the geometry.",
             "itemtype": "method",
             "name": "centroid",
@@ -4446,7 +4494,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 741,
+            "line": 743,
             "description": "Computes the bounding box (envelope).",
             "itemtype": "method",
             "name": "getEnvelope",
@@ -4458,7 +4506,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 769,
+            "line": 771,
             "description": "Computes the 3D bounding box (envelope).",
             "itemtype": "method",
             "name": "getEnvelope3D",
@@ -4470,7 +4518,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 801,
+            "line": 803,
             "description": "Creates a Geometry from a WKT string.",
             "static": 1,
             "itemtype": "method",
@@ -4482,7 +4530,7 @@
                     "type": "String"
                 },
                 {
-                    "name": "src",
+                    "name": "srs",
                     "description": "",
                     "type": "gdal.SpatialReference",
                     "optional": true
@@ -4495,8 +4543,8 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 836,
-            "description": "Creates a Geometry from a WKB string.",
+            "line": 838,
+            "description": "Creates a Geometry from a WKB buffer.",
             "static": 1,
             "itemtype": "method",
             "name": "fromWKB",
@@ -4504,10 +4552,10 @@
                 {
                     "name": "wkb",
                     "description": "",
-                    "type": "Object"
+                    "type": "Buffer"
                 },
                 {
-                    "name": "src",
+                    "name": "srs",
                     "description": "",
                     "type": "gdal.SpatialReference",
                     "optional": true
@@ -4520,7 +4568,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 881,
+            "line": 883,
             "description": "Creates an empty Geometry from a WKB type.",
             "static": 1,
             "itemtype": "method",
@@ -4528,8 +4576,8 @@
             "params": [
                 {
                     "name": "type",
-                    "description": "WKB geometry type ({{#crossLink \"Constants (WKB)\"}}available options{{/crossLink}})",
-                    "type": "Object"
+                    "description": "WKB geometry type ({{#crossLink \"Constants (wkbGeometryType)\"}}available options{{/crossLink}})",
+                    "type": "Integer"
                 }
             ],
             "return": {
@@ -4539,7 +4587,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 899,
+            "line": 901,
             "itemtype": "attribute",
             "name": "srs",
             "type": "gdal.SpatialReference",
@@ -4547,7 +4595,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 927,
+            "line": 929,
             "readonly": "",
             "itemtype": "attribute",
             "name": "name",
@@ -4556,8 +4604,8 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 939,
-            "description": "See {{#crossLink \"Constants (WKB)\"}}wkbGeometryTypes{{/crossLink}}.",
+            "line": 941,
+            "description": "See {{#crossLink \"Constants (wkbGeometryType)\"}}wkbGeometryTypes{{/crossLink}}.",
             "readonly": "",
             "itemtype": "attribute",
             "name": "wkbType",
@@ -4566,7 +4614,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 952,
+            "line": 954,
             "readonly": "",
             "itemtype": "attribute",
             "name": "wkbSize",
@@ -4575,7 +4623,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 964,
+            "line": 966,
             "readonly": "",
             "itemtype": "attribute",
             "name": "dimension",
@@ -4584,7 +4632,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 976,
+            "line": 978,
             "readonly": "",
             "itemtype": "attribute",
             "name": "coordinateDimension",
@@ -4593,7 +4641,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 1005,
+            "line": 1007,
             "description": "Returns the Geometry subclass that matches the\ngiven WKB geometry type.",
             "static": 1,
             "itemtype": "method",
@@ -4601,7 +4649,7 @@
             "params": [
                 {
                     "name": "type",
-                    "description": "WKB geometry type ({{#crossLink \"Constants (WKB)\"}}available options{{/crossLink}})",
+                    "description": "WKB geometry type ({{#crossLink \"Constants (wkbGeometryType)\"}}available options{{/crossLink}})",
                     "type": "Integer"
                 }
             ],
@@ -4612,7 +4660,7 @@
         },
         {
             "file": "src/gdal_geometry.cpp",
-            "line": 1022,
+            "line": 1024,
             "description": "Returns the Geometry subclass name that matches the\ngiven WKB geometry type.",
             "static": 1,
             "itemtype": "method",
@@ -4620,7 +4668,7 @@
             "params": [
                 {
                     "name": "type",
-                    "description": "WKB geometry type ({{#crossLink \"Constants (WKB)\"}}available options{{/crossLink}})",
+                    "description": "WKB geometry type ({{#crossLink \"Constants (wkbGeometryType)\"}}available options{{/crossLink}})",
                     "type": "Integer"
                 }
             ],
@@ -4856,7 +4904,7 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 147,
+            "line": 148,
             "description": "Computes the length of the line string.",
             "itemtype": "method",
             "name": "getLength",
@@ -4867,7 +4915,7 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 155,
+            "line": 156,
             "description": "Returns the point at the specified distance along the line string.",
             "itemtype": "method",
             "name": "value",
@@ -4886,7 +4934,40 @@
         },
         {
             "file": "src/gdal_linestring.cpp",
-            "line": 178,
+            "line": 179,
+            "description": "Add a segment of another linestring to this one.\n\nAdds the request range of vertices to the end of this line string in an efficient manner. If the start index is larger than the end index then the vertices will be reversed as they are copied.",
+            "itemtype": "method",
+            "name": "addSubLineString",
+            "params": [
+                {
+                    "name": "line",
+                    "description": "the other linestring",
+                    "type": "gdal.LineString"
+                },
+                {
+                    "name": "start",
+                    "description": "the first vertex to copy, defaults to 0 to start with the first vertex in the other linestring",
+                    "type": "Int",
+                    "optional": true,
+                    "optdefault": "0"
+                },
+                {
+                    "name": "end",
+                    "description": "the last vertex to copy, defaults to -1 indicating the last vertex of the other linestring",
+                    "type": "Int",
+                    "optional": true,
+                    "optdefault": "-1"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Void"
+            },
+            "class": "gdal.LineString"
+        },
+        {
+            "file": "src/gdal_linestring.cpp",
+            "line": 217,
             "description": "Points that make up the line string.",
             "itemtype": "attribute",
             "name": "points",
@@ -5291,7 +5372,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 185,
+            "line": 188,
             "description": "Set a GeogCS based on well known name.",
             "itemtype": "method",
             "name": "setWellKnownGeogCS",
@@ -5306,7 +5387,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 193,
+            "line": 196,
             "description": "Convert in place to ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5317,7 +5398,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 201,
+            "line": 204,
             "description": "Convert in place from ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5328,7 +5409,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 209,
+            "line": 212,
             "description": "This method returns `true` if EPSG feels this geographic coordinate system\nshould be treated as having lat/long coordinate ordering.\n\nCurrently this returns `true` for all geographic coordinate systems with an\nEPSG code set, and AXIS values set defining it as lat, long. Note that\ncoordinate systems with an EPSG code and no axis settings will be assumed\nto not be lat/long.\n\n`false` will be returned for all coordinate systems that are not geographic,\nor that do not have an EPSG code set.",
             "itemtype": "method",
             "name": "EPSGTreatsAsLatLong",
@@ -5340,7 +5421,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 226,
+            "line": 229,
             "description": "This method returns `true` if EPSG feels this projected coordinate system should\nbe treated as having northing/easting coordinate ordering.",
             "itemtype": "method",
             "name": "EPSGTreatsAsNorthingEasting",
@@ -5352,7 +5433,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 235,
+            "line": 238,
             "description": "Check if geocentric coordinate system.",
             "itemtype": "method",
             "name": "isGeocentric",
@@ -5364,7 +5445,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 243,
+            "line": 246,
             "description": "Check if geocentric coordinate system.",
             "itemtype": "method",
             "name": "isProjected",
@@ -5376,7 +5457,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 251,
+            "line": 254,
             "description": "Check if local coordinate system.",
             "itemtype": "method",
             "name": "isLocal",
@@ -5388,7 +5469,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 259,
+            "line": 262,
             "description": "Check if vertical coordinate system.",
             "itemtype": "method",
             "name": "isVertical",
@@ -5400,7 +5481,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 267,
+            "line": 270,
             "description": "Check if compound coordinate system.",
             "itemtype": "method",
             "name": "isCompound",
@@ -5412,7 +5493,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 275,
+            "line": 278,
             "description": "Do the GeogCS'es match?",
             "itemtype": "method",
             "name": "isSameGeogCS",
@@ -5431,7 +5512,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 284,
+            "line": 287,
             "description": "Do the VertCS'es match?",
             "itemtype": "method",
             "name": "isSameVertCS",
@@ -5450,7 +5531,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 293,
+            "line": 296,
             "description": "Do these two spatial references describe the same system?",
             "itemtype": "method",
             "name": "isSame",
@@ -5469,7 +5550,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 302,
+            "line": 305,
             "description": "Set EPSG authority info if possible.",
             "throws": {
                 "description": "Error"
@@ -5480,7 +5561,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 310,
+            "line": 313,
             "description": "Clones the spatial reference.",
             "itemtype": "method",
             "name": "clone",
@@ -5492,7 +5573,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 323,
+            "line": 326,
             "description": "Make a duplicate of the GEOGCS node of this OGRSpatialReference object.",
             "itemtype": "method",
             "name": "cloneGeogCS",
@@ -5504,7 +5585,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 336,
+            "line": 339,
             "description": "Get the authority name for a node. The most common authority is \"EPSG\".",
             "itemtype": "method",
             "name": "getAuthorityName",
@@ -5523,7 +5604,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 355,
+            "line": 358,
             "description": "Get the authority code for a node.",
             "itemtype": "method",
             "name": "getAuthorityCode",
@@ -5542,7 +5623,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 374,
+            "line": 377,
             "description": "Convert this SRS into WKT format.",
             "throws": {
                 "description": "Error"
@@ -5557,7 +5638,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 400,
+            "line": 403,
             "description": "Convert this SRS into a a nicely formatted WKT string for display to a person.",
             "throws": {
                 "description": "Error"
@@ -5581,7 +5662,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 430,
+            "line": 433,
             "description": "Export coordinate system in PROJ.4 format.",
             "throws": {
                 "description": "Error"
@@ -5596,7 +5677,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 461,
+            "line": 464,
             "description": "Export coordinate system in XML format.",
             "throws": {
                 "description": "Error"
@@ -5611,7 +5692,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 487,
+            "line": 490,
             "description": "Fetch indicated attribute of named node.",
             "itemtype": "method",
             "name": "getAttrValue",
@@ -5637,7 +5718,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 507,
+            "line": 510,
             "description": "Creates a spatial reference from a WKT string.",
             "static": 1,
             "throws": {
@@ -5660,7 +5741,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 534,
+            "line": 537,
             "description": "Creates a spatial reference from a Proj.4 string.",
             "static": 1,
             "throws": {
@@ -5683,7 +5764,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 560,
+            "line": 563,
             "description": "Creates a spatial reference from a WMSAUTO string.\n\nNote that the WMS 1.3 specification does not include the units code, while\napparently earlier specs do. GDAL tries to guess around this.",
             "example": [
                 "\n```\nvar wms = 'AUTO:42001,99,8888';\nvar ref = gdal.SpatialReference.fromWMSAUTO(wms);```"
@@ -5709,7 +5790,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 594,
+            "line": 597,
             "description": "Import coordinate system from XML format (GML only currently).",
             "static": 1,
             "throws": {
@@ -5732,7 +5813,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 620,
+            "line": 623,
             "description": "Initialize from OGC URN.\n\nThe OGC URN should be prefixed with \"urn:ogc:def:crs:\" per recommendation\npaper 06-023r1. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -5755,7 +5836,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 650,
+            "line": 653,
             "description": "Initialize from OGC URL.\n\nThe OGC URL should be prefixed with \"http://opengis.net/def/crs\" per best\npractice paper 11-135. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -5778,7 +5859,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 680,
+            "line": 683,
             "description": "Initialize spatial reference from a URL.\n\nThis method will download the spatial reference from the given URL.",
             "static": 1,
             "throws": {
@@ -5801,7 +5882,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 708,
+            "line": 711,
             "description": "Initialize from a Mapinfo style CoordSys definition.",
             "static": 1,
             "throws": {
@@ -5824,7 +5905,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 734,
+            "line": 737,
             "description": "Initialize from an arbitrary spatial reference string.\n\nThis method will examine the provided input, and try to deduce the format,\nand then use it to initialize the spatial reference system.",
             "static": 1,
             "throws": {
@@ -5847,7 +5928,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 763,
+            "line": 766,
             "description": "Initialize from EPSG GCS or PCS code.",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(4326);```"
@@ -5873,7 +5954,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 793,
+            "line": 796,
             "description": "Initialize from EPSG GCS or PCS code.\n\nThis method is similar to `fromEPSG()` except that EPSG preferred axis ordering\n*will* be applied for geographic and projected coordinate systems. EPSG normally\ndefines geographic coordinate systems to use lat/long, and also there are also\na few projected coordinate systems that use northing/easting order contrary\nto typical GIS use).",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(26910);```"
@@ -5899,7 +5980,30 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 829,
+            "line": 832,
+            "description": "Import coordinate system from ESRI .prj format(s).\n\nThis function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().\n\nCurrently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.",
+            "static": 1,
+            "throws": {
+                "description": "Error"
+            },
+            "itemtype": "method",
+            "name": "fromESRI",
+            "params": [
+                {
+                    "name": "input",
+                    "description": "",
+                    "type": "String[]"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "gdal.SpatialReference"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 870,
             "description": "Fetch linear geographic coordinate system units.",
             "itemtype": "method",
             "name": "getLinearUnits",
@@ -5911,13 +6015,25 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 851,
+            "line": 892,
             "description": "Fetch angular geographic coordinate system units.",
             "itemtype": "method",
             "name": "getAngularUnits",
             "return": {
                 "description": "An object containing `value` and `unit` properties.",
                 "type": "Object"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 914,
+            "description": "Validate SRS tokens.\n\nThis method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.",
+            "itemtype": "method",
+            "name": "validate",
+            "return": {
+                "description": "`\"corrupt\"`, '\"unsupported\"', `null` (if fine)",
+                "type": "String|null"
             },
             "class": "gdal.SpatialReference"
         },
@@ -6058,6 +6174,13 @@
                             "name": "t_srs",
                             "description": "",
                             "type": "gdal.SpatialReference"
+                        },
+                        {
+                            "name": "maxError",
+                            "description": "",
+                            "type": "Number",
+                            "optional": true,
+                            "optdefault": "0"
                         }
                     ]
                 }
@@ -6070,7 +6193,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 182,
+            "line": 215,
             "description": "The collection of all drivers registered with GDAL",
             "final": 1,
             "itemtype": "property",
@@ -6080,7 +6203,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 197,
+            "line": 230,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_LONGNAME",
@@ -6089,7 +6212,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 203,
+            "line": 236,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_MIMETYPE",
@@ -6098,7 +6221,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 209,
+            "line": 242,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_HELPTOPIC",
@@ -6107,7 +6230,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 215,
+            "line": 248,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_EXTENSION",
@@ -6116,7 +6239,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 221,
+            "line": 254,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_CREATIONOPTIONLIST",
@@ -6125,7 +6248,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 227,
+            "line": 260,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DMD_CREATIONDATATYPES",
@@ -6134,7 +6257,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 238,
+            "line": 271,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_CREATE",
@@ -6143,7 +6266,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 244,
+            "line": 277,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_CREATECOPY",
@@ -6152,7 +6275,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 250,
+            "line": 283,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.DCAP_VIRTUALIO",
@@ -6161,7 +6284,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 261,
+            "line": 294,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCRandomRead",
@@ -6170,7 +6293,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 267,
+            "line": 300,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCSequentialWrite",
@@ -6179,7 +6302,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 273,
+            "line": 306,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCRandomWrite",
@@ -6188,7 +6311,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 279,
+            "line": 312,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastSpatialFilter",
@@ -6197,7 +6320,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 285,
+            "line": 318,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastFeatureCount",
@@ -6206,7 +6329,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 291,
+            "line": 324,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastGetExtent",
@@ -6215,7 +6338,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 297,
+            "line": 330,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCCreateField",
@@ -6224,7 +6347,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 303,
+            "line": 336,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCDeleteField",
@@ -6233,7 +6356,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 309,
+            "line": 342,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCReorderFields",
@@ -6242,7 +6365,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 315,
+            "line": 348,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCAlterFieldDefn",
@@ -6251,7 +6374,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 321,
+            "line": 354,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCTransactions",
@@ -6260,7 +6383,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 327,
+            "line": 360,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCDeleteFeature",
@@ -6269,7 +6392,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 333,
+            "line": 366,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCFastSetNextByIndex",
@@ -6278,7 +6401,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 339,
+            "line": 372,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCStringsAsUTF8",
@@ -6287,7 +6410,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 345,
+            "line": 378,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCIgnoreFields",
@@ -6296,7 +6419,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 353,
+            "line": 386,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OLCCreateGeomField",
@@ -6305,7 +6428,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 366,
+            "line": 399,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCCreateLayer",
@@ -6314,7 +6437,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 372,
+            "line": 405,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCDeleteLayer",
@@ -6323,7 +6446,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 378,
+            "line": 411,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODsCCreateGeomFieldAfterCreateLayer",
@@ -6332,7 +6455,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 385,
+            "line": 418,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODrCCreateDataSource",
@@ -6341,7 +6464,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 391,
+            "line": 424,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.ODrCDeleteDataSource",
@@ -6350,7 +6473,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 409,
+            "line": 442,
             "description": "Unknown or unspecified type",
             "final": 1,
             "itemtype": "property",
@@ -6360,7 +6483,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 416,
+            "line": 449,
             "description": "Eight bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -6370,7 +6493,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 423,
+            "line": 456,
             "description": "Sixteen bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -6380,7 +6503,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 430,
+            "line": 463,
             "description": "Sixteen bit signed integer",
             "final": 1,
             "itemtype": "property",
@@ -6390,7 +6513,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 437,
+            "line": 470,
             "description": "Thirty two bit unsigned integer",
             "final": 1,
             "itemtype": "property",
@@ -6400,7 +6523,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 444,
+            "line": 477,
             "description": "Thirty two bit signed integer",
             "final": 1,
             "itemtype": "property",
@@ -6410,7 +6533,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 451,
+            "line": 484,
             "description": "Thirty two bit floating point",
             "final": 1,
             "itemtype": "property",
@@ -6420,7 +6543,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 458,
+            "line": 491,
             "description": "Sixty four bit floating point",
             "final": 1,
             "itemtype": "property",
@@ -6430,7 +6553,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 465,
+            "line": 498,
             "description": "Complex Int16",
             "final": 1,
             "itemtype": "property",
@@ -6440,7 +6563,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 472,
+            "line": 505,
             "description": "Complex Int32",
             "final": 1,
             "itemtype": "property",
@@ -6450,7 +6573,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 479,
+            "line": 512,
             "description": "Complex Float32",
             "final": 1,
             "itemtype": "property",
@@ -6460,7 +6583,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 486,
+            "line": 519,
             "description": "Complex Float64",
             "final": 1,
             "itemtype": "property",
@@ -6470,7 +6593,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 498,
+            "line": 531,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJUndefined",
@@ -6479,7 +6602,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 504,
+            "line": 537,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJLeft",
@@ -6488,7 +6611,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 510,
+            "line": 543,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OJRight",
@@ -6497,7 +6620,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 521,
+            "line": 554,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_Undefined",
@@ -6506,7 +6629,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 527,
+            "line": 560,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_GrayIndex",
@@ -6515,7 +6638,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 533,
+            "line": 566,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_PaletteIndex",
@@ -6524,7 +6647,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 539,
+            "line": 572,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_RedBand",
@@ -6533,7 +6656,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 545,
+            "line": 578,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_GreenBand",
@@ -6542,7 +6665,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 551,
+            "line": 584,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_BlueBand",
@@ -6551,7 +6674,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 557,
+            "line": 590,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_AlphaBand",
@@ -6560,7 +6683,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 563,
+            "line": 596,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_HueBand",
@@ -6569,7 +6692,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 569,
+            "line": 602,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_SaturationBand",
@@ -6578,7 +6701,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 575,
+            "line": 608,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_LightnessBand",
@@ -6587,7 +6710,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 581,
+            "line": 614,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_CyanBand",
@@ -6596,7 +6719,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 587,
+            "line": 620,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_MagentaBand",
@@ -6605,7 +6728,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 593,
+            "line": 626,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YellowBand",
@@ -6614,7 +6737,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 599,
+            "line": 632,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_BlackBand",
@@ -6623,7 +6746,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 605,
+            "line": 638,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_YBand",
@@ -6632,7 +6755,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 611,
+            "line": 644,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_CbBand",
@@ -6641,7 +6764,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 617,
+            "line": 650,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GCI_YCbCr_CrBand",
@@ -6650,214 +6773,217 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 628,
+            "line": 661,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbVariantOgc",
             "type": "{String}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbVariant)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 634,
+            "line": 667,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbVariantIso",
             "type": "{String}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbVariant)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 640,
+            "line": 678,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbXDR",
             "type": "{String}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbByteOrder)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 646,
+            "line": 684,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbNDR",
             "type": "{String}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbByteOrder)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 653,
-            "final": 1,
+            "line": 695,
+            "final": "The `wkb25DBit` constant can be used to convert between 2D types to 2.5D types",
+            "example": [
+                "\n```\n// 2 -> 2.5D\nwkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit\n\n// 2.5D -> 2D (same as wkbFlatten())\nwkbPoint = gdal.wkbPoint25D & (~gdal.wkb25DBit)``` "
+            ],
             "itemtype": "property",
             "name": "gdal.wkb25DBit",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 662,
+            "line": 715,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbUnknown",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 668,
+            "line": 721,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPoint",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 674,
+            "line": 727,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLineString",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 680,
+            "line": 733,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbPolygon",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 686,
+            "line": 739,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPoint",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 692,
+            "line": 745,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiLineString",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 698,
+            "line": 751,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbMultiPolygon",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 704,
+            "line": 757,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbGeometryCollection",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 710,
+            "line": 763,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbNone",
             "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 716,
+            "line": 769,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.wkbLinearRing",
             "type": "{String}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 722,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbPoint25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 728,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbLineString25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 734,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbPolygon25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 740,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbMultiPoint25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 746,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbMultiLineString25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 752,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbMultiPolygon25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 758,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbGeometryCollection25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
-        },
-        {
-            "file": "src/node_gdal.cpp",
-            "line": 764,
-            "final": 1,
-            "itemtype": "property",
-            "name": "gdal.wkbLinearRing25D",
-            "type": "{integer}",
-            "class": "Constants (WKB)"
+            "class": "Constants (wkbGeometryType)"
         },
         {
             "file": "src/node_gdal.cpp",
             "line": 775,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPoint25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 781,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLineString25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 787,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbPolygon25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 793,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPoint25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 799,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiLineString25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 805,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbMultiPolygon25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 811,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbGeometryCollection25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 817,
+            "final": 1,
+            "itemtype": "property",
+            "name": "gdal.wkbLinearRing25D",
+            "type": "{integer}",
+            "class": "Constants (wkbGeometryType)"
+        },
+        {
+            "file": "src/node_gdal.cpp",
+            "line": 828,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTInteger",
@@ -6866,7 +6992,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 781,
+            "line": 834,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTIntegerList",
@@ -6875,7 +7001,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 787,
+            "line": 840,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTReal",
@@ -6884,7 +7010,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 793,
+            "line": 846,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTRealList",
@@ -6893,7 +7019,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 799,
+            "line": 852,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTString",
@@ -6902,7 +7028,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 805,
+            "line": 858,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTStringList",
@@ -6911,7 +7037,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 811,
+            "line": 864,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTWideString",
@@ -6920,7 +7046,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 817,
+            "line": 870,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTWideStringList",
@@ -6929,7 +7055,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 823,
+            "line": 876,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTBinary",
@@ -6938,7 +7064,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 829,
+            "line": 882,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTDate",
@@ -6947,7 +7073,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 835,
+            "line": 888,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTTime",
@@ -6956,7 +7082,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 841,
+            "line": 894,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.OFTDateTime",
@@ -6965,7 +7091,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 854,
+            "line": 907,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_NearestNeighbor",
@@ -6974,7 +7100,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 860,
+            "line": 913,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Bilinear",
@@ -6983,7 +7109,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 866,
+            "line": 919,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Cubic",
@@ -6992,7 +7118,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 872,
+            "line": 925,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_CubicSpline",
@@ -7001,7 +7127,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 878,
+            "line": 931,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Lanczos",
@@ -7010,7 +7136,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 884,
+            "line": 937,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Average",
@@ -7019,7 +7145,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 890,
+            "line": 943,
             "final": 1,
             "itemtype": "property",
             "name": "gdal.GRA_Mode",
@@ -7028,7 +7154,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 897,
+            "line": 950,
             "description": "GDAL version (not the binding version)",
             "final": 1,
             "itemtype": "property",
@@ -7038,7 +7164,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 912,
+            "line": 965,
             "description": "Disables all output.",
             "static": 1,
             "itemtype": "method",
@@ -7047,7 +7173,7 @@
         },
         {
             "file": "src/node_gdal.cpp",
-            "line": 921,
+            "line": 974,
             "description": "Displays extra debugging information from GDAL.",
             "static": 1,
             "itemtype": "method",

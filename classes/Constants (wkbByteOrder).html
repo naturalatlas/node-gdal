@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/collections/rasterband_overviews.cpp - node-gdal</title>
+    <title>Constants (wkbByteOrder) - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -166,177 +166,159 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/collections/rasterband_overviews.cpp <small>File</small></h1>
+    <h1>Constants (wkbByteOrder)</h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
-#include &quot;../gdal_common.hpp&quot;
-#include &quot;../gdal_rasterband.hpp&quot;
-#include &quot;rasterband_overviews.hpp&quot;
+    
 
-namespace node_gdal {
+    
 
-Persistent&lt;FunctionTemplate&gt; RasterBandOverviews::constructor;
+    
 
-void RasterBandOverviews::Initialize(Handle&lt;Object&gt; target)
-{
-	NanScope();
+    
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(RasterBandOverviews::New);
-	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;RasterBandOverviews&quot;));
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getBySampleCount&quot;, getBySampleCount);
 
-	target-&gt;Set(NanNew(&quot;RasterBandOverviews&quot;), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
-}
 
-RasterBandOverviews::RasterBandOverviews()
-	: ObjectWrap()
-{}
+<!-- table of contents -->
 
-RasterBandOverviews::~RasterBandOverviews()
-{}
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
 
-/**
- * An encapsulation of a {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}
- * overview functionality.
- *
- * @class gdal.RasterBandOverviews
- */
-NAN_METHOD(RasterBandOverviews::New)
-{
-	NanScope();
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.wkbNDR"><span class="ip">gdal.wkbNDR</span></a></li>
+				
+				<li><a href="#prop-gdal.wkbXDR"><span class="ip">gdal.wkbXDR</span></a></li>
+				
+			</ul>
+		</li>
+		
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
-	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
-		void* ptr = ext-&gt;Value();
-		RasterBandOverviews *f =  static_cast&lt;RasterBandOverviews *&gt;(ptr);
-		f-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
-	} else {
-		NanThrowError(&quot;Cannot create RasterBandOverviews directly&quot;);
-		NanReturnUndefined();
-	}
-}
+		
 
-Handle&lt;Value&gt; RasterBandOverviews::New(Handle&lt;Value&gt; band_obj)
-{
-	NanEscapableScope();
-
-	RasterBandOverviews *wrapped = new RasterBandOverviews();
-
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(RasterBandOverviews::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), band_obj);
-
-	return NanEscapeScope(obj);
-}
-
-NAN_METHOD(RasterBandOverviews::toString)
-{
-	NanScope();
-	NanReturnValue(NanNew(&quot;RasterBandOverviews&quot;));
-}
-
-/**
- * Fetches the overview at the provided index.
- *
- * @method get
- * @throws Error
- * @param {Integer} index 0-based index
- * @return {gdal.RasterBand}
- */
-NAN_METHOD(RasterBandOverviews::get)
-{
-	NanScope();
-
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
-	}
-
-	int id;
-	NODE_ARG_INT(0, &quot;id&quot;, id);
-
-	GDALRasterBand *result = band-&gt;get()-&gt;GetOverview(id);
-
-	// TODO: return null instead?
-	if (result == NULL) {
-		NanThrowError(&quot;Specified overview not found&quot;);
-		NanReturnUndefined();
-	}
-
-	NanReturnValue(RasterBand::New(result, band-&gt;getParent()));
-}
-
-/**
- * Fetch best sampling overview.
- *
- * Returns the most reduced overview of the given band that still satisfies the
- * desired number of samples. This function can be used with zero as the number
- * of desired samples to fetch the most reduced overview. The same band as was
- * passed in will be returned if it has not overviews, or if none of the overviews
- * have enough samples.
- *
- * @method getBySampleCount
- * @param {Integer} samples
- * @return {gdal.RasterBand}
- */
-NAN_METHOD(RasterBandOverviews::getBySampleCount)
-{
-	NanScope();
-
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
-	}
-
-	int n_samples;
-	NODE_ARG_INT(0, &quot;minimum number of samples&quot;, n_samples);
-
-	GDALRasterBand *result = band-&gt;get()-&gt;GetRasterSampleOverview(n_samples);
-
-	NanReturnValue(RasterBand::New(result, band-&gt;getParent()));
-}
-
-/**
- * Returns the number of overviews.
- *
- * @method count
- * @return {Integer}
- */
-NAN_METHOD(RasterBandOverviews::count)
-{
-	NanScope();
-
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
-	}
-
-	NanReturnValue(NanNew&lt;Integer&gt;(band-&gt;get()-&gt;GetOverviewCount()));
-}
-
-} // namespace node_gdal
-    </pre>
+		
+	</ul>
 </div>
+
+<!-- details -->
+
+
+
+
+
+
+    <div id="properties" class="page-section">
+        <h2 class="off-left">Properties</h2>
+
+        <div class="item-list">
+        
+            <div id="prop-gdal.wkbNDR" class="property item">
+    <h3 class="name"><code>gdal.wkbNDR</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l684"><code>src&#x2F;node_gdal.cpp:684</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.wkbXDR" class="property item">
+    <h3 class="name"><code>gdal.wkbXDR</code></h3>
+    <span class="type">String</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l678"><code>src&#x2F;node_gdal.cpp:678</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+        </div>
+    </div>
+
+
+
+
+
+
 
                     </div>
                 </div>

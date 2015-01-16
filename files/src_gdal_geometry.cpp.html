@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -617,7 +621,7 @@ NAN_METHOD(Geometry::intersection)
 /**
  * Compute the union of this geometry with another.
  *
- * @method unionGeometry
+ * @method union
  * @param {gdal.Geometry} geometry
  * @return gdal.Geometry
  */
@@ -764,6 +768,8 @@ NAN_METHOD(Geometry::exportToWKT)
  * Convert a geometry into well known binary format.
  *
  * @method toWKB
+ * @param {string} [byte_order=&quot;MSB&quot;] ({{#crossLink &quot;Constants (wkbByteOrder)&quot;}}see options{{/crossLink}})
+ * @param {string} [variant=&quot;OGC&quot;] ({{#crossLink &quot;Constants (wkbVariant)&quot;}}see options{{/crossLink}})
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::exportToWKB)
@@ -973,7 +979,7 @@ NAN_METHOD(Geometry::getEnvelope3D)
  * @static
  * @method fromWKT
  * @param {String} wkt
- * @param {gdal.SpatialReference} [src]
+ * @param {gdal.SpatialReference} [srs]
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkt)
@@ -1003,12 +1009,12 @@ NAN_METHOD(Geometry::createFromWkt)
 }
 
 /**
- * Creates a Geometry from a WKB string.
+ * Creates a Geometry from a WKB buffer.
  *
  * @static
  * @method fromWKB
- * @param {Object} wkb
- * @param {gdal.SpatialReference} [src]
+ * @param {Buffer} wkb
+ * @param {gdal.SpatialReference} [srs]
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::createFromWkb)
@@ -1052,7 +1058,7 @@ NAN_METHOD(Geometry::createFromWkb)
  *
  * @static
  * @method create
- * @param {Object} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (wkbGeometryType)&quot;}}available options{{/crossLink}})
  * @return gdal.Geometry
  */
 NAN_METHOD(Geometry::create)
@@ -1106,7 +1112,7 @@ NAN_GETTER(Geometry::nameGetter)
 }
 
 /**
- * See {{#crossLink &quot;Constants (WKB)&quot;}}wkbGeometryTypes{{/crossLink}}.
+ * See {{#crossLink &quot;Constants (wkbGeometryType)&quot;}}wkbGeometryTypes{{/crossLink}}.
  * @readOnly
  * @attribute wkbType
  * @type integer
@@ -1177,7 +1183,7 @@ Handle&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
  *
  * @static
  * @method getConstructor
- * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (wkbGeometryType)&quot;}}available options{{/crossLink}})
  * @return Function
  */
 NAN_METHOD(Geometry::getConstructor)
@@ -1194,7 +1200,7 @@ NAN_METHOD(Geometry::getConstructor)
  *
  * @static
  * @method getName
- * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (WKB)&quot;}}available options{{/crossLink}})
+ * @param {Integer} type WKB geometry type ({{#crossLink &quot;Constants (wkbGeometryType)&quot;}}available options{{/crossLink}})
  * @return String
  */
 NAN_METHOD(Geometry::getName)

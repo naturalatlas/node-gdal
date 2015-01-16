@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Constants (WKB) - node-gdal</title>
+    <title>Constants (wkbGeometryType) - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.3.1</b>
+                    API Docs for Version: <b>0.4.1</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (WKB)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -59,7 +59,11 @@
             
                 <li><a href="../classes/Constants (OLC).html">Constants (OLC)</a></li>
             
-                <li><a href="../classes/Constants (WKB).html">Constants (WKB)</a></li>
+                <li><a href="../classes/Constants (wkbByteOrder).html">Constants (wkbByteOrder)</a></li>
+            
+                <li><a href="../classes/Constants (wkbGeometryType).html">Constants (wkbGeometryType)</a></li>
+            
+                <li><a href="../classes/Constants (wkbVariant).html">Constants (wkbVariant)</a></li>
             
                 <li><a href="../classes/gdal.html">gdal</a></li>
             
@@ -162,7 +166,7 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>Constants (WKB)</h1>
+    <h1>Constants (wkbGeometryType)</h1>
 </div>
 
     
@@ -215,8 +219,6 @@
 				
 				<li><a href="#prop-gdal.wkbMultiPolygon25D"><span class="ip">gdal.wkbMultiPolygon25D</span></a></li>
 				
-				<li><a href="#prop-gdal.wkbNDR"><span class="ip">gdal.wkbNDR</span></a></li>
-				
 				<li><a href="#prop-gdal.wkbNone"><span class="ip">gdal.wkbNone</span></a></li>
 				
 				<li><a href="#prop-gdal.wkbPoint"><span class="ip">gdal.wkbPoint</span></a></li>
@@ -228,12 +230,6 @@
 				<li><a href="#prop-gdal.wkbPolygon25D"><span class="ip">gdal.wkbPolygon25D</span></a></li>
 				
 				<li><a href="#prop-gdal.wkbUnknown"><span class="ip">gdal.wkbUnknown</span></a></li>
-				
-				<li><a href="#prop-gdal.wkbVariantIso"><span class="ip">gdal.wkbVariantIso</span></a></li>
-				
-				<li><a href="#prop-gdal.wkbVariantOgc"><span class="ip">gdal.wkbVariantOgc</span></a></li>
-				
-				<li><a href="#prop-gdal.wkbXDR"><span class="ip">gdal.wkbXDR</span></a></li>
 				
 			</ul>
 		</li>
@@ -282,7 +278,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l653"><code>src&#x2F;node_gdal.cpp:653</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l695"><code>src&#x2F;node_gdal.cpp:695</code></a>
         
         </p>
 
@@ -297,6 +293,19 @@
 
     
 
+    
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <pre class="code prettyprint"><code>// 2 -&gt; 2.5D
+wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
+
+// 2.5D -&gt; 2D (same as wkbFlatten())
+wkbPoint = gdal.wkbPoint25D &amp; (~gdal.wkb25DBit)</code></pre>
+
+            </div>
+        </div>
     
 
     
@@ -328,7 +337,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l704"><code>src&#x2F;node_gdal.cpp:704</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l757"><code>src&#x2F;node_gdal.cpp:757</code></a>
         
         </p>
 
@@ -374,7 +383,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l758"><code>src&#x2F;node_gdal.cpp:758</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l811"><code>src&#x2F;node_gdal.cpp:811</code></a>
         
         </p>
 
@@ -420,7 +429,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l716"><code>src&#x2F;node_gdal.cpp:716</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l769"><code>src&#x2F;node_gdal.cpp:769</code></a>
         
         </p>
 
@@ -466,7 +475,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l764"><code>src&#x2F;node_gdal.cpp:764</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l817"><code>src&#x2F;node_gdal.cpp:817</code></a>
         
         </p>
 
@@ -512,7 +521,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l674"><code>src&#x2F;node_gdal.cpp:674</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l727"><code>src&#x2F;node_gdal.cpp:727</code></a>
         
         </p>
 
@@ -558,7 +567,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l728"><code>src&#x2F;node_gdal.cpp:728</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l781"><code>src&#x2F;node_gdal.cpp:781</code></a>
         
         </p>
 
@@ -604,7 +613,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l692"><code>src&#x2F;node_gdal.cpp:692</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l745"><code>src&#x2F;node_gdal.cpp:745</code></a>
         
         </p>
 
@@ -650,7 +659,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l746"><code>src&#x2F;node_gdal.cpp:746</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l799"><code>src&#x2F;node_gdal.cpp:799</code></a>
         
         </p>
 
@@ -696,7 +705,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l686"><code>src&#x2F;node_gdal.cpp:686</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l739"><code>src&#x2F;node_gdal.cpp:739</code></a>
         
         </p>
 
@@ -742,7 +751,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l740"><code>src&#x2F;node_gdal.cpp:740</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l793"><code>src&#x2F;node_gdal.cpp:793</code></a>
         
         </p>
 
@@ -788,7 +797,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l698"><code>src&#x2F;node_gdal.cpp:698</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l751"><code>src&#x2F;node_gdal.cpp:751</code></a>
         
         </p>
 
@@ -834,53 +843,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l752"><code>src&#x2F;node_gdal.cpp:752</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.wkbNDR" class="property item">
-    <h3 class="name"><code>gdal.wkbNDR</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l646"><code>src&#x2F;node_gdal.cpp:646</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l805"><code>src&#x2F;node_gdal.cpp:805</code></a>
         
         </p>
 
@@ -926,7 +889,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l710"><code>src&#x2F;node_gdal.cpp:710</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l763"><code>src&#x2F;node_gdal.cpp:763</code></a>
         
         </p>
 
@@ -972,7 +935,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l668"><code>src&#x2F;node_gdal.cpp:668</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l721"><code>src&#x2F;node_gdal.cpp:721</code></a>
         
         </p>
 
@@ -1018,7 +981,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l722"><code>src&#x2F;node_gdal.cpp:722</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l775"><code>src&#x2F;node_gdal.cpp:775</code></a>
         
         </p>
 
@@ -1064,7 +1027,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l680"><code>src&#x2F;node_gdal.cpp:680</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l733"><code>src&#x2F;node_gdal.cpp:733</code></a>
         
         </p>
 
@@ -1110,7 +1073,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l734"><code>src&#x2F;node_gdal.cpp:734</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l787"><code>src&#x2F;node_gdal.cpp:787</code></a>
         
         </p>
 
@@ -1156,145 +1119,7 @@
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l662"><code>src&#x2F;node_gdal.cpp:662</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.wkbVariantIso" class="property item">
-    <h3 class="name"><code>gdal.wkbVariantIso</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l634"><code>src&#x2F;node_gdal.cpp:634</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.wkbVariantOgc" class="property item">
-    <h3 class="name"><code>gdal.wkbVariantOgc</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l628"><code>src&#x2F;node_gdal.cpp:628</code></a>
-        
-        </p>
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-        
-            <div id="prop-gdal.wkbXDR" class="property item">
-    <h3 class="name"><code>gdal.wkbXDR</code></h3>
-    <span class="type">String</span>
-
-    
-
-    
-
-    
-        <span class="flag final">const</span>
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_node_gdal.cpp.html#l640"><code>src&#x2F;node_gdal.cpp:640</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l715"><code>src&#x2F;node_gdal.cpp:715</code></a>
         
         </p>
 
