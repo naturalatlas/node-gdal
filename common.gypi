@@ -38,7 +38,7 @@
 			"Debug": {
 				"cflags_cc!": ["-O3", "-Os", "-DNDEBUG"],
 				"xcode_settings": {
-					"OTHER_CPLUSPLUSFLAGS": ["-O3", "-Os", "-DNDEBUG"],
+					"OTHER_CPLUSPLUSFLAGS": ["-DDEBUG"],
 					"GCC_OPTIMIZATION_LEVEL": "0",
 					"GCC_GENERATE_DEBUGGING_SYMBOLS": "YES"
 				},
