@@ -48,16 +48,16 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "node-pre-gyp": "~0.6.1",
-    "nan": "~1.4.1"
+    "node-pre-gyp": "0.6.4",
+    "nan": "1.6.2"
   },
   "devDependencies": {
     "mocha": "~1.x",
     "chai": "~1.9.1",
     "aws-sdk": "~2.0.25",
     "gh-pages": "~0.2.0",
-	"yuidoc-lucid-theme": "~0.1.1",
-	"yuidocjs": "~0.3.50"
+    "yuidoc-lucid-theme": "~0.1.1",
+    "yuidocjs": "~0.3.50"
   },
   "bundledDependencies": [
     "node-pre-gyp"

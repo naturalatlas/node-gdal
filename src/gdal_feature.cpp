@@ -390,7 +390,7 @@ NAN_GETTER(Feature::fieldsGetter)
 
 /**
  * @attribute fid
- * @type {Integer}
+ * @type {Number}
  */
 NAN_GETTER(Feature::fidGetter)
 {
@@ -400,7 +400,7 @@ NAN_GETTER(Feature::fidGetter)
 		NanThrowError("Feature object already destroyed");
 		NanReturnUndefined();
 	}
-	NanReturnValue(NanNew<Integer>(feature->this_->GetFID()));
+	NanReturnValue(NanNew<Number>(feature->this_->GetFID()));
 }
 
 /**
