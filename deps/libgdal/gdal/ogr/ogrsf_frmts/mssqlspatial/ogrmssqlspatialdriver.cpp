@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialdriver.cpp 20570 2010-09-11 20:40:59Z tamas $
+ * $Id: ogrmssqlspatialdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -30,7 +30,7 @@
 #include "ogr_mssqlspatial.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp 20570 2010-09-11 20:40:59Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                           ~OGRMSSQLSpatialDriver()                   */
@@ -79,8 +79,7 @@ OGRDataSource *OGRMSSQLSpatialDriver::Open( const char * pszFilename, int bUpdat
 /************************************************************************/
 
 OGRDataSource *OGRMSSQLSpatialDriver::CreateDataSource( const char * pszName,
-                                               char **papszOptions )
-
+                                                        CPL_UNUSED char **papszOptions )
 {
     OGRMSSQLSpatialDataSource   *poDS = new OGRMSSQLSpatialDataSource();
 
@@ -90,7 +89,7 @@ OGRDataSource *OGRMSSQLSpatialDriver::CreateDataSource( const char * pszName,
     if( !poDS->Open( pszName, TRUE, TRUE ) )
     {
         delete poDS;
-        CPLError( CE_Failure, CPLE_AppDefined, 
+        CPLError( CE_Failure, CPLE_AppDefined,
          "MSSQL Spatial driver doesn't currently support database creation.\n"
                   "Please create database with the Microsoft SQL Server Client Tools." );
         return NULL;
@@ -124,4 +123,3 @@ void RegisterOGRMSSQLSpatial()
         return;
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRMSSQLSpatialDriver );
 }
-

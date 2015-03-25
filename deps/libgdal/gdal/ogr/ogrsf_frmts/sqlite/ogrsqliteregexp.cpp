@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteregexp.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsqliteregexp.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  SQLite REGEXP function
@@ -68,7 +68,7 @@ typedef struct {
 /************************************************************************/
 
 static
-void OGRSQLiteREGEXPFunction(sqlite3_context *ctx, int argc, sqlite3_value **argv)
+void OGRSQLiteREGEXPFunction(sqlite3_context *ctx, CPL_UNUSED int argc, sqlite3_value **argv)
 {
     const char *re, *str;
     pcre *p;

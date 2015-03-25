@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreaderp.h 27713 2014-09-21 15:51:47Z jef $
+ * $Id: nasreaderp.h 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  NAS Reader
  * Purpose:  Private Declarations for OGR NAS Reader code.
@@ -191,7 +191,7 @@ public:
     int              PrescanForTemplate( void );
     void             ResetReading();
 
-    int              ParseXSD( const char *pszFile ) { return FALSE; }
+    int              ParseXSD( CPL_UNUSED const char *pszFile ) { return FALSE; }
 
     int              ResolveXlinks( const char *pszFile,
                                     int* pbOutIsTempFile,

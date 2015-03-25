@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasdatasource.cpp 27713 2014-09-21 15:51:47Z jef $
+ * $Id: ogrnasdatasource.cpp 28132 2014-12-11 22:31:03Z jef $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnasdatasource.cpp 27713 2014-09-21 15:51:47Z jef $");
+CPL_CVSID("$Id: ogrnasdatasource.cpp 28132 2014-12-11 22:31:03Z jef $");
 
 static const char *apszURNNames[] =
 {
@@ -133,11 +133,20 @@ int OGRNASDataSource::Open( const char * pszNewName, int bTestOpen )
 /* -------------------------------------------------------------------- */
 /*      Here, we expect the opening chevrons of NAS tree root element   */
 /* -------------------------------------------------------------------- */
-        if( szPtr[0] != '<'
-            || strstr(szPtr,"opengis.net/gml") == NULL
-            || (strstr(szPtr,"NAS-Operationen.xsd") == NULL &&
-                strstr(szPtr,"NAS-Operationen_optional.xsd") == NULL &&
-                strstr(szPtr,"AAA-Fachschema.xsd") == NULL ) )
+        bool bFound = FALSE;
+        if( szPtr[0] == '<' && strstr(szPtr,"opengis.net/gml") != NULL )
+        {
+            char **papszIndicators = CSLTokenizeStringComplex( CPLGetConfigOption( "NAS_INDICATOR", "NAS-Operationen.xsd;NAS-Operationen_optional.xsd;AAA-Fachschema.xsd" ), ";", 0, 0 );
+
+            for( int i = 0; papszIndicators[i] && !bFound; i++ )
+            {
+                bFound = strstr( szPtr, papszIndicators[i] ) != NULL;
+            }
+
+            CSLDestroy( papszIndicators );
+        }
+
+        if( !bFound )
         {
             /*CPLDebug( "NAS",
                       "Skipping. No chevrons of NAS found [%s]\n", szPtr );*/
@@ -380,8 +389,7 @@ OGRLayer *OGRNASDataSource::GetLayer( int iLayer )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRNASDataSource::TestCapability( const char * pszCap )
-
+int OGRNASDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

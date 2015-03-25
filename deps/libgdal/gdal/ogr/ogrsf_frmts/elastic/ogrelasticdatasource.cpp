@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrelasticdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrelasticdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -37,7 +37,7 @@
 #include "cpl_csv.h"
 #include "cpl_http.h"
 
-CPL_CVSID("$Id: ogrelasticdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrelasticdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                        OGRElasticDataSource()                        */
@@ -176,7 +176,10 @@ int OGRElasticDataSource::Create(const char *pszFilename,
             fdata = (char *) malloc(fsize + 1);
 
             fseek(fp, 0, SEEK_SET);
-            fread(fdata, fsize, 1, fp);
+            if (0 == fread(fdata, fsize, 1, fp)) {
+                CPLError(CE_Failure, CPLE_FileIO,
+                         "OGRElasticDataSource::Create read failed.");
+            }
             fdata[fsize] = 0;
             this->pszMapping = fdata;
             fclose(fp);

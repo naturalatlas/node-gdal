@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hfaband.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Implementation of the HFABand, for accessing one Eimg_Layer.
@@ -33,7 +33,7 @@
 
 /* include the compression code */
 
-CPL_CVSID("$Id: hfaband.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hfaband.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 /************************************************************************/
 /*                              HFABand()                               */
@@ -703,7 +703,7 @@ static CPLErr UncompressBlock( GByte *pabyCData, int nSrcBytes,
                  nNumRuns, nDataOffset);
         return CE_Failure;
     }
-    
+
     if (nNumBits > INT_MAX / nNumRuns ||
         nNumBits * nNumRuns > INT_MAX - 7 ||
         (nNumBits * nNumRuns + 7)/8 > INT_MAX - nDataOffset)

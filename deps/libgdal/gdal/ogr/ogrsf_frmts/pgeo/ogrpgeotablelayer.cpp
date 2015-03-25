@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeotablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgeotablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoTableLayer class, access to an existing table.
@@ -32,7 +32,7 @@
 #include "ogr_pgeo.h"
 #include "ogrpgeogeometry.h"
 
-CPL_CVSID("$Id: ogrpgeotablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgeotablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                          OGRPGeoTableLayer()                         */
@@ -374,8 +374,7 @@ int OGRPGeoTableLayer::GetFeatureCount( int bForce )
 /*                             GetExtent()                              */
 /************************************************************************/
 
-OGRErr OGRPGeoTableLayer::GetExtent( OGREnvelope *psExtent, int bForce )
-
+OGRErr OGRPGeoTableLayer::GetExtent( OGREnvelope *psExtent, CPL_UNUSED int bForce )
 {
     *psExtent = sExtent;
     return OGRERR_NONE;

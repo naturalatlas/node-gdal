@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceosrecipe.c 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ceosrecipe.c 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  CEOS field layout recipes.
@@ -29,7 +29,7 @@
 
 #include "ceos.h"
 
-CPL_CVSID("$Id: ceosrecipe.c 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ceosrecipe.c 27739 2014-09-25 18:49:52Z goatbar $");
 
 /* Array of Datatypes and their names/values */
 
@@ -310,8 +310,8 @@ int CeosDefaultRecipe( CeosSARVolume_t *volume, void *token )
     CeosTypeCode_t TypeCode;
     struct CeosSARImageDesc *ImageDesc = &(volume->ImageDesc);
     char temp_str[1024];
-    int i, temp_int;
-    
+    int i /*, temp_int */;
+
 #define DoExtractInt(a) ExtractInt( record, recipe[i].Type, recipe[i].Offset, recipe[i].Length, &a)
 
     if(token == NULL)
@@ -323,7 +323,7 @@ int CeosDefaultRecipe( CeosSARVolume_t *volume, void *token )
 
 /*    temp_imagerecipe = (CeosSARImageDescRecipe_t *) token;
     recipe = temp_imagerecipe->Recipe; */
- 
+
     recipe = token;
 
     for(i = 0; recipe[i].ImageDescValue != 0; i++ )
@@ -339,7 +339,7 @@ int CeosDefaultRecipe( CeosSARVolume_t *volume, void *token )
 
 	    if(record == NULL)
 	    {
-		temp_int = 0;
+              /* temp_int = 0; */
 	    } else {
 
 		switch( recipe[i].ImageDescValue )

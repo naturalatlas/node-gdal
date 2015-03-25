@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarper.h 27701 2014-09-20 15:07:02Z goatbar $
+ * $Id: gdalwarper.h 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL High Performance Warper
  * Purpose:  Prototypes, and definitions for warping related work.
@@ -339,8 +339,8 @@ private:
                                       const char *pszType );
 
     /* Unused kept to preserve binary ABI */
-    CPL_UNUSED void            *unused1;
-    CPL_UNUSED void            *unused2;
+    /* CPL_UNUSED */ void            *unused1;
+    /* CPL_UNUSED */ void            *unused2;
     void            *hIOMutex;
     void            *hWarpMutex;
 

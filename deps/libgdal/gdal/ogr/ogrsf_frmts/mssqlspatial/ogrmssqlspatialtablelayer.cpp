@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialtablelayer.cpp 27361 2014-05-18 12:11:28Z tamas $
+ * $Id: ogrmssqlspatialtablelayer.cpp 28397 2015-01-31 22:34:06Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLSpatialTableLayer class, access to an existing table.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialtablelayer.cpp 27361 2014-05-18 12:11:28Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialtablelayer.cpp 28397 2015-01-31 22:34:06Z tamas $");
 
 /************************************************************************/
 /*                         OGRMSSQLAppendEscaped( )                     */
@@ -234,13 +234,12 @@ OGRFeatureDefn* OGRMSSQLSpatialTableLayer::GetLayerDefn()
 /************************************************************************/
 
 CPLErr OGRMSSQLSpatialTableLayer::Initialize( const char *pszSchema,
-                                              const char *pszLayerName, 
+                                              const char *pszLayerName,
                                               const char *pszGeomCol,
-                                              int nCoordDimension, 
+                                              CPL_UNUSED int nCoordDimension,
                                               int nSRId,
                                               const char *pszSRText,
                                               OGRwkbGeometryType eType )
-
 {
     CPLFree( pszFIDColumn );
     pszFIDColumn = NULL;
@@ -430,6 +429,8 @@ CPLString OGRMSSQLSpatialTableLayer::BuildFields()
     int i = 0;
     int nColumn = 0;
     CPLString osFieldList;
+
+    GetLayerDefn();
 
     if( pszFIDColumn && poFeatureDefn->GetFieldIndex( pszFIDColumn ) == -1 )
     {
@@ -1246,4 +1247,3 @@ void OGRMSSQLSpatialTableLayer::AppendFieldValue(CPLODBCStatement *poStatement,
         poStatement->Append( pszStrValue );
     }
 }
-

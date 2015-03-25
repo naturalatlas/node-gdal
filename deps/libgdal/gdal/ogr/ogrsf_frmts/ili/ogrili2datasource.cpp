@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrili2datasource.cpp 27184 2014-04-14 22:21:56Z pka $
+ * $Id: ogrili2datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  Interlis 2 Translator
  * Purpose:  Implements OGRILI2DataSource class.
@@ -37,7 +37,7 @@
 using namespace std;
 
 
-CPL_CVSID("$Id: ogrili2datasource.cpp 27184 2014-04-14 22:21:56Z pka $");
+CPL_CVSID("$Id: ogrili2datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                         OGRILI2DataSource()                         */
@@ -179,8 +179,8 @@ int OGRILI2DataSource::Open( const char * pszNewName, int bTestOpen )
 /*                               Create()                               */
 /************************************************************************/
 
-int OGRILI2DataSource::Create( const char *pszFilename, 
-                              char **papszOptions )
+int OGRILI2DataSource::Create( const char *pszFilename,
+                               CPL_UNUSED char **papszOptions )
 
 {
     char **filenames = CSLTokenizeString2( pszFilename, ",", 0 );
@@ -260,10 +260,9 @@ int OGRILI2DataSource::Create( const char *pszFilename,
 
 OGRLayer *
 OGRILI2DataSource::CreateLayer( const char * pszLayerName,
-                               OGRSpatialReference *poSRS,
-                               OGRwkbGeometryType eType,
-                               char ** papszOptions )
-
+                                CPL_UNUSED OGRSpatialReference *poSRS,
+                                OGRwkbGeometryType eType,
+                                CPL_UNUSED char ** papszOptions )
 {
     if (fpOutput == NULL)
         return NULL;

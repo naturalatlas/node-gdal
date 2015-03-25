@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasdriver.cpp 26335 2013-08-15 22:34:46Z rouault $
+ * $Id: ogrnasdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OGR
  * Purpose:  OGRNASDriver implementation
@@ -32,7 +32,7 @@
 #include "nasreaderp.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrnasdriver.cpp 26335 2013-08-15 22:34:46Z rouault $");
+CPL_CVSID("$Id: ogrnasdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 
 /************************************************************************/
@@ -86,8 +86,7 @@ OGRDataSource *OGRNASDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRNASDriver::TestCapability( const char * pszCap )
-
+int OGRNASDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -101,4 +100,3 @@ void RegisterOGRNAS()
 {
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRNASDriver );
 }
-

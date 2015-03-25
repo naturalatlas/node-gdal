@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrshapelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrshapelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRShapeLayer class.
@@ -43,7 +43,7 @@
 
 #define UNSUPPORTED_OP_READ_ONLY "%s : unsupported operation on a read-only datasource."
 
-CPL_CVSID("$Id: ogrshapelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrshapelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 
 class OGRShapeGeomFieldDefn: public OGRGeomFieldDefn
@@ -1734,11 +1734,11 @@ OGRErr OGRShapeLayer::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, 
     char            szFieldName[20];
     int             nWidth, nPrecision;
     OGRFieldType    eType = poFieldDefn->GetType();
-    DBFFieldType    eDBFType;
+    /* DBFFieldType    eDBFType; */
 
     chNativeType = DBFGetNativeFieldType( hDBF, iField );
-    eDBFType = DBFGetFieldInfo( hDBF, iField, szFieldName,
-                                &nWidth, &nPrecision );
+    /* eDBFType = */ DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                      &nWidth, &nPrecision );
 
     if ((nFlags & ALTER_TYPE_FLAG) &&
         poNewFieldDefn->GetType() != poFieldDefn->GetType())
@@ -2526,11 +2526,11 @@ OGRErr OGRShapeLayer::ResizeDBF()
         char            szFieldName[20];
         int             nOriWidth, nPrecision;
         char            chNativeType;
-        DBFFieldType    eDBFType;
+        /* DBFFieldType    eDBFType; */
 
         chNativeType = DBFGetNativeFieldType( hDBF, iField );
-        eDBFType = DBFGetFieldInfo( hDBF, iField, szFieldName,
-                                    &nOriWidth, &nPrecision );
+        /* eDBFType = */ DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                          &nOriWidth, &nPrecision );
 
         if (panBestWidth[j] < nOriWidth)
         {

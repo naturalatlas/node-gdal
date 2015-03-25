@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatiallayer.cpp 25989 2013-05-05 19:35:01Z tamas $
+ * $Id: ogrmssqlspatiallayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -29,7 +29,7 @@
 
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 25989 2013-05-05 19:35:01Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 /************************************************************************/
 /*                        OGRMSSQLSpatialLayer()                        */
 /************************************************************************/
@@ -396,8 +396,7 @@ OGRFeature *OGRMSSQLSpatialLayer::GetFeature( long nFeatureId )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRMSSQLSpatialLayer::TestCapability( const char * pszCap )
-
+int OGRMSSQLSpatialLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -513,4 +512,3 @@ char* OGRMSSQLSpatialLayer::GByteArrayToHexString( const GByte* pabyData, int nL
 
     return pszTextBuf;
 }
-

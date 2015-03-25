@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpglayer.cpp 27106 2014-03-28 11:59:57Z rouault $
+ * $Id: ogrpglayer.cpp 28445 2015-02-09 18:17:24Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGLayer class  which implements shared handling
@@ -65,7 +65,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpglayer.cpp 27106 2014-03-28 11:59:57Z rouault $");
+CPL_CVSID("$Id: ogrpglayer.cpp 28445 2015-02-09 18:17:24Z rouault $");
 
 #define CURSOR_PAGE     500
 
@@ -1348,6 +1348,14 @@ void OGRPGLayer::SetInitialQueryCursor()
     CPLAssert( pszQueryStatement != NULL );
 
     poDS->FlushSoftTransaction();
+
+    // Workaround a bug in tables= mode where the spatial ref
+    // hasn't yet been resolved. Doing so later during the FETCH transaction
+    // will fail due to the BEGIN / COMMIT involved in SRS resolution
+    // Ultimately we should reconsider all this transaction logic
+    for(int i=0;i<poFeatureDefn->GetGeomFieldCount();i++)
+        poFeatureDefn->GetGeomFieldDefn(i)->GetSpatialRef();
+
     poDS->SoftStartTransaction();
 
     if ( poDS->bUseBinaryCursor && bCanUseBinaryCursor )
@@ -1817,7 +1825,8 @@ OGRErr OGRPGLayer::GetExtent( int iGeomField, OGREnvelope *psExtent, int bForce 
 /*                             GetExtent()                              */
 /************************************************************************/
 
-OGRErr OGRPGLayer::RunGetExtentRequest( OGREnvelope *psExtent, int bForce,
+OGRErr OGRPGLayer::RunGetExtentRequest( OGREnvelope *psExtent,
+                                        CPL_UNUSED int bForce,
                                         CPLString osCommand)
 {
     if ( psExtent == NULL )

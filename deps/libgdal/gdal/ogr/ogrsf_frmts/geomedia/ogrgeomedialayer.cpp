@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomedialayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomedialayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaLayer class, code shared between
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogrgeomediageometry.h"
 
-CPL_CVSID("$Id: ogrgeomedialayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeomedialayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                          OGRGeomediaLayer()                          */
@@ -318,8 +318,7 @@ OGRFeature *OGRGeomediaLayer::GetFeature( long nFeatureId )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRGeomediaLayer::TestCapability( const char * pszCap )
-
+int OGRGeomediaLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

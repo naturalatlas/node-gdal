@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomediadatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaDataSource class.
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogrgeomediadatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeomediadatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                       OGRGeomediaDataSource()                        */
@@ -105,8 +105,7 @@ static int CheckDSNStringTemplate(const char* pszStr)
 /************************************************************************/
 
 int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
-                              int bTestOpen )
-
+                                 CPL_UNUSED int bTestOpen )
 {
     CPLAssert( nLayers == 0 );
 
@@ -323,8 +322,7 @@ OGRSpatialReference* OGRGeomediaDataSource::GetGeomediaSRS(const char* pszGCoord
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRGeomediaDataSource::TestCapability( const char * pszCap )
-
+int OGRGeomediaDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

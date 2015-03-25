@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgtablelayer.cpp 27697 2014-09-19 18:21:02Z rouault $
+ * $Id: ogrpgtablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
 
  *
  * Project:  OpenGIS Simple Features Reference Implementation
@@ -37,7 +37,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgtablelayer.cpp 27697 2014-09-19 18:21:02Z rouault $");
+CPL_CVSID("$Id: ogrpgtablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 
 #define USE_COPY_UNSET  -10
@@ -2388,7 +2388,7 @@ OGRErr OGRPGTableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK )
 /************************************************************************/
 
 OGRErr OGRPGTableLayer::CreateGeomField( OGRGeomFieldDefn *poGeomFieldIn,
-                                         int bApproxOK )
+                                         CPL_UNUSED int bApproxOK )
 {
     PGconn              *hPGConn = poDS->GetPGConn();
     PGresult            *hResult;

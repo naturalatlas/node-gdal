@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrcsvdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVDataSource class
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "cpl_vsi_virtual.h"
 
-CPL_CVSID("$Id: ogrcsvdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrcsvdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                          OGRCSVDataSource()                          */
@@ -138,7 +138,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
 
     int bIgnoreExtension = EQUALN(osFilename, "CSV:", 4);
     int bUSGeonamesFile = FALSE;
-    int bGeonamesOrgFile = FALSE;
+    /* int bGeonamesOrgFile = FALSE; */
     if (bIgnoreExtension)
     {
         osFilename = osFilename + 4;
@@ -186,7 +186,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
         if (bUpdateIn)
             return FALSE;
         bIgnoreExtension = TRUE;
-        bGeonamesOrgFile = TRUE;
+        /* bGeonamesOrgFile = TRUE; */
 
         if (EQUAL(osExt, "zip") &&
             strstr(osFilename, "/vsizip/") == NULL )

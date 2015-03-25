@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrcsvlayer.cpp 27748 2014-09-28 12:05:20Z rouault $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcsvlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrcsvlayer.cpp 27748 2014-09-28 12:05:20Z rouault $");
 
 
 
@@ -332,6 +332,12 @@ OGRCSVLayer::OGRCSVLayer( const char *pszLayerNameIn,
 
     if( !bNew && !bHasFieldNames )
         VSIRewindL( fpCSV );
+    
+    panGeomFieldIndex = (int*) CPLCalloc(nFieldCount, sizeof(int));
+    for( iField = 0; iField < nFieldCount; iField++ )
+    {
+        panGeomFieldIndex[iField] = -1;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Check for geonames.org tables                                   */
@@ -404,12 +410,6 @@ OGRCSVLayer::OGRCSVLayer( const char *pszLayerNameIn,
             papszFieldTypes = OGRCSVReadParseLineL(fpCSVT, ',', FALSE);
             VSIFCloseL(fpCSVT);
         }
-    }
-    
-    panGeomFieldIndex = (int*) CPLCalloc(nFieldCount, sizeof(int));
-    for( iField = 0; iField < nFieldCount; iField++ )
-    {
-        panGeomFieldIndex[iField] = -1;
     }
 
 /* -------------------------------------------------------------------- */

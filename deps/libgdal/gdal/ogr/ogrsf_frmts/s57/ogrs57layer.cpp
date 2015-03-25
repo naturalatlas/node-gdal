@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrs57layer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrs57layer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements OGRS57Layer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrs57layer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrs57layer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                            OGRS57Layer()                             */
@@ -289,7 +289,9 @@ OGRErr OGRS57Layer::CreateFeature( OGRFeature *poFeature )
         if( !poFeature->IsFieldSet( iRCNMFld ) )
             poFeature->SetField( iRCNMFld, nRCNM );
         else
+        {
             CPLAssert( poFeature->GetFieldAsInteger( iRCNMFld ) == nRCNM );
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -302,7 +304,9 @@ OGRErr OGRS57Layer::CreateFeature( OGRFeature *poFeature )
         if( !poFeature->IsFieldSet( iOBJLFld ) )
             poFeature->SetField( iOBJLFld, nOBJL );
         else
+        {
             CPLAssert( poFeature->GetFieldAsInteger( iOBJLFld ) == nOBJL );
+        }
     }
 
 /* -------------------------------------------------------------------- */

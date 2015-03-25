@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediadriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomediadriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -31,7 +31,7 @@
 #include "ogr_geomedia.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrgeomediadriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeomediadriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRODBCDriver()                            */
@@ -141,8 +141,7 @@ OGRDataSource *OGRGeomediaDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRGeomediaDriver::TestCapability( const char * pszCap )
-
+int OGRGeomediaDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -156,4 +155,3 @@ void RegisterOGRGeomedia()
 {
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRGeomediaDriver );
 }
-

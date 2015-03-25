@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osm_parser.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: osm_parser.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
@@ -45,7 +45,7 @@
 
 #define XML_BUFSIZE 64*1024
 
-CPL_CVSID("$Id: osm_parser.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: osm_parser.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                            INIT_INFO()                               */
@@ -338,6 +338,7 @@ int ReadOSMHeader(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(OSMHEADER_IDX_OSMOSIS_REPLICATION_TIMESTAMP, WT_VARINT))
         {
+            /* TODO: Do something with nVal or change this to a seek forward. */
             GIntBig nVal;
             READ_VARINT64(pabyData, pabyDataLimit, nVal);
         }

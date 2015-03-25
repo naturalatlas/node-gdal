@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrlayer.cpp 28169 2014-12-17 16:24:25Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The generic portions of the OGRSFLayer class.
@@ -34,7 +34,7 @@
 #include "ogr_attrind.h"
 #include "swq.h"
 
-CPL_CVSID("$Id: ogrlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrlayer.cpp 28169 2014-12-17 16:24:25Z rouault $");
 
 /************************************************************************/
 /*                              OGRLayer()                              */
@@ -1631,6 +1631,8 @@ OGRErr create_field_map(OGRFeatureDefn *poDefn, int **map)
     if (n > 0) {
         *map = (int*)VSIMalloc(sizeof(int) * n);
         if (!(*map)) return OGRERR_NOT_ENOUGH_MEMORY;
+        for(int i=0;i<n;i++)
+            (*map)[i] = -1;
     }
     return ret;
 }

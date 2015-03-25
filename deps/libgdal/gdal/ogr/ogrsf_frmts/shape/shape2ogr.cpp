@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shape2ogr.cpp 27604 2014-08-23 10:01:50Z rouault $
+ * $Id: shape2ogr.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements translation of Shapefile shapes into OGR
@@ -32,7 +32,7 @@
 #include "ogrshape.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: shape2ogr.cpp 27604 2014-08-23 10:01:50Z rouault $");
+CPL_CVSID("$Id: shape2ogr.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                        RingStartEnd                                  */
@@ -1137,11 +1137,11 @@ static OGRErr GrowField(DBFHandle hDBF, int iField, OGRFieldDefn* poFieldDefn,
     char            szFieldName[20];
     int             nOriWidth, nPrecision;
     char            chNativeType;
-    DBFFieldType    eDBFType;
+    /* DBFFieldType    eDBFType; */
 
     chNativeType = DBFGetNativeFieldType( hDBF, iField );
-    eDBFType = DBFGetFieldInfo( hDBF, iField, szFieldName,
-                                &nOriWidth, &nPrecision );
+    /* eDBFType = */ DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                      &nOriWidth, &nPrecision );
 
     CPLDebug("SHAPE", "Extending field %d (%s) from %d to %d characters",
                 iField, poFieldDefn->GetNameRef(), nOriWidth, nNewSize);
@@ -1382,4 +1382,3 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
 
     return OGRERR_NONE;
 }
-

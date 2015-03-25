@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonreader.h 28350 2015-01-23 17:53:57Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines GeoJSON reader within OGR OGRGeoJSON Driver.
@@ -195,7 +195,7 @@ OGRSpatialReference* OGRESRIJSONReadSpatialReference( json_object* poObj );
 OGRwkbGeometryType OGRESRIJSONGetGeometryType( json_object* poObj );
 OGRPoint* OGRESRIJSONReadPoint( json_object* poObj);
 OGRLineString* OGRESRIJSONReadLineString( json_object* poObj);
-OGRPolygon* OGRESRIJSONReadPolygon( json_object* poObj);
+OGRGeometry* OGRESRIJSONReadPolygon( json_object* poObj);
 OGRMultiPoint* OGRESRIJSONReadMultiPoint( json_object* poObj);
 
 /************************************************************************/

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf5imagedataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hdf5imagedataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  Read subdatasets of HDF5 file.
@@ -38,7 +38,7 @@
 #include "hdf5dataset.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: hdf5imagedataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hdf5imagedataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 CPL_C_START
 void GDALRegister_HDF5Image(void);
@@ -304,12 +304,12 @@ HDF5ImageRasterBand::HDF5ImageRasterBand( HDF5ImageDataset *poDS, int nBand,
         if(H5Pget_layout(listid) == H5D_CHUNKED)
         {
             hsize_t panChunkDims[3];
-            int nDimSize = H5Pget_chunk(listid, 3, panChunkDims);
+            CPL_UNUSED int nDimSize = H5Pget_chunk(listid, 3, panChunkDims);
             CPLAssert(nDimSize == poDS->ndims);
             nBlockXSize   = (int) panChunkDims[poDS->GetXIndex()];
             nBlockYSize   = (int) panChunkDims[poDS->GetYIndex()];
         }
-        
+
         H5Pclose(listid);
     }
 
@@ -756,11 +756,11 @@ CPLErr HDF5ImageDataset::CreateProjections()
             if(EQUALN(osMissionLevel,"GTC",3))
                 productType  = PROD_CSK_L1D;
         }
-            
+
         CaptureCSKGeoTransform(productType);
         CaptureCSKGeolocation(productType);
         CaptureCSKGCPs(productType);
-        
+
         break;
     }
     case UNKNOWN_PRODUCT:
@@ -770,8 +770,8 @@ CPLErr HDF5ImageDataset::CreateProjections()
 
     hid_t LatitudeDatasetID  = -1;
     hid_t LongitudeDatasetID = -1;
-    hid_t LatitudeDataspaceID;
-    hid_t LongitudeDataspaceID;
+    // hid_t LatitudeDataspaceID;
+    // hid_t LongitudeDataspaceID;
     float* Latitude;
     float* Longitude;
     int    i,j;
@@ -805,11 +805,11 @@ CPLErr HDF5ImageDataset::CreateProjections()
     /*      Retrieve HDF5 data information                                  */
     /* -------------------------------------------------------------------- */
     LatitudeDatasetID   = H5Dopen( hHDF5,poH5Objects->pszPath );
-    LatitudeDataspaceID = H5Dget_space( dataset_id );
+    // LatitudeDataspaceID = H5Dget_space( dataset_id );
 
     poH5Objects=HDF5FindDatasetObjects( poH5RootGroup, "Longitude" );
     LongitudeDatasetID   = H5Dopen( hHDF5,poH5Objects->pszPath );
-    LongitudeDataspaceID = H5Dget_space( dataset_id );
+    // LongitudeDataspaceID = H5Dget_space( dataset_id );
 
     if( ( LatitudeDatasetID > 0 ) && ( LongitudeDatasetID > 0) ) {
 
@@ -1257,4 +1257,3 @@ void HDF5ImageDataset::CaptureCSKGCPs(int iProductType)
         }
     }
 }
-

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 27718 2014-09-21 16:55:01Z goatbar $
+ * $Id: ogr_geojson.h 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -83,7 +83,7 @@ private:
     FeaturesSeq::iterator iterCurrent_;
 
     /* poDS_ retained for ABI compatibility. */
-    CPL_UNUSED OGRGeoJSONDataSource* poDS_;
+    /* CPL_UNUSED */ OGRGeoJSONDataSource* poDS_;
     OGRFeatureDefn* poFeatureDefn_;
     CPLString sFIDColumn_;
 };
@@ -237,4 +237,3 @@ public:
 };
 
 #endif /* OGR_GEOJSON_H_INCLUDED */
-

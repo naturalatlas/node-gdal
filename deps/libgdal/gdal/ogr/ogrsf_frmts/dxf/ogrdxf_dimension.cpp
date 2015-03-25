@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxf_dimension.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxf_dimension.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements translation support for DIMENSION elements as a part
@@ -32,11 +32,11 @@
 #include "ogr_dxf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdxf_dimension.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxf_dimension.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
-#endif 
+#endif
 
 /************************************************************************/
 /*                         TranslateDIMENSION()                         */
@@ -46,12 +46,12 @@ OGRFeature *OGRDXFLayer::TranslateDIMENSION()
 
 {
     char szLineBuf[257];
-    int nCode, nDimType = 0;
+    int nCode /*, nDimType = 0 */;
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
-    double dfArrowX1 = 0.0, dfArrowY1 = 0.0, dfArrowZ1 = 0.0;
-    double dfTargetX1 = 0.0, dfTargetY1 = 0.0, dfTargetZ1 = 0.0;
-    double dfTargetX2 = 0.0, dfTargetY2 = 0.0, dfTargetZ2 = 0.0;
-    double dfTextX = 0.0, dfTextY = 0.0, dfTextZ = 0.0;
+    double dfArrowX1 = 0.0, dfArrowY1 = 0.0 /*, dfArrowZ1 = 0.0 */;
+    double dfTargetX1 = 0.0, dfTargetY1 = 0.0 /* , dfTargetZ1 = 0.0 */;
+    double dfTargetX2 = 0.0, dfTargetY2 = 0.0 /* , dfTargetZ2 = 0.0 */;
+    double dfTextX = 0.0, dfTextY = 0.0 /* , dfTextZ = 0.0 */;
     double dfAngle = 0.0;
     double dfHeight = CPLAtof(poDS->GetVariable("$DIMTXT", "2.5"));
 
@@ -70,7 +70,7 @@ OGRFeature *OGRDXFLayer::TranslateDIMENSION()
             break;
 
           case 30:
-            dfArrowZ1 = CPLAtof(szLineBuf);
+            /* dfArrowZ1 = CPLAtof(szLineBuf); */
             break;
 
           case 11:
@@ -82,7 +82,7 @@ OGRFeature *OGRDXFLayer::TranslateDIMENSION()
             break;
 
           case 31:
-            dfTextZ = CPLAtof(szLineBuf);
+            /* dfTextZ = CPLAtof(szLineBuf); */
             break;
 
           case 13:
@@ -94,7 +94,7 @@ OGRFeature *OGRDXFLayer::TranslateDIMENSION()
             break;
 
           case 33:
-            dfTargetZ2 = CPLAtof(szLineBuf);
+            /* dfTargetZ2 = CPLAtof(szLineBuf); */
             break;
 
           case 14:
@@ -106,11 +106,11 @@ OGRFeature *OGRDXFLayer::TranslateDIMENSION()
             break;
 
           case 34:
-            dfTargetZ1 = CPLAtof(szLineBuf);
+            /* dfTargetZ1 = CPLAtof(szLineBuf); */
             break;
 
           case 70:
-            nDimType = atoi(szLineBuf);
+            /* nDimType = atoi(szLineBuf); */
             break;
 
           case 1:

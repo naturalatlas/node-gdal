@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeogeometry.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgeogeometry.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements decoder of shapebin geometry for PGeo
@@ -34,7 +34,7 @@
 #include "ogr_p.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrpgeogeometry.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgeogeometry.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #define SHPP_TRISTRIP   0
 #define SHPP_TRIFAN     1
@@ -1592,7 +1592,7 @@ OGRErr OGRCreateFromShapeBin( GByte *pabyShape,
              || nSHPType == SHPT_POINTZ
              || nSHPType == SHPT_POINTZM )
     {
-        int nOffset;
+        /* int nOffset; */
         double  dfX, dfY, dfZ = 0;
 
         int bHasZ = (nSHPType == SHPT_POINTZ || nSHPType == SHPT_POINTZM);
@@ -1609,7 +1609,7 @@ OGRErr OGRCreateFromShapeBin( GByte *pabyShape,
 
         CPL_LSBPTR64( &dfX );
         CPL_LSBPTR64( &dfY );
-        nOffset = 20 + 8;
+        /* nOffset = 20 + 8; */
 
         if( bHasZ )
         {
@@ -1624,7 +1624,7 @@ OGRErr OGRCreateFromShapeBin( GByte *pabyShape,
     }
 
     CPLError(CE_Failure, CPLE_AppDefined,
-             "Unsupported geometry type: %d", 
+             "Unsupported geometry type: %d",
               nSHPType );
 
     return OGRERR_FAILURE;

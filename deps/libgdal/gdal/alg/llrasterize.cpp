@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: llrasterize.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: llrasterize.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Vector polygon rasterization code.
@@ -105,15 +105,12 @@ No known bug
     double dx2, dy2;
     double dy;
     double intersect;
-    
 
     int ind1, ind2;
     int ints, n, part;
-    int *polyInts, polyAllocated;
+    int *polyInts;
 
-  
     int horizontal_x1, horizontal_x2;
-
 
     if (!nPartCount) {
         return;
@@ -122,10 +119,9 @@ No known bug
     n = 0;
     for( part = 0; part < nPartCount; part++ )
         n += panPartSize[part];
-    
+
     polyInts = (int *) malloc(sizeof(int) * n);
-    polyAllocated = n;
-    
+
     dminy = padfY[0];
     dmaxy = padfY[0];
     for (i=1; (i < n); i++) {
@@ -605,4 +601,3 @@ GDALdllImageLineAllTouched(int nRasterXSize, int nRasterYSize,
         } // next segment
     } // next part
 }
-

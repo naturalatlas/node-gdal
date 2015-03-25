@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili1reader.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ili1reader.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  Interlis 1 Reader
  * Purpose:  Implementation of ILI1Reader class.
@@ -50,7 +50,7 @@
 #  endif
 #endif
 
-CPL_CVSID("$Id: ili1reader.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ili1reader.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 //
 // ILI1Reader
@@ -247,7 +247,7 @@ int ILI1Reader::AddIliGeom(OGRFeature *feature, int iField, long fpos)
 }
 
 
-int ILI1Reader::ReadTable(const char *layername) {
+int ILI1Reader::ReadTable(CPL_UNUSED const char *layername) {
     char **tokens = NULL;
     const char *firsttok = NULL;
     int ret = TRUE;

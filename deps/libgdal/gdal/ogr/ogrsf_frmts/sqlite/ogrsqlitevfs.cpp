@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitevfs.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsqlitevfs.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements SQLite VFS
@@ -30,7 +30,7 @@
 #include "cpl_atomic_ops.h"
 #include "ogr_sqlite.h"
 
-CPL_CVSID("$Id: ogrsqlitevfs.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsqlitevfs.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 //#define DEBUG_IO 1
 
@@ -247,7 +247,7 @@ static const sqlite3_io_methods OGRSQLiteIOMethods =
     OGRSQLiteIODeviceCharacteristics
 #if 0
     // TODO: These are in sqlite3.
-    0, // xShmMap
+    , 0, // xShmMap
     0, // xShmLock
     0, // xShmBarrier
     0, // xShmUnmap

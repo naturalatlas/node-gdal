@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterio.cpp 27119 2014-04-03 18:48:27Z rouault $
+ * $Id: rasterio.cpp 27904 2014-10-23 23:42:29Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Contains default implementation of GDALRasterBand::IRasterIO()
@@ -48,7 +48,7 @@
 #endif
 
 
-CPL_CVSID("$Id: rasterio.cpp 27119 2014-04-03 18:48:27Z rouault $");
+CPL_CVSID("$Id: rasterio.cpp 27904 2014-10-23 23:42:29Z rouault $");
 
 /************************************************************************/
 /*                             IRasterIO()                              */
@@ -296,11 +296,11 @@ CPLErr GDALRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                         && nPixelSpace == nBufDataSize )
                     {
                         if( eRWFlag == GF_Read )
-                            memcpy( ((GByte *) pData) + iBufOffset + k * nLineSpace,
+                            memcpy( ((GByte *) pData) + iBufOffset + (size_t)k * nLineSpace,
                                     pabySrcBlock + iSrcOffset, nXSpanSize );
                         else
                             memcpy( pabySrcBlock + iSrcOffset, 
-                                    ((GByte *) pData) + iBufOffset + k * nLineSpace, nXSpanSize );
+                                    ((GByte *) pData) + iBufOffset + (size_t)k * nLineSpace, nXSpanSize );
                     }
                     else
                     {
@@ -309,10 +309,10 @@ CPLErr GDALRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                         if( eRWFlag == GF_Read )
                             GDALCopyWords( pabySrcBlock + iSrcOffset,
                                         eDataType, nBandDataSize,
-                                        ((GByte *) pData) + iBufOffset + k * nLineSpace,
+                                        ((GByte *) pData) + iBufOffset + (size_t)k * nLineSpace,
                                         eBufType, nPixelSpace, nXSpan );
                         else
-                            GDALCopyWords( ((GByte *) pData) + iBufOffset + k * nLineSpace,
+                            GDALCopyWords( ((GByte *) pData) + iBufOffset + (size_t)k * nLineSpace,
                                         eBufType, nPixelSpace,
                                         pabySrcBlock + iSrcOffset,
                                         eDataType, nBandDataSize, nXSpan );

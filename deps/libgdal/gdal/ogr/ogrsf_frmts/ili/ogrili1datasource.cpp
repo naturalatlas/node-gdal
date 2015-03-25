@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrili1datasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrili1datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  Interlis 1 Translator
  * Purpose:  Implements OGRILI1DataSource class.
@@ -36,7 +36,7 @@
 
 #include <string>
 
-CPL_CVSID("$Id: ogrili1datasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrili1datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                         OGRILI1DataSource()                         */
@@ -181,8 +181,7 @@ int OGRILI1DataSource::Open( const char * pszNewName, int bTestOpen )
 /************************************************************************/
 
 int OGRILI1DataSource::Create( const char *pszFilename,
-                              char **papszOptions )
-
+                               CPL_UNUSED char **papszOptions )
 {
     std::string osBasename, osModelFilename;
     char **filenames = CSLTokenizeString2( pszFilename, ",", 0 );
@@ -248,10 +247,9 @@ static char *ExtractTopic(const char * pszLayerName)
 
 OGRLayer *
 OGRILI1DataSource::CreateLayer( const char * pszLayerName,
-                               OGRSpatialReference *poSRS,
-                               OGRwkbGeometryType eType,
-                               char ** papszOptions )
-
+                                CPL_UNUSED OGRSpatialReference *poSRS,
+                                OGRwkbGeometryType eType,
+                                CPL_UNUSED char ** papszOptions )
 {
     FeatureDefnInfo featureDefnInfo = poImdReader->GetFeatureDefnInfo(pszLayerName);
     const char *table = pszLayerName;

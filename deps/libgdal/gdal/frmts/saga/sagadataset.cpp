@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sagadataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: sagadataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
  * Project:  SAGA GIS Binary Driver
  * Purpose:  Implements the SAGA GIS Binary Grid Format.
  * Author:   Volker Wichmann, wichmann@laserdata.at
@@ -37,7 +37,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: sagadataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: sagadataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #ifndef INT_MAX
 # define INT_MAX 2147483647
@@ -995,7 +995,7 @@ GDALDataset *SAGADataset::Create( const char * pszFilename,
 
 GDALDataset *SAGADataset::CreateCopy( const char *pszFilename,
 				      GDALDataset *poSrcDS,
-				      int bStrict, char **papszOptions,
+				      int bStrict, CPL_UNUSED char **papszOptions,
 				      GDALProgressFunc pfnProgress,
 				      void *pProgressData )
 {

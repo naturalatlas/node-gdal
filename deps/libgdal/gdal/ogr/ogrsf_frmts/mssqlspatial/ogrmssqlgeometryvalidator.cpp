@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlgeometryvalidator.cpp 21933 2011-03-11 16:50:10Z tamas $
+ * $Id: ogrmssqlgeometryvalidator.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLGeometryValidator class to create valid SqlGeometries.
@@ -30,7 +30,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlgeometryvalidator.cpp 21933 2011-03-11 16:50:10Z tamas $");
+CPL_CVSID("$Id: ogrmssqlgeometryvalidator.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                   OGRMSSQLGeometryValidator()                        */
@@ -57,7 +57,7 @@ OGRMSSQLGeometryValidator::~OGRMSSQLGeometryValidator()
 /*                         ValidatePoint()                              */
 /************************************************************************/
 
-int OGRMSSQLGeometryValidator::ValidatePoint(OGRPoint* poGeom)
+int OGRMSSQLGeometryValidator::ValidatePoint(CPL_UNUSED OGRPoint* poGeom)
 {
     return TRUE;
 }
@@ -66,7 +66,7 @@ int OGRMSSQLGeometryValidator::ValidatePoint(OGRPoint* poGeom)
 /*                     ValidateMultiPoint()                             */
 /************************************************************************/
 
-int OGRMSSQLGeometryValidator::ValidateMultiPoint(OGRMultiPoint* poGeom)
+int OGRMSSQLGeometryValidator::ValidateMultiPoint(CPL_UNUSED OGRMultiPoint* poGeom)
 {
     return TRUE;
 }
@@ -491,5 +491,3 @@ OGRGeometry* OGRMSSQLGeometryValidator::GetValidGeometryRef()
 
     return poValidGeometry;
 }
-
-

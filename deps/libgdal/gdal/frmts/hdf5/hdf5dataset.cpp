@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf5dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hdf5dataset.cpp 28365 2015-01-27 10:39:30Z rouault $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  HDF5 Datasets. Open HDF5 file, fetch metadata and list of
@@ -40,7 +40,7 @@
 #include "cpl_string.h"
 #include "hdf5dataset.h"
 
-CPL_CVSID("$Id: hdf5dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hdf5dataset.cpp 28365 2015-01-27 10:39:30Z rouault $");
 
 CPL_C_START
 void GDALRegister_HDF5(void);
@@ -75,6 +75,11 @@ void GDALRegister_HDF5()
         poDriver->pfnIdentify = HDF5Dataset::Identify;
         GetGDALDriverManager()->RegisterDriver(poDriver);
     }
+
+#ifdef HDF5_PLUGIN
+    GDALRegister_HDF5Image();
+#endif
+
 }
 
 /************************************************************************/

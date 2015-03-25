@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_citation.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gt_citation.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Implements special parsing of Imagine citation strings, and
@@ -35,7 +35,7 @@
 #include "geovalues.h"
 #include "gt_citation.h"
 
-CPL_CVSID("$Id: gt_citation.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gt_citation.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 static const char *apszUnitMap[] = {
     "meters", "1.0",
@@ -156,7 +156,7 @@ char* ImagineCitationTranslation(char* psCitation, geokey_t keyID)
                 if(p1[0] == '\0' || p1[0] == '\n' || p1[0] == ' ')
                     p1 --;
                 p2 = p1 - 1;
-                while( p2>0 && (p2[0] == ' ' || p2[0] == '\0' || p2[0] == '\n') )
+                while( p2 != 0 && (p2[0] == ' ' || p2[0] == '\0' || p2[0] == '\n') )
                     p2--;
                 if(p2 != p1 - 1)
                     p1 = p2;
@@ -199,7 +199,7 @@ char* ImagineCitationTranslation(char* psCitation, geokey_t keyID)
                 if(p1[0] == '\0' || p1[0] == '\n' || p1[0] == ' ')
                     p1 --;
                 char* p2 = p1 - 1;
-                while( p2>0 && (p2[0] == ' ' || p2[0] == '\0' || p2[0] == '\n') )
+                while( p2 != 0 && (p2[0] == ' ' || p2[0] == '\0' || p2[0] == '\n') )
                     p2--;
                 if(p2 != p1 - 1)
                     p1 = p2;

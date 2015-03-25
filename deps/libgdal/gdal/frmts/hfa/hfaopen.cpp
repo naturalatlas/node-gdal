@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaopen.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: hfaopen.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Supporting functions for HFA (.img) ... main (C callable) API
@@ -42,7 +42,7 @@
 #include <limits.h>
 #include <vector>
 
-CPL_CVSID("$Id: hfaopen.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: hfaopen.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 
 static const char *apszAuxMetadataItems[] = {
@@ -3061,12 +3061,12 @@ int HFACreateSpillStack( HFAInfo_t *psInfo, int nXSize, int nYSize,
         fpVSIL = VSIFOpenL( pszFullFilename, "w+" );
         if( fpVSIL == NULL )
         {
-            CPLError( CE_Failure, CPLE_OpenFailed, 
+            CPLError( CE_Failure, CPLE_OpenFailed,
                       "Failed to create spill file %s.\n%s",
                       psInfo->pszIGEFilename, VSIStrerror( errno ) );
             return FALSE;
         }
-        
+
         VSIFWriteL( (void *) pszMagick, 1, strlen(pszMagick)+1, fpVSIL );
     }
 
@@ -3075,18 +3075,18 @@ int HFACreateSpillStack( HFAInfo_t *psInfo, int nXSize, int nYSize,
 /* -------------------------------------------------------------------- */
 /*      Work out some details about the tiling scheme.                  */
 /* -------------------------------------------------------------------- */
-    int	nBlocksPerRow, nBlocksPerColumn, nBlocks, nBytesPerBlock;
-    int	nBytesPerRow, nBlockMapSize, iFlagsSize;
+    int	nBlocksPerRow, nBlocksPerColumn, /* nBlocks, */ nBytesPerBlock;
+    int	nBytesPerRow, nBlockMapSize /* , iFlagsSize */;
 
     nBlocksPerRow = (nXSize + nBlockSize - 1) / nBlockSize;
     nBlocksPerColumn = (nYSize + nBlockSize - 1) / nBlockSize;
-    nBlocks = nBlocksPerRow * nBlocksPerColumn;
+    /* nBlocks = nBlocksPerRow * nBlocksPerColumn; */
     nBytesPerBlock = (nBlockSize * nBlockSize
                       * HFAGetDataTypeBits(nDataType) + 7) / 8;
 
     nBytesPerRow = ( nBlocksPerRow + 7 ) / 8;
     nBlockMapSize = nBytesPerRow * nBlocksPerColumn;
-    iFlagsSize = nBlockMapSize + 20;
+    /* iFlagsSize = nBlockMapSize + 20; */
 
 /* -------------------------------------------------------------------- */
 /*      Write stack prefix information.                                 */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarper.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdalwarper.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Implementation of high level convenience APIs for warper.
@@ -34,7 +34,7 @@
 #include "ogr_api.h"
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalwarper.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gdalwarper.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 /************************************************************************/
 /*                         GDALReprojectImage()                         */
@@ -73,13 +73,13 @@ CPL_CVSID("$Id: gdalwarper.cpp 27729 2014-09-24 00:40:16Z goatbar $");
  * @return CE_None on success or CE_Failure if something goes wrong.
  */
 
-CPLErr CPL_STDCALL 
-GDALReprojectImage( GDALDatasetH hSrcDS, const char *pszSrcWKT, 
+CPLErr CPL_STDCALL
+GDALReprojectImage( GDALDatasetH hSrcDS, const char *pszSrcWKT,
                     GDALDatasetH hDstDS, const char *pszDstWKT,
-                    GDALResampleAlg eResampleAlg, 
-                    CPL_UNUSED double dfWarpMemoryLimit, 
+                    GDALResampleAlg eResampleAlg,
+                    CPL_UNUSED double dfWarpMemoryLimit,
                     double dfMaxError,
-                    GDALProgressFunc pfnProgress, void *pProgressArg, 
+                    GDALProgressFunc pfnProgress, void *pProgressArg,
                     GDALWarpOptions *psOptions )
 
 {

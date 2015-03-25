@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_priv.h 27657 2014-09-10 07:21:17Z rouault $
+ * $Id: gdal_priv.h 27874 2014-10-17 18:36:22Z rouault $
  *
  * Name:     gdal_priv.h
  * Project:  GDAL Core
@@ -685,6 +685,26 @@ class CPL_DLL GDALNoDataValuesMaskBand : public GDALRasterBand
   public:
                 GDALNoDataValuesMaskBand( GDALDataset * );
     virtual     ~GDALNoDataValuesMaskBand();
+};
+
+/* ******************************************************************** */
+/*                         GDALRescaledAlphaBand                        */
+/* ******************************************************************** */
+
+class GDALRescaledAlphaBand : public GDALRasterBand
+{
+    GDALRasterBand *poParent;
+    void           *pTemp;
+
+  protected:
+    virtual CPLErr IReadBlock( int, int, void * );
+    virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
+                              void *, int, int, GDALDataType,
+                              int, int );
+
+  public:
+                GDALRescaledAlphaBand( GDALRasterBand * );
+    virtual     ~GDALRescaledAlphaBand();
 };
 
 /* ******************************************************************** */

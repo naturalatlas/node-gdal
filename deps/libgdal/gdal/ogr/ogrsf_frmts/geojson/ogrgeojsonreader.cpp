@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.cpp 27613 2014-08-30 15:55:30Z rouault $
+ * $Id: ogrgeojsonreader.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONReader class (OGR GeoJSON Driver).
@@ -422,7 +422,7 @@ bool OGRGeoJSONReader::GenerateLayerDefn( OGRGeoJSONLayer* poLayer, json_object*
     OGRFeatureDefn* poLayerDefn = poLayer->GetLayerDefn();
     CPLAssert( NULL != poLayerDefn );
 
-    bool bHasFID = false;
+    /* bool bHasFID = false; */
 
     for( int i = 0; i < poLayerDefn->GetFieldCount(); ++i )
     {
@@ -431,7 +431,7 @@ bool OGRGeoJSONReader::GenerateLayerDefn( OGRGeoJSONLayer* poLayer, json_object*
             && OFTInteger == poDefn->GetType() )
         {
             poLayer->SetFIDColumn( poDefn->GetNameRef() );
-            bHasFID = true;
+            /* bHasFID = true; */
             break;
         }
     }
@@ -868,7 +868,7 @@ OGRGeoJSONReader::ReadFeatureCollection( OGRGeoJSONLayer* poLayer, json_object* 
 
     if( json_type_array == json_object_get_type( poObjFeatures ) )
     {
-        bool bAdded = false;
+        /* bool bAdded = false; */
         OGRFeature* poFeature = NULL;
         json_object* poObjFeature = NULL;
 
@@ -877,7 +877,7 @@ OGRGeoJSONReader::ReadFeatureCollection( OGRGeoJSONLayer* poLayer, json_object* 
         {
             poObjFeature = json_object_array_get_idx( poObjFeatures, i );
             poFeature = ReadFeature( poLayer, poObjFeature );
-            bAdded = AddFeature( poLayer, poFeature );
+            /* bAdded = */ AddFeature( poLayer, poFeature );
             //CPLAssert( bAdded );
         }
         //CPLAssert( nFeatures == poLayer_->GetFeatureCount() );
@@ -1542,4 +1542,3 @@ OGRGeometryH OGR_G_CreateGeometryFromJson( const char* pszJson )
     /* Translation failed */
     return NULL;
 }
-

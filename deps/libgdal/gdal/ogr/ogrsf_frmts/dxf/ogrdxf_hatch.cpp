@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxf_hatch.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxf_hatch.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements translation support for HATCH elements as part
@@ -35,11 +35,11 @@
 
 #include "ogrdxf_polyline_smooth.h"
 
-CPL_CVSID("$Id: ogrdxf_hatch.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxf_hatch.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
-#endif 
+#endif
 
 /************************************************************************/
 /*                           TranslateHATCH()                           */
@@ -57,7 +57,7 @@ OGRFeature *OGRDXFLayer::TranslateHATCH()
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
 
     CPLString osHatchPattern;
-    int nFillFlag = 0;
+    /* int nFillFlag = 0; */
     OGRGeometryCollection oGC;
 
     while( (nCode = poDS->ReadValue(szLineBuf,sizeof(szLineBuf))) > 0 )
@@ -65,7 +65,7 @@ OGRFeature *OGRDXFLayer::TranslateHATCH()
         switch( nCode )
         {
           case 70:
-            nFillFlag = atoi(szLineBuf);
+            /* nFillFlag = atoi(szLineBuf); */
             break;
 
           case 2:

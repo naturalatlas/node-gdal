@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodbclayer.cpp 17755 2009-10-04 21:04:10Z rouault $
+ * $Id: ogrodbclayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRODBCLayer class, code shared between 
@@ -32,7 +32,7 @@
 #include "ogr_odbc.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrodbclayer.cpp 17755 2009-10-04 21:04:10Z rouault $");
+CPL_CVSID("$Id: ogrodbclayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                            OGRODBCLayer()                            */
@@ -344,8 +344,7 @@ OGRFeature *OGRODBCLayer::GetFeature( long nFeatureId )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRODBCLayer::TestCapability( const char * pszCap )
-
+int OGRODBCLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -359,4 +358,3 @@ OGRSpatialReference *OGRODBCLayer::GetSpatialRef()
 {
     return poSRS;
 }
-

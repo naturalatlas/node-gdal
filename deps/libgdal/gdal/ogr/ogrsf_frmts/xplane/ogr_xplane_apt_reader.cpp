@@ -30,7 +30,7 @@
 #include "ogr_xplane_apt_reader.h"
 #include "ogr_xplane_geo_utils.h"
 
-CPL_CVSID("$Id: ogr_xplane_apt_reader.cpp 27118 2014-04-02 20:52:00Z rouault $");
+CPL_CVSID("$Id: ogr_xplane_apt_reader.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                   OGRXPlaneCreateAptFileReader                       */
@@ -1032,7 +1032,7 @@ int OGRXPlaneAptReader::ParsePolygonalGeometry(OGRGeometry** ppoGeom)
     double dfLastLatBezier = 0., dfLastLonBezier = 0.;
     int bIsFirst = TRUE;
     int bFirstIsBezier = TRUE;
-    int bLastIsValid = FALSE;
+    /* int bLastIsValid = FALSE; */
     int bLastIsBezier = FALSE;
     int bLastPartIsClosed = FALSE;
     const char* pszLine;
@@ -1230,7 +1230,7 @@ int OGRXPlaneAptReader::ParsePolygonalGeometry(OGRGeometry** ppoGeom)
 
         dfLastLat = dfLat;
         dfLastLon = dfLon;
-        bLastIsValid = TRUE;
+        /* bLastIsValid = TRUE; */
 
         CSLDestroy(papszTokens);
     }
@@ -1362,7 +1362,7 @@ int OGRXPlaneAptReader::ParseLinearGeometry(OGRMultiLineString& multilinestring,
     double dfLastLatBezier = 0., dfLastLonBezier = 0.;
     int bIsFirst = TRUE;
     int bFirstIsBezier = TRUE;
-    int bLastIsValid = FALSE;
+    /* int bLastIsValid = FALSE; */
     int bLastIsBezier = FALSE;
     int bLastPartIsClosedOrEnded = FALSE;
     const char* pszLine;
@@ -1583,7 +1583,7 @@ int OGRXPlaneAptReader::ParseLinearGeometry(OGRMultiLineString& multilinestring,
 
         dfLastLat = dfLat;
         dfLastLon = dfLon;
-        bLastIsValid = TRUE;
+        /* bLastIsValid = TRUE; */
 
         CSLDestroy(papszTokens);
     }

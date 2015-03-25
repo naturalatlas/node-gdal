@@ -141,6 +141,7 @@
 				"gdal/gcore/gdalproxypool.cpp",
 				"gdal/gcore/gdalrasterband.cpp",
 				"gdal/gcore/gdalrasterblock.cpp",
+				"gdal/gcore/gdalrescaledalphaband.cpp",
 				"gdal/gcore/gdalvirtualmem.cpp",
 				"gdal/gcore/jp2dump.cpp",
 				"gdal/gcore/overview.cpp",

@@ -1,5 +1,5 @@
 /****************************************************************************
- * $Id: gs7bgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gs7bgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Implements the Golden Software Surfer 7 Binary Grid Format.
@@ -61,7 +61,7 @@
 # define SHRT_MAX 32767
 #endif /* SHRT_MAX */
 
-CPL_CVSID("$Id: gs7bgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gs7bgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_GS7BG(void);
@@ -313,10 +313,11 @@ CPLErr GS7BGRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
         return CE_Failure;
     }
 
-    double *pfImage;
-    pfImage = (double *)pImage;
+#ifdef CPL_MSB
+    double *pfImage = (double *)pImage;
     for( int iPixel=0; iPixel<nBlockXSize; iPixel++ )
         CPL_LSBPTR64( pfImage + iPixel );
+#endif
 
     return CE_None;
 }
@@ -1371,4 +1372,3 @@ void GDALRegister_GS7BG()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

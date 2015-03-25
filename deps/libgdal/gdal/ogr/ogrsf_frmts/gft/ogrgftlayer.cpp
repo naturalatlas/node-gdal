@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgftlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTLayer class.
@@ -30,7 +30,7 @@
 #include "ogr_gft.h"
 #include "cpl_minixml.h"
 
-CPL_CVSID("$Id: ogrgftlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgftlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                            OGRGFTLayer()                             */
@@ -340,8 +340,9 @@ static OGRGeometry* ParseKMLGeometry(/* const */ CPLXMLNode* psXML)
             poColl = new OGRMultiLineString();
         else if (eType == wkbPolygon)
             poColl = new OGRMultiPolygon();
-        else
+        else {
             CPLAssert(0);
+        }
 
         psIter = psXML->psChild;
         for(psIter = psXML->psChild; psIter; psIter = psIter->psNext)

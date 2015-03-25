@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalrasterize.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalrasterize.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Vector rasterization.
@@ -112,8 +112,9 @@ void gvBurnScanline( void *pCBData, int nY, int nXStart, int nXEnd,
             }
         }
     }
-    else
+    else {
         CPLAssert(0);
+    }
 }
 
 /************************************************************************/
@@ -167,8 +168,9 @@ void gvBurnPoint( void *pCBData, int nY, int nX, double dfVariant )
             }
         }
     }
-    else
+    else {
         CPLAssert(0);
+    }
 }
 
 /************************************************************************/
@@ -176,9 +178,9 @@ void gvBurnPoint( void *pCBData, int nY, int nX, double dfVariant )
 /************************************************************************/
 
 static void GDALCollectRingsFromGeometry(
-    OGRGeometry *poShape, 
-    std::vector<double> &aPointX, std::vector<double> &aPointY, 
-    std::vector<double> &aPointVariant, 
+    OGRGeometry *poShape,
+    std::vector<double> &aPointX, std::vector<double> &aPointY,
+    std::vector<double> &aPointVariant,
     std::vector<int> &aPartSize, GDALBurnValueSrc eBurnValueSrc)
 
 {
@@ -1319,4 +1321,3 @@ CPLErr GDALRasterizeLayersBuf( void *pData, int nBufXSize, int nBufYSize,
     return eErr;
 #endif /* def OGR_ENABLED */
 }
-

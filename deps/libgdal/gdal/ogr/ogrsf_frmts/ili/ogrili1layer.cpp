@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrili1layer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrili1layer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  Interlis 1 Translator
  * Purpose:  Implements OGRILI1Layer class.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ogr_geos.h"
 
-CPL_CVSID("$Id: ogrili1layer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrili1layer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                           OGRILI1Layer()                              */
@@ -376,15 +376,15 @@ OGRErr OGRILI1Layer::CreateFeature( OGRFeature *poFeature ) {
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRILI1Layer::TestCapability( const char * pszCap ) {
-        return FALSE;
+int OGRILI1Layer::TestCapability( CPL_UNUSED const char * pszCap ) {
+    return FALSE;
 }
 
 /************************************************************************/
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRILI1Layer::CreateField( OGRFieldDefn *poField, int bApproxOK ) {
+OGRErr OGRILI1Layer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK ) {
     poFeatureDefn->AddFieldDefn( poField );
 
     return OGRERR_NONE;

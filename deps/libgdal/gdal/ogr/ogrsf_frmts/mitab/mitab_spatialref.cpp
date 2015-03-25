@@ -341,7 +341,8 @@ MapInfoDatumInfo asDatumInfoList[] =
 { 0,    113, "Lisboa_DLX",                 4, -303, -62, 105,  0, 0, 0, 0, 0},
 { 0,    114, "Melrica_1973_D73",           4, -223, 110, 37,   0, 0, 0, 0, 0},
 { 0,    115, "Euref_98",                   0, 0,    0,   0,    0, 0, 0, 0, 0},
-{ 0,    116, "GDA94",                      0, 0,    0,   0,    0, 0, 0, 0, 0},
+{ 6283, 116, "GDA94",                      0, 0,    0,   0,    0, 0, 0, 0, 0},
+{ 6283, 116, "Geocentric_Datum_of_Australia_1994", 0, 0, 0, 0, 0, 0, 0, 0, 0},
 { 6167, 117, "NZGD2000",                   0, 0,    0,   0,    0, 0, 0, 0, 0},
 { 6167, 117, "New_Zealand_Geodetic_Datum_2000",0,0, 0,   0,    0, 0, 0, 0, 0},
 { 6169, 118, "America_Samoa",              7, -115, 118, 426,  0, 0, 0, 0, 0},
@@ -521,9 +522,9 @@ OGRSpatialReference *TABFile::GetSpatialRef()
     /*-----------------------------------------------------------------
      * Get the units name, and translation factor.
      *----------------------------------------------------------------*/
-    const char *pszUnitsName; 
+    const char *pszUnitsName;
     const char *pszUnitsConv;
-    double      dfConv = 1.0;
+    /* double      dfConv = 1.0; */
 
     switch( sTABProj.nUnitsId )
     {
@@ -591,14 +592,14 @@ OGRSpatialReference *TABFile::GetSpatialRef()
         pszUnitsName = SRS_UL_ROD;
         pszUnitsConv = SRS_UL_ROD_CONV;
         break;
-            
+
       default:
         pszUnitsName = SRS_UL_METER;
         pszUnitsConv = "1.0";
         break;
     }
 
-    dfConv = CPLAtof(pszUnitsConv);
+    /* dfConv = CPLAtof(pszUnitsConv); */
 
     /*-----------------------------------------------------------------
      * Transform them into an OGRSpatialReference.
@@ -1607,4 +1608,3 @@ int TABFile::SetSpatialRef(OGRSpatialReference *poSpatialRef)
 
     return 0;
 }
-

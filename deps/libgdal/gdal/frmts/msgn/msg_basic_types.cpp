@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msg_basic_types.cpp 17686 2009-09-25 13:35:11Z dron $
+ * $Id: msg_basic_types.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  MSG Native Reader
  * Purpose:  Basic types implementation.
@@ -30,7 +30,7 @@
 #include "msg_basic_types.h"
 #include "cpl_port.h"
 
-CPL_CVSID("$Id: msg_basic_types.cpp 17686 2009-09-25 13:35:11Z dron $");
+CPL_CVSID("$Id: msg_basic_types.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 #include <stdio.h>
 
@@ -76,12 +76,13 @@ void to_native(IMAGE_DESCRIPTION_RECORD& r) {
     r.referencegrid_visir.numberOfColumns = CPL_MSBWORD32(r.referencegrid_visir.numberOfColumns);
     // should floats be swapped too?
     unsigned int t;
-    
+
     // convert float using CPL_MSBWORD32
+    // TODO: Fix strict aliasing issue
     t = *(unsigned int *)&r.referencegrid_visir.lineDirGridStep;
     t = CPL_MSBWORD32(t);
     r.referencegrid_visir.lineDirGridStep = *(float *)&t;
-    
+
     // convert float using CPL_MSBWORD32
     t = *(unsigned int *)&r.referencegrid_visir.columnDirGridStep;
     t = CPL_MSBWORD32(t);
@@ -221,5 +222,3 @@ void Conversions::convert_geo_to_pixel(double longitude, double latitude,unsigne
 }
 
 } // namespace msg_native_format
-
-

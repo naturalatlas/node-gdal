@@ -1,5 +1,5 @@
 /******************************************************************************
-* $Id: ogr_openfilegdb.h 27044 2014-03-16 23:41:27Z rouault $
+* $Id: ogr_openfilegdb.h 27771 2014-09-30 22:45:12Z rouault $
 *
 * Project:  OpenGIS Simple Features Reference Implementation
 * Purpose:  Implements Open FileGDB OGR driver.
@@ -165,6 +165,14 @@ class OGROpenFileGDBDataSource : public OGRDataSource
                                      int nInterestTable);
 
   int                 FileExists(const char* pszFilename);
+  void                AddLayer( const CPLString& osName,
+                                int nInterestTable,
+                                int& nCandidateLayers,
+                                int& nLayersSDC,
+                                const CPLString& osDefinition,
+                                const CPLString& osDocumentation,
+                                const char* pszGeomName,
+                                OGRwkbGeometryType eGeomType );
 
 public:
            OGROpenFileGDBDataSource();

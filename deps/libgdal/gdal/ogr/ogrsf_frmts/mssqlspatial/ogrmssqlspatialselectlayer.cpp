@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialselectlayer.cpp 27361 2014-05-18 12:11:28Z tamas $
+ * $Id: ogrmssqlspatialselectlayer.cpp 27760 2014-09-28 18:31:18Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLSpatialSelectLayer class, layer access to the results
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 27361 2014-05-18 12:11:28Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 27760 2014-09-28 18:31:18Z tamas $");
 /************************************************************************/
 /*                     OGRMSSQLSpatialSelectLayer()                     */
 /************************************************************************/
@@ -51,6 +51,7 @@ OGRMSSQLSpatialSelectLayer::OGRMSSQLSpatialSelectLayer( OGRMSSQLSpatialDataSourc
 
     /* identify the geometry column */
     pszGeomColumn = NULL;
+    int iImageCol = -1;
     for ( int iColumn = 0; iColumn < poStmt->GetColCount(); iColumn++ )
     {
         if ( EQUAL(poStmt->GetColTypeName( iColumn ), "image") )
@@ -75,6 +76,8 @@ OGRMSSQLSpatialSelectLayer::OGRMSSQLSpatialSelectLayer( OGRMSSQLSpatialDataSourc
                     break;
                 }
             }
+            else if (iImageCol == -1)
+                iImageCol = iColumn;
         }
         else if ( EQUAL(poStmt->GetColTypeName( iColumn ), "geometry") )
         {
@@ -88,6 +91,13 @@ OGRMSSQLSpatialSelectLayer::OGRMSSQLSpatialSelectLayer( OGRMSSQLSpatialDataSourc
             pszGeomColumn = CPLStrdup(poStmt->GetColName(iColumn));
             break;
         }
+    }
+
+    if (pszGeomColumn == NULL && iImageCol >= 0)
+    {
+        /* set the image col as geometry column as the last resort */
+        nGeomColumnType = MSSQLCOLTYPE_BINARY;
+        pszGeomColumn = CPLStrdup(poStmt->GetColName(iImageCol));
     }
 
     BuildFeatureDefn( "SELECT", poStmt );

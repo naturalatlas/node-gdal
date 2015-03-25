@@ -35,7 +35,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: levellerdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: levellerdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_Leveller(void);
@@ -1345,6 +1345,7 @@ bool LevellerDataset::load_from_file(VSILFILE* file, const char* pszFilename)
 			{
 				UNITLABEL unitcode;
 				//char szLocalUnits[8];
+                                // TODO: Fix strict aliasing issue.
 				if(!this->get((int&)unitcode, file, "coordsys_units"))
 					unitcode = UNITLABEL_M;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeodriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgeodriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -31,7 +31,7 @@
 #include "ogr_pgeo.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgeodriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgeodriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                            ~OGRODBCDriver()                            */
@@ -144,8 +144,7 @@ OGRDataSource *OGRPGeoDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRPGeoDriver::TestCapability( const char * pszCap )
-
+int OGRPGeoDriver::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
@@ -221,7 +220,7 @@ bool OGRODBCMDBDriver::FindDriverLib()
         // Directory or file path
         strLibPath = pszDrvCfg;
 
-        VSIStatBuf sStatBuf = { 0 };
+        VSIStatBuf sStatBuf;
         if ( VSIStat( pszDrvCfg, &sStatBuf ) == 0
              && VSI_ISDIR( sStatBuf.st_mode ) ) 
         {
@@ -270,7 +269,7 @@ bool OGRODBCMDBDriver::LibraryExists(const char* pszLibPath)
 {
     CPLAssert( 0 != pszLibPath );
 
-    VSIStatBuf stb = { 0 } ;
+    VSIStatBuf stb;
 
     if ( 0 == VSIStat( pszLibPath, &stb ) )
     {
@@ -297,4 +296,3 @@ void RegisterOGRPGeo()
 {
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRPGeoDriver );
 }
-

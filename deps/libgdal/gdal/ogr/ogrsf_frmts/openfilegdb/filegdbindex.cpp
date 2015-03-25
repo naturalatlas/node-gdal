@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbindex.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: filegdbindex.cpp 27751 2014-09-28 16:33:48Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB indexes
@@ -74,7 +74,7 @@ class FileGDBTrivialIterator : public FileGDBIterator
         virtual                     ~FileGDBTrivialIterator() { delete poParentIter; }
 
         virtual FileGDBTable        *GetTable() { return poTable; }
-        virtual void                 Reset() { iRow = 0; }
+        virtual void                 Reset() { iRow = 0; poParentIter->Reset(); }
         virtual int                  GetNextRowSortedByFID();
         virtual int                  GetRowCount()
                 { return poTable->GetTotalRecordCount(); }

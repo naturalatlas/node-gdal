@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarpkernel.cpp 27159 2014-04-12 15:49:25Z rouault $
+ * $Id: gdalwarpkernel.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Implementation of the GDALWarpKernel class.  Implements the actual
@@ -37,7 +37,7 @@
 #include "cpl_atomic_ops.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalwarpkernel.cpp 27159 2014-04-12 15:49:25Z rouault $");
+CPL_CVSID("$Id: gdalwarpkernel.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 static const int anGWKFilterRadius[] =
 {
@@ -3346,7 +3346,7 @@ free_warper:
                 || _padfY[_iDstX] < _poWK->nSrcYOff ) \
                 continue; \
 \
-            int iSrcX, iSrcY, iSrcOffset;\
+            int iSrcX, iSrcY, CPL_UNUSED iSrcOffset;\
 \
             iSrcX = ((int) (_padfX[_iDstX] + 1e-10)) - _poWK->nSrcXOff;\
             iSrcY = ((int) (_padfY[_iDstX] + 1e-10)) - _poWK->nSrcYOff;\
@@ -5368,4 +5368,3 @@ static void GWKAverageOrModeThread( void* pData)
     VSIFree(pafVals);
     VSIFree(panSums);
 }
-

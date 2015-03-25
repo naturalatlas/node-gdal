@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ods_formula_node.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ods_formula_node.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Component: ODS formula Engine
  * Purpose: Implementation of the ods_formula_node class used to represent a
@@ -512,8 +512,9 @@ int ods_formula_node::EvaluateIF(IODSCellEvaluator* poEvaluator)
     CPLAssert(papoSubExpr[0]->eNodeType == SNT_CONSTANT );
     CPLAssert(papoSubExpr[1]->eNodeType == SNT_CONSTANT );
     if (nSubExprCount == 3)
+    {
         CPLAssert(papoSubExpr[2]->eNodeType == SNT_CONSTANT );
-
+    }
     int bCond = FALSE;
     if (papoSubExpr[0]->field_type == ODS_FIELD_TYPE_INTEGER)
     {

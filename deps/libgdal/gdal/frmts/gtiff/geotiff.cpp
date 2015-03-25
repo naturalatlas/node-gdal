@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: geotiff.cpp 27607 2014-08-27 12:54:43Z rouault $
+ * $Id: geotiff.cpp 28419 2015-02-06 00:28:50Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -60,7 +60,7 @@
 #include "tiffiop.h"
 #endif
 
-CPL_CVSID("$Id: geotiff.cpp 27607 2014-08-27 12:54:43Z rouault $");
+CPL_CVSID("$Id: geotiff.cpp 28419 2015-02-06 00:28:50Z rouault $");
 
 #if SIZEOF_VOIDP == 4
 static int bGlobalStripIntegerOverflow = FALSE;
@@ -793,6 +793,7 @@ CPLErr GTiffRasterBand::DirectIO( GDALRWFlag eRWFlag,
           (poGDS->nBitsPerSample == 8 || (poGDS->nBitsPerSample == 16) ||
            poGDS->nBitsPerSample == 32 || poGDS->nBitsPerSample == 64) &&
           poGDS->nBitsPerSample == GDALGetDataTypeSize(eDataType) &&
+          poGDS->SetDirectory() && /* very important to make hTIFF uptodate! */
           !TIFFIsTiled( poGDS->hTIFF )) )
     {
         return CE_Failure;
@@ -1883,7 +1884,13 @@ CPLErr GTiffRasterBand::SetMetadata( char ** papszMD, const char *pszDomain )
     if( pszDomain == NULL || !EQUAL(pszDomain,"_temporary_") )
     {
         if( papszMD != NULL || GetMetadata(pszDomain) != NULL )
+        {
             poGDS->bMetadataChanged = TRUE;
+            // Cancel any existing metadata from PAM file
+            if( eAccess == GA_Update &&
+                GDALPamRasterBand::GetMetadata(pszDomain) != NULL )
+                GDALPamRasterBand::SetMetadata(papszMD, pszDomain);
+        }
     }
 
     return oGTiffMDMD.SetMetadata( papszMD, pszDomain );
@@ -1910,7 +1917,13 @@ CPLErr GTiffRasterBand::SetMetadataItem( const char *pszName,
 
 {
     if( pszDomain == NULL || !EQUAL(pszDomain,"_temporary_") )
+    {
         poGDS->bMetadataChanged = TRUE;
+        // Cancel any existing metadata from PAM file
+        if( eAccess == GA_Update &&
+            GDALPamRasterBand::GetMetadataItem(pszName, pszDomain) != NULL )
+            GDALPamRasterBand::SetMetadataItem(pszName, NULL, pszDomain);
+    }
 
     return oGTiffMDMD.SetMetadataItem( pszName, pszValue, pszDomain );
 }
@@ -2792,8 +2805,9 @@ CPLErr GTiffOddBitsBand::IWriteBlock( int nBlockXOff, int nBlockYOff,
                     nInWord = ((GUInt16 *) pImage)[iPixel++];
                 else if( eDataType == GDT_UInt32 )
                     nInWord = ((GUInt32 *) pImage)[iPixel++];
-                else
+                else {
                     CPLAssert(0);
+                }
 
                 if (nInWord > nMaxVal)
                 {
@@ -2905,8 +2919,9 @@ CPLErr GTiffOddBitsBand::IWriteBlock( int nBlockXOff, int nBlockYOff,
                     nInWord = ((GUInt16 *) pabyThisImage)[iPixel++];
                 else if( eDataType == GDT_UInt32 )
                     nInWord = ((GUInt32 *) pabyThisImage)[iPixel++];
-                else
+                else {
                     CPLAssert(0);
+                }
 
                 if (nInWord > nMaxVal)
                 {
@@ -3218,22 +3233,23 @@ CPLErr GTiffOddBitsBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 
                 for( iBit = 0; iBit < poGDS->nBitsPerSample; iBit++ )
                 {
-                    if( pabyBlockBuf[iBitOffset>>3] 
+                    if( pabyBlockBuf[iBitOffset>>3]
                         & (0x80 >>(iBitOffset & 7)) )
                         nOutWord |= (1 << (poGDS->nBitsPerSample - 1 - iBit));
                     iBitOffset++;
-                } 
+                }
 
                 iBitOffset= iBitOffset + iPixelBitSkip - poGDS->nBitsPerSample;
-                
+
                 if( eDataType == GDT_Byte )
                     ((GByte *) pImage)[iPixel++] = (GByte) nOutWord;
                 else if( eDataType == GDT_UInt16 )
                     ((GUInt16 *) pImage)[iPixel++] = (GUInt16) nOutWord;
                 else if( eDataType == GDT_UInt32 )
                     ((GUInt32 *) pImage)[iPixel++] = nOutWord;
-                else
+                else {
                     CPLAssert(0);
+                }
             }
         }
     }
@@ -5143,8 +5159,7 @@ CPLErr GTiffDataset::IBuildOverviews(
 /* -------------------------------------------------------------------- */
 /*      Refresh old overviews that were listed.                         */
 /* -------------------------------------------------------------------- */
-    if (nCompression != COMPRESSION_NONE &&
-        nPlanarConfig == PLANARCONFIG_CONTIG &&
+    if (nPlanarConfig == PLANARCONFIG_CONTIG &&
         GDALDataTypeIsComplex(GetRasterBand( panBandList[0] )->GetRasterDataType()) == FALSE &&
         GetRasterBand( panBandList[0] )->GetColorTable() == NULL &&
         (EQUALN(pszResampling, "NEAR", 4) || EQUAL(pszResampling, "AVERAGE") || EQUAL(pszResampling, "GAUSS")))
@@ -5152,6 +5167,9 @@ CPLErr GTiffDataset::IBuildOverviews(
         /* In the case of pixel interleaved compressed overviews, we want to generate */
         /* the overviews for all the bands block by block, and not band after band, */
         /* in order to write the block once and not loose space in the TIFF file */
+        /* We also use that logic for uncompressed overviews, since GDALRegenerateOverviewsMultiBand() */
+        /* will be able to trigger cascading overview regeneration even in the presence */
+        /* of an alpha band. */
 
         GDALRasterBand ***papapoOverviewBands;
         GDALRasterBand  **papoBandList;
@@ -9129,8 +9147,12 @@ GTiffDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /*      Should we use optimized way of copying from an input JPEG       */
 /*      dataset ?                                                       */
 /* -------------------------------------------------------------------- */
+#if defined(HAVE_LIBJPEG)
     int bCopyFromJPEG = FALSE;
+#endif
+#if defined(HAVE_LIBJPEG) || defined(JPEG_DIRECT_COPY)
     int bDirectCopyFromJPEG = FALSE;
+#endif
 
     /* Note: JPEG_DIRECT_COPY is not defined by default, because it is mainly */
     /* usefull for debugging purposes */
@@ -10174,7 +10196,13 @@ CPLErr GTiffDataset::SetMetadata( char ** papszMD, const char *pszDomain )
     if ((papszMD != NULL) && (pszDomain != NULL) && EQUAL(pszDomain, "COLOR_PROFILE"))
         bColorProfileMetadataChanged = TRUE;
     else if( pszDomain == NULL || !EQUAL(pszDomain,"_temporary_") )
+    {
         bMetadataChanged = TRUE;
+        // Cancel any existing metadata from PAM file
+        if( eAccess == GA_Update &&
+            GDALPamDataset::GetMetadata(pszDomain) != NULL )
+            GDALPamDataset::SetMetadata(papszMD, pszDomain);
+    }
 
     if( (pszDomain == NULL || EQUAL(pszDomain, "")) &&
         CSLFetchNameValue(papszMD, GDALMD_AREA_OR_POINT) != NULL )
@@ -10241,7 +10269,13 @@ CPLErr GTiffDataset::SetMetadataItem( const char *pszName,
     if ((pszDomain != NULL) && EQUAL(pszDomain, "COLOR_PROFILE"))
         bColorProfileMetadataChanged = TRUE;
     else if( pszDomain == NULL || !EQUAL(pszDomain,"_temporary_") )
+    {
         bMetadataChanged = TRUE;
+        // Cancel any existing metadata from PAM file
+        if( eAccess == GA_Update &&
+            GDALPamDataset::GetMetadataItem(pszName, pszDomain) != NULL )
+            GDALPamDataset::SetMetadataItem(pszName, NULL, pszDomain);
+    }
 
     if( (pszDomain == NULL || EQUAL(pszDomain, "")) &&
         pszName != NULL && EQUAL(pszName, GDALMD_AREA_OR_POINT) )
@@ -11087,4 +11121,3 @@ void GDALRegister_GTiff()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

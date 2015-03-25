@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqltablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmysqltablelayer.cpp 27916 2014-10-30 15:38:57Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLTableLayer class.
@@ -33,23 +33,22 @@
 #include "cpl_string.h"
 #include "ogr_mysql.h"
 
-CPL_CVSID("$Id: ogrmysqltablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmysqltablelayer.cpp 27916 2014-10-30 15:38:57Z rouault $");
 
 /************************************************************************/
 /*                         OGRMySQLTableLayer()                         */
 /************************************************************************/
 
-OGRMySQLTableLayer::OGRMySQLTableLayer( OGRMySQLDataSource *poDSIn, 
-                                  const char * pszTableName,
-                                  int bUpdate, int nSRSIdIn )
-
+OGRMySQLTableLayer::OGRMySQLTableLayer( OGRMySQLDataSource *poDSIn,
+                                        CPL_UNUSED const char * pszTableName,
+                                        int bUpdate, int nSRSIdIn )
 {
     poDS = poDSIn;
 
     pszQuery = NULL;
     pszWHERE = CPLStrdup( "" );
     pszQueryStatement = NULL;
-    
+
     bUpdateAccess = bUpdate;
 
     iNextShapeId = 0;
@@ -406,6 +405,9 @@ void OGRMySQLTableLayer::SetSpatialFilter( OGRGeometry * poGeomIn )
 void OGRMySQLTableLayer::BuildWhere()
 
 {
+    // don't mess up decimal separator 
+    CPLLocaleC oLocaleForcer; 
+
     CPLFree( pszWHERE );
     pszWHERE = (char*)CPLMalloc(500 + ((pszQuery) ? strlen(pszQuery) : 0));
     pszWHERE[0] = '\0';
@@ -1069,14 +1071,13 @@ OGRFeature *OGRMySQLTableLayer::GetFeature( long nFeatureId )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRMySQLTableLayer::GetFeatureCount( int bForce )
-
+int OGRMySQLTableLayer::GetFeatureCount( CPL_UNUSED int bForce )
 {
 /* -------------------------------------------------------------------- */
 /*      Ensure any active long result is interrupted.                   */
 /* -------------------------------------------------------------------- */
     poDS->InterruptLongResult();
-    
+
 /* -------------------------------------------------------------------- */
 /*      Issue the appropriate select command.                           */
 /* -------------------------------------------------------------------- */
@@ -1123,8 +1124,7 @@ int OGRMySQLTableLayer::GetFeatureCount( int bForce )
 /*      like PostgreSQL.						*/
 /************************************************************************/
 
-OGRErr OGRMySQLTableLayer::GetExtent(OGREnvelope *psExtent, int bForce )
-
+OGRErr OGRMySQLTableLayer::GetExtent(OGREnvelope *psExtent, CPL_UNUSED int bForce )
 {
 	if( GetLayerDefn()->GetGeomType() == wkbNone )
     {
@@ -1132,7 +1132,7 @@ OGRErr OGRMySQLTableLayer::GetExtent(OGREnvelope *psExtent, int bForce )
         psExtent->MaxX = 0.0;
         psExtent->MinY = 0.0;
         psExtent->MaxY = 0.0;
-        
+
         return OGRERR_FAILURE;
     }
 

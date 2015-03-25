@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrosmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrosmdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMDataSource class.
@@ -121,7 +121,7 @@ size_t GetMaxTotalAllocs();
 static void WriteVarInt64(GUIntBig nSVal, GByte** ppabyData);
 static void WriteVarSInt64(GIntBig nSVal, GByte** ppabyData);
 
-CPL_CVSID("$Id: ogrosmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrosmdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 class DSToBeOpened
 {
@@ -2611,8 +2611,9 @@ void OGROSMDataSource::ProcessPolygonsStandalone()
                 bFeatureAdded = TRUE;
 
         }
-        else
+        else {
             CPLAssert(FALSE);
+        }
 
         sqlite3_reset(pahSelectWayStmt[0]);
 

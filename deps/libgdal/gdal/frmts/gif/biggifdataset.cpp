@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: biggifdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: biggifdataset.cpp 28278 2015-01-03 14:00:06Z rouault $
  *
  * Project:  BIGGIF Driver
  * Purpose:  Implement GDAL support for reading large GIF files in a 
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "gifabstractdataset.h"
 
-CPL_CVSID("$Id: biggifdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: biggifdataset.cpp 28278 2015-01-03 14:00:06Z rouault $");
 
 CPL_C_START
 void	GDALRegister_BIGGIF(void);
@@ -478,6 +478,13 @@ GDALDataset *BIGGIFDataset::Open( GDALOpenInfo * poOpenInfo )
     
     poDS->nRasterXSize = poDS->hGifFile->SavedImages[0].ImageDesc.Width;
     poDS->nRasterYSize = poDS->hGifFile->SavedImages[0].ImageDesc.Height;
+    if( poDS->hGifFile->SavedImages[0].ImageDesc.ColorMap == NULL &&
+        poDS->hGifFile->SColorMap == NULL )
+    {
+        CPLDebug("GIF", "Skipping image without color table");
+        delete poDS;
+        return NULL;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Create band information objects.                                */

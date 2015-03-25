@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf4dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hdf4dataset.cpp 28365 2015-01-27 10:39:30Z rouault $
  *
  * Project:  Hierarchical Data Format Release 4 (HDF4)
  * Purpose:  HDF4 Datasets. Open HDF4 file, fetch metadata and list of
@@ -42,7 +42,7 @@
 #include "hdf4compat.h"
 #include "hdf4dataset.h"
 
-CPL_CVSID("$Id: hdf4dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hdf4dataset.cpp 28365 2015-01-27 10:39:30Z rouault $");
 
 CPL_C_START
 void	GDALRegister_HDF4(void);
@@ -1245,5 +1245,9 @@ void GDALRegister_HDF4()
 
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
-}
 
+#ifdef HDF4_PLUGIN
+    GDALRegister_HDF4Image();
+#endif
+
+}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreader.cpp 27713 2014-09-21 15:51:47Z jef $
+ * $Id: nasreader.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  NAS Reader
  * Purpose:  Implementation of NASReader class.
@@ -854,8 +854,7 @@ int NASReader::SaveClasses( const char *pszFile )
 /*      looking for schema information.                                 */
 /************************************************************************/
 
-int NASReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
-
+int NASReader::PrescanForSchema( int bGetExtents, CPL_UNUSED int bAnalyzeSRSPerFeature )
 {
     GMLFeature  *poFeature;
 
@@ -1035,10 +1034,9 @@ void NASReader::CheckForRelations( const char *pszElement,
 /*      Returns TRUE for success                                        */
 /************************************************************************/
 
-int NASReader::HugeFileResolver( const char *pszFile,
-                              int bSqliteIsTempFile,
-                              int iSqliteCacheMB )
-
+int NASReader::HugeFileResolver( CPL_UNUSED const char *pszFile,
+                                 CPL_UNUSED int bSqliteIsTempFile,
+                                 CPL_UNUSED int iSqliteCacheMB )
 {
     CPLDebug( "NAS", "HugeFileResolver() not currently implemented for NAS." );
     return FALSE;
@@ -1061,11 +1059,10 @@ int NASReader::PrescanForTemplate( void )
 /*      Returns TRUE for success                                        */
 /************************************************************************/
 
-int NASReader::ResolveXlinks( const char *pszFile,
-                              int* pbOutIsTempFile,
-                              char **papszSkip,
-                              const int bStrict )
-
+int NASReader::ResolveXlinks( CPL_UNUSED const char *pszFile,
+                              CPL_UNUSED int* pbOutIsTempFile,
+                              CPL_UNUSED char **papszSkip,
+                              CPL_UNUSED const int bStrict )
 {
     CPLDebug( "NAS", "ResolveXlinks() not currently implemented for NAS." );
     return FALSE;

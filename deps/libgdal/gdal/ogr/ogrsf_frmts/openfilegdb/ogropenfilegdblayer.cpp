@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenfilegdblayer.cpp 27654 2014-09-09 18:28:10Z rouault $
+ * $Id: ogropenfilegdblayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Open FileGDB OGR driver.
@@ -380,7 +380,7 @@ int OGROpenFileGDBLayer::BuildLayerDefinition()
 
         const FileGDBField* poGDBField = m_poLyrTable->GetField(i);
         OGRFieldType eType = OFTString;
-        int nWidth = 0;
+        /* int nWidth = 0; */
         switch( poGDBField->GetType() )
         {
             case FGFT_INT16:
@@ -392,7 +392,7 @@ int OGROpenFileGDBLayer::BuildLayerDefinition()
                 eType = OFTReal;
                 break;
             case FGFT_STRING:
-                nWidth = poGDBField->GetMaxWidth();
+                /* nWidth = poGDBField->GetMaxWidth(); */
                 eType = OFTString;
                 break;
             case FGFT_UUID_1:

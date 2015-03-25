@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqldatasource.cpp 27506 2014-07-07 19:49:05Z rouault $
+ * $Id: ogrmysqldatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLDataSource class.
@@ -37,7 +37,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmysqldatasource.cpp 27506 2014-07-07 19:49:05Z rouault $");
+CPL_CVSID("$Id: ogrmysqldatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 /************************************************************************/
 /*                         OGRMySQLDataSource()                         */
 /************************************************************************/
@@ -294,8 +294,7 @@ int OGRMySQLDataSource::Open( const char * pszNewName, int bUpdate,
 /************************************************************************/
 
 int OGRMySQLDataSource::OpenTable( const char *pszNewName, int bUpdate,
-                                int bTestOpen )
-
+                                   CPL_UNUSED int bTestOpen )
 {
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
@@ -819,11 +818,10 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     MYSQL_RES           *hResult=NULL;
     CPLString            osCommand;
     const char          *pszGeometryType;
-    const char			*pszGeomColumnName;
-    const char 			*pszExpectedFIDName; 
-	
+    const char		*pszGeomColumnName;
+    const char		*pszExpectedFIDName;
     char                *pszLayerName;
-    int                 nDimension = 3; // MySQL only supports 2d currently
+    // int                 nDimension = 3; // MySQL only supports 2d currently
 
 
 /* -------------------------------------------------------------------- */
@@ -837,8 +835,8 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     else
         pszLayerName = CPLStrdup( pszLayerNameIn );
 
-    if( wkbFlatten(eType) == eType )
-        nDimension = 2;
+    // if( wkbFlatten(eType) == eType )
+    //    nDimension = 2;
 
     CPLDebug("MYSQL","Creating layer %s.", pszLayerName);
 
@@ -852,7 +850,7 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     {
         if( EQUAL(pszLayerName,papoLayers[iLayer]->GetLayerDefn()->GetName()) )
         {
-			
+
             if( CSLFetchNameValue( papszOptions, "OVERWRITE" ) != NULL
                 && !EQUAL(CSLFetchNameValue(papszOptions,"OVERWRITE"),"NO") )
             {

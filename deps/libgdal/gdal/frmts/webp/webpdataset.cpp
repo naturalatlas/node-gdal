@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: webpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: webpdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL WEBP Driver
  * Purpose:  Implement GDAL WEBP Support based on libwebp
@@ -33,7 +33,7 @@
 #include "webp/decode.h"
 #include "webp/encode.h"
 
-CPL_CVSID("$Id: webpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: webpdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_WEBP(void);
@@ -101,8 +101,7 @@ class WEBPRasterBand : public GDALPamRasterBand
 /*                          WEBPRasterBand()                            */
 /************************************************************************/
 
-WEBPRasterBand::WEBPRasterBand( WEBPDataset *poDS, int nBand )
-
+WEBPRasterBand::WEBPRasterBand( WEBPDataset *poDS, CPL_UNUSED int nBand )
 {
     this->poDS = poDS;
 
@@ -116,9 +115,8 @@ WEBPRasterBand::WEBPRasterBand( WEBPDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr WEBPRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
-
+CPLErr WEBPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+                                   void * pImage )
 {
     WEBPDataset* poGDS = (WEBPDataset*) poDS;
 

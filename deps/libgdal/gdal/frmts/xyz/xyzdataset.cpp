@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: xyzdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: xyzdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  XYZ driver
  * Purpose:  GDALDataset driver for XYZ dataset.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: xyzdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: xyzdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_XYZ(void);
@@ -358,9 +358,10 @@ CPLErr XYZRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
         if( idx + 1 == nRasterXSize )
             break;
     }
-    
-    if( poGDS->bSameNumberOfValuesPerLine )
+
+    if( poGDS->bSameNumberOfValuesPerLine ) {
         CPLAssert(poGDS->nDataLineNum == (nBlockYOff + 1) * nBlockXSize);
+    }
 
     nLastYOff = nBlockYOff;
 
@@ -1240,4 +1241,3 @@ void GDALRegister_XYZ()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

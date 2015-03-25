@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_curl.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_curl.cpp 28190 2014-12-21 22:42:54Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for HTTP/FTP files
@@ -34,7 +34,7 @@
 #include "cpl_time.h"
 #include "cpl_vsil_curl_priv.h"
 
-CPL_CVSID("$Id: cpl_vsil_curl.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_curl.cpp 28190 2014-12-21 22:42:54Z rouault $");
 
 #ifndef HAVE_CURL
 
@@ -790,9 +790,16 @@ int VSICurlHandle::DownloadRegion(vsi_l_offset startOffset, int nBlocks)
     sWriteFuncHeaderData.bIsHTTP = strncmp(pszURL, "http", 4) == 0;
     sWriteFuncHeaderData.nStartOffset = startOffset;
     sWriteFuncHeaderData.nEndOffset = startOffset + nBlocks * DOWNLOAD_CHUNCK_SIZE - 1;
+    /* Some servers don't like we try to read after end-of-file (#5786) */
+    if( cachedFileProp->bHastComputedFileSize && 
+        sWriteFuncHeaderData.nEndOffset >= cachedFileProp->fileSize )
+    {
+        sWriteFuncHeaderData.nEndOffset = cachedFileProp->fileSize - 1;
+    }
 
     char rangeStr[512];
-    sprintf(rangeStr, CPL_FRMT_GUIB "-" CPL_FRMT_GUIB, startOffset, startOffset + nBlocks * DOWNLOAD_CHUNCK_SIZE - 1);
+    sprintf(rangeStr, CPL_FRMT_GUIB "-" CPL_FRMT_GUIB, startOffset,
+            sWriteFuncHeaderData.nEndOffset);
 
     if (ENABLE_DEBUG)
         CPLDebug("VSICURL", "Downloading %s (%s)...", rangeStr, pszURL);
@@ -991,6 +998,9 @@ size_t VSICurlHandle::Read( void *pBuffer, size_t nSize, size_t nMemb )
                     break;
                 }
             }
+
+            if( nBlocksToDownload > N_MAX_REGIONS )
+                nBlocksToDownload = N_MAX_REGIONS;
 
             if (DownloadRegion(nOffsetToDownload, nBlocksToDownload) == FALSE)
             {

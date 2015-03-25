@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfcreatecopy.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pdfcreatecopy.cpp 27991 2014-11-21 09:09:00Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset.
@@ -39,7 +39,7 @@
 #include "cpl_error.h"
 #include "ogr_spatialref.h"
 #include "ogr_geometry.h"
-#include "vrt/vrtdataset.h"
+#include "vrtdataset.h"
 
 #include "pdfobject.h"
 
@@ -50,7 +50,7 @@
 /* Cf PDF reference v1.7, Appendix C, page 993 */
 #define MAXIMUM_SIZE_IN_UNITS   14400
 
-CPL_CVSID("$Id: pdfcreatecopy.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pdfcreatecopy.cpp 27991 2014-11-21 09:09:00Z rouault $");
 
 #define PIXEL_TO_GEO_X(x,y) adfGeoTransform[0] + x * adfGeoTransform[1] + y * adfGeoTransform[2]
 #define PIXEL_TO_GEO_Y(x,y) adfGeoTransform[3] + x * adfGeoTransform[4] + y * adfGeoTransform[5]
@@ -2866,10 +2866,14 @@ int GDALPDFWriter::WriteOGRFeature(GDALPDFLayerDesc& osVectorDesc,
         {
             /*if (osLabelText[i] == '\n')
                 VSIFPrintfL(fp, ") Tj T* (");
-            else */if (osLabelText[i] >= 32 && osLabelText[i] <= 127)
-                VSIFPrintfL(fp, "%c", osLabelText[i]);
-            else
-                VSIFPrintfL(fp, "_");
+            else */
+
+            /* Tautology.  Always true. */
+            /* if (osLabelText[i] >= 32 && osLabelText[i] <= 127) { */
+            VSIFPrintfL(fp, "%c", osLabelText[i]);
+            /* } else {
+                   VSIFPrintfL(fp, "_");
+            } */
         }
         VSIFPrintfL(fp, ") Tj\n");
         VSIFPrintfL(fp, "ET\n");
@@ -3421,17 +3425,19 @@ int GDALPDFWriter::WriteMask(GDALDataset* poSrcDS,
 
     int bOnly0or255 = TRUE;
     int bOnly255 = TRUE;
-    int bOnly0 = TRUE;
+    /* int bOnly0 = TRUE; */
     int i;
     for(i=0;i<nReqXSize * nReqYSize;i++)
     {
         if (pabyMask[i] == 0)
             bOnly255 = FALSE;
         else if (pabyMask[i] == 255)
-            bOnly0 = FALSE;
+        {
+            /* bOnly0 = FALSE; */
+        }
         else
         {
-            bOnly0 = FALSE;
+            /* bOnly0 = FALSE; */
             bOnly255 = FALSE;
             bOnly0or255 = FALSE;
             break;

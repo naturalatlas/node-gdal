@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_xml.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogr_srs_xml.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference interface to OGC XML (014r4).
@@ -231,28 +231,26 @@ static CPLXMLNode *addAuthorityIDBlock( CPLXMLNode *psTarget,
 
     return psElement;
 }
-    
 
 /************************************************************************/
 /*                              addGMLId()                              */
 /************************************************************************/
 
 static void addGMLId( CPLXMLNode *psParent )
-
 {
     static void *hGMLIdMutex = NULL;
     CPLMutexHolderD( &hGMLIdMutex );
 
-    CPLXMLNode *psId;
+    /* CPLXMLNode *psId; */
     static int nNextGMLId = 1;
     char   szIdText[40];
 
     sprintf( szIdText, "ogrcrs%d", nNextGMLId++ );
-    
-    psId = 
-        CPLCreateXMLNode( 
-            CPLCreateXMLNode( psParent, CXT_Attribute, "gml:id" ),
-            CXT_Text, szIdText );
+
+    /* psId =  */
+    CPLCreateXMLNode(
+        CPLCreateXMLNode( psParent, CXT_Attribute, "gml:id" ),
+        CXT_Text, szIdText );
 }
 
 /************************************************************************/

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlsxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrxlsxdatasource.cpp 28181 2014-12-20 17:22:45Z rouault $
  *
  * Project:  XLSX Translator
  * Purpose:  Implements OGRXLSXDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_time.h"
 
-CPL_CVSID("$Id: ogrxlsxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrxlsxdatasource.cpp 28181 2014-12-20 17:22:45Z rouault $");
 
 /************************************************************************/
 /*                            OGRXLSXLayer()                            */
@@ -1621,11 +1621,16 @@ static void WriteWorkbook(const char* pszName, OGRDataSource* poDS)
 
 static void BuildColString(char szCol[5], int nCol)
 {
+    /*
+    A Z   AA AZ   BA BZ   ZA   ZZ   AAA    ZZZ      AAAA
+    0 25  26 51   52 77   676  701  702    18277    18278
+    */
     int k = 0;
     szCol[k++] = (nCol % 26) + 'A';
     while(nCol >= 26)
     {
         nCol /= 26;
+        nCol --; /* We wouldn't need that if this was a proper base 26 numeration scheme ! */
         szCol[k++] = (nCol % 26) + 'A';
     }
     szCol[k] = 0;

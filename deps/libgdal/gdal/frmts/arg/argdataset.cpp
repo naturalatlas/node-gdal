@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: argdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: argdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  Azavea Raster Grid format driver.
  * Purpose:  Implements support for reading and writing Azavea Raster Grid
@@ -34,7 +34,7 @@
 #include <json.h>
 #include <ogr_spatialref.h>
 
-CPL_CVSID("$Id: argdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: argdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #define MAX_FILENAME_LEN 4096
 
@@ -576,17 +576,17 @@ GDALDataset *ARGDataset::Open( GDALOpenInfo * poOpenInfo )
 /************************************************************************/
 /*                          CreateCopy()                                */
 /************************************************************************/
-GDALDataset * ARGDataset::CreateCopy( const char * pszFilename, 
+GDALDataset * ARGDataset::CreateCopy( const char * pszFilename,
                                       GDALDataset * poSrcDS,
                                       CPL_UNUSED int bStrict,
-                                      CPL_UNUSED char ** papszOptions, 
+                                      CPL_UNUSED char ** papszOptions,
                                       CPL_UNUSED GDALProgressFunc pfnProgress,
-                                      CPL_UNUSED void * pProgressData ) 
+                                      CPL_UNUSED void * pProgressData )
 {
     int nBands = poSrcDS->GetRasterCount();
     int nXSize = poSrcDS->GetRasterXSize();
     int nYSize = poSrcDS->GetRasterYSize();
-    int nXBlockSize, nYBlockSize, nPixelOffset;
+    int nXBlockSize, nYBlockSize, nPixelOffset = 0;
     GDALDataType eType;
     CPLString osJSONFilename;
     CPLString pszDataType;
@@ -657,7 +657,7 @@ GDALDataset * ARGDataset::CreateCopy( const char * pszFilename,
     pszWKT = (char *)poSrcDS->GetProjectionRef();
     nErr = oSRS.importFromWkt(&pszWKT);
     if (nErr != OGRERR_NONE) {
-        CPLError( CE_Failure, CPLE_NotSupported, 
+        CPLError( CE_Failure, CPLE_NotSupported,
               "Cannot import spatial reference WKT from source dataset.");
         return NULL;
     }
@@ -760,8 +760,9 @@ GDALDataset * ARGDataset::CreateCopy( const char * pszFilename,
     int bNative = TRUE;
 #endif
 
-    poDstBand = new RawRasterBand( fpImage, 0, nPixelOffset, 
-        nPixelOffset * nXSize, eType, bNative, nXSize, nYSize, TRUE, FALSE);
+    poDstBand = new RawRasterBand( fpImage, 0, nPixelOffset,
+                                   nPixelOffset * nXSize, eType, bNative,
+                                   nXSize, nYSize, TRUE, FALSE);
 
     poSrcBand->GetBlockSize(&nXBlockSize, &nYBlockSize);
 
@@ -846,4 +847,3 @@ void GDALRegister_ARG()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

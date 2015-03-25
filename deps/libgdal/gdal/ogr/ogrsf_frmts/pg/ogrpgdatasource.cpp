@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDataSource class.
@@ -37,7 +37,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 static void OGRPGNoticeProcessor( void *arg, const char * pszMessage );
 
@@ -1748,8 +1748,7 @@ OGRLayer *OGRPGDataSource::GetLayerByName( const char *pszName )
 /*                        OGRPGNoticeProcessor()                        */
 /************************************************************************/
 
-static void OGRPGNoticeProcessor( void *arg, const char * pszMessage )
-
+static void OGRPGNoticeProcessor( CPL_UNUSED void *arg, const char * pszMessage )
 {
     CPLDebug( "OGR_PG_NOTICE", "%s", pszMessage );
 }

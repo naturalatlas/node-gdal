@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalrasterband.cpp 27723 2014-09-22 18:21:08Z goatbar $
+ * $Id: gdalrasterband.cpp 27858 2014-10-15 08:41:23Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Base class for format specific band class implementation.  This
@@ -37,7 +37,7 @@
 #define TO_SUBBLOCK(x) ((x) >> 6)
 #define WITHIN_SUBBLOCK(x) ((x) & 0x3f)
 
-CPL_CVSID("$Id: gdalrasterband.cpp 27723 2014-09-22 18:21:08Z goatbar $");
+CPL_CVSID("$Id: gdalrasterband.cpp 27858 2014-10-15 08:41:23Z rouault $");
 
 /************************************************************************/
 /*                           GDALRasterBand()                           */
@@ -4554,12 +4554,21 @@ GDALRasterBand *GDALRasterBand::GetMaskBand()
         && (this == poDS->GetRasterBand(1)
             || this == poDS->GetRasterBand(2)
             || this == poDS->GetRasterBand(3))
-        && poDS->GetRasterBand(4)->GetColorInterpretation() == GCI_AlphaBand
-        && poDS->GetRasterBand(4)->GetRasterDataType() == GDT_Byte )
+        && poDS->GetRasterBand(4)->GetColorInterpretation() == GCI_AlphaBand )
     {
-        nMaskFlags = GMF_ALPHA | GMF_PER_DATASET;
-        poMask = poDS->GetRasterBand(4);
-        return poMask;
+        if( poDS->GetRasterBand(4)->GetRasterDataType() == GDT_Byte )
+        {
+            nMaskFlags = GMF_ALPHA | GMF_PER_DATASET;
+            poMask = poDS->GetRasterBand(4);
+            return poMask;
+        }
+        else if( poDS->GetRasterBand(4)->GetRasterDataType() == GDT_UInt16 )
+        {
+            nMaskFlags = GMF_ALPHA | GMF_PER_DATASET;
+            poMask = new GDALRescaledAlphaBand( poDS->GetRasterBand(4) );
+            bOwnMask = true;
+            return poMask;
+        }
     }
 
 /* -------------------------------------------------------------------- */

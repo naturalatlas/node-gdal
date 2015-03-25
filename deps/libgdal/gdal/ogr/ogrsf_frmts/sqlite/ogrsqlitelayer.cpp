@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsqlitelayer.cpp 28178 2014-12-19 21:14:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteLayer class, code shared between 
@@ -42,7 +42,7 @@
 #include "ogr_sqlite.h"
 #include <cassert>
 
-CPL_CVSID("$Id: ogrsqlitelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsqlitelayer.cpp 28178 2014-12-19 21:14:05Z rouault $");
 
 /************************************************************************/
 /*                           OGRSQLiteLayer()                           */
@@ -472,6 +472,7 @@ void OGRSQLiteLayer::BuildFeatureDefn( const char *pszLayerName,
 const char *OGRSQLiteLayer::GetFIDColumn() 
 
 {
+    GetLayerDefn();
     if( pszFIDColumn != NULL )
         return pszFIDColumn;
     else

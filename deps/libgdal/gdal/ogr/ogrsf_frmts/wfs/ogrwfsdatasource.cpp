@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwfsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrwfsdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  WFS Translator
  * Purpose:  Implements OGRWFSDataSource class
@@ -37,7 +37,7 @@
 #include "swq.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrwfsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrwfsdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 #define DEFAULT_BASE_START_INDEX     0
 #define DEFAULT_PAGE_SIZE            100
@@ -1216,7 +1216,7 @@ int OGRWFSDataSource::Open( const char * pszFilename, int bUpdateIn)
 
                 CPLXMLNode* psBBox = NULL;
                 CPLXMLNode* psLatLongBBox = NULL;
-                int bFoundBBox = FALSE;
+                /* int bFoundBBox = FALSE; */
                 double dfMinX = 0, dfMinY = 0, dfMaxX = 0, dfMaxY = 0;
                 if ((psBBox = CPLGetXMLNode(psChildIter, "WGS84BoundingBox")) != NULL)
                 {
@@ -1232,7 +1232,7 @@ int OGRWFSDataSource::Open( const char * pszFilename, int bUpdateIn)
                                             osConcat, " ,", FALSE, FALSE );
                         if (CSLCount(papszTokens) == 4)
                         {
-                            bFoundBBox = TRUE;
+                            /* bFoundBBox = TRUE; */
                             dfMinX = CPLAtof(papszTokens[0]);
                             dfMinY = CPLAtof(papszTokens[1]);
                             dfMaxX = CPLAtof(papszTokens[2]);
@@ -1255,7 +1255,7 @@ int OGRWFSDataSource::Open( const char * pszFilename, int bUpdateIn)
                     if (pszMinX != NULL && pszMinY != NULL &&
                         pszMaxX != NULL && pszMaxY != NULL)
                     {
-                        bFoundBBox = TRUE;
+                        /* bFoundBBox = TRUE; */
                         dfMinX = CPLAtof(pszMinX);
                         dfMinY = CPLAtof(pszMinY);
                         dfMaxX = CPLAtof(pszMaxX);

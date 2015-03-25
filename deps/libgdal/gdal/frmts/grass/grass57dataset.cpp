@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grass57dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: grass57dataset.cpp 28291 2015-01-05 14:45:07Z martinl $
  *
  * Project:  GRASS Driver
  * Purpose:  Implement GRASS raster read/write support
@@ -63,7 +63,7 @@ char *GPJ_grass_to_wkt(struct Key_Value *,
 
 #define GRASS_MAX_COLORS 100000  // what is the right value
 
-CPL_CVSID("$Id: grass57dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: grass57dataset.cpp 28291 2015-01-05 14:45:07Z martinl $");
 
 CPL_C_START
 void	GDALRegister_GRASS(void);
@@ -92,6 +92,7 @@ CPL_C_END
 #define G_get_d_raster_row       Rast_get_d_row
 #define G_allocate_f_raster_buf  Rast_allocate_f_buf
 #define G_allocate_d_raster_buf  Rast_allocate_d_buf
+#define G__setenv                G_setenv_nogisrc
 #endif
 
 /************************************************************************/

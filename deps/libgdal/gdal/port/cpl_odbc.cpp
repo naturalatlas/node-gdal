@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_odbc.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_odbc.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  OGR ODBC Driver
  * Purpose:  Declarations for ODBC Access Cover API.
@@ -36,7 +36,7 @@
 
 #ifndef WIN32CE /* ODBC is not supported on Windows CE. */
 
-CPL_CVSID("$Id: cpl_odbc.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_odbc.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 #ifndef SQLColumns_TABLE_CAT 
 #define SQLColumns_TABLE_CAT 1
@@ -75,9 +75,10 @@ CPLODBCDriverInstaller::CPLODBCDriverInstaller()
 /************************************************************************/
 
 int CPLODBCDriverInstaller::InstallDriver( const char* pszDriver,
-        const char* pszPathIn, WORD fRequest )
+                                           CPL_UNUSED const char* pszPathIn,
+                                           WORD fRequest )
 {
-    CPLAssert( NULL != pszDriver ); 
+    CPLAssert( NULL != pszDriver );
 
     // Try to install driver to system-wide location
     if ( FALSE == SQLInstallDriverEx( pszDriver, NULL, m_szPathOut,
@@ -85,11 +86,11 @@ int CPLODBCDriverInstaller::InstallDriver( const char* pszDriver,
                     &m_nUsageCount ) )
     {
         const WORD nErrorNum = 1; // TODO - a function param?
-        RETCODE cRet = SQL_ERROR;
-        
+        CPL_UNUSED RETCODE cRet = SQL_ERROR;
+
         // Failure is likely related to no write permissions to
         // system-wide default location, so try to install to HOME
-       
+
         static char* pszEnvIni = NULL;
         if (pszEnvIni == NULL)
         {

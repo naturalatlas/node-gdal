@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocitablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $
+ * $Id: ogrocitablelayer.cpp 28319 2015-01-15 23:29:32Z martinl $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCITableLayer class.  This class provides
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrocitablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $");
+CPL_CVSID("$Id: ogrocitablelayer.cpp 28319 2015-01-15 23:29:32Z martinl $");
 
 static int nDiscarded = 0;
 static int nHits = 0;
@@ -50,6 +50,7 @@ OGROCITableLayer::OGROCITableLayer( OGROCIDataSource *poDSIn,
 
 {
     poDS = poDSIn;
+    bExtentUpdated = false;
 
     pszQuery = NULL;
     pszWHERE = CPLStrdup( "" );
@@ -959,9 +960,15 @@ OGRErr OGROCITableLayer::UnboundCreateFeature( OGRFeature *poFeature )
         nOffset += strlen(pszCommand+nOffset);
 
         nFID = poFeature->GetFID();
-        if( nFID == -1 )
+        if( nFID == OGRNullFID )
+        {
+            if( iNextFIDToWrite < 0 )
+            {
+                iNextFIDToWrite = GetMaxFID() + 1;
+            }
             nFID = iNextFIDToWrite++;
-
+            poFeature->SetFID( nFID );
+        }
         sprintf( pszCommand+nOffset, "%ld", nFID );
     }
 

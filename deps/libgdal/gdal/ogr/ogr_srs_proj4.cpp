@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_proj4.cpp 27437 2014-06-06 19:14:53Z rouault $
+ * $Id: ogr_srs_proj4.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference interface to PROJ.4.
@@ -35,7 +35,7 @@
 
 extern int EPSGGetWGS84Transform( int nGeogCS, double *padfTransform );
 
-CPL_CVSID("$Id: ogr_srs_proj4.cpp 27437 2014-06-06 19:14:53Z rouault $");
+CPL_CVSID("$Id: ogr_srs_proj4.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /* -------------------------------------------------------------------- */
 /*      The following list comes from osrs/proj/src/pj_ellps.c          */
@@ -473,7 +473,7 @@ OGRErr OGRSpatialReference::importFromProj4( const char * pszProj4 )
 /* -------------------------------------------------------------------- */
     const char *pszPM = CSLFetchNameValue( papszNV, "pm" );
     double dfFromGreenwich = 0.0;
-    int    nPMCode = -1;
+    /* int    nPMCode = -1; */
 
     if( pszPM != NULL )
     {
@@ -482,7 +482,7 @@ OGRErr OGRSpatialReference::importFromProj4( const char * pszProj4 )
         {
             dfFromGreenwich = CPLDMSToDec(psProj4PM->pszFromGreenwich);
             pszPM = psProj4PM->pszWKTPMName;
-            nPMCode = psProj4PM->nPMCode;
+            /* nPMCode = psProj4PM->nPMCode; */
         }
         else
         {
@@ -2564,4 +2564,3 @@ OGRErr OGRSpatialReference::exportToProj4( char ** ppszProj4 ) const
 
     return OGRERR_NONE;
 }
-

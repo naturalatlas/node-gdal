@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarpoperation.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalwarpoperation.cpp 28206 2014-12-24 10:32:49Z rouault $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Implementation of the GDALWarpOperation class.
@@ -33,7 +33,7 @@
 #include "cpl_multiproc.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: gdalwarpoperation.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalwarpoperation.cpp 28206 2014-12-24 10:32:49Z rouault $");
 
 /* Defined in gdalwarpkernel.cpp */
 int GWKGetFilterRadius(GDALResampleAlg eResampleAlg);
@@ -2213,10 +2213,16 @@ CPLErr GDALWarpOperation::ComputeSourceWindow(int nDstXOff, int nDstYOff,
     *pnSrcXOff = MIN(*pnSrcXOff,GDALGetRasterXSize(psOptions->hSrcDS));
     *pnSrcYOff = MIN(*pnSrcYOff,GDALGetRasterYSize(psOptions->hSrcDS));
 
+    double dfCeilMaxXOut = ceil(dfMaxXOut);
+    if( dfCeilMaxXOut > INT_MAX )
+        dfCeilMaxXOut = INT_MAX;
+    double dfCeilMaxYOut = ceil(dfMaxYOut);
+    if( dfCeilMaxYOut > INT_MAX )
+        dfCeilMaxYOut = INT_MAX;
     *pnSrcXSize = MIN( GDALGetRasterXSize(psOptions->hSrcDS) - *pnSrcXOff,
-                       ((int) ceil( dfMaxXOut )) - *pnSrcXOff + nResWinSize );
+                       ((int) dfCeilMaxXOut) - *pnSrcXOff + nResWinSize );
     *pnSrcYSize = MIN( GDALGetRasterYSize(psOptions->hSrcDS) - *pnSrcYOff,
-                       ((int) ceil( dfMaxYOut )) - *pnSrcYOff + nResWinSize );
+                       ((int) dfCeilMaxYOut) - *pnSrcYOff + nResWinSize );
     *pnSrcXSize = MAX(0,*pnSrcXSize);
     *pnSrcYSize = MAX(0,*pnSrcYSize);
 

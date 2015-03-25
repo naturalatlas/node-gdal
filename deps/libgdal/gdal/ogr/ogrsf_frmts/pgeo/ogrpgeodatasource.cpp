@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeodatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgeodatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoDataSource class.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogrpgeodatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgeodatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 /************************************************************************/
 /*                         OGRPGeoDataSource()                          */
@@ -99,8 +99,7 @@ static int CheckDSNStringTemplate(const char* pszStr)
 /************************************************************************/
 
 int OGRPGeoDataSource::Open( const char * pszNewName, int bUpdate,
-                              int bTestOpen )
-
+                             CPL_UNUSED int bTestOpen )
 {
     CPLAssert( nLayers == 0 );
 
@@ -216,8 +215,7 @@ int OGRPGeoDataSource::Open( const char * pszNewName, int bUpdate,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRPGeoDataSource::TestCapability( const char * pszCap )
-
+int OGRPGeoDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }

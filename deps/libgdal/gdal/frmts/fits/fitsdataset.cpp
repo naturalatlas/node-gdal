@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fitsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: fitsdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
  *
  * Project:  FITS Driver
  * Purpose:  Implement FITS raster read/write support
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include <string.h>
 
-CPL_CVSID("$Id: fitsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: fitsdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
 
 CPL_C_START
 #include <fitsio.h>
@@ -121,9 +121,8 @@ FITSRasterBand::~FITSRasterBand() {
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr FITSRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff,
+CPLErr FITSRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void* pImage ) {
- 
   // A FITS block is one row (we assume BSQ formatted data)
   FITSDataset* dataset = (FITSDataset*) poDS;
   fitsfile* hFITS = dataset->hFITS;
@@ -166,9 +165,8 @@ CPLErr FITSRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff,
 /*                                                                      */
 /************************************************************************/
 
-CPLErr FITSRasterBand::IWriteBlock(int nBlockXOff, int nBlockYOff,
+CPLErr FITSRasterBand::IWriteBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff,
 				   void* pImage) {
-
   FITSDataset* dataset = (FITSDataset*) poDS;
   fitsfile* hFITS = dataset->hFITS;
   int status = 0;
@@ -526,11 +524,9 @@ GDALDataset* FITSDataset::Open(GDALOpenInfo* poOpenInfo) {
 /************************************************************************/
 
 GDALDataset *FITSDataset::Create(const char* pszFilename,
-				 int nXSize, int nYSize, 
+				 int nXSize, int nYSize,
 				 int nBands, GDALDataType eType,
-				 char** papszParmList) {
-
-
+				 CPL_UNUSED char** papszParmList) {
   FITSDataset* dataset;
   fitsfile* hFITS;
   int status = 0;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jp2userbox.cpp 25784 2013-03-23 11:13:42Z rouault $
+ * $Id: jp2userbox.cpp 27739 2014-09-25 18:49:52Z goatbar $
  *
  * Project:  GDAL ECW Driver
  * Purpose:  JP2UserBox implementation - arbitrary box read/write.
@@ -29,7 +29,7 @@
 
 #include "gdal_ecw.h"
 
-CPL_CVSID("$Id: jp2userbox.cpp 25784 2013-03-23 11:13:42Z rouault $");
+CPL_CVSID("$Id: jp2userbox.cpp 27739 2014-09-25 18:49:52Z goatbar $");
 
 #if defined(HAVE_COMPRESS)
 
@@ -94,15 +94,15 @@ void JP2UserBox::UpdateXLBox()
 /************************************************************************/
 
 #if ECWSDK_VERSION >= 40
-CNCSError JP2UserBox::Parse( NCS::SDK::CFileBase &JP2File, 
-                             NCS::CIOStream &Stream )
+CNCSError JP2UserBox::Parse( CPL_UNUSED NCS::SDK::CFileBase &JP2File,
+                             CPL_UNUSED NCS::CIOStream &Stream )
 #else
-CNCSError JP2UserBox::Parse( class CNCSJP2File &JP2File, 
-                             CNCSJPCIOStream &Stream )
+CNCSError JP2UserBox::Parse( CPL_UNUSED class CNCSJP2File &JP2File,
+                             CPL_UNUSED CNCSJPCIOStream &Stream )
 #endif
 {
     CNCSError Error = NCS_SUCCESS;
-    
+
     return Error;
 }
 

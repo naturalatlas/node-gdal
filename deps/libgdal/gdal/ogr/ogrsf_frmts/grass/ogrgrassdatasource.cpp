@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgrassdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgrassdatasource.cpp 28291 2015-01-05 14:45:07Z martinl $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGRASSDataSource class.
@@ -32,7 +32,11 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrgrassdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgrassdatasource.cpp 28291 2015-01-05 14:45:07Z martinl $");
+
+#if GRASS_VERSION_MAJOR  >= 7
+#define G__setenv                G_setenv_nogisrc
+#endif
 
 /************************************************************************/
 /*                         Grass2CPLErrorHook()                         */

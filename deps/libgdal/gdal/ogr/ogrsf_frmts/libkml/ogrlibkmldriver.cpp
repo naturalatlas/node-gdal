@@ -29,23 +29,21 @@
 #include "ogr_libkml.h"
 #include "cpl_conv.h"
 #include "cpl_error.h"
-#include "cpl_atomic_ops.h"
+#include "cpl_multiproc.h"
 
 #include <kml/dom.h>
 
 using kmldom::KmlFactory;
 
-static volatile int nKmlFactoryRefCount = 0;
-
+static void *hMutex = NULL;
+static KmlFactory *poKmlFactory = NULL;
+    
 /******************************************************************************
  OGRLIBKMLDriver()
 ******************************************************************************/
 
 OGRLIBKMLDriver::OGRLIBKMLDriver (  )
 {
-    CPLAtomicInc(&nKmlFactoryRefCount);
-    m_poKmlFactory = KmlFactory::GetFactory (  );
-
 }
 
 /******************************************************************************
@@ -54,8 +52,10 @@ OGRLIBKMLDriver::OGRLIBKMLDriver (  )
 
 OGRLIBKMLDriver::~OGRLIBKMLDriver (  )
 {
-    if (CPLAtomicDec(&nKmlFactoryRefCount) == 0)
-        delete m_poKmlFactory;
+    if( hMutex != NULL )
+        CPLDestroyMutex(hMutex);
+    hMutex = NULL;
+    poKmlFactory = NULL;
 }
 
 /******************************************************************************
@@ -77,7 +77,19 @@ OGRDataSource *OGRLIBKMLDriver::Open (
     const char *pszFilename,
     int bUpdate )
 {
-    OGRLIBKMLDataSource *poDS = new OGRLIBKMLDataSource ( m_poKmlFactory );
+    VSIStatBufL sStatBuf;
+    if( !EQUAL(CPLGetExtension(pszFilename), "kml") &&
+        !EQUAL(CPLGetExtension(pszFilename), "kmz") &&
+        !(VSIStatL(pszFilename, &sStatBuf) == 0 && VSI_ISDIR(sStatBuf.st_mode)) )
+        return NULL;
+
+    {
+        CPLMutexHolderD(&hMutex);
+        if( poKmlFactory == NULL )
+            poKmlFactory = KmlFactory::GetFactory (  );
+    }
+
+    OGRLIBKMLDataSource *poDS = new OGRLIBKMLDataSource ( poKmlFactory );
 
     if ( !poDS->Open ( pszFilename, bUpdate ) ) {
         delete poDS;
@@ -99,7 +111,13 @@ OGRDataSource *OGRLIBKMLDriver::CreateDataSource (
     CPLAssert ( NULL != pszName );
     CPLDebug ( "LIBKML", "Attempt to create: %s", pszName );
 
-    OGRLIBKMLDataSource *poDS = new OGRLIBKMLDataSource ( m_poKmlFactory );
+    {
+        CPLMutexHolderD(&hMutex);
+        if( poKmlFactory == NULL )
+            poKmlFactory = KmlFactory::GetFactory (  );
+    }
+
+    OGRLIBKMLDataSource *poDS = new OGRLIBKMLDataSource ( poKmlFactory );
 
     if ( !poDS->Create ( pszName, papszOptions ) ) {
         delete poDS;
@@ -124,7 +142,7 @@ OGRErr OGRLIBKMLDriver::DeleteDataSource (
 
     /***** dir *****/
 
-    VSIStatBufL sStatBuf = { };
+    VSIStatBufL sStatBuf;
     if ( !VSIStatL ( pszName, &sStatBuf ) && VSI_ISDIR ( sStatBuf.st_mode ) ) {
 
         char **papszDirList = NULL;

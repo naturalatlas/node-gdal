@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gifdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gifdataset.cpp 28284 2015-01-03 20:08:36Z rouault $
  *
  * Project:  GIF Driver
  * Purpose:  Implement GDAL GIF Support using libungif code.  
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "gifabstractdataset.h"
 
-CPL_CVSID("$Id: gifdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gifdataset.cpp 28284 2015-01-03 20:08:36Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GIF(void);
@@ -166,7 +166,8 @@ GIFRasterBand::GIFRasterBand( GIFDataset *poDS, int nBand,
     {
         unsigned char *pExtData;
 
-        if( psImage->ExtensionBlocks[iExtBlock].Function != 0xf9 )
+        if( psImage->ExtensionBlocks[iExtBlock].Function != 0xf9 ||
+            psImage->ExtensionBlocks[iExtBlock].ByteCount < 4  )
             continue;
 
         pExtData = (unsigned char *) psImage->ExtensionBlocks[iExtBlock].Bytes;
@@ -456,9 +457,21 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
             || psImage->ImageDesc.Height != poDS->nRasterYSize )
             continue;
 
+        if( psImage->ImageDesc.ColorMap == NULL &&
+            poDS->hGifFile->SColorMap == NULL )
+        {
+            CPLDebug("GIF", "Skipping image without color table");
+            continue;
+        }
+
         poDS->SetBand( poDS->nBands+1, 
                        new GIFRasterBand( poDS, poDS->nBands+1, psImage,
                                           hGifFile->SBackGroundColor ));
+    }
+    if( poDS->nBands == 0 )
+    {
+        delete poDS;
+        return NULL;
     }
 
 /* -------------------------------------------------------------------- */
