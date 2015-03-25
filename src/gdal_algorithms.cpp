@@ -274,9 +274,9 @@ NAN_METHOD(Algorithms::polygonize)
 
 	CPLErr err;
 	if(obj->HasOwnProperty(NanNew("useFloats")) && obj->Get(NanNew("useFloats"))->BooleanValue()){
-		err = GDALFPolygonize(src->get(), mask ? mask->get() : NULL, dst->get(), pix_val_field, papszOptions, NULL, NULL);
+		err = GDALFPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
-		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, dst->get(), pix_val_field, papszOptions, NULL, NULL);
+		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
 	}
 
 	if(papszOptions) CSLDestroy(papszOptions);
