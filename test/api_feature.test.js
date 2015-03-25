@@ -342,6 +342,18 @@ describe('gdal.Feature', function() {
 				assert.equal(pt.x, 5);
 				assert.equal(pt.y, 10);
 			});
+			it('should clear geometry if null is passed', function(){
+				var feature = new gdal.Feature(defn);
+				feature.setGeometry(new gdal.Point(5, 10));
+				feature.setGeometry(null);
+				assert.isNull(feature.getGeometry());
+			});
+			it('should clear geometry if undefined is passed', function(){
+				var feature = new gdal.Feature(defn);
+				feature.setGeometry(new gdal.Point(5, 10));
+				feature.setGeometry(undefined);
+				assert.isNull(feature.getGeometry());
+			});
 			/*
 			// http://gdal.org/1.11/ogr/classOGRFeature.html#af1181ade837a52129ea25b46dd50cf30
 			// "checking for geometry type not yet implemented"
@@ -360,6 +372,11 @@ describe('gdal.Feature', function() {
 				var pt = feature.getGeometry();
 				assert.equal(pt.x, 5);
 				assert.equal(pt.y, 10);
+			});
+			it('should return null if geometry is not set', function(){
+				var feature = new gdal.Feature(defn);
+				var geom = feature.getGeometry();
+				assert.isNull(geom);
 			});
 		});
 		describe('setFrom()', function(){

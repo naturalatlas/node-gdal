@@ -194,7 +194,7 @@ NAN_METHOD(Feature::getGeometry)
 
 	OGRGeometry* geom = feature->this_->GetGeometryRef();
 	if (!geom) {
-		NanThrowError("Error getting feature geometry");
+		NanReturnNull();
 	}
 
 
@@ -237,7 +237,27 @@ NAN_METHOD(Feature::getFieldDefn)
  * @method setGeometry
  * @param {gdal.Geometry} geometry
  */
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, "geometry");
+NAN_METHOD(Feature::setGeometry)
+{
+	NanScope();
+
+	Geometry *geom = NULL;
+	NODE_ARG_WRAPPED_OPT(0, "geometry", Geometry, geom);
+
+	Feature *feature = ObjectWrap::Unwrap<Feature>(args.This());
+	if (!feature->this_) {
+		NanThrowError("Feature object already destroyed");
+		NanReturnUndefined();
+	}
+
+	OGRErr err = feature->this_->SetGeometry(geom ? geom->get() : NULL);
+	if(err){
+		NODE_THROW_OGRERR(err);
+	} 
+
+	NanReturnUndefined();
+}
+
 
 /**
  * Determines if the features are the same.
