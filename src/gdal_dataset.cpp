@@ -647,7 +647,7 @@ NAN_METHOD(Dataset::setGCPs)
  * @method buildOverviews
  * @param {String} resampling `"NEAREST"`, `"GAUSS"`, `"CUBIC"`, `"AVERAGE"`, `"MODE"`, `"AVERAGE_MAGPHASE"` or `"NONE"`
  * @param {Integer[]} overviews
- * @param {Integer[]} [bands]
+ * @param {Integer[]} [bands] Note: Generation of overviews in external TIFF currently only supported when operating on all bands.
  */
 NAN_METHOD(Dataset::buildOverviews)
 {

@@ -482,7 +482,7 @@ describe('gdal.Dataset', function() {
 		});
 		describe('buildOverviews()', function() {
 			it('should generate overviews for all bands', function() {
-				var ds   = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+				var ds = gdal.open(fileUtils.clone(__dirname+"/data/multiband.tif"), 'r+');
 				var expected_w = [ds.rasterSize.x/2, ds.rasterSize.x/4, ds.rasterSize.x/8];
 				ds.buildOverviews('NEAREST', [2, 4, 8]);
 				ds.bands.forEach(function(band){
@@ -511,7 +511,8 @@ describe('gdal.Dataset', function() {
 			});
 			describe('w/bands argument', function(){
 				it('should generate overviews only for the given bands', function(){
-					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					gdal.config.set('USE_RRD','YES');
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/multiband.tif"), 'r+');
 					ds.buildOverviews('NEAREST', [2, 4, 8], [1]);
 					assert.equal(ds.bands.get(1).overviews.count(), 3);
 				});
