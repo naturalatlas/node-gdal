@@ -6,6 +6,7 @@ environment:
   matrix:
     - nodejs_version: "0.10.32"
     - nodejs_version: "0.11.13"
+    - nodejs_version: "0.12.1"
 
 platform:
   - x86

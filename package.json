@@ -1,6 +1,6 @@
 {
   "name": "gdal",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
   "url": "http://github.com/naturalatlas/node-gdal",
   "main": "./lib/gdal.js",
