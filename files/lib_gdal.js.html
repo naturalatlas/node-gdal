@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.1</b>
+                    API Docs for Version: <b>0.4.2</b>
                 </p>
             </li>
         </div>
@@ -464,7 +464,7 @@ gdal.LineStringPoints.prototype.toArray = defaultToArray;
 gdal.PolygonRings.prototype.toArray = defaultToArray;
 
 /**
- * Creates or opens a dataset.
+ * Creates or opens a dataset. Dataset should be explicitly closed with &#x60;dataset.close()&#x60; method if opened in &#x60;&quot;w&quot;&#x60; mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.   
  *
  * @example
  * &#x60;&#x60;&#x60;
@@ -569,7 +569,6 @@ function fieldTypeFromValue(val) {
 /**
  * Creates a LayerFields instance from an object of keys and values.
  *
- * @static
  * @method fromJSON
  * @for gdal.LayerFields
  * @param {Object} object

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.1</b>
+                    API Docs for Version: <b>0.4.2</b>
                 </p>
             </li>
         </div>
@@ -367,7 +367,7 @@ NAN_METHOD(Feature::getGeometry)
 
 	OGRGeometry* geom = feature-&gt;this_-&gt;GetGeometryRef();
 	if (!geom) {
-		NanThrowError(&quot;Error getting feature geometry&quot;);
+		NanReturnNull();
 	}
 
 
@@ -410,7 +410,27 @@ NAN_METHOD(Feature::getFieldDefn)
  * @method setGeometry
  * @param {gdal.Geometry} geometry
  */
-NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Feature, setGeometry, SetGeometry, Geometry, &quot;geometry&quot;);
+NAN_METHOD(Feature::setGeometry)
+{
+	NanScope();
+
+	Geometry *geom = NULL;
+	NODE_ARG_WRAPPED_OPT(0, &quot;geometry&quot;, Geometry, geom);
+
+	Feature *feature = ObjectWrap::Unwrap&lt;Feature&gt;(args.This());
+	if (!feature-&gt;this_) {
+		NanThrowError(&quot;Feature object already destroyed&quot;);
+		NanReturnUndefined();
+	}
+
+	OGRErr err = feature-&gt;this_-&gt;SetGeometry(geom ? geom-&gt;get() : NULL);
+	if(err){
+		NODE_THROW_OGRERR(err);
+	} 
+
+	NanReturnUndefined();
+}
+
 
 /**
  * Determines if the features are the same.
@@ -543,7 +563,7 @@ NAN_GETTER(Feature::fieldsGetter)
 
 /**
  * @attribute fid
- * @type {Integer}
+ * @type {Number}
  */
 NAN_GETTER(Feature::fidGetter)
 {
@@ -553,7 +573,7 @@ NAN_GETTER(Feature::fidGetter)
 		NanThrowError(&quot;Feature object already destroyed&quot;);
 		NanReturnUndefined();
 	}
-	NanReturnValue(NanNew&lt;Integer&gt;(feature-&gt;this_-&gt;GetFID()));
+	NanReturnValue(NanNew&lt;Number&gt;(feature-&gt;this_-&gt;GetFID()));
 }
 
 /**

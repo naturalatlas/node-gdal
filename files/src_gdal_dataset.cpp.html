@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.1</b>
+                    API Docs for Version: <b>0.4.2</b>
                 </p>
             </li>
         </div>
@@ -820,7 +820,7 @@ NAN_METHOD(Dataset::setGCPs)
  * @method buildOverviews
  * @param {String} resampling &#x60;&quot;NEAREST&quot;&#x60;, &#x60;&quot;GAUSS&quot;&#x60;, &#x60;&quot;CUBIC&quot;&#x60;, &#x60;&quot;AVERAGE&quot;&#x60;, &#x60;&quot;MODE&quot;&#x60;, &#x60;&quot;AVERAGE_MAGPHASE&quot;&#x60; or &#x60;&quot;NONE&quot;&#x60;
  * @param {Integer[]} overviews
- * @param {Integer[]} [bands]
+ * @param {Integer[]} [bands] Note: Generation of overviews in external TIFF currently only supported when operating on all bands.
  */
 NAN_METHOD(Dataset::buildOverviews)
 {

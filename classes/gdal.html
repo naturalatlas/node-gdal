@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.1</b>
+                    API Docs for Version: <b>0.4.2</b>
                 </p>
             </li>
         </div>
@@ -1407,7 +1407,7 @@ that should not be considered in contour line generation.</p>
 	</div>
 
 	
-	<div class="description"><p>Creates or opens a dataset.</p>
+	<div class="description"><p>Creates or opens a dataset. Dataset should be explicitly closed with <code>dataset.close()</code> method if opened in <code>"w"</code> mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.</p>
 </div>
 	
 

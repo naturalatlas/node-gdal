@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.4.1",
+        "version": "0.4.2",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -1478,7 +1478,7 @@
         {
             "file": "lib/gdal.js",
             "line": 293,
-            "description": "Creates or opens a dataset.",
+            "description": "Creates or opens a dataset. Dataset should be explicitly closed with `dataset.close()` method if opened in `\"w\"` mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.",
             "example": [
                 "\n```\nvar dataset = gdal.open('./data.shp');```"
             ],
@@ -1548,7 +1548,6 @@
             "file": "lib/gdal.js",
             "line": 396,
             "description": "Creates a LayerFields instance from an object of keys and values.",
-            "static": 1,
             "itemtype": "method",
             "name": "fromJSON",
             "params": [
@@ -3414,7 +3413,7 @@
                 },
                 {
                     "name": "bands",
-                    "description": "",
+                    "description": "Note: Generation of overviews in external TIFF currently only supported when operating on all bands.",
                     "type": "Integer[]",
                     "optional": true
                 }
@@ -3760,7 +3759,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 242,
+            "line": 262,
             "description": "Determines if the features are the same.",
             "itemtype": "method",
             "name": "equals",
@@ -3779,7 +3778,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 251,
+            "line": 271,
             "description": "Clones the feature.",
             "itemtype": "method",
             "name": "clone",
@@ -3791,7 +3790,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 268,
+            "line": 288,
             "description": "Releases the feature from memory.",
             "itemtype": "method",
             "name": "destroy",
@@ -3799,7 +3798,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 285,
+            "line": 305,
             "description": "Set one feature from another. Overwrites the contents of this feature\nfrom the geometry and attributes of another.",
             "example": [
                 "\n```\nvar feature1 = new gdal.Feature(defn);\nvar feature2 = new gdal.Feature(defn);\nfeature1.setGeometry(new gdal.Point(5, 10));\nfeature1.fields.set([5, 'test', 3.14]);\nfeature2.setFrom(feature1);```"
@@ -3833,7 +3832,7 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 360,
+            "line": 380,
             "readonly": "",
             "itemtype": "attribute",
             "name": "fields",
@@ -3842,15 +3841,15 @@
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 371,
+            "line": 391,
             "itemtype": "attribute",
             "name": "fid",
-            "type": "{Integer}",
+            "type": "{Number}",
             "class": "gdal.Feature"
         },
         {
             "file": "src/gdal_feature.cpp",
-            "line": 386,
+            "line": 406,
             "readonly": "",
             "itemtype": "attribute",
             "name": "defn",

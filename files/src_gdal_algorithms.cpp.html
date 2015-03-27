@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.1</b>
+                    API Docs for Version: <b>0.4.2</b>
                 </p>
             </li>
         </div>
@@ -447,9 +447,9 @@ NAN_METHOD(Algorithms::polygonize)
 
 	CPLErr err;
 	if(obj-&gt;HasOwnProperty(NanNew(&quot;useFloats&quot;)) &amp;&amp; obj-&gt;Get(NanNew(&quot;useFloats&quot;))-&gt;BooleanValue()){
-		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), pix_val_field, papszOptions, NULL, NULL);
+		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
-		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), pix_val_field, papszOptions, NULL, NULL);
+		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
 	}
 
 	if(papszOptions) CSLDestroy(papszOptions);
