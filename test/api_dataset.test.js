@@ -195,6 +195,19 @@ describe('gdal.Dataset', function() {
 					assert.instanceOf(lyr, gdal.Layer);
 					assert.equal(lyr.geomType, gdal.wkbPoint);
 				});
+				it('should accept 2.5D Types for geom_type', function() {
+					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					var ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					var lyr = ds.layers.create('layer_name', null, gdal.wkbPoint25D);
+					assert.instanceOf(lyr, gdal.Layer);
+					assert.equal(lyr.geomType, gdal.wkbPoint25D);
+
+					file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+					ds = gdal.open(file, 'w', 'ESRI Shapefile');
+					lyr = ds.layers.create('layer_name', null, gdal.wkbPoint | gdal.wkb25DBit);
+					assert.instanceOf(lyr, gdal.Layer);
+					assert.equal(lyr.geomType, gdal.wkbPoint25D);
+				});
 				it('should throw if bad geometry type is given', function() {
 					var file = __dirname + "/data/temp/ds_layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
 					var ds = gdal.open(file, 'w', 'ESRI Shapefile');

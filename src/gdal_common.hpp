@@ -238,10 +238,10 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (args.Length() < num + 1) {                                                                                                       \
     NanThrowError(name " must be given"); NanReturnUndefined();                                                                        \
   }                                                                                                                                    \
-  if (!args[num]->IsInt32()) {                                                                                                         \
+  if (!args[num]->IsInt32() && !args[num]->IsUint32()) {                                                                               \
     NanThrowTypeError(name " must be of type " #enum_type); NanReturnUndefined();                                                      \
   }                                                                                                                                    \
-  var = enum_type(args[num]->IntegerValue());
+  var = enum_type(args[num]->Uint32Value());
 
 
 #define NODE_ARG_BOOL(num, name, var)                                                                          \
@@ -319,8 +319,8 @@ NAN_SETTER(READ_ONLY_SETTER);
 
 #define NODE_ARG_ENUM_OPT(num, name, enum_type, var)                                                             \
   if (args.Length() > num) {                                                                                     \
-    if (args[num]->IsInt32()) {                                                                                  \
-      var = static_cast<enum_type>(args[num]->IntegerValue());                                                   \
+    if (args[num]->IsInt32() || args[num]->IsUint32()) {                                                         \
+      var = static_cast<enum_type>(args[num]->Uint32Value());                                                    \
     } else if(!args[num]->IsNull() && !args[num]->IsUndefined()) {                                               \
       NanThrowTypeError(name " must be an integer"); NanReturnUndefined();                                       \
     }                                                                                                            \
