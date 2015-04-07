@@ -1,7 +1,7 @@
 {
 	"name": "node-gdal",
 	"description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-	"version": "0.4.2",
+	"version": "0.4.3",
 	"url": "https://github.com/naturalatlas/node-gdal",
 	"logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png",
 	"options": {
