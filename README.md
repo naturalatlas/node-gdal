@@ -49,7 +49,7 @@ console.log("srs: " + (layer.srs ? layer.srs.toWKT() : 'null'));
 
 ## Notes
 
-- This binding is currently *not* async, so it will block node's event loop. This will be changing in the future ([#18](https://github.com/naturalatlas/node-gdal/issues/18#issuecomment-57513723)). In the meantime, be very careful (or avoid) using it in server code. 
+- This binding is currently *not* async, so it will block node's event loop. This will be changing in the future ([#18](https://github.com/naturalatlas/node-gdal/issues/18#issuecomment-57513723)). In the meantime, be very careful (or avoid) using it in server code. We recommended using tools like [worker-farm](https://www.npmjs.com/package/worker-farm) to push expensive operations to a seperate process.
 
 ## Contributors
 
