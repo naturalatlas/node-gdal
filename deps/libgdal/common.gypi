@@ -33,7 +33,8 @@
 			"HAVE_GEOS=1",
 			"PROJ_STATIC=1",
 			"CPU_<(endianness)_ENDIAN=1",
-			"BIGTIFF_SUPPORT=1"
+			"BIGTIFF_SUPPORT=1",
+			"ZIP_SUPPORT=1"
 		],
 		"dependencies": [
 			"<(deps_dir)/libexpat/libexpat.gyp:libexpat",
