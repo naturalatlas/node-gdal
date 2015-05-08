@@ -48,8 +48,8 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "node-pre-gyp": "0.6.4",
-    "nan": "1.6.2"
+    "node-pre-gyp": "0.6.7",
+    "nan": "1.8.4"
   },
   "devDependencies": {
     "mocha": "~1.x",
