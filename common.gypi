@@ -1,7 +1,9 @@
 {
 	"variables": {
 		"toolset%":'',
-		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
+		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")",
+        #TO ENABLE MRSID SUPPORT ADD THE BASE PATH TO LIZARDTECH MRSID INCLUDES/ASSEMBLIES EX: C:\MrSID_DSDK_9.1.0.4045_win64_vc12/
+        "mrsid_base": "S:\gdal\MrSID_DSDK_9.1.0.4045_win64_vc12"
 	},
 	"target_defaults": {
 		"default_configuration": "Release",

@@ -112,7 +112,20 @@
 							}
 						}]
 					]
-				}]
+				}],
+                ["'<(mrsid_base)' != ''",{
+                    "conditions": [
+                        ['OS == "win"',{
+                            "libraries": [
+                                "<(mrsid_base)/Raster_DSDK/lib/lti_dsdk.lib",
+                                "<(mrsid_base)/Raster_DSDK/lib/lti_dsdk_cdll.lib"
+                            ]
+                        },{
+                        
+                        }]
+                    ]
+                    
+                }]
 			]
 		},
 		{
@@ -126,7 +139,28 @@
 					],
 					"destination": "<(module_path)"
 				}
-			]
+			],
+            "conditions" : [
+                ["'<(mrsid_base)' != ''",{
+                    "conditions": [
+                        ['OS == "win"',{
+                            "copies": [
+                                {
+                                    "files": [                                
+                                        "<(mrsid_base)/Raster_DSDK/lib/lti_dsdk_9.1.dll",
+                                        "<(mrsid_base)/Raster_DSDK/lib/lti_dsdk_cdll_9.1.dll",
+                                        "<(mrsid_base)/Raster_DSDK/lib/tbb.dll"
+                                    ],
+                                    "destination": "<(module_path)"
+                                }
+                            ]
+                        },{
+                        
+                        }]
+                    ]
+                    
+                }]
+            ]
 		}
 	]
 }
