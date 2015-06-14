@@ -410,5 +410,24 @@ describe('gdal', function() {
 				gdal.reprojectImage(options);
 			},'dfWarpMemoryLimit=1 is unreasonably small');
 		});
+
+		it('should use additional stringlist options', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326),
+				options: {INIT_DEST: 123}
+			};
+
+			var info = gdal.suggestedWarpOutput(options);
+			options.dst = gdal.open('temp_dst', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			gdal.reprojectImage(options);
+
+			var value = options.dst.bands.get(1).pixels.get(0,0);
+
+			assert.equal(value, 123);
+		});
 	});
 });

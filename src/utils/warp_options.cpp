@@ -82,6 +82,8 @@ int WarpOptions::parse(Handle<Value> value)
 		return 1; // error parsing string list
 	}
 
+	options->papszWarpOptions = additional_options.get();
+
 	if(obj->HasOwnProperty(NanNew("memoryLimit"))){
 		prop = obj->Get(NanNew("memoryLimit"));
 		if(prop->IsNumber()){
