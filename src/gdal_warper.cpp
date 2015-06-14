@@ -216,7 +216,7 @@ CPLErr GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
  * @param {Number} [options.dstNodata]
  * @param {Integer} [options.memoryLimit]
  * @param {Number} [options.maxError]
- * @param {Number} [options.multi]
+ * @param {Boolean} [options.multi]
  * @param {string[]|object} [options.options] Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))
  */
 NAN_METHOD(Warper::reprojectImage)
