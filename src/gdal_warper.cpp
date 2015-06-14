@@ -16,11 +16,10 @@ void Warper::Initialize(Handle<Object> target)
 /**
  * GDALReprojectImage() method with a ChunkAndWarpImage replaced with ChunkAndWarpMulti
  */
-CPLErr CPL_STDCALL
-GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
+CPLErr GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
                     GDALDatasetH hDstDS, const char *pszDstWKT,
                     GDALResampleAlg eResampleAlg,
-                    CPL_UNUSED double dfWarpMemoryLimit,
+                    double dfWarpMemoryLimit,
                     double dfMaxError,
                     GDALProgressFunc pfnProgress, void *pProgressArg,
                     GDALWarpOptions *psOptions )
