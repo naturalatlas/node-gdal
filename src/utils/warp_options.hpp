@@ -54,6 +54,9 @@ public:
 	inline GDALWarpOptions* get() {
 		return options;
 	}
+	inline bool useMultithreading() {
+		return multi;
+	}
 private:
 	GDALWarpOptions *options;
 	StringList additional_options;
@@ -61,6 +64,7 @@ private:
 	IntegerList dst_bands;
 	double* src_nodata;
 	double* dst_nodata;
+	bool multi;
 };
 
 }

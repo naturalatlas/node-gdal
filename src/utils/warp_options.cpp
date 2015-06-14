@@ -11,7 +11,8 @@ WarpOptions::WarpOptions()
 	  src_bands("src band ids"), 
 	  dst_bands("dst band ids"),
 	  src_nodata(NULL),
-	  dst_nodata(NULL)
+	  dst_nodata(NULL),
+	  multi(false)
 {
 	options = GDALCreateWarpOptions();
 }
@@ -215,6 +216,12 @@ int WarpOptions::parse(Handle<Value> value)
 			options->hCutline = ObjectWrap::Unwrap<Geometry>(prop.As<Object>())->get();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
 			NanThrowTypeError("cutline property must be a Geometry object"); return 1;
+		}
+	}
+	if(obj->HasOwnProperty(NanNew("multi"))){
+		prop = obj->Get(NanNew("multi"));
+		if(prop->IsTrue()){
+			multi = true;
 		}
 	}
 	return 0;

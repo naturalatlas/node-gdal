@@ -232,6 +232,37 @@ describe('gdal', function() {
 			
 			assert.notEqual(approx_checksum, exact_checksum);
 		});
+		it('should produce same result using multi option', function(){
+			var options = {
+				src: src,
+				s_srs: src.srs,
+				t_srs: gdal.SpatialReference.fromEPSG(4326)
+			};
+			var info = gdal.suggestedWarpOutput(options);
+
+			//use lower than suggested resolution (faster)
+			info.rasterSize.x /= 4;
+			info.rasterSize.y /= 4; 
+			info.geoTransform[1] *= 4; 
+			info.geoTransform[5] *= 4;
+
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+
+			gdal.reprojectImage(options);
+
+			var expected_checksum = gdal.checksumImage(options.dst.bands.get(1));
+
+			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);
+			options.dst.geoTransform = info.geoTransform;
+			options.multi = true;
+
+			gdal.reprojectImage(options);
+
+			var result_checksum = gdal.checksumImage(options.dst.bands.get(1));
+
+			assert.equal(result_checksum, expected_checksum);
+		})
 		it('should throw if cutline is wrong geometry type', function(){
 			var options = {
 				src: src,

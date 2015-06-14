@@ -14,6 +14,188 @@ void Warper::Initialize(Handle<Object> target)
 }
 
 /**
+ * GDALReprojectImage() method with a ChunkAndWarpImage replaced with ChunkAndWarpMulti
+ */
+CPLErr CPL_STDCALL
+GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
+                    GDALDatasetH hDstDS, const char *pszDstWKT,
+                    GDALResampleAlg eResampleAlg,
+                    CPL_UNUSED double dfWarpMemoryLimit,
+                    double dfMaxError,
+                    GDALProgressFunc pfnProgress, void *pProgressArg,
+                    GDALWarpOptions *psOptions )
+
+{
+    GDALWarpOptions *psWOptions;
+
+/* -------------------------------------------------------------------- */
+/*      Setup a reprojection based transformer.                         */
+/* -------------------------------------------------------------------- */
+    void *hTransformArg;
+
+    hTransformArg = 
+        GDALCreateGenImgProjTransformer( hSrcDS, pszSrcWKT, hDstDS, pszDstWKT, 
+                                         TRUE, 1000.0, 0 );
+
+    if( hTransformArg == NULL )
+        return CE_Failure;
+
+/* -------------------------------------------------------------------- */
+/*      Create a copy of the user provided options, or a defaulted      */
+/*      options structure.                                              */
+/* -------------------------------------------------------------------- */
+    if( psOptions == NULL )
+        psWOptions = GDALCreateWarpOptions();
+    else
+        psWOptions = GDALCloneWarpOptions( psOptions );
+
+    psWOptions->eResampleAlg = eResampleAlg;
+
+/* -------------------------------------------------------------------- */
+/*      Set transform.                                                  */
+/* -------------------------------------------------------------------- */
+    if( dfMaxError > 0.0 )
+    {
+        psWOptions->pTransformerArg = 
+            GDALCreateApproxTransformer( GDALGenImgProjTransform, 
+                                         hTransformArg, dfMaxError );
+
+        psWOptions->pfnTransformer = GDALApproxTransform;
+    }
+    else
+    {
+        psWOptions->pfnTransformer = GDALGenImgProjTransform;
+        psWOptions->pTransformerArg = hTransformArg;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set file and band mapping.                                      */
+/* -------------------------------------------------------------------- */
+    int  iBand;
+
+    psWOptions->hSrcDS = hSrcDS;
+    psWOptions->hDstDS = hDstDS;
+
+    if( psWOptions->nBandCount == 0 )
+    {
+        psWOptions->nBandCount = MIN(GDALGetRasterCount(hSrcDS),
+                                     GDALGetRasterCount(hDstDS));
+        
+        psWOptions->panSrcBands = (int *) 
+            CPLMalloc(sizeof(int) * psWOptions->nBandCount);
+        psWOptions->panDstBands = (int *) 
+            CPLMalloc(sizeof(int) * psWOptions->nBandCount);
+
+        for( iBand = 0; iBand < psWOptions->nBandCount; iBand++ )
+        {
+            psWOptions->panSrcBands[iBand] = iBand+1;
+            psWOptions->panDstBands[iBand] = iBand+1;
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set source nodata values if the source dataset seems to have    */
+/*      any. Same for target nodata values                              */
+/* -------------------------------------------------------------------- */
+    for( iBand = 0; iBand < psWOptions->nBandCount; iBand++ )
+    {
+        GDALRasterBandH hBand = GDALGetRasterBand( hSrcDS, iBand+1 );
+        int             bGotNoData = FALSE;
+        double          dfNoDataValue;
+
+        if (GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand)
+        {
+            psWOptions->nSrcAlphaBand = iBand + 1;
+        }
+
+        dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
+        if( bGotNoData )
+        {
+            if( psWOptions->padfSrcNoDataReal == NULL )
+            {
+                int  ii;
+
+                psWOptions->padfSrcNoDataReal = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions->nBandCount);
+                psWOptions->padfSrcNoDataImag = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions->nBandCount);
+
+                for( ii = 0; ii < psWOptions->nBandCount; ii++ )
+                {
+                    psWOptions->padfSrcNoDataReal[ii] = -1.1e20;
+                    psWOptions->padfSrcNoDataImag[ii] = 0.0;
+                }
+            }
+
+            psWOptions->padfSrcNoDataReal[iBand] = dfNoDataValue;
+        }
+
+        // Deal with target band
+        hBand = GDALGetRasterBand( hDstDS, iBand+1 );
+        if (hBand && GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand)
+        {
+            psWOptions->nDstAlphaBand = iBand + 1;
+        }
+
+        dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
+        if( bGotNoData )
+        {
+            if( psWOptions->padfDstNoDataReal == NULL )
+            {
+                int  ii;
+
+                psWOptions->padfDstNoDataReal = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions->nBandCount);
+                psWOptions->padfDstNoDataImag = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions->nBandCount);
+
+                for( ii = 0; ii < psWOptions->nBandCount; ii++ )
+                {
+                    psWOptions->padfDstNoDataReal[ii] = -1.1e20;
+                    psWOptions->padfDstNoDataImag[ii] = 0.0;
+                }
+            }
+
+            psWOptions->padfDstNoDataReal[iBand] = dfNoDataValue;
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set the progress function.                                      */
+/* -------------------------------------------------------------------- */
+    if( pfnProgress != NULL )
+    {
+        psWOptions->pfnProgress = pfnProgress;
+        psWOptions->pProgressArg = pProgressArg;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Create a warp options based on the options.                     */
+/* -------------------------------------------------------------------- */
+    GDALWarpOperation  oWarper;
+    CPLErr eErr;
+
+    eErr = oWarper.Initialize( psWOptions );
+
+    if( eErr == CE_None )
+        eErr = oWarper.ChunkAndWarpMulti( 0, 0, 
+                                          GDALGetRasterXSize(hDstDS),
+                                          GDALGetRasterYSize(hDstDS) );
+
+/* -------------------------------------------------------------------- */
+/*      Cleanup.                                                        */
+/* -------------------------------------------------------------------- */
+    GDALDestroyGenImgProjTransformer( hTransformArg );
+
+    if( dfMaxError > 0.0 )
+        GDALDestroyApproxTransformer( psWOptions->pTransformerArg );
+        
+    GDALDestroyWarpOptions( psWOptions );
+
+    return eErr;
+}
+
+/**
  * Reprojects a dataset.
  *
  * @throws Error
@@ -35,6 +217,7 @@ void Warper::Initialize(Handle<Object> target)
  * @param {Number} [options.dstNodata]
  * @param {Integer} [options.memoryLimit]
  * @param {Number} [options.maxError]
+ * @param {Number} [options.multi]
  * @param {string[]|object} [options.options] Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))
  */
 NAN_METHOD(Warper::reprojectImage)
@@ -79,8 +262,14 @@ NAN_METHOD(Warper::reprojectImage)
 		NanReturnUndefined();
 	}
 
-	CPLErr err = GDALReprojectImage(opts->hSrcDS, s_srs_wkt, opts->hDstDS, t_srs_wkt, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	CPLErr err;
 
+	if(options.useMultithreading()){
+		err = GDALReprojectImageMulti(opts->hSrcDS, s_srs_wkt, opts->hDstDS, t_srs_wkt, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	} else {
+		err = GDALReprojectImage(opts->hSrcDS, s_srs_wkt, opts->hDstDS, t_srs_wkt, opts->eResampleAlg, opts->dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	}
+	
 	CPLFree(s_srs_wkt);
 	CPLFree(t_srs_wkt);
 
