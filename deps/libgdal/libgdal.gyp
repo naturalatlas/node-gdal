@@ -273,6 +273,7 @@
 				"./gdal/port",
 				"./gdal/frmts",
 				"./gdal/frmts/zlib",
+				"./gdal/frmts/vrt",
 				"./gdal/ogr",
 				"./gdal/ogr/ogrsf_frmts",
 				"./gdal/ogr/ogrsf_frmts/mem",
