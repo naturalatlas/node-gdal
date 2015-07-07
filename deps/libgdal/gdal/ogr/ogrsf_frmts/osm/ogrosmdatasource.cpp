@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrosmdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrosmdatasource.cpp 29242 2015-05-24 10:59:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMDataSource class.
@@ -88,7 +88,7 @@
 #define PAGE_SIZE   4096
 
 /* compressSize should not be greater than 512, so COMPRESS_SIZE_TO_BYTE() fits on a byte */
-#define COMPRESS_SIZE_TO_BYTE(nCompressSize)  (((nCompressSize) - 8) / 2)
+#define COMPRESS_SIZE_TO_BYTE(nCompressSize)  (GByte)(((nCompressSize) - 8) / 2)
 #define ROUND_COMPRESS_SIZE(nCompressSize)    (((nCompressSize) + 1) / 2) * 2;
 #define COMPRESS_SIZE_FROM_BYTE(byte_on_size) ((byte_on_size) * 2 + 8)
 
@@ -121,7 +121,7 @@ size_t GetMaxTotalAllocs();
 static void WriteVarInt64(GUIntBig nSVal, GByte** ppabyData);
 static void WriteVarSInt64(GIntBig nSVal, GByte** ppabyData);
 
-CPL_CVSID("$Id: ogrosmdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrosmdatasource.cpp 29242 2015-05-24 10:59:41Z rouault $");
 
 class DSToBeOpened
 {
@@ -131,7 +131,7 @@ class DSToBeOpened
         CPLString               osInterestLayers;
 };
 
-static void                      *hMutex = NULL;
+static CPLMutex                  *hMutex = NULL;
 static std::vector<DSToBeOpened>  oListDSToBeOpened;
 
 /************************************************************************/
@@ -180,6 +180,7 @@ OGROSMDataSource::OGROSMDataSource()
     nLayers = 0;
     papoLayers = NULL;
     pszName = NULL;
+    bExtentValid = FALSE;
     bInterleavedReading = -1;
     poCurrentLayer = NULL;
     psParser = NULL;
@@ -195,6 +196,9 @@ OGROSMDataSource::OGROSMDataSource()
     hDeletePolygonsStandaloneStmt = NULL;
     hSelectPolygonsStandaloneStmt = NULL;
     bHasRowInPolygonsStandalone = FALSE;
+
+    hDBForComputedAttributes = NULL;
+
     nNodesInTransaction = 0;
     bInTransaction = FALSE;
     pahSelectNodeStmt = NULL;
@@ -287,6 +291,9 @@ OGROSMDataSource::~OGROSMDataSource()
 
     if( hDB != NULL )
         CloseDB();
+
+    if( hDBForComputedAttributes != NULL )
+        sqlite3_close(hDBForComputedAttributes);
 
 #ifdef HAVE_SQLITE_VFS
     if (pMyVFS)
@@ -425,7 +432,7 @@ void OGROSMDataSource::CloseDB()
     }
 
     if( bInTransaction )
-        CommitTransaction();
+        CommitTransactionCacheDB();
 
     sqlite3_close(hDB);
     hDB = NULL;
@@ -860,8 +867,10 @@ void OGROSMDataSource::NotifyNodes(unsigned int nNodes, OSMNode* pasNodes)
     }
 }
 
-static void OGROSMNotifyNodes (unsigned int nNodes, OSMNode* pasNodes,
-                               CPL_UNUSED OSMContext* psOSMContext, void* user_data)
+static void OGROSMNotifyNodes (unsigned int nNodes,
+                               OSMNode* pasNodes,
+                               CPL_UNUSED OSMContext* psOSMContext,
+                               void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyNodes(nNodes, pasNodes);
 }
@@ -1044,8 +1053,8 @@ static int DecompressSector(GByte* pabyIn, int nSectorSize, GByte* pabyOut)
         {
             if( bLastValid )
             {
-                pasLonLatOut[i].nLon = nLastLon + ReadVarSInt64(&pabyPtr);
-                pasLonLatOut[i].nLat = nLastLat + ReadVarSInt64(&pabyPtr);
+                pasLonLatOut[i].nLon = (int)(nLastLon + ReadVarSInt64(&pabyPtr));
+                pasLonLatOut[i].nLat = (int)(nLastLat + ReadVarSInt64(&pabyPtr));
             }
             else
             {
@@ -1547,8 +1556,8 @@ int OGROSMDataSource::UncompressWay( int nBytes, GByte* pabyCompressedWay,
     int nPoints = 1;
     do
     {
-        pasCoords[nPoints].nLon = pasCoords[nPoints-1].nLon + ReadVarSInt64(&pabyPtr);
-        pasCoords[nPoints].nLat = pasCoords[nPoints-1].nLat + ReadVarSInt64(&pabyPtr);
+        pasCoords[nPoints].nLon = (int)(pasCoords[nPoints-1].nLon + ReadVarSInt64(&pabyPtr));
+        pasCoords[nPoints].nLat = (int)(pasCoords[nPoints-1].nLat + ReadVarSInt64(&pabyPtr));
 
         nPoints ++;
     } while (pabyPtr < pabyCompressedWay + nBytes);
@@ -1920,18 +1929,16 @@ void OGROSMDataSource::NotifyWay (OSMWay* psWay)
                     psWay->sInfo.ts.nTimeStamp;
             else
             {
-                int year, month, day, hour, minute, TZ;
-                float second;
-                if (OGRParseXMLDateTime(psWay->sInfo.ts.pszTimeStamp, &year, &month, &day,
-                                        &hour, &minute, &second, &TZ))
+                OGRField sField;
+                if (OGRParseXMLDateTime(psWay->sInfo.ts.pszTimeStamp, &sField))
                 {
                     struct tm brokendown;
-                    brokendown.tm_year = year - 1900;
-                    brokendown.tm_mon = month - 1;
-                    brokendown.tm_mday = day;
-                    brokendown.tm_hour = hour;
-                    brokendown.tm_min = minute;
-                    brokendown.tm_sec = (int)(second + .5);
+                    brokendown.tm_year = sField.Date.Year - 1900;
+                    brokendown.tm_mon = sField.Date.Month - 1;
+                    brokendown.tm_mday = sField.Date.Day;
+                    brokendown.tm_hour = sField.Date.Hour;
+                    brokendown.tm_min = sField.Date.Minute;
+                    brokendown.tm_sec = (int)(sField.Date.Second + .5);
                     psWayFeaturePairs->sInfo.ts.nTimeStamp =
                         CPLYMDHMSToUnixTime(&brokendown);
                 }
@@ -2004,7 +2011,7 @@ void OGROSMDataSource::NotifyWay (OSMWay* psWay)
                 psKD = oIterK->second;
             psKD->nOccurences ++;
 
-            pasAccumulatedTags[nAccumulatedTags].nKeyIndex = psKD->nKeyIndex;
+            pasAccumulatedTags[nAccumulatedTags].nKeyIndex = (short)psKD->nKeyIndex;
 
             /* to fit in 2 bytes, the theoretical limit would be 127 * 128 + 127 */
             if( psKD->asValues.size() < 1024 )
@@ -2070,7 +2077,9 @@ void OGROSMDataSource::NotifyWay (OSMWay* psWay)
     nUnsortedReqIds += (psWay->nRefs - bIsArea);
 }
 
-static void OGROSMNotifyWay (OSMWay* psWay, CPL_UNUSED OSMContext* psOSMContext, void* user_data)
+static void OGROSMNotifyWay (OSMWay* psWay,
+                             CPL_UNUSED OSMContext* psOSMContext,
+                             void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyWay(psWay);
 }
@@ -2519,7 +2528,8 @@ void OGROSMDataSource::NotifyRelation (OSMRelation* psRelation)
 }
 
 static void OGROSMNotifyRelation (OSMRelation* psRelation,
-                                  CPL_UNUSED OSMContext* psOSMContext, void* user_data)
+                                  CPL_UNUSED OSMContext* psOSMContext,
+                                  void* user_data)
 {
     ((OGROSMDataSource*) user_data)->NotifyRelation(psRelation);
 }
@@ -2640,7 +2650,8 @@ void OGROSMDataSource::NotifyBounds (double dfXMin, double dfYMin,
 
 static void OGROSMNotifyBounds( double dfXMin, double dfYMin,
                                 double dfXMax, double dfYMax,
-                                CPL_UNUSED OSMContext* psCtxt, void* user_data )
+                                CPL_UNUSED OSMContext* psCtxt,
+                                void* user_data )
 {
     ((OGROSMDataSource*) user_data)->NotifyBounds(dfXMin, dfYMin,
                                                   dfXMax, dfYMax);
@@ -2650,17 +2661,9 @@ static void OGROSMNotifyBounds( double dfXMin, double dfYMin,
 /*                                Open()                                */
 /************************************************************************/
 
-int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGROSMDataSource::Open( const char * pszFilename, char** papszOpenOptions )
 
 {
-    const char* pszExt = CPLGetExtension(pszFilename);
-    if( !EQUAL(pszExt, "pbf") &&
-        !EQUAL(pszExt, "osm") &&
-        !EQUALN(pszFilename, "/vsicurl_streaming/", strlen("/vsicurl_streaming/")) &&
-        strcmp(pszFilename, "/vsistdin/") != 0 &&
-        strcmp(pszFilename, "/dev/stdin/") != 0 )
-        return FALSE;
-
     pszName = CPLStrdup( pszFilename );
 
     psParser = OSM_Open( pszName,
@@ -2672,23 +2675,23 @@ int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
     if( psParser == NULL )
         return FALSE;
 
-    if (bUpdateIn)
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-                 "OGR/OSM driver does not support opening a file in update mode");
-        return FALSE;
-    }
+    if( CSLFetchBoolean(papszOpenOptions, "INTERLEAVED_READING", FALSE) )
+        bInterleavedReading = TRUE;
 
-    /* The following 4 config options are only usefull for debugging */
+    /* The following 4 config options are only useful for debugging */
     bIndexPoints = CSLTestBoolean(CPLGetConfigOption("OSM_INDEX_POINTS", "YES"));
     bUsePointsIndex = CSLTestBoolean(CPLGetConfigOption("OSM_USE_POINTS_INDEX", "YES"));
     bIndexWays = CSLTestBoolean(CPLGetConfigOption("OSM_INDEX_WAYS", "YES"));
     bUseWaysIndex = CSLTestBoolean(CPLGetConfigOption("OSM_USE_WAYS_INDEX", "YES"));
 
-    bCustomIndexing = CSLTestBoolean(CPLGetConfigOption("OSM_USE_CUSTOM_INDEXING", "YES"));
+    bCustomIndexing = CSLTestBoolean(CSLFetchNameValueDef(
+            papszOpenOptions, "USE_CUSTOM_INDEXING",
+                        CPLGetConfigOption("OSM_USE_CUSTOM_INDEXING", "YES")));
     if( !bCustomIndexing )
         CPLDebug("OSM", "Using SQLite indexing for points");
-    bCompressNodes = CSLTestBoolean(CPLGetConfigOption("OSM_COMPRESS_NODES", "NO"));
+    bCompressNodes = CSLTestBoolean(CSLFetchNameValueDef(
+            papszOpenOptions, "COMPRESS_NODES",
+                        CPLGetConfigOption("OSM_COMPRESS_NODES", "NO")));
     if( bCompressNodes )
         CPLDebug("OSM", "Using compression for nodes DB");
 
@@ -2710,7 +2713,7 @@ int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
     papoLayers[IDX_LYR_OTHER_RELATIONS] = new OGROSMLayer(this, IDX_LYR_OTHER_RELATIONS, "other_relations");
     papoLayers[IDX_LYR_OTHER_RELATIONS]->GetLayerDefn()->SetGeomType(wkbGeometryCollection);
 
-    if( !ParseConf() )
+    if( !ParseConf(papszOpenOptions) )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Could not parse configuration file for OSM import");
@@ -2752,7 +2755,8 @@ int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
         return FALSE;
     }
 
-    nMaxSizeForInMemoryDBInMB = atoi(CPLGetConfigOption("OSM_MAX_TMPFILE_SIZE", "100"));
+    nMaxSizeForInMemoryDBInMB = atoi(CSLFetchNameValueDef(papszOpenOptions,
+        "MAX_TMPFILE_SIZE", CPLGetConfigOption("OSM_MAX_TMPFILE_SIZE", "100")));
     GIntBig nSize = (GIntBig)nMaxSizeForInMemoryDBInMB * 1024 * 1024;
     if (nSize < 0 || (GIntBig)(size_t)nSize != nSize)
     {
@@ -3007,7 +3011,7 @@ int OGROSMDataSource::SetDBOptions()
     if( !SetCacheSize() )
         return FALSE;
 
-    if( !StartTransaction() )
+    if( !StartTransactionCacheDB() )
         return FALSE;
 
     return TRUE;
@@ -3180,10 +3184,10 @@ int OGROSMDataSource::CreatePreparedStatements()
 }
 
 /************************************************************************/
-/*                           StartTransaction()                         */
+/*                      StartTransactionCacheDB()                       */
 /************************************************************************/
 
-int OGROSMDataSource::StartTransaction()
+int OGROSMDataSource::StartTransactionCacheDB()
 {
     if( bInTransaction )
         return FALSE;
@@ -3204,10 +3208,10 @@ int OGROSMDataSource::StartTransaction()
 }
 
 /************************************************************************/
-/*                           CommitTransaction()                        */
+/*                        CommitTransactionCacheDB()                    */
 /************************************************************************/
 
-int OGROSMDataSource::CommitTransaction()
+int OGROSMDataSource::CommitTransactionCacheDB()
 {
     if( !bInTransaction )
         return FALSE;
@@ -3228,12 +3232,32 @@ int OGROSMDataSource::CommitTransaction()
 }
 
 /************************************************************************/
+/*                     AddComputedAttributes()                          */
+/************************************************************************/
+
+void OGROSMDataSource::AddComputedAttributes(int iCurLayer,
+                                             const std::vector<OGROSMComputedAttribute>& oAttributes)
+{
+    for(size_t i=0; i<oAttributes.size();i++)
+    {
+        if( oAttributes[i].osSQL.size() )
+        {
+            papoLayers[iCurLayer]->AddComputedAttribute(oAttributes[i].osName,
+                                                        oAttributes[i].eType,
+                                                        oAttributes[i].osSQL);
+        }
+    }
+}
+
+/************************************************************************/
 /*                           ParseConf()                                */
 /************************************************************************/
 
-int OGROSMDataSource::ParseConf()
+int OGROSMDataSource::ParseConf(char** papszOpenOptions)
 {
-    const char *pszFilename = CPLGetConfigOption("OSM_CONFIG_FILE", NULL);
+    const char *pszFilename = 
+        CSLFetchNameValueDef(papszOpenOptions, "CONFIG_FILE",
+                             CPLGetConfigOption("OSM_CONFIG_FILE", NULL));
     if( pszFilename == NULL )
         pszFilename = CPLFindFile( "gdal", "osmconf.ini" );
     if( pszFilename == NULL )
@@ -3248,13 +3272,20 @@ int OGROSMDataSource::ParseConf()
 
     const char* pszLine;
     int iCurLayer = -1;
+    std::vector<OGROSMComputedAttribute> oAttributes;
 
     int i;
 
     while((pszLine = CPLReadLine2L(fpConf, -1, NULL)) != NULL)
     {
+        if(pszLine[0] == '#')
+            continue;
         if(pszLine[0] == '[' && pszLine[strlen(pszLine)-1] == ']' )
         {
+            if( iCurLayer >= 0 )
+                AddComputedAttributes(iCurLayer, oAttributes);
+            oAttributes.resize(0);
+
             iCurLayer = -1;
             pszLine ++;
             ((char*)pszLine)[strlen(pszLine)-1] = '\0'; /* Evil but OK */
@@ -3435,9 +3466,100 @@ int OGROSMDataSource::ParseConf()
                 }
                 CSLDestroy(papszTokens2);
             }
+            else if ( CSLCount(papszTokens) == 2 && strcmp(papszTokens[0], "computed_attributes") == 0 )
+            {
+                char** papszTokens2 = CSLTokenizeString2(papszTokens[1], ",", 0);
+                oAttributes.resize(0);
+                for(int i=0;papszTokens2[i] != NULL;i++)
+                {
+                    oAttributes.push_back(OGROSMComputedAttribute(papszTokens2[i]));
+                }
+                CSLDestroy(papszTokens2);
+            }
+            else if ( CSLCount(papszTokens) == 2 && strlen(papszTokens[0]) >= 5 &&
+                      strcmp(papszTokens[0] + strlen(papszTokens[0]) - 5, "_type") == 0 )
+            {
+                CPLString osName(papszTokens[0]);
+                osName.resize(strlen(papszTokens[0]) - 5);
+                const char* pszType = papszTokens[1];
+                int bFound = FALSE;
+                 OGRFieldType eType = OFTString;
+                if( EQUAL(pszType, "Integer") )
+                    eType = OFTInteger;
+                else if( EQUAL(pszType, "Integer64") )
+                    eType = OFTInteger64;
+                else if( EQUAL(pszType, "Real") )
+                    eType = OFTReal;
+                else if( EQUAL(pszType, "String") )
+                    eType = OFTString;
+                else if( EQUAL(pszType, "DateTime") )
+                    eType = OFTDateTime;
+                else
+                    CPLError(CE_Warning, CPLE_AppDefined,
+                                "Unhandled type (%s) for attribute %s",
+                                pszType, osName.c_str());
+                for(size_t i = 0; i < oAttributes.size(); i++ )
+                {
+                    if( oAttributes[i].osName == osName )
+                    {
+                        bFound = TRUE;
+                        oAttributes[i].eType = eType;
+                        break;
+                    }
+                }
+                if( !bFound )
+                {
+                    int idx = papoLayers[iCurLayer]->GetLayerDefn()->GetFieldIndex(osName);
+                    if( idx >= 0 )
+                    {
+                        papoLayers[iCurLayer]->GetLayerDefn()->GetFieldDefn(idx)->SetType(eType);
+                        bFound = TRUE;
+                    }
+                }
+                if( !bFound )
+                {
+                    CPLError(CE_Warning, CPLE_AppDefined, "Undeclared attribute : %s",
+                             osName.c_str());
+                }
+            }
+            else if ( CSLCount(papszTokens) >= 2 && strlen(papszTokens[0]) >= 4 &&
+                      strcmp(papszTokens[0] + strlen(papszTokens[0]) - 4, "_sql") == 0 )
+            {
+                CPLString osName(papszTokens[0]);
+                osName.resize(strlen(papszTokens[0]) - 4);
+                size_t i;
+                for(i = 0; i < oAttributes.size(); i++ )
+                {
+                    if( oAttributes[i].osName == osName )
+                    {
+                        const char* pszSQL = strchr(pszLine, '=') + 1;
+                        while( *pszSQL == ' ' )
+                            pszSQL ++;
+                        int bInQuotes = FALSE;
+                        if( *pszSQL == '"' )
+                        {
+                            bInQuotes = TRUE;
+                            pszSQL ++;
+                        }
+                        oAttributes[i].osSQL = pszSQL;
+                        if( bInQuotes && oAttributes[i].osSQL.size() > 1 &&
+                            oAttributes[i].osSQL[oAttributes[i].osSQL.size()-1] == '"' )
+                            oAttributes[i].osSQL.resize(oAttributes[i].osSQL.size()-1);
+                        break;
+                    }
+                }
+                if( i == oAttributes.size() )
+                {
+                    CPLError(CE_Warning, CPLE_AppDefined, "Undeclared attribute : %s",
+                             osName.c_str());
+                }
+            }
             CSLDestroy(papszTokens);
         }
     }
+
+    if( iCurLayer >= 0 )
+        AddComputedAttributes(iCurLayer, oAttributes);
 
     for(i=0;i<nLayers;i++)
     {
@@ -3648,7 +3770,7 @@ int OGROSMDataSource::TransferToDiskIfNecesserary()
             CPLString osNewTmpDBName;
             osNewTmpDBName = CPLGenerateTempFilename("osm_tmp_nodes");
 
-            CPLDebug("OSM", "%s too big for RAM. Transfering it onto disk in %s",
+            CPLDebug("OSM", "%s too big for RAM. Transferring it onto disk in %s",
                      osNodesFilename.c_str(), osNewTmpDBName.c_str());
 
             if( CPLCopyFile( osNewTmpDBName, osNodesFilename ) != 0 )
@@ -3727,7 +3849,7 @@ int OGROSMDataSource::TransferToDiskIfNecesserary()
 
             osNewTmpDBName = CPLGenerateTempFilename("osm_tmp");
 
-            CPLDebug("OSM", "%s too big for RAM. Transfering it onto disk in %s",
+            CPLDebug("OSM", "%s too big for RAM. Transferring it onto disk in %s",
                      osTmpDBName.c_str(), osNewTmpDBName.c_str());
 
             if( CPLCopyFile( osNewTmpDBName, osTmpDBName ) != 0 )
@@ -3932,7 +4054,7 @@ class OGROSMResultLayerDecorator : public OGRLayerDecorator
                                         osDSName(osDSName),
                                         osInterestLayers(osInterestLayers) {}
 
-        virtual int         GetFeatureCount( int bForce = TRUE )
+        virtual GIntBig     GetFeatureCount( int bForce = TRUE )
         {
             /* When we run GetFeatureCount() with SQLite SQL dialect, */
             /* the OSM dataset will be re-opened. Make sure that it is */
@@ -4111,7 +4233,7 @@ OGRLayer * OGROSMDataSource::ExecuteSQL( const char *pszSQLCommand,
                                                             poSpatialFilter,
                                                             pszDialect );
 
-            /* If the user explicitely run a COUNT() request, then do it ! */
+            /* If the user explicitly run a COUNT() request, then do it ! */
             if( poResultSetLayer )
             {
                 if( pszDialect != NULL && EQUAL(pszDialect, "SQLITE") )

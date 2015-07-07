@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_gft.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_gft.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  GFT Translator
  * Purpose:  Definition of classes for OGR Google Fusion Tables driver.
@@ -81,7 +81,7 @@ protected:
 
     virtual int                 TestCapability( const char * );
 
-    virtual OGRErr              SetNextByIndex( long nIndex );
+    virtual OGRErr              SetNextByIndex( GIntBig nIndex );
 
     const char *        GetDefaultGeometryColumnName() { return "geometry"; }
 
@@ -137,18 +137,18 @@ class OGRGFTTableLayer : public OGRGFTLayer
     virtual OGRFeatureDefn *    GetLayerDefn();
 
     virtual const char *        GetName() { return osTableName.c_str(); }
-    virtual int         GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
 
-    virtual OGRFeature *        GetFeature( long nFID );
+    virtual OGRFeature *        GetFeature( GIntBig nFID );
 
     virtual void        SetSpatialFilter( OGRGeometry * );
     virtual OGRErr      SetAttributeFilter( const char * );
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      SetFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
 
     virtual OGRErr      StartTransaction();
     virtual OGRErr      CommitTransaction();
@@ -223,7 +223,7 @@ class OGRGFTDataSource : public OGRDataSource
 
     virtual int         TestCapability( const char * );
 
-    virtual OGRLayer   *CreateLayer( const char *pszName,
+    virtual OGRLayer   *ICreateLayer( const char *pszName,
                                      OGRSpatialReference *poSpatialRef = NULL,
                                      OGRwkbGeometryType eGType = wkbUnknown,
                                      char ** papszOptions = NULL );

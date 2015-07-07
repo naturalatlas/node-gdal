@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrmemdatasource.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemDataSource class.
@@ -31,13 +31,13 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrmemdatasource.cpp 27959 2014-11-14 18:29:21Z rouault $");
 
 /************************************************************************/
 /*                          OGRMemDataSource()                          */
 /************************************************************************/
 
-OGRMemDataSource::OGRMemDataSource( const char *pszFilename, 
+OGRMemDataSource::OGRMemDataSource( const char *pszFilename,
                                     CPL_UNUSED char **papszOptions)
 {
     pszName = CPLStrdup(pszFilename);
@@ -61,14 +61,14 @@ OGRMemDataSource::~OGRMemDataSource()
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRMemDataSource::CreateLayer( const char * pszLayerName,
-                               OGRSpatialReference *poSRS,
-                               OGRwkbGeometryType eType,
-                               CPL_UNUSED char ** papszOptions )
+OGRMemDataSource::ICreateLayer( const char * pszLayerName,
+                                OGRSpatialReference *poSRS,
+                                OGRwkbGeometryType eType,
+                                CPL_UNUSED char ** papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
@@ -123,6 +123,8 @@ int OGRMemDataSource::TestCapability( const char * pszCap )
         return TRUE;
     else if( EQUAL(pszCap,ODsCCreateGeomFieldAfterCreateLayer) )
         return TRUE;
+    else if( EQUAL(pszCap,ODsCCurveGeometries) )
+        return TRUE;
     else
         return FALSE;
 }
@@ -139,4 +141,3 @@ OGRLayer *OGRMemDataSource::GetLayer( int iLayer )
     else
         return papoLayers[iLayer];
 }
-

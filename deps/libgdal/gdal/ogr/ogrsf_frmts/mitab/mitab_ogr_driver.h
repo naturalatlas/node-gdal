@@ -9,6 +9,7 @@
  *
  **********************************************************************
  * Copyright (c) 1999, 2000, Stephane Villeneuve
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -102,12 +103,13 @@ class OGRTABDataSource : public OGRDataSource
     int                 m_bSingleFile;
     int                 m_bSingleLayerAlreadyCreated;
     GBool               m_bQuickSpatialIndexMode;
+    int                 m_bUpdate;
 
   public:
                 OGRTABDataSource();
     virtual     ~OGRTABDataSource();
 
-    int         Open( const char *pszName, int bTestOpen );
+    int         Open( GDALOpenInfo* poOpenInfo, int bTestOpen );
     int         Create( const char *pszName, char ** papszOptions );
 
     const char  *GetName() { return m_pszName; }
@@ -115,26 +117,12 @@ class OGRTABDataSource : public OGRDataSource
     OGRLayer    *GetLayer( int );
     int          TestCapability( const char * );
     
-    OGRLayer    *CreateLayer(const char *, 
+    OGRLayer    *ICreateLayer(const char *, 
                              OGRSpatialReference * = NULL,
                              OGRwkbGeometryType = wkbUnknown,
                              char ** = NULL );
-};
- 
-/************************************************************************/
-/*                             OGRTABDriver                             */
-/************************************************************************/
 
-class OGRTABDriver : public OGRSFDriver
-{
-public:
-    virtual     ~OGRTABDriver();
-
-    const char  *GetName();
-    OGRDataSource *Open ( const char *,int );
-    int         TestCapability( const char * );
-    virtual OGRDataSource *CreateDataSource( const char *, char ** = NULL );
-    virtual OGRErr DeleteDataSource( const char * );
+    char        **GetFileList();
 };
 
 void CPL_DLL RegisterOGRTAB();

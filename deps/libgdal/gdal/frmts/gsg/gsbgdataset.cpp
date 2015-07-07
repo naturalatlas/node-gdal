@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gsbgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: gsbgdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implements the Golden Software Binary Grid Format.
@@ -61,7 +61,7 @@
 # define SHRT_MAX 32767
 #endif /* SHRT_MAX */
 
-CPL_CVSID("$Id: gsbgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: gsbgdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GSBG(void);
@@ -679,7 +679,7 @@ GDALDataset *GSBGDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return poDS;
 }
@@ -882,10 +882,11 @@ CPLErr GSBGDataset::WriteHeader( VSILFILE *fp, GInt16 nXSize, GInt16 nYSize,
 /************************************************************************/
 
 GDALDataset *GSBGDataset::Create( const char * pszFilename,
-				  int nXSize, int nYSize, CPL_UNUSED int nBands,
+				  int nXSize,
+                                  int nYSize,
+                                  CPL_UNUSED int nBands,
 				  GDALDataType eType,
 				  CPL_UNUSED char **papszParmList )
-
 {
     if( nXSize <= 0 || nYSize <= 0 )
     {
@@ -962,7 +963,8 @@ GDALDataset *GSBGDataset::Create( const char * pszFilename,
 
 GDALDataset *GSBGDataset::CreateCopy( const char *pszFilename,
 				      GDALDataset *poSrcDS,
-				      int bStrict, CPL_UNUSED char **papszOptions,
+				      int bStrict,
+                                      CPL_UNUSED char **papszOptions,
 				      GDALProgressFunc pfnProgress,
 				      void *pProgressData )
 {
@@ -1059,7 +1061,7 @@ GDALDataset *GSBGDataset::CreateCopy( const char *pszFilename,
     {
 	eErr = poSrcBand->RasterIO( GF_Read, 0, iRow,
 				    nXSize, 1, pfData,
-				    nXSize, 1, GDT_Float32, 0, 0 );
+				    nXSize, 1, GDT_Float32, 0, 0, NULL );
 
 	if( eErr != CE_None )
 	{
@@ -1143,6 +1145,7 @@ void GDALRegister_GSBG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GSBG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Golden Software Binary Grid (.grd)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

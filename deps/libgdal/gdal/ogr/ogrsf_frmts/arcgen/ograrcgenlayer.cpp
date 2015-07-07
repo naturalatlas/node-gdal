@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograrcgenlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ograrcgenlayer.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ograrcgenlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ograrcgenlayer.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRARCGENLayer()                             */
@@ -53,6 +53,7 @@ OGRARCGENLayer::OGRARCGENLayer( const char* pszFilename,
 
     OGRFieldDefn    oField1( "ID", OFTInteger);
     poFeatureDefn->AddFieldDefn( &oField1 );
+    SetDescription( poFeatureDefn->GetName() );
 }
 
 /************************************************************************/
@@ -138,13 +139,13 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
                 poFeature->SetField(0, papszTokens[0]);
                 if (nTokens == 3)
                     poFeature->SetGeometryDirectly(
-                        new OGRPoint(atof(papszTokens[1]),
-                                     atof(papszTokens[2])));
+                        new OGRPoint(CPLAtof(papszTokens[1]),
+                                     CPLAtof(papszTokens[2])));
                 else
                     poFeature->SetGeometryDirectly(
-                        new OGRPoint(atof(papszTokens[1]),
-                                     atof(papszTokens[2]),
-                                     atof(papszTokens[3])));
+                        new OGRPoint(CPLAtof(papszTokens[1]),
+                                     CPLAtof(papszTokens[2]),
+                                     CPLAtof(papszTokens[3])));
                 CSLDestroy(papszTokens);
                 return poFeature;
             }
@@ -199,14 +200,14 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
         {
             if (nTokens == 2)
             {
-                poLS->addPoint(atof(papszTokens[0]),
-                               atof(papszTokens[1]));
+                poLS->addPoint(CPLAtof(papszTokens[0]),
+                               CPLAtof(papszTokens[1]));
             }
             else if (nTokens == 3)
             {
-                poLS->addPoint(atof(papszTokens[0]),
-                               atof(papszTokens[1]),
-                               atof(papszTokens[2]));
+                poLS->addPoint(CPLAtof(papszTokens[0]),
+                               CPLAtof(papszTokens[1]),
+                               CPLAtof(papszTokens[2]));
             }
             else
             {
@@ -229,4 +230,3 @@ int OGRARCGENLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
-

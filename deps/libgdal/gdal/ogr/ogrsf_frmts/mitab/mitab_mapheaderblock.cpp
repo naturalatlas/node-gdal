@@ -10,6 +10,7 @@
  *
  **********************************************************************
  * Copyright (c) 1999-2002, Daniel Morissette
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -138,6 +139,12 @@
 
 #include "mitab.h"
 
+#ifdef WIN32
+inline double round(double r) {
+    return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
+}
+#endif
+
 /*---------------------------------------------------------------------
  * Set various constants used in generating the header block.
  *--------------------------------------------------------------------*/
@@ -179,6 +186,27 @@ static GByte  gabyObjLenArray[ HDR_OBJ_LEN_ARRAY_SIZE  ] = {
 TABMAPHeaderBlock::TABMAPHeaderBlock(TABAccess eAccessMode /*= TABRead*/):
     TABRawBinBlock(eAccessMode, TRUE)
 {
+    InitMembersWithDefaultValues();
+
+    /* We don't want to reset it once it is set */
+    m_bIntBoundsOverflow = FALSE;
+}
+
+/**********************************************************************
+ *                   TABMAPHeaderBlock::~TABMAPHeaderBlock()
+ *
+ * Destructor.
+ **********************************************************************/
+TABMAPHeaderBlock::~TABMAPHeaderBlock()
+{
+
+}
+
+/**********************************************************************
+ *            TABMAPHeaderBlock::InitMembersWithDefaultValues()
+ **********************************************************************/
+void TABMAPHeaderBlock::InitMembersWithDefaultValues()
+{
     int i;
 
     /*-----------------------------------------------------------------
@@ -207,7 +235,7 @@ TABMAPHeaderBlock::TABMAPHeaderBlock(TABAccess eAccessMode /*= TABRead*/):
     m_nDistUnitsCode = 7;       // Meters
     m_nMaxSpIndexDepth = 0;
     m_nCoordPrecision = 3;      // ??? 3 Digits of precision
-    m_nCoordOriginQuadrant = HDR_DEF_ORG_QUADRANT; // ???
+    m_nCoordOriginQuadrant = HDR_DEF_ORG_QUADRANT; // ??? N-E quadrant
     m_nReflectXAxisCoord = HDR_DEF_REFLECTXAXIS;
     m_nMaxObjLenArrayId = HDR_OBJ_LEN_ARRAY_SIZE-1;  // See gabyObjLenArray[]
     m_numPenDefs = 0;
@@ -219,10 +247,13 @@ TABMAPHeaderBlock::TABMAPHeaderBlock(TABAccess eAccessMode /*= TABRead*/):
     m_sProj.nProjId  = 0;
     m_sProj.nEllipsoidId = 0;
     m_sProj.nUnitsId = 7;
+    m_sProj.nDatumId = 0;
     m_XScale = 1000.0;  // Default coord range (before SetCoordSysBounds()) 
     m_YScale = 1000.0;  // will be [-1000000.000 .. 1000000.000]
     m_XDispl = 0.0;
     m_YDispl = 0.0;
+    m_XPrecision = 0.0;  // not specified
+    m_YPrecision = 0.0;  // not specified
 
     for(i=0; i<6; i++)
         m_sProj.adProjParams[i] = 0.0;
@@ -243,16 +274,6 @@ TABMAPHeaderBlock::TABMAPHeaderBlock(TABAccess eAccessMode /*= TABRead*/):
     m_sProj.dAffineParamF = 0.0;
 }
 
-/**********************************************************************
- *                   TABMAPHeaderBlock::~TABMAPHeaderBlock()
- *
- * Destructor.
- **********************************************************************/
-TABMAPHeaderBlock::~TABMAPHeaderBlock()
-{
-
-}
-
 
 /**********************************************************************
  *                   TABMAPHeaderBlock::InitBlockFromData()
@@ -266,7 +287,7 @@ TABMAPHeaderBlock::~TABMAPHeaderBlock()
 int     TABMAPHeaderBlock::InitBlockFromData(GByte *pabyBuf, 
                                              int nBlockSize, int nSizeUsed, 
                                              GBool bMakeCopy /* = TRUE */,
-                                             FILE *fpSrc /* = NULL */, 
+                                             VSILFILE *fpSrc /* = NULL */, 
                                              int nOffset /* = 0 */)
 {
     int i, nStatus;
@@ -313,6 +334,11 @@ int     TABMAPHeaderBlock::InitBlockFromData(GByte *pabyBuf,
     m_nYMin = ReadInt32();
     m_nXMax = ReadInt32();
     m_nYMax = ReadInt32();
+    if( m_nXMin > m_nXMax || m_nYMin > m_nYMax )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined, "Reading corrupted MBR from .map header");
+        CPLErrorReset();
+    }
 
     GotoByteInBlock(0x130);     // Skip 16 unknown bytes 
 
@@ -405,6 +431,8 @@ int     TABMAPHeaderBlock::InitBlockFromData(GByte *pabyBuf,
         }
     }
 
+    UpdatePrecision();
+
     return 0;
 }
 
@@ -444,6 +472,12 @@ int TABMAPHeaderBlock::Int2Coordsys(GInt32 nX, GInt32 nY,
     else
         dY = (nY - m_YDispl) / m_YScale;
 
+    // Round coordinates to the desired precision
+    if (m_XPrecision > 0 && m_YPrecision > 0)
+    {
+        dX = round(dX*m_XPrecision)/m_XPrecision;
+        dY = round(dY*m_YPrecision)/m_YPrecision;
+    }
 //printf("Int2Coordsys: (%d, %d) -> (%.10g, %.10g)\n", nX, nY, dX, dY);
 
     return 0;
@@ -664,6 +698,8 @@ int TABMAPHeaderBlock::SetCoordsysBounds(double dXMin, double dYMin,
     m_nXMax = 1000000000;
     m_nYMax = 1000000000;
 
+    UpdatePrecision();
+
     return 0;
 }
 
@@ -823,6 +859,10 @@ int     TABMAPHeaderBlock::CommitToFile()
     WriteInt32(m_nYMin);
     WriteInt32(m_nXMax);
     WriteInt32(m_nYMax);
+    if( m_nXMin > m_nXMax || m_nYMin > m_nYMax )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined, "Writing corrupted MBR into .map header");
+    }
 
     WriteZeros(16);     // ???
 
@@ -889,7 +929,12 @@ int     TABMAPHeaderBlock::CommitToFile()
      * OK, call the base class to write the block to disk.
      *----------------------------------------------------------------*/
     if (nStatus == 0)
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("MITAB", "Commiting HEADER block to offset %d", m_nFileOffset);
+#endif
         nStatus = TABRawBinBlock::CommitToFile();
+    }
 
     return nStatus;
 }
@@ -909,10 +954,9 @@ int     TABMAPHeaderBlock::CommitToFile()
  * Returns 0 if succesful or -1 if an error happened, in which case 
  * CPLError() will have been called.
  **********************************************************************/
-int     TABMAPHeaderBlock::InitNewBlock(FILE *fpSrc, int nBlockSize, 
+int     TABMAPHeaderBlock::InitNewBlock(VSILFILE *fpSrc, int nBlockSize, 
                                         int nFileOffset /* = 0*/)
 {
-    int i;
     /*-----------------------------------------------------------------
      * Start with the default initialisation
      *----------------------------------------------------------------*/
@@ -922,56 +966,7 @@ int     TABMAPHeaderBlock::InitNewBlock(FILE *fpSrc, int nBlockSize,
     /*-----------------------------------------------------------------
      * Set acceptable default values for member vars.
      *----------------------------------------------------------------*/
-    m_nMAPVersionNumber = HDR_VERSION_NUMBER;
-    m_nBlockSize = HDR_DATA_BLOCK_SIZE;
-
-    m_dCoordsys2DistUnits = 1.0;
-    m_nXMin = -1000000000;
-    m_nYMin = -1000000000;
-    m_nXMax = 1000000000;
-    m_nYMax = 1000000000;
-
-    m_nFirstIndexBlock = 0;
-    m_nFirstGarbageBlock = 0;
-    m_nFirstToolBlock = 0;
-
-    m_numPointObjects = 0;
-    m_numLineObjects = 0;
-    m_numRegionObjects = 0;
-    m_numTextObjects = 0;
-    m_nMaxCoordBufSize = 0;
-
-    m_nDistUnitsCode = 7;       // Meters
-    m_nMaxSpIndexDepth = 0;
-    m_nCoordPrecision = 3;      // ??? 3 digits of precision
-    m_nCoordOriginQuadrant = HDR_DEF_ORG_QUADRANT; // ??? N-E quadrant
-    m_nReflectXAxisCoord = HDR_DEF_REFLECTXAXIS;
-    m_nMaxObjLenArrayId = HDR_OBJ_LEN_ARRAY_SIZE-1;  // See gabyObjLenArray[]
-    m_numPenDefs = 0;
-    m_numBrushDefs = 0;
-    m_numSymbolDefs = 0;
-    m_numFontDefs = 0;
-    m_numMapToolBlocks = 0;
-
-    m_sProj.nProjId  = 0;
-    m_sProj.nEllipsoidId = 0;
-    m_sProj.nUnitsId = 7;
-    m_sProj.nDatumId = 0;
-    m_XScale = 1000.0;  // Default coord range (before SetCoordSysBounds()) 
-    m_YScale = 1000.0;  // will be [-1000000.000 .. 1000000.000]
-    m_XDispl = 0.0;
-    m_YDispl = 0.0;
-
-    for(i=0; i<6; i++)
-        m_sProj.adProjParams[i] = 0.0;
-
-    m_sProj.dDatumShiftX = 0.0;
-    m_sProj.dDatumShiftY = 0.0;
-    m_sProj.dDatumShiftZ = 0.0;
-    for(i=0; i<5; i++)
-        m_sProj.adDatumParams[i] = 0.0;
-
-    m_sProj.nAffineFlag = 0;
+    InitMembersWithDefaultValues();
 
     /*-----------------------------------------------------------------
      * And Set the map object length array in the buffer...
@@ -988,6 +983,17 @@ int     TABMAPHeaderBlock::InitNewBlock(FILE *fpSrc, int nBlockSize,
     return 0;
 }
 
+/**********************************************************************
+ * TABMAPHeaderBlock::UpdatePrecision()
+ *
+ * Update x and y maximum achievable precision given current scales
+ * (m_XScale and m_YScale)
+ **********************************************************************/
+void TABMAPHeaderBlock::UpdatePrecision()
+{
+    m_XPrecision = pow(10.0, round(log10(m_XScale)));
+    m_YPrecision = pow(10.0, round(log10(m_YScale)));
+}
 
 /**********************************************************************
  *                   TABMAPHeaderBlock::Dump()

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: btdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: btdataset.cpp 29284 2015-06-03 13:26:10Z rouault $
  *
  * Project:  VTP .bt Driver
  * Purpose:  Implementation of VTP .bt elevation format read/write support.
@@ -32,7 +32,7 @@
 #include "rawdataset.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: btdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: btdataset.cpp 29284 2015-06-03 13:26:10Z rouault $");
 
 CPL_C_START
 void    GDALRegister_BT(void);
@@ -187,9 +187,10 @@ CPLErr BTRasterBand::IReadBlock( int nBlockXOff,
 /*                            IWriteBlock()                             */
 /************************************************************************/
 
-CPLErr BTRasterBand::IWriteBlock( int nBlockXOff, 
+CPLErr BTRasterBand::IWriteBlock( int nBlockXOff,
                                   CPL_UNUSED int nBlockYOff,
                                   void * pImage )
+
 {
     int nDataSize = GDALGetDataTypeSize( eDataType ) / 8;
     GByte *pabyWrkBlock;
@@ -481,7 +482,7 @@ CPLErr BTDataset::SetProjection( const char *pszNewProjection )
 
         if( ABS(dfLinear - 0.3048) < 0.0000001 )
             nShortTemp = 2;
-        else if( ABS(dfLinear - atof(SRS_UL_US_FOOT_CONV)) < 0.00000001 )
+        else if( ABS(dfLinear - CPLAtof(SRS_UL_US_FOOT_CONV)) < 0.00000001 )
             nShortTemp = 3;
         else
             nShortTemp = 1;
@@ -569,7 +570,7 @@ GDALDataset *BTDataset::Open( GDALOpenInfo * poOpenInfo )
 
     strncpy( szVersion, (char *) (poDS->abyHeader + 7), 3 );
     szVersion[3] = '\0';
-    poDS->nVersionCode = (int) (atof(szVersion) * 10);
+    poDS->nVersionCode = (int) (CPLAtof(szVersion) * 10);
 
 /* -------------------------------------------------------------------- */
 /*      Extract core header information, being careful about the        */
@@ -677,9 +678,9 @@ GDALDataset *BTDataset::Open( GDALOpenInfo * poOpenInfo )
         if( nHUnits == 1 )
             oSRS.SetLinearUnits( SRS_UL_METER, 1.0 );
         else if( nHUnits == 2 )
-            oSRS.SetLinearUnits( SRS_UL_FOOT, atof(SRS_UL_FOOT_CONV) );
+            oSRS.SetLinearUnits( SRS_UL_FOOT, CPLAtof(SRS_UL_FOOT_CONV) );
         else if( nHUnits == 3 )
-            oSRS.SetLinearUnits( SRS_UL_US_FOOT, atof(SRS_UL_US_FOOT_CONV) );
+            oSRS.SetLinearUnits( SRS_UL_US_FOOT, CPLAtof(SRS_UL_US_FOOT_CONV) );
 
         // Translate some of the more obvious old USGS datum codes 
         if( nDatum == 0 )
@@ -807,10 +808,11 @@ GDALDataset *BTDataset::Open( GDALOpenInfo * poOpenInfo )
 /************************************************************************/
 
 GDALDataset *BTDataset::Create( const char * pszFilename,
-                                int nXSize, int nYSize, int nBands,
+                                int nXSize,
+                                int nYSize,
+                                int nBands,
                                 GDALDataType eType,
                                 CPL_UNUSED char ** papszOptions )
-
 {
 
 /* -------------------------------------------------------------------- */
@@ -942,6 +944,7 @@ void GDALRegister_BT()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "BT" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "VTP .bt (Binary Terrain) 1.3 Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

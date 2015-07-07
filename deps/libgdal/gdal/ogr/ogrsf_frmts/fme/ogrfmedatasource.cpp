@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfmedatasource.cpp 13253 2007-12-05 14:54:00Z warmerdam $
+ * $Id: ogrfmedatasource.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Implementations of the OGRFMEDataSource class.
@@ -39,7 +39,7 @@
 
 const char* kPROVIDERNAME = "FME_OLEDB";
 
-CPL_CVSID("$Id: ogrfmedatasource.cpp 13253 2007-12-05 14:54:00Z warmerdam $");
+CPL_CVSID("$Id: ogrfmedatasource.cpp 27959 2014-11-14 18:29:21Z rouault $");
 
 #ifdef WIN32
 #define FMEDLL_NAME "fme.dll"
@@ -1008,7 +1008,7 @@ void OGRFMEDataSource::ClarifyGeometryClass(
 
     // Is this 3D?
     if( poFeature->getDimension() == FME_THREE_D )
-        eThisType = (OGRwkbGeometryType) (eThisType | wkb25DBit);
+        eThisType = wkbSetZ(eThisType);
     
 /* -------------------------------------------------------------------- */
 /*      Now adjust the working type.                                    */
@@ -1034,10 +1034,10 @@ void OGRFMEDataSource::ClarifyGeometryClass(
     else
         eNewBestGeomType = wkbUnknown;
 
-    if( ((eBestGeomType & wkb25DBit) || (eThisType & wkb25DBit)) 
+    if( (wkbHasZ(eBestGeomType) || wkbHasZ(eThisType)) 
         && (int) eNewBestGeomType != 500 )
     {
-        eNewBestGeomType = (OGRwkbGeometryType)(((int) eBestGeomType) | wkb25DBit);
+        eNewBestGeomType = wkbSetZ(eNewBestGeomType);
     } 
 
     eBestGeomType = eNewBestGeomType;

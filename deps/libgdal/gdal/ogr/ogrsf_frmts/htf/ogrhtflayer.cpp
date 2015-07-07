@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrhtflayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrhtflayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  HTF Translator
  * Purpose:  Implements OGRHTFLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogrhtflayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrhtflayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                            OGRHTFLayer()                             */
@@ -65,6 +65,7 @@ OGRHTFPolygonLayer::OGRHTFPolygonLayer( const char* pszFilename, int nZone, int 
 
 {
     poFeatureDefn = new OGRFeatureDefn( "polygon" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbPolygon  );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -92,6 +93,7 @@ OGRHTFSoundingLayer::OGRHTFSoundingLayer( const char* pszFilename, int nZone, in
 
 {
     poFeatureDefn = new OGRFeatureDefn( "sounding" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbPoint  );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -398,8 +400,8 @@ OGRFeature *OGRHTFPolygonLayer::GetNextRawFeature()
             char** papszTokens = CSLTokenizeString(pszLine);
             if (CSLCount(papszTokens) == 4)
             {
-                double dfEasting = atof(papszTokens[2]);
-                double dfNorthing = atof(papszTokens[3]);
+                double dfEasting = CPLAtof(papszTokens[2]);
+                double dfNorthing = CPLAtof(papszTokens[3]);
                 if (!bHastFirstCoord)
                 {
                     bHastFirstCoord = TRUE;
@@ -526,7 +528,7 @@ OGRFeature *OGRHTFSoundingLayer::GetNextRawFeature()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRHTFSoundingLayer::GetFeatureCount(int bForce)
+GIntBig OGRHTFSoundingLayer::GetFeatureCount(int bForce)
 {
     if (m_poFilterGeom != NULL || m_poAttrQuery != NULL)
         return OGRHTFLayer::GetFeatureCount(bForce);
@@ -626,6 +628,7 @@ OGRHTFMetadataLayer::OGRHTFMetadataLayer(std::vector<CPLString> aosMD)
     nNextFID = 0;
 
     poFeatureDefn = new OGRFeatureDefn( "metadata" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone  );
 

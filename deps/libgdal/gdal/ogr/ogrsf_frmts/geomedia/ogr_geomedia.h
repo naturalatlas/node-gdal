@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geomedia.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_geomedia.h 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for Geomedia MDB driver.
@@ -53,7 +53,7 @@ class OGRGeomediaLayer : public OGRLayer
     OGRSpatialReference *poSRS;
     int                 nSRSId;
 
-    int                 iNextShapeId;
+    GIntBig             iNextShapeId;
 
     OGRGeomediaDataSource    *poDS;
 
@@ -77,7 +77,7 @@ class OGRGeomediaLayer : public OGRLayer
     virtual OGRFeature *GetNextRawFeature();
     virtual OGRFeature *GetNextFeature();
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
     
@@ -111,10 +111,10 @@ class OGRGeomediaTableLayer : public OGRGeomediaLayer
                                     OGRSpatialReference* poSRS );
 
     virtual void        ResetReading();
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 
     virtual OGRErr      SetAttributeFilter( const char * );
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     virtual int         TestCapability( const char * );
 };
@@ -138,9 +138,9 @@ class OGRGeomediaSelectLayer : public OGRGeomediaLayer
                         ~OGRGeomediaSelectLayer();
 
     virtual void        ResetReading();
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     virtual int         TestCapability( const char * );
 };

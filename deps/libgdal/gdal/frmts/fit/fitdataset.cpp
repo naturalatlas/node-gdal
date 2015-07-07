@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fitdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: fitdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  FIT Driver
  * Purpose:  Implement FIT Support - not using the SGI iflFIT library.
@@ -33,7 +33,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: fitdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: fitdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 CPL_C_START
  
@@ -1069,7 +1069,7 @@ GDALDataset *FITDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return guard.take();
 }
@@ -1266,7 +1266,7 @@ static GDALDataset *FITCreateCopy(const char * pszFilename,
                                       firstBand->GetRasterDataType(),
                                       // eBufType
                                       bytesPerPixel, // nPixelSpace
-                                      bytesPerPixel * blockX); // nLineSpace
+                                      bytesPerPixel * blockX, NULL); // nLineSpace
                 if (eErr != CE_None)
                     CPLError(CE_Failure, CPLE_FileIO, 
                              "FIT write - CreateCopy got read error %i", eErr);
@@ -1319,9 +1319,9 @@ static GDALDataset *FITCreateCopy(const char * pszFilename,
     pfnProgress( 1.0, NULL, pProgressData );
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
-    GDALPamDataset *poDS = (GDALPamDataset *) 
+    GDALPamDataset *poDS = (GDALPamDataset *)
         GDALOpen( pszFilename, GA_ReadOnly );
 
     if( poDS )
@@ -1356,6 +1356,7 @@ void GDALRegister_FIT()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "FIT" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "FIT Image" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_dxf.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_dxf.h 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  DXF Translator
  * Purpose:  Definition of classes for OGR .dxf driver.
@@ -296,7 +296,7 @@ class OGRDXFWriterLayer : public OGRLayer
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
     int                 TestCapability( const char * );
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     OGRErr              CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
 
@@ -323,7 +323,7 @@ class OGRDXFBlocksWriterLayer : public OGRLayer
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
     int                 TestCapability( const char * );
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     OGRErr              CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
 
@@ -387,7 +387,7 @@ class OGRDXFWriterDS : public OGRDataSource
 
     int                 TestCapability( const char * );
 
-    OGRLayer           *CreateLayer( const char *pszName, 
+    OGRLayer           *ICreateLayer( const char *pszName, 
                                      OGRSpatialReference *poSpatialRef = NULL,
                                      OGRwkbGeometryType eGType = wkbUnknown,
                                      char ** papszOptions = NULL );
@@ -398,23 +398,5 @@ class OGRDXFWriterDS : public OGRDataSource
 
     void                UpdateExtent( OGREnvelope* psEnvelope );
 };
-
-/************************************************************************/
-/*                             OGRDXFDriver                             */
-/************************************************************************/
-
-class OGRDXFDriver : public OGRSFDriver
-{
-  public:
-                ~OGRDXFDriver();
-
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-    int         TestCapability( const char * );
-
-    OGRDataSource      *CreateDataSource( const char *pszName,
-                                          char ** = NULL );
-};
-
 
 #endif /* ndef _OGR_DXF_H_INCLUDED */

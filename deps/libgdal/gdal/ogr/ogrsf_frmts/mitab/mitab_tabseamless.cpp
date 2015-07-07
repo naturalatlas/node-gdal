@@ -10,6 +10,7 @@
  *
  **********************************************************************
  * Copyright (c) 1999-2004, Daniel Morissette
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -82,11 +83,8 @@
  *  - Read-only
  *  - Base tables can only be of type TABFile
  *  - Feature Ids are build using the id of the base table in the main
- *    index table and the actual feature id of each object inside the base
- *    tables.  Since we are limited to 32 bits for feature ids, this implies
- *    a limit on the (number of base tables) * (features/table)
- *    The current implementation can support up to 2047 (0x7ff) base tables
- *    and a max of 1048575 (0xfffff) features per base table.
+ *    index table (upper 32 bits) and the actual feature id of each object
+ *    inside the base tables (lower 32 bits).
  *  - Only relative paths are supported for base tables names.
  *    
  *====================================================================*/
@@ -107,8 +105,6 @@ TABSeamless::TABSeamless()
     m_nCurFeatureId = -1;
     
     m_poIndexTable = NULL;
-    m_nIndexTableFIDBits = 0;
-    m_nIndexTableFIDMask = 0;
     m_nTableNameField = -1;
     m_nCurBaseTableId = -1;
     m_poCurBaseTable = NULL;
@@ -153,7 +149,7 @@ void TABSeamless::ResetReading()
  *
  * Returns 0 on success, -1 on error.
  **********************************************************************/
-int TABSeamless::Open(const char *pszFname, const char *pszAccess,
+int TABSeamless::Open(const char *pszFname, TABAccess eAccess,
                       GBool bTestOpenNoError /*= FALSE*/ )
 {
     char nStatus = 0;
@@ -168,7 +164,7 @@ int TABSeamless::Open(const char *pszFname, const char *pszAccess,
     /*-----------------------------------------------------------------
      * Validate access mode and call the right open method
      *----------------------------------------------------------------*/
-    if (EQUALN(pszAccess, "r", 1))
+    if (eAccess == TABRead)
     {
         m_eAccessMode = TABRead;
         nStatus = (char)OpenForRead(pszFname, bTestOpenNoError);
@@ -176,7 +172,7 @@ int TABSeamless::Open(const char *pszFname, const char *pszAccess,
     else
     {
         CPLError(CE_Failure, CPLE_NotSupported,
-                 "Open() failed: access mode \"%s\" not supported", pszAccess);
+                 "Open() failed: access mode \"%d\" not supported", eAccess);
         return -1;
     }
 
@@ -283,7 +279,7 @@ int TABSeamless::OpenForRead(const char *pszFname,
      * should contain the path to the base table for each rectangle MBR
      *----------------------------------------------------------------*/
     m_poIndexTable = new TABFile;
-    if (m_poIndexTable->Open(m_pszFname, "rb", bTestOpenNoError) != 0)
+    if (m_poIndexTable->Open(m_pszFname, m_eAccessMode, bTestOpenNoError) != 0)
     {
         // Open Failed... an error has already been reported, just return.
         if (bTestOpenNoError)
@@ -305,13 +301,6 @@ int TABSeamless::OpenForRead(const char *pszFname,
         Close();
         return -1;        
     }
-
-    /* Set the number of bits required to encode features for this index
-     * table. (Based of the number of features)
-     */
-    int s=0, numFeatures = m_poIndexTable->GetFeatureCount(FALSE);
-    do s++, numFeatures>>=1; while(numFeatures);
-    m_nIndexTableFIDBits= s+1;
 
     /*-----------------------------------------------------------------
      * We need to open the first table to get its FeatureDefn
@@ -346,8 +335,8 @@ int TABSeamless::Close()
         delete m_poIndexTable;  // Automatically closes.
     m_poIndexTable = NULL;
 
-    if (m_poFeatureDefnRef && m_poFeatureDefnRef->Dereference() == 0)
-        delete m_poFeatureDefnRef;
+    if (m_poFeatureDefnRef )
+        m_poFeatureDefnRef->Release();
     m_poFeatureDefnRef = NULL;
 
     if (m_poCurFeature)
@@ -387,7 +376,9 @@ int TABSeamless::OpenBaseTable(TABFeature *poIndexFeature,
      * Fetch table id.  We actually use the index feature's ids as the
      * base table ids.
      *----------------------------------------------------------------*/
-    int nTableId = poIndexFeature->GetFID();
+    GIntBig nTableId64 = poIndexFeature->GetFID();
+    int nTableId = (int)nTableId64;
+    CPLAssert((GIntBig)nTableId == nTableId64);
 
     if (m_nCurBaseTableId == nTableId && m_poCurBaseTable != NULL)
     {
@@ -422,7 +413,7 @@ int TABSeamless::OpenBaseTable(TABFeature *poIndexFeature,
 #endif
 
     m_poCurBaseTable = new TABFile;
-    if (m_poCurBaseTable->Open(pszFname, "rb", bTestOpenNoError) != 0)
+    if (m_poCurBaseTable->Open(pszFname, m_eAccessMode, bTestOpenNoError) != 0)
     {
         // Open Failed... an error has already been reported, just return.
         if (bTestOpenNoError)
@@ -432,32 +423,6 @@ int TABSeamless::OpenBaseTable(TABFeature *poIndexFeature,
         CPLFree(pszFname);
         return -1;
     }
-    
-    /* Set the number of bits required to encode feature id for this base
-     * table. (Based of the number of features) This will be used for
-     * encode and extract feature ID.
-     */
-    int s=0, nCurBaseTableFIDBits = 0,
-        numFeatures = m_poCurBaseTable->GetFeatureCount(FALSE);
-    do s++, numFeatures>>=1; while(numFeatures);
-    nCurBaseTableFIDBits = s;
-
-    /* Check if we can encode feature IDs in 32 bits to avoid overflow */
-    if (nCurBaseTableFIDBits + m_nIndexTableFIDBits > 32)
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-                 "Open() failed: feature ids cannot be encoded in 32 bits "
-                 "for the index table (%s) and the base table (%s).", 
-                 m_pszFname, pszName);
-        if (bTestOpenNoError)
-            CPLErrorReset();
-        delete m_poCurBaseTable;
-        m_poCurBaseTable = NULL;
-        CPLFree(pszFname);
-        return -1;
-    }
-   
-    m_nIndexTableFIDMask = (32-m_nIndexTableFIDBits);
 
     // Set the spatial filter to the new table 
     if( m_poFilterGeom != NULL &&  m_poCurBaseTable )
@@ -562,19 +527,8 @@ int TABSeamless::OpenNextBaseTable(GBool bTestOpenNoError /*=FALSE*/)
  *
  * Combine the table id + feature id into a single feature id that should
  * be unique amongst all base tables in this seamless dataset.
- *
- * We reserve some bits in the feature id for the table id based on the
- * number of features in the index table.  This reduces the available range
- * of feature ids for each base table... for instance, if the index contains
- * 65000 entries, then each base table will be limited to 65535 features.
- *
- * If the number of features in a base table exceeds the number of bits
- * available (e.g. 65535 inthe above example) then the feature ids will
- * wrap for this table and thus it will be impossible to access some of
- * the features unless the caller uses only calls to GetNextFeature() and
- * avoids calls to GetFeatureRef().
  **********************************************************************/
-int TABSeamless::EncodeFeatureId(int nTableId, int nBaseFeatureId)
+GIntBig TABSeamless::EncodeFeatureId(int nTableId, int nBaseFeatureId)
 {
     if (nTableId == -1 || nBaseFeatureId == -1)
         return -1;
@@ -582,23 +536,23 @@ int TABSeamless::EncodeFeatureId(int nTableId, int nBaseFeatureId)
     /* Feature encoding is now based on the numbers of bits on the number
        of features in the index table. */
 
-    return ((nTableId<<m_nIndexTableFIDMask) + nBaseFeatureId);
+    return (((GIntBig)nTableId<<32) + nBaseFeatureId);
 }
 
-int TABSeamless::ExtractBaseTableId(int nEncodedFeatureId)
+int TABSeamless::ExtractBaseTableId(GIntBig nEncodedFeatureId)
 {
     if (nEncodedFeatureId == -1)
         return -1;
 
-    return ((nEncodedFeatureId>>m_nIndexTableFIDMask));
+    return ((int)(nEncodedFeatureId>>32));
 }
 
-int TABSeamless::ExtractBaseFeatureId(int nEncodedFeatureId)
+int TABSeamless::ExtractBaseFeatureId(GIntBig nEncodedFeatureId)
 {
     if (nEncodedFeatureId == -1)
         return -1;
 
-    return (nEncodedFeatureId & ((1<<m_nIndexTableFIDMask) -1 ));
+    return ((int)(nEncodedFeatureId & 0xffffffff));
 }
 
 /**********************************************************************
@@ -607,7 +561,7 @@ int TABSeamless::ExtractBaseFeatureId(int nEncodedFeatureId)
  * Returns feature id that follows nPrevId, or -1 if it is the
  * last feature id.  Pass nPrevId=-1 to fetch the first valid feature id.
  **********************************************************************/
-int TABSeamless::GetNextFeatureId(int nPrevId)
+GIntBig TABSeamless::GetNextFeatureId(GIntBig nPrevId)
 {
     if (m_poIndexTable == NULL)
         return -1; // File is not opened yet
@@ -621,7 +575,7 @@ int TABSeamless::GetNextFeatureId(int nPrevId)
     int nId = ExtractBaseFeatureId(nPrevId);
     do
     {
-        nId = m_poCurBaseTable->GetNextFeatureId(nId);
+        nId = (int) m_poCurBaseTable->GetNextFeatureId(nId);
         if (nId != -1)
             return EncodeFeatureId(m_nCurBaseTableId, nId);  // Found one!
         else
@@ -646,7 +600,7 @@ int TABSeamless::GetNextFeatureId(int nPrevId)
  * error happened.  In any case, CPLError() will have been called to
  * report the reason of the failure.
  **********************************************************************/
-TABFeature *TABSeamless::GetFeatureRef(int nFeatureId)
+TABFeature *TABSeamless::GetFeatureRef(GIntBig nFeatureId)
 {
     if (m_poIndexTable == NULL)
         return NULL; // File is not opened yet
@@ -664,8 +618,15 @@ TABFeature *TABSeamless::GetFeatureRef(int nFeatureId)
     {
         if (m_poCurFeature)
             delete m_poCurFeature;
+        m_poCurFeature = NULL;
 
-        m_poCurFeature = (TABFeature*)m_poCurBaseTable->GetFeature(ExtractBaseFeatureId(nFeatureId));
+        TABFeature* poCurFeature = (TABFeature*)m_poCurBaseTable->GetFeature(ExtractBaseFeatureId(nFeatureId));
+        if( poCurFeature == NULL )
+            return NULL;
+        m_poCurFeature = new TABFeature(m_poFeatureDefnRef);
+        m_poCurFeature->SetFrom(poCurFeature);
+        delete poCurFeature;
+
         m_nCurFeatureId = nFeatureId;
 
         m_poCurFeature->SetFID(nFeatureId);
@@ -799,8 +760,10 @@ OGRErr TABSeamless::GetExtent (OGREnvelope *psExtent, int bForce)
  * Returns 0 on success, or silently returns -1 (with no error) if this
  * information is not available.
  **********************************************************************/
-int TABSeamless::GetFeatureCountByType(CPL_UNUSED int &numPoints, CPL_UNUSED int &numLines,
-                                       CPL_UNUSED int &numRegions, CPL_UNUSED int &numTexts,
+int TABSeamless::GetFeatureCountByType(CPL_UNUSED int &numPoints,
+                                       CPL_UNUSED int &numLines,
+                                       CPL_UNUSED int &numRegions,
+                                       CPL_UNUSED int &numTexts,
                                        CPL_UNUSED GBool bForce /*= TRUE*/)
 {
     /*-----------------------------------------------------------------
@@ -811,7 +774,7 @@ int TABSeamless::GetFeatureCountByType(CPL_UNUSED int &numPoints, CPL_UNUSED int
     return -1;
 }
 
-int TABSeamless::GetFeatureCount(int bForce)
+GIntBig TABSeamless::GetFeatureCount(int bForce)
 {
     /*-----------------------------------------------------------------
      * __TODO__  This should be implemented to return -1 if force=false,

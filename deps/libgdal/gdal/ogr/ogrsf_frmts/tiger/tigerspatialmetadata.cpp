@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerspatialmetadata.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: tigerspatialmetadata.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerSpatialMetadata, providing access to .RTM files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerspatialmetadata.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: tigerspatialmetadata.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 #define FILE_CODE "M"
 
@@ -58,8 +58,9 @@ static const TigerRecordInfo rtM_info =
 /************************************************************************/
 
 TigerSpatialMetadata::TigerSpatialMetadata( OGRTigerDataSource * poDSIn,
-                                            CPL_UNUSED const char * pszPrototypeModule )
-  : TigerFileBase(&rtM_info, FILE_CODE)
+                                            CPL_UNUSED const char * pszPrototypeModule ) :
+    TigerFileBase(&rtM_info, FILE_CODE)
+
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "SpatialMetadata" );

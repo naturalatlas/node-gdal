@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeorsslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgeorsslayer.cpp 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  GeoRSS Translator
  * Purpose:  Implements OGRGeoRSSLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_api.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgeorsslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgeorsslayer.cpp 28900 2015-04-14 09:40:34Z rouault $");
 
 static const char* apszAllowedATOMFieldNamesWithSubElements[] = { "author", "contributor", NULL };
 
@@ -94,6 +94,7 @@ OGRGeoRSSLayer::OGRGeoRSSLayer( const char* pszFilename,
     eFormat = poDS->GetFormat();
 
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     poSRS = poSRSIn;
@@ -340,11 +341,16 @@ static int OGRGeoRSSLayerATOMTagHasSubElement(const char* pszName)
 void OGRGeoRSSLayer::startElementCbk(const char *pszName, const char **ppszAttr)
 {
     int bSerializeTag = FALSE;
+    const char* pszNoNSName = pszName;
+    const char* pszColon = strchr(pszNoNSName, ':');
+    if( pszColon )
+        pszNoNSName = pszColon + 1;
 
     if (bStopParsing) return;
 
-    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszName, "entry") == 0) ||
-        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && !bInFeature && (currentDepth == 1 || currentDepth == 2) && strcmp(pszName, "item") == 0))
+    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszNoNSName, "entry") == 0) ||
+        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && !bInFeature &&
+        (currentDepth == 1 || currentDepth == 2) && strcmp(pszNoNSName, "item") == 0))
     {
         featureDepth = currentDepth;
 
@@ -371,7 +377,7 @@ void OGRGeoRSSLayer::startElementCbk(const char *pszName, const char **ppszAttr)
     }
     else if (bInFeature && bInTagWithSubTag && currentDepth == 3)
     {
-        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszName));
+        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszNoNSName));
 
         CPLFree(pszSubElementName);
         pszSubElementName = NULL;
@@ -386,17 +392,17 @@ void OGRGeoRSSLayer::startElementCbk(const char *pszName, const char **ppszAttr)
         CPLFree(pszFieldName);
     }
     else if (bInFeature && eFormat == GEORSS_ATOM &&
-             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszName))
+             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszNoNSName))
     {
         CPLFree(pszTagWithSubTag);
-        pszTagWithSubTag = CPLStrdup(pszName);
+        pszTagWithSubTag = CPLStrdup(pszNoNSName);
 
         int count = 1;
         while(CPLHashSetLookup(setOfFoundFields, pszTagWithSubTag) != NULL)
         {
             count ++;
             CPLFree(pszTagWithSubTag);
-            pszTagWithSubTag = CPLStrdup(CPLSPrintf("%s%d", pszName, count));
+            pszTagWithSubTag = CPLStrdup(CPLSPrintf("%s%d", pszNoNSName, count));
         }
         CPLHashSetInsert(setOfFoundFields, CPLStrdup(pszTagWithSubTag));
 
@@ -475,6 +481,9 @@ void OGRGeoRSSLayer::startElementCbk(const char *pszName, const char **ppszAttr)
         pszSubElementValue = NULL;
         nSubElementValueLen = 0;
         iCurrentField = -1;
+
+        if( pszName != pszNoNSName && strncmp(pszName, "atom:", 5) == 0 )
+            pszName = pszNoNSName;
 
         pszSubElementName = CPLStrdup(pszName);
         int count = 1;
@@ -574,9 +583,14 @@ void OGRGeoRSSLayer::endElementCbk(const char *pszName)
     if (bStopParsing) return;
 
     currentDepth--;
+    const char* pszNoNSName = pszName;
+    const char* pszColon = strchr(pszNoNSName, ':');
+    if( pszColon )
+        pszNoNSName = pszColon + 1;
 
-    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszName, "entry") == 0) ||
-        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && (currentDepth == 1 || currentDepth == 2) && strcmp(pszName, "item") == 0))
+    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszNoNSName, "entry") == 0) ||
+        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) &&
+         (currentDepth == 1 || currentDepth == 2) && strcmp(pszNoNSName, "item") == 0))
     {
         bInFeature = FALSE;
         bInTagWithSubTag = FALSE;
@@ -613,7 +627,7 @@ void OGRGeoRSSLayer::endElementCbk(const char *pszName)
 
     if (bInTagWithSubTag && currentDepth == 3)
     {
-        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszName));
+        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszNoNSName));
 
         if (iCurrentField != -1 && pszSubElementName &&
             strcmp(pszFieldName, pszSubElementName) == 0 && poFeature &&
@@ -635,7 +649,7 @@ void OGRGeoRSSLayer::endElementCbk(const char *pszName)
         CPLFree(pszFieldName);
     }
     else if (bInFeature && eFormat == GEORSS_ATOM &&
-             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszName))
+             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszNoNSName))
     {
         bInTagWithSubTag = FALSE;
     }
@@ -783,20 +797,14 @@ void OGRGeoRSSLayer::endElementCbk(const char *pszName)
             pszSubElementValue[nSubElementValueLen] = 0;
             if (poFeatureDefn->GetFieldDefn(iCurrentField)->GetType() == OFTDateTime)
             {
-                int year, month, day, hour, minute, TZ;
-                int nsecond;
-                float fsecond;
-                if (OGRParseRFC822DateTime(pszSubElementValue, &year, &month, &day,
-                                                 &hour, &minute, &nsecond, &TZ))
+                OGRField sField;
+                if (OGRParseRFC822DateTime(pszSubElementValue, &sField))
                 {
-                    poFeature->SetField(iCurrentField, year, month, day,
-                                        hour, minute, nsecond, TZ);
+                    poFeature->SetField(iCurrentField, &sField);
                 }
-                else if (OGRParseXMLDateTime(pszSubElementValue, &year, &month, &day,
-                                                   &hour, &minute, &fsecond, &TZ))
+                else if (OGRParseXMLDateTime(pszSubElementValue, &sField))
                 {
-                    poFeature->SetField(iCurrentField, year, month, day,
-                                        hour, minute, (int)(fsecond + .5), TZ);
+                    poFeature->SetField(iCurrentField, &sField);
                 }
                 else
                 {
@@ -1076,12 +1084,6 @@ static void OGRGeoRSSLayerWriteSimpleElement(VSILFILE* fp,
             {
                 char* pszValue =
                         OGRGetXML_UTF8_EscapedString(poFeature->GetFieldAsString( iIndex ));
-                if (poFeatureDefn->GetFieldDefn(iIndex)->GetType() == OFTReal)
-                {
-                    char* pszComma = strchr(pszValue, ',');
-                    if (pszComma)
-                        *pszComma = '.';
-                }
                 VSIFPrintfL(fp, " %s=\"%s\"", pszAttributeName, pszValue);
                 CPLFree(pszValue);
             }
@@ -1097,12 +1099,6 @@ static void OGRGeoRSSLayerWriteSimpleElement(VSILFILE* fp,
 
         char* pszValue =
                 OGRGetXML_UTF8_EscapedString(poFeature->GetFieldAsString( iIndex ));
-        if (poFeatureDefn->GetFieldDefn(iIndex)->GetType() == OFTReal)
-        {
-            char* pszComma = strchr(pszValue, ',');
-            if (pszComma)
-                *pszComma = '.';
-        }
         VSIFPrintfL(fp, "%s", pszValue);
         CPLFree(pszValue);
 
@@ -1116,10 +1112,10 @@ static void OGRGeoRSSLayerWriteSimpleElement(VSILFILE* fp,
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGeoRSSLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     VSILFILE* fp = poDS->GetOutputFP();
@@ -1219,12 +1215,6 @@ OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
 
                             char* pszValue =
                                     OGRGetXML_UTF8_EscapedString(poFeature->GetFieldAsString( j ));
-                            if (poFeatureDefn->GetFieldDefn(j)->GetType() == OFTReal)
-                            {
-                                char* pszComma = strchr(pszValue, ',');
-                                if (pszComma)
-                                    *pszComma = '.';
-                            }
                             VSIFPrintfL(fp, "        <%s>%s</%s>\n", pszAttributeName2, pszValue, pszAttributeName2);
                             CPLFree(pszValue);
                         }
@@ -1247,40 +1237,28 @@ OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
         else if (eFormat == GEORSS_RSS &&
             strcmp(pszName, "pubDate") == 0)
         {
-            int year, month, day, hour, minute, second, TZFlag;
-            if (poFeature->GetFieldAsDateTime(i, &year, &month, &day,
-                                                    &hour, &minute, &second, &TZFlag))
-            {
-                char* pszDate = OGRGetRFC822DateTime(year, month, day, hour, minute, second, TZFlag);
-                VSIFPrintfL(fp, "      <%s>%s</%s>\n",
-                        pszName, pszDate, pszName);
-                CPLFree(pszDate);
-            }
+            const OGRField* psField = poFeature->GetRawFieldRef(i);
+            char* pszDate = OGRGetRFC822DateTime(psField);
+            VSIFPrintfL(fp, "      <%s>%s</%s>\n",
+                    pszName, pszDate, pszName);
+            CPLFree(pszDate);
         }
         else if (eFormat == GEORSS_ATOM &&
                  (strcmp(pszName, "updated") == 0 || strcmp(pszName, "published") == 0))
         {
-            int year, month, day, hour, minute, second, TZFlag;
-            if (poFeature->GetFieldAsDateTime(i, &year, &month, &day,
-                                                    &hour, &minute, &second, &TZFlag))
-            {
-                char* pszDate = OGRGetXMLDateTime(year, month, day, hour, minute, second, TZFlag);
-                VSIFPrintfL(fp, "      <%s>%s</%s>\n",
-                        pszName, pszDate, pszName);
-                CPLFree(pszDate);
-            }
+            const OGRField* psField = poFeature->GetRawFieldRef(i);
+            char* pszDate = OGRGetXMLDateTime(psField);
+            VSIFPrintfL(fp, "      <%s>%s</%s>\n",
+                    pszName, pszDate, pszName);
+            CPLFree(pszDate);
         }
         else if (strcmp(pszName, "dc_date") == 0)
         {
-            int year, month, day, hour, minute, second, TZFlag;
-            if (poFeature->GetFieldAsDateTime(i, &year, &month, &day,
-                                                    &hour, &minute, &second, &TZFlag))
-            {
-                char* pszDate = OGRGetXMLDateTime(year, month, day, hour, minute, second, TZFlag);
-                VSIFPrintfL(fp, "      <%s>%s</%s>\n",
-                        "dc:date", pszDate, "dc:date");
-                CPLFree(pszDate);
-            }
+            const OGRField* psField = poFeature->GetRawFieldRef(i);
+            char* pszDate = OGRGetXMLDateTime(psField);
+            VSIFPrintfL(fp, "      <%s>%s</%s>\n",
+                    "dc:date", pszDate, "dc:date");
+            CPLFree(pszDate);
         }
         /* RSS fields with content and attributes */
         else if (eFormat == GEORSS_RSS &&
@@ -1426,12 +1404,6 @@ OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
             }
             char* pszValue =
                         OGRGetXML_UTF8_EscapedString(poFeature->GetFieldAsString( i ));
-            if (poFeatureDefn->GetFieldDefn(i)->GetType() == OFTReal)
-            {
-                char* pszComma = strchr(pszValue, ',');
-                if (pszComma)
-                    *pszComma = '.';
-            }
             VSIFPrintfL(fp, "      <%s>%s</%s>\n", pszTagName, pszValue, pszTagName);
             CPLFree(pszValue);
             CPLFree(pszTagName);
@@ -1634,7 +1606,8 @@ OGRErr OGRGeoRSSLayer::CreateFeature( OGRFeature *poFeature )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGeoRSSLayer::CreateField( OGRFieldDefn *poFieldDefn, CPL_UNUSED int bApproxOK )
+OGRErr OGRGeoRSSLayer::CreateField( OGRFieldDefn *poFieldDefn,
+                                    CPL_UNUSED int bApproxOK )
 {
     const char* pszName = poFieldDefn->GetNameRef();
     if (((eFormat == GEORSS_RSS && strcmp(pszName, "pubDate") == 0) ||
@@ -1828,9 +1801,14 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
     if (bStopParsing) return;
 
     nWithoutEventCounter = 0;
+    const char* pszNoNSName = pszName;
+    const char* pszColon = strchr(pszNoNSName, ':');
+    if( pszColon )
+        pszNoNSName = pszColon + 1;
 
-    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszName, "entry") == 0) ||
-        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && !bInFeature && (currentDepth == 1 || currentDepth == 2) && strcmp(pszName, "item") == 0))
+    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszNoNSName, "entry") == 0) ||
+        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && !bInFeature &&
+        (currentDepth == 1 || currentDepth == 2) && strcmp(pszNoNSName, "item") == 0))
     {
         bInFeature = TRUE;
         featureDepth = currentDepth;
@@ -1843,7 +1821,7 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
     }
     else if (bInTagWithSubTag && currentDepth == 3)
     {
-        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszName));
+        char* pszFieldName = CPLStrdup(CPLSPrintf("%s_%s", pszTagWithSubTag, pszNoNSName));
         if (poFeatureDefn->GetFieldIndex(pszFieldName) == -1)
         {
             OGRFieldDefn newFieldDefn(pszFieldName, OFTString);
@@ -1860,17 +1838,17 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
         CPLFree(pszFieldName);
     }
     else if (bInFeature && eFormat == GEORSS_ATOM &&
-             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszName))
+             currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszNoNSName))
     {
         CPLFree(pszTagWithSubTag);
-        pszTagWithSubTag = CPLStrdup(pszName);
+        pszTagWithSubTag = CPLStrdup(pszNoNSName);
 
         int count = 1;
         while(CPLHashSetLookup(setOfFoundFields, pszTagWithSubTag) != NULL)
         {
             count ++;
             CPLFree(pszTagWithSubTag);
-            pszTagWithSubTag = CPLStrdup(CPLSPrintf("%s%d", pszName, count));
+            pszTagWithSubTag = CPLStrdup(CPLSPrintf("%s%d", pszNoNSName, count));
             if (pszTagWithSubTag[0] == 0)
             {
                 XML_StopParser(oSchemaParser, XML_FALSE);
@@ -1884,6 +1862,9 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
     }
     else if (bInFeature && currentDepth == featureDepth + 1 && !IS_GEO_ELEMENT(pszName))
     {
+        if( pszName != pszNoNSName && strncmp(pszName, "atom:", 5) == 0 )
+            pszName = pszNoNSName;
+
         CPLFree(pszSubElementName);
         pszSubElementName = CPLStrdup(pszName);
 
@@ -1903,14 +1884,14 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
         {
             currentFieldDefn = poFeatureDefn->GetFieldDefn(iField);
         }
-        else if ( ! ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && strcmp(pszName, "enclosure") == 0) &&
-                  ! (eFormat == GEORSS_ATOM && strcmp(pszName, "link") == 0) &&
-                  ! (eFormat == GEORSS_ATOM && strcmp(pszName, "category") == 0))
+        else if ( ! ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && strcmp(pszNoNSName, "enclosure") == 0) &&
+                  ! (eFormat == GEORSS_ATOM && strcmp(pszNoNSName, "link") == 0) &&
+                  ! (eFormat == GEORSS_ATOM && strcmp(pszNoNSName, "category") == 0))
         {
             OGRFieldType eFieldType;
-            if (((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && strcmp(pszName, "pubDate") == 0) ||
-                (eFormat == GEORSS_ATOM && strcmp(pszName, "updated") == 0) ||
-                (eFormat == GEORSS_ATOM && strcmp(pszName, "published") == 0) ||
+            if (((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && strcmp(pszNoNSName, "pubDate") == 0) ||
+                (eFormat == GEORSS_ATOM && strcmp(pszNoNSName, "updated") == 0) ||
+                (eFormat == GEORSS_ATOM && strcmp(pszNoNSName, "published") == 0) ||
                 strcmp(pszName, "dc:date") == 0)
                 eFieldType = OFTDateTime;
             else
@@ -2081,7 +2062,7 @@ void OGRGeoRSSLayer::startElementLoadSchemaCbk(const char *pszName, const char *
                 eGeomType = wkbUnknown;
 
             if (nDimension == 3)
-                eGeomType = (OGRwkbGeometryType) (eGeomType | wkb25DBit);
+                eGeomType = wkbSetZ(eGeomType);
         }
     }
 
@@ -2103,13 +2084,19 @@ void OGRGeoRSSLayer::endElementLoadSchemaCbk(const char *pszName)
     if (!bInFeature)
         return;
 
-    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszName, "entry") == 0) ||
-        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) && (currentDepth == 1 || currentDepth == 2) && strcmp(pszName, "item") == 0))
+    const char* pszNoNSName = pszName;
+    const char* pszColon = strchr(pszNoNSName, ':');
+    if( pszColon )
+        pszNoNSName = pszColon + 1;
+
+    if ((eFormat == GEORSS_ATOM && currentDepth == 1 && strcmp(pszNoNSName, "entry") == 0) ||
+        ((eFormat == GEORSS_RSS || eFormat == GEORSS_RSS_RDF) &&
+        (currentDepth == 1 || currentDepth == 2) && strcmp(pszNoNSName, "item") == 0))
     {
         bInFeature = FALSE;
     }
     else if (bInFeature && eFormat == GEORSS_ATOM &&
-                currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszName))
+                currentDepth == 2 && OGRGeoRSSLayerATOMTagHasSubElement(pszNoNSName))
     {
         bInTagWithSubTag = FALSE;
     }
@@ -2225,7 +2212,7 @@ int OGRGeoRSSLayer::TestCapability( const char * pszCap )
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRGeoRSSLayer::GetFeatureCount( int bForce )
+GIntBig OGRGeoRSSLayer::GetFeatureCount( int bForce )
 
 {
     if (bWriteMode)

@@ -6,6 +6,15 @@
 /* Define to 1 if you have the `PTHREAD_MUTEX_RECURSIVE' constant. */
 #undef HAVE_PTHREAD_MUTEX_RECURSIVE
 
+/* Define to 1 if you have the `PTHREAD_MUTEX_ADAPTIVE_NP' constant. */
+#undef HAVE_PTHREAD_MUTEX_ADAPTIVE_NP
+
+/* Define to 1 if you have the `pthread_spinlock_t' type. */
+#undef HAVE_PTHREAD_SPINLOCK
+
+/* Define to 1 if you have the 5 args `mremap' function. */
+#undef HAVE_5ARGS_MREMAP
+
 /* --prefix directory for GDAL install */
 #undef GDAL_PREFIX
 
@@ -213,6 +222,9 @@
 
 /* Define to 1 if you have the `getaddrinfo' function. */
 #undef HAVE_GETADDRINFO
+
+/* Define to 1 if you have the _SC_PHYS_PAGES' constant. */
+#undef HAVE_SC_PHYS_PAGES
 
 /* Use this file to override settings in instances where you're doing FAT compiles
    on Apple.  It is currently off by default because it doesn't seem to work with 

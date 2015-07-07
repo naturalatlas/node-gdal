@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrili1datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrili1datasource.cpp 29139 2015-05-03 20:09:20Z pka $
  *
  * Project:  Interlis 1 Translator
  * Purpose:  Implements OGRILI1DataSource class.
@@ -36,7 +36,7 @@
 
 #include <string>
 
-CPL_CVSID("$Id: ogrili1datasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrili1datasource.cpp 29139 2015-05-03 20:09:20Z pka $");
 
 /************************************************************************/
 /*                         OGRILI1DataSource()                         */
@@ -87,7 +87,7 @@ OGRILI1DataSource::~OGRILI1DataSource()
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRILI1DataSource::Open( const char * pszNewName, int bTestOpen )
+int OGRILI1DataSource::Open( const char * pszNewName, char** papszOpenOptions, int bTestOpen )
 
 {
     FILE        *fp;
@@ -98,15 +98,23 @@ int OGRILI1DataSource::Open( const char * pszNewName, int bTestOpen )
     {
         return FALSE;
     }
+    
+    if( CSLFetchNameValue(papszOpenOptions, "MODEL") != NULL )
+    {
+        osBasename = pszNewName;
+        osModelFilename = CSLFetchNameValue(papszOpenOptions, "MODEL");
+    }
+    else
+    {
+        char **filenames = CSLTokenizeString2( pszNewName, ",", 0 );
 
-    char **filenames = CSLTokenizeString2( pszNewName, ",", 0 );
+        osBasename = filenames[0];
 
-    osBasename = filenames[0];
+        if( CSLCount(filenames) > 1 )
+            osModelFilename = filenames[1];
 
-    if( CSLCount(filenames) > 1 )
-        osModelFilename = filenames[1];
-
-    CSLDestroy( filenames );
+        CSLDestroy( filenames );
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Open the source file.                                           */
@@ -165,13 +173,18 @@ int OGRILI1DataSource::Open( const char * pszNewName, int bTestOpen )
     if (osModelFilename.length() > 0 )
         poReader->ReadModel( poImdReader, osModelFilename.c_str(), this );
 
-    if( getenv( "ARC_DEGREES" ) != NULL ) {
-      //No better way to pass arguments to the reader (it could even be an -lco arg)
-      poReader->SetArcDegrees( atof( getenv("ARC_DEGREES") ) );
+    int bResetConfigOption = FALSE;
+    if (EQUAL(CPLGetConfigOption("OGR_ARC_STEPSIZE", ""), ""))
+    {
+        bResetConfigOption = TRUE;
+        CPLSetThreadLocalConfigOption("OGR_ARC_STEPSIZE", "0.96");
     }
 
-    //Parse model and read data - without surface joing and polygonizing
+    //Parse model and read data - without surface join and area polygonizing
     poReader->ReadFeatures();
+    
+    if( bResetConfigOption )
+        CPLSetThreadLocalConfigOption("OGR_ARC_STEPSIZE", NULL);
 
     return TRUE;
 }
@@ -242,14 +255,14 @@ static char *ExtractTopic(const char * pszLayerName)
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRILI1DataSource::CreateLayer( const char * pszLayerName,
-                                CPL_UNUSED OGRSpatialReference *poSRS,
-                                OGRwkbGeometryType eType,
-                                CPL_UNUSED char ** papszOptions )
+OGRILI1DataSource::ICreateLayer( const char * pszLayerName,
+                               CPL_UNUSED OGRSpatialReference *poSRS,
+                               OGRwkbGeometryType eType,
+                               CPL_UNUSED char ** papszOptions )
 {
     FeatureDefnInfo featureDefnInfo = poImdReader->GetFeatureDefnInfo(pszLayerName);
     const char *table = pszLayerName;
@@ -299,6 +312,8 @@ int OGRILI1DataSource::TestCapability( const char * pszCap )
 
 {
     if( EQUAL(pszCap,ODsCCreateLayer) )
+        return TRUE;
+    else if( EQUAL(pszCap,ODsCCurveGeometries) )
         return TRUE;
     else
         return FALSE;

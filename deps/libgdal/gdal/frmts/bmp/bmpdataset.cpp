@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bmpdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: bmpdataset.cpp 28234 2014-12-27 14:22:54Z rouault $
  *
  * Project:  Microsoft Windows Bitmap
  * Purpose:  Read/write MS Windows Device Independent Bitmap (DIB) files
@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bmpdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: bmpdataset.cpp 28234 2014-12-27 14:22:54Z rouault $");
 
 CPL_C_START
 void    GDALRegister_BMP(void);
@@ -230,7 +230,10 @@ class BMPDataset : public GDALPamDataset
   protected:
     virtual CPLErr      IRasterIO( GDALRWFlag, int, int, int, int,
                                    void *, int, int, GDALDataType,
-                                   int, int *, int, int, int );
+                                   int, int *,
+                                   GSpacing nPixelSpace, GSpacing nLineSpace,
+                                   GSpacing nBandSpace,
+                                   GDALRasterIOExtraArg* psExtraArg );
 
   public:
                 BMPDataset();
@@ -321,7 +324,8 @@ BMPRasterBand::~BMPRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr BMPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr BMPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
                                   void * pImage )
 {
     BMPDataset  *poGDS = (BMPDataset *) poDS;
@@ -860,8 +864,9 @@ BMPComprRasterBand::~BMPComprRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr BMPComprRasterBand::
-    IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, void * pImage )
+CPLErr BMPComprRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                       int nBlockYOff,
+                                       void * pImage )
 {
     memcpy( pImage, pabyUncomprBuf +
             (poDS->GetRasterYSize() - nBlockYOff - 1) * poDS->GetRasterXSize(),
@@ -924,6 +929,8 @@ CPLErr BMPDataset::GetGeoTransform( double * padfTransform )
     if( GDALPamDataset::GetGeoTransform( padfTransform ) == CE_None)
         return CE_None;
 
+#ifdef notdef
+    // See http://trac.osgeo.org/gdal/ticket/3578
     if (sInfoHeader.iXPelsPerMeter > 0 && sInfoHeader.iYPelsPerMeter > 0)
     {
         padfTransform[1] = sInfoHeader.iXPelsPerMeter;
@@ -932,6 +939,7 @@ CPLErr BMPDataset::GetGeoTransform( double * padfTransform )
         padfTransform[3] = -0.5*padfTransform[5];
         return CE_None;
     }
+#endif
 
     return CE_Failure;
 }
@@ -974,20 +982,22 @@ CPLErr BMPDataset::IRasterIO( GDALRWFlag eRWFlag,
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType,
                               int nBandCount, int *panBandMap, 
-                              int nPixelSpace, int nLineSpace, int nBandSpace )
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg )
 
 {
     if( nBandCount > 1 )
         return GDALDataset::BlockBasedRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     else
         return 
             GDALDataset::IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                     pData, nBufXSize, nBufYSize, eBufType, 
                                     nBandCount, panBandMap, 
-                                    nPixelSpace, nLineSpace, nBandSpace );
+                                    nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 }
 
 /************************************************************************/
@@ -1520,6 +1530,7 @@ void GDALRegister_BMP()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "BMP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "MS Windows Device Independent Bitmap" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -1540,4 +1551,3 @@ void GDALRegister_BMP()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

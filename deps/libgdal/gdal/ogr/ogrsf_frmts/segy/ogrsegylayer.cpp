@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegylayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsegylayer.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  SEG-Y Translator
  * Purpose:  Implements OGRSEGYLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogrsegylayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsegylayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 #define DT_IBM_4BYTES_FP         1
 #define DT_4BYTES_INT            2
@@ -805,14 +805,15 @@ static const FieldDesc SEGYHeaderFields[] =
 
 OGRSEGYHeaderLayer::OGRSEGYHeaderLayer( const char* pszLayerName,
                                         SEGYBinaryFileHeader* psBFH,
-                                        char* pszHeaderTextIn )
+                                        const char* pszHeaderTextIn )
 
 {
     bEOF = FALSE;
     memcpy(&sBFH, psBFH, sizeof(sBFH));
-    pszHeaderText = pszHeaderTextIn;
+    pszHeaderText = CPLStrdup(pszHeaderTextIn);
 
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone );
 

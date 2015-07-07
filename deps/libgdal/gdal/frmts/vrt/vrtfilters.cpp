@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtfilters.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vrtfilters.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of some filter types.
@@ -32,7 +32,7 @@
 #include "cpl_minixml.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: vrtfilters.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: vrtfilters.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -117,7 +117,9 @@ CPLErr
 VRTFilteredSource::RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                              void *pData, int nBufXSize, int nBufYSize, 
                              GDALDataType eBufType, 
-                             int nPixelSpace, int nLineSpace )
+                             GSpacing nPixelSpace,
+                             GSpacing nLineSpace,
+                             GDALRasterIOExtraArg* psExtraArg )
 
 {
 /* -------------------------------------------------------------------- */
@@ -129,16 +131,18 @@ VRTFilteredSource::RasterIO( int nXOff, int nYOff, int nXSize, int nYSize,
     {
         return VRTComplexSource::RasterIO( nXOff, nYOff, nXSize, nYSize, 
                                            pData, nBufXSize, nBufYSize, 
-                                           eBufType, nPixelSpace, nLineSpace );
+                                           eBufType, nPixelSpace, nLineSpace, psExtraArg );
     }
 
     // The window we will actually request from the source raster band.
+    double dfReqXOff, dfReqYOff, dfReqXSize, dfReqYSize;
     int nReqXOff, nReqYOff, nReqXSize, nReqYSize;
 
     // The window we will actual set _within_ the pData buffer.
     int nOutXOff, nOutYOff, nOutXSize, nOutYSize;
 
     if( !GetSrcDstWindow( nXOff, nYOff, nXSize, nYSize, nBufXSize, nBufYSize,
+                        &dfReqXOff, &dfReqYOff, &dfReqXSize, &dfReqYSize,
                         &nReqXOff, &nReqYOff, &nReqXSize, &nReqYSize,
                         &nOutXOff, &nOutYOff, &nOutXSize, &nOutYSize ) )
         return CE_None;
@@ -287,7 +291,7 @@ VRTFilteredSource::RasterIO( int nXOff, int nYOff, int nXSize, int nYSize,
                                               + nLineOffset * nTopFill
                                               + nPixelOffset * nLeftFill,
                                             nFileXSize, nFileYSize, eOperDataType,
-                                            nPixelOffset, nLineOffset );
+                                            nPixelOffset, nLineOffset, psExtraArg );
 
     if( eErr != CE_None )
     {
@@ -562,7 +566,7 @@ CPLErr VRTKernelFilteredSource::XMLInit( CPLXMLNode *psTree,
     padfNewCoefs = (double *) CPLMalloc(sizeof(double) * nCoefs);
 
     for( i = 0; i < nCoefs; i++ )
-        padfNewCoefs[i] = atof(papszCoefItems[i]);
+        padfNewCoefs[i] = CPLAtof(papszCoefItems[i]);
 
     eErr = SetKernel( nNewKernelSize, padfNewCoefs );
 
@@ -610,7 +614,7 @@ CPLXMLNode *VRTKernelFilteredSource::SerializeToXML( const char *pszVRTPath )
 
     strcpy( pszKernelCoefs, "" );
     for( iCoef = 0; iCoef < nCoefCount; iCoef++ )
-        sprintf( pszKernelCoefs + strlen(pszKernelCoefs), 
+        CPLsprintf( pszKernelCoefs + strlen(pszKernelCoefs), 
                  "%.8g ", padfKernelCoefs[iCoef] );
     
     CPLSetXMLValue( psKernel, "Size", CPLSPrintf( "%d", nKernelSize ) );

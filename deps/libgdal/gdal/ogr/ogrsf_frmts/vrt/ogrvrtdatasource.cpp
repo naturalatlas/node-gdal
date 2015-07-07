@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrvrtdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrvrtdatasource.cpp 28950 2015-04-18 23:24:49Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVRTDataSource class.
@@ -34,7 +34,7 @@
 #include "ogrwarpedlayer.h"
 #include "ogrunionlayer.h"
 
-CPL_CVSID("$Id: ogrvrtdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrvrtdatasource.cpp 28950 2015-04-18 23:24:49Z rouault $");
 
 /************************************************************************/
 /*                       OGRVRTGetGeometryType()                        */
@@ -55,6 +55,11 @@ static const OGRGeomTypeName asGeomTypeNames[] = { /* 25D versions are implicit 
     { wkbMultiLineString, "wkbMultiLineString" },
     { wkbMultiPolygon, "wkbMultiPolygon" },
     { wkbGeometryCollection, "wkbGeometryCollection" },
+    { wkbCircularString, "wkbCircularString" },
+    { wkbCompoundCurve, "wkbCompoundCurve" },
+    { wkbCurvePolygon, "wkbCurvePolygon" },
+    { wkbGeometryCollection, "wkbMultiCurve" },
+    { wkbMultiSurface, "wkbMultiSurface" },
     { wkbNone, "wkbNone" },
     { wkbNone, NULL }
 };
@@ -74,8 +79,8 @@ OGRwkbGeometryType OGRVRTGetGeometryType(const char* pszGType, int* pbError)
         {
             eGeomType = asGeomTypeNames[iType].eType;
 
-            if( strstr(pszGType,"25D") != NULL )
-                eGeomType = (OGRwkbGeometryType) (eGeomType | wkb25DBit);
+            if( strstr(pszGType,"25D") != NULL || strstr(pszGType,"Z") != NULL )
+                eGeomType = wkbSetZ(eGeomType);
             break;
         }
     }
@@ -93,17 +98,19 @@ OGRwkbGeometryType OGRVRTGetGeometryType(const char* pszGType, int* pbError)
 /*                          OGRVRTDataSource()                          */
 /************************************************************************/
 
-OGRVRTDataSource::OGRVRTDataSource()
+OGRVRTDataSource::OGRVRTDataSource(GDALDriver* poDriver)
 
 {
     pszName = NULL;
     papoLayers = NULL;
+    paeLayerType = NULL;
     nLayers = 0;
     psTree = NULL;
     nCallLevel = 0;
     poLayerPool = NULL;
     poParentDS = NULL;
     bRecursionDetected = FALSE;
+    this->poDriver = poDriver;
 }
 
 /************************************************************************/
@@ -121,6 +128,7 @@ OGRVRTDataSource::~OGRVRTDataSource()
         delete papoLayers[i];
     
     CPLFree( papoLayers );
+    CPLFree( paeLayerType );
 
     if( psTree != NULL)
         CPLDestroyXMLNode( psTree );
@@ -839,6 +847,11 @@ int OGRVRTDataSource::Initialize( CPLXMLNode *psTree, const char *pszNewName,
         poLayerPool = new OGRLayerPool(nMaxSimultaneouslyOpened);
 
 /* -------------------------------------------------------------------- */
+/*      Apply any dataset level metadata.                               */
+/* -------------------------------------------------------------------- */
+    oMDMD.XMLInit( psVRTDSXML, TRUE );
+
+/* -------------------------------------------------------------------- */
 /*      Look for layers.                                                */
 /* -------------------------------------------------------------------- */
     CPLXMLNode *psLTree;
@@ -858,9 +871,25 @@ int OGRVRTDataSource::Initialize( CPLXMLNode *psTree, const char *pszNewName,
 /* -------------------------------------------------------------------- */
 /*      Add layer to data source layer list.                            */
 /* -------------------------------------------------------------------- */
+        nLayers ++;
         papoLayers = (OGRLayer **)
-            CPLRealloc( papoLayers,  sizeof(OGRLayer *) * (nLayers+1) );
-        papoLayers[nLayers++] = poLayer;
+            CPLRealloc( papoLayers,  sizeof(OGRLayer *) * nLayers );
+        papoLayers[nLayers-1] = poLayer;
+
+        paeLayerType = (OGRLayerType*)
+            CPLRealloc( paeLayerType,  sizeof(int) * nLayers );
+        if( poLayerPool != NULL && EQUAL(psLTree->pszValue,"OGRVRTLayer"))
+        {
+            paeLayerType[nLayers - 1] = OGR_VRT_PROXIED_LAYER;
+        }
+        else if( EQUAL(psLTree->pszValue,"OGRVRTLayer") )
+        {
+            paeLayerType[nLayers - 1] = OGR_VRT_LAYER;
+        }
+        else
+        {
+            paeLayerType[nLayers - 1] = OGR_VRT_OTHER_LAYER;
+        }
     }
 
     return TRUE;
@@ -870,8 +899,10 @@ int OGRVRTDataSource::Initialize( CPLXMLNode *psTree, const char *pszNewName,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRVRTDataSource::TestCapability( CPL_UNUSED const char * pszCap )
+int OGRVRTDataSource::TestCapability( const char * pszCap )
 {
+    if( EQUAL(pszCap,ODsCCurveGeometries) )
+        return TRUE;
     return FALSE;
 }
 
@@ -904,4 +935,46 @@ void OGRVRTDataSource::AddForbiddenNames(const char* pszOtherDSName)
 int OGRVRTDataSource::IsInForbiddenNames(const char* pszOtherDSName)
 {
     return aosOtherDSNameSet.find(pszOtherDSName) != aosOtherDSNameSet.end();
+}
+
+/************************************************************************/
+/*                             GetFileList()                             */
+/************************************************************************/
+
+char **OGRVRTDataSource::GetFileList()
+{
+    CPLStringList oList;
+    oList.AddString( GetName() );
+    for(int i=0; i<nLayers; i++ )
+    {
+        OGRLayer* poLayer = papoLayers[i];
+        OGRVRTLayer* poVRTLayer = NULL;
+        switch( paeLayerType[nLayers - 1] )
+        {
+            case OGR_VRT_PROXIED_LAYER:
+                poVRTLayer = (OGRVRTLayer*) ((OGRProxiedLayer*)poLayer)->GetUnderlyingLayer();
+                break;
+            case OGR_VRT_LAYER:
+                poVRTLayer = (OGRVRTLayer*) poLayer;
+                break;
+            default:
+                break;
+        }
+        if( poVRTLayer != NULL )
+        {
+            GDALDataset* poSrcDS = poVRTLayer->GetSrcDataset();
+            if( poSrcDS != NULL )
+            {
+                char** papszFileList = poSrcDS->GetFileList();
+                char** papszIter = papszFileList;
+                for(; papszIter != NULL && *papszIter != NULL; papszIter++ )
+                {
+                    if( oList.FindString(*papszIter) < 0 )
+                        oList.AddString(*papszIter);
+                }
+                CSLDestroy(papszFileList);
+            }
+        }
+    }
+    return oList.StealList();
 }

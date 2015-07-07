@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_minixml.h 25119 2012-10-13 22:38:43Z rouault $
+ * $Id: cpl_minixml.h 28690 2015-03-08 20:06:12Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Declarations for MiniXML Handler.
@@ -138,6 +138,9 @@ int        CPL_DLL  CPLRemoveXMLChild( CPLXMLNode *psParent,
 void       CPL_DLL  CPLAddXMLSibling( CPLXMLNode *psOlderSibling,
                                       CPLXMLNode *psNewSibling );
 CPLXMLNode CPL_DLL *CPLCreateXMLElementAndValue( CPLXMLNode *psParent,
+                                                 const char *pszName,
+                                                 const char *pszValue );
+void       CPL_DLL CPLAddXMLAttributeAndValue( CPLXMLNode *psParent,
                                                  const char *pszName,
                                                  const char *pszValue );
 CPLXMLNode CPL_DLL *CPLCloneXMLTree( CPLXMLNode *psTree );

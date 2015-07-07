@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmutexedlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmutexedlayer.cpp 28601 2015-03-03 11:06:40Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMutexedLayer class
@@ -30,13 +30,14 @@
 #include "ogrmutexedlayer.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmutexedlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmutexedlayer.cpp 28601 2015-03-03 11:06:40Z rouault $");
 
 OGRMutexedLayer::OGRMutexedLayer(OGRLayer* poDecoratedLayer,
                                  int bTakeOwnership,
-                                 void* hMutex) :
+                                 CPLMutex* hMutex) :
         OGRLayerDecorator(poDecoratedLayer, bTakeOwnership), m_hMutex(hMutex)
 {
+    SetDescription( poDecoratedLayer->GetDescription() );
 }
 
 OGRMutexedLayer::~OGRMutexedLayer()
@@ -94,31 +95,31 @@ OGRFeature *OGRMutexedLayer::GetNextFeature()
     return OGRLayerDecorator::GetNextFeature();
 }
 
-OGRErr      OGRMutexedLayer::SetNextByIndex( long nIndex )
+OGRErr      OGRMutexedLayer::SetNextByIndex( GIntBig nIndex )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
     return OGRLayerDecorator::SetNextByIndex(nIndex);
 }
 
-OGRFeature *OGRMutexedLayer::GetFeature( long nFID )
+OGRFeature *OGRMutexedLayer::GetFeature( GIntBig nFID )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
     return OGRLayerDecorator::GetFeature(nFID);
 }
 
-OGRErr      OGRMutexedLayer::SetFeature( OGRFeature *poFeature )
+OGRErr      OGRMutexedLayer::ISetFeature( OGRFeature *poFeature )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
-    return OGRLayerDecorator::SetFeature(poFeature);
+    return OGRLayerDecorator::ISetFeature(poFeature);
 }
 
-OGRErr      OGRMutexedLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr      OGRMutexedLayer::ICreateFeature( OGRFeature *poFeature )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
-    return OGRLayerDecorator::CreateFeature(poFeature);
+    return OGRLayerDecorator::ICreateFeature(poFeature);
 }
 
-OGRErr      OGRMutexedLayer::DeleteFeature( long nFID )
+OGRErr      OGRMutexedLayer::DeleteFeature( GIntBig nFID )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
     return OGRLayerDecorator::DeleteFeature(nFID);
@@ -148,7 +149,7 @@ OGRSpatialReference *OGRMutexedLayer::GetSpatialRef()
     return OGRLayerDecorator::GetSpatialRef();
 }
 
-int         OGRMutexedLayer::GetFeatureCount( int bForce )
+GIntBig         OGRMutexedLayer::GetFeatureCount( int bForce )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
     return OGRLayerDecorator::GetFeatureCount(bForce);
@@ -256,3 +257,42 @@ OGRErr      OGRMutexedLayer::SetIgnoredFields( const char **papszFields )
     CPLMutexHolderOptionalLockD(m_hMutex);
     return OGRLayerDecorator::SetIgnoredFields(papszFields);
 }
+
+char      **OGRMutexedLayer::GetMetadata( const char * pszDomain )
+{
+    CPLMutexHolderOptionalLockD(m_hMutex);
+    return OGRLayerDecorator::GetMetadata(pszDomain);
+}
+
+CPLErr      OGRMutexedLayer::SetMetadata( char ** papszMetadata,
+                                          const char * pszDomain )
+{
+    CPLMutexHolderOptionalLockD(m_hMutex);
+    return OGRLayerDecorator::SetMetadata(papszMetadata, pszDomain);
+}
+
+const char *OGRMutexedLayer::GetMetadataItem( const char * pszName,
+                                              const char * pszDomain )
+{
+    CPLMutexHolderOptionalLockD(m_hMutex);
+    return OGRLayerDecorator::GetMetadataItem(pszName, pszDomain);
+}
+
+CPLErr      OGRMutexedLayer::SetMetadataItem( const char * pszName,
+                                              const char * pszValue,
+                                              const char * pszDomain )
+{
+    CPLMutexHolderOptionalLockD(m_hMutex);
+    return OGRLayerDecorator::SetMetadataItem(pszName, pszValue, pszDomain);
+}
+
+#if defined(WIN32) && defined(_MSC_VER)
+// Horrible hack: for some reason MSVC doesn't export the class
+// if it is not referenced from the DLL itself
+void OGRRegisterMutexedLayer();
+void OGRRegisterMutexedLayer()
+{
+    CPLAssert(FALSE); // Never call this function: it will segfault
+    delete new OGRMutexedLayer(NULL, FALSE, NULL);
+}
+#endif

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_svg.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_svg.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  SVG Translator
  * Purpose:  Definition of classes for OGR .svg driver.
@@ -80,10 +80,12 @@ class OGRSVGLayer : public OGRLayer
     int                inInterestingElement;
 
     int                bStopParsing;
+#ifdef HAVE_EXPAT
     int                nWithoutEventCounter;
     int                nDataHandlerCounter;
 
     OGRSVGLayer       *poCurLayer;
+#endif
 
   private:
     void               LoadSchema();
@@ -101,7 +103,7 @@ class OGRSVGLayer : public OGRLayer
     virtual const char*         GetName() { return osLayerName.c_str(); }
     virtual OGRwkbGeometryType  GetGeomType();
 
-    virtual int                 GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig             GetFeatureCount( int bForce = TRUE );
 
     virtual OGRFeatureDefn *    GetLayerDefn();
     
@@ -136,7 +138,9 @@ class OGRSVGDataSource : public OGRDataSource
     OGRSVGLayer**       papoLayers;
     int                 nLayers;
 
+#ifdef HAVE_EXPAT
     OGRSVGValidity      eValidity;
+#endif
     int                 bIsCloudmade;
 
 #ifdef HAVE_EXPAT
@@ -148,8 +152,7 @@ class OGRSVGDataSource : public OGRDataSource
                         OGRSVGDataSource();
                         ~OGRSVGDataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     virtual const char*         GetName() { return pszName; }
 
@@ -163,21 +166,6 @@ class OGRSVGDataSource : public OGRDataSource
     void                startElementValidateCbk(const char *pszName, const char **ppszAttr);
     void                dataHandlerValidateCbk(const char *data, int nLen);
 #endif
-};
-
-/************************************************************************/
-/*                             OGRSVGDriver                             */
-/************************************************************************/
-
-class OGRSVGDriver : public OGRSFDriver
-{
-  public:
-                ~OGRSVGDriver();
-
-    const char*         GetName();
-    OGRDataSource*      Open( const char *, int );
-
-    virtual int                 TestCapability( const char * );
 };
 
 #endif /* ndef _OGR_SVG_H_INCLUDED */

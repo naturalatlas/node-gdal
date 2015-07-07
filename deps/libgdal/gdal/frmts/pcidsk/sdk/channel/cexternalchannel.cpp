@@ -52,8 +52,8 @@ using namespace PCIDSK;
 /*                          CExternalChannel()                          */
 /************************************************************************/
 
-CExternalChannel::CExternalChannel( PCIDSKBuffer &image_header, 
-                                    uint64 ih_offset, 
+CExternalChannel::CExternalChannel( PCIDSKBuffer &image_header,
+                                    uint64 ih_offset,
                                     CPL_UNUSED PCIDSKBuffer &file_header,
                                     std::string filename,
                                     int channelnum,

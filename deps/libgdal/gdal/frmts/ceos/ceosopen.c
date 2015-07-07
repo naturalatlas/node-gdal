@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceosopen.c 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ceosopen.c 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CEOS Translator
  * Purpose:  Implementation of non-GDAL dependent CEOS support.
@@ -30,7 +30,7 @@
 
 #include "ceosopen.h"
 
-CPL_CVSID("$Id: ceosopen.c 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ceosopen.c 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                            CEOSScanInt()                             */
@@ -377,4 +377,3 @@ void CEOSClose( CEOSImage * psCEOS )
     VSIFCloseL( psCEOS->fpImage );
     CPLFree( psCEOS );
 }
-

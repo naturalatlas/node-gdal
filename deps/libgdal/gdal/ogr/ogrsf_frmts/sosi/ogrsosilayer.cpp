@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsosilayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsosilayer.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  SOSI Translator
  * Purpose:  Implements OGRSOSILayer.
@@ -43,6 +43,7 @@ OGRSOSILayer::OGRSOSILayer( OGRSOSIDataSource *poPar, OGRFeatureDefn *poFeatDefn
     nNextFID      = 0;
     poNextSerial  = NULL;
     
+    SetDescription( poFeatureDefn->GetName() );
     if( poFeatureDefn->GetGeomFieldCount() > 0 )
         poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poParent->poSRS);
 
@@ -66,15 +67,15 @@ OGRFeatureDefn *OGRSOSILayer::GetLayerDefn() {
 /************************************************************************/
 /*                           CreateField()                              */
 /************************************************************************/
-OGRErr OGRSOSILayer::CreateField (OGRFieldDefn *poField, int bApproxOK) {
+OGRErr OGRSOSILayer::CreateField (OGRFieldDefn *poField, CPL_UNUSED int bApproxOK) {
     poFeatureDefn->AddFieldDefn( poField );
     return OGRERR_NONE; /* We'll just gladly accept any "field" we find */
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
-OGRErr OGRSOSILayer::CreateFeature(OGRFeature *poFeature) {
+OGRErr OGRSOSILayer::ICreateFeature(OGRFeature *poFeature) {
     short nNavn;
     long nSerial;
     

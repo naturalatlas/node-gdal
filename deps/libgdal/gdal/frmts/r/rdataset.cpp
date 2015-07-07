@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: rdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  R Format Driver
  * Purpose:  Read/write R stats package object format.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "../raw/rawdataset.h"
 
-CPL_CVSID("$Id: rdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: rdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void    GDALRegister_R(void);
@@ -130,7 +130,8 @@ RRasterBand::~RRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr RRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr RRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                int nBlockYOff,
                                 void * pImage )
 {
     memcpy( pImage, padfMatrixValues + nBlockYOff * nBlockXSize,
@@ -223,7 +224,7 @@ double RDataset::ReadFloat()
 {
     if( bASCII )
     {
-        return atof(ASCIIFGets());
+        return CPLAtof(ASCIIFGets());
     }
     else
     {
@@ -590,6 +591,7 @@ void GDALRegister_R()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "R" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "R Object Data Store" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -611,4 +613,3 @@ void GDALRegister_R()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

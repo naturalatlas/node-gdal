@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wmsdriver.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: wmsdriver.h 28432 2015-02-06 21:15:27Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -58,14 +58,14 @@ class GDALWMSRasterBand;
 CPLString MD5String(const char *s);
 CPLString ProjToWKT(const CPLString &proj);
 void URLAppend(CPLString *url, const char *s);
-void URLAppendF(CPLString *url, const char *s, ...);
+void URLAppendF(CPLString *url, const char *s, ...) CPL_PRINT_FUNC_FORMAT (2, 3);
 void URLAppend(CPLString *url, const CPLString &s);
 CPLString BufferToVSIFile(GByte *buffer, size_t size);
 CPLErr MakeDirs(const char *path);
 
 
 int StrToBool(const char *p);
-int URLSearchAndReplace (CPLString *base, const char *search, const char *fmt, ...);
+int URLSearchAndReplace (CPLString *base, const char *search, const char *fmt, ...) CPL_PRINT_FUNC_FORMAT (3, 4);
 /* Convert a.b.c.d to a * 0x1000000 + b * 0x10000 + c * 0x100 + d */
 int VersionStringToInt(const char *version);
 
@@ -346,7 +346,12 @@ public:
                                     void * pProgressData );
 
 protected:
-    virtual CPLErr IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer, int bsx, int bsy, GDALDataType bdt, int band_count, int *band_map, int pixel_space, int line_space, int band_space);
+    virtual CPLErr IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer,
+                             int bsx, int bsy, GDALDataType bdt,
+                             int band_count, int *band_map,
+                             GSpacing nPixelSpace, GSpacing nLineSpace,
+                             GSpacing nBandSpace,
+                             GDALRasterIOExtraArg* psExtraArg);
     CPLErr Initialize(CPLXMLNode *config);
 
     GDALWMSDataWindow m_data_window;
@@ -410,7 +415,9 @@ public:
     virtual GDALColorInterp GetColorInterpretation();
     virtual CPLErr SetColorInterpretation( GDALColorInterp );
     virtual CPLErr IReadBlock(int x, int y, void *buffer);
-    virtual CPLErr IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer, int bsx, int bsy, GDALDataType bdt, int pixel_space, int line_space);
+    virtual CPLErr IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer, int bsx, int bsy, GDALDataType bdt,
+                             GSpacing nPixelSpace, GSpacing nLineSpace,
+                             GDALRasterIOExtraArg* psExtraArg);
     virtual int HasArbitraryOverviews();
     virtual int GetOverviewCount();
     virtual GDALRasterBand *GetOverview(int n);

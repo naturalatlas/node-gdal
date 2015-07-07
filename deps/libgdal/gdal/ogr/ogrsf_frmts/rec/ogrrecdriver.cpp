@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrrecdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrrecdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  REC Translator
  * Purpose:  Implements EpiInfo .REC driver.
@@ -30,53 +30,31 @@
 #include "ogr_rec.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrrecdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
-
-/************************************************************************/
-/*                           ~OGRRECDriver()                            */
-/************************************************************************/
-
-OGRRECDriver::~OGRRECDriver()
-
-{
-}
-
-/************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGRRECDriver::TestCapability( const char * )
-
-{
-    return FALSE;
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRRECDriver::GetName()
-
-{
-    return "REC";
-}
+CPL_CVSID("$Id: ogrrecdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRRECDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGRRECDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    OGRRECDataSource   *poDS = new OGRRECDataSource();
+    OGRRECDataSource   *poDS;
 
-    if( !poDS->Open( pszFilename ) )
+    if( poOpenInfo->fpL == NULL ||
+        !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "REC") )
+    {
+        return NULL;
+    }
+
+    poDS = new OGRRECDataSource();
+    if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
         poDS = NULL;
     }
 
-    if( poDS != NULL && bUpdate )
+    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "REC Driver doesn't support update." );
@@ -94,6 +72,21 @@ OGRDataSource *OGRRECDriver::Open( const char * pszFilename, int bUpdate )
 void RegisterOGRREC()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRRECDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "REC" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "REC" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "rec" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "EPIInfo .REC " );
+
+        poDriver->pfnOpen = OGRRECDriverOpen;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
 

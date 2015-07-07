@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsf_frmts.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsf_frmts.h 29035 2015-04-27 12:38:54Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Classes related to format registration, and file opening.
@@ -34,12 +34,19 @@
 #include "cpl_progress.h"
 #include "ogr_feature.h"
 #include "ogr_featurestyle.h"
+#include "gdal_priv.h"
 
 /**
  * \file ogrsf_frmts.h
  *
  * Classes related to registration of format support, and opening datasets.
  */
+
+#if !defined(GDAL_COMPILATION) && !defined(SUPPRESS_DEPRECATION_WARNINGS)
+#define OGR_DEPRECATED(x) CPL_WARN_DEPRECATED(x)
+#else
+#define OGR_DEPRECATED(x) 
+#endif
 
 class OGRLayerAttrIndex;
 class OGRSFDriver;
@@ -56,8 +63,11 @@ class OGRSFDriver;
 /* Note: any virtual method added to this class must also be added in the */
 /* OGRLayerDecorator and OGRMutexedLayer classes. */
 
-class CPL_DLL OGRLayer
+class CPL_DLL OGRLayer : public GDALMajorObject
 {
+  private:
+    void         ConvertNonLinearGeomsIfNecessary( OGRFeature *poFeature );
+
   protected:
     int          m_bFilterIsEnvelope;
     OGRGeometry *m_poFilterGeom;
@@ -71,6 +81,9 @@ class CPL_DLL OGRLayer
     int          InstallFilter( OGRGeometry * );
     
     OGRErr       GetExtentInternal(int iGeomField, OGREnvelope *psExtent, int bForce );
+
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
 
   public:
     OGRLayer();
@@ -90,11 +103,13 @@ class CPL_DLL OGRLayer
 
     virtual void        ResetReading() = 0;
     virtual OGRFeature *GetNextFeature() = 0;
-    virtual OGRErr      SetNextByIndex( long nIndex );
-    virtual OGRFeature *GetFeature( long nFID );
-    virtual OGRErr      SetFeature( OGRFeature *poFeature );
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex );
+    virtual OGRFeature *GetFeature( GIntBig nFID );
+
+    OGRErr      SetFeature( OGRFeature *poFeature );
+    OGRErr      CreateFeature( OGRFeature *poFeature );
+
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
 
     virtual const char *GetName();
     virtual OGRwkbGeometryType GetGeomType();
@@ -103,20 +118,18 @@ class CPL_DLL OGRLayer
 
     virtual OGRSpatialReference *GetSpatialRef();
 
-    virtual int         GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
     virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
     virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent,
                                   int bForce = TRUE);
 
     virtual int         TestCapability( const char * ) = 0;
 
-    virtual const char *GetInfo( const char * );
-
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
     virtual OGRErr      DeleteField( int iField );
     virtual OGRErr      ReorderFields( int* panMap );
-    virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags );
+    virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlagsIn );
 
     virtual OGRErr      CreateGeomField( OGRGeomFieldDefn *poField,
                                      int bApproxOK = TRUE );
@@ -199,12 +212,14 @@ class CPL_DLL OGRLayer
     GIntBig              m_nFeaturesRead;
 };
 
-
 /************************************************************************/
 /*                            OGRDataSource                             */
 /************************************************************************/
 
 /**
+ * LEGACY class. Use GDALDataset in your new code ! This class may be
+ * removed in a later release.
+ * 
  * This class represents a data source.  A data source potentially
  * consists of many layers (OGRLayer).  A data source normally consists
  * of one, or a related set of files, though the name doesn't have to be
@@ -212,77 +227,22 @@ class CPL_DLL OGRLayer
  *
  * When an OGRDataSource is destroyed, all it's associated OGRLayers objects
  * are also destroyed.
+ *
+ * NOTE: Starting with GDAL 2.0, it is *NOT* safe to cast the handle of
+ * a C function that returns a OGRDataSourceH to a OGRDataSource*. If a C++ object
+ * is needed, the handle should be cast to GDALDataset*.
+ *
+ * @deprecated
  */ 
 
-class CPL_DLL OGRDataSource
+class CPL_DLL OGRDataSource : public GDALDataset
 {
-    friend class OGRSFDriverRegistrar;
+public:
+                        OGRDataSource();
 
-    void        *m_hMutex;
+    virtual const char  *GetName() OGR_DEPRECATED("Use GDALDataset class instead") = 0;
 
-    OGRLayer*       BuildLayerFromSelectInfo(void* psSelectInfo,
-                                             OGRGeometry *poSpatialFilter,
-                                             const char *pszDialect);
-
-  public:
-
-    OGRDataSource();
-    virtual     ~OGRDataSource();
-    static void         DestroyDataSource( OGRDataSource * );
-
-    virtual const char  *GetName() = 0;
-
-    virtual int         GetLayerCount() = 0;
-    virtual OGRLayer    *GetLayer(int) = 0;
-    virtual OGRLayer    *GetLayerByName(const char *);
-    virtual OGRErr      DeleteLayer(int);
-
-    virtual int         TestCapability( const char * ) = 0;
-
-    virtual OGRLayer   *CreateLayer( const char *pszName, 
-                                     OGRSpatialReference *poSpatialRef = NULL,
-                                     OGRwkbGeometryType eGType = wkbUnknown,
-                                     char ** papszOptions = NULL );
-    virtual OGRLayer   *CopyLayer( OGRLayer *poSrcLayer, 
-                                   const char *pszNewName, 
-                                   char **papszOptions = NULL );
-
-    virtual OGRStyleTable *GetStyleTable();
-    virtual void        SetStyleTableDirectly( OGRStyleTable *poStyleTable );
-                            
-    virtual void        SetStyleTable(OGRStyleTable *poStyleTable);
-
-    virtual OGRLayer *  ExecuteSQL( const char *pszStatement,
-                                    OGRGeometry *poSpatialFilter,
-                                    const char *pszDialect );
-    virtual void        ReleaseResultSet( OGRLayer * poResultsSet );
-
-    virtual OGRErr      SyncToDisk();
-
-    int                 Reference();
-    int                 Dereference();
-    int                 GetRefCount() const;
-    int                 GetSummaryRefCount() const;
-    OGRErr              Release();
-
-    OGRSFDriver        *GetDriver() const;
-    void                SetDriver( OGRSFDriver *poDriver );
-    
-    static int          IsGenericSQLDialect(const char* pszDialect);
-
-  protected:
-
-    OGRErr              ProcessSQLCreateIndex( const char * );
-    OGRErr              ProcessSQLDropIndex( const char * );
-    OGRErr              ProcessSQLDropTable( const char * );
-    OGRErr              ProcessSQLAlterTableAddColumn( const char * );
-    OGRErr              ProcessSQLAlterTableDropColumn( const char * );
-    OGRErr              ProcessSQLAlterTableAlterColumn( const char * );
-    OGRErr              ProcessSQLAlterTableRenameColumn( const char * );
-
-    OGRStyleTable      *m_poStyleTable;
-    int                 m_nRefCount;
-    OGRSFDriver        *m_poDriver;
+    static void         DestroyDataSource( OGRDataSource * ) OGR_DEPRECATED("Use GDALDataset class instead");
 };
 
 /************************************************************************/
@@ -290,32 +250,37 @@ class CPL_DLL OGRDataSource
 /************************************************************************/
 
 /**
+ * LEGACY class. Use GDALDriver in your new code ! This class may be
+ * removed in a later release.
+ *
  * Represents an operational format driver.
  *
  * One OGRSFDriver derived class will normally exist for each file format
  * registered for use, regardless of whether a file has or will be opened.
  * The list of available drivers is normally managed by the
  * OGRSFDriverRegistrar.
+ *
+ * NOTE: Starting with GDAL 2.0, it is *NOT* safe to cast the handle of
+ * a C function that returns a OGRSFDriverH to a OGRSFDriver*. If a C++ object
+ * is needed, the handle should be cast to GDALDriver*.
+ *
+ * @deprecated
  */
 
-class CPL_DLL OGRSFDriver
+class CPL_DLL OGRSFDriver : public GDALDriver
 {
   public:
     virtual     ~OGRSFDriver();
 
-    virtual const char  *GetName() = 0;
+    virtual const char  *GetName() OGR_DEPRECATED("Use GDALDriver class instead") = 0;
 
-    virtual OGRDataSource *Open( const char *pszName, int bUpdate=FALSE ) = 0;
-
-    virtual int         TestCapability( const char * ) = 0;
+    virtual OGRDataSource *Open( const char *pszName, int bUpdate=FALSE ) OGR_DEPRECATED("Use GDALDriver class instead") = 0;
+    
+    virtual int            TestCapability( const char *pszCap ) OGR_DEPRECATED("Use GDALDriver class instead") = 0;
 
     virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
-    virtual OGRErr      DeleteDataSource( const char *pszName );
-
-    virtual OGRDataSource *CopyDataSource( OGRDataSource *poSrcDS, 
-                                           const char *pszNewName, 
-                                           char **papszOptions = NULL );
+                                             char ** = NULL ) OGR_DEPRECATED("Use GDALDriver class instead");
+    virtual OGRErr      DeleteDataSource( const char *pszName ) OGR_DEPRECATED("Use GDALDriver class instead");
 };
 
 
@@ -324,49 +289,44 @@ class CPL_DLL OGRSFDriver
 /************************************************************************/
 
 /**
+ * LEGACY class. Use GDALDriverManager in your new code ! This class may be
+ * removed in a later release.
+ *
  * Singleton manager for OGRSFDriver instances that will be used to try
  * and open datasources.  Normally the registrar is populated with 
  * standard drivers using the OGRRegisterAll() function and does not need
  * to be directly accessed.  The driver registrar and all registered drivers
  * may be cleaned up on shutdown using OGRCleanupAll().
+ *
+ * @deprecated
  */
 
 class CPL_DLL OGRSFDriverRegistrar
 {
-    int         nDrivers;
-    OGRSFDriver **papoDrivers;
 
                 OGRSFDriverRegistrar();
+                ~OGRSFDriverRegistrar();
 
-    int         nOpenDSCount;
-    char        **papszOpenDSRawName;
-    OGRDataSource **papoOpenDS;
-    OGRSFDriver **papoOpenDSDriver;
-    GIntBig     *panOpenDSPID;
+    static GDALDataset* OpenWithDriverArg(GDALDriver* poDriver,
+                                                 GDALOpenInfo* poOpenInfo);
+    static GDALDataset* CreateVectorOnly( GDALDriver* poDriver,
+                                          const char * pszName,
+                                          char ** papszOptions );
+    static CPLErr       DeleteDataSource( GDALDriver* poDriver,
+                                          const char * pszName );
 
   public:
 
-                ~OGRSFDriverRegistrar();
+    static OGRSFDriverRegistrar *GetRegistrar() OGR_DEPRECATED("Use GDALDriverManager class instead");
 
-    static OGRSFDriverRegistrar *GetRegistrar();
-    static OGRDataSource *Open( const char *pszName, int bUpdate=FALSE,
-                                OGRSFDriver ** ppoDriver = NULL );
+    void        RegisterDriver( OGRSFDriver * poDriver ) OGR_DEPRECATED("Use GDALDriverManager class instead");
 
-    OGRDataSource *OpenShared( const char *pszName, int bUpdate=FALSE,
-                               OGRSFDriver ** ppoDriver = NULL );
-    OGRErr      ReleaseDataSource( OGRDataSource * );
+    int         GetDriverCount( void ) OGR_DEPRECATED("Use GDALDriverManager class instead");
+    GDALDriver *GetDriver( int iDriver ) OGR_DEPRECATED("Use GDALDriverManager class instead");
+    GDALDriver *GetDriverByName( const char * ) OGR_DEPRECATED("Use GDALDriverManager class instead");
 
-    void        RegisterDriver( OGRSFDriver * poDriver );
-    void        DeregisterDriver( OGRSFDriver * poDriver );
-
-    int         GetDriverCount( void );
-    OGRSFDriver *GetDriver( int iDriver );
-    OGRSFDriver *GetDriverByName( const char * );
-
-    int         GetOpenDSCount() { return nOpenDSCount; } 
-    OGRDataSource *GetOpenDS( int );
-
-    void        AutoLoadDrivers();
+    int         GetOpenDSCount() OGR_DEPRECATED("Use GDALDriverManager class instead");
+    OGRDataSource *GetOpenDS( int ) OGR_DEPRECATED("Use GDALDriverManager class instead");
 };
 
 /* -------------------------------------------------------------------- */
@@ -374,6 +334,7 @@ class CPL_DLL OGRSFDriverRegistrar
 /* -------------------------------------------------------------------- */
 CPL_C_START
 void CPL_DLL OGRRegisterAll();
+void OGRRegisterAllInternal();
 
 void CPL_DLL RegisterOGRFileGDB();
 void CPL_DLL RegisterOGRShape();
@@ -418,7 +379,6 @@ void CPL_DLL RegisterOGRBNA();
 void CPL_DLL RegisterOGRGPX();
 void CPL_DLL RegisterOGRGeoconcept();
 void CPL_DLL RegisterOGRIngres();
-void CPL_DLL RegisterOGRPCIDSK();
 void CPL_DLL RegisterOGRXPlane();
 void CPL_DLL RegisterOGRNAS();
 void CPL_DLL RegisterOGRGeoRSS();
@@ -441,6 +401,7 @@ void CPL_DLL RegisterOGRGFT();
 void CPL_DLL RegisterOGRGME();
 void CPL_DLL RegisterOGRSVG();
 void CPL_DLL RegisterOGRCouchDB();
+void CPL_DLL RegisterOGRCloudant();
 void CPL_DLL RegisterOGRIdrisi();
 void CPL_DLL RegisterOGRARCGEN();
 void CPL_DLL RegisterOGRSEGUKOOA();
@@ -450,11 +411,14 @@ void CPL_DLL RegisterOGRODS();
 void CPL_DLL RegisterOGRXLSX();
 void CPL_DLL RegisterOGRElastic();
 void CPL_DLL RegisterOGRGeoPackage();
-void CPL_DLL RegisterOGRPDF();
 void CPL_DLL RegisterOGRWalk();
 void CPL_DLL RegisterOGRCartoDB();
 void CPL_DLL RegisterOGRSXF();
 void CPL_DLL RegisterOGROpenFileGDB();
+void CPL_DLL RegisterOGRSelafin();
+void CPL_DLL RegisterOGRJML();
+void CPL_DLL RegisterOGRPLSCENES();
+void CPL_DLL RegisterOGRCSW();
 CPL_C_END
 
 

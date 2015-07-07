@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrili2layer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrili2layer.cpp 29140 2015-05-03 20:09:32Z pka $
  *
  * Project:  Interlis 2 Translator
  * Purpose:  Implements OGRILI2Layer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrili2layer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrili2layer.cpp 29140 2015-05-03 20:09:32Z pka $");
 
 /************************************************************************/
 /*                           OGRILI2Layer()                              */
@@ -43,6 +43,7 @@ OGRILI2Layer::OGRILI2Layer( OGRFeatureDefn* poFeatureDefnIn,
                             OGRILI2DataSource *poDSIn )
 {
     poFeatureDefn = poFeatureDefnIn;
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     oGeomFieldInfos = oGeomFieldInfosIn;
 
@@ -70,10 +71,10 @@ OGRILI2Layer::~OGRILI2Layer()
 
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /************************************************************************/
 
-OGRErr OGRILI2Layer::SetFeature (OGRFeature *poFeature)
+OGRErr OGRILI2Layer::ISetFeature (OGRFeature *poFeature)
 {
     listFeature.push_back(poFeature);
     return OGRERR_NONE;
@@ -112,7 +113,7 @@ OGRFeature *OGRILI2Layer::GetNextFeature()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRILI2Layer::GetFeatureCount( int bForce )
+GIntBig OGRILI2Layer::GetFeatureCount( int bForce )
 {
     if (m_poFilterGeom == NULL && m_poAttrQuery == NULL)
     {
@@ -130,17 +131,17 @@ static char* d2str(double val)
     if( val == (int) val )
         sprintf( strbuf, "%d", (int) val );
     else if( fabs(val) < 370 )
-        sprintf( strbuf, "%.16g", val );
+        CPLsprintf( strbuf, "%.16g", val );
     else if( fabs(val) > 100000000.0  )
-        sprintf( strbuf, "%.16g", val );
+        CPLsprintf( strbuf, "%.16g", val );
     else
-        sprintf( strbuf, "%.3f", val );
+        CPLsprintf( strbuf, "%.3f", val );
     return strbuf;
 }
 
 static void AppendCoordinateList( OGRLineString *poLine, VSILFILE* fp )
 {
-    int         b3D = (poLine->getGeometryType() & wkb25DBit);
+    int         b3D = wkbHasZ(poLine->getGeometryType());
 
     for( int iPoint = 0; iPoint < poLine->getNumPoints(); iPoint++ )
     {
@@ -267,10 +268,10 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp, const c
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRILI2Layer::CreateFeature( OGRFeature *poFeature ) {
+OGRErr OGRILI2Layer::ICreateFeature( OGRFeature *poFeature ) {
     static char         szTempBuffer[80];
     const char* tid;
     int iField = 0;
@@ -281,7 +282,7 @@ OGRErr OGRILI2Layer::CreateFeature( OGRFeature *poFeature ) {
     }
     else
     {
-        sprintf( szTempBuffer, "%ld", poFeature->GetFID() );
+        sprintf( szTempBuffer, CPL_FRMT_GIB, poFeature->GetFID() );
         tid = szTempBuffer;
     }
 
@@ -326,7 +327,10 @@ OGRErr OGRILI2Layer::CreateFeature( OGRFeature *poFeature ) {
 /************************************************************************/
 
 int OGRILI2Layer::TestCapability( CPL_UNUSED const char * pszCap ) {
-    return FALSE;
+    if( EQUAL(pszCap,OLCCurveGeometries) )
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /************************************************************************/

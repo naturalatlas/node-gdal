@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ddffielddefn.cpp 25820 2013-03-30 20:07:35Z rouault $
+ * $Id: ddffielddefn.cpp 28348 2015-01-23 15:27:13Z rouault $
  *
  * Project:  ISO 8211 Access
  * Purpose:  Implements the DDFFieldDefn class.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include <ctype.h>
 
-CPL_CVSID("$Id: ddffielddefn.cpp 25820 2013-03-30 20:07:35Z rouault $");
+CPL_CVSID("$Id: ddffielddefn.cpp 28348 2015-01-23 15:27:13Z rouault $");
 
 #define CPLE_DiscardedFormat   1301
 
@@ -138,7 +138,8 @@ void DDFFieldDefn::AddSubfield( DDFSubfieldDefn *poNewSFDefn,
     _arrayDescr = (char *) 
         CPLRealloc(_arrayDescr, 
                    strlen(_arrayDescr)+strlen(poNewSFDefn->GetName())+2);
-    if( strlen(_arrayDescr) > 0 )
+    if( strlen(_arrayDescr) > 0 && 
+       (_arrayDescr[0] != '*' || strlen(_arrayDescr) > 1) )
         strcat( _arrayDescr, "!" );
     strcat( _arrayDescr, poNewSFDefn->GetName() );
 }

@@ -140,6 +140,7 @@ OGRLIBKMLLayer::OGRLIBKMLLayer ( const char *pszLayerName,
     m_poOgrSRS->SetWellKnownGeogCS ( "WGS84" );
 
     m_poOgrFeatureDefn = new OGRFeatureDefn ( pszLayerName );
+    SetDescription( m_poOgrFeatureDefn->GetName() );
     m_poOgrFeatureDefn->Reference (  );
     m_poOgrFeatureDefn->SetGeomType ( eGType );
     if( m_poOgrFeatureDefn->GetGeomFieldCount() != 0 )
@@ -511,7 +512,7 @@ OGRFeature *OGRLIBKMLLayer::GetNextRawFeature (
                 
 ******************************************************************************/
 
-OGRErr OGRLIBKMLLayer::CreateFeature (
+OGRErr OGRLIBKMLLayer::ICreateFeature (
     OGRFeature * poOgrFeat )
 {
 
@@ -571,12 +572,12 @@ OGRErr OGRLIBKMLLayer::CreateFeature (
             {
                 bAlreadyWarned = TRUE;
                 CPLError(CE_Warning, CPLE_AppDefined,
-                         "It is recommanded to define a FID when calling CreateFeature() in a update document");
+                         "It is recommended to define a FID when calling CreateFeature() in a update document");
             }
         }
         else
         {
-            const char* pszId = CPLSPrintf("%s.%ld",
+            const char* pszId = CPLSPrintf("%s." CPL_FRMT_GIB,
                     OGRLIBKMLGetSanitizedNCName(GetName()).c_str(), poOgrFeat->GetFID());
             poOgrFeat->SetFID(nFeatures);
             poKmlFeature->set_id(pszId);
@@ -602,7 +603,7 @@ OGRErr OGRLIBKMLLayer::CreateFeature (
 
 ******************************************************************************/
 
-OGRErr OGRLIBKMLLayer::SetFeature ( OGRFeature * poOgrFeat )
+OGRErr OGRLIBKMLLayer::ISetFeature ( OGRFeature * poOgrFeat )
 {
     if( !bUpdate || m_poKmlUpdate == NULL )
         return OGRERR_UNSUPPORTED_OPERATION;
@@ -618,7 +619,7 @@ OGRErr OGRLIBKMLLayer::SetFeature ( OGRFeature * poOgrFeat )
     poChange->add_object(poKmlFeature);
     m_poKmlUpdate->add_updateoperation(poChange);
     
-    const char* pszId = CPLSPrintf("%s.%ld",
+    const char* pszId = CPLSPrintf("%s." CPL_FRMT_GIB,
                     OGRLIBKMLGetSanitizedNCName(GetName()).c_str(), poOgrFeat->GetFID());
     poKmlFeature->set_targetid(pszId);
 
@@ -640,7 +641,7 @@ OGRErr OGRLIBKMLLayer::SetFeature ( OGRFeature * poOgrFeat )
 
 ******************************************************************************/
 
-OGRErr OGRLIBKMLLayer::DeleteFeature( long nFID )
+OGRErr OGRLIBKMLLayer::DeleteFeature( GIntBig nFID )
 {
     if( !bUpdate || m_poKmlUpdate == NULL )
         return OGRERR_UNSUPPORTED_OPERATION;
@@ -651,7 +652,7 @@ OGRErr OGRLIBKMLLayer::DeleteFeature( long nFID )
     PlacemarkPtr poKmlPlacemark = poKmlFactory->CreatePlacemark();
     poDelete->add_feature(poKmlPlacemark);
     
-    const char* pszId = CPLSPrintf("%s.%ld",
+    const char* pszId = CPLSPrintf("%s." CPL_FRMT_GIB,
                     OGRLIBKMLGetSanitizedNCName(GetName()).c_str(), nFID);
     poKmlPlacemark->set_targetid(pszId);
 
@@ -675,7 +676,7 @@ OGRErr OGRLIBKMLLayer::DeleteFeature( long nFID )
                 
 ******************************************************************************/
 
-int OGRLIBKMLLayer::GetFeatureCount (
+GIntBig OGRLIBKMLLayer::GetFeatureCount (
                                      int bForce )
 {
 

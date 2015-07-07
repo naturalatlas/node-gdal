@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fme2ogr.h 12123 2007-09-11 23:57:40Z warmerdam $
+ * $Id: fme2ogr.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Declarations for translating IFMEFeatures to OGRFeatures.
@@ -98,7 +98,7 @@ class OGRFMELayerCached : public OGRFMELayer
                        
     virtual void        ResetReading();
     virtual OGRFeature *GetNextFeature();
-    virtual int         GetFeatureCount( int bForce );
+    virtual GIntBig     GetFeatureCount( int bForce );
 
     virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
     
@@ -138,7 +138,7 @@ class OGRFMELayerDB : public OGRFMELayer
     
     virtual void        ResetReading();
     virtual OGRFeature *GetNextFeature();
-    virtual int         GetFeatureCount( int bForce );
+    virtual GIntBig     GetFeatureCount( int bForce );
 
     virtual int         TestCapability( const char * );
 

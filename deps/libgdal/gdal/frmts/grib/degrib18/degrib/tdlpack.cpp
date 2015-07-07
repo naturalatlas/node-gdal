@@ -175,7 +175,7 @@ static int ReadTDLPSect1 (uChar *pds, sInt4 tdlpLen, sInt4 *curLoc,
    t_hour = li_temp - t_day * 100;
    if ((t_year != year) || (t_month != month) || (t_day != day) ||
        (t_hour != hour)) {
-      errSprintf ("Error Inconsistant Times in ReadTDLPSect1.\n");
+      errSprintf ("Error Inconsistent Times in ReadTDLPSect1.\n");
       return -1;
    }
    if (ParseTime (&(pdsMeta->refTime), year, month, day, hour, min, 0) != 0) {
@@ -232,10 +232,10 @@ static int ReadTDLPSect1 (uChar *pds, sInt4 tdlpLen, sInt4 *curLoc,
    project_hr = GRIB_UNSIGN_INT2 (*pds, pds[1]);
    tau = pdsMeta->ID3 - ((pdsMeta->ID3 / 1000) * 1000);
    if (tau != project_hr) {
-      printf ("Warning: Inconsistant Projections in hours in "
+      printf ("Warning: Inconsistent Projections in hours in "
               "ReadTDLPSect1 (%d vs %d)\n", tau, project_hr);
 /*
-      errSprintf ("Warning: Inconsistant Projections in hours in "
+      errSprintf ("Warning: Inconsistent Projections in hours in "
                   "ReadTDLPSect1 (%ld vs %d)\n", tau, project_hr);
 */
       project_hr = tau;
@@ -634,7 +634,7 @@ int TDLP_RefTime (DataSource &fp, sInt4 tdlpLen, double *refTime)
 
    if ((t_year != year) || (t_month != month) || (t_day != day) ||
        (t_hour != hour)) {
-      errSprintf ("Error Inconsistant Times in TDLP_RefTime.\n");
+      errSprintf ("Error Inconsistent Times in TDLP_RefTime.\n");
       return -1;
    }
    if (ParseTime (refTime, year, month, day, hour, min, 0) != 0) {
@@ -796,8 +796,11 @@ static int ReadTDLPSect2 (uChar *gds, sInt4 tdlpLen, sInt4 *curLoc,
  * NOTES
  *****************************************************************************
  */
-static int ReadTDLPSect3 (CPL_UNUSED uChar *bms, CPL_UNUSED sInt4 tdlpLen, CPL_UNUSED sInt4 *curLoc,
-                          CPL_UNUSED uChar *bitmap, CPL_UNUSED sInt4 NxNy)
+static int ReadTDLPSect3 (CPL_UNUSED uChar *bms,
+                          CPL_UNUSED sInt4 tdlpLen,
+                          CPL_UNUSED sInt4 *curLoc,
+                          CPL_UNUSED uChar *bitmap,
+                          CPL_UNUSED sInt4 NxNy)
 {
    errSprintf ("Bitmap data is Not Supported\n");
    return -1;
@@ -847,7 +850,9 @@ static int ReadTDLPSect3 (CPL_UNUSED uChar *bms, CPL_UNUSED sInt4 tdlpLen, CPL_U
  */
 static int ReadTDLPSect4 (uChar *bds, sInt4 tdlpLen, sInt4 *curLoc,
                           short int DSF, short int BSF, double *data,
-                          grib_MetaData *meta, CPL_UNUSED double unitM, CPL_UNUSED double unitB)
+                          grib_MetaData *meta,
+                          CPL_UNUSED double unitM,
+                          CPL_UNUSED double unitB)
 {
    uInt4 sectLen;       /* Length in bytes of the current section. */
    uChar f_notGridPnt;  /* Not Grid point data? */
@@ -2862,7 +2867,9 @@ static void shiftGroup0 (sInt4 *Data, int start1, int start2, int bit,
  * NOTES
  *****************************************************************************
  */
-static void doSplit (sInt4 *Data, CPL_UNUSED int numData, TDLGroupType * G,
+static void doSplit (sInt4 *Data,
+                     CPL_UNUSED int numData,
+                     TDLGroupType * G,
                      TDLGroupType ** lclGroup, int *numLclGroup,
                      char f_primMiss, sInt4 li_primMiss,
                      char f_secMiss, sInt4 li_secMiss, int xFactor)
@@ -3001,7 +3008,9 @@ static void doSplit (sInt4 *Data, CPL_UNUSED int numData, TDLGroupType * G,
  * NOTES
  *****************************************************************************
  */
-static void doSplitRight (sInt4 *Data, CPL_UNUSED int numData, TDLGroupType * G,
+static void doSplitRight (sInt4 *Data,
+                          CPL_UNUSED int numData,
+                          TDLGroupType * G,
                           TDLGroupType * G1, TDLGroupType * G2,
                           char f_primMiss, sInt4 li_primMiss,
                           char f_secMiss, sInt4 li_secMiss)
@@ -3355,7 +3364,9 @@ static int splitGroup (sInt4 *Data, int numData, TDLGroupType * group,
  * NOTES
  *****************************************************************************
  */
-static void shiftGroup (sInt4 *Data, CPL_UNUSED int numData, TDLGroupType ** Group,
+static void shiftGroup (sInt4 *Data,
+                        CPL_UNUSED int numData,
+                        TDLGroupType ** Group,
                         size_t *NumGroup, char f_primMiss, sInt4 li_primMiss,
                         char f_secMiss, sInt4 li_secMiss, int xFactor)
 {
@@ -3858,7 +3869,7 @@ static int GroupPack (double *Src, sInt4 **Dst, sInt4 numData,
                            * requested. */
    sInt4 *Data;         /* The scaled data. */
    char f_min;          /* Flag saying overallMin is valid. */
-   sInt4 overallMin;    /* The overall min of the scaled data. */
+   sInt4 overallMin = 0;    /* The overall min of the scaled data. */
    sInt4 secMin;        /* The overall min of the 2nd order differences */
    sInt4 li_primMiss = 0; /* The scaled primary missing value */
    sInt4 li_secMiss = 0; /* The scaled secondary missing value */

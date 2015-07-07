@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid_priv.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalgrid_priv.h 29314 2015-06-05 20:21:11Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Prototypes, and definitions for of GDAL scattered data gridder.
@@ -51,6 +51,21 @@ typedef struct
     const float *pafZ;
 } GDALGridExtraParameters;
 
+#ifdef HAVE_SSE_AT_COMPILE_TIME
+int CPLHaveRuntimeSSE();
+
+CPLErr
+GDALGridInverseDistanceToAPower2NoSmoothingNoSearchSSE(
+                                        const void *poOptions,
+                                        GUInt32 nPoints,
+                                        const double *unused_padfX,
+                                        const double *unused_padfY,
+                                        const double *unused_padfZ,
+                                        double dfXPoint, double dfYPoint,
+                                        double *pdfValue,
+                                        void* hExtraParamsIn );
+#endif
+
 #ifdef HAVE_AVX_AT_COMPILE_TIME
 int CPLHaveRuntimeAVX();
 
@@ -66,10 +81,19 @@ CPLErr GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
 #endif
 
 #if defined(__GNUC__) 
+#if defined(__x86_64)
+#define GCC_CPUID(level, a, b, c, d)            \
+  __asm__ ("xchgq %%rbx, %q1\n"                 \
+           "cpuid\n"                            \
+           "xchgq %%rbx, %q1"                   \
+       : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
+       : "0" (level))
+#else
 #define GCC_CPUID(level, a, b, c, d)            \
   __asm__ ("xchgl %%ebx, %1\n"                  \
            "cpuid\n"                            \
            "xchgl %%ebx, %1"                    \
        : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
        : "0" (level))
+#endif
 #endif

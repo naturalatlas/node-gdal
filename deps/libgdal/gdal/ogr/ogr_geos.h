@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geos.h 17469 2009-07-28 18:28:27Z warmerdam $
+ * $Id: ogr_geos.h 27483 2014-06-30 20:49:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions related to support for use of GEOS in OGR.
@@ -33,6 +33,10 @@
 #define OGR_GEOS_H_INCLUDED
 
 #ifdef HAVE_GEOS 
+// To avoid accidental use of non reentrant GEOS API.
+// (check only effective in GEOS >= 3.5)
+#  define GEOS_USE_ONLY_R_API
+
 #  include <geos_c.h>
 #else
 

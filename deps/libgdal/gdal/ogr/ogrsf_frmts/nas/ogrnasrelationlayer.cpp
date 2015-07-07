@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasrelationlayer.cpp 27713 2014-09-21 15:51:47Z jef $
+ * $Id: ogrnasrelationlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASRelationLayer class, a special layer holding all
@@ -33,7 +33,7 @@
 #include "cpl_port.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnasrelationlayer.cpp 27713 2014-09-21 15:51:47Z jef $");
+CPL_CVSID("$Id: ogrnasrelationlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                        OGRNASRelationLayer()                         */
@@ -51,6 +51,7 @@ OGRNASRelationLayer::OGRNASRelationLayer( OGRNASDataSource *poDSIn )
 /*      Establish the layer fields.                                     */
 /* -------------------------------------------------------------------- */
     poFeatureDefn = new OGRFeatureDefn( "ALKIS_beziehungen" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone );
 
@@ -147,7 +148,7 @@ OGRFeature *OGRNASRelationLayer::GetNextFeature()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRNASRelationLayer::GetFeatureCount( int bForce )
+GIntBig OGRNASRelationLayer::GetFeatureCount( int bForce )
 
 {
     if( !bPopulated )

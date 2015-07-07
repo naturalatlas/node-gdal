@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dteddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: dteddataset.cpp 29017 2015-04-25 19:32:11Z rouault $
  *
  * Project:  DTED Translator
  * Purpose:  GDALDataset driver for DTED translator.
@@ -33,7 +33,7 @@
 #include "ogr_spatialref.h"
 #include <algorithm>
 
-CPL_CVSID("$Id: dteddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: dteddataset.cpp 29017 2015-04-25 19:32:11Z rouault $");
 
 CPL_C_START
 void    GDALRegister_DTED(void);
@@ -125,9 +125,9 @@ DTEDRasterBand::DTEDRasterBand( DTEDDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
-                                  void * pImage )
-
+CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff,
+                                   CPL_UNUSED int nBlockYOff,
+                                   void * pImage )
 {
     DTEDDataset *poDTED_DS = (DTEDDataset *) poDS;
     int         nYSize = poDTED_DS->psDTED->nYSize;
@@ -187,9 +187,9 @@ CPLErr DTEDRasterBand::IReadBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr DTEDRasterBand::IWriteBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
-                                  void * pImage )
-
+CPLErr DTEDRasterBand::IWriteBlock( int nBlockXOff,
+                                    CPL_UNUSED int nBlockYOff,
+                                    void * pImage )
 {
     DTEDDataset *poDTED_DS = (DTEDDataset *) poDS;
     GInt16      *panData;
@@ -326,13 +326,16 @@ GDALDataset *DTEDDataset::Open( GDALOpenInfo * poOpenInfo )
     int         i;
     DTEDInfo    *psDTED;
 
-    if (!Identify(poOpenInfo))
+    if (!Identify(poOpenInfo) || poOpenInfo->fpL == NULL )
         return NULL;
 
 /* -------------------------------------------------------------------- */
 /*      Try opening the dataset.                                        */
 /* -------------------------------------------------------------------- */
-    psDTED = DTEDOpen( poOpenInfo->pszFilename, (poOpenInfo->eAccess == GA_Update) ? "rb+" : "rb", TRUE );
+    VSILFILE* fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = NULL;
+    psDTED = DTEDOpenEx( fp, poOpenInfo->pszFilename, 
+                         (poOpenInfo->eAccess == GA_Update) ? "rb+" : "rb", TRUE );
 
     if( psDTED == NULL )
         return( NULL );
@@ -374,95 +377,95 @@ GDALDataset *DTEDDataset::Open( GDALOpenInfo * poOpenInfo )
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_VERTACCURACY_UHL );
     poDS->SetMetadataItem( "DTED_VerticalAccuracy_UHL", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_VERTACCURACY_ACC );
     poDS->SetMetadataItem( "DTED_VerticalAccuracy_ACC", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_SECURITYCODE_UHL );
     poDS->SetMetadataItem( "DTED_SecurityCode_UHL", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_SECURITYCODE_DSI );
     poDS->SetMetadataItem( "DTED_SecurityCode_DSI", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_UNIQUEREF_UHL );
     poDS->SetMetadataItem( "DTED_UniqueRef_UHL", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_UNIQUEREF_DSI );
     poDS->SetMetadataItem( "DTED_UniqueRef_DSI", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_DATA_EDITION );
     poDS->SetMetadataItem( "DTED_DataEdition", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_MATCHMERGE_VERSION );
     poDS->SetMetadataItem( "DTED_MatchMergeVersion", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_MAINT_DATE );
     poDS->SetMetadataItem( "DTED_MaintenanceDate", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_MATCHMERGE_DATE );
     poDS->SetMetadataItem( "DTED_MatchMergeDate", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_MAINT_DESCRIPTION );
     poDS->SetMetadataItem( "DTED_MaintenanceDescription", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_PRODUCER );
     poDS->SetMetadataItem( "DTED_Producer", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_VERTDATUM );
     poDS->SetMetadataItem( "DTED_VerticalDatum", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_HORIZDATUM );
     poDS->SetMetadataItem( "DTED_HorizontalDatum", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_DIGITIZING_SYS );
     poDS->SetMetadataItem( "DTED_DigitizingSystem", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_COMPILATION_DATE );
     poDS->SetMetadataItem( "DTED_CompilationDate", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_HORIZACCURACY );
     poDS->SetMetadataItem( "DTED_HorizontalAccuracy", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_REL_HORIZACCURACY );
     poDS->SetMetadataItem( "DTED_RelHorizontalAccuracy", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_REL_VERTACCURACY );
     poDS->SetMetadataItem( "DTED_RelVerticalAccuracy", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
     
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_ORIGINLAT );
     poDS->SetMetadataItem( "DTED_OriginLatitude", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
     
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_ORIGINLONG );
     poDS->SetMetadataItem( "DTED_OriginLongitude", pszValue );
-    free( pszValue );
+    CPLFree( pszValue );
     
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_NIMA_DESIGNATOR ); 
     poDS->SetMetadataItem( "DTED_NimaDesignator", pszValue ); 
-    free( pszValue );
+    CPLFree( pszValue );
 
     pszValue = DTEDGetMetadata( psDTED, DTEDMD_PARTIALCELL_DSI );
     poDS->SetMetadataItem( "DTED_PartialCellIndicator", pszValue );
-    free( pszValue ); 
+    CPLFree( pszValue );
 
     poDS->SetMetadataItem( GDALMD_AREA_OR_POINT, GDALMD_AOP_POINT );
 
@@ -470,30 +473,39 @@ GDALDataset *DTEDDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Initialize any PAM information.                                 */
 /* -------------------------------------------------------------------- */
     poDS->SetDescription( poOpenInfo->pszFilename );
-    poDS->TryLoadXML();
+    poDS->TryLoadXML( poOpenInfo->GetSiblingFiles() );
 
     // if no SR in xml, try aux
     const char* pszPrj = poDS->GDALPamDataset::GetProjectionRef();
     if( !pszPrj || strlen(pszPrj) == 0 )
     {
-        GDALDataset* poAuxDS = GDALFindAssociatedAuxFile( poOpenInfo->pszFilename, GA_ReadOnly, poDS );
-        if( poAuxDS )
+        int bTryAux = TRUE;
+        if( poOpenInfo->GetSiblingFiles() != NULL &&
+            CSLFindString(poOpenInfo->GetSiblingFiles(), CPLResetExtension(CPLGetFilename(poOpenInfo->pszFilename), "aux")) < 0 &&
+            CSLFindString(poOpenInfo->GetSiblingFiles(), CPLSPrintf("%s.aux", CPLGetFilename(poOpenInfo->pszFilename))) < 0 )
+            bTryAux = FALSE;
+        if( bTryAux )
         {
-            pszPrj = poAuxDS->GetProjectionRef();
-            if( pszPrj && strlen(pszPrj) > 0 )
+            GDALDataset* poAuxDS = GDALFindAssociatedAuxFile( poOpenInfo->pszFilename, GA_ReadOnly, poDS );
+            if( poAuxDS )
             {
-                CPLFree( poDS->pszProjection );
-                poDS->pszProjection = CPLStrdup(pszPrj);
-            }
+                pszPrj = poAuxDS->GetProjectionRef();
+                if( pszPrj && strlen(pszPrj) > 0 )
+                {
+                    CPLFree( poDS->pszProjection );
+                    poDS->pszProjection = CPLStrdup(pszPrj);
+                }
 
-            GDALClose( poAuxDS );
+                GDALClose( poAuxDS );
+            }
         }
     }
 
 /* -------------------------------------------------------------------- */
 /*      Support overviews.                                              */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename,
+                                 poOpenInfo->GetSiblingFiles() );
     return( poDS );
 }
 
@@ -728,7 +740,7 @@ DTEDCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         poSrcBand->RasterIO( GF_Read, 0, iY, psDTED->nXSize, 1, 
                             (void *) (panData + iY * psDTED->nXSize), psDTED->nXSize, 1, 
-                            GDT_Int16, 0, 0 );
+                            GDT_Int16, 0, 0, NULL );
 
         if( pfnProgress && !pfnProgress(0.5 * (iY+1) / (double) psDTED->nYSize, NULL, pProgressData ) )
         {
@@ -905,8 +917,10 @@ void GDALRegister_DTED()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "DTED" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "DTED Elevation Raster" );
+        poDriver->SetMetadataItem( GDAL_DMD_EXTENSIONS, "dt0 dt1 dt2" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
                                    "frmt_various.html#DTED" );
         poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES, 
@@ -921,4 +935,3 @@ void GDALRegister_DTED()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

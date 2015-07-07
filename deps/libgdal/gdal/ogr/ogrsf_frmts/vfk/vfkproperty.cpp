@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkproperty.cpp 25702 2013-03-07 17:17:54Z martinl $
+ * $Id: vfkproperty.cpp 27995 2014-11-21 20:14:07Z rouault $
  *
  * Project:  VFK Reader - Property definition
  * Purpose:  Implements VFKProperty class.
@@ -103,4 +103,28 @@ VFKProperty& VFKProperty::operator=(VFKProperty const& other)
         m_strValue = other.m_strValue;
     }
     return *this;
+}
+
+/*!
+  \brief Get string property
+  
+  \param escape TRUE to escape characters for SQL
+  
+  \return string buffer
+*/
+const char *VFKProperty::GetValueS(bool escape) const
+{
+    size_t ipos;
+
+    if (!escape)
+        return m_strValue.c_str();
+
+    CPLString strValue(m_strValue);
+    ipos = 0;
+    while (std::string::npos != (ipos = strValue.find("'", ipos))) {
+        strValue.replace(ipos, 1, "\'\'", 2);
+        ipos += 2;
+    }
+
+    return CPLSPrintf("%s", strValue.c_str());
 }

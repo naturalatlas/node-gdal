@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrnasdriver.cpp 28131 2014-12-11 22:30:16Z jef $
  *
  * Project:  OGR
  * Purpose:  OGRNASDriver implementation
@@ -32,15 +32,14 @@
 #include "nasreaderp.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrnasdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrnasdriver.cpp 28131 2014-12-11 22:30:16Z jef $");
 
 
 /************************************************************************/
-/*                          ~OGRNASDriver()                           */
+/*                       OGRNASDriverUnload()                           */
 /************************************************************************/
 
-OGRNASDriver::~OGRNASDriver()
-
+static void OGRNASDriverUnload(CPL_UNUSED GDALDriver* poDriver)
 {
     if( NASReader::hMutex != NULL )
         CPLDestroyMutex( NASReader::hMutex );
@@ -48,31 +47,77 @@ OGRNASDriver::~OGRNASDriver()
 }
 
 /************************************************************************/
-/*                              GetName()                               */
+/*                     OGRNASDriverIdentify()                           */
 /************************************************************************/
 
-const char *OGRNASDriver::GetName()
+static int OGRNASDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    return "NAS";
+    if( poOpenInfo->fpL == NULL )
+        return FALSE;
+
+/* -------------------------------------------------------------------- */
+/*      Check for a UTF-8 BOM and skip if found                         */
+/*                                                                      */
+/*      TODO: BOM is variable-length parameter and depends on encoding. */
+/*            Add BOM detection for other encodings.                    */
+/* -------------------------------------------------------------------- */
+
+    // Used to skip to actual beginning of XML data
+    const char* szPtr = (const char*)poOpenInfo->pabyHeader;
+
+    if( ( (unsigned char)szPtr[0] == 0xEF )
+        && ( (unsigned char)szPtr[1] == 0xBB )
+        && ( (unsigned char)szPtr[2] == 0xBF) )
+    {
+        szPtr += 3;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Here, we expect the opening chevrons of NAS tree root element   */
+/* -------------------------------------------------------------------- */
+    if( szPtr[0] != '<' )
+        return FALSE;
+
+    if( !poOpenInfo->TryToIngest(8192) )
+        return FALSE;
+    szPtr = (const char*)poOpenInfo->pabyHeader;
+
+    if( strstr(szPtr,"opengis.net/gml") == NULL )
+        return FALSE;
+
+    char **papszIndicators = CSLTokenizeStringComplex( CPLGetConfigOption( "NAS_INDICATOR", "NAS-Operationen.xsd;NAS-Operationen_optional.xsd;AAA-Fachschema.xsd" ), ";", 0, 0 );
+
+    bool bFound = FALSE;
+    for( int i = 0; papszIndicators[i] && !bFound; i++ )
+    {
+	bFound = strstr( szPtr, papszIndicators[i] ) != NULL;
+    }
+
+    CSLDestroy( papszIndicators );
+
+    return bFound;
 }
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRNASDriver::Open( const char * pszFilename,
-                                   int bUpdate )
+static GDALDataset *OGRNASDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     OGRNASDataSource    *poDS;
 
-    if( bUpdate )
+    if( poOpenInfo->eAccess == GA_Update ||
+        !OGRNASDriverIdentify(poOpenInfo) )
         return NULL;
+
+    VSIFCloseL(poOpenInfo->fpL);
+    poOpenInfo->fpL = NULL;
 
     poDS = new OGRNASDataSource();
 
-    if( !poDS->Open( pszFilename, TRUE )
+    if( !poDS->Open( poOpenInfo->pszFilename )
         || poDS->GetLayerCount() == 0 )
     {
         delete poDS;
@@ -83,20 +128,30 @@ OGRDataSource *OGRNASDriver::Open( const char * pszFilename,
 }
 
 /************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGRNASDriver::TestCapability( CPL_UNUSED const char * pszCap )
-{
-    return FALSE;
-}
-
-/************************************************************************/
 /*                           RegisterOGRNAS()                           */
 /************************************************************************/
 
 void RegisterOGRNAS()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRNASDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "NAS" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "NAS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "NAS - ALKIS" );
+        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "xml" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_nas.html" );
+
+        poDriver->pfnOpen = OGRNASDriverOpen;
+        poDriver->pfnIdentify = OGRNASDriverIdentify;
+        poDriver->pfnUnloadDriver = OGRNASDriverUnload;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }

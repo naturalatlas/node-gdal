@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterlitedataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rasterlitedataset.cpp 29265 2015-05-29 10:49:34Z rouault $
  *
  * Project:  GDAL Rasterlite driver
  * Purpose:  Implement GDAL Rasterlite support using OGR SQLite driver
@@ -34,7 +34,59 @@
 
 #include "rasterlitedataset.h"
 
-CPL_CVSID("$Id: rasterlitedataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rasterlitedataset.cpp 29265 2015-05-29 10:49:34Z rouault $");
+
+
+/************************************************************************/
+/*                        RasterliteOpenSQLiteDB()                      */
+/************************************************************************/
+
+OGRDataSourceH RasterliteOpenSQLiteDB(const char* pszFilename,
+                                      GDALAccess eAccess)
+{
+    const char* const apszAllowedDrivers[] = { "SQLITE", NULL };
+    return (OGRDataSourceH)GDALOpenEx(pszFilename,
+                                      GDAL_OF_VECTOR |
+                                      ((eAccess == GA_Update) ? GDAL_OF_UPDATE : 0),
+                                      apszAllowedDrivers, NULL, NULL);
+}
+
+/************************************************************************/
+/*                       RasterliteGetPixelSizeCond()                   */
+/************************************************************************/
+
+CPLString RasterliteGetPixelSizeCond(double dfPixelXSize,
+                                     double dfPixelYSize,
+                                     const char* pszTablePrefixWithDot)
+{
+    CPLString osCond;
+    osCond.Printf("((%spixel_x_size >= %s AND %spixel_x_size <= %s) AND "
+                   "(%spixel_y_size >= %s AND %spixel_y_size <= %s))",
+                  pszTablePrefixWithDot,
+                  CPLString().FormatC(dfPixelXSize - 1e-15,"%.15f").c_str(),
+                  pszTablePrefixWithDot,
+                  CPLString().FormatC(dfPixelXSize + 1e-15,"%.15f").c_str(),
+                  pszTablePrefixWithDot,
+                  CPLString().FormatC(dfPixelYSize - 1e-15,"%.15f").c_str(),
+                  pszTablePrefixWithDot,
+                  CPLString().FormatC(dfPixelYSize + 1e-15,"%.15f").c_str());
+    return osCond;
+}
+/************************************************************************/
+/*                     RasterliteGetSpatialFilterCond()                 */
+/************************************************************************/
+
+CPLString RasterliteGetSpatialFilterCond(double minx, double miny,
+                                         double maxx, double maxy)
+{
+    CPLString osCond;
+    osCond.Printf("(xmin < %s AND xmax > %s AND ymin < %s AND ymax > %s)",
+                  CPLString().FormatC(maxx,"%.15f").c_str(),
+                  CPLString().FormatC(minx,"%.15f").c_str(),
+                  CPLString().FormatC(maxy,"%.15f").c_str(),
+                  CPLString().FormatC(miny,"%.15f").c_str());
+    return osCond;
+}
 
 /************************************************************************/
 /*                            RasterliteBand()                          */
@@ -84,16 +136,12 @@ CPLErr RasterliteBand::IReadBlock( int nBlockXOff, int nBlockYOff, void * pImage
     osSQL.Printf("SELECT m.geometry, r.raster, m.id, m.width, m.height FROM \"%s_metadata\" AS m, "
                  "\"%s_rasters\" AS r WHERE m.rowid IN "
                  "(SELECT pkid FROM \"idx_%s_metadata_geometry\" "
-                  "WHERE xmin < %.15f AND xmax > %.15f "
-                  "AND ymin < %.15f  AND ymax > %.15f) "
-                 "AND m.pixel_x_size >= %.15f AND m.pixel_x_size <= %.15f AND "
-                 "m.pixel_y_size >= %.15f AND m.pixel_y_size <= %.15f AND r.id = m.id",
-                  poGDS->osTableName.c_str(),
-                  poGDS->osTableName.c_str(),
-                  poGDS->osTableName.c_str(),
-                  maxx, minx, maxy, miny,
-                  poGDS->adfGeoTransform[1] - 1e-15, poGDS->adfGeoTransform[1] + 1e-15,
-                  - poGDS->adfGeoTransform[5] - 1e-15, - poGDS->adfGeoTransform[5] + 1e-15);
+                  "WHERE %s) AND %s AND r.id = m.id",
+                 poGDS->osTableName.c_str(),
+                 poGDS->osTableName.c_str(),
+                 poGDS->osTableName.c_str(),
+                 RasterliteGetSpatialFilterCond(minx, miny, maxx, maxy).c_str(),
+                 RasterliteGetPixelSizeCond(poGDS->adfGeoTransform[1], -poGDS->adfGeoTransform[5], "m.").c_str());
     
     OGRLayerH hSQLLyr = OGR_DS_ExecuteSQL(poGDS->hDS, osSQL.c_str(), NULL, NULL);
     if (hSQLLyr == NULL)
@@ -203,7 +251,9 @@ CPLErr RasterliteBand::IReadBlock( int nBlockXOff, int nBlockYOff, void * pImage
                                               nDataSize, FALSE);
             VSIFCloseL(fp);
             
-            GDALDatasetH hDSTile = GDALOpen(osMemFileName.c_str(), GA_ReadOnly);
+            GDALDatasetH hDSTile = GDALOpenEx(osMemFileName.c_str(),
+                                              GDAL_OF_RASTER | GDAL_OF_INTERNAL,
+                                              NULL, NULL, NULL);
             int nTileBands = 0;
             if (hDSTile && (nTileBands = GDALGetRasterCount(hDSTile)) == 0)
             {
@@ -762,11 +812,9 @@ int RasterliteDataset::GetBlockParams(OGRLayerH hRasterLyr, int nLevel,
     
     osSQL.Printf("SELECT m.geometry, r.raster, m.id "
                  "FROM \"%s_metadata\" AS m, \"%s_rasters\" AS r "
-                 "WHERE m.pixel_x_size >= %.15f AND m.pixel_x_size <= %.15f AND "
-                 "m.pixel_y_size >= %.15f AND m.pixel_y_size <= %.15f AND r.id = m.id",
+                 "WHERE %s AND r.id = m.id",
                  osTableName.c_str(), osTableName.c_str(),
-                 padfXResolutions[nLevel] - 1e-15, padfXResolutions[nLevel] + 1e-15,
-                 padfYResolutions[nLevel] - 1e-15, padfYResolutions[nLevel] + 1e-15);
+                 RasterliteGetPixelSizeCond(padfXResolutions[nLevel],padfYResolutions[nLevel], "m.").c_str());
     
     OGRLayerH hSQLLyr = OGR_DS_ExecuteSQL(hDS, osSQL.c_str(), NULL, NULL);
     if (hSQLLyr == NULL)
@@ -881,10 +929,12 @@ end:
 int RasterliteDataset::Identify(GDALOpenInfo* poOpenInfo)
 {
     if (!EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "MBTILES") &&
+        !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "GPKG") &&
         poOpenInfo->nHeaderBytes >= 1024 &&
         EQUALN((const char*)poOpenInfo->pabyHeader, "SQLite Format 3", 15))
     {
-        return TRUE;
+        // Could be a SQLite/Spatialite file as well
+        return -1;
     }
     else if (EQUALN(poOpenInfo->pszFilename, "RASTERLITE:", 11))
     {
@@ -908,7 +958,7 @@ GDALDataset* RasterliteDataset::Open(GDALOpenInfo* poOpenInfo)
     int bMinXSet = FALSE, bMinYSet = FALSE, bMaxXSet = FALSE, bMaxYSet = FALSE;
     int nReqBands = 0;
 
-    if (!Identify(poOpenInfo))
+    if( Identify(poOpenInfo) == FALSE )
         return NULL;
 
 /* -------------------------------------------------------------------- */
@@ -922,7 +972,7 @@ GDALDataset* RasterliteDataset::Open(GDALOpenInfo* poOpenInfo)
     else
     {
         papszTokens = CSLTokenizeStringComplex( 
-                poOpenInfo->pszFilename + 11, ", ", FALSE, FALSE );
+                poOpenInfo->pszFilename + 11, ",", FALSE, FALSE );
         int nTokens = CSLCount(papszTokens);
         if (nTokens == 0)
         {
@@ -942,22 +992,22 @@ GDALDataset* RasterliteDataset::Open(GDALOpenInfo* poOpenInfo)
             else if (EQUALN(papszTokens[i], "minx=", 5))
             {
                 bMinXSet = TRUE;
-                minx = atof(papszTokens[i] + 5);
+                minx = CPLAtof(papszTokens[i] + 5);
             }
             else if (EQUALN(papszTokens[i], "miny=", 5))
             {
                 bMinYSet = TRUE;
-                miny = atof(papszTokens[i] + 5);
+                miny = CPLAtof(papszTokens[i] + 5);
             }
             else if (EQUALN(papszTokens[i], "maxx=", 5))
             {
                 bMaxXSet = TRUE;
-                maxx = atof(papszTokens[i] + 5);
+                maxx = CPLAtof(papszTokens[i] + 5);
             }
             else if (EQUALN(papszTokens[i], "maxy=", 5))
             {
                 bMaxYSet = TRUE;
-                maxy = atof(papszTokens[i] + 5);
+                maxy = CPLAtof(papszTokens[i] + 5);
             }
             else if (EQUALN(papszTokens[i], "bands=", 6))
             {
@@ -978,7 +1028,7 @@ GDALDataset* RasterliteDataset::Open(GDALOpenInfo* poOpenInfo)
 /*      Open underlying OGR DB                                          */
 /* -------------------------------------------------------------------- */
 
-    OGRDataSourceH hDS = OGROpen(osFileName.c_str(), (poOpenInfo->eAccess == GA_Update) ? TRUE : FALSE, NULL);
+    OGRDataSourceH hDS = RasterliteOpenSQLiteDB(osFileName.c_str(), poOpenInfo->eAccess);
     CPLDebug("RASTERLITE", "SQLite DB Open");
     
     RasterliteDataset* poDS = NULL;
@@ -1349,6 +1399,7 @@ void GDALRegister_Rasterlite()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "Rasterlite" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Rasterlite" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_rec.h 15583 2008-10-23 00:04:33Z warmerdam $
+ * $Id: ogr_rec.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  Epi .REC Translator
  * Purpose:  Definition of classes for OGR .REC support.
@@ -103,20 +103,5 @@ class OGRRECDataSource : public OGRDataSource
     OGRLayer            *GetLayer( int );
     int                 TestCapability( const char * );
 };
-
-/************************************************************************/
-/*                             OGRRECDriver                             */
-/************************************************************************/
-
-class OGRRECDriver : public OGRSFDriver
-{
-  public:
-                ~OGRRECDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-    int         TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_REC_H_INCLUDED */

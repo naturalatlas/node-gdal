@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaldefaultoverviews.cpp 27657 2014-09-10 07:21:17Z rouault $
+ * $Id: gdaldefaultoverviews.cpp 28907 2015-04-14 15:14:32Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Helper code to implement overview and mask support for many 
@@ -32,7 +32,7 @@
 #include "gdal_priv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdaldefaultoverviews.cpp 27657 2014-09-10 07:21:17Z rouault $");
+CPL_CVSID("$Id: gdaldefaultoverviews.cpp 28907 2015-04-14 15:14:32Z rouault $");
 
 /************************************************************************/
 /*                        GDALDefaultOverviews()                        */
@@ -187,7 +187,11 @@ void GDALDefaultOverviews::OverviewScan()
         if( bInitNameIsOVR )
             osOvrFilename = pszInitName;
         else
+        {
+            if( !GDALCanFileAcceptSidecarFile(pszInitName) )
+                return;
             osOvrFilename.Printf( "%s.ovr", pszInitName );
+        }
 
         bExists = CPLCheckForFile( (char *) osOvrFilename.c_str(), 
                                    papszInitSiblingFiles );
@@ -205,9 +209,10 @@ void GDALDefaultOverviews::OverviewScan()
 
         if( bExists )
         {
-            GDALOpenInfo oOpenInfo(osOvrFilename, poDS->GetAccess(),
-                                   papszInitSiblingFiles);
-            poODS = (GDALDataset*) GDALOpenInternal( oOpenInfo, NULL );
+            poODS = (GDALDataset*) GDALOpenEx( osOvrFilename,
+                                               GDAL_OF_RASTER |
+                                               ((poDS->GetAccess() == GA_Update) ? GDAL_OF_UPDATE : 0),
+                                               NULL, NULL, papszInitSiblingFiles );
         }
     }
 
@@ -393,6 +398,49 @@ int GDALOvLevelAdjust( int nOvLevel, int nXSize )
     int nOXSize = (nXSize + nOvLevel - 1) / nOvLevel;
     
     return (int) (0.5 + nXSize / (double) nOXSize);
+}
+
+
+int GDALOvLevelAdjust2( int nOvLevel, int nXSize, int nYSize )
+
+{
+    /* Select the larger dimension to have increased accuracy, but */
+    /* with a slight preference to x even if (a bit) smaller than y */
+    /* in an attempt to behave closer as previous behaviour */
+    if( nXSize >= nYSize / 2 && !(nXSize < nYSize && nXSize < nOvLevel) )
+    {
+        int     nOXSize = (nXSize + nOvLevel - 1) / nOvLevel;
+    
+        return (int) (0.5 + nXSize / (double) nOXSize);
+    }
+    else
+    {
+        int     nOYSize = (nYSize + nOvLevel - 1) / nOvLevel;
+    
+        return (int) (0.5 + nYSize / (double) nOYSize);
+    }
+}
+
+/************************************************************************/
+/*                         GDALComputeOvFactor()                        */
+/************************************************************************/
+
+int GDALComputeOvFactor( int nOvrXSize, int nRasterXSize,
+                         int nOvrYSize, int nRasterYSize )
+{
+    /* Select the larger dimension to have increased accuracy, but */
+    /* with a slight preference to x even if (a bit) smaller than y */
+    /* in an attempt to behave closer as previous behaviour */
+    if( nRasterXSize >= nRasterYSize / 2 )
+    {
+        return (int) 
+                (0.5 + nRasterXSize / (double) nOvrXSize);
+    }
+    else
+    {
+        return (int) 
+                (0.5 + nRasterYSize / (double) nOvrYSize);
+    }
 }
 
 /************************************************************************/
@@ -587,12 +635,15 @@ GDALDefaultOverviews::BuildOverviews(
             if (poOverview == NULL)
                 continue;
  
-            nOvFactor = (int) 
-                (0.5 + poBand->GetXSize() / (double) poOverview->GetXSize());
+            nOvFactor = GDALComputeOvFactor(poOverview->GetXSize(),
+                                             poBand->GetXSize(),
+                                             poOverview->GetYSize(),
+                                             poBand->GetYSize());
 
             if( nOvFactor == panOverviewList[i] 
-                || nOvFactor == GDALOvLevelAdjust( panOverviewList[i], 
-                                                   poBand->GetXSize() ) )
+                || nOvFactor == GDALOvLevelAdjust2( panOverviewList[i], 
+                                                   poBand->GetXSize(), 
+                                                   poBand->GetYSize() ) )
                 panOverviewList[i] *= -1;
         }
 
@@ -712,13 +763,16 @@ GDALDefaultOverviews::BuildOverviews(
                 if (bHasNoData)
                   poOverview->SetNoDataValue(noDataValue);
 
-                nOvFactor = (int) 
-                    (0.5 + poBand->GetXSize() / (double) poOverview->GetXSize());
+                nOvFactor = GDALComputeOvFactor(poOverview->GetXSize(),
+                                                 poBand->GetXSize(),
+                                                 poOverview->GetYSize(),
+                                                 poBand->GetYSize());
 
                 if( nOvFactor == - panOverviewList[i] 
                     || (panOverviewList[i] < 0 &&
-                        nOvFactor == GDALOvLevelAdjust( -panOverviewList[i],
-                                                       poBand->GetXSize() )) )
+                        nOvFactor == GDALOvLevelAdjust2( -panOverviewList[i],
+                                                       poBand->GetXSize(),
+                                                       poBand->GetYSize() )) )
                 {
                     papoOverviewBands[nNewOverviews++] = poOverview;
                     break;
@@ -1034,6 +1088,8 @@ int GDALDefaultOverviews::HaveMaskFile( char ** papszSiblingFiles,
     if( EQUAL(CPLGetExtension(pszBasename),"msk") )
         return FALSE;
 
+    if( !GDALCanFileAcceptSidecarFile(pszBasename) )
+        return FALSE;
     osMskFilename.Printf( "%s.msk", pszBasename );
 
     int bExists = CPLCheckForFile( (char *) osMskFilename.c_str(), 
@@ -1054,9 +1110,10 @@ int GDALDefaultOverviews::HaveMaskFile( char ** papszSiblingFiles,
 /* -------------------------------------------------------------------- */
 /*      Open the file.                                                  */
 /* -------------------------------------------------------------------- */
-    GDALOpenInfo oOpenInfo(osMskFilename, poDS->GetAccess(),
-                           papszInitSiblingFiles);
-    poMaskDS = (GDALDataset *) GDALOpenInternal( oOpenInfo, NULL );
+    poMaskDS = (GDALDataset *) GDALOpenEx( osMskFilename,
+                                           GDAL_OF_RASTER |
+                                           ((poDS->GetAccess() == GA_Update) ? GDAL_OF_UPDATE : 0),
+                                           NULL, NULL, papszInitSiblingFiles );
     CPLAssert( poMaskDS != poDS );
 
     if( poMaskDS == NULL )

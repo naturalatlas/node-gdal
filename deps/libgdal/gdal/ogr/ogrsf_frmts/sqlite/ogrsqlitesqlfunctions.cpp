@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitesqlfunctions.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsqlitesqlfunctions.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Extension SQL functions
@@ -37,6 +37,7 @@
 #include "ogr_geocoding.h"
 
 #include "ogrsqliteregexp.cpp" /* yes the .cpp file, to make it work on Windows with load_extension('gdalXX.dll') */
+#include "swq.h"
 
 #ifndef HAVE_SPATIALITE
 #define MINIMAL_SPATIAL_FUNCTIONS
@@ -334,6 +335,9 @@ void OGR2SQLITE_ogr_geocode_set_result(sqlite3_context* pContext,
             if( eType == OFTInteger )
                 sqlite3_result_int(pContext,
                                    poFeature->GetFieldAsInteger(nIdx));
+            else if( eType == OFTInteger64 )
+                sqlite3_result_int64(pContext,
+                                   poFeature->GetFieldAsInteger64(nIdx));
             else if( eType == OFTReal )
                 sqlite3_result_double(pContext,
                                       poFeature->GetFieldAsDouble(nIdx));
@@ -426,7 +430,7 @@ static double OGR2SQLITE_GetValAsDouble(sqlite3_value* val, int* pbGotVal)
 
         case SQLITE_INTEGER:
             if( pbGotVal ) *pbGotVal = TRUE;
-            return sqlite3_value_int64(val);
+            return (double) sqlite3_value_int64(val);
 
         default:
             if( pbGotVal ) *pbGotVal = FALSE;
@@ -439,7 +443,8 @@ static double OGR2SQLITE_GetValAsDouble(sqlite3_value* val, int* pbGotVal)
 /************************************************************************/
 
 static OGRGeometry* OGR2SQLITE_GetGeom(CPL_UNUSED sqlite3_context* pContext,
-                                       CPL_UNUSED int argc, sqlite3_value** argv,
+                                       CPL_UNUSED int argc,
+                                       sqlite3_value** argv,
                                        int* pnSRSId)
 {
     if( sqlite3_value_type (argv[0]) != SQLITE_BLOB )
@@ -1038,6 +1043,32 @@ void OGR2SQLITE_ST_MakePoint(sqlite3_context* pContext,
 
 #endif // #ifdef MINIMAL_SPATIAL_FUNCTIONS
 
+
+/************************************************************************/
+/*                     OGRSQLITE_hstore_get_value()                     */
+/************************************************************************/
+
+static
+void OGRSQLITE_hstore_get_value(sqlite3_context* pContext,
+                                CPL_UNUSED int argc,
+                                sqlite3_value** argv)
+{
+    if( sqlite3_value_type (argv[0]) != SQLITE_TEXT ||
+        sqlite3_value_type (argv[1]) != SQLITE_TEXT )
+    {
+        sqlite3_result_null (pContext);
+        return;
+    }
+
+    const char* pszHStore = (const char*)sqlite3_value_text(argv[0]);
+    const char* pszSearchedKey = (const char*)sqlite3_value_text(argv[1]);
+    char* pszValue = OGRHStoreGetValue(pszHStore, pszSearchedKey);
+    if( pszValue != NULL )
+        sqlite3_result_text( pContext, pszValue, -1, CPLFree );
+    else
+        sqlite3_result_null( pContext );
+}
+
 /************************************************************************/
 /*                   OGRSQLiteRegisterSQLFunctions()                    */
 /************************************************************************/
@@ -1088,6 +1119,10 @@ void* OGRSQLiteRegisterSQLFunctions(sqlite3* hDB)
     // Custom and undocumented function, not sure I'll keep it.
     sqlite3_create_function(hDB, "Transform3", 3, SQLITE_ANY, pData,
                             OGR2SQLITE_Transform, NULL, NULL);
+
+    // HSTORE functions
+    sqlite3_create_function(hDB, "hstore_get_value", 2, SQLITE_ANY, NULL,
+                            OGRSQLITE_hstore_get_value, NULL, NULL);
 
 #ifdef MINIMAL_SPATIAL_FUNCTIONS
     /* Check if spatialite is available */

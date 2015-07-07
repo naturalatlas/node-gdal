@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57reader.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: s57reader.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements S57Reader class.
@@ -36,7 +36,7 @@
 #include <string>
 #include <fstream>
 
-CPL_CVSID("$Id: s57reader.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: s57reader.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
@@ -348,7 +348,7 @@ OGRFeature *S57Reader::NextPendingMultiPoint()
 /*                             SetOptions()                             */
 /************************************************************************/
 
-void S57Reader::SetOptions( char ** papszOptionsIn )
+int S57Reader::SetOptions( char ** papszOptionsIn )
 
 {
     const char * pszOptionValue;
@@ -357,22 +357,27 @@ void S57Reader::SetOptions( char ** papszOptionsIn )
     papszOptions = CSLDuplicate( papszOptionsIn );
 
     pszOptionValue = CSLFetchNameValue( papszOptions, S57O_SPLIT_MULTIPOINT );
-    if( pszOptionValue != NULL && !EQUAL(pszOptionValue,"OFF") )
+    if( pszOptionValue != NULL && CSLTestBoolean(pszOptionValue) )
         nOptionFlags |= S57M_SPLIT_MULTIPOINT;
     else
         nOptionFlags &= ~S57M_SPLIT_MULTIPOINT;
 
     pszOptionValue = CSLFetchNameValue( papszOptions, S57O_ADD_SOUNDG_DEPTH );
-    if( pszOptionValue != NULL && !EQUAL(pszOptionValue,"OFF") )
+    if( pszOptionValue != NULL && CSLTestBoolean(pszOptionValue) )
         nOptionFlags |= S57M_ADD_SOUNDG_DEPTH;
     else
         nOptionFlags &= ~S57M_ADD_SOUNDG_DEPTH;
 
-    CPLAssert( ! (nOptionFlags & S57M_ADD_SOUNDG_DEPTH)
-               || (nOptionFlags & S57M_SPLIT_MULTIPOINT) );
+    if( (nOptionFlags & S57M_ADD_SOUNDG_DEPTH) &&
+        !(nOptionFlags & S57M_SPLIT_MULTIPOINT) )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Inconsistent options : ADD_SOUNDG_DEPTH should only be enabled if SPLIT_MULTIPOINT is also enabled");
+        return FALSE;
+    }
 
     pszOptionValue = CSLFetchNameValue( papszOptions, S57O_LNAM_REFS );
-    if( pszOptionValue != NULL && !EQUAL(pszOptionValue,"OFF") )
+    if( pszOptionValue != NULL && CSLTestBoolean(pszOptionValue) )
         nOptionFlags |= S57M_LNAM_REFS;
     else
         nOptionFlags &= ~S57M_LNAM_REFS;
@@ -387,7 +392,7 @@ void S57Reader::SetOptions( char ** papszOptionsIn )
 
     pszOptionValue = CSLFetchNameValue(papszOptions, 
                                        S57O_PRESERVE_EMPTY_NUMBERS);
-    if( pszOptionValue != NULL && !EQUAL(pszOptionValue,"OFF") )
+    if( pszOptionValue != NULL && CSLTestBoolean(pszOptionValue) )
         nOptionFlags |= S57M_PRESERVE_EMPTY_NUMBERS;
     else
         nOptionFlags &= ~S57M_PRESERVE_EMPTY_NUMBERS;
@@ -411,11 +416,12 @@ void S57Reader::SetOptions( char ** papszOptionsIn )
         nOptionFlags &= ~S57M_RETURN_DSID;
 
     pszOptionValue = CSLFetchNameValue( papszOptions, S57O_RECODE_BY_DSSI );
-    if( pszOptionValue != NULL && !EQUAL(pszOptionValue,"OFF") )
+    if( pszOptionValue != NULL && CSLTestBoolean(pszOptionValue) )
         nOptionFlags |= S57M_RECODE_BY_DSSI;
     else
         nOptionFlags &= ~S57M_RECODE_BY_DSSI;
 
+    return TRUE;
 }
 
 /************************************************************************/

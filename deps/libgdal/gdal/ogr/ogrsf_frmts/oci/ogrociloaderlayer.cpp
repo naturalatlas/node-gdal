@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrociloaderlayer.cpp 22346 2011-05-10 03:02:15Z warmerdam $
+ * $Id: ogrociloaderlayer.cpp 28430 2015-02-06 20:57:41Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCILoaderLayer class.  This implements
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrociloaderlayer.cpp 22346 2011-05-10 03:02:15Z warmerdam $");
+CPL_CVSID("$Id: ogrociloaderlayer.cpp 28430 2015-02-06 20:57:41Z rouault $");
 
 /************************************************************************/
 /*                         OGROCILoaderLayer()                          */
@@ -54,6 +54,7 @@ OGROCILoaderLayer::OGROCILoaderLayer( OGROCIDataSource *poDSIn,
     nLDRMode = LDRM_UNKNOWN;
 
     poFeatureDefn = new OGRFeatureDefn( pszTableName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     
     pszGeomName = CPLStrdup( pszGeomColIn );
@@ -190,6 +191,11 @@ void OGROCILoaderLayer::WriteLoaderHeader()
             VSIFPrintf( fpLoader, "    \"%s\" INTEGER EXTERNAL", 
                         poFldDefn->GetNameRef() );
         }
+        else if( poFldDefn->GetType() == OFTInteger )
+        {
+            VSIFPrintf( fpLoader, "    \"%s\" LONGINTEGER EXTERNAL", 
+                        poFldDefn->GetNameRef() );
+        }
         else if( poFldDefn->GetType() == OFTReal )
         {
             VSIFPrintf( fpLoader, "    \"%s\" FLOAT EXTERNAL", 
@@ -256,7 +262,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureStreamMode( OGRFeature *poFeature )
 /* -------------------------------------------------------------------- */
 /*      Write the FID.                                                  */
 /* -------------------------------------------------------------------- */
-    VSIFPrintf( fpLoader, " %ld|", poFeature->GetFID() );
+    VSIFPrintf( fpLoader, " " CPL_FRMT_GIB "|", poFeature->GetFID() );
 
 /* -------------------------------------------------------------------- */
 /*      Set the geometry                                                */
@@ -324,6 +330,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureStreamMode( OGRFeature *poFeature )
         if( !poFeature->IsFieldSet( i ) )
         {
             if( poFldDefn->GetType() != OFTInteger 
+                && poFldDefn->GetType() != OFTInteger64
                 && poFldDefn->GetType() != OFTReal )
                 VSIFPrintf( fpLoader, "%04d", 0 );
             continue;
@@ -340,6 +347,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureStreamMode( OGRFeature *poFeature )
         nLineLen += strlen(pszStrValue);
 
         if( poFldDefn->GetType() == OFTInteger 
+            || poFldDefn->GetType() == OFTInteger64
             || poFldDefn->GetType() == OFTReal )
         {
             if( poFldDefn->GetWidth() > 0 && bPreservePrecision
@@ -392,7 +400,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureVariableMode( OGRFeature *poFeature )
 /*      Write the FID.                                                  */
 /* -------------------------------------------------------------------- */
     oLine.Append( "00000000" );
-    oLine.Appendf( 32, " %d|", poFeature->GetFID() );
+    oLine.Appendf( 32, " " CPL_FRMT_GIB "|", poFeature->GetFID() );
 
 /* -------------------------------------------------------------------- */
 /*      Set the geometry                                                */
@@ -446,6 +454,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureVariableMode( OGRFeature *poFeature )
         if( !poFeature->IsFieldSet( i ) )
         {
             if( poFldDefn->GetType() != OFTInteger 
+                && poFldDefn->GetType() != OFTInteger64
                 && poFldDefn->GetType() != OFTReal )
                 oLine.Append( "0000" );
             else
@@ -456,6 +465,7 @@ OGRErr OGROCILoaderLayer::WriteFeatureVariableMode( OGRFeature *poFeature )
         const char *pszStrValue = poFeature->GetFieldAsString(i);
 
         if( poFldDefn->GetType() == OFTInteger 
+            || poFldDefn->GetType() == OFTInteger64
             || poFldDefn->GetType() == OFTReal )
         {
             if( poFldDefn->GetWidth() > 0 && bPreservePrecision
@@ -518,10 +528,10 @@ OGRErr OGROCILoaderLayer::WriteFeatureBinaryMode( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGROCILoaderLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGROCILoaderLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     WriteLoaderHeader();
@@ -582,7 +592,7 @@ int OGROCILoaderLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGROCILoaderLayer::GetFeatureCount( int bForce )
+GIntBig OGROCILoaderLayer::GetFeatureCount( int bForce )
 
 {
     return iNextFIDToWrite - 1;

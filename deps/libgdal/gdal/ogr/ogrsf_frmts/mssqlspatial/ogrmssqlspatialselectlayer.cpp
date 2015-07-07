@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialselectlayer.cpp 27760 2014-09-28 18:31:18Z tamas $
+ * $Id: ogrmssqlspatialselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLSpatialSelectLayer class, layer access to the results
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 27760 2014-09-28 18:31:18Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 /************************************************************************/
 /*                     OGRMSSQLSpatialSelectLayer()                     */
 /************************************************************************/
@@ -186,7 +186,7 @@ void OGRMSSQLSpatialSelectLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRMSSQLSpatialSelectLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRMSSQLSpatialSelectLayer::GetFeature( GIntBig nFeatureId )
 
 {
     return OGRMSSQLSpatialLayer::GetFeature( nFeatureId );
@@ -224,7 +224,7 @@ OGRErr OGRMSSQLSpatialSelectLayer::GetExtent(OGREnvelope *, int )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRMSSQLSpatialSelectLayer::GetFeatureCount( int bForce )
+GIntBig OGRMSSQLSpatialSelectLayer::GetFeatureCount( int bForce )
 
 {
     return OGRMSSQLSpatialLayer::GetFeatureCount( bForce );

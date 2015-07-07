@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbtable.cpp 27727 2014-09-23 18:41:36Z rouault $
+ * $Id: filegdbtable.cpp 29330 2015-06-14 12:11:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB tables
@@ -87,6 +87,7 @@ void FileGDBTable::Init()
     osFilename = "";
     fpTable = NULL;
     fpTableX = NULL;
+    nFileSize = 0;
     memset(&sCurField, 0, sizeof(sCurField));
     bError = FALSE;
     nCurRow = -1;
@@ -110,12 +111,16 @@ void FileGDBTable::Init()
     osObjectIdColName = "";
     nChSaved = -1;
     pabyTablXBlockMap = NULL;
+    nCountBlocksBeforeIBlockIdx = 0;
+    nCountBlocksBeforeIBlockValue = 0;
     bHasReadGDBIndexes = FALSE;
     nOffsetFieldDesc = 0;
     nFieldDescLength = 0;
     nTablxOffsetSize = 0;
     anFeatureOffsets.resize(0);
     nOffsetHeaderEnd = 0;
+    bHasDeletedFeaturesListed = FALSE;
+    bIsDeleted = FALSE;
 }
 
 /************************************************************************/
@@ -266,8 +271,7 @@ static void ReadVarUInt64NoCheck(GByte*& pabyIter, GUIntBig& nOutVal)
 /*                      IsLikelyFeatureAtOffset()                       */
 /************************************************************************/
 
-int FileGDBTable::IsLikelyFeatureAtOffset(vsi_l_offset nFileSize,
-                                          vsi_l_offset nOffset,
+int FileGDBTable::IsLikelyFeatureAtOffset(vsi_l_offset nOffset,
                                           GUInt32* pnSize,
                                           int* pbDeletedRecord)
 {
@@ -445,11 +449,17 @@ int FileGDBTable::IsLikelyFeatureAtOffset(vsi_l_offset nFileSize,
 /*                      GuessFeatureLocations()                         */
 /************************************************************************/
 
+#define MARK_DELETED(x)  ((x) | (((GIntBig)1) << 63))
+#define IS_DELETED(x)    (((x) & (((GIntBig)1) << 63)) != 0)
+#define GET_OFFSET(x)    ((x) & ~(((GIntBig)1) << 63))
+
 int FileGDBTable::GuessFeatureLocations()
 {
-    vsi_l_offset nFileSize;
     VSIFSeekL(fpTable, 0, SEEK_END);
     nFileSize = VSIFTellL(fpTable);
+    
+    int bReportDeletedFeatures =
+        CSLTestBoolean(CPLGetConfigOption("OPENFILEGDB_REPORT_DELETED_FEATURES", "NO"));
 
     vsi_l_offset nOffset = 40 + nFieldDescLength;
     
@@ -480,7 +490,7 @@ int FileGDBTable::GuessFeatureLocations()
     {
         GUInt32 nSize;
         int bDeletedRecord;
-        if( !IsLikelyFeatureAtOffset(nFileSize, nOffset, &nSize, &bDeletedRecord) )
+        if( !IsLikelyFeatureAtOffset(nOffset, &nSize, &bDeletedRecord) )
         {
             nOffset ++;
         }
@@ -490,8 +500,16 @@ int FileGDBTable::GuessFeatureLocations()
                      nOffset, nSize);*/
             if( bDeletedRecord )
             {
-                nInvalidRecords ++;
-                anFeatureOffsets.push_back(0);
+                if( bReportDeletedFeatures )
+                {
+                    bHasDeletedFeaturesListed = TRUE;
+                    anFeatureOffsets.push_back(MARK_DELETED(nOffset));
+                }
+                else
+                {
+                    nInvalidRecords ++;
+                    anFeatureOffsets.push_back(0);
+                }
             }
             else
                 anFeatureOffsets.push_back(nOffset);
@@ -501,10 +519,13 @@ int FileGDBTable::GuessFeatureLocations()
     nTotalRecordCount = (int) anFeatureOffsets.size();
     if( nTotalRecordCount - nInvalidRecords > nValidRecordCount )
     {
-        CPLError(CE_Warning, CPLE_AppDefined,
-                 "More features found (%d) than declared number of valid features (%d). "
-                 "So deleted features will likely be reported.",
-                 nTotalRecordCount - nInvalidRecords, nValidRecordCount);
+        if( !bHasDeletedFeaturesListed )
+        {
+            CPLError(CE_Warning, CPLE_AppDefined,
+                    "More features found (%d) than declared number of valid features (%d). "
+                    "So deleted features will likely be reported.",
+                    nTotalRecordCount - nInvalidRecords, nValidRecordCount);
+        }
         nValidRecordCount = nTotalRecordCount - nInvalidRecords;
     }
 
@@ -570,7 +591,7 @@ int FileGDBTable::ReadTableXHeader()
             returnErrorIf(VSIFReadL( pabyTablXBlockMap, nSizeInBytes, 1, fpTableX ) != 1 );
             /* returnErrorIf(nMagic2 == 0 ); */
 
-            // Check that the map is consistant with n1024Blocks
+            // Check that the map is consistent with n1024Blocks
             GUInt32 nCountBlocks = 0;
             for(GUInt32 i=0;i<nBitsForBlockMap;i++)
                 nCountBlocks += TEST_BIT(pabyTablXBlockMap, i) != 0;
@@ -584,15 +605,25 @@ int FileGDBTable::ReadTableXHeader()
 /*                                 Open()                               */
 /************************************************************************/
 
-int FileGDBTable::Open(const char* pszFilename)
+int FileGDBTable::Open(const char* pszFilename,
+                       const char* pszLayerName)
 {
     const int errorRetValue = FALSE;
     CPLAssert(fpTable == NULL);
 
     osFilename = pszFilename;
+    CPLString osFilenameWithLayerName(osFilename);
+    if( pszLayerName )
+        osFilenameWithLayerName += CPLSPrintf(" (layer %s)", pszLayerName);
 
     fpTable = VSIFOpenL( pszFilename, "rb" );
-    returnErrorIf(fpTable == NULL );
+    if( fpTable == NULL )
+    {
+        CPLError(CE_Failure, CPLE_OpenFailed,
+                 "Cannot open %s: %s", osFilenameWithLayerName.c_str(),
+                 VSIStrerror(errno));
+        return FALSE;
+    }
 
     // Read .gdtable file header
     GByte abyHeader[40];
@@ -600,12 +631,13 @@ int FileGDBTable::Open(const char* pszFilename)
     nValidRecordCount = GetInt32(abyHeader + 4, 0);
     returnErrorIf(nValidRecordCount < 0 );
 
+    CPLString osTableXName;
     if( nValidRecordCount > 0 &&
         !CSLTestBoolean(CPLGetConfigOption("OPENFILEGDB_IGNORE_GDBTABLX", "FALSE")) )
     {
-        const char* pszTableXName = CPLFormFilename(CPLGetPath(pszFilename),
+        osTableXName = CPLFormFilename(CPLGetPath(pszFilename),
                                         CPLGetBasename(pszFilename), "gdbtablx");
-        fpTableX = VSIFOpenL( pszTableXName, "rb" );
+        fpTableX = VSIFOpenL( osTableXName, "rb" );
         if( fpTableX == NULL )
         {
             const char* pszIgnoreGDBTablXAbsence =
@@ -614,7 +646,7 @@ int FileGDBTable::Open(const char* pszFilename)
             {
                 CPLError(CE_Warning, CPLE_AppDefined, "%s could not be found. "
                         "Trying to guess feature locations, but this might fail or "
-                        "return incorrect results", pszTableXName);
+                        "return incorrect results", osTableXName.c_str());
             }
             else if( !CSLTestBoolean(pszIgnoreGDBTablXAbsence) )
             {
@@ -627,10 +659,35 @@ int FileGDBTable::Open(const char* pszFilename)
 
     if( fpTableX != NULL )
     {
-        returnErrorIf(nValidRecordCount > nTotalRecordCount );
+        if(nValidRecordCount > nTotalRecordCount )
+        {
+            if( CSLTestBoolean(CPLGetConfigOption("OPENFILEGDB_USE_GDBTABLE_RECORD_COUNT", "FALSE")) )
+            {
+                /* Potentially unsafe. See #5842 */
+                CPLDebug("OpenFileGDB", "%s: nTotalRecordCount (was %d) forced to nValidRecordCount=%d",
+                        osFilenameWithLayerName.c_str(),
+                        nTotalRecordCount, nValidRecordCount);
+                nTotalRecordCount = nValidRecordCount;
+            }
+            else
+            {
+                /* By default err on the safe side */
+                CPLError(CE_Warning, CPLE_AppDefined,
+                        "File %s declares %d valid records, but %s declares "
+                        "only %d total records. Using that later value for safety "
+                        "(this possibly ignoring features). "
+                        "You can also try setting OPENFILEGDB_IGNORE_GDBTABLX=YES to "
+                        "completely ignore the .gdbtablx file (but possibly retrieving "
+                        "deleted features), or set OPENFILEGDB_USE_GDBTABLE_RECORD_COUNT=YES "
+                        "(but that setting can potentially cause crashes)",
+                        osFilenameWithLayerName.c_str(), nValidRecordCount,
+                        osTableXName.c_str(), nTotalRecordCount);
+                nValidRecordCount = nTotalRecordCount;
+            }
+        }
 
 #ifdef DEBUG_VERBOSE
-        if( nTotalRecordCount != nValidRecordCount )
+        else if( nTotalRecordCount != nValidRecordCount )
         {
             CPLDebug("OpenFileGDB", "%s: nTotalRecordCount=%d nValidRecordCount=%d",
                     pszFilename,
@@ -754,11 +811,47 @@ int FileGDBTable::Open(const char* pszFilename)
                     break;
             }
 
+            OGRField sDefault;
+            sDefault.Set.nMarker1 = OGRUnsetMarker;
+            sDefault.Set.nMarker2 = OGRUnsetMarker;
             if( (flags & 4) != 0 )
             {
                 /* Default value */
                 /* Found on PreNIS.gdb/a0000000d.gdbtable */
                 returnErrorIf(nRemaining < defaultValueLength );
+                if( defaultValueLength )
+                {
+                    if( eType == FGFT_STRING )
+                    {
+                        sDefault.String = (char*)CPLMalloc(defaultValueLength+1);
+                        memcpy(sDefault.String, pabyIter, defaultValueLength);
+                        sDefault.String[defaultValueLength] = 0;
+                    }
+                    else if( eType == FGFT_INT16 && defaultValueLength == 2 )
+                    {
+                        sDefault.Integer = GetInt16(pabyIter, 0);
+                        sDefault.Set.nMarker2 = 0;
+                    }
+                    else if( eType == FGFT_INT32 && defaultValueLength == 4 )
+                    {
+                        sDefault.Integer = GetInt32(pabyIter, 0);
+                        sDefault.Set.nMarker2 = 0;
+                    }
+                    else if( eType == FGFT_FLOAT32 && defaultValueLength == 4 )
+                    {
+                        sDefault.Real = GetFloat32(pabyIter, 0);
+                    }
+                    else if( eType == FGFT_FLOAT64 && defaultValueLength == 8 )
+                    {
+                        sDefault.Real = GetFloat64(pabyIter, 0);
+                    }
+                    else if( eType == FGFT_DATETIME && defaultValueLength == 8 )
+                    {
+                        double dfVal = GetFloat64(pabyIter, 0);
+                        FileGDBDoubleDateToOGRDate(dfVal, &sDefault);
+                    }
+                }
+
                 pabyIter += defaultValueLength;
                 nRemaining -= defaultValueLength;
             }
@@ -776,6 +869,7 @@ int FileGDBTable::Open(const char* pszFilename)
             poField->eType = eType;
             poField->bNullable = (flags & 1);
             poField->nMaxWidth = nMaxWidth;
+            poField->sDefault = sDefault;
             apoFields.push_back(poField);
         }
         else
@@ -838,40 +932,44 @@ int FileGDBTable::Open(const char* pszFilename)
             nRemaining --;
             poField->bHasM = (abyGeomFlags & 2) != 0;
             poField->bHasZ = (abyGeomFlags & 4) != 0;
-            returnErrorIf(
-                    nRemaining < (GUInt32)(sizeof(double) * ( 8 + (poField->bHasM + poField->bHasZ) * 3 )) );
 
-#define READ_DOUBLE(field) do { \
-    field = GetFloat64(pabyIter, 0); \
-    pabyIter += sizeof(double); \
-    nRemaining -= sizeof(double); } while(0)
-
-            READ_DOUBLE(poField->dfXOrigin);
-            READ_DOUBLE(poField->dfYOrigin);
-            READ_DOUBLE(poField->dfXYScale);
-
-            if( poField->bHasM )
+            if( eType == FGFT_GEOMETRY || abyGeomFlags > 0 )
             {
-                READ_DOUBLE(poField->dfMOrigin);
-                READ_DOUBLE(poField->dfMScale);
-            }
+                returnErrorIf(
+                        nRemaining < (GUInt32)(sizeof(double) * ( 4 + (( eType == FGFT_GEOMETRY ) ? 4 : 0) + (poField->bHasM + poField->bHasZ) * 3 )) );
 
-            if( poField->bHasZ )
-            {
-                READ_DOUBLE(poField->dfZOrigin);
-                READ_DOUBLE(poField->dfZScale);
-            }
+    #define READ_DOUBLE(field) do { \
+        field = GetFloat64(pabyIter, 0); \
+        pabyIter += sizeof(double); \
+        nRemaining -= sizeof(double); } while(0)
 
-            READ_DOUBLE(poField->dfXYTolerance);
+                READ_DOUBLE(poField->dfXOrigin);
+                READ_DOUBLE(poField->dfYOrigin);
+                READ_DOUBLE(poField->dfXYScale);
 
-            if( poField->bHasM )
-            {
-                READ_DOUBLE(poField->dfMTolerance);
-            }
+                if( poField->bHasM )
+                {
+                    READ_DOUBLE(poField->dfMOrigin);
+                    READ_DOUBLE(poField->dfMScale);
+                }
 
-            if( poField->bHasZ )
-            {
-                READ_DOUBLE(poField->dfZTolerance);
+                if( poField->bHasZ )
+                {
+                    READ_DOUBLE(poField->dfZOrigin);
+                    READ_DOUBLE(poField->dfZScale);
+                }
+
+                READ_DOUBLE(poField->dfXYTolerance);
+
+                if( poField->bHasM )
+                {
+                    READ_DOUBLE(poField->dfMTolerance);
+                }
+
+                if( poField->bHasZ )
+                {
+                    READ_DOUBLE(poField->dfZTolerance);
+                }
             }
 
             if( eType == FGFT_RASTER )
@@ -889,6 +987,10 @@ int FileGDBTable::Open(const char* pszFilename)
                 READ_DOUBLE(poField->dfYMax);
 
                 /* Purely empiric logic ! */
+                /* Well, it seems that in practice there are 1 or 3 doubles */
+                /* here. When there are 3, the first one is zmin and the second */
+                /* one is zmax */
+                int nCountDoubles = 0;
                 while( TRUE )
                 {
                     returnErrorIf(nRemaining < 5 );
@@ -900,6 +1002,7 @@ int FileGDBTable::Open(const char* pszFilename)
                         pabyIter += 5;
                         nRemaining -= 5;
                         returnErrorIf(nRemaining < (GUInt32)(nToSkip * 8) );
+                        nCountDoubles += nToSkip;
                         pabyIter += nToSkip * 8;
                         nRemaining -= nToSkip * 8;
                         break;
@@ -909,8 +1012,11 @@ int FileGDBTable::Open(const char* pszFilename)
                         returnErrorIf(nRemaining < 8 );
                         pabyIter += 8;
                         nRemaining -= 8;
+                        nCountDoubles ++;
                     }
                 }
+                if( nCountDoubles == 3 )
+                    poField->bHas3D = TRUE;
             }
         }
 
@@ -1002,8 +1108,12 @@ vsi_l_offset FileGDBTable::GetOffsetInTableForRow(int iRow)
     const int errorRetValue = 0;
     returnErrorIf(iRow < 0 || iRow >= nTotalRecordCount );
 
+    bIsDeleted = FALSE;
     if( fpTableX == NULL )
-        return anFeatureOffsets[iRow];
+    {
+        bIsDeleted = IS_DELETED(anFeatureOffsets[iRow]);
+        return GET_OFFSET(anFeatureOffsets[iRow]);
+    }
 
     if( pabyTablXBlockMap != NULL )
     {
@@ -1014,8 +1124,22 @@ vsi_l_offset FileGDBTable::GetOffsetInTableForRow(int iRow)
         if( TEST_BIT(pabyTablXBlockMap, iBlock) == 0 )
             return 0;
 
-        for(int i=0;i<iBlock;i++)
-            nCountBlocksBefore += TEST_BIT(pabyTablXBlockMap, i) != 0;
+        // In case of sequential reading, optimization to avoid recomputing
+        // the number of blocks since the beginning of the map
+        if( iBlock >= nCountBlocksBeforeIBlockIdx )
+        {
+            nCountBlocksBefore = nCountBlocksBeforeIBlockValue;
+            for(int i=nCountBlocksBeforeIBlockIdx;i<iBlock;i++)
+                nCountBlocksBefore += TEST_BIT(pabyTablXBlockMap, i) != 0;
+        }
+        else
+        {
+            nCountBlocksBefore = 0;
+            for(int i=0;i<iBlock;i++)
+                nCountBlocksBefore += TEST_BIT(pabyTablXBlockMap, i) != 0;
+        }
+        nCountBlocksBeforeIBlockIdx = iBlock;
+        nCountBlocksBeforeIBlockValue = nCountBlocksBefore;
         int iCorrectedRow = nCountBlocksBefore * 1024 + (iRow % 1024);
         VSIFSeekL(fpTableX, 16 + nTablxOffsetSize * iCorrectedRow, SEEK_SET);
     }
@@ -1047,6 +1171,46 @@ vsi_l_offset FileGDBTable::GetOffsetInTableForRow(int iRow)
 }
 
 /************************************************************************/
+/*                      GetAndSelectNextNonEmptyRow()                   */
+/************************************************************************/
+
+int FileGDBTable::GetAndSelectNextNonEmptyRow(int iRow)
+{
+    const int errorRetValue = -1;
+    returnErrorAndCleanupIf(iRow < 0 || iRow >= nTotalRecordCount, nCurRow = -1 );
+
+    while( iRow < nTotalRecordCount )
+    {
+        if( pabyTablXBlockMap != NULL && (iRow % 1024) == 0 )
+        {
+            int iBlock = iRow / 1024;
+            if( TEST_BIT(pabyTablXBlockMap, iBlock) == 0 )
+            {
+                int nBlocks = (nTotalRecordCount+1023)/1024;
+                do
+                {
+                    iBlock ++;
+                }
+                while( iBlock < nBlocks &&
+                    TEST_BIT(pabyTablXBlockMap, iBlock) == 0 );
+
+                iRow = iBlock * 1024;
+                if( iRow >= nTotalRecordCount )
+                    return -1;
+            }
+        }
+
+        if( SelectRow(iRow) )
+            return iRow;
+        if( HasGotError() )
+            return -1;
+        iRow ++;
+    }
+
+    return -1;
+}
+
+/************************************************************************/
 /*                            SelectRow()                               */
 /************************************************************************/
 
@@ -1070,6 +1234,11 @@ int FileGDBTable::SelectRow(int iRow)
                 VSIFReadL(abyBuffer, 4, 1, fpTable) != 1, nCurRow = -1 );
 
         nRowBlobLength = GetUInt32(abyBuffer, 0);
+        if( bIsDeleted )
+        {
+            nRowBlobLength = (GUInt32)(-(int)nRowBlobLength);
+        }
+
         if( !(apoFields.size() == 0 && nRowBlobLength == 0) )
         {
             /* CPLDebug("OpenFileGDB", "nRowBlobLength = %u", nRowBlobLength); */
@@ -1079,6 +1248,18 @@ int FileGDBTable::SelectRow(int iRow)
 
             if( nRowBlobLength > nBufferMaxSize )
             {
+                /* For suspicious row blob length, check if we don't go beyond file size */
+                if( nRowBlobLength > 100 * 1024 * 1024 )
+                {
+                    if( nFileSize == 0 )
+                    {
+                        VSIFSeekL(fpTable, 0, SEEK_END);
+                        nFileSize = VSIFTellL(fpTable);
+                        VSIFSeekL(fpTable, nOffsetTable + 4, SEEK_SET);
+                    }
+                    returnErrorAndCleanupIf( nOffsetTable + 4 + nRowBlobLength > nFileSize, nCurRow = -1 );
+                }
+
                 GByte* pabyNewBuffer = (GByte*) VSIRealloc( pabyBuffer,
                                 nRowBlobLength + ZEROES_AFTER_END_OF_BUFFER );
                 returnErrorAndCleanupIf(pabyNewBuffer == NULL, nCurRow = -1 );
@@ -1123,8 +1304,9 @@ int FileGDBDoubleDateToOGRDate(double dfVal, OGRField* psField)
     psField->Date.Day = (GByte)brokendowntime.tm_mday;
     psField->Date.Hour = (GByte)brokendowntime.tm_hour;
     psField->Date.Minute = (GByte)brokendowntime.tm_min;
-    psField->Date.Second = (GByte)brokendowntime.tm_sec;
+    psField->Date.Second = (float)brokendowntime.tm_sec;
     psField->Date.TZFlag = 0;
+    psField->Date.Reserved = 0;
 
     return TRUE;
 }
@@ -1798,6 +1980,8 @@ FileGDBField::FileGDBField(FileGDBTable* poParent) :
     poParent(poParent), eType(FGFT_UNDEFINED), bNullable(FALSE),
     nMaxWidth(0), poIndex(NULL)
 {
+    sDefault.Set.nMarker1 = OGRUnsetMarker;
+    sDefault.Set.nMarker2 = OGRUnsetMarker;
 }
 
 /************************************************************************/
@@ -1806,6 +1990,10 @@ FileGDBField::FileGDBField(FileGDBTable* poParent) :
 
 FileGDBField::~FileGDBField()
 {
+    if( eType == FGFT_STRING &&
+        !(sDefault.Set.nMarker1 == OGRUnsetMarker &&
+          sDefault.Set.nMarker2 == OGRUnsetMarker) )
+        CPLFree(sDefault.String);
 }
 
 
@@ -1838,7 +2026,7 @@ FileGDBGeomField::FileGDBGeomField(FileGDBTable* poParent) :
     dfXOrigin(0.0), dfYOrigin(0.0), dfXYScale(0.0), dfMOrigin(0.0),
     dfMScale(0.0), dfZOrigin(0.0), dfZScale(0.0), dfXYTolerance(0.0),
     dfMTolerance(0.0), dfZTolerance(0.0), dfXMin(0.0), dfYMin(0.0),
-    dfXMax(0.0), dfYMax(0.0)
+    dfXMax(0.0), dfYMax(0.0), bHas3D(FALSE)
 {
 }
 

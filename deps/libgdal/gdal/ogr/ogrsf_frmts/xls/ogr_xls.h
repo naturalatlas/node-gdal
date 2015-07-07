@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xls.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_xls.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  XLS Translator
  * Purpose:  Definition of classes for OGR .xls driver.
@@ -70,7 +70,7 @@ class OGRXLSLayer : public OGRLayer
     virtual OGRFeature *        GetNextFeature();
 
     virtual OGRFeatureDefn *    GetLayerDefn();
-    virtual int                 GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig             GetFeatureCount( int bForce = TRUE );
 
     virtual const char         *GetName() { return pszName; }
     virtual OGRwkbGeometryType  GetGeomType() { return wkbNone; }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntffilereader.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ntffilereader.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  NTF Translator
  * Purpose:  NTFFileReader class implementation.
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: ntffilereader.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ntffilereader.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 static int DefaultNTFRecordGrouper( NTFFileReader *, NTFRecord **,
                                     NTFRecord * );
@@ -421,7 +421,7 @@ int NTFFileReader::Open( const char * pszFilenameIn )
 /* -------------------------------------------------------------------- */
 /*      Classify the product type.                                      */
 /* -------------------------------------------------------------------- */
-    if( EQUALN(pszProduct,"LAND-LINE",9) && atof(pszPVName+5) < 1.3 )
+    if( EQUALN(pszProduct,"LAND-LINE",9) && CPLAtof(pszPVName+5) < 1.3 )
         nProduct = NPC_LANDLINE;
     else if( EQUALN(pszProduct,"LAND-LINE",9) )
         nProduct = NPC_LANDLINE99;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_sparsefile.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_sparsefile.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Implementation of sparse file virtual io driver.
@@ -38,7 +38,7 @@
 #  include <wce_errno.h>
 #endif
 
-CPL_CVSID("$Id: cpl_vsil_sparsefile.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_sparsefile.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 class SFRegion { 
 public:
@@ -291,7 +291,9 @@ size_t VSISparseFileHandle::Read( void * pBuffer, size_t nSize, size_t nCount )
 /*                               Write()                                */
 /************************************************************************/
 
-size_t VSISparseFileHandle::Write( CPL_UNUSED const void * pBuffer, CPL_UNUSED size_t nSize, CPL_UNUSED size_t nCount )
+size_t VSISparseFileHandle::Write( CPL_UNUSED const void * pBuffer,
+                                   CPL_UNUSED size_t nSize,
+                                   CPL_UNUSED size_t nCount )
 {
     errno = EBADF;
     return 0;

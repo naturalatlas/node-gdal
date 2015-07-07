@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsi_virtual.h 27720 2014-09-21 17:58:47Z goatbar $
+ * $Id: cpl_vsi_virtual.h 28493 2015-02-16 09:49:16Z rouault $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Declarations for classes related to the virtual filesystem.
@@ -36,6 +36,7 @@
 
 #include "cpl_vsi.h"
 #include "cpl_string.h"
+#include "cpl_multiproc.h"
 
 #if defined(WIN32CE)
 #  include "cpl_wince.h"
@@ -113,7 +114,8 @@ public:
     static VSIFilesystemHandler *GetHandler( const char * );
     static void InstallHandler( const std::string& osPrefix, 
                                 VSIFilesystemHandler * );
-    static void RemoveHandler( const std::string& osPrefix );
+    /* RemoveHandler is never defined. */
+    /* static void RemoveHandler( const std::string& osPrefix ); */
 };
 
 
@@ -161,7 +163,7 @@ class VSIArchiveReader
 class VSIArchiveFilesystemHandler : public VSIFilesystemHandler 
 {
 protected:
-    void* hMutex;
+    CPLMutex* hMutex;
     /* We use a cache that contains the list of files containes in a VSIArchive file as */
     /* unarchive.c is quite inefficient in listing them. This speeds up access to VSIArchive files */
     /* containing ~1000 files like a CADRG product */
@@ -188,8 +190,11 @@ public:
     virtual int FindFileInArchive(const char* archiveFilename, const char* fileInArchiveName, const VSIArchiveEntry** archiveEntry);
 };
 
-VSIVirtualHandle* VSICreateBufferedReaderHandle(VSIVirtualHandle* poBaseHandle);
+VSIVirtualHandle CPL_DLL *VSICreateBufferedReaderHandle(VSIVirtualHandle* poBaseHandle);
+VSIVirtualHandle* VSICreateBufferedReaderHandle(VSIVirtualHandle* poBaseHandle,
+                                                const GByte* pabyBeginningContent,
+                                                vsi_l_offset nSheatFileSize);
 VSIVirtualHandle* VSICreateCachedFile( VSIVirtualHandle* poBaseHandle, size_t nChunkSize = 32768, size_t nCacheSize = 0 );
-VSIVirtualHandle* VSICreateGZipWritable( VSIVirtualHandle* poBaseHandle, int bRegularZLibIn, int bAutoCloseBaseHandle );
+VSIVirtualHandle CPL_DLL *VSICreateGZipWritable( VSIVirtualHandle* poBaseHandle, int bRegularZLibIn, int bAutoCloseBaseHandle );
 
 #endif /* ndef CPL_VSI_VIRTUAL_H_INCLUDED */

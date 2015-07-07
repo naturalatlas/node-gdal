@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogridblayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogridblayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBLayer class, code shared between
@@ -33,7 +33,7 @@
 #include "ogr_idb.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogridblayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogridblayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                            OGRIDBLayer()                            */
@@ -98,6 +98,7 @@ CPLErr OGRIDBLayer::BuildFeatureDefn( const char *pszLayerName,
 
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     const ITTypeInfo * poInfo = poCurr->RowType();
     int    nRawColumns = poInfo->ColumnCount();
 
@@ -389,7 +390,7 @@ OGRFeature *OGRIDBLayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRIDBLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRIDBLayer::GetFeature( GIntBig nFeatureId )
 
 {
     /* This should be implemented directly! */

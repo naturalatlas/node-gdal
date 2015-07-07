@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeoselectlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgeoselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoSelectLayer class, layer access to the results
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "ogr_pgeo.h"
 
-CPL_CVSID("$Id: ogrpgeoselectlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgeoselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRPGeoSelectLayer()                        */
@@ -149,7 +149,7 @@ void OGRPGeoSelectLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRPGeoSelectLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRPGeoSelectLayer::GetFeature( GIntBig nFeatureId )
 
 {
     return OGRPGeoLayer::GetFeature( nFeatureId );
@@ -174,7 +174,7 @@ int OGRPGeoSelectLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRPGeoSelectLayer::GetFeatureCount( int bForce )
+GIntBig OGRPGeoSelectLayer::GetFeatureCount( int bForce )
 
 {
     return OGRPGeoLayer::GetFeatureCount( bForce );

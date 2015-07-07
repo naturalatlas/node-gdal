@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlgeometryvalidator.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrmssqlgeometryvalidator.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLGeometryValidator class to create valid SqlGeometries.
@@ -30,7 +30,7 @@
 #include "cpl_conv.h"
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlgeometryvalidator.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrmssqlgeometryvalidator.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                   OGRMSSQLGeometryValidator()                        */

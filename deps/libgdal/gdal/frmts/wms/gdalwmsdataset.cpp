@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdalwmsdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -219,10 +219,10 @@ CPLErr GDALWMSDataset::Initialize(CPLXMLNode *config) {
                 {
                     if ((ulx[0] != '\0') && (uly[0] != '\0') && (lrx[0] != '\0') && (lry[0] != '\0'))
                     {
-                        m_data_window.m_x0 = atof(ulx);
-                        m_data_window.m_y0 = atof(uly);
-                        m_data_window.m_x1 = atof(lrx);
-                        m_data_window.m_y1 = atof(lry);
+                        m_data_window.m_x0 = CPLAtof(ulx);
+                        m_data_window.m_y0 = CPLAtof(uly);
+                        m_data_window.m_x1 = CPLAtof(lrx);
+                        m_data_window.m_y1 = CPLAtof(lry);
                     }
                     else
                     {
@@ -541,7 +541,12 @@ CPLErr GDALWMSDataset::Initialize(CPLXMLNode *config) {
 /************************************************************************/
 /*                             IRasterIO()                              */
 /************************************************************************/
-CPLErr GDALWMSDataset::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer, int bsx, int bsy, GDALDataType bdt, int band_count, int *band_map, int pixel_space, int line_space, int band_space) {
+CPLErr GDALWMSDataset::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy,
+                                 void *buffer, int bsx, int bsy, GDALDataType bdt,
+                                 int band_count, int *band_map,
+                                 GSpacing nPixelSpace, GSpacing nLineSpace,
+                                 GSpacing nBandSpace,
+                                 GDALRasterIOExtraArg* psExtraArg) {
     CPLErr ret;
 
     if (rw != GF_Read) return CE_Failure;
@@ -555,7 +560,8 @@ CPLErr GDALWMSDataset::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, 
     m_hint.m_overview = -1;
     m_hint.m_valid = true;
     //	printf("[%p] GDALWMSDataset::IRasterIO(x0: %d, y0: %d, sx: %d, sy: %d, bsx: %d, bsy: %d, band_count: %d, band_map: %p)\n", this, x0, y0, sx, sy, bsx, bsy, band_count, band_map);
-    ret = GDALDataset::IRasterIO(rw, x0, y0, sx, sy, buffer, bsx, bsy, bdt, band_count, band_map, pixel_space, line_space, band_space);
+    ret = GDALDataset::IRasterIO(rw, x0, y0, sx, sy, buffer, bsx, bsy, bdt, band_count, band_map,
+                                 nPixelSpace, nLineSpace, nBandSpace, psExtraArg);
     m_hint.m_valid = false;
 
     return ret;
@@ -601,8 +607,11 @@ CPLErr GDALWMSDataset::SetGeoTransform(CPL_UNUSED double *gt) {
 CPLErr GDALWMSDataset::AdviseRead(int x0, int y0,
                                   int sx, int sy,
                                   int bsx, int bsy,
-                                  GDALDataType bdt, CPL_UNUSED int band_count, CPL_UNUSED int *band_map,
+                                  GDALDataType bdt,
+                                  CPL_UNUSED int band_count,
+                                  CPL_UNUSED int *band_map,
                                   char **options) {
+//    printf("AdviseRead(%d, %d, %d, %d)\n", x0, y0, sx, sy);
     if (m_offline_mode || !m_use_advise_read) return CE_None;
     if (m_cache == NULL) return CE_Failure;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: cpgdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Polarimetric Workstation
  * Purpose:  Convair PolGASP data (.img/.hdr format). 
@@ -32,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: cpgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: cpgdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_CPG(void);
@@ -496,14 +496,14 @@ GDALDataset* CPGDataset::InitializeType1Or2Dataset( const char *pszFilename )
                  EQUAL(papszTokens[0],"reference") &&
                  EQUAL(papszTokens[1],"north") )
         {
-            dfnorth = atof(papszTokens[2]);
+            dfnorth = CPLAtof(papszTokens[2]);
             iUTMParamsFound++;
         }
         else if ( ( CSLCount( papszTokens ) >= 3 ) &&
                EQUAL(papszTokens[0],"reference") &&
                EQUAL(papszTokens[1],"east") )
         {
-            dfeast = atof(papszTokens[2]);
+            dfeast = CPLAtof(papszTokens[2]);
             iUTMParamsFound++;
         }  
         else if ( ( CSLCount( papszTokens ) >= 5 ) &&
@@ -547,24 +547,24 @@ GDALDataset* CPGDataset::InitializeType1Or2Dataset( const char *pszFilename )
         }
         else if( EQUAL(papszTokens[0],"altitude") )
         {
-            dfaltitude = atof(papszTokens[1]);
+            dfaltitude = CPLAtof(papszTokens[1]);
             iGeoParamsFound++;
         }
         else if( EQUAL(papszTokens[0],"near_srd") )
         {
-            dfnear_srd = atof(papszTokens[1]);
+            dfnear_srd = CPLAtof(papszTokens[1]);
             iGeoParamsFound++;
         }
 
         else if( EQUAL(papszTokens[0],"sample_size") )
         {
-            dfsample_size = atof(papszTokens[1]);
+            dfsample_size = CPLAtof(papszTokens[1]);
             iGeoParamsFound++;
             iUTMParamsFound++;
         }
         else if( EQUAL(papszTokens[0],"sample_size_az") )
         {
-            dfsample_size_az = atof(papszTokens[1]);
+            dfsample_size_az = CPLAtof(papszTokens[1]);
             iGeoParamsFound++;
             iUTMParamsFound++;
         }
@@ -884,16 +884,16 @@ GDALDataset *CPGDataset::InitializeType3Dataset( const char *pszFilename )
                  EQUAL(papszTokens[0],"project") &&
                  EQUAL(papszTokens[1],"origin:") )
         {
-            dfeast = atof(papszTokens[2]);
-            dfnorth = atof(papszTokens[3]);
+            dfeast = CPLAtof(papszTokens[2]);
+            dfnorth = CPLAtof(papszTokens[3]);
             iUTMParamsFound+=2;
         }
         else if ( ( CSLCount( papszTokens ) >= 4 ) &&
                EQUAL(papszTokens[0],"file") &&
                EQUAL(papszTokens[1],"start:"))
         {
-            dfOffsetX =  atof(papszTokens[2]);
-            dfOffsetY = atof(papszTokens[3]);
+            dfOffsetX =  CPLAtof(papszTokens[2]);
+            dfOffsetY = CPLAtof(papszTokens[3]);
             iUTMParamsFound+=2;
         }  
         else if ( ( CSLCount( papszTokens ) >= 6 ) &&
@@ -902,8 +902,8 @@ GDALDataset *CPGDataset::InitializeType3Dataset( const char *pszFilename )
                EQUAL(papszTokens[2],"on") &&
                EQUAL(papszTokens[3],"ground:"))
         {
-            dfxsize = atof(papszTokens[4]);
-            dfysize = atof(papszTokens[5]);
+            dfxsize = CPLAtof(papszTokens[4]);
+            dfysize = CPLAtof(papszTokens[5]);
             iUTMParamsFound+=2;
  
         }   
@@ -1264,9 +1264,9 @@ Im(SVV) = byte(10) ysca/127
 
 */
 
-CPLErr SIRC_QSLCRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
-
+CPLErr SIRC_QSLCRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                        int nBlockYOff,
+                                        void * pImage )
 {
     int	   offset, nBytesPerSample=10;
     GByte  *pabyRecord;
@@ -1417,8 +1417,9 @@ CPG_STOKESRasterBand::~CPG_STOKESRasterBand()
 
 /* Convert from Stokes to Covariance representation */
 
-CPLErr CPG_STOKESRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
+CPLErr CPG_STOKESRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                         int nBlockYOff,
+                                         void * pImage )
 
 {
     int iPixel;
@@ -1689,6 +1690,7 @@ void GDALRegister_CPG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "CPG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Convair PolGASP" );
 

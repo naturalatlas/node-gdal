@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr2kmlgeometry.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr2kmlgeometry.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGR -> KML geometries writer.
@@ -110,23 +110,23 @@ static void MakeKMLCoordinate( char *pszTarget,
         if( x == (int) x && y == (int) y )
             sprintf( pszTarget, "%d,%d", (int) x, (int) y );
         else if( fabs(x) < 370 && fabs(y) < 370 )
-            sprintf( pszTarget, "%.16g,%.16g", x, y );
+            CPLsprintf( pszTarget, "%.16g,%.16g", x, y );
         else if( fabs(x) > 100000000.0 || fabs(y) > 100000000.0 )
-            sprintf( pszTarget, "%.16g,%.16g", x, y );
+            CPLsprintf( pszTarget, "%.16g,%.16g", x, y );
         else
-            sprintf( pszTarget, "%.3f,%.3f", x, y );
+            CPLsprintf( pszTarget, "%.3f,%.3f", x, y );
     }
     else
     {
         if( x == (int) x && y == (int) y && z == (int) z )
             sprintf( pszTarget, "%d,%d,%d", (int) x, (int) y, (int) z );
         else if( fabs(x) < 370 && fabs(y) < 370 )
-            sprintf( pszTarget, "%.16g,%.16g,%.16g", x, y, z );
+            CPLsprintf( pszTarget, "%.16g,%.16g,%.16g", x, y, z );
         else if( fabs(x) > 100000000.0 || fabs(y) > 100000000.0 
                  || fabs(z) > 100000000.0 )
-            sprintf( pszTarget, "%.16g,%.16g,%.16g", x, y, z );
+            CPLsprintf( pszTarget, "%.16g,%.16g,%.16g", x, y, z );
         else
-            sprintf( pszTarget, "%.3f,%.3f,%.3f", x, y, z );
+            CPLsprintf( pszTarget, "%.3f,%.3f,%.3f", x, y, z );
     }
 #endif
 }
@@ -171,7 +171,7 @@ static void AppendCoordinateList( OGRLineString *poLine,
 
 {
     char szCoordinate[256]= { 0 };
-    int b3D = (poLine->getGeometryType() & wkb25DBit);
+    int b3D = wkbHasZ(poLine->getGeometryType());
 
     *pnLength += strlen(*ppszText + *pnLength);
     _GrowBuffer( *pnLength + 20, ppszText, pnMaxLength );

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrelasticlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrelasticlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -35,7 +35,7 @@
 #include "ogr_p.h"
 #include <json.h> // JSON-C
 
-CPL_CVSID("$Id: ogrelasticlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrelasticlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGRElasticLayer()                          */
@@ -65,6 +65,7 @@ OGRElasticLayer::OGRElasticLayer(CPL_UNUSED const char* pszFilename,
     }
 
     poFeatureDefn = new OGRFeatureDefn(pszLayerName);
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     poSRS = poSRSIn;
@@ -174,10 +175,10 @@ CPLString OGRElasticLayer::BuildMap() {
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRElasticLayer::CreateFeature(OGRFeature *poFeature) {
+OGRErr OGRElasticLayer::ICreateFeature(OGRFeature *poFeature) {
 
     // Check to see if the user has elected to only write out the mapping file
     // This method will only write out one layer from the vector file in cases where there are multiple layers
@@ -338,6 +339,8 @@ int OGRElasticLayer::TestCapability(const char * pszCap) {
 
     else if (EQUAL(pszCap, OLCSequentialWrite))
         return TRUE;
+    else if (EQUAL(pszCap, OLCCreateField))
+        return TRUE;
     else
         return FALSE;
 }
@@ -346,7 +349,7 @@ int OGRElasticLayer::TestCapability(const char * pszCap) {
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRElasticLayer::GetFeatureCount(CPL_UNUSED int bForce) {
+GIntBig OGRElasticLayer::GetFeatureCount(CPL_UNUSED int bForce) {
     CPLError(CE_Failure, CPLE_NotSupported,
             "Cannot read features when writing a Elastic file");
     return 0;

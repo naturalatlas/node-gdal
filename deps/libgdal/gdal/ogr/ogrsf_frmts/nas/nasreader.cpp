@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreader.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: nasreader.cpp 29051 2015-04-29 17:18:37Z rouault $
  *
  * Project:  NAS Reader
  * Purpose:  Implementation of NASReader class.
@@ -49,7 +49,7 @@
 #include "nasreaderp.h"
 #include "cpl_conv.h"
 
-void *NASReader::hMutex = NULL;
+CPLMutex *NASReader::hMutex = NULL;
 
 /************************************************************************/
 /*                          CreateGMLReader()                           */
@@ -854,7 +854,9 @@ int NASReader::SaveClasses( const char *pszFile )
 /*      looking for schema information.                                 */
 /************************************************************************/
 
-int NASReader::PrescanForSchema( int bGetExtents, CPL_UNUSED int bAnalyzeSRSPerFeature )
+int NASReader::PrescanForSchema( int bGetExtents,
+                                 CPL_UNUSED int bAnalyzeSRSPerFeature,
+                                 CPL_UNUSED int bOnlyDetectSRS )
 {
     GMLFeature  *poFeature;
 
@@ -887,6 +889,7 @@ int NASReader::PrescanForSchema( int bGetExtents, CPL_UNUSED int bAnalyzeSRSPerF
             if( papsGeometry[0] != NULL )
             {
                 poGeometry = (OGRGeometry*) OGR_G_CreateFromGMLTree(papsGeometry[0]);
+                poGeometry = ConvertGeometry(poGeometry);
             }
 
             if( poGeometry != NULL )
@@ -895,7 +898,7 @@ int NASReader::PrescanForSchema( int bGetExtents, CPL_UNUSED int bAnalyzeSRSPerF
                 OGREnvelope sEnvelope;
 
                 if( poClass->GetGeometryPropertyCount() == 0 )
-                    poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown ) );
+                    poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown, -1, TRUE ) );
 
                 OGRwkbGeometryType eGType = (OGRwkbGeometryType)
                     poClass->GetGeometryProperty(0)->GetType();
@@ -911,8 +914,8 @@ int NASReader::PrescanForSchema( int bGetExtents, CPL_UNUSED int bAnalyzeSRSPerF
                     eGType = wkbNone;
 
                 poClass->GetGeometryProperty(0)->SetType(
-                    (int) OGRMergeGeometryTypes(
-                        eGType, poGeometry->getGeometryType() ) );
+                    (int) OGRMergeGeometryTypesEx(
+                        eGType, poGeometry->getGeometryType(), TRUE ) );
 
                 // merge extents.
                 poGeometry->getEnvelope( &sEnvelope );
@@ -1020,8 +1023,7 @@ void NASReader::CheckForRelations( const char *pszElement,
         if( EQUALN(pszHRef,"urn:adv:oid:", 12 ) )
         {
             poFeature->AddOBProperty( pszElement, pszHRef );
-            if( ppszCurField && *ppszCurField )
-                CPLFree( *ppszCurField );
+            CPLFree( *ppszCurField );
             *ppszCurField = CPLStrdup( pszHRef + 12 );
         }
 
@@ -1077,4 +1079,21 @@ int NASReader::SetFilteredClassName(const char* pszClassName)
     CPLFree(m_pszFilteredClassName);
     m_pszFilteredClassName = (pszClassName) ? CPLStrdup(pszClassName) : NULL;
     return TRUE;
+}
+
+/************************************************************************/
+/*                         ConvertGeometry()                            */
+/************************************************************************/
+
+OGRGeometry*  NASReader::ConvertGeometry(OGRGeometry* poGeom)
+{
+    //poGeom = OGRGeometryFactory::forceToLineString( poGeom, false );
+    if( poGeom != NULL )
+    {
+        if( wkbFlatten(poGeom->getGeometryType()) == wkbMultiLineString )
+        {
+            poGeom = OGRGeometryFactory::forceTo(poGeom, wkbLineString);
+        }
+    }
+    return poGeom;
 }

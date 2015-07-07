@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgrassdatasource.cpp 28291 2015-01-05 14:45:07Z martinl $
+ * $Id: ogrgrassdatasource.cpp 28534 2015-02-21 14:34:39Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGRASSDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrgrassdatasource.cpp 28291 2015-01-05 14:45:07Z martinl $");
+CPL_CVSID("$Id: ogrgrassdatasource.cpp 28534 2015-02-21 14:34:39Z rouault $");
 
 #if GRASS_VERSION_MAJOR  >= 7
 #define G__setenv                G_setenv_nogisrc
@@ -160,7 +160,7 @@ int OGRGRASSDataSource::Open( const char * pszNewName, int bUpdate,
         static char* gisbaseEnv = NULL;
         const char *gisbase = GRASS_GISBASE;
         CPLError( CE_Warning, CPLE_AppDefined, "GRASS warning: GISBASE "
-                "enviroment variable was not set, using:\n%s", gisbase );
+                "environment variable was not set, using:\n%s", gisbase );
         char buf[2000];
         snprintf ( buf, sizeof(buf), "GISBASE=%s", gisbase );
         buf[sizeof(buf)-1] = '\0';
@@ -231,10 +231,10 @@ int OGRGRASSDataSource::Open( const char * pszNewName, int bUpdate,
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 OGRLayer *
-OGRGRASSDataSource::CreateLayer( const char * pszLayerName,
+OGRGRASSDataSource::ICreateLayer( const char * pszLayerName,
                                  OGRSpatialReference *poSRS,
                                  OGRwkbGeometryType eType,
                                  char ** papszOptions )

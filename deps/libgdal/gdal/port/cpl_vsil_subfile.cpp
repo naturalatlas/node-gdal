@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_subfile.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_subfile.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Implementation of subfile virtual IO functions.
@@ -37,7 +37,7 @@
 #  include <wce_errno.h>
 #endif
 
-CPL_CVSID("$Id: cpl_vsil_subfile.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_subfile.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -407,6 +407,7 @@ int VSISubFileFilesystemHandler::Mkdir( CPL_UNUSED const char * pszPathname,
 /************************************************************************/
 
 int VSISubFileFilesystemHandler::Rmdir( CPL_UNUSED const char * pszPathname )
+
 {
     errno = EACCES;
     return -1;

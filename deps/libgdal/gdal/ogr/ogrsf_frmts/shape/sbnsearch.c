@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sbnsearch.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: sbnsearch.c 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  Shapelib
  * Purpose:  Implementation of search in ESRI SBN spatial index.
@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-SHP_CVSID("$Id: sbnsearch.c 27044 2014-03-16 23:41:27Z rouault $")
+SHP_CVSID("$Id: sbnsearch.c 28039 2014-11-30 18:24:59Z rouault $")
 
 #ifndef TRUE
 #  define TRUE 1
@@ -328,7 +328,7 @@ SBNSearchHandle SBNOpenDiskTree( const char* pszSBNFilename,
         if ((nBinStart > 0 && nNodeShapeCount == 0) ||
             nNodeShapeCount < 0 || nNodeShapeCount > nShapeCount)
         {
-            hSBN->sHooks.Error( "Inconsistant shape count in bin" );
+            hSBN->sHooks.Error( "Inconsistent shape count in bin" );
             SBNCloseDiskTree(hSBN);
             return NULL;
         }
@@ -637,7 +637,7 @@ static int SBNSearchDiskInternal( SearchStruct* psSearch,
             {
                 free(psNode->pabyShapeDesc);
                 psNode->pabyShapeDesc = NULL;
-                hSBN->sHooks.Error( "Inconsistant shape count for bin" );
+                hSBN->sHooks.Error( "Inconsistent shape count for bin" );
                 return FALSE;
             }
 
@@ -684,7 +684,7 @@ static int SBNSearchDiskInternal( SearchStruct* psSearch,
 #ifdef sanity_checks
 /* -------------------------------------------------------------------- */
 /*      Those tests only check that the shape bounding box in the bin   */
-/*      are consistant (self-consistant and consistant with the node    */
+/*      are consistent (self-consistent and consistent with the node    */
 /*      they are attached to). They are optional however (as far as     */
 /*      the safety of runtime is concerned at least).                   */
 /* -------------------------------------------------------------------- */
@@ -737,7 +737,7 @@ static int SBNSearchDiskInternal( SearchStruct* psSearch,
         {
             free(psNode->pabyShapeDesc);
             psNode->pabyShapeDesc = NULL;
-            hSBN->sHooks.Error( "Inconsistant shape count for bin" );
+            hSBN->sHooks.Error( "Inconsistent shape count for bin" );
             return FALSE;
         }
 

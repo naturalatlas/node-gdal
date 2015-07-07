@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gifdataset.cpp 28284 2015-01-03 20:08:36Z rouault $
+ * $Id: gifdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  GIF Driver
  * Purpose:  Implement GDAL GIF Support using libungif code.  
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "gifabstractdataset.h"
 
-CPL_CVSID("$Id: gifdataset.cpp 28284 2015-01-03 20:08:36Z rouault $");
+CPL_CVSID("$Id: gifdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_GIF(void);
@@ -53,7 +53,6 @@ CPL_C_END
 static const int InterlacedOffset[] = { 0, 4, 2, 1 }; 
 static const int InterlacedJumps[] = { 8, 8, 4, 2 };  
 
-static int VSIGIFReadFunc( GifFileType *, GifByteType *, int);
 static int VSIGIFWriteFunc( GifFileType *, const GifByteType *, int );
 
 /************************************************************************/
@@ -87,28 +86,12 @@ class GIFDataset : public GIFAbstractDataset
 /* ==================================================================== */
 /************************************************************************/
 
-class GIFRasterBand : public GDALPamRasterBand
+class GIFRasterBand : public GIFAbstractRasterBand
 {
-    friend class GIFDataset;
-
-    SavedImage	*psImage;
-
-    int		*panInterlaceMap;
-    
-    GDALColorTable *poColorTable;
-
-    int		nTransparentColor;
-
   public:
 
                    GIFRasterBand( GIFDataset *, int, SavedImage *, int );
-    virtual       ~GIFRasterBand();
-
     virtual CPLErr IReadBlock( int, int, void * );
-
-    virtual double GetNoDataValue( int *pbSuccess = NULL );
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual GDALColorTable *GetColorTable();
 };
 
 /************************************************************************/
@@ -116,128 +99,19 @@ class GIFRasterBand : public GDALPamRasterBand
 /************************************************************************/
 
 GIFRasterBand::GIFRasterBand( GIFDataset *poDS, int nBand, 
-                              SavedImage *psSavedImage, int nBackground )
+                              SavedImage *psSavedImage, int nBackground ) :
+                GIFAbstractRasterBand(poDS, nBand, psSavedImage, nBackground, FALSE)
 
 {
-    this->poDS = poDS;
-    this->nBand = nBand;
-
-    eDataType = GDT_Byte;
-
-    nBlockXSize = poDS->nRasterXSize;
-    nBlockYSize = 1;
-
-    psImage = psSavedImage;
-
-    poColorTable = NULL;
-    panInterlaceMap = NULL;
-    nTransparentColor = 0;
-
-    if (psImage == NULL)
-        return;
-
-/* -------------------------------------------------------------------- */
-/*      Setup interlacing map if required.                              */
-/* -------------------------------------------------------------------- */
-    panInterlaceMap = NULL;
-    if( psImage->ImageDesc.Interlace )
-    {
-        int	i, j, iLine = 0;
-
-        panInterlaceMap = (int *) CPLCalloc(poDS->nRasterYSize,sizeof(int));
-
-	for (i = 0; i < 4; i++)
-        {
-	    for (j = InterlacedOffset[i]; 
-                 j < poDS->nRasterYSize;
-                 j += InterlacedJumps[i]) 
-                panInterlaceMap[j] = iLine++;
-        }
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Check for transparency.  We just take the first graphic         */
-/*      control extension block we find, if any.                        */
-/* -------------------------------------------------------------------- */
-    int	iExtBlock;
-
-    nTransparentColor = -1;
-    for( iExtBlock = 0; iExtBlock < psImage->ExtensionBlockCount; iExtBlock++ )
-    {
-        unsigned char *pExtData;
-
-        if( psImage->ExtensionBlocks[iExtBlock].Function != 0xf9 ||
-            psImage->ExtensionBlocks[iExtBlock].ByteCount < 4  )
-            continue;
-
-        pExtData = (unsigned char *) psImage->ExtensionBlocks[iExtBlock].Bytes;
-
-        /* check if transparent color flag is set */
-        if( !(pExtData[0] & 0x1) )
-            continue;
-
-        nTransparentColor = pExtData[3];
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Setup colormap.                                                 */
-/* -------------------------------------------------------------------- */
-    ColorMapObject 	*psGifCT = psImage->ImageDesc.ColorMap;
-    if( psGifCT == NULL )
-        psGifCT = poDS->hGifFile->SColorMap;
-
-    poColorTable = new GDALColorTable();
-    for( int iColor = 0; iColor < psGifCT->ColorCount; iColor++ )
-    {
-        GDALColorEntry	oEntry;
-
-        oEntry.c1 = psGifCT->Colors[iColor].Red;
-        oEntry.c2 = psGifCT->Colors[iColor].Green;
-        oEntry.c3 = psGifCT->Colors[iColor].Blue;
-
-        if( iColor == nTransparentColor )
-            oEntry.c4 = 0;
-        else
-            oEntry.c4 = 255;
-
-        poColorTable->SetColorEntry( iColor, &oEntry );
-    }
-
-/* -------------------------------------------------------------------- */
-/*      If we have a background value, return it here.  Some            */
-/*      applications might want to treat this as transparent, but in    */
-/*      many uses this is inappropriate so we don't return it as        */
-/*      nodata or transparent.                                          */
-/* -------------------------------------------------------------------- */
-    if( nBackground != 255 )
-    {
-        char szBackground[10];
-        
-        sprintf( szBackground, "%d", nBackground );
-        SetMetadataItem( "GIF_BACKGROUND", szBackground );
-    }
-}
-
-/************************************************************************/
-/*                           ~GIFRasterBand()                           */
-/************************************************************************/
-
-GIFRasterBand::~GIFRasterBand()
-
-{
-    if( poColorTable != NULL )
-        delete poColorTable;
-
-    CPLFree( panInterlaceMap );
 }
 
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GIFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr GIFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
                                   void * pImage )
-
 {
     CPLAssert( nBlockXOff == 0 );
 
@@ -254,39 +128,6 @@ CPLErr GIFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
             nBlockXSize );
 
     return CE_None;
-}
-
-/************************************************************************/
-/*                       GetColorInterpretation()                       */
-/************************************************************************/
-
-GDALColorInterp GIFRasterBand::GetColorInterpretation()
-
-{
-    return GCI_PaletteIndex;
-}
-
-/************************************************************************/
-/*                           GetColorTable()                            */
-/************************************************************************/
-
-GDALColorTable *GIFRasterBand::GetColorTable()
-
-{
-    return poColorTable;
-}
-
-/************************************************************************/
-/*                           GetNoDataValue()                           */
-/************************************************************************/
-
-double GIFRasterBand::GetNoDataValue( int *pbSuccess )
-
-{
-    if( pbSuccess != NULL )
-        *pbSuccess = nTransparentColor != -1;
-
-    return nTransparentColor;
 }
 
 /************************************************************************/
@@ -311,7 +152,7 @@ GIFDataset::GIFDataset()
 GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if( !Identify( poOpenInfo ) )
+    if( !Identify( poOpenInfo ) || poOpenInfo->fpL == NULL )
         return NULL;
 
     if( poOpenInfo->eAccess == GA_Update )
@@ -323,17 +164,16 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
     }
 
 /* -------------------------------------------------------------------- */
-/*      Open the file and ingest.                                       */
+/*      Ingest.                                                         */
 /* -------------------------------------------------------------------- */
     GifFileType 	*hGifFile;
     VSILFILE                *fp;
     int                  nGifErr;
 
-    fp = VSIFOpenL( poOpenInfo->pszFilename, "r" );
-    if( fp == NULL )
-        return NULL;
+    fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = NULL;
 
-    hGifFile = GIFAbstractDataset::myDGifOpen( fp, VSIGIFReadFunc );
+    hGifFile = GIFAbstractDataset::myDGifOpen( fp, GIFAbstractDataset::ReadFunc );
     if( hGifFile == NULL )
     {
         VSIFCloseL( fp );
@@ -383,7 +223,9 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
                       "Due to limitations of the GDAL GIF driver we deliberately avoid\n"
                       "opening large GIF files (larger than 100 megapixels).");
             GIFAbstractDataset::myDGifCloseFile( hGifFile );
-            VSIFCloseL( fp );
+            /* Reset poOpenInfo->fpL since BIGGIF may need it */
+            poOpenInfo->fpL = fp;
+            VSIFSeekL(fp, 0, SEEK_SET);
             return NULL;
         }
     }
@@ -392,7 +234,7 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
 
     VSIFSeekL( fp, 0, SEEK_SET);
 
-    hGifFile = GIFAbstractDataset::myDGifOpen( fp, VSIGIFReadFunc );
+    hGifFile = GIFAbstractDataset::myDGifOpen( fp, GIFAbstractDataset::ReadFunc );
     if( hGifFile == NULL )
     {
         VSIFCloseL( fp );
@@ -463,7 +305,10 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
             CPLDebug("GIF", "Skipping image without color table");
             continue;
         }
-
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+        /* Since giflib 5, de-interlacing is done by DGifSlurp() */
+        psImage->ImageDesc.Interlace = 0;
+#endif
         poDS->SetBand( poDS->nBands+1, 
                        new GIFRasterBand( poDS, poDS->nBands+1, psImage,
                                           hGifFile->SBackGroundColor ));
@@ -483,12 +328,13 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Initialize any PAM information.                                 */
 /* -------------------------------------------------------------------- */
     poDS->SetDescription( poOpenInfo->pszFilename );
-    poDS->TryLoadXML();
+    poDS->TryLoadXML( poOpenInfo->GetSiblingFiles() );
 
 /* -------------------------------------------------------------------- */
 /*      Support overviews.                                              */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename,
+                                 poOpenInfo->GetSiblingFiles() );
 
     return poDS;
 }
@@ -497,11 +343,7 @@ GDALDataset *GIFDataset::Open( GDALOpenInfo * poOpenInfo )
 /*                        GDALPrintGifError()                           */
 /************************************************************************/
 
-static void GDALPrintGifError(
-#if GIFLIB_MAJOR < 5
-CPL_UNUSED 
-#endif
-GifFileType *hGifFile, const char* pszMsg)
+static void GDALPrintGifError(CPL_UNUSED GifFileType *hGifFile, const char* pszMsg)
 {
 /* GIFLIB_MAJOR is only defined in libgif >= 4.2.0 */
 /* libgif 4.2.0 has retired PrintGifError() and added GifErrorString() */
@@ -653,7 +495,9 @@ GIFDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /*      Setup parameters.                                               */
 /* -------------------------------------------------------------------- */
     if (EGifPutScreenDesc(hGifFile, nXSize, nYSize, 
-                          psGifCT->ColorCount, 255, psGifCT) == GIF_ERROR)
+                          8, /* ColorRes */
+                          255, /* Background */
+                          psGifCT) == GIF_ERROR)
     {
         GifFreeMapObject(psGifCT);
         GDALPrintGifError(hGifFile, "Error writing gif file.");
@@ -704,7 +548,7 @@ GIFDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         {
             eErr = poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1, 
                                      pabyScanline, nXSize, 1, GDT_Byte,
-                                     nBands, nBands * nXSize );
+                                     nBands, nBands * nXSize, NULL );
 
             if( eErr != CE_None || EGifPutLine( hGifFile, pabyScanline, nXSize ) == GIF_ERROR )
             {
@@ -740,7 +584,7 @@ GIFDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             {
                 eErr= poBand->RasterIO( GF_Read, 0, j, nXSize, 1, 
                                         pabyScanline, nXSize, 1, GDT_Byte,
-                                        1, nXSize );
+                                        1, nXSize, NULL );
 
                 if (eErr != CE_None || EGifPutLine(hGifFile, pabyScanline, nXSize) == GIF_ERROR)
                 {
@@ -788,7 +632,7 @@ GIFDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     }
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
 
     /* If outputing to stdout, we can't reopen it, so we'll return */
@@ -821,20 +665,6 @@ error:
     if (pabyScanline)
         CPLFree( pabyScanline );
     return NULL;
-}
-
-/************************************************************************/
-/*                           VSIGIFReadFunc()                           */
-/*                                                                      */
-/*      Proxy function for reading from GIF file.                       */
-/************************************************************************/
-
-static int VSIGIFReadFunc( GifFileType *psGFile, GifByteType *pabyBuffer, 
-                           int nBytesToRead )
-
-{
-    return VSIFReadL( pabyBuffer, 1, nBytesToRead, 
-                      (VSILFILE *) psGFile->UserData );
 }
 
 /************************************************************************/
@@ -882,6 +712,7 @@ void GDALRegister_GIF()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GIF" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Graphics Interchange Format (.gif)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -906,4 +737,3 @@ void GDALRegister_GIF()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

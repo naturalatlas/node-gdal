@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vsi_pcidsk_io.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vsi_pcidsk_io.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  PCIDSK Database File
  * Purpose:  PCIDSK SDK compatiable io interface built on VSI.
@@ -32,7 +32,7 @@
 #include "cpl_multiproc.h"
 #include "pcidsk.h"
 
-CPL_CVSID("$Id: vsi_pcidsk_io.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: vsi_pcidsk_io.cpp 28459 2015-02-12 13:48:21Z rouault $");
 
 using namespace PCIDSK;
 
@@ -225,7 +225,7 @@ class CPLThreadMutex : public PCIDSK::Mutex
 
 {
 private:
-    void    *hMutex;
+    CPLMutex    *hMutex;
 
 public:
     CPLThreadMutex();

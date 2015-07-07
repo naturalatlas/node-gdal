@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cplkeywordparser.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cplkeywordparser.cpp 29123 2015-05-03 11:05:46Z bishop $
  *
  * Project:  Common Portability Library
  * Purpose:  Implementation of CPLKeywordParser - a class for parsing
@@ -118,7 +118,7 @@ int CPLKeywordParser::ReadGroup( const char *pszPathPrefix )
         if( !ReadPair( osName, osValue ) )
             return FALSE;
 
-        if( EQUAL(osName,"BEGIN_GROUP") )
+        if( EQUAL(osName,"BEGIN_GROUP") || EQUAL(osName,"GROUP") )
         {
             if( !ReadGroup( (CPLString(pszPathPrefix) + osValue + ".").c_str() ) )
                 return FALSE;

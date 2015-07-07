@@ -145,7 +145,8 @@ int ZCALLBACK fclose_file_func (CPL_UNUSED voidpf opaque, voidpf stream)
 }
 
 static
-int ZCALLBACK ferror_file_func (CPL_UNUSED voidpf opaque, CPL_UNUSED voidpf stream)
+int ZCALLBACK ferror_file_func (CPL_UNUSED voidpf opaque,
+                                CPL_UNUSED voidpf stream)
 {
     int ret;
     ret = 0; // FIXME

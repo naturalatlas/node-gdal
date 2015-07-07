@@ -30,7 +30,7 @@
 #include "ogr_idrisi.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogridrisidriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogridrisidriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 // g++ ogr/ogrsf_frmts/idrisi/*.cpp -Wall -g -fPIC -shared -o ogr_Idrisi.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/idrisi -Iogr/ogrsf_frmts -Ifrmts/idrisi
 
@@ -62,9 +62,20 @@ const char *OGRIdrisiDriver::GetName()
 OGRDataSource *OGRIdrisiDriver::Open( const char * pszFilename, int bUpdate )
 
 {
+    if (bUpdate)
+    {
+        return NULL;
+    }
+
+// --------------------------------------------------------------------
+//      Does this appear to be a .vct file?
+// --------------------------------------------------------------------
+    if ( !EQUAL(CPLGetExtension(pszFilename), "vct") )
+        return NULL;
+
     OGRIdrisiDataSource   *poDS = new OGRIdrisiDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate ) )
+    if( !poDS->Open( pszFilename ) )
     {
         delete poDS;
         poDS = NULL;
@@ -89,6 +100,10 @@ int OGRIdrisiDriver::TestCapability( CPL_UNUSED const char * pszCap )
 void RegisterOGRIdrisi()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRIdrisiDriver );
+    OGRSFDriver* poDriver = new OGRIdrisiDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "Idrisi Vector (.vct)" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "vct" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }
-

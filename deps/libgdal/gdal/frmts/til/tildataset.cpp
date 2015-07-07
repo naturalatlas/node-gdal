@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tildataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: tildataset.cpp 29198 2015-05-15 08:45:00Z rouault $
  *
  * Project:  EarthWatch .TIL Driver
  * Purpose:  Implementation of the TILDataset class.
@@ -35,8 +35,9 @@
 #include "vrtdataset.h"
 #include "cpl_multiproc.h"
 #include "cplkeywordparser.h"
+#include "gdal_mdreader.h"
 
-CPL_CVSID("$Id: tildataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: tildataset.cpp 29198 2015-05-15 08:45:00Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -49,8 +50,7 @@ class CPL_DLL TILDataset : public GDALPamDataset
     VRTDataset *poVRTDS;
     std::vector<GDALDataset *> apoTileDS;
 
-    CPLString                  osRPBFilename;
-    CPLString                  osIMDFilename;
+    char **papszMetadataFiles;
 
   protected:
     virtual int         CloseDependentDatasets();
@@ -84,7 +84,8 @@ class TILRasterBand : public GDALPamRasterBand
     virtual CPLErr IReadBlock( int, int, void * );
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 };
 
 /************************************************************************/
@@ -121,20 +122,21 @@ CPLErr TILRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                  int nXOff, int nYOff, int nXSize, int nYSize,
                                  void * pData, int nBufXSize, int nBufYSize,
                                  GDALDataType eBufType,
-                                 int nPixelSpace, int nLineSpace )
+                                 GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GDALRasterIOExtraArg* psExtraArg )
 
 {
     if(GetOverviewCount() > 0)
     {
         return GDALPamRasterBand::IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                  pData, nBufXSize, nBufYSize, eBufType,
-                                 nPixelSpace, nLineSpace );
+                                 nPixelSpace, nLineSpace, psExtraArg );
     }
     else //if not exist TIL overviews, try to use band source overviews
     {
         return poVRTBand->IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                  pData, nBufXSize, nBufYSize, eBufType,
-                                 nPixelSpace, nLineSpace );
+                                 nPixelSpace, nLineSpace, psExtraArg );
     }
 }
 
@@ -152,6 +154,7 @@ TILDataset::TILDataset()
 
 {
     poVRTDS = NULL;
+    papszMetadataFiles = NULL;
 }
 
 /************************************************************************/
@@ -162,6 +165,7 @@ TILDataset::~TILDataset()
 
 {
     CloseDependentDatasets();
+    CSLDestroy(papszMetadataFiles);
 }
 
 /************************************************************************/
@@ -228,16 +232,22 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     
     CPLString osDirname = CPLGetDirname(poOpenInfo->pszFilename);
 
+// get metadata reader
+
+    GDALMDReaderManager mdreadermanager;
+    GDALMDReaderBase* mdreader = mdreadermanager.GetReader(poOpenInfo->pszFilename, 
+                                         poOpenInfo->GetSiblingFiles(), MDR_DG);
+                                              
+    if(NULL == mdreader)    
+    {
+        CPLError( CE_Failure, CPLE_OpenFailed,
+                  "Unable to open .TIL dataset due to missing metadata file." );
+        return NULL;
+    }                                     
 /* -------------------------------------------------------------------- */
 /*      Try to find the corresponding .IMD file.                        */
 /* -------------------------------------------------------------------- */
-    char **papszIMD = NULL;
-    CPLString osIMDFilename = 
-        GDALFindAssociatedFile( poOpenInfo->pszFilename, "IMD", 
-                                poOpenInfo->papszSiblingFiles, 0 );
-
-    if( osIMDFilename != "" )
-        papszIMD = GDALLoadIMDFile( osIMDFilename, NULL );
+    char **papszIMD = mdreader->GetMetadataDomain(MD_DOMAIN_IMD);
 
     if( papszIMD == NULL )
     {
@@ -252,7 +262,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Missing a required field in the .IMD file." );
-        CSLDestroy( papszIMD );
         return NULL;
     }
 
@@ -263,7 +272,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     
     if( fp == NULL )
     {
-        CSLDestroy( papszIMD );
         return NULL;
     }
 
@@ -272,7 +280,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     if( !oParser.Ingest( fp ) )
     {
         VSIFCloseL( fp );
-        CSLDestroy( papszIMD );
         return NULL;
     }
 
@@ -286,15 +293,13 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     TILDataset 	*poDS;
 
     poDS = new TILDataset();
-
-    poDS->osIMDFilename = osIMDFilename; 
-    poDS->SetMetadata( papszIMD, "IMD" );
+    poDS->papszMetadataFiles = mdreader->GetMetadataFiles();
+    mdreader->FillMetadata(&poDS->oMDMD);
     poDS->nRasterXSize = atoi(CSLFetchNameValueDef(papszIMD,"numColumns","0"));
     poDS->nRasterYSize = atoi(CSLFetchNameValueDef(papszIMD,"numRows","0"));
     if (!GDALCheckDatasetDimensions(poDS->nRasterXSize, poDS->nRasterYSize))
     {
         delete poDS;
-        CSLDestroy( papszIMD );
         return NULL;
     }
 
@@ -309,7 +314,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Missing TILE_1.filename in .TIL file." );
         delete poDS;
-        CSLDestroy( papszIMD );
         return NULL;
     }
 
@@ -324,7 +328,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     if( poTemplateDS == NULL || poTemplateDS->GetRasterCount() == 0)
     {
         delete poDS;
-        CSLDestroy( papszIMD );
         if (poTemplateDS != NULL)
             GDALClose( poTemplateDS );
         return NULL;
@@ -343,8 +346,10 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     double      adfGeoTransform[6];
     if( poTemplateDS->GetGeoTransform( adfGeoTransform ) == CE_None )
     {
-        adfGeoTransform[0] = CPLAtof(CSLFetchNameValueDef(papszIMD,"MAP_PROJECTED_PRODUCT.ULX","0"));
-        adfGeoTransform[3] = CPLAtof(CSLFetchNameValueDef(papszIMD,"MAP_PROJECTED_PRODUCT.ULY","0"));
+        // According to https://www.digitalglobe.com/sites/default/files/ISD_External.pdf, ulx=originX and 
+        // is "Easting of the center of the upper left pixel of the image."
+        adfGeoTransform[0] = CPLAtof(CSLFetchNameValueDef(papszIMD,"MAP_PROJECTED_PRODUCT.ULX","0")) - adfGeoTransform[1] / 2;
+        adfGeoTransform[3] = CPLAtof(CSLFetchNameValueDef(papszIMD,"MAP_PROJECTED_PRODUCT.ULY","0")) - adfGeoTransform[5] / 2;
         poDS->SetGeoTransform(adfGeoTransform);
     }
 
@@ -390,7 +395,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Missing TILE_%d.filename in .TIL file.", iTile );
             delete poDS;
-            CSLDestroy( papszIMD );
             return NULL;
         }
         
@@ -440,29 +444,6 @@ GDALDataset *TILDataset::Open( GDALOpenInfo * poOpenInfo )
     }
 
 /* -------------------------------------------------------------------- */
-/*      Set RPC and IMD metadata.                                       */
-/* -------------------------------------------------------------------- */
-    poDS->osRPBFilename = 
-        GDALFindAssociatedFile( poOpenInfo->pszFilename, "RPB", 
-                                poOpenInfo->papszSiblingFiles, 0 );
-    if( poDS->osRPBFilename != "" )
-    {
-        char **papszRPCMD = GDALLoadRPBFile( poOpenInfo->pszFilename,
-                                             poOpenInfo->papszSiblingFiles );
-        
-        if( papszRPCMD != NULL )
-        {
-            poDS->SetMetadata( papszRPCMD, "RPC" );
-            CSLDestroy( papszRPCMD );
-        }
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Cleanup                                                         */
-/* -------------------------------------------------------------------- */
-    CSLDestroy( papszIMD );
-
-/* -------------------------------------------------------------------- */
 /*      Initialize any PAM information.                                 */
 /* -------------------------------------------------------------------- */
     poDS->SetDescription( poOpenInfo->pszFilename );
@@ -489,12 +470,14 @@ char **TILDataset::GetFileList()
     for( i = 0; i < apoTileDS.size(); i++ )
         papszFileList = CSLAddString( papszFileList,
                                       apoTileDS[i]->GetDescription() );
-    
-    papszFileList = CSLAddString( papszFileList, osIMDFilename );
-
-
-    if( osRPBFilename != "" )
-        papszFileList = CSLAddString( papszFileList, osRPBFilename );
+                                      
+    if(NULL != papszMetadataFiles)
+    {
+        for( int i = 0; papszMetadataFiles[i] != NULL; i++ )
+        {
+            papszFileList = CSLAddString( papszFileList, papszMetadataFiles[i] );
+        }
+    }
 
     return papszFileList;
 }
@@ -513,6 +496,7 @@ void GDALRegister_TIL()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "TIL" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "EarthWatch .TIL" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

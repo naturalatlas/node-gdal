@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_osm.h 27138 2014-04-07 20:32:14Z rouault $
+ * $Id: ogr_osm.h 29242 2015-05-24 10:59:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/OpenStreeMap driver.
@@ -53,6 +53,21 @@ class ConstCharComp
         }
 };
 
+class OGROSMComputedAttribute
+{
+    public:
+        CPLString    osName;
+        int          nIndex;
+        OGRFieldType eType;
+        CPLString    osSQL;
+        sqlite3_stmt  *hStmt;
+        std::vector<CPLString> aosAttrToBind;
+        std::vector<int> anIndexToBind;
+
+        OGROSMComputedAttribute() : nIndex(-1), eType(OFTString), hStmt(NULL) {}
+        OGROSMComputedAttribute(const char* pszName) : osName(pszName), nIndex(-1), eType(OFTString), hStmt(NULL) {}
+};
+
 /************************************************************************/
 /*                           OGROSMLayer                                */
 /************************************************************************/
@@ -71,6 +86,8 @@ class OGROSMLayer : public OGRLayer
 
     std::vector<char*>   apszNames;
     std::map<const char*, int, ConstCharComp> oMapFieldNameToIndex;
+    
+    std::vector<OGROSMComputedAttribute> oComputedAttributes;
 
     int                  bResetReadingAllowed;
     
@@ -126,7 +143,7 @@ class OGROSMLayer : public OGRLayer
     virtual int         TestCapability( const char * );
                                      
     virtual OGRFeature *GetNextFeature();
-    virtual int         GetFeatureCount( int bForce );
+    virtual GIntBig     GetFeatureCount( int bForce );
         
     virtual OGRErr      SetAttributeFilter( const char* pszAttrQuery );
 
@@ -185,6 +202,10 @@ class OGROSMLayer : public OGRLayer
 
     void                AddIgnoreKey(const char* pszK);
     void                AddWarnKey(const char* pszK);
+
+    void                AddComputedAttribute(const char* pszName,
+                                             OGRFieldType eType,
+                                             const char* pszSQL);
 };
 
 /************************************************************************/
@@ -282,6 +303,8 @@ class OGROSMDataSource : public OGRDataSource
     sqlite3_stmt       *hSelectPolygonsStandaloneStmt;
     int                 bHasRowInPolygonsStandalone;
 
+    sqlite3            *hDBForComputedAttributes;
+
     int                 nMaxSizeForInMemoryDBInMB;
     int                 bInMemoryTmpDB;
     int                 bMustUnlink;
@@ -377,7 +400,7 @@ class OGROSMDataSource : public OGRDataSource
                                        unsigned int* pnTags, OSMTag* pasTags,
                                        OSMInfo* psInfo );
 
-    int                 ParseConf();
+    int                 ParseConf(char** papszOpenOptions);
     int                 CreateTempDB();
     int                 SetDBOptions();
     int                 SetCacheSize();
@@ -396,8 +419,8 @@ class OGROSMDataSource : public OGRDataSource
                                  LonLat* pasLonLatPairs, int nPairs,
                                  OSMInfo* psInfo);
 
-    int                 StartTransaction();
-    int                 CommitTransaction();
+    int                 StartTransactionCacheDB();
+    int                 CommitTransactionCacheDB();
 
     int                 FindNode(GIntBig nID);
     void                ProcessWaysBatch();
@@ -423,6 +446,9 @@ class OGROSMDataSource : public OGRDataSource
     int                 AllocBucket(int iBucket);
     int                 AllocMoreBuckets(int nNewBucketIdx, int bAllocBucket = FALSE);
 
+    void                AddComputedAttributes(int iCurLayer,
+                                             const std::vector<OGROSMComputedAttribute>& oAttributes);
+
   public:
                         OGROSMDataSource();
                         ~OGROSMDataSource();
@@ -439,7 +465,7 @@ class OGROSMDataSource : public OGRDataSource
     virtual void        ReleaseResultSet( OGRLayer * poLayer );
 
 
-    int                 Open ( const char* pszFilename, int bUpdateIn );
+    int                 Open ( const char* pszFilename, char** papszOpenOptions );
 
     int                 ResetReading();
     int                 ParseNextChunk(int nIdxLayer);
@@ -458,23 +484,6 @@ class OGROSMDataSource : public OGRDataSource
     int                 IsFeatureCountEnabled() const { return bIsFeatureCountEnabled; }
 
     int                 DoesAttributeNameLaundering() const { return bAttributeNameLaundering; }
-};
-
-/************************************************************************/
-/*                            OGROSMDriver                              */
-/************************************************************************/
-
-class OGROSMDriver : public OGRSFDriver
-{
-  public:
-                ~OGROSMDriver();
-
-    virtual const char    *GetName();
-    virtual OGRDataSource *Open( const char *, int );
-    virtual OGRDataSource *CreateDataSource( const char * pszName,
-                                             char **papszOptions );
-
-    virtual int            TestCapability( const char * );
 };
 
 #endif /* ndef _OGR_OSM_H_INCLUDED */

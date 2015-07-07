@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_idrisi.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_idrisi.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  Idrisi Translator
  * Purpose:  Definition of classes for OGR Idrisi driver.
@@ -79,7 +79,7 @@ protected:
     void SetExtent(double dfMinX, double dfMinY, double dfMaxX, double dfMaxY);
     virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
-    virtual int         GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig         GetFeatureCount( int bForce = TRUE );
 };
 
 /************************************************************************/
@@ -97,8 +97,7 @@ class OGRIdrisiDataSource : public OGRDataSource
                         OGRIdrisiDataSource();
                         ~OGRIdrisiDataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     virtual const char*         GetName() { return pszName; }
 

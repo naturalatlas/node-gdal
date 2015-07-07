@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf5imagedataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: hdf5imagedataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  Read subdatasets of HDF5 file.
@@ -38,7 +38,7 @@
 #include "hdf5dataset.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: hdf5imagedataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: hdf5imagedataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void GDALRegister_HDF5Image(void);
@@ -648,6 +648,7 @@ void GDALRegister_HDF5Image( )
         poDriver = new GDALDriver( );
 
         poDriver->SetDescription( "HDF5Image" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "HDF5 Dataset" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

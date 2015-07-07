@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: minidriver.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  GDALWMSMiniDriver base class implementation.
@@ -30,7 +30,7 @@
 #include "wmsdriver.h"
 
 static volatile GDALWMSMiniDriverManager *g_mini_driver_manager = NULL;
-static void *g_mini_driver_manager_mutex = NULL;
+static CPLMutex *g_mini_driver_manager_mutex = NULL;
 
 GDALWMSMiniDriver::GDALWMSMiniDriver() {
     m_parent_dataset = 0;
@@ -46,8 +46,7 @@ CPLErr GDALWMSMiniDriver::Initialize(CPL_UNUSED CPLXMLNode *config) {
 void GDALWMSMiniDriver::GetCapabilities(CPL_UNUSED GDALWMSMiniDriverCapabilities *caps) {
 }
 
-void GDALWMSMiniDriver::ImageRequest(CPL_UNUSED CPLString *url,
-                                     CPL_UNUSED const GDALWMSImageRequestInfo &iri) {
+void GDALWMSMiniDriver::ImageRequest(CPL_UNUSED CPLString *url, CPL_UNUSED const GDALWMSImageRequestInfo &iri) {
 }
 
 void GDALWMSMiniDriver::TiledImageRequest(CPL_UNUSED CPLString *url,

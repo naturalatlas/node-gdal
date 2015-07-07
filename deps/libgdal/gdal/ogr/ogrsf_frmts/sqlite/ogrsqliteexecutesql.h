@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteexecutesql.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqliteexecutesql.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Run SQL requests with SQLite SQL engine
@@ -34,7 +34,7 @@
 #include "ogrsf_frmts.h"
 #include <set>
 
-OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
+OGRLayer * OGRSQLiteExecuteSQL( GDALDataset* poDS,
                                 const char *pszStatement,
                                 OGRGeometry *poSpatialFilter,
                                 const char *pszDialect );

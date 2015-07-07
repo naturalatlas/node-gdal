@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmsrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdalwmsrasterband.cpp 28562 2015-02-26 15:00:55Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  GDALWMSRasterBand implementation.
@@ -37,7 +37,10 @@ GDALWMSRasterBand::GDALWMSRasterBand(GDALWMSDataset *parent_dataset, int band, d
     m_overview = -1;
     m_color_interp = GCI_Undefined;
 
-    poDS = parent_dataset;
+    if( scale == 1.0 )
+        poDS = parent_dataset;
+    else
+        poDS = NULL;
     nRasterXSize = static_cast<int>(m_parent_dataset->m_data_window.m_sx * scale + 0.5);
     nRasterYSize = static_cast<int>(m_parent_dataset->m_data_window.m_sy * scale + 0.5);
     nBand = band;
@@ -238,7 +241,8 @@ CPLErr GDALWMSRasterBand::ReadBlocks(int x, int y, void *buffer, int bx0, int by
                         }
                     }
                 } else {
-                    CPLError(CE_Failure, CPLE_AppDefined, "GDALWMS: Unable to download block %d, %d.\n  URL: %s\n  HTTP status code: %d, error: %s.",
+                    CPLError(CE_Failure, CPLE_AppDefined, "GDALWMS: Unable to download block %d, %d.\n  URL: %s\n  HTTP status code: %d, error: %s.\n"
+                        "Add the HTTP status code to <ZeroBlockHttpCodes> to ignore that error (see http://www.gdal.org/frmt_wms.html).",
                         download_blocks[i].x, download_blocks[i].y, download_requests[i].pszURL, download_requests[i].nStatus, 
 		    download_requests[i].pszError ? download_requests[i].pszError : "(null)");
                     ret = CE_Failure;
@@ -284,7 +288,10 @@ CPLErr GDALWMSRasterBand::IReadBlock(int x, int y, void *buffer) {
     return eErr;
 }
 
-CPLErr GDALWMSRasterBand::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy, void *buffer, int bsx, int bsy, GDALDataType bdt, int pixel_space, int line_space) {
+CPLErr GDALWMSRasterBand::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int sy,
+                                    void *buffer, int bsx, int bsy, GDALDataType bdt,
+                                    GSpacing nPixelSpace, GSpacing nLineSpace,
+                                    GDALRasterIOExtraArg* psExtraArg) {
     CPLErr ret;
 
     if (rw != GF_Read) return CE_Failure;
@@ -297,7 +304,7 @@ CPLErr GDALWMSRasterBand::IRasterIO(GDALRWFlag rw, int x0, int y0, int sx, int s
     m_parent_dataset->m_hint.m_sy = sy;
     m_parent_dataset->m_hint.m_overview = m_overview;
     m_parent_dataset->m_hint.m_valid = true;
-    ret = GDALRasterBand::IRasterIO(rw, x0, y0, sx, sy, buffer, bsx, bsy, bdt, pixel_space, line_space);
+    ret = GDALRasterBand::IRasterIO(rw, x0, y0, sx, sy, buffer, bsx, bsy, bdt, nPixelSpace, nLineSpace, psExtraArg);
     m_parent_dataset->m_hint.m_valid = false;
 
     return ret;
@@ -421,15 +428,14 @@ const char *GDALWMSRasterBand::GetMetadataItem( const char * pszName,
             double dfGeoX, dfGeoY;
 
             {
-                CPLLocaleC oLocaleEnforcer;
-                if( sscanf( pszName+9, "%lf_%lf", &dfGeoX, &dfGeoY ) != 2 )
+                dfGeoX = CPLAtof(pszName + 9);
+                const char* pszUnderscore = strchr(pszName + 9, '_');
+                if( !pszUnderscore )
                     return NULL;
+                dfGeoY = CPLAtof(pszUnderscore+1);
             }
 
-            if( GetDataset() == NULL )
-                return NULL;
-
-            if( GetDataset()->GetGeoTransform( adfGeoTransform ) != CE_None )
+            if( m_parent_dataset->GetGeoTransform( adfGeoTransform ) != CE_None )
                 return NULL;
 
             if( !GDALInvGeoTransform( adfGeoTransform, adfInvGeoTransform ) )
@@ -448,8 +454,8 @@ const char *GDALWMSRasterBand::GetMetadataItem( const char * pszName,
             /* the values if we are an overview */
             if (m_overview >= 0)
             {
-                iPixel = (int) (1.0 * iPixel * GetXSize() / GetDataset()->GetRasterBand(1)->GetXSize());
-                iLine = (int) (1.0 * iLine * GetYSize() / GetDataset()->GetRasterBand(1)->GetYSize());
+                iPixel = (int) (1.0 * iPixel * GetXSize() / m_parent_dataset->GetRasterBand(1)->GetXSize());
+                iLine = (int) (1.0 * iLine * GetYSize() / m_parent_dataset->GetRasterBand(1)->GetYSize());
             }
         }
         else
@@ -654,7 +660,7 @@ CPLErr GDALWMSRasterBand::ReadBlockFromFile(int x, int y, const char *file_name,
                                 // TODO: This hack is from #3493 - not sure it really belongs here.
 				if ((GDT_Int16==dt)&&(GDT_UInt16==ds->GetRasterBand(ib)->GetRasterDataType()))
 				    dt=GDT_UInt16;
-				if (ds->RasterIO(GF_Read, 0, 0, sx, sy, p, sx, sy, dt, 1, &ib, pixel_space, line_space, 0) != CE_None) {
+				if (ds->RasterIO(GF_Read, 0, 0, sx, sy, p, sx, sy, dt, 1, &ib, pixel_space, line_space, 0, NULL) != CE_None) {
 				    CPLError(CE_Failure, CPLE_AppDefined, "GDALWMS: RasterIO failed on downloaded block.");
 				    ret = CE_Failure;
 				}
@@ -680,7 +686,7 @@ CPLErr GDALWMSRasterBand::ReadBlockFromFile(int x, int y, const char *file_name,
                                }     
                             }
                         } else if (ib <= 4) {
-                            if (ds->RasterIO(GF_Read, 0, 0, sx, sy, p, sx, sy, eDataType, 1, NULL, pixel_space, line_space, 0) != CE_None) {
+                            if (ds->RasterIO(GF_Read, 0, 0, sx, sy, p, sx, sy, eDataType, 1, NULL, pixel_space, line_space, 0, NULL) != CE_None) {
                                 CPLError(CE_Failure, CPLE_AppDefined, "GDALWMS: RasterIO failed on downloaded block.");
                                 ret = CE_Failure;
                             }
@@ -804,8 +810,11 @@ CPLErr GDALWMSRasterBand::ReportWMSException(const char *file_name) {
 
 CPLErr GDALWMSRasterBand::AdviseRead(int x0, int y0,
                                      int sx, int sy,
-                                     CPL_UNUSED int bsx, CPL_UNUSED int bsy,
-                                     CPL_UNUSED GDALDataType bdt, CPL_UNUSED char **options) {
+                                     CPL_UNUSED int bsx,
+                                     CPL_UNUSED int bsy,
+                                     CPL_UNUSED GDALDataType bdt,
+                                     CPL_UNUSED char **options) {
+//    printf("AdviseRead(%d, %d, %d, %d)\n", x0, y0, sx, sy);
     if (m_parent_dataset->m_offline_mode || !m_parent_dataset->m_use_advise_read) return CE_None;
     if (m_parent_dataset->m_cache == NULL) return CE_Failure;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitesinglefeaturelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqlitesinglefeaturelayer.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteSingleFeatureLayer class.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "ogr_sqlite.h"
 
-CPL_CVSID("$Id: ogrsqlitesinglefeaturelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrsqlitesinglefeaturelayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                    OGRSQLiteSingleFeatureLayer()                     */
@@ -42,6 +42,7 @@ OGRSQLiteSingleFeatureLayer::OGRSQLiteSingleFeatureLayer(
                                                      int nVal )
 {
     poFeatureDefn = new OGRFeatureDefn( "SELECT" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     OGRFieldDefn oField( pszLayerName, OFTInteger );
     poFeatureDefn->AddFieldDefn( &oField );

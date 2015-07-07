@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrelasticdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrelasticdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -30,38 +30,18 @@
 #include "ogr_elastic.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrelasticdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrelasticdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
-/*                         ~OGRElasticDriver()                          */
+/*                     OGRElasticSearchDriverCreate()                   */
 /************************************************************************/
-
-OGRElasticDriver::~OGRElasticDriver() {
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRElasticDriver::GetName() {
-    return "ElasticSearch";
-}
-
-/************************************************************************/
-/*                                Open()                                */
-/************************************************************************/
-
-OGRDataSource *OGRElasticDriver::Open(CPL_UNUSED const char * pszFilename,
-                                      CPL_UNUSED int bUpdate) {
-    return NULL;
-}
-
-/************************************************************************/
-/*                          CreateDataSource()                          */
-/************************************************************************/
-
-OGRDataSource *OGRElasticDriver::CreateDataSource(const char * pszName,
-        char **papszOptions) {
+static GDALDataset* OGRElasticSearchDriverCreate( const char * pszName,
+                                                  CPL_UNUSED int nXSize,
+                                                  CPL_UNUSED int nYSize,
+                                                  CPL_UNUSED int nBands,
+                                                  CPL_UNUSED GDALDataType eDT,
+                                                  char ** papszOptions )
+{
     OGRElasticDataSource *poDS = new OGRElasticDataSource();
 
     if (!poDS->Create(pszName, papszOptions)) {
@@ -73,23 +53,33 @@ OGRDataSource *OGRElasticDriver::CreateDataSource(const char * pszName,
 }
 
 /************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGRElasticDriver::TestCapability(const char * pszCap) {
-    if (EQUAL(pszCap, ODrCCreateDataSource))
-        return TRUE;
-    else
-        return FALSE;
-}
-
-/************************************************************************/
 /*                          RegisterOGRElastic()                        */
 /************************************************************************/
 
 void RegisterOGRElastic() {
     if (!GDAL_CHECK_VERSION("OGR/Elastic Search driver"))
         return;
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(new OGRElasticDriver);
-}
+    GDALDriver  *poDriver;
 
+    if( GDALGetDriverByName( "ElasticSearch" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "ElasticSearch" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                    "Elastic Search" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                    "drv_elasticsearch.html" );
+
+        poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
+    "<CreationOptionList/>");
+
+        poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
+    "<LayerCreationOptionList/>");
+
+        poDriver->pfnCreate = OGRElasticSearchDriverCreate;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
+}

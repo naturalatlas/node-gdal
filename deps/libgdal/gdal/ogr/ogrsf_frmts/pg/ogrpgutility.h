@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgutility.h 22450 2011-05-28 21:25:11Z rouault $
+ * $Id: ogrpgutility.h 27784 2014-10-02 15:43:18Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private utilities for OGR/PostgreSQL driver.
@@ -33,7 +33,8 @@
 #include "libpq-fe.h"
 
 PGresult *OGRPG_PQexec(PGconn *conn, const char *query,
-                       int bMultipleCommandAllowed = FALSE);
+                       int bMultipleCommandAllowed = FALSE,
+                       int bErrorAsDebug = FALSE);
 
 /************************************************************************/
 /*                            OGRPGClearResult                          */

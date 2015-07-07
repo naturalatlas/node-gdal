@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfcreatecopy.cpp 27991 2014-11-21 09:09:00Z rouault $
+ * $Id: pdfcreatecopy.cpp 28780 2015-03-26 12:29:35Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset.
@@ -27,11 +27,7 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-/* hack for PDF driver and poppler >= 0.15.0 that defines incompatible "typedef bool GBool" */
-/* in include/poppler/goo/gtypes.h with the one defined in cpl_port.h */
-#define CPL_GBOOL_DEFINED
-
-#include "pdfdataset.h"
+#include "gdal_pdf.h"
 #include "pdfcreatecopy.h"
 
 #include "cpl_vsi_virtual.h"
@@ -50,7 +46,7 @@
 /* Cf PDF reference v1.7, Appendix C, page 993 */
 #define MAXIMUM_SIZE_IN_UNITS   14400
 
-CPL_CVSID("$Id: pdfcreatecopy.cpp 27991 2014-11-21 09:09:00Z rouault $");
+CPL_CVSID("$Id: pdfcreatecopy.cpp 28780 2015-03-26 12:29:35Z rouault $");
 
 #define PIXEL_TO_GEO_X(x,y) adfGeoTransform[0] + x * adfGeoTransform[1] + y * adfGeoTransform[2]
 #define PIXEL_TO_GEO_Y(x,y) adfGeoTransform[3] + x * adfGeoTransform[4] + y * adfGeoTransform[5]
@@ -843,6 +839,8 @@ static GDALPDFObject* GDALPDFBuildOGC_BP_Datum(const OGRSpatialReference* poSRS)
             poPDFDatum = GDALPDFObjectRW::CreateString("NAS");
         else if( EQUAL(pszDatumDescription, SRS_DN_NAD83) || nEPSGDatum == 6269 )
             poPDFDatum = GDALPDFObjectRW::CreateString("NAR");
+        else if( nEPSGDatum == 6135 )
+            poPDFDatum = GDALPDFObjectRW::CreateString("OHA-M");
         else
         {
             CPLDebug("PDF",
@@ -3000,9 +2998,9 @@ int GDALPDFWriter::EndPage(const char* pszExtraImages,
         for(int i=0;i+4<=nCount; /* */)
         {
             const char* pszImageFilename = papszExtraImagesTokens[i+0];
-            double dfX = atof(papszExtraImagesTokens[i+1]);
-            double dfY = atof(papszExtraImagesTokens[i+2]);
-            double dfScale = atof(papszExtraImagesTokens[i+3]);
+            double dfX = CPLAtof(papszExtraImagesTokens[i+1]);
+            double dfY = CPLAtof(papszExtraImagesTokens[i+2]);
+            double dfScale = CPLAtof(papszExtraImagesTokens[i+3]);
             const char* pszLinkVal = NULL;
             i += 4;
             if( i < nCount && EQUALN(papszExtraImagesTokens[i],"link=",5) )
@@ -3416,7 +3414,7 @@ int GDALPDFWriter::WriteMask(GDALDataset* poSrcDS,
             nXOff, nYOff,
             nReqXSize, nReqYSize,
             pabyMask, nReqXSize, nReqYSize, GDT_Byte,
-            0, 0);
+            0, 0, NULL);
     if (eErr != CE_None)
     {
         VSIFree(pabyMask);
@@ -3673,7 +3671,7 @@ int GDALPDFWriter::WriteBlock(GDALDataset* poSrcDS,
                                 nReqXSize, nReqYSize,
                                 pabyMEMDSBuffer, nReqXSize, nReqYSize,
                                 GDT_Byte, nBands, NULL,
-                                0, 0, 0);
+                                0, 0, 0, NULL);
 
         if( eErr != CE_None )
         {
@@ -3857,7 +3855,7 @@ int GDALPDFWriter::WriteBlock(GDALDataset* poSrcDS,
             eErr = poBlockSrcDS->RasterIO(GF_Read,
                                           0, iLine, nReqXSize, 1,
                                           pabyLine, nReqXSize, 1, GDT_Byte,
-                                          nBands, NULL, nBands, 0, 1);
+                                          nBands, NULL, nBands, 0, 1, NULL);
             if( eErr != CE_None )
                 break;
 

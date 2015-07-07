@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili2handler.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ili2handler.cpp 27794 2014-10-04 10:13:46Z rouault $
  *
  * Project:  Interlis 2 Reader
  * Purpose:  Implementation of ILI2Handler class.
@@ -35,7 +35,7 @@
 #include "ili2readerp.h"
 #include <xercesc/sax2/Attributes.hpp>
 
-CPL_CVSID("$Id: ili2handler.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ili2handler.cpp 27794 2014-10-04 10:13:46Z rouault $");
 
 // 
 // constants
@@ -166,7 +166,7 @@ void ILI2Handler::characters( const XMLCh *const chars,
 /************************************************************************/
 
 void ILI2Handler::characters( const XMLCh *const chars,
-                     const unsigned int length ) {
+                     CPL_UNUSED const unsigned int length ) {
   
   // add the text element
   if (level >= 3) {

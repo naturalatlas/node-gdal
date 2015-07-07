@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: lcpdataset.cpp 27050 2014-03-18 00:09:03Z kyle $
+ * $Id: lcpdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  LCP Driver
  * Purpose:  FARSITE v.4 Landscape file (.lcp) reader for GDAL
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: lcpdataset.cpp 27050 2014-03-18 00:09:03Z kyle $");
+CPL_CVSID("$Id: lcpdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void    GDALRegister_LCP(void);
@@ -753,7 +753,7 @@ GDALDataset *LCPDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     CPLFree(pszList);
 
@@ -814,7 +814,7 @@ CPLErr LCPDataset::ClassifyBandData( GDALRasterBand *poBand,
     {
         eErr = poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1,
                                  panValues, nXSize, 1, 
-                                 GDT_Int16, 0, 0 );
+                                 GDT_Int16, 0, 0, NULL );
         for( int iPixel = 0; iPixel < nXSize; iPixel++ )
         {
             if( panValues[iPixel] == -9999 )
@@ -1304,7 +1304,7 @@ GDALDataset *LCPDataset::CreateCopy( const char * pszFilename,
             pszUnit = oSrcSRS.GetAttrValue( "UNIT", 1 );
             if( pszUnit != NULL )
             {
-                double dfScale = atof( pszUnit );
+                double dfScale = CPLAtof( pszUnit );
                 if( dfScale != 1.0 )
                 {
                     if( bStrict )
@@ -1607,7 +1607,7 @@ GDALDataset *LCPDataset::CreateCopy( const char * pszFilename,
             GDALRasterBand * poBand = poSrcDS->GetRasterBand( iBand+1 );
             eErr = poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1,
                                      panScanline + iBand, nXSize, 1, GDT_Int16,
-                                     nBands * 2, nBands * nXSize * 2 );
+                                     nBands * 2, nBands * nXSize * 2, NULL );
             /* Not sure what to do here */
             if( eErr != CE_None )
             {
@@ -1704,6 +1704,7 @@ void GDALRegister_LCP()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "LCP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "FARSITE v.4 Landscape File (.lcp)" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "lcp" );

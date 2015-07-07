@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ddfsubfielddefn.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ddfsubfielddefn.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  ISO 8211 Access
  * Purpose:  Implements the DDFSubfieldDefn class.
@@ -30,8 +30,9 @@
 
 #include "iso8211.h"
 #include "cpl_conv.h"
+#include "cpl_string.h"
 
-CPL_CVSID("$Id: ddfsubfielddefn.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ddfsubfielddefn.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                          DDFSubfieldDefn()                           */
@@ -442,7 +443,7 @@ DDFSubfieldDefn::ExtractFloatData( const char * pachSourceData,
       case 'R':
       case 'S':
       case 'C':
-        return atof(ExtractStringData(pachSourceData, nMaxBytes,
+        return CPLAtof(ExtractStringData(pachSourceData, nMaxBytes,
                                       pnConsumedBytes));
 
       case 'B':
@@ -954,7 +955,7 @@ int DDFSubfieldDefn::FormatFloatValue( char *pachData, int nBytesAvailable,
     int nSize;
     char szWork[120];
 
-    sprintf( szWork, "%.16g", dfNewValue );
+    CPLsprintf( szWork, "%.16g", dfNewValue );
 
     if( bIsVariable )
     {

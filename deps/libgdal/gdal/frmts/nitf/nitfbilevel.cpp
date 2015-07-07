@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfbilevel.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfbilevel.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module implement BILEVEL (C1) compressed image reading.
@@ -38,9 +38,9 @@ CPL_C_START
 #include "tiffio.h"
 CPL_C_END
 
-TIFF* VSI_TIFFOpen(const char* name, const char* mode);
+#include "tifvsi.h"
 
-CPL_CVSID("$Id: nitfbilevel.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: nitfbilevel.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                       NITFUncompressBILEVEL()                        */
@@ -60,9 +60,13 @@ int NITFUncompressBILEVEL( NITFImage *psImage,
 
     osFilename.Printf( "/vsimem/nitf-wrk-%ld.tif", (long) CPLGetPID() );
 
-    TIFF *hTIFF = VSI_TIFFOpen( osFilename, "w+" );
+    VSILFILE* fpL = VSIFOpenL(osFilename, "w+");
+    if( fpL == NULL )
+        return FALSE;
+    TIFF *hTIFF = VSI_TIFFOpen( osFilename, "w+", fpL );
     if (hTIFF == NULL)
     {
+        VSIFCloseL(fpL);
         return FALSE;
     }
 
@@ -91,9 +95,10 @@ int NITFUncompressBILEVEL( NITFImage *psImage,
 /* -------------------------------------------------------------------- */
     int bResult = TRUE;
 
-    hTIFF = VSI_TIFFOpen( osFilename, "r" );
+    hTIFF = VSI_TIFFOpen( osFilename, "r", fpL );
     if (hTIFF == NULL)
     {
+        VSIFCloseL(fpL);
         return FALSE;
     }
 
@@ -105,6 +110,7 @@ int NITFUncompressBILEVEL( NITFImage *psImage,
     }
 
     TIFFClose( hTIFF );
+    VSIFCloseL(fpL);
 
     VSIUnlink( osFilename );
 

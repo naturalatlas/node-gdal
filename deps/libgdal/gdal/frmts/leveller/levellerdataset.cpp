@@ -35,7 +35,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: levellerdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: levellerdataset.cpp 28435 2015-02-07 14:35:34Z rouault $");
 
 CPL_C_START
 void	GDALRegister_Leveller(void);
@@ -454,10 +454,11 @@ LevellerRasterBand::~LevellerRasterBand()
 /*                             IWriteBlock()                            */
 /************************************************************************/
 
-CPLErr LevellerRasterBand::IWriteBlock ( 
-	CPL_UNUSED int nBlockXOff, 
-	int nBlockYOff,
-        void* pImage
+CPLErr LevellerRasterBand::IWriteBlock
+(
+    CPL_UNUSED int nBlockXOff,
+    int nBlockYOff,
+    void* pImage
 )
 {
     CPLAssert( nBlockXOff == 0  );
@@ -520,7 +521,8 @@ CPLErr LevellerRasterBand::SetUnitType( const char* psz )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr LevellerRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr LevellerRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                       int nBlockYOff,
                                        void* pImage )
 
 {
@@ -920,7 +922,7 @@ GDALDataset* LevellerDataset::Create
     const char* pszValue = CSLFetchNameValue( 
 		papszOptions,"MINUSERPIXELVALUE");
     if( pszValue != NULL )
-        poDS->m_dLogSpan[0] = atof( pszValue );
+        poDS->m_dLogSpan[0] = CPLAtof( pszValue );
 	else
 	{
 		delete poDS;
@@ -932,7 +934,7 @@ GDALDataset* LevellerDataset::Create
     pszValue = CSLFetchNameValue( 
 		papszOptions,"MAXUSERPIXELVALUE");
     if( pszValue != NULL )
-        poDS->m_dLogSpan[1] = atof( pszValue );
+        poDS->m_dLogSpan[1] = CPLAtof( pszValue );
 
 	if(poDS->m_dLogSpan[1] < poDS->m_dLogSpan[0])
 	{
@@ -1345,9 +1347,10 @@ bool LevellerDataset::load_from_file(VSILFILE* file, const char* pszFilename)
 			{
 				UNITLABEL unitcode;
 				//char szLocalUnits[8];
-                                // TODO: Fix strict aliasing issue.
-				if(!this->get((int&)unitcode, file, "coordsys_units"))
-					unitcode = UNITLABEL_M;
+                                int unitcode_int;
+				if(!this->get(unitcode_int, file, "coordsys_units"))
+					unitcode_int = UNITLABEL_M;
+                                unitcode = (UNITLABEL) unitcode_int;
 
 				if(!this->make_local_coordsys("Leveller", unitcode))
 				{
@@ -1396,8 +1399,10 @@ bool LevellerDataset::load_from_file(VSILFILE* file, const char* pszFilename)
 			this->get(m_dElevScale, file, "coordsys_em_scale");
 			this->get(m_dElevBase, file, "coordsys_em_base");
 			UNITLABEL unitcode;
-			if(this->get((int&)unitcode, file, "coordsys_em_units"))
+                        int unitcode_int;
+			if(this->get(unitcode_int, file, "coordsys_em_units"))
 			{
+                                unitcode = (UNITLABEL) unitcode_int;
 				const char* pszUnitID = this->code_to_id(unitcode);
 				if(pszUnitID != NULL)
 					strcpy(m_szElevUnits, pszUnitID);
@@ -1571,7 +1576,7 @@ GDALDataset *LevellerDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return( poDS );
 }
@@ -1599,6 +1604,7 @@ void GDALRegister_Leveller()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "Leveller" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, 
                                    "ter" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 

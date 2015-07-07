@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgtmlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgtmlayer.cpp 27884 2014-10-19 22:27:48Z rouault $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of OGRGTMLayer class.
@@ -82,6 +82,10 @@ int OGRGTMLayer::TestCapability( const char * pszCap )
     if (EQUAL(pszCap,OLCFastFeatureCount) &&
         m_poFilterGeom == NULL && m_poAttrQuery == NULL )
         return TRUE;
+    else if( EQUAL(pszCap,OLCCreateField) )
+        return poDS != NULL && poDS->getOutputFP() != NULL;
+    else if( EQUAL(pszCap,OLCSequentialWrite) )
+        return poDS != NULL && poDS->getOutputFP() != NULL;
     else
         return FALSE;
 }
@@ -132,8 +136,8 @@ OGRErr OGRGTMLayer::CheckAndFixCoordinatesValidity( double& pdfLatitude, double&
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGTMLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
-
+OGRErr OGRGTMLayer::CreateField( OGRFieldDefn *poField,
+                                 CPL_UNUSED int bApproxOK )
 {
     for( int iField = 0; iField < poFeatureDefn->GetFieldCount(); iField++ )
     {

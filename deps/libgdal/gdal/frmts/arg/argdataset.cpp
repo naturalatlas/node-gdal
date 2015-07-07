@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: argdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: argdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Azavea Raster Grid format driver.
  * Purpose:  Implements support for reading and writing Azavea Raster Grid
@@ -34,7 +34,7 @@
 #include <json.h>
 #include <ogr_spatialref.h>
 
-CPL_CVSID("$Id: argdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: argdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 #define MAX_FILENAME_LEN 4096
 
@@ -139,7 +139,7 @@ json_object * GetJsonObject(CPLString pszFilename)
     CPLString osJSONFilename = GetJsonFilename(pszFilename);
 
     pJSONObject = json_object_from_file((char *)osJSONFilename.c_str());
-    if (pJSONObject == (struct json_object*)error_ptr(-1) || pJSONObject == NULL) {
+    if (pJSONObject == NULL) {
         CPLDebug("ARGDataset", "GetJsonObject(): "
             "Could not parse JSON file.");
         return NULL;
@@ -785,7 +785,7 @@ GDALDataset * ARGDataset::CreateCopy( const char * pszFilename,
 
                 eErr = poSrcBand->RasterIO(GF_Read, nXBlock * nXBlockSize, 
                     nYBlock * nYBlockSize + nYScanline, nXValid, 1, pabyData, nXBlockSize, 
-                    1, eType, 0, 0);
+                    1, eType, 0, 0, NULL);
 
                 if (eErr != CE_None) {
                     CPLError(CE_Failure, CPLE_AppDefined, "Error reading.");
@@ -799,7 +799,7 @@ GDALDataset * ARGDataset::CreateCopy( const char * pszFilename,
 
                 eErr = poDstBand->RasterIO(GF_Write, nXBlock * nXBlockSize, 
                     nYBlock * nYBlockSize + nYScanline, nXValid, 1, pabyData, nXBlockSize, 
-                    1, eType, 0, 0);
+                    1, eType, 0, 0, NULL);
 
                 if (eErr != CE_None) {
                     CPLError(CE_Failure, CPLE_AppDefined, "Error writing.");
@@ -834,6 +834,7 @@ void GDALRegister_ARG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "ARG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Azavea Raster Grid format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

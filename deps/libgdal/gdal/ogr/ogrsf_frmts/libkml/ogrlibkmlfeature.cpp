@@ -382,7 +382,7 @@ FeaturePtr feat2kml (
                     poKmlPhotoOverlay->set_shape(kmldom::SHAPE_SPHERE);
             }
 
-            ElementPtr poKmlElement = geom2kml ( poOgrGeom, -1, 0, poKmlFactory );
+            ElementPtr poKmlElement = geom2kml ( poOgrGeom, -1, poKmlFactory );
 
             poKmlPhotoOverlay->set_point ( AsPoint ( poKmlElement ) );
         }
@@ -616,7 +616,12 @@ FeaturePtr feat2kml (
                                     resourceMap = poKmlFactory->CreateResourceMap();
                                 AliasPtr alias = poKmlFactory->CreateAlias();
                                 if( bIsURL && CPLIsFilenameRelative(osImage) )
-                                    alias->set_targethref(CPLFormFilename(CPLGetPath(pszURL), osImage, NULL));
+                                {
+                                    if( strncmp(pszURL, "http", 4) == 0 )
+                                        alias->set_targethref(CPLSPrintf("%s/%s", CPLGetPath(pszURL), osImage.c_str()));
+                                    else
+                                        alias->set_targethref(CPLFormFilename(CPLGetPath(pszURL), osImage, NULL));
+                                }
                                 else
                                     alias->set_targethref(osImage);
                                 alias->set_sourcehref(osImage);
@@ -681,7 +686,7 @@ FeaturePtr feat2kml (
         PlacemarkPtr poKmlPlacemark = poKmlFactory->CreatePlacemark (  );
         poKmlFeature = poKmlPlacemark;
 
-        ElementPtr poKmlElement = geom2kml ( poOgrGeom, -1, 0, poKmlFactory );
+        ElementPtr poKmlElement = geom2kml ( poOgrGeom, -1, poKmlFactory );
 
         poKmlPlacemark->set_geometry ( AsGeometry ( poKmlElement ) );
     }

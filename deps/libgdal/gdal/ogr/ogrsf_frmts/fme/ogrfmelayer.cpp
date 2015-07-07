@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfmelayer.cpp 12123 2007-09-11 23:57:40Z warmerdam $
+ * $Id: ogrfmelayer.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Implementation of the OGRFMELayer base class.  The class
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrfmelayer.cpp 12123 2007-09-11 23:57:40Z warmerdam $");
+CPL_CVSID("$Id: ogrfmelayer.cpp 27959 2014-11-14 18:29:21Z rouault $");
 
 /************************************************************************/
 /*                            OGRFMELayer()                             */
@@ -105,6 +105,7 @@ int OGRFMELayer::Initialize( IFMEFeature * poSchemaFeature,
     poSchemaFeature->getFeatureType( *poFMEString );
 
     poFeatureDefn = new OGRFeatureDefn( poFMEString->data() );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     poDS->GetFMESession()->destroyString( poFMEString );
@@ -274,7 +275,7 @@ int OGRFMELayer::Initialize( IFMEFeature * poSchemaFeature,
 /*      Assign the geometry type ... try to apply 3D-ness as well.      */
 /* -------------------------------------------------------------------- */
     if( poSchemaFeature->getDimension() == FME_THREE_D )
-        eGeomType = (OGRwkbGeometryType) (((int)eGeomType) | wkb25DBit);
+        eGeomType = wkbSetZ(eGeomType);
 
     poFeatureDefn->SetGeomType( eGeomType );
 

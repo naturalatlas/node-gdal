@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fastdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: fastdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  EOSAT FAST Format reader
  * Purpose:  Reads Landsat FAST-L7A, IRS 1C/1D
@@ -33,7 +33,7 @@
 #include "ogr_spatialref.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: fastdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: fastdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void	GDALRegister_FAST(void);
@@ -1131,6 +1131,7 @@ void GDALRegister_FAST()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "FAST" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "EOSAT FAST Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

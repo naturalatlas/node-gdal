@@ -322,7 +322,8 @@ JPIPKAKRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                               int nXOff, int nYOff, int nXSize, int nYSize,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
-                              int nPixelSpace,int nLineSpace )
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg)
     
 {
 /* -------------------------------------------------------------------- */
@@ -334,7 +335,7 @@ JPIPKAKRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamRasterBand::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nPixelSpace, nLineSpace );
+            nPixelSpace, nLineSpace, psExtraArg );
 
 /* -------------------------------------------------------------------- */
 /*      Otherwise do this as a single uncached async rasterio.          */
@@ -389,6 +390,8 @@ JPIPKAKDataset::JPIPKAKDataset()
     nDatabins = 0;
     bWindowDone = FALSE;
     bGeoTransformValid = FALSE;
+
+    bNeedReinitialize = FALSE;
 
     adfGeoTransform[0] = 0.0;
     adfGeoTransform[1] = 1.0;
@@ -629,7 +632,10 @@ int JPIPKAKDataset::Initialize(const char* pszDatasetName, int bReinitializing )
 /*      hopefully the configuration is unchanged.                       */
 /* -------------------------------------------------------------------- */
         if( bReinitializing )
+        {
+            bNeedReinitialize = FALSE;
             return TRUE;
+        }
 
 /* -------------------------------------------------------------------- */
 /*      Collect GDAL raster configuration information.                  */
@@ -1141,7 +1147,9 @@ CPLErr JPIPKAKDataset::IRasterIO( GDALRWFlag eRWFlag,
                                   void * pData, int nBufXSize, int nBufYSize,
                                   GDALDataType eBufType, 
                                   int nBandCount, int *panBandMap,
-                                  int nPixelSpace,int nLineSpace,int nBandSpace)
+                                  GSpacing nPixelSpace, GSpacing nLineSpace,
+                                  GSpacing nBandSpace,
+                                  GDALRasterIOExtraArg* psExtraArg)
 
 {
 /* -------------------------------------------------------------------- */
@@ -1152,7 +1160,7 @@ CPLErr JPIPKAKDataset::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamDataset::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 
 /* -------------------------------------------------------------------- */
 /*      Otherwise do this as a single uncached async rasterio.          */
@@ -1190,9 +1198,10 @@ CPLErr JPIPKAKDataset::IRasterIO( GDALRWFlag eRWFlag,
 /************************************************************************/
 
 int 
-JPIPKAKDataset::TestUseBlockIO( int nXOff, int nYOff, int nXSize, int nYSize,
+JPIPKAKDataset::TestUseBlockIO( CPL_UNUSED int nXOff, CPL_UNUSED int nYOff,
+                                int nXSize, int nYSize,
                                 int nBufXSize, int nBufYSize,
-                                GDALDataType eDataType, 
+                                CPL_UNUSED GDALDataType eDataType, 
                                 int nBandCount, int *panBandList )
 
 {
@@ -1459,6 +1468,7 @@ void GDALRegister_JPIPKAK()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "JPIPKAK" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "JPIP (based on Kakadu)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

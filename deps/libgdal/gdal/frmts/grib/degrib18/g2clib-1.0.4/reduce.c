@@ -19,9 +19,9 @@
 typedef g2int integer;
 typedef g2float real;
 
-/* Subroutine */ int reduce(CPL_UNUSED integer *kfildo, integer *jmin, integer *jmax, 
+/* Subroutine */ int reduce(CPL_UNUSED integer *kfildo, integer *jmin, integer *jmax,
 	integer *lbit, integer *nov, integer *lx, integer *ndg, integer *ibit,
-	 integer *jbit, integer *kbit, integer *novref, integer *ibxx2, 
+	 integer *jbit, integer *kbit, integer *novref, integer *ibxx2,
 	integer *ier)
 {
     /* Initialized data */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgpxdatasource.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogrgpxdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgpxdatasource.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 #define SPACE_FOR_METADATA 160
 
@@ -91,7 +91,7 @@ OGRGPXDataSource::~OGRGPXDataSource()
             if (dfMinLon <= dfMaxLon)
             {
                 char szMetadata[SPACE_FOR_METADATA+1];
-                int nRet = snprintf(szMetadata, SPACE_FOR_METADATA,
+                int nRet = CPLsnprintf(szMetadata, SPACE_FOR_METADATA,
                          "<metadata><bounds minlat=\"%.15f\" minlon=\"%.15f\" maxlat=\"%.15f\" maxlon=\"%.15f\"/></metadata>",
                         dfMinLat, dfMinLon, dfMaxLat, dfMaxLon);
                 if (nRet < SPACE_FOR_METADATA)
@@ -141,14 +141,13 @@ OGRLayer *OGRGPXDataSource::GetLayer( int iLayer )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRGPXDataSource::CreateLayer( const char * pszLayerName,
-                                          CPL_UNUSED OGRSpatialReference *poSRS,
-                                          OGRwkbGeometryType eType,
-                                          char ** papszOptions )
-
+OGRLayer * OGRGPXDataSource::ICreateLayer( const char * pszLayerName,
+                                           CPL_UNUSED OGRSpatialReference *poSRS,
+                                           OGRwkbGeometryType eType,
+                                           char ** papszOptions )
 {
     GPXGeometryType gpxGeomType;
     if (eType == wkbPoint || eType == wkbPoint25D)
@@ -239,7 +238,8 @@ void OGRGPXDataSource::startElementValidateCbk(const char *pszName, const char *
 /*                      dataHandlerValidateCbk()                        */
 /************************************************************************/
 
-void OGRGPXDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
+void OGRGPXDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data,
+                                              CPL_UNUSED int nLen)
 {
     nDataHandlerCounter ++;
     if (nDataHandlerCounter >= BUFSIZ)

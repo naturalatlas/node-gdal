@@ -52,8 +52,8 @@ using namespace PCIDSK;
 /*                      CBandInterleavedChannel()                       */
 /************************************************************************/
 
-CBandInterleavedChannel::CBandInterleavedChannel( PCIDSKBuffer &image_header, 
-                                                  uint64 ih_offset, 
+CBandInterleavedChannel::CBandInterleavedChannel( PCIDSKBuffer &image_header,
+                                                  uint64 ih_offset,
                                                   CPL_UNUSED PCIDSKBuffer &file_header,
                                                   int channelnum,
                                                   CPCIDSKFile *file,
@@ -474,4 +474,3 @@ std::string CBandInterleavedChannel::MassageLink( std::string filename_in ) cons
 
     return filename_in;
 }
-

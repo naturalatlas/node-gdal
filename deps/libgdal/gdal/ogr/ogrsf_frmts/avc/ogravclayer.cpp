@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogravclayer.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCLayer class.  This is the base class for E00
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogravclayer.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                           OGRAVCLayer()                           */
@@ -178,6 +178,8 @@ int OGRAVCLayer::SetupFeatureDefinition( const char *pszName )
         poFeatureDefn = NULL;
         return FALSE;
     }
+
+    SetDescription( pszName );
 }
 
 /************************************************************************/
@@ -590,9 +592,3 @@ int OGRAVCLayer::TranslateTableFields( OGRFeature *poFeature,
 
     return TRUE;
 }
-
-
-
-
-
-

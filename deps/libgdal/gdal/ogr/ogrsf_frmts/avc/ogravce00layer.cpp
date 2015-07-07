@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravce00layer.cpp 23907 2012-02-04 23:04:59Z rouault $
+ * $Id: ogravce00layer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCE00Layer class.
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravce00layer.cpp 23907 2012-02-04 23:04:59Z rouault $");
+CPL_CVSID("$Id: ogravce00layer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                           OGRAVCE00Layer()                           */
@@ -135,7 +135,7 @@ void OGRAVCE00Layer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRAVCE00Layer::GetFeature( long nFID )
+OGRFeature *OGRAVCE00Layer::GetFeature( GIntBig nFID )
 
 {
 /* -------------------------------------------------------------------- */
@@ -491,7 +491,7 @@ int OGRAVCE00Layer::AppendTableFields( OGRFeature *poFeature )
     void *hRecord;
 
     if( nTableAttrIndex == -1 )
-        nRecordId = poFeature->GetFID();
+        nRecordId = (int) poFeature->GetFID();
     else
         nRecordId = poFeature->GetFieldAsInteger( nTableAttrIndex );
 
@@ -522,7 +522,7 @@ int OGRAVCE00Layer::AppendTableFields( OGRFeature *poFeature )
 }
 
 
-int OGRAVCE00Layer::GetFeatureCount(int bForce)
+GIntBig OGRAVCE00Layer::GetFeatureCount(int bForce)
 {
     if (m_poAttrQuery != NULL || m_poFilterGeom != NULL)
         return OGRAVCLayer::GetFeatureCount(bForce);
@@ -531,7 +531,7 @@ int OGRAVCE00Layer::GetFeatureCount(int bForce)
     {
         if (psSection->nFeatureCount < 0)
         {
-            nFeatureCount = OGRLayer::GetFeatureCount(bForce);
+            nFeatureCount = (int) OGRLayer::GetFeatureCount(bForce);
         }
         else
         {

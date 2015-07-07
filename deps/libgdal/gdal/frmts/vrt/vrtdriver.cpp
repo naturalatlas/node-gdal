@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: vrtdriver.cpp 29294 2015-06-05 08:52:15Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTDriver
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "gdal_alg_priv.h"
 
-CPL_CVSID("$Id: vrtdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: vrtdriver.cpp 29294 2015-06-05 08:52:15Z rouault $");
 
 /************************************************************************/
 /*                             VRTDriver()                              */
@@ -43,9 +43,13 @@ VRTDriver::VRTDriver()
 
 {
     papszSourceParsers = NULL;
+#if 0
     pDeserializerData = GDALRegisterTransformDeserializer("WarpedOverviewTransformer",
                                                           VRTWarpedOverviewTransform,
                                                           VRTDeserializeWarpedOverviewTransformer);
+#else
+    pDeserializerData = NULL;
+#endif
 }
 
 /************************************************************************/
@@ -56,11 +60,12 @@ VRTDriver::~VRTDriver()
 
 {
     CSLDestroy( papszSourceParsers );
-
+#if 0
     if ( pDeserializerData )
     {
         GDALUnregisterTransformDeserializer( pDeserializerData );
     }
+#endif
 }
 
 /************************************************************************/
@@ -154,9 +159,12 @@ VRTSource *VRTDriver::ParseSource( CPLXMLNode *psSrc, const char *pszVRTPath )
 /************************************************************************/
 
 static GDALDataset *
-VRTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-               int bStrict, char ** papszOptions, 
-               CPL_UNUSED GDALProgressFunc pfnProgress, CPL_UNUSED void * pProgressData )
+VRTCreateCopy( const char * pszFilename,
+               GDALDataset *poSrcDS,
+               int bStrict,
+               char ** papszOptions,
+               CPL_UNUSED GDALProgressFunc pfnProgress,
+               CPL_UNUSED void * pProgressData )
 {
     VRTDataset *poVRTDS = NULL;
 
@@ -178,6 +186,7 @@ VRTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     /*      Convert tree to a single block of XML text.                     */
     /* -------------------------------------------------------------------- */
         char *pszVRTPath = CPLStrdup(CPLGetPath(pszFilename));
+        ((VRTDataset *) poSrcDS)->UnsetPreservedRelativeFilenames();
         CPLXMLNode *psDSTree = ((VRTDataset *) poSrcDS)->SerializeToXML( pszVRTPath );
 
         char *pszXML = CPLSerializeXMLTree( psDSTree );
@@ -351,6 +360,7 @@ void GDALRegister_VRT()
         poDriver = new VRTDriver();
         
         poDriver->SetDescription( "VRT" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Virtual Raster" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "vrt" );
@@ -363,6 +373,11 @@ void GDALRegister_VRT()
         poDriver->pfnCreate = VRTDataset::Create;
         poDriver->pfnIdentify = VRTDataset::Identify;
         poDriver->pfnDelete = VRTDataset::Delete;
+
+        poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST,
+"<OpenOptionList>"
+"  <Option name='ROOT_PATH' type='string' description='Root path to evaluate relative paths inside the VRT. Mainly useful for inlined VRT, or in-memory VRT, where their own directory does not make sense'/>"
+"</OpenOptionList>" );
 
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
@@ -379,4 +394,3 @@ void GDALRegister_VRT()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

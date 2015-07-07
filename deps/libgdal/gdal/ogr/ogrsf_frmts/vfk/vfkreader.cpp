@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkreader.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: vfkreader.cpp 27973 2014-11-16 17:40:22Z martinl $
  *
  * Project:  VFK Reader
  * Purpose:  Implements VFKReader class.
@@ -269,24 +269,25 @@ int VFKReader::ReadDataRecords(IVFKDataBlock *poDataBlock)
             pszBlockName = GetDataBlockName(pszLine);
             
             if (pszBlockName && (!pszName || EQUAL(pszBlockName, pszName))) {
-                /* merge lines if needed */
-                if (pszLine[nLength - 2] == '\302' &&
-                    pszLine[nLength - 1] == '\244') {
-                    
-                    /* remove 0302 0244 (currency sign) from string */
-                    pszLine[nLength - 2] = '\0';
+                /* merge lines if needed
+
+                   See http://en.wikipedia.org/wiki/ISO/IEC_8859
+                   - \244 - general currency sign
+                */
+                if (pszLine[nLength - 1] == '\244') {
+                    /* remove \244 (currency sign) from string */
+                    pszLine[nLength - 1] = '\0';
                     
                     pszMultiLine.clear();
                     pszMultiLine = pszLine;
                     CPLFree(pszLine);
                     
                     while ((pszLine = ReadLine()) != NULL &&
-                           pszLine[strlen(pszLine) - 2] == '\302' &&
                            pszLine[strlen(pszLine) - 1] == '\244') {
                         /* append line */
                         pszMultiLine += pszLine;
-                        /* remove 0302 0244 (currency sign) from string */
-                        pszMultiLine[strlen(pszLine) - 2] = '\0';
+                        /* remove 0244 (currency sign) from string */
+                        pszMultiLine.erase(pszMultiLine.size() - 1);
 
                         CPLFree(pszLine);
                     } 
@@ -306,8 +307,7 @@ int VFKReader::ReadDataRecords(IVFKDataBlock *poDataBlock)
                         osBlockNameLast = CPLString(pszBlockName);
                     }
                 }
-                if (!poDataBlockCurrent)
-                {
+                if (!poDataBlockCurrent) {
                     CPLFree(pszBlockName);
                     continue; // assert ?
                 }
@@ -380,10 +380,11 @@ IVFKDataBlock *VFKReader::CreateDataBlock(const char *pszBlockName)
   \param poNewDataBlock pointer to VFKDataBlock instance
   \param pszDefn unused (FIXME ?)
 */
-void VFKReader::AddDataBlock(IVFKDataBlock *poNewDataBlock, CPL_UNUSED const char *pszDefn)
+void VFKReader::AddDataBlock(IVFKDataBlock *poNewDataBlock,
+                             CPL_UNUSED const char *pszDefn)
 {
     m_nDataBlockCount++;
-    
+
     m_papoDataBlock = (IVFKDataBlock **)
         CPLRealloc(m_papoDataBlock, sizeof (IVFKDataBlock *) * m_nDataBlockCount);
     m_papoDataBlock[m_nDataBlockCount-1] = poNewDataBlock;

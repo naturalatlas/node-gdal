@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_aeronavfaa.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_aeronavfaa.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Definition of classes for OGR AeronavFAA driver.
@@ -174,28 +174,13 @@ class OGRAeronavFAADataSource : public OGRDataSource
                         OGRAeronavFAADataSource();
                         ~OGRAeronavFAADataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     virtual const char*         GetName() { return pszName; }
 
     virtual int                 GetLayerCount() { return nLayers; }
     virtual OGRLayer*           GetLayer( int );
 
-    virtual int                 TestCapability( const char * );
-};
-
-/************************************************************************/
-/*                         OGRAeronavFAADriver                          */
-/************************************************************************/
-
-class OGRAeronavFAADriver : public OGRSFDriver
-{
-  public:
-                ~OGRAeronavFAADriver();
-
-    virtual const char*         GetName();
-    virtual OGRDataSource*      Open( const char *, int );
     virtual int                 TestCapability( const char * );
 };
 

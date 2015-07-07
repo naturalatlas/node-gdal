@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitevfs.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrsqlitevfs.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements SQLite VFS
@@ -30,7 +30,13 @@
 #include "cpl_atomic_ops.h"
 #include "ogr_sqlite.h"
 
-CPL_CVSID("$Id: ogrsqlitevfs.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrsqlitevfs.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+
+#ifdef DEBUG_IO
+# define DEBUG_ONLY
+#else
+# define DEBUG_ONLY CPL_UNUSED
+#endif
 
 //#define DEBUG_IO 1
 
@@ -109,15 +115,7 @@ static int OGRSQLiteIOTruncate(sqlite3_file* pFile, sqlite3_int64 size)
     return (nRet == 0) ? SQLITE_OK : SQLITE_IOERR_TRUNCATE;
 }
 
-static int OGRSQLiteIOSync(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                           sqlite3_file* pFile,
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                           int flags)
+static int OGRSQLiteIOSync(DEBUG_ONLY sqlite3_file* pFile, DEBUG_ONLY int flags)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -139,15 +137,7 @@ static int OGRSQLiteIOFileSize(sqlite3_file* pFile, sqlite3_int64 *pSize)
     return SQLITE_OK;
 }
 
-static int OGRSQLiteIOLock(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                           sqlite3_file* pFile,
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                           int flags)
+static int OGRSQLiteIOLock(DEBUG_ONLY sqlite3_file* pFile, DEBUG_ONLY int flags)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -156,7 +146,7 @@ CPL_UNUSED
     return SQLITE_OK;
 }
 
-static int OGRSQLiteIOUnlock(CPL_UNUSED sqlite3_file* pFile, CPL_UNUSED int flags)
+static int OGRSQLiteIOUnlock(DEBUG_ONLY sqlite3_file* pFile, DEBUG_ONLY int flags)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -165,15 +155,8 @@ static int OGRSQLiteIOUnlock(CPL_UNUSED sqlite3_file* pFile, CPL_UNUSED int flag
     return SQLITE_OK;
 }
 
-static int OGRSQLiteIOCheckReservedLock(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                        sqlite3_file* pFile,
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                        int *pResOut)
+static int OGRSQLiteIOCheckReservedLock(DEBUG_ONLY sqlite3_file* pFile,
+                                        DEBUG_ONLY int *pResOut)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -183,19 +166,9 @@ CPL_UNUSED
     return SQLITE_OK;
 }
 
-static int OGRSQLiteIOFileControl(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                  sqlite3_file* pFile,
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                  int op,
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                  void *pArg)
+static int OGRSQLiteIOFileControl(DEBUG_ONLY sqlite3_file* pFile,
+                           DEBUG_ONLY int op,
+                           DEBUG_ONLY void *pArg)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -204,11 +177,7 @@ CPL_UNUSED
     return SQLITE_NOTFOUND;
 }
 
-static int OGRSQLiteIOSectorSize(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                 sqlite3_file* pFile)
+static int OGRSQLiteIOSectorSize(DEBUG_ONLY sqlite3_file* pFile)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -217,11 +186,7 @@ CPL_UNUSED
     return 0;
 }
 
-static int OGRSQLiteIODeviceCharacteristics(
-#ifndef DEBUG_IO
-CPL_UNUSED 
-#endif
-                                            sqlite3_file* pFile)
+static int OGRSQLiteIODeviceCharacteristics(DEBUG_ONLY sqlite3_file* pFile)
 {
 #ifdef DEBUG_IO
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
@@ -245,15 +210,6 @@ static const sqlite3_io_methods OGRSQLiteIOMethods =
     OGRSQLiteIOFileControl,
     OGRSQLiteIOSectorSize,
     OGRSQLiteIODeviceCharacteristics
-#if 0
-    // TODO: These are in sqlite3.
-    , 0, // xShmMap
-    0, // xShmLock
-    0, // xShmBarrier
-    0, // xShmUnmap
-    0, // xFetch
-    0 // xUnfetch
-#endif
 };
 
 static int OGRSQLiteVFSOpen(sqlite3_vfs* pVFS,
@@ -310,9 +266,8 @@ static int OGRSQLiteVFSOpen(sqlite3_vfs* pVFS,
     return SQLITE_OK;
 }
 
-static int OGRSQLiteVFSDelete(CPL_UNUSED sqlite3_vfs* pVFS,
-                              const char *zName,
-                              CPL_UNUSED int syncDir)
+static int OGRSQLiteVFSDelete(DEBUG_ONLY sqlite3_vfs* pVFS,
+                           const char *zName, int DEBUG_ONLY syncDir)
 {
 #ifdef DEBUG_IO
     CPLDebug("SQLITE", "OGRSQLiteVFSDelete(%s)", zName);
@@ -321,7 +276,10 @@ static int OGRSQLiteVFSDelete(CPL_UNUSED sqlite3_vfs* pVFS,
     return SQLITE_OK;
 }
 
-static int OGRSQLiteVFSAccess (CPL_UNUSED sqlite3_vfs* pVFS, const char *zName, int flags, int *pResOut)
+static int OGRSQLiteVFSAccess (DEBUG_ONLY sqlite3_vfs* pVFS,
+                               const char *zName,
+                               int flags,
+                               int *pResOut)
 {
 #ifdef DEBUG_IO
     CPLDebug("SQLITE", "OGRSQLiteVFSAccess(%s, %d)", zName, flags);

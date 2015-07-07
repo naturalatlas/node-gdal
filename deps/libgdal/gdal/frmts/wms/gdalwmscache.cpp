@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwmscache.cpp 27555 2014-08-02 17:47:11Z rouault $
+ * $Id: gdalwmscache.cpp 27554 2014-08-02 17:46:37Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS

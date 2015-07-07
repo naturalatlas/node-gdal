@@ -2,7 +2,7 @@
 #define SHAPEFILE_H_INCLUDED
 
 /******************************************************************************
- * $Id: shapefil.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: shapefil.h 28337 2015-01-21 21:10:33Z rouault $
  *
  * Project:  Shapelib
  * Purpose:  Primary include file for Shapelib.
@@ -583,6 +583,10 @@ typedef	struct
 
     int         iLanguageDriver;
     char        *pszCodePage;
+    
+    int         nUpdateYearSince1900; /* 0-255 */
+    int         nUpdateMonth; /* 1-12 */
+    int         nUpdateDay; /* 1-31 */
 } DBFInfo;
 
 typedef DBFInfo * DBFHandle;
@@ -689,6 +693,9 @@ char    SHPAPI_CALL
 
 const char SHPAPI_CALL1(*)
       DBFGetCodePage(DBFHandle psDBF );
+
+void SHPAPI_CALL
+    DBFSetLastModifiedDate( DBFHandle psDBF, int nYYSince1900, int nMM, int nDD );
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: irisdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: irisdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  IRIS Reader
  * Purpose:  All code for IRIS format Reader
@@ -43,7 +43,7 @@
 #include <sstream>
 
 
-CPL_CVSID("$Id: irisdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: irisdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_IRIS(void);
@@ -189,7 +189,8 @@ IRISRasterBand::~IRISRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr IRISRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr IRISRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
                                    void * pImage )
 
 {
@@ -308,6 +309,21 @@ CPLErr IRISRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                 fVal = poGDS->fNyquistVelocity * (fVal - 128)/127;
             ((float *) pImage)[i] = fVal;     
         }       
+    //SHEAR (1-Byte Shear)
+    //See point 3.3.23 at page 3.39 of the manual
+    } else if(poGDS->nDataTypeCode == 35){
+        float fVal;
+        for (i=0;i<nBlockXSize;i++){
+            fVal = (float) *(pszRecord+i*nDataLength);
+            if (fVal == 0.0)
+                fVal = -9998;
+            else if (fVal == 255.0)
+                fVal = -9999;
+            else
+                fVal = (fVal - 128) * 0.2;
+            ((float *) pImage)[i] = fVal;
+        }
+
     }
 
     return CE_None;
@@ -960,6 +976,7 @@ void GDALRegister_IRIS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "IRIS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "IRIS data (.PPI, .CAPPi etc)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

@@ -326,10 +326,11 @@ const char *CTable2Dataset::GetProjectionRef()
 /************************************************************************/
 
 GDALDataset *CTable2Dataset::Create( const char * pszFilename,
-                                     int nXSize, int nYSize, CPL_UNUSED int nBands,
+                                     int nXSize,
+                                     int nYSize,
+                                     CPL_UNUSED int nBands,
                                      GDALDataType eType,
                                      char ** papszOptions )
-
 {
     if( eType != GDT_Float32 )
     {
@@ -443,6 +444,7 @@ void GDALRegister_CTable2()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "CTable2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "CTable2 Datum Grid Shift" );
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
@@ -457,4 +459,3 @@ void GDALRegister_CTable2()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

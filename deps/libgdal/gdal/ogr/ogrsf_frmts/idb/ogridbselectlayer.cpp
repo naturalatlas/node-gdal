@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogridbselectlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogridbselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBSelectLayer class, layer access to the results
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "ogr_idb.h"
 
-CPL_CVSID("$Id: ogridbselectlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogridbselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRIDBSelectLayer()                         */
@@ -133,7 +133,7 @@ void OGRIDBSelectLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRIDBSelectLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRIDBSelectLayer::GetFeature( GIntBig nFeatureId )
 
 {
     return OGRIDBLayer::GetFeature( nFeatureId );
@@ -171,7 +171,7 @@ OGRErr OGRIDBSelectLayer::GetExtent(OGREnvelope *, int )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRIDBSelectLayer::GetFeatureCount( int bForce )
+GIntBig OGRIDBSelectLayer::GetFeatureCount( int bForce )
 
 {
     return OGRIDBLayer::GetFeatureCount( bForce );

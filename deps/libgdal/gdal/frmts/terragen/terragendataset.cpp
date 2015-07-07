@@ -106,7 +106,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-// CPL_CVSID("$Id: terragendataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+// CPL_CVSID("$Id: terragendataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_Terragen(void);
@@ -270,9 +270,9 @@ TerragenRasterBand::TerragenRasterBand( TerragenDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr TerragenRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr TerragenRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                       int nBlockYOff,
                                        void* pImage )
-
 {
     //CPLAssert( sizeof(float) == sizeof(GInt32) );
     CPLAssert( nBlockXOff == 0  );
@@ -366,9 +366,9 @@ double TerragenRasterBand::GetOffset(int* pbSuccess)
 /************************************************************************/
 
 CPLErr TerragenRasterBand::IWriteBlock
-( 
-	CPL_UNUSED int nBlockXOff, 
-	int nBlockYOff,
+(
+    CPL_UNUSED int nBlockXOff,
+    int nBlockYOff,
     void* pImage
 )
 {
@@ -910,8 +910,8 @@ CPLErr TerragenDataset::SetProjection( const char * pszNewProjection )
 
         if( approx_equal(dfLinear, 0.3048))
             m_dMetersPerGroundUnit = 0.3048;
-        else if( approx_equal(dfLinear, atof(SRS_UL_US_FOOT_CONV)) )
-            m_dMetersPerGroundUnit = atof(SRS_UL_US_FOOT_CONV);
+        else if( approx_equal(dfLinear, CPLAtof(SRS_UL_US_FOOT_CONV)) )
+            m_dMetersPerGroundUnit = CPLAtof(SRS_UL_US_FOOT_CONV);
         else
             m_dMetersPerGroundUnit = 1.0;
     }
@@ -981,12 +981,12 @@ GDALDataset* TerragenDataset::Create
     const char* pszValue = CSLFetchNameValue( 
 		papszOptions,"MINUSERPIXELVALUE");
     if( pszValue != NULL )
-        poDS->m_dLogSpan[0] = atof( pszValue );
+        poDS->m_dLogSpan[0] = CPLAtof( pszValue );
 
     pszValue = CSLFetchNameValue( 
 		papszOptions,"MAXUSERPIXELVALUE");
     if( pszValue != NULL )
-        poDS->m_dLogSpan[1] = atof( pszValue );
+        poDS->m_dLogSpan[1] = CPLAtof( pszValue );
 
 
 	if( poDS->m_dLogSpan[1] <= poDS->m_dLogSpan[0] )
@@ -1143,6 +1143,7 @@ void GDALRegister_Terragen()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "Terragen" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, 
                                    "ter" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
@@ -1162,5 +1163,3 @@ void GDALRegister_Terragen()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-
-

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxf_ogcwkt.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gxf_ogcwkt.c 28565 2015-02-27 10:26:21Z rouault $
  *
  * Project:  GXF Reader
  * Purpose:  Handle GXF to OGC WKT projection transformation.
@@ -29,8 +29,9 @@
  ****************************************************************************/
 
 #include "gxfopen.h"
+#include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gxf_ogcwkt.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gxf_ogcwkt.c 28565 2015-02-27 10:26:21Z rouault $");
 
 /* -------------------------------------------------------------------- */
 /* the following #defines come from ogr_spatialref.h in the GDAL/OGR	*/
@@ -549,7 +550,7 @@ char *GXFGetMapProjectionAsOGCWKT( GXFHandle hGXF )
         if( strlen(psGXF->pszUnitName) > 80 )
             return CPLStrdup("");
 
-        sprintf( szProjection+strlen(szProjection),
+        CPLsprintf( szProjection+strlen(szProjection),
                  ",UNIT[\"%s\",%.15g]",
                  psGXF->pszUnitName, psGXF->dfUnitToMeter );
     }
@@ -572,8 +573,8 @@ char *GXFGetMapProjectionAsOGCWKT( GXFHandle hGXF )
 
         if( CSLCount(papszTokens) > 2 )
         {
-            double	dfMajor = atof(papszTokens[1]);
-            double	dfEccentricity = atof(papszTokens[2]);
+            double	dfMajor = CPLAtof(papszTokens[1]);
+            double	dfEccentricity = CPLAtof(papszTokens[2]);
             double	dfInvFlattening, dfMinor;
             char	*pszOGCDatum;
 
@@ -583,13 +584,13 @@ char *GXFGetMapProjectionAsOGCWKT( GXFHandle hGXF )
             else
             {
                 dfMinor = dfMajor * pow(1.0-dfEccentricity*dfEccentricity,0.5);
-                dfInvFlattening = 1.0 / (1 - dfMinor/dfMajor);
+                dfInvFlattening = OSRCalcInvFlattening(dfMajor, dfMinor);
             }
 
             pszOGCDatum = CPLStrdup(papszTokens[0]);
             WKTMassageDatum( &pszOGCDatum );
             
-            sprintf( szGCS,
+            CPLsprintf( szGCS,
                      "GEOGCS[\"%s\","
                        "DATUM[\"%s\","
                        "SPHEROID[\"%s\",%s,%.15g]],",

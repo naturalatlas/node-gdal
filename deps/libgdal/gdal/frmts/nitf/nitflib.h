@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitflib.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitflib.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Main GDAL independent include file for NITF support.  
@@ -80,6 +80,7 @@ typedef struct {
 /*      File level prototypes.                                          */
 /* -------------------------------------------------------------------- */
 NITFFile CPL_DLL *NITFOpen( const char *pszFilename, int bUpdatable );
+NITFFile *NITFOpenEx( VSILFILE *fp, const char *pszFilename );
 void     CPL_DLL  NITFClose( NITFFile * );
 
 int      CPL_DLL  NITFCreate( const char *pszFilename, 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonwriter.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgeojsonwriter.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of GeoJSON writer utilities (OGR GeoJSON Driver).
@@ -56,7 +56,7 @@ json_object* OGRGeoJSONWriteFeature( OGRFeature* poFeature, int bWriteBBOX, int 
     if ( poFeature->GetFID() != OGRNullFID )
     {
         json_object_object_add( poObj, "id",
-                                json_object_new_int((int)poFeature->GetFID()) );
+                                json_object_new_int64(poFeature->GetFID()) );
     }
 
 /* -------------------------------------------------------------------- */
@@ -126,6 +126,7 @@ json_object* OGRGeoJSONWriteAttributes( OGRFeature* poFeature )
         OGRFieldDefn* poFieldDefn = poDefn->GetFieldDefn( nField );
         CPLAssert( NULL != poFieldDefn );
         OGRFieldType eType = poFieldDefn->GetType();
+        OGRFieldSubType eSubType = poFieldDefn->GetSubType();
 
         if( !poFeature->IsFieldSet(nField) )
         {
@@ -133,8 +134,21 @@ json_object* OGRGeoJSONWriteAttributes( OGRFeature* poFeature )
         }
         else if( OFTInteger == eType )
         {
-            poObjProp = json_object_new_int( 
-                poFeature->GetFieldAsInteger( nField ) );
+            if( eSubType == OFSTBoolean )
+                poObjProp = json_object_new_boolean( 
+                    poFeature->GetFieldAsInteger( nField ) );
+            else
+                poObjProp = json_object_new_int( 
+                    poFeature->GetFieldAsInteger( nField ) );
+        }
+        else if( OFTInteger64 == eType )
+        {
+            if( eSubType == OFSTBoolean )
+                poObjProp = json_object_new_boolean( 
+                    (json_bool)poFeature->GetFieldAsInteger64( nField ) );
+            else
+                poObjProp = json_object_new_int64( 
+                    poFeature->GetFieldAsInteger64( nField ) );
         }
         else if( OFTReal == eType )
         {
@@ -153,8 +167,27 @@ json_object* OGRGeoJSONWriteAttributes( OGRFeature* poFeature )
             poObjProp = json_object_new_array();
             for(int i=0;i<nSize;i++)
             {
-                json_object_array_add(poObjProp,
+                if( eSubType == OFSTBoolean )
+                    json_object_array_add(poObjProp,
+                            json_object_new_boolean(panList[i]));
+                else
+                    json_object_array_add(poObjProp,
                             json_object_new_int(panList[i]));
+            }
+        }
+        else if( OFTInteger64List == eType )
+        {
+            int nSize = 0;
+            const GIntBig* panList = poFeature->GetFieldAsInteger64List(nField, &nSize);
+            poObjProp = json_object_new_array();
+            for(int i=0;i<nSize;i++)
+            {
+                if( eSubType == OFSTBoolean )
+                    json_object_array_add(poObjProp,
+                            json_object_new_boolean((json_bool)panList[i]));
+                else
+                    json_object_array_add(poObjProp,
+                            json_object_new_int64(panList[i]));
             }
         }
         else if( OFTRealList == eType )
@@ -606,13 +639,13 @@ static int OGR_json_double_with_precision_to_string(struct json_object *jso,
                                                     CPL_UNUSED int level,
                                                     CPL_UNUSED int flags)
 {
-    char szBuffer[75]; 
+    char szBuffer[75];
     int nPrecision = (int) (size_t) jso->_userdata;
-    OGRFormatDouble( szBuffer, sizeof(szBuffer), jso->o.c_double, '.', 
-                     (nPrecision < 0) ? 15 : nPrecision ); 
+    OGRFormatDouble( szBuffer, sizeof(szBuffer), jso->o.c_double, '.',
+                     (nPrecision < 0) ? 15 : nPrecision );
     if( szBuffer[0] == 't' /*oobig */ )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.18g", jso->o.c_double);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.18g", jso->o.c_double);
     }
     return printbuf_memappend(pb, szBuffer, strlen(szBuffer)); 
 }

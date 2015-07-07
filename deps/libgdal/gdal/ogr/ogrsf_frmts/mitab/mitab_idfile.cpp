@@ -10,6 +10,7 @@
  *
  **********************************************************************
  * Copyright (c) 1999, 2000, Daniel Morissette
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -92,6 +93,27 @@ TABIDFile::~TABIDFile()
 /**********************************************************************
  *                   TABIDFile::Open()
  *
+ * Compatibility layer with new interface.
+ * Return 0 on success, -1 in case of failure.
+ **********************************************************************/
+
+int TABIDFile::Open(const char *pszFname, const char* pszAccess)
+{
+    if( EQUALN(pszAccess, "r", 1) )
+        return Open(pszFname, TABRead);
+    else if( EQUALN(pszAccess, "w", 1) )
+        return Open(pszFname, TABWrite);
+    else
+    {
+        CPLError(CE_Failure, CPLE_FileIO,
+                 "Open() failed: access mode \"%s\" not supported", pszAccess);
+        return -1;
+    }
+}
+
+/**********************************************************************
+ *                   TABIDFile::Open()
+ *
  * Open a .ID file, and initialize the structures to be ready to read
  * objects from it.
  *
@@ -100,7 +122,7 @@ TABIDFile::~TABIDFile()
  *
  * Returns 0 on success, -1 on error.
  **********************************************************************/
-int TABIDFile::Open(const char *pszFname, const char *pszAccess)
+int TABIDFile::Open(const char *pszFname, TABAccess eAccess)
 {
     int         nLen;
 
@@ -116,20 +138,26 @@ int TABIDFile::Open(const char *pszFname, const char *pszAccess)
      * Note that in Write mode we need TABReadWrite since we do random
      * updates in the index as data blocks are split
      *----------------------------------------------------------------*/
-    if (EQUALN(pszAccess, "r", 1))
+    const char* pszAccess = NULL;
+    if (eAccess == TABRead)
     {
         m_eAccessMode = TABRead;
         pszAccess = "rb";
     }
-    else if (EQUALN(pszAccess, "w", 1))
+    else if (eAccess == TABWrite)
     {
         m_eAccessMode = TABReadWrite;
         pszAccess = "wb+";
     }
+    else if (eAccess == TABReadWrite)
+    {
+        m_eAccessMode = TABReadWrite;
+        pszAccess = "rb+";
+    }
     else
     {
         CPLError(CE_Failure, CPLE_FileIO,
-                 "Open() failed: access mode \"%s\" not supported", pszAccess);
+                 "Open() failed: access mode \"%d\" not supported", eAccess);
         return -1;
     }
 
@@ -154,7 +182,7 @@ int TABIDFile::Open(const char *pszFname, const char *pszAccess)
     /*-----------------------------------------------------------------
      * Open file
      *----------------------------------------------------------------*/
-    m_fp = VSIFOpen(m_pszFname, pszAccess);
+    m_fp = VSIFOpenL(m_pszFname, pszAccess);
 
     if (m_fp == NULL)
     {
@@ -165,14 +193,14 @@ int TABIDFile::Open(const char *pszFname, const char *pszAccess)
         return -1;
     }
 
-    if (m_eAccessMode == TABRead)
+    if (m_eAccessMode == TABRead || m_eAccessMode == TABReadWrite)
     {
         /*-------------------------------------------------------------
          * READ access:
          * Establish the number of object IDs from the size of the file
          *------------------------------------------------------------*/
-        VSIStatBuf  sStatBuf;
-        if ( VSIStat(m_pszFname, &sStatBuf) == -1 )
+        VSIStatBufL  sStatBuf;
+        if ( VSIStatL(m_pszFname, &sStatBuf) == -1 )
         {
             CPLError(CE_Failure, CPLE_FileIO, 
                      "stat() failed for %s\n", m_pszFname);
@@ -180,7 +208,7 @@ int TABIDFile::Open(const char *pszFname, const char *pszAccess)
             return -1;
         }
 
-        m_nMaxId = sStatBuf.st_size/4;
+        m_nMaxId = (int)(sStatBuf.st_size/4);
         m_nBlockSize = MIN(1024, m_nMaxId*4);
 
         /*-------------------------------------------------------------
@@ -232,17 +260,15 @@ int TABIDFile::Close()
     /*----------------------------------------------------------------
      * Write access: commit latest changes to the file.
      *---------------------------------------------------------------*/
-    if (m_eAccessMode == TABReadWrite && m_poIDBlock)
-    {
-        m_poIDBlock->CommitToFile();
-    }
+    if (m_eAccessMode != TABRead)
+        SyncToDisk();
     
     // Delete all structures 
     delete m_poIDBlock;
     m_poIDBlock = NULL;
 
     // Close file
-    VSIFClose(m_fp);
+    VSIFCloseL(m_fp);
     m_fp = NULL;
 
     CPLFree(m_pszFname);
@@ -251,6 +277,24 @@ int TABIDFile::Close()
     return 0;
 }
 
+/************************************************************************/
+/*                            SyncToDisk()                             */
+/************************************************************************/
+
+int TABIDFile::SyncToDisk()
+{
+    if( m_eAccessMode == TABRead )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "SyncToDisk() can be used only with Write access.");
+        return -1;
+    }
+
+    if( m_poIDBlock == NULL)
+        return 0;
+
+    return m_poIDBlock->CommitToFile();
+}
 
 /**********************************************************************
  *                   TABIDFile::GetObjPtr()
@@ -300,7 +344,7 @@ int TABIDFile::SetObjPtr(GInt32 nObjId, GInt32 nObjPtr)
     if (m_poIDBlock == NULL)
         return -1;
 
-    if (m_eAccessMode != TABReadWrite)
+    if (m_eAccessMode == TABRead)
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "SetObjPtr() can be used only with Write access.");

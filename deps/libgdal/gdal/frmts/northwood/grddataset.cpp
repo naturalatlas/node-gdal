@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: grddataset.cpp 28502 2015-02-16 16:55:20Z rouault $
  *
  * Project:  GRD Reader
  * Purpose:  GDAL driver for Northwood Grid Format
@@ -91,13 +91,6 @@ class NWT_GRDRasterBand:public GDALPamRasterBand
     virtual CPLErr IReadBlock( int, int, void * );
     virtual double GetNoDataValue( int *pbSuccess );
 
-    /* FIXME. I don't believe it is correct to advertize offset and */
-    /* scale because IReadBlock() already apply them. */
-    virtual double GetOffset( int *pbSuccess = NULL );
-    virtual CPLErr SetOffset( double dfNewValue );
-    virtual double GetScale( int *pbSuccess = NULL );
-    virtual CPLErr SetScale( double dfNewValue );
-
     virtual GDALColorInterp GetColorInterpretation();
 };
 
@@ -173,7 +166,9 @@ GDALColorInterp NWT_GRDRasterBand::GetColorInterpretation()
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
-CPLErr NWT_GRDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, void *pImage )
+CPLErr NWT_GRDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                      int nBlockYOff,
+                                      void *pImage )
 {
     NWT_GRDDataset *poGDS = (NWT_GRDDataset *) poDS;
     char *pszRecord;
@@ -242,48 +237,6 @@ CPLErr NWT_GRDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
     {
         CPLFree( pszRecord );
     }
-    return CE_None;
-}
-
-/************************************************************************/
-/*                             GetOffset()                              */
-/************************************************************************/
-double NWT_GRDRasterBand::GetOffset( int *pbSuccess )
-{
-    if( pbSuccess )
-        *pbSuccess = bHaveOffsetScale;
-    return dfOffset;
-}
-
-/************************************************************************/
-/*                             SetOffset()                              */
-/************************************************************************/
-CPLErr NWT_GRDRasterBand::SetOffset( double dfNewValue )
-{
-    //poGDS->bMetadataChanged = TRUE;
-
-    bHaveOffsetScale = TRUE;
-    dfOffset = dfNewValue;
-    return CE_None;
-}
-
-/************************************************************************/
-/*                              GetScale()                              */
-/************************************************************************/
-double NWT_GRDRasterBand::GetScale( int *pbSuccess )
-{
-    if( pbSuccess )
-        *pbSuccess = bHaveOffsetScale;
-    return dfScale;
-}
-
-/************************************************************************/
-/*                              SetScale()                              */
-/************************************************************************/
-CPLErr NWT_GRDRasterBand::SetScale( double dfNewValue )
-{
-    bHaveOffsetScale = TRUE;
-    dfScale = dfNewValue;
     return CE_None;
 }
 
@@ -440,7 +393,7 @@ GDALDataset *NWT_GRDDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return (poDS);
 }
@@ -458,6 +411,7 @@ void GDALRegister_NWT_GRD()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "NWT_GRD" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                  "Northwood Numeric Grid Format .grd/.tab" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_various.html#grd");

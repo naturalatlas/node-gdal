@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgndataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: msgndataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  MSG Native Reader
  * Purpose:  All code for EUMETSAT Archive format reader
@@ -34,7 +34,7 @@
 #include "msg_reader_core.h"
 using namespace msg_native_format;
 
-CPL_CVSID("$Id: msgndataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: msgndataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void   GDALRegister_MSGN(void);
@@ -155,8 +155,10 @@ MSGNRasterBand::MSGNRasterBand( MSGNDataset *poDS, int nBand , open_mode_type mo
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr MSGNRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr MSGNRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
                                    void * pImage )
+
 {
     MSGNDataset *poGDS = (MSGNDataset *) poDS;
 
@@ -356,7 +358,7 @@ GDALDataset *MSGNDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      least one "\n#keyword" type signature in the first chunk of     */
 /*      the file.                                                       */
 /* -------------------------------------------------------------------- */
-    if( open_info->fp == NULL || open_info->nHeaderBytes < 50 )
+    if( open_info->fpL == NULL || open_info->nHeaderBytes < 50 )
         return NULL;
 
     /* check if this is a "NATIVE" MSG format image */
@@ -381,11 +383,13 @@ GDALDataset *MSGNDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     MSGNDataset        *poDS;
+    FILE* fp = VSIFOpen( open_info->pszFilename, "rb" );
+    if( fp == NULL )
+        return NULL;
 
     poDS = new MSGNDataset();
 
-    poDS->fp = open_info->fp;
-    open_info->fp = NULL;
+    poDS->fp = fp;
 
 /* -------------------------------------------------------------------- */
 /*      Read the header.                                                */
@@ -528,6 +532,7 @@ void GDALRegister_MSGN()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "MSGN" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "EUMETSAT Archive native (.nat)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

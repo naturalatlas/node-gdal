@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_mem.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_mem.h 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions within the OGR Memory driver.
@@ -36,17 +36,18 @@
 /************************************************************************/
 /*                             OGRMemLayer                              */
 /************************************************************************/
+class OGRMemDataSource;
 
 class OGRMemLayer : public OGRLayer
 {
     OGRFeatureDefn     *poFeatureDefn;
     
-    int                 nFeatureCount;
-    int                 nMaxFeatureCount;
+    GIntBig             nFeatureCount;
+    GIntBig             nMaxFeatureCount;
     OGRFeature        **papoFeatures;
 
-    int                 iNextReadFID;
-    int                 iNextCreateFID;
+    GIntBig             iNextReadFID;
+    GIntBig             iNextCreateFID;
 
     int                 bUpdatable;
     int                 bAdvertizeUTF8;
@@ -61,16 +62,16 @@ class OGRMemLayer : public OGRLayer
 
     void                ResetReading();
     OGRFeature *        GetNextFeature();
-    virtual OGRErr      SetNextByIndex( long nIndex );
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex );
 
-    OGRFeature         *GetFeature( long nFeatureId );
-    OGRErr              SetFeature( OGRFeature *poFeature );
-    OGRErr              CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
+    OGRErr              ISetFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
-    int                 GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int );
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
@@ -85,7 +86,7 @@ class OGRMemLayer : public OGRLayer
     void                SetUpdatable(int bUpdatableIn) { bUpdatable = bUpdatableIn; }
     void                SetAdvertizeUTF8(int bAdvertizeUTF8In) { bAdvertizeUTF8 = bAdvertizeUTF8In; }
 
-    int                 GetNextReadFID() { return iNextReadFID; }
+    GIntBig             GetNextReadFID() { return iNextReadFID; }
 };
 
 /************************************************************************/
@@ -107,7 +108,7 @@ class OGRMemDataSource : public OGRDataSource
     int                 GetLayerCount() { return nLayers; }
     OGRLayer            *GetLayer( int );
 
-    virtual OGRLayer    *CreateLayer( const char *, 
+    virtual OGRLayer    *ICreateLayer( const char *, 
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

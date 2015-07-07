@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpxlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgpxlayer.cpp 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgpxlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgpxlayer.cpp 28900 2015-04-14 09:40:34Z rouault $");
 
 #define FLD_TRACK_FID       0
 #define FLD_TRACK_SEG_ID    1
@@ -84,6 +84,7 @@ OGRGPXLayer::OGRGPXLayer( const char* pszFilename,
     int bShortNames  = CSLTestBoolean(CPLGetConfigOption("GPX_SHORT_NAMES", "NO"));
     
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     
     if (gpxGeomType == GPX_TRACK_POINT)
@@ -905,11 +906,10 @@ void OGRGPXLayer::endElementCbk(const char *pszName)
                 pszSubElementValue[nSubElementValueLen] = 0;
                 if (strcmp(pszSubElementName, "time") == 0)
                 {
-                    int year, month, day, hour, minute, TZ;
-                    float second;
-                    if (OGRParseXMLDateTime(pszSubElementValue, &year, &month, &day, &hour, &minute, &second, &TZ))
+                    OGRField sField;
+                    if (OGRParseXMLDateTime(pszSubElementValue, &sField))
                     {
-                        poFeature->SetField(iCurrentField, year, month, day, hour, minute, (int)(second + .5), TZ);
+                        poFeature->SetField(iCurrentField, &sField);
                     }
                     else
                     {
@@ -1076,7 +1076,7 @@ OGRFeature *OGRGPXLayer::GetNextFeature()
 static char* OGRGPX_GetXMLCompatibleTagName(const char* pszExtensionsNS,
                                             const char* pszName)
 {
-    /* Skip "ogr_" for example if NS is "ogr". Usefull for GPX -> GPX roundtrip */
+    /* Skip "ogr_" for example if NS is "ogr". Useful for GPX -> GPX roundtrip */
     if (strncmp(pszName, pszExtensionsNS, strlen(pszExtensionsNS)) == 0 &&
         pszName[strlen(pszExtensionsNS)] == '_')
     {
@@ -1187,15 +1187,10 @@ void OGRGPXLayer::WriteFeatureAttributes( OGRFeature *poFeature, int nIdentLevel
             const char* pszName = poFieldDefn->GetNameRef();
             if (strcmp(pszName, "time") == 0)
             {
-                int year, month, day, hour, minute, second, TZFlag;
-                if (poFeature->GetFieldAsDateTime(i, &year, &month, &day,
-                                                  &hour, &minute, &second, &TZFlag))
-                {
-                    char* pszDate = OGRGetXMLDateTime(year, month, day, hour, minute, second, TZFlag);
-                    AddIdent(fp, nIdentLevel);
-                    poDS->PrintLine("<time>%s</time>", pszDate);
-                    CPLFree(pszDate);
-                }
+                char* pszDate = OGRGetXMLDateTime(poFeature->GetRawFieldRef(i));
+                AddIdent(fp, nIdentLevel);
+                poDS->PrintLine("<time>%s</time>", pszDate);
+                CPLFree(pszDate);
             }
             else if (strncmp(pszName, "link", 4) == 0)
             {
@@ -1348,10 +1343,10 @@ OGRErr OGRGPXLayer::CheckAndFixCoordinatesValidity( double* pdfLatitude, double*
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGPXLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGPXLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     VSILFILE* fp = poDS->GetOutputFP();
@@ -1768,7 +1763,8 @@ OGRErr OGRGPXLayer::CreateFeature( OGRFeature *poFeature )
 /************************************************************************/
 
 
-OGRErr OGRGPXLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRGPXLayer::CreateField( OGRFieldDefn *poField,
+                                 CPL_UNUSED int bApproxOK )
 {
     for( int iField = 0; iField < poFeatureDefn->GetFieldCount(); iField++ )
     {

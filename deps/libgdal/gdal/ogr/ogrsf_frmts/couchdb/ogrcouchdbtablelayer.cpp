@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrcouchdbtablelayer.cpp 28928 2015-04-17 10:24:19Z rouault $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBTableLayer class.
@@ -34,7 +34,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 28928 2015-04-17 10:24:19Z rouault $");
 
 /************************************************************************/
 /*                       OGRCouchDBTableLayer()                         */
@@ -77,6 +77,8 @@ OGRCouchDBTableLayer::OGRCouchDBTableLayer(OGRCouchDBDataSource* poDS,
     dfMaxY = 0;
 
     nCoordPrecision = atoi(CPLGetConfigOption("OGR_COUCHDB_COORDINATE_PRECISION", "-1"));
+    
+    SetDescription( osName );
 }
 
 /************************************************************************/
@@ -488,7 +490,11 @@ static CPLString OGRCouchDBGetValue(swq_field_type eType,
     }
     else if (eType == SWQ_INTEGER)
     {
-        return CPLSPrintf("%d", poNode->int_value);
+        return CPLSPrintf("%d", (int)poNode->int_value);
+    }
+    else if (eType == SWQ_INTEGER64)
+    {
+        return CPLSPrintf(CPL_FRMT_GIB, poNode->int_value);
     }
     else if (eType == SWQ_FLOAT)
     {
@@ -539,7 +545,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
 
     int bCanHandleFilter = FALSE;
 
-    swq_expr_node * pNode = (swq_expr_node *) m_poAttrQuery->GetSWGExpr();
+    swq_expr_node * pNode = (swq_expr_node *) m_poAttrQuery->GetSWQExpr();
     if (pNode->eNodeType == SNT_OPERATION &&
         (pNode->nOperation == SWQ_EQ ||
             pNode->nOperation == SWQ_GE ||
@@ -564,7 +570,8 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             osURI += "/_all_docs?";
         }
         else if (nIndex >= FIRST_FIELD &&
-            (eType == SWQ_STRING || eType == SWQ_INTEGER || eType == SWQ_FLOAT))
+            (eType == SWQ_STRING || eType == SWQ_INTEGER ||
+             eType == SWQ_INTEGER64 || eType == SWQ_FLOAT))
         {
             int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
             if (bFoundFilter)
@@ -627,7 +634,8 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
         }
         else if (nIndex0 == nIndex1 && eType0 == eType1 &&
             nIndex0 >= FIRST_FIELD &&
-            (eType0 == SWQ_STRING || eType0 == SWQ_INTEGER || eType0 == SWQ_FLOAT))
+            (eType0 == SWQ_STRING || eType0 == SWQ_INTEGER ||
+             eType0 == SWQ_INTEGER64 || eType0 == SWQ_FLOAT))
         {
             int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
             if (bFoundFilter)
@@ -687,7 +695,8 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             osURI += "/_all_docs?";
         }
         else if (nIndex >= FIRST_FIELD &&
-            (eType == SWQ_STRING || eType == SWQ_INTEGER || eType == SWQ_FLOAT))
+            (eType == SWQ_STRING || eType == SWQ_INTEGER ||
+             eType == SWQ_INTEGER64 || eType == SWQ_FLOAT))
         {
             int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
             if (bFoundFilter)
@@ -793,7 +802,7 @@ int OGRCouchDBTableLayer::FetchNextRows()
 /*                            GetFeature()                              */
 /************************************************************************/
 
-OGRFeature * OGRCouchDBTableLayer::GetFeature( long nFID )
+OGRFeature * OGRCouchDBTableLayer::GetFeature( GIntBig nFID )
 {
     GetLayerDefn();
 
@@ -885,7 +894,7 @@ OGRFeatureDefn * OGRCouchDBTableLayer::GetLayerDefn()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRCouchDBTableLayer::GetFeatureCount(int bForce)
+GIntBig OGRCouchDBTableLayer::GetFeatureCount(int bForce)
 {
     GetLayerDefn();
 
@@ -1074,18 +1083,18 @@ static json_object* OGRCouchDBWriteFeature( OGRFeature* poFeature,
                                 json_object_new_string(pszId) );
 
         if ( poFeature->GetFID() != OGRNullFID &&
-             strcmp(CPLSPrintf("%09ld", poFeature->GetFID()), pszId) != 0 )
+             strcmp(CPLSPrintf("%09ld", (long)poFeature->GetFID()), pszId) != 0 )
         {
             CPLDebug("CouchDB",
                      "_id field = %s, but FID = %09ld --> taking into account _id field only",
                      pszId,
-                     poFeature->GetFID());
+                     (long)poFeature->GetFID());
         }
     }
     else if ( poFeature->GetFID() != OGRNullFID )
     {
         json_object_object_add( poObj, "_id",
-                                json_object_new_string(CPLSPrintf("%09ld", poFeature->GetFID())) );
+                                json_object_new_string(CPLSPrintf("%09ld", (long)poFeature->GetFID())) );
     }
 
     if (poFeature->IsFieldSet(_REV_FIELD))
@@ -1230,10 +1239,10 @@ int OGRCouchDBTableLayer::GetMaximumId()
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRCouchDBTableLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     GetLayerDefn();
@@ -1369,10 +1378,10 @@ OGRErr OGRCouchDBTableLayer::CreateFeature( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
 
-OGRErr      OGRCouchDBTableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr      OGRCouchDBTableLayer::ISetFeature( OGRFeature *poFeature )
 {
     GetLayerDefn();
 
@@ -1431,7 +1440,7 @@ OGRErr      OGRCouchDBTableLayer::SetFeature( OGRFeature *poFeature )
 /*                          DeleteFeature()                             */
 /************************************************************************/
 
-OGRErr OGRCouchDBTableLayer::DeleteFeature( long nFID )
+OGRErr OGRCouchDBTableLayer::DeleteFeature( GIntBig nFID )
 {
     GetLayerDefn();
 
@@ -1816,7 +1825,7 @@ void OGRCouchDBTableLayer::LoadMetadata()
 
             json_object* poIs25D = json_object_object_get(poAnswerObj, "is_25D");
             if (poIs25D && json_object_get_boolean(poIs25D))
-                eGeomType = (OGRwkbGeometryType) (eGeomType | wkb25DBit);
+                eGeomType = wkbSetZ(eGeomType);
 
             json_object* poExtent = json_object_object_get(poAnswerObj, "extent");
             if (poExtent && json_object_get_type(poExtent) == json_type_object)
@@ -1963,7 +1972,7 @@ void OGRCouchDBTableLayer::WriteMetadata()
     {
         json_object_object_add(poDoc, "geomtype",
                     json_object_new_string(OGRToOGCGeomType(eGeomType)));
-        if (poFeatureDefn->GetGeomType() & wkb25DBit)
+        if (wkbHasZ(poFeatureDefn->GetGeomType()))
         {
             json_object_object_add(poDoc, "is_25D",
                                json_object_new_boolean(TRUE));

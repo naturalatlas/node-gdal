@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfdataset.h 28899 2015-04-14 09:27:00Z rouault $
  *
  * Project:  NITF Read/Write Translator
  * Purpose:  GDALDataset/GDALRasterBand declarations.
@@ -110,7 +110,7 @@ class NITFDataset : public GDALPamDataset
     CPLString    osNITFFilename;
 
     CPLString    osRSetVRT;
-    int          CheckForRSets( const char *pszFilename );
+    int          CheckForRSets( const char *pszFilename, char** papszSiblingFiles );
 
     char       **papszTextMDToWrite;
     char       **papszCgmMDToWrite;
@@ -135,7 +135,10 @@ class NITFDataset : public GDALPamDataset
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *,
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     virtual const char *GetProjectionRef(void);
     virtual CPLErr SetProjection( const char * );
@@ -230,7 +233,8 @@ class NITFProxyPamRasterBand : public GDALPamRasterBand
         virtual CPLErr IWriteBlock( int, int, void * );
         virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                                 void *, int, int, GDALDataType,
-                                int, int );
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GDALRasterIOExtraArg* psExtraArg);
 
     public:
                          ~NITFProxyPamRasterBand();
@@ -279,7 +283,7 @@ class NITFProxyPamRasterBand : public GDALPamRasterBand
         virtual int HasArbitraryOverviews();
         virtual int GetOverviewCount();
         virtual GDALRasterBand *GetOverview(int);
-        virtual GDALRasterBand *GetRasterSampleOverview( int );
+        virtual GDALRasterBand *GetRasterSampleOverview( GUIntBig );
         virtual CPLErr BuildOverviews( const char *, int, int *,
                                     GDALProgressFunc, void * );
 
@@ -288,16 +292,16 @@ class NITFProxyPamRasterBand : public GDALPamRasterBand
                                 GDALDataType eDT, char **papszOptions );
 
         /*virtual CPLErr  GetHistogram( double dfMin, double dfMax,
-                            int nBuckets, int * panHistogram,
+                            int nBuckets, GUIntBig * panHistogram,
                             int bIncludeOutOfRange, int bApproxOK,
                             GDALProgressFunc, void *pProgressData );
 
         virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                            int *pnBuckets, int ** ppanHistogram,
+                                            int *pnBuckets, GUIntBig ** ppanHistogram,
                                             int bForce,
                                             GDALProgressFunc, void *pProgressData);
         virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                            int nBuckets, int *panHistogram );*/
+                                            int nBuckets, GUIntBig *panHistogram );*/
 
         /*virtual const GDALRasterAttributeTable *GetDefaultRAT();
         virtual CPLErr SetDefaultRAT( const GDALRasterAttributeTable * );*/

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayer.cpp 28169 2014-12-17 16:24:25Z rouault $
+ * $Id: ogrlayer.cpp 28928 2015-04-17 10:24:19Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The generic portions of the OGRSFLayer class.
@@ -33,8 +33,9 @@
 #include "ogr_p.h"
 #include "ogr_attrind.h"
 #include "swq.h"
+#include "ograpispy.h"
 
-CPL_CVSID("$Id: ogrlayer.cpp 28169 2014-12-17 16:24:25Z rouault $");
+CPL_CVSID("$Id: ogrlayer.cpp 28928 2015-04-17 10:24:19Z rouault $");
 
 /************************************************************************/
 /*                              OGRLayer()                              */
@@ -164,14 +165,14 @@ int OGR_L_GetRefCount( OGRLayerH hLayer )
 }
 
 /************************************************************************/
-/*                          GetFeatureCount()                           */
+/*                         GetFeatureCount()                            */
 /************************************************************************/
 
-int OGRLayer::GetFeatureCount( int bForce )
+GIntBig OGRLayer::GetFeatureCount( int bForce )
 
 {
     OGRFeature     *poFeature;
-    int            nFeatureCount = 0;
+    GIntBig         nFeatureCount = 0;
 
     if( !bForce )
         return -1;
@@ -188,13 +189,18 @@ int OGRLayer::GetFeatureCount( int bForce )
 }
 
 /************************************************************************/
-/*                       OGR_L_GetFeatureCount()                        */
+/*                      OGR_L_GetFeatureCount()                         */
 /************************************************************************/
 
-int OGR_L_GetFeatureCount( OGRLayerH hLayer, int bForce )
+GIntBig OGR_L_GetFeatureCount( OGRLayerH hLayer, int bForce )
 
 {
-    VALIDATE_POINTER1( hLayer, "OGR_L_GetFeature", 0 );
+    VALIDATE_POINTER1( hLayer, "OGR_L_GetFeatureCount", 0 );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetFeatureCount(hLayer, bForce);
+#endif
 
     return ((OGRLayer *) hLayer)->GetFeatureCount(bForce);
 }
@@ -267,7 +273,11 @@ OGRErr OGRLayer::GetExtentInternal(int iGeomField, OGREnvelope *psExtent, int bF
         else if (!bExtentSet)
         {
             poGeom->getEnvelope(psExtent);
-            bExtentSet = TRUE;
+            if( !(CPLIsNan(psExtent->MinX) || CPLIsNan(psExtent->MinY) ||
+                  CPLIsNan(psExtent->MaxX) || CPLIsNan(psExtent->MaxY)) )
+            {
+                bExtentSet = TRUE;
+            }
         }
         else
         {
@@ -297,6 +307,11 @@ OGRErr OGR_L_GetExtent( OGRLayerH hLayer, OGREnvelope *psExtent, int bForce )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetExtent", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetExtent(hLayer, bForce);
+#endif
+
     return ((OGRLayer *) hLayer)->GetExtent( psExtent, bForce );
 }
 
@@ -309,6 +324,11 @@ OGRErr OGR_L_GetExtentEx( OGRLayerH hLayer, int iGeomField,
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetExtentEx", OGRERR_INVALID_HANDLE );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetExtentEx(hLayer, iGeomField, bForce);
+#endif
 
     return ((OGRLayer *) hLayer)->GetExtent( iGeomField, psExtent, bForce );
 }
@@ -396,7 +416,7 @@ int OGRLayer::AttributeFilterEvaluationNeedsGeometry()
     if( !m_poAttrQuery )
         return FALSE;
 
-    swq_expr_node* expr = (swq_expr_node *) m_poAttrQuery->GetSWGExpr();
+    swq_expr_node* expr = (swq_expr_node *) m_poAttrQuery->GetSWQExpr();
     int nLayerFieldCount = GetLayerDefn()->GetFieldCount();
 
     return ContainGeomSpecialField(expr, nLayerFieldCount);
@@ -411,6 +431,11 @@ OGRErr OGR_L_SetAttributeFilter( OGRLayerH hLayer, const char *pszQuery )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_SetAttributeFilter", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetAttributeFilter(hLayer, pszQuery);
+#endif
+
     return ((OGRLayer *) hLayer)->SetAttributeFilter( pszQuery );
 }
 
@@ -418,7 +443,7 @@ OGRErr OGR_L_SetAttributeFilter( OGRLayerH hLayer, const char *pszQuery )
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRLayer::GetFeature( long nFID )
+OGRFeature *OGRLayer::GetFeature( GIntBig nFID )
 
 {
     OGRFeature *poFeature;
@@ -453,10 +478,15 @@ OGRFeature *OGRLayer::GetFeature( long nFID )
 /*                          OGR_L_GetFeature()                          */
 /************************************************************************/
 
-OGRFeatureH OGR_L_GetFeature( OGRLayerH hLayer, long nFeatureId )
+OGRFeatureH OGR_L_GetFeature( OGRLayerH hLayer, GIntBig nFeatureId )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetFeature", NULL );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetFeature(hLayer, nFeatureId);
+#endif
 
     return (OGRFeatureH) ((OGRLayer *)hLayer)->GetFeature( nFeatureId );
 }
@@ -465,7 +495,7 @@ OGRFeatureH OGR_L_GetFeature( OGRLayerH hLayer, long nFeatureId )
 /*                           SetNextByIndex()                           */
 /************************************************************************/
 
-OGRErr OGRLayer::SetNextByIndex( long nIndex )
+OGRErr OGRLayer::SetNextByIndex( GIntBig nIndex )
 
 {
     OGRFeature *poFeature;
@@ -490,10 +520,15 @@ OGRErr OGRLayer::SetNextByIndex( long nIndex )
 /*                        OGR_L_SetNextByIndex()                        */
 /************************************************************************/
 
-OGRErr OGR_L_SetNextByIndex( OGRLayerH hLayer, long nIndex )
+OGRErr OGR_L_SetNextByIndex( OGRLayerH hLayer, GIntBig nIndex )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_SetNextByIndex", OGRERR_INVALID_HANDLE );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetNextByIndex(hLayer, nIndex);
+#endif
 
     return ((OGRLayer *)hLayer)->SetNextByIndex( nIndex );
 }
@@ -507,14 +542,52 @@ OGRFeatureH OGR_L_GetNextFeature( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetNextFeature", NULL );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetNextFeature(hLayer);
+#endif
+
     return (OGRFeatureH) ((OGRLayer *)hLayer)->GetNextFeature();
+}
+
+/************************************************************************/
+/*                    ConvertNonLinearGeomsIfNecessary()                */
+/************************************************************************/
+
+void OGRLayer::ConvertNonLinearGeomsIfNecessary( OGRFeature *poFeature )
+{
+    if( !TestCapability(OLCCurveGeometries) )
+    {
+        int nGeomFieldCount = GetLayerDefn()->GetGeomFieldCount();
+        for(int i=0;i<nGeomFieldCount;i++)
+        {
+            OGRGeometry* poGeom = poFeature->GetGeomFieldRef(i);
+            if( poGeom != NULL && OGR_GT_IsNonLinear(poGeom->getGeometryType()) )
+            {
+                OGRwkbGeometryType eTargetType = OGR_GT_GetLinear(poGeom->getGeometryType());
+                poFeature->SetGeomFieldDirectly(i,
+                    OGRGeometryFactory::forceTo(poFeature->StealGeometry(i), eTargetType));
+            }
+        }
+    }
 }
 
 /************************************************************************/
 /*                             SetFeature()                             */
 /************************************************************************/
 
-OGRErr OGRLayer::SetFeature( OGRFeature * )
+OGRErr OGRLayer::SetFeature( OGRFeature *poFeature )
+
+{
+    ConvertNonLinearGeomsIfNecessary(poFeature);
+    return ISetFeature(poFeature);
+}
+
+/************************************************************************/
+/*                             ISetFeature()                            */
+/************************************************************************/
+
+OGRErr OGRLayer::ISetFeature( OGRFeature * )
 
 {
     return OGRERR_UNSUPPORTED_OPERATION;
@@ -530,6 +603,11 @@ OGRErr OGR_L_SetFeature( OGRLayerH hLayer, OGRFeatureH hFeat )
     VALIDATE_POINTER1( hLayer, "OGR_L_SetFeature", OGRERR_INVALID_HANDLE );
     VALIDATE_POINTER1( hFeat, "OGR_L_SetFeature", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetFeature(hLayer, hFeat);
+#endif
+
     return ((OGRLayer *)hLayer)->SetFeature( (OGRFeature *) hFeat );
 }
 
@@ -537,7 +615,18 @@ OGRErr OGR_L_SetFeature( OGRLayerH hLayer, OGRFeatureH hFeat )
 /*                           CreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRLayer::CreateFeature( OGRFeature * )
+OGRErr OGRLayer::CreateFeature( OGRFeature *poFeature )
+
+{
+    ConvertNonLinearGeomsIfNecessary(poFeature);
+    return ICreateFeature(poFeature);
+}
+
+/************************************************************************/
+/*                           ICreateFeature()                            */
+/************************************************************************/
+
+OGRErr OGRLayer::ICreateFeature( OGRFeature * )
 
 {
     return OGRERR_UNSUPPORTED_OPERATION;
@@ -553,18 +642,12 @@ OGRErr OGR_L_CreateFeature( OGRLayerH hLayer, OGRFeatureH hFeat )
     VALIDATE_POINTER1( hLayer, "OGR_L_CreateFeature", OGRERR_INVALID_HANDLE );
     VALIDATE_POINTER1( hFeat, "OGR_L_CreateFeature", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_CreateFeature(hLayer, hFeat);
+#endif
+
     return ((OGRLayer *) hLayer)->CreateFeature( (OGRFeature *) hFeat );
-}
-
-/************************************************************************/
-/*                              GetInfo()                               */
-/************************************************************************/
-
-const char *OGRLayer::GetInfo( const char * pszTag )
-
-{
-    (void) pszTag;
-    return NULL;
 }
 
 /************************************************************************/
@@ -594,6 +677,11 @@ OGRErr OGR_L_CreateField( OGRLayerH hLayer, OGRFieldDefnH hField,
     VALIDATE_POINTER1( hLayer, "OGR_L_CreateField", OGRERR_INVALID_HANDLE );
     VALIDATE_POINTER1( hField, "OGR_L_CreateField", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_CreateField(hLayer, hField, bApproxOK);
+#endif
+
     return ((OGRLayer *) hLayer)->CreateField( (OGRFieldDefn *) hField, 
                                                bApproxOK );
 }
@@ -622,6 +710,11 @@ OGRErr OGR_L_DeleteField( OGRLayerH hLayer, int iField )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_DeleteField", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_DeleteField(hLayer, iField);
+#endif
+
     return ((OGRLayer *) hLayer)->DeleteField( iField );
 }
 
@@ -648,6 +741,11 @@ OGRErr OGR_L_ReorderFields( OGRLayerH hLayer, int* panMap )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_ReorderFields", OGRERR_INVALID_HANDLE );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_ReorderFields(hLayer, panMap);
+#endif
 
     return ((OGRLayer *) hLayer)->ReorderFields( panMap );
 }
@@ -719,6 +817,11 @@ OGRErr OGR_L_ReorderField( OGRLayerH hLayer, int iOldFieldPos, int iNewFieldPos 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_ReorderField", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_ReorderField(hLayer, iOldFieldPos, iNewFieldPos);
+#endif
+
     return ((OGRLayer *) hLayer)->ReorderField( iOldFieldPos, iNewFieldPos );
 }
 
@@ -751,6 +854,11 @@ OGRErr OGR_L_AlterFieldDefn( OGRLayerH hLayer, int iField, OGRFieldDefnH hNewFie
     VALIDATE_POINTER1( hLayer, "OGR_L_AlterFieldDefn", OGRERR_INVALID_HANDLE );
     VALIDATE_POINTER1( hNewFieldDefn, "OGR_L_AlterFieldDefn", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_AlterFieldDefn(hLayer, iField, hNewFieldDefn, nFlags);
+#endif
+
     return ((OGRLayer *) hLayer)->AlterFieldDefn( iField, (OGRFieldDefn*) hNewFieldDefn, nFlags );
 }
 
@@ -781,6 +889,11 @@ OGRErr OGR_L_CreateGeomField( OGRLayerH hLayer, OGRGeomFieldDefnH hField,
     VALIDATE_POINTER1( hLayer, "OGR_L_CreateGeomField", OGRERR_INVALID_HANDLE );
     VALIDATE_POINTER1( hField, "OGR_L_CreateGeomField", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_CreateGeomField(hLayer, hField, bApproxOK);
+#endif
+
     return ((OGRLayer *) hLayer)->CreateGeomField( (OGRGeomFieldDefn *) hField, 
                                                    bApproxOK );
 }
@@ -804,6 +917,11 @@ OGRErr OGR_L_StartTransaction( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_StartTransaction", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_StartTransaction(hLayer);
+#endif
+
     return ((OGRLayer *)hLayer)->StartTransaction();
 }
 
@@ -825,6 +943,11 @@ OGRErr OGR_L_CommitTransaction( OGRLayerH hLayer )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_CommitTransaction", OGRERR_INVALID_HANDLE );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_CommitTransaction(hLayer);
+#endif
 
     return ((OGRLayer *)hLayer)->CommitTransaction();
 }
@@ -848,6 +971,11 @@ OGRErr OGR_L_RollbackTransaction( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_RollbackTransaction", OGRERR_INVALID_HANDLE );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_RollbackTransaction(hLayer);
+#endif
+
     return ((OGRLayer *)hLayer)->RollbackTransaction();
 }
 
@@ -860,6 +988,11 @@ OGRFeatureDefnH OGR_L_GetLayerDefn( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetLayerDefn", NULL );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetLayerDefn(hLayer);
+#endif
+
     return (OGRFeatureDefnH) ((OGRLayer *)hLayer)->GetLayerDefn();
 }
 
@@ -871,6 +1004,11 @@ int OGR_L_FindFieldIndex( OGRLayerH hLayer, const char *pszFieldName, int bExact
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_FindFieldIndex", -1 );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_FindFieldIndex(hLayer, pszFieldName, bExactMatch);
+#endif
 
     return ((OGRLayer *)hLayer)->FindFieldIndex( pszFieldName, bExactMatch );
 }
@@ -905,6 +1043,11 @@ OGRSpatialReferenceH OGR_L_GetSpatialRef( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetSpatialRef", NULL );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetSpatialRef(hLayer);
+#endif
+
     return (OGRSpatialReferenceH) ((OGRLayer *) hLayer)->GetSpatialRef();
 }
 
@@ -917,6 +1060,11 @@ int OGR_L_TestCapability( OGRLayerH hLayer, const char *pszCap )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_TestCapability", 0 );
     VALIDATE_POINTER1( pszCap, "OGR_L_TestCapability", 0 );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_TestCapability(hLayer, pszCap);
+#endif
 
     return ((OGRLayer *) hLayer)->TestCapability( pszCap );
 }
@@ -939,6 +1087,11 @@ OGRGeometryH OGR_L_GetSpatialFilter( OGRLayerH hLayer )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetSpatialFilter", NULL );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetSpatialFilter(hLayer);
+#endif
 
     return (OGRGeometryH) ((OGRLayer *) hLayer)->GetSpatialFilter();
 }
@@ -988,6 +1141,11 @@ void OGR_L_SetSpatialFilter( OGRLayerH hLayer, OGRGeometryH hGeom )
 {
     VALIDATE_POINTER0( hLayer, "OGR_L_SetSpatialFilter" );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetSpatialFilter(hLayer, hGeom);
+#endif
+
     ((OGRLayer *) hLayer)->SetSpatialFilter( (OGRGeometry *) hGeom );
 }
 
@@ -1000,6 +1158,11 @@ void OGR_L_SetSpatialFilterEx( OGRLayerH hLayer, int iGeomField,
 
 {
     VALIDATE_POINTER0( hLayer, "OGR_L_SetSpatialFilterEx" );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetSpatialFilterEx(hLayer, iGeomField, hGeom);
+#endif
 
     ((OGRLayer *) hLayer)->SetSpatialFilter( iGeomField, (OGRGeometry *) hGeom );
 }
@@ -1049,6 +1212,11 @@ void OGR_L_SetSpatialFilterRect( OGRLayerH hLayer,
 {
     VALIDATE_POINTER0( hLayer, "OGR_L_SetSpatialFilterRect" );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetSpatialFilterRect(hLayer, dfMinX, dfMinY, dfMaxX, dfMaxY);
+#endif
+
     ((OGRLayer *) hLayer)->SetSpatialFilterRect( dfMinX, dfMinY, 
                                                  dfMaxX, dfMaxY );
 }
@@ -1064,6 +1232,11 @@ void OGR_L_SetSpatialFilterRectEx( OGRLayerH hLayer,
 
 {
     VALIDATE_POINTER0( hLayer, "OGR_L_SetSpatialFilterRectEx" );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetSpatialFilterRectEx(hLayer, iGeomField, dfMinX, dfMinY, dfMaxX, dfMaxY);
+#endif
 
     ((OGRLayer *) hLayer)->SetSpatialFilterRect( iGeomField,
                                                  dfMinX, dfMinY, 
@@ -1289,6 +1462,11 @@ void OGR_L_ResetReading( OGRLayerH hLayer )
 {
     VALIDATE_POINTER0( hLayer, "OGR_L_ResetReading" );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_ResetReading(hLayer);
+#endif
+
     ((OGRLayer *) hLayer)->ResetReading();
 }
 
@@ -1334,20 +1512,24 @@ OGRErr OGRLayer::SyncToDisk()
 /*                          OGR_L_SyncToDisk()                          */
 /************************************************************************/
 
-OGRErr OGR_L_SyncToDisk( OGRLayerH hDS )
+OGRErr OGR_L_SyncToDisk( OGRLayerH hLayer )
 
 {
-    VALIDATE_POINTER1( hDS, "OGR_L_SyncToDisk", OGRERR_INVALID_HANDLE );
+    VALIDATE_POINTER1( hLayer, "OGR_L_SyncToDisk", OGRERR_INVALID_HANDLE );
 
-    return ((OGRLayer *) hDS)->SyncToDisk();
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SyncToDisk(hLayer);
+#endif
+
+    return ((OGRLayer *) hLayer)->SyncToDisk();
 }
 
 /************************************************************************/
 /*                           DeleteFeature()                            */
 /************************************************************************/
 
-OGRErr OGRLayer::DeleteFeature( CPL_UNUSED long nFID )
-
+OGRErr OGRLayer::DeleteFeature( CPL_UNUSED GIntBig nFID )
 {
     return OGRERR_UNSUPPORTED_OPERATION;
 }
@@ -1356,12 +1538,17 @@ OGRErr OGRLayer::DeleteFeature( CPL_UNUSED long nFID )
 /*                        OGR_L_DeleteFeature()                         */
 /************************************************************************/
 
-OGRErr OGR_L_DeleteFeature( OGRLayerH hDS, long nFID )
+OGRErr OGR_L_DeleteFeature( OGRLayerH hLayer, GIntBig nFID )
 
 {
-    VALIDATE_POINTER1( hDS, "OGR_L_DeleteFeature", OGRERR_INVALID_HANDLE );
+    VALIDATE_POINTER1( hLayer, "OGR_L_DeleteFeature", OGRERR_INVALID_HANDLE );
 
-    return ((OGRLayer *) hDS)->DeleteFeature( nFID );
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_DeleteFeature(hLayer, nFID);
+#endif
+
+    return ((OGRLayer *) hLayer)->DeleteFeature( nFID );
 }
 
 /************************************************************************/
@@ -1405,6 +1592,11 @@ const char *OGR_L_GetFIDColumn( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetFIDColumn", NULL );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetFIDColumn(hLayer);
+#endif
+
     return ((OGRLayer *) hLayer)->GetFIDColumn();
 }
 
@@ -1429,6 +1621,11 @@ const char *OGR_L_GetGeometryColumn( OGRLayerH hLayer )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetGeometryColumn", NULL );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetGeometryColumn(hLayer);
+#endif
 
     return ((OGRLayer *) hLayer)->GetGeometryColumn();
 }
@@ -1523,6 +1720,11 @@ const char* OGR_L_GetName( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetName", "" );
 
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetName(hLayer);
+#endif
+
     return ((OGRLayer *) hLayer)->GetName();
 }
 
@@ -1532,8 +1734,15 @@ const char* OGR_L_GetName( OGRLayerH hLayer )
 
 OGRwkbGeometryType OGRLayer::GetGeomType()
 {
-    return GetLayerDefn()->GetGeomType();
+    OGRFeatureDefn* poLayerDefn = GetLayerDefn();
+    if( poLayerDefn == NULL )
+    {
+        CPLDebug("OGR", "GetLayerType() returns NULL !");
+        return wkbUnknown;
+    }
+    return poLayerDefn->GetGeomType();
 }
+
 /************************************************************************/
 /*                         OGR_L_GetGeomType()                          */
 /************************************************************************/
@@ -1543,7 +1752,17 @@ OGRwkbGeometryType OGR_L_GetGeomType( OGRLayerH hLayer )
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_GetGeomType", wkbUnknown );
 
-    return ((OGRLayer *) hLayer)->GetGeomType();
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_GetGeomType(hLayer);
+#endif
+
+    OGRwkbGeometryType eType = ((OGRLayer *) hLayer)->GetGeomType();
+    if( OGR_GT_IsNonLinear(eType) && !OGRGetNonLinearGeometriesEnabledFlag() )
+    {
+        eType = OGR_GT_GetLinear(eType);
+    }
+    return eType;
 }
 
 /************************************************************************/
@@ -1606,6 +1825,11 @@ OGRErr OGR_L_SetIgnoredFields( OGRLayerH hLayer, const char **papszFields )
 
 {
     VALIDATE_POINTER1( hLayer, "OGR_L_SetIgnoredFields", OGRERR_INVALID_HANDLE );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_L_SetIgnoredFields(hLayer, papszFields);
+#endif
 
     return ((OGRLayer *) hLayer)->SetIgnoredFields( papszFields );
 }
@@ -1804,7 +2028,7 @@ OGRErr OGRLayer::Intersection( OGRLayer *pLayerMethod,
     int *mapMethod = NULL;
     OGREnvelope sEnvelopeMethod;
     GBool bEnvelopeSet;
-    double progress_max = GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -2069,7 +2293,7 @@ OGRErr OGRLayer::Union( OGRLayer *pLayerMethod,
     OGRGeometry *pGeometryInputFilter = NULL;
     int *mapInput = NULL;
     int *mapMethod = NULL;
-    double progress_max = GetFeatureCount(0) + pLayerMethod->GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0) + (double) pLayerMethod->GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -2413,7 +2637,7 @@ OGRErr OGRLayer::SymDifference( OGRLayer *pLayerMethod,
     OGRGeometry *pGeometryInputFilter = NULL;
     int *mapInput = NULL;
     int *mapMethod = NULL;
-    double progress_max = GetFeatureCount(0) + pLayerMethod->GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0) + (double) pLayerMethod->GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -2723,7 +2947,7 @@ OGRErr OGRLayer::Identity( OGRLayer *pLayerMethod,
     OGRGeometry *pGeometryMethodFilter = NULL;
     int *mapInput = NULL;
     int *mapMethod = NULL;
-    double progress_max = GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -2997,7 +3221,7 @@ OGRErr OGRLayer::Update( OGRLayer *pLayerMethod,
     OGRGeometry *pGeometryMethodFilter = NULL;
     int *mapInput = NULL;
     int *mapMethod = NULL;
-    double progress_max = GetFeatureCount(0) + pLayerMethod->GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0) + (double) pLayerMethod->GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -3270,7 +3494,7 @@ OGRErr OGRLayer::Clip( OGRLayer *pLayerMethod,
     OGRFeatureDefn *poDefnResult = NULL;
     OGRGeometry *pGeometryMethodFilter = NULL;
     int *mapInput = NULL;
-    double progress_max = GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));
@@ -3506,7 +3730,7 @@ OGRErr OGRLayer::Erase( OGRLayer *pLayerMethod,
     OGRFeatureDefn *poDefnResult = NULL;
     OGRGeometry *pGeometryMethodFilter = NULL;
     int *mapInput = NULL;
-    double progress_max = GetFeatureCount(0);
+    double progress_max = (double) GetFeatureCount(0);
     double progress_counter = 0;
     double progress_ticker = 0;
     int bSkipFailures = CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "SKIP_FAILURES", "NO"));

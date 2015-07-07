@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteregexp.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrsqliteregexp.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  SQLite REGEXP function
@@ -167,11 +167,7 @@ void OGRSQLiteREGEXPFunction(sqlite3_context *ctx, CPL_UNUSED int argc, sqlite3_
 /************************************************************************/
 
 static
-void* OGRSQLiteRegisterRegExpFunction(
-#ifndef HAVE_PCRE
-CPL_UNUSED
-#endif
-                                      sqlite3* hDB)
+void* OGRSQLiteRegisterRegExpFunction(sqlite3* hDB)
 {
 #ifdef HAVE_PCRE
 
@@ -205,11 +201,7 @@ CPL_UNUSED
 /************************************************************************/
 
 static
-void OGRSQLiteFreeRegExpCache(
-#ifndef HAVE_PCRE
-CPL_UNUSED
-#endif
-                              void* hRegExpCache)
+void OGRSQLiteFreeRegExpCache(void* hRegExpCache)
 {
 #ifdef HAVE_PCRE
     if( hRegExpCache == NULL )

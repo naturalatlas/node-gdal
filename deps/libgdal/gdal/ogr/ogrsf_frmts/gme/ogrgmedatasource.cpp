@@ -70,7 +70,8 @@ OGRGMEDataSource::~OGRGMEDataSource()
 
     if (bMustCleanPersistant)
     {
-        char** papszOptions = CSLAddString(NULL, CPLSPrintf("CLOSE_PERSISTENT=GME:%p", this));
+        char** papszOptions = NULL;
+        papszOptions = CSLSetNameValue(papszOptions, "CLOSE_PERSISTENT", CPLSPrintf("GME:%p", this));
         CPLHTTPFetch( GetAPIURL(), papszOptions);
         CSLDestroy(papszOptions);
     }
@@ -133,9 +134,6 @@ CPLString OGRGMEGetOptionValue(const char* pszFilename,
 int OGRGMEDataSource::Open( const char * pszFilename, int bUpdateIn)
 
 {
-    if (!EQUALN(pszFilename, "GME:", 4))
-        return FALSE;
-
     bReadWrite = bUpdateIn;
 
     pszName = CPLStrdup( pszFilename );
@@ -228,7 +226,7 @@ int OGRGMEDataSource::Open( const char * pszFilename, int bUpdateIn)
         return TRUE;
     }
     else if (osProjectId.size() != 0) {
-        CPLDebug("GME", "We have a projectId: %s. Use CreateLayer to create tables.",
+        CPLDebug("GME", "We have a projectId: %s. UseICreateLayer to create tables.",
                  osProjectId.c_str());
         return TRUE;
     }
@@ -237,13 +235,13 @@ int OGRGMEDataSource::Open( const char * pszFilename, int bUpdateIn)
 }
 
 /************************************************************************/
-/*                           CreateLayer()                              */
+/*                          ICreateLayer()                              */
 /************************************************************************/
 
-OGRLayer   *OGRGMEDataSource::CreateLayer( const char *pszName,
-                                           CPL_UNUSED OGRSpatialReference *poSpatialRef,
-                                           OGRwkbGeometryType eGType,
-                                           char ** papszOptions )
+OGRLayer   *OGRGMEDataSource::ICreateLayer( const char *pszName,
+                                            CPL_UNUSED OGRSpatialReference *poSpatialRef,
+                                            OGRwkbGeometryType eGType,
+                                            char ** papszOptions )
 {
     if (!bReadWrite)
     {

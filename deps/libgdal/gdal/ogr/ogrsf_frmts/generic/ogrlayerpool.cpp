@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerpool.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrlayerpool.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLayerPool and OGRProxiedLayer class
@@ -29,7 +29,7 @@
 
 #include "ogrlayerpool.h"
 
-CPL_CVSID("$Id: ogrlayerpool.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrlayerpool.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                      OGRAbstractProxiedLayer()                       */
@@ -217,6 +217,17 @@ void OGRProxiedLayer::CloseUnderlyingLayer()
 }
 
 /************************************************************************/
+/*                          GetUnderlyingLayer()                        */
+/************************************************************************/
+
+OGRLayer* OGRProxiedLayer::GetUnderlyingLayer()
+{
+    if( poUnderlyingLayer == NULL )
+        OpenUnderlyingLayer();
+    return poUnderlyingLayer;
+}
+
+/************************************************************************/
 /*                          GetSpatialFilter()                          */
 /************************************************************************/
 
@@ -279,7 +290,7 @@ OGRFeature *OGRProxiedLayer::GetNextFeature()
 /*                           SetNextByIndex()                           */
 /************************************************************************/
 
-OGRErr      OGRProxiedLayer::SetNextByIndex( long nIndex )
+OGRErr      OGRProxiedLayer::SetNextByIndex( GIntBig nIndex )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return OGRERR_FAILURE;
     return poUnderlyingLayer->SetNextByIndex(nIndex);
@@ -289,27 +300,27 @@ OGRErr      OGRProxiedLayer::SetNextByIndex( long nIndex )
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRProxiedLayer::GetFeature( long nFID )
+OGRFeature *OGRProxiedLayer::GetFeature( GIntBig nFID )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return NULL;
     return poUnderlyingLayer->GetFeature(nFID);
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /************************************************************************/
 
-OGRErr      OGRProxiedLayer::SetFeature( OGRFeature *poFeature )
+OGRErr      OGRProxiedLayer::ISetFeature( OGRFeature *poFeature )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return OGRERR_FAILURE;
     return poUnderlyingLayer->SetFeature(poFeature);
 }
 
 /************************************************************************/
-/*                            CreateFeature()                           */
+/*                            ICreateFeature()                           */
 /************************************************************************/
 
-OGRErr      OGRProxiedLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr      OGRProxiedLayer::ICreateFeature( OGRFeature *poFeature )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return OGRERR_FAILURE;
     return poUnderlyingLayer->CreateFeature(poFeature);
@@ -319,7 +330,7 @@ OGRErr      OGRProxiedLayer::CreateFeature( OGRFeature *poFeature )
 /*                           DeleteFeature()                            */
 /************************************************************************/
 
-OGRErr      OGRProxiedLayer::DeleteFeature( long nFID )
+OGRErr      OGRProxiedLayer::DeleteFeature( GIntBig nFID )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return OGRERR_FAILURE;
     return poUnderlyingLayer->DeleteFeature(nFID);
@@ -390,7 +401,7 @@ OGRSpatialReference *OGRProxiedLayer::GetSpatialRef()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int         OGRProxiedLayer::GetFeatureCount( int bForce )
+GIntBig         OGRProxiedLayer::GetFeatureCount( int bForce )
 {
     if( poUnderlyingLayer == NULL && !OpenUnderlyingLayer() ) return 0;
     return poUnderlyingLayer->GetFeatureCount(bForce);

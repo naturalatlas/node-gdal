@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfeaturestyle.cpp 27071 2014-03-21 21:52:46Z rouault $
+ * $Id: ogrfeaturestyle.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Feature Representation string API
@@ -34,7 +34,7 @@
 #include "ogr_featurestyle.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: ogrfeaturestyle.cpp 27071 2014-03-21 21:52:46Z rouault $");
+CPL_CVSID("$Id: ogrfeaturestyle.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void OGRFeatureStylePuller() {}
@@ -2071,10 +2071,10 @@ double OGRStyleTool::GetParamDbl(const OGRStyleParamId &sStyleParam ,
         // if sStyleParam.bGeoref == TRUE , need to convert to output value;
       case OGRSTypeString:
         if (sStyleParam.bGeoref)
-          return ComputeWithUnit(atof(sStyleValue.pszValue),
+          return ComputeWithUnit(CPLAtof(sStyleValue.pszValue),
                                  sStyleValue.eUnit);
         else
-          return atof(sStyleValue.pszValue);
+          return CPLAtof(sStyleValue.pszValue);
       case OGRSTypeDouble:
         if (sStyleParam.bGeoref)
           return ComputeWithUnit(sStyleValue.dfValue,
@@ -2117,7 +2117,7 @@ void OGRStyleTool::SetParamStr(const OGRStyleParamId &sStyleParam ,
         sStyleValue.pszValue = CPLStrdup(pszParamString);
         break;
       case OGRSTypeDouble:
-        sStyleValue.dfValue = atof(pszParamString);
+        sStyleValue.dfValue = CPLAtof(pszParamString);
         break;
       case OGRSTypeInteger:
       case OGRSTypeBoolean:

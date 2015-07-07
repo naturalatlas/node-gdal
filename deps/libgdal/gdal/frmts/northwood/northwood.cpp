@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: northwood.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: northwood.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GRC/GRD Reader
  * Purpose:  Northwood Format basic implementation

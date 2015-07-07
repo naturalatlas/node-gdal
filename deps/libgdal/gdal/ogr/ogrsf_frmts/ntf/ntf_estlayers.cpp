@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntf_estlayers.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ntf_estlayers.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  NTF Translator
  * Purpose:  NTFFileReader methods related to establishing the schemas
@@ -33,7 +33,7 @@
 #include "ntf.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ntf_estlayers.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ntf_estlayers.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 #define MAX_LINK        5000
 
@@ -317,10 +317,10 @@ static OGRFeature *TranslateOscarComment( CPL_UNUSED NTFFileReader *poReader,
                                           NTFRecord **papoGroup )
 
 {
-    if( CSLCount((char **) papoGroup) != 1 
+    if( CSLCount((char **) papoGroup) != 1
         || papoGroup[0]->GetType() != NRT_COMMENT )
         return NULL;
-        
+
     OGRFeature  *poFeature = new OGRFeature( poLayer->GetLayerDefn() );
 
     // RECORD_TYPE
@@ -1149,10 +1149,10 @@ static OGRFeature *TranslateStrategiNode( CPL_UNUSED NTFFileReader *poReader,
                                           NTFRecord **papoGroup )
 
 {
-    if( CSLCount((char **) papoGroup) != 1 
+    if( CSLCount((char **) papoGroup) != 1
         || papoGroup[0]->GetType() != NRT_NODEREC )
         return NULL;
-        
+
     OGRFeature  *poFeature = new OGRFeature( poLayer->GetLayerDefn() );
 
     // NODE_ID
@@ -1631,7 +1631,7 @@ static OGRFeature *TranslateLandlineName( NTFFileReader *poReader,
     poFeature->SetField( 5, atoi(papoGroup[1]->GetField(10,10)) );
         
     // ORIENT
-    poFeature->SetField( 6, atof(papoGroup[1]->GetField( 11, 14 )) * 0.1 );
+    poFeature->SetField( 6, CPLAtof(papoGroup[1]->GetField( 11, 14 )) * 0.1 );
 
     // TEXT_HT_GROUND
     poFeature->SetField( 7, poFeature->GetFieldAsDouble(4)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ctgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ctgdataset.cpp 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  CTG driver
  * Purpose:  GDALDataset driver for CTG dataset.
@@ -30,7 +30,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ctgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ctgdataset.cpp 28039 2014-11-30 18:24:59Z rouault $");
 
 CPL_C_START
 void    GDALRegister_CTG(void);
@@ -194,7 +194,8 @@ CTGRasterBand::~CTGRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr CTGRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, CPL_UNUSED int nBlockYOff,
+CPLErr CTGRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  CPL_UNUSED int nBlockYOff,
                                   void * pImage )
 {
     CTGDataset* poGDS = (CTGDataset* ) poDS;
@@ -360,7 +361,7 @@ int CTGDataset::Identify( GDALOpenInfo * poOpenInfo )
 
     GDALOpenInfo* poOpenInfoToDelete = NULL;
     /*  GZipped grid_cell.gz files are common, so automagically open them */
-    /*  if the /vsigzip/ has not been explicitely passed */
+    /*  if the /vsigzip/ has not been explicitly passed */
     const char* pszFilename = CPLGetFilename(poOpenInfo->pszFilename);
     if ((EQUAL(pszFilename, "grid_cell.gz") ||
          EQUAL(pszFilename, "grid_cell1.gz") ||
@@ -371,7 +372,7 @@ int CTGDataset::Identify( GDALOpenInfo * poOpenInfo )
         osFilename += poOpenInfo->pszFilename;
         poOpenInfo = poOpenInfoToDelete =
                 new GDALOpenInfo(osFilename.c_str(), GA_ReadOnly,
-                                 poOpenInfo->papszSiblingFiles);
+                                 poOpenInfo->GetSiblingFiles());
     }
 
     if (poOpenInfo->nHeaderBytes < HEADER_LINE_COUNT * 80)
@@ -431,7 +432,7 @@ GDALDataset *CTGDataset::Open( GDALOpenInfo * poOpenInfo )
     CPLString osFilename(poOpenInfo->pszFilename);
 
     /*  GZipped grid_cell.gz files are common, so automagically open them */
-    /*  if the /vsigzip/ has not been explicitely passed */
+    /*  if the /vsigzip/ has not been explicitly passed */
     const char* pszFilename = CPLGetFilename(poOpenInfo->pszFilename);
     if ((EQUAL(pszFilename, "grid_cell.gz") ||
          EQUAL(pszFilename, "grid_cell1.gz") ||
@@ -591,6 +592,7 @@ void GDALRegister_CTG()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "CTG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "USGS LULC Composite Theme Grid" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -604,4 +606,3 @@ void GDALRegister_CTG()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

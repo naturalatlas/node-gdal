@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: isis2dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: isis2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  ISIS Version 2 Driver
  * Purpose:  Implementation of ISIS2Dataset
@@ -50,7 +50,7 @@
 #include "cpl_string.h" 
 #include "nasakeywordhandler.h"
 
-CPL_CVSID("$Id: isis2dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: isis2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_ISIS2(void);
@@ -422,14 +422,14 @@ GDALDataset *ISIS2Dataset::Open( GDALOpenInfo * poOpenInfo )
     /***********   Grab Cellsize ************/
     value = poDS->GetKeyword("QUBE.IMAGE_MAP_PROJECTION.MAP_SCALE");
     if (strlen(value) > 0 ) {
-        dfXDim = (float) atof(value) * 1000.0; /* convert from km to m */
-        dfYDim = (float) atof(value) * 1000.0 * -1;
+        dfXDim = (float) CPLAtof(value) * 1000.0; /* convert from km to m */
+        dfYDim = (float) CPLAtof(value) * 1000.0 * -1;
     }
     
     /***********   Grab LINE_PROJECTION_OFFSET ************/
     value = poDS->GetKeyword("QUBE.IMAGE_MAP_PROJECTION.LINE_PROJECTION_OFFSET");
     if (strlen(value) > 0) {
-        yulcenter = (float) atof(value);
+        yulcenter = (float) CPLAtof(value);
         yulcenter = ((yulcenter) * dfYDim);
         dfULYMap = yulcenter - (dfYDim/2);
     }
@@ -437,7 +437,7 @@ GDALDataset *ISIS2Dataset::Open( GDALOpenInfo * poOpenInfo )
     /***********   Grab SAMPLE_PROJECTION_OFFSET ************/
     value = poDS->GetKeyword("QUBE.IMAGE_MAP_PROJECTION.SAMPLE_PROJECTION_OFFSET");
     if( strlen(value) > 0 ) {
-        xulcenter = (float) atof(value);
+        xulcenter = (float) CPLAtof(value);
         xulcenter = ((xulcenter) * dfXDim);
         dfULXMap = xulcenter - (dfXDim/2);
     }
@@ -453,27 +453,27 @@ GDALDataset *ISIS2Dataset::Open( GDALOpenInfo * poOpenInfo )
 
     /***********   Grab SEMI-MAJOR ************/
     semi_major = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.A_AXIS_RADIUS")) * 1000.0;
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.A_AXIS_RADIUS")) * 1000.0;
 
     /***********   Grab semi-minor ************/
     semi_minor = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.C_AXIS_RADIUS")) * 1000.0;
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.C_AXIS_RADIUS")) * 1000.0;
 
     /***********   Grab CENTER_LAT ************/
     center_lat = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.CENTER_LATITUDE"));
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.CENTER_LATITUDE"));
 
     /***********   Grab CENTER_LON ************/
     center_lon = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.CENTER_LONGITUDE"));
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.CENTER_LONGITUDE"));
 
     /***********   Grab 1st std parallel ************/
     first_std_parallel = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.FIRST_STANDARD_PARALLEL"));
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.FIRST_STANDARD_PARALLEL"));
 
     /***********   Grab 2nd std parallel ************/
     second_std_parallel = 
-        atof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.SECOND_STANDARD_PARALLEL"));
+        CPLAtof(poDS->GetKeyword( "QUBE.IMAGE_MAP_PROJECTION.SECOND_STANDARD_PARALLEL"));
      
     /*** grab  PROJECTION_LATITUDE_TYPE = "PLANETOCENTRIC" ****/
     // Need to further study how ocentric/ographic will effect the gdal library.
@@ -966,7 +966,8 @@ int ISIS2Dataset::WriteRaster(CPLString osFilename,
                               bool includeLabel,
                               GUIntBig iRecords,
                               GUIntBig iLabelRecords,
-                              CPL_UNUSED GDALDataType eType, CPL_UNUSED const char * pszInterleaving) {
+                              CPL_UNUSED GDALDataType eType,
+                              CPL_UNUSED const char * pszInterleaving) {
     GUIntBig nSize;
     GByte byZero(0);
     CPLString pszAccess("wb");
@@ -1093,11 +1094,11 @@ int ISIS2Dataset::WriteQUBE_Information(
 
 int ISIS2Dataset::WriteLabel(
     CPLString osFilename, CPLString osRasterFile, CPLString sObjectTag,
-    unsigned int nXSize, unsigned int nYSize, unsigned int nBands, 
+    unsigned int nXSize, unsigned int nYSize, unsigned int nBands,
     GDALDataType eType,
-    GUIntBig iRecords, const char * pszInterleaving, 
-    GUIntBig &iLabelRecords, CPL_UNUSED bool bRelaunch)
-
+    GUIntBig iRecords, const char * pszInterleaving,
+    GUIntBig &iLabelRecords,
+    CPL_UNUSED bool bRelaunch)
 {
     CPLDebug("ISIS2", "Write Label filename = %s, rasterfile = %s",osFilename.c_str(),osRasterFile.c_str());
     bool bAttachedLabel = EQUAL(osRasterFile, "");
@@ -1195,6 +1196,7 @@ int ISIS2Dataset::WriteLabel(
             poDriver = new GDALDriver();
         
             poDriver->SetDescription( "ISIS2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
             poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                        "USGS Astrogeology ISIS cube (Version 2)" );
             poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_isis2.html" );

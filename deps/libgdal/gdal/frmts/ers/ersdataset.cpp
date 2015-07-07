@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ersdataset.cpp 27433 2014-06-04 19:21:16Z rouault $
+ * $Id: ersdataset.cpp 28474 2015-02-13 11:42:37Z rouault $
  *
  * Project:  ERMapper .ers Driver
  * Purpose:  Implementation of .ers driver.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ershdrnode.h"
 
-CPL_CVSID("$Id: ersdataset.cpp 27433 2014-06-04 19:21:16Z rouault $");
+CPL_CVSID("$Id: ersdataset.cpp 28474 2015-02-13 11:42:37Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -70,9 +70,9 @@ class ERSDataset : public RawDataset
     int         bHasNoDataValue;
     double      dfNoDataValue;
 
-    CPLString      osProj;
-    CPLString      osDatum;
-    CPLString      osUnits;
+    CPLString      osProj, osProjForced;
+    CPLString      osDatum, osDatumForced;
+    CPLString      osUnits, osUnitsForced;
     void           WriteProjectionInfo(const char* pszProj,
                                        const char* pszDatum,
                                        const char* pszUnits);
@@ -437,9 +437,20 @@ CPLErr ERSDataset::SetProjection( const char *pszSRS )
 
     /* Write the above computed values, unless they have been overriden by */
     /* the creation options PROJ, DATUM or UNITS */
-    WriteProjectionInfo( (osProj.size()) ? osProj.c_str() : szERSProj,
-                         (osDatum.size()) ? osDatum.c_str() : szERSDatum,
-                         (osUnits.size()) ? osUnits.c_str() : szERSUnits );
+    if( osProjForced.size() )
+        osProj = osProjForced;
+    else
+        osProj = szERSProj;
+    if( osDatumForced.size() )
+        osDatum = osDatumForced;
+    else
+        osDatum = szERSDatum;
+    if( osUnitsForced.size() )
+        osUnits = osUnitsForced;
+    else
+        osUnits = szERSUnits;
+
+    WriteProjectionInfo( osProj, osDatum, osUnits );
 
     return CE_None;
 }
@@ -689,12 +700,12 @@ void ERSDataset::ReadGCPs()
 
         CPLFree( psGCP->pszId );
         psGCP->pszId = CPLStrdup(papszTokens[iGCP*nItemsPerLine+0]);
-        psGCP->dfGCPPixel = atof(papszTokens[iGCP*nItemsPerLine+3]);
-        psGCP->dfGCPLine  = atof(papszTokens[iGCP*nItemsPerLine+4]);
-        psGCP->dfGCPX     = atof(papszTokens[iGCP*nItemsPerLine+5]);
-        psGCP->dfGCPY     = atof(papszTokens[iGCP*nItemsPerLine+6]);
+        psGCP->dfGCPPixel = CPLAtof(papszTokens[iGCP*nItemsPerLine+3]);
+        psGCP->dfGCPLine  = CPLAtof(papszTokens[iGCP*nItemsPerLine+4]);
+        psGCP->dfGCPX     = CPLAtof(papszTokens[iGCP*nItemsPerLine+5]);
+        psGCP->dfGCPY     = CPLAtof(papszTokens[iGCP*nItemsPerLine+6]);
         if( nItemsPerLine == 8 )
-            psGCP->dfGCPZ = atof(papszTokens[iGCP*nItemsPerLine+7]);
+            psGCP->dfGCPZ = CPLAtof(papszTokens[iGCP*nItemsPerLine+7]);
     }
     
     CSLDestroy( papszTokens );
@@ -1410,13 +1421,13 @@ GDALDataset *ERSDataset::Create( const char * pszFilename,
 /* -------------------------------------------------------------------- */
     const char *pszDatum = CSLFetchNameValue( papszOptions, "DATUM" );
     if (pszDatum)
-        poDS->osDatum = pszDatum;
+        poDS->osDatumForced = poDS->osDatum = pszDatum;
     const char *pszProj = CSLFetchNameValue( papszOptions, "PROJ" );
     if (pszProj)
-        poDS->osProj = pszProj;
+        poDS->osProjForced = poDS->osProj = pszProj;
     const char *pszUnits = CSLFetchNameValue( papszOptions, "UNITS" );
     if (pszUnits)
-        poDS->osUnits = pszUnits;
+        poDS->osUnitsForced = poDS->osUnits = pszUnits;
 
     if (pszDatum || pszProj || pszUnits)
     {
@@ -1442,6 +1453,7 @@ void GDALRegister_ERS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "ERS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "ERMapper .ers Labelled" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

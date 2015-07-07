@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrs57layer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrs57layer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements OGRS57Layer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrs57layer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrs57layer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRS57Layer()                             */
@@ -52,6 +52,7 @@ OGRS57Layer::OGRS57Layer( OGRS57DataSource *poDSIn,
     nFeatureCount = nFeatureCountIn;
 
     poFeatureDefn = poDefnIn;
+    SetDescription( poFeatureDefn->GetName() );
     if( poFeatureDefn->GetGeomFieldCount() > 0 )
         poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poDS->GetSpatialRef());
 
@@ -240,7 +241,7 @@ OGRErr OGRS57Layer::GetExtent( OGREnvelope *psExtent, int bForce )
 /************************************************************************/
 /*                          GetFeatureCount()                           */
 /************************************************************************/
-int OGRS57Layer::GetFeatureCount (int bForce)
+GIntBig OGRS57Layer::GetFeatureCount (int bForce)
 {
     
     if( !TestCapability(OLCFastFeatureCount) )
@@ -253,16 +254,16 @@ int OGRS57Layer::GetFeatureCount (int bForce)
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRS57Layer::GetFeature( long nFeatureId )
+OGRFeature *OGRS57Layer::GetFeature( GIntBig nFeatureId )
 
 {
     S57Reader   *poReader = poDS->GetModule(0); // not multi-reader aware
 
-    if( poReader != NULL )
+    if( poReader != NULL && nFeatureId <= INT_MAX )
     {
         OGRFeature      *poFeature;
 
-        poFeature = poReader->ReadFeature( nFeatureId, poFeatureDefn );
+        poFeature = poReader->ReadFeature( (int)nFeatureId, poFeatureDefn );
         if( poFeature != NULL &&  poFeature->GetGeometryRef() != NULL )
             poFeature->GetGeometryRef()->assignSpatialReference(
                 GetSpatialRef() );
@@ -273,10 +274,10 @@ OGRFeature *OGRS57Layer::GetFeature( long nFeatureId )
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRS57Layer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRS57Layer::ICreateFeature( OGRFeature *poFeature )
 
 {
 /* -------------------------------------------------------------------- */

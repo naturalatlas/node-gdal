@@ -51,19 +51,22 @@ using namespace std;
 /************************************************************************/
 /*                           GenerateTiles()                            */
 /************************************************************************/
-void GenerateTiles(std::string filename, 
-                   CPL_UNUSED int zoom, int rxsize, 
-                   int rysize, CPL_UNUSED int ix, CPL_UNUSED int iy, 
-                   int rx, int ry, int dxsize, 
+void GenerateTiles(std::string filename,
+                   CPL_UNUSED int zoom,
+                   int rxsize,
+                   int rysize,
+                   CPL_UNUSED int ix,
+                   CPL_UNUSED int iy,
+                   int rx, int ry, int dxsize,
                    int dysize, int bands,
                    GDALDataset* poSrcDs,
-                   GDALDriver* poOutputTileDriver, 
+                   GDALDriver* poOutputTileDriver,
                    GDALDriver* poMemDriver,
                    bool isJpegDriver)
 {
     GDALDataset* poTmpDataset = NULL;
     GDALRasterBand* alphaBand = NULL;
-   
+
     GByte* pafScanline = new GByte[dxsize];
     bool* hadnoData = new bool[dxsize];
 
@@ -109,18 +112,12 @@ void GenerateTiles(std::string filename,
                 }
             }
 
-            GDALRasterBand* poBandtmp = NULL;
-            if (poTmpDataset)
-            {
-                poBandtmp = poTmpDataset->GetRasterBand(band);
-            }
-
             int yOffset = ry + row * rowOffset;
             bool bReadFailed = false;
             if (poBand)
             {
                 CPLErr errTest = 
-                    poBand->RasterIO( GF_Read, rx, yOffset, rxsize, rowOffset, pafScanline, dxsize, 1, GDT_Byte, 0, 0);
+                    poBand->RasterIO( GF_Read, rx, yOffset, rxsize, rowOffset, pafScanline, dxsize, 1, GDT_Byte, 0, 0, NULL);
 
                 if ( errTest == CE_Failure )
                 {
@@ -151,10 +148,11 @@ void GenerateTiles(std::string filename,
                 }
             }
 
-            if (poBandtmp && bReadFailed == false)
+            if (bReadFailed == false)
             {
+                GDALRasterBand* poBandtmp = poTmpDataset->GetRasterBand(band);
                 poBandtmp->RasterIO(GF_Write, 0, row, dxsize, 1, pafScanline, dxsize, 1, GDT_Byte, 
-                                    0, 0);
+                                    0, 0, NULL);
             }
         } 
 
@@ -176,7 +174,7 @@ void GenerateTiles(std::string filename,
                 }    
 
                 alphaBand->RasterIO(GF_Write, 0, row, dxsize, 1, pafScanline, dxsize, 1, GDT_Byte, 
-                                    0, 0);
+                                    0, 0, NULL);
             }
         }
     }
@@ -507,12 +505,15 @@ class KmlSuperOverlayDummyDataset: public GDALDataset
 };
 
 static
-GDALDataset *KmlSuperOverlayCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                                        CPL_UNUSED int bStrict, char ** papszOptions,
-                                        GDALProgressFunc pfnProgress, void * pProgressData)
+GDALDataset *KmlSuperOverlayCreateCopy( const char * pszFilename,
+                                        GDALDataset *poSrcDS,
+                                        CPL_UNUSED int bStrict,
+                                        char ** papszOptions,
+                                        GDALProgressFunc pfnProgress,
+                                        void * pProgressData)
 {
     bool isKmz = false;
-    
+
     if( pfnProgress == NULL )
         pfnProgress = GDALDummyProgress;
 
@@ -991,7 +992,8 @@ CPLErr KmlSuperOverlayReadDataset::GetGeoTransform( double * padfGeoTransform )
 /*                        KmlSuperOverlayRasterBand()                   */
 /************************************************************************/
 
-KmlSuperOverlayRasterBand::KmlSuperOverlayRasterBand(KmlSuperOverlayReadDataset* poDS, CPL_UNUSED int nBand)
+KmlSuperOverlayRasterBand::KmlSuperOverlayRasterBand(KmlSuperOverlayReadDataset* poDS,
+                                                     CPL_UNUSED int nBand)
 {
     nRasterXSize = poDS->nRasterXSize;
     nRasterYSize = poDS->nRasterYSize;
@@ -1014,6 +1016,10 @@ CPLErr KmlSuperOverlayRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff, vo
         nXSize = nRasterXSize - nXOff;
     if( nYOff + nYSize > nRasterYSize )
         nYSize = nRasterYSize - nYOff;
+    
+    GDALRasterIOExtraArg sExtraArg;
+    INIT_RASTERIO_EXTRA_ARG(sExtraArg);
+
     return IRasterIO( GF_Read,
                       nXOff,
                       nYOff,
@@ -1024,7 +1030,7 @@ CPLErr KmlSuperOverlayRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff, vo
                       nYSize,
                       eDataType,
                       1,
-                      nBlockXSize );
+                      nBlockXSize, &sExtraArg );
 }
 
 /************************************************************************/
@@ -1044,14 +1050,16 @@ CPLErr KmlSuperOverlayRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                              int nXOff, int nYOff, int nXSize, int nYSize,
                                              void * pData, int nBufXSize, int nBufYSize,
                                              GDALDataType eBufType,
-                                             int nPixelSpace, int nLineSpace )
+                                             GSpacing nPixelSpace,
+                                             GSpacing nLineSpace,
+                                             GDALRasterIOExtraArg* psExtraArg )
 {
     KmlSuperOverlayReadDataset* poGDS = (KmlSuperOverlayReadDataset* )poDS;
 
     return poGDS->IRasterIO(eRWFlag, nXOff, nYOff, nXSize, nYSize,
                             pData, nBufXSize, nBufYSize, eBufType,
                             1, &nBand,
-                            nPixelSpace, nLineSpace, 0 );
+                            nPixelSpace, nLineSpace, 0, psExtraArg );
 }
 
 /************************************************************************/
@@ -1122,7 +1130,9 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType, 
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace, int nLineSpace, int nBandSpace)
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg)
 {
     if( eRWFlag == GF_Write )
         return CE_Failure;
@@ -1136,7 +1146,7 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
                                     pData, nBufXSize, nBufYSize,
                                     eBufType, 
                                     nBandCount, panBandMap,
-                                    nPixelSpace, nLineSpace, nBandSpace);
+                                    nPixelSpace, nLineSpace, nBandSpace, psExtraArg);
     
     double dfXOff = 1.0 * nXOff / nFactor;
     double dfYOff = 1.0 * nYOff / nFactor;
@@ -1191,9 +1201,7 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
                         }
                         else
                         {
-                            osSubFilename = CPLGetPath(pszBaseFilename);
-                            osSubFilename += "/";
-                            osSubFilename += pszHref;
+                            osSubFilename = CPLFormFilename(CPLGetPath(pszBaseFilename), pszHref, NULL);
                         }
                         osSubFilename = KMLRemoveSlash(osSubFilename);
                     }
@@ -1383,7 +1391,8 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
                                              nReqYSize,
                                              pData, nBufXSize, nBufYSize, eBufType,
                                              nBandCount, panBandMap,
-                                             nPixelSpace, nLineSpace, nBandSpace );
+                                             nPixelSpace, nLineSpace, nBandSpace,
+                                             psExtraArg);
 
             for(i=0; i < (int)aosImages.size(); i++)
             {
@@ -1395,6 +1404,9 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
             return eErr;
         }
     }
+
+    GDALProgressFunc  pfnProgressGlobal = psExtraArg->pfnProgress;
+    void             *pProgressDataGlobal = psExtraArg->pProgressData;
 
     for(int iBandIdx = 0; iBandIdx < nBandCount; iBandIdx++ )
     {
@@ -1423,6 +1435,13 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
         if( nReqYOff + nReqYSize > poDSIcon->GetRasterYSize() )
             nReqYSize = poDSIcon->GetRasterYSize() - nReqYOff;
 
+        psExtraArg->pfnProgress = GDALScaledProgress;
+        psExtraArg->pProgressData = 
+            GDALCreateScaledProgress( 1.0 * iBandIdx / nBandCount,
+                                      1.0 * (iBandIdx + 1) / nBandCount,
+                                      pfnProgressGlobal,
+                                      pProgressDataGlobal );
+
         poDSIcon->GetRasterBand(nIconBand)->RasterIO( eRWFlag,
                                                       nReqXOff,
                                                       nReqYOff,
@@ -1430,8 +1449,14 @@ CPLErr KmlSuperOverlayReadDataset::IRasterIO( GDALRWFlag eRWFlag,
                                                       nReqYSize,
                                                       ((GByte*) pData) + nBandSpace * iBandIdx,
                                                       nBufXSize, nBufYSize, eBufType,
-                                                      nPixelSpace, nLineSpace );
+                                                      nPixelSpace, nLineSpace,
+                                                      psExtraArg);
+
+        GDALDestroyScaledProgress( psExtraArg->pProgressData );
     }
+
+    psExtraArg->pfnProgress = pfnProgressGlobal;
+    psExtraArg->pProgressData = pProgressDataGlobal;
 
     return CE_None;
 
@@ -1518,13 +1543,30 @@ int KmlSuperOverlayReadDataset::Identify(GDALOpenInfo * poOpenInfo)
 {
     const char* pszExt = CPLGetExtension(poOpenInfo->pszFilename);
     if( EQUAL(pszExt, "kmz") )
-        return TRUE;
+        return -1;
     if( poOpenInfo->nHeaderBytes == 0 )
         return FALSE;
-    if( EQUAL(pszExt, "kml") &&
-        strstr((const char*)poOpenInfo->pabyHeader, "<kml") != NULL )
-        return TRUE;
-    return FALSE;
+    if( !EQUAL(pszExt, "kml") ||
+        strstr((const char*)poOpenInfo->pabyHeader, "<kml") == NULL )
+        return FALSE;
+    
+    for( int i=0;i<2;i++ )
+    {
+        if( strstr((const char*)poOpenInfo->pabyHeader, "<NetworkLink>") != NULL &&
+            strstr((const char*)poOpenInfo->pabyHeader, "<Region>") != NULL &&
+            strstr((const char*)poOpenInfo->pabyHeader, "<Link>") != NULL )
+            return TRUE;
+        
+        if( strstr((const char*)poOpenInfo->pabyHeader, "<Document>") != NULL &&
+            strstr((const char*)poOpenInfo->pabyHeader, "<Region>") != NULL &&
+            strstr((const char*)poOpenInfo->pabyHeader, "<GroundOverlay>") != NULL )
+            return TRUE;
+
+        if( i == 0 && !poOpenInfo->TryToIngest(1024*10) )
+            return FALSE;
+    }
+    
+    return -1;
 }
 
 /************************************************************************/
@@ -1534,7 +1576,7 @@ int KmlSuperOverlayReadDataset::Identify(GDALOpenInfo * poOpenInfo)
 GDALDataset *KmlSuperOverlayReadDataset::Open(GDALOpenInfo * poOpenInfo)
 
 {
-    if( !Identify(poOpenInfo) )
+    if( Identify(poOpenInfo) == FALSE )
         return NULL;
 
     return Open(poOpenInfo->pszFilename);
@@ -1560,9 +1602,7 @@ GDALDataset* KmlSuperOverlayLoadIcon(const char* pszBaseFilename, const char* ps
         osSubFilename = CPLSPrintf("/vsicurl_streaming/%s", pszIcon);
     else
     {
-        osSubFilename = CPLGetPath(pszBaseFilename);
-        osSubFilename += "/";
-        osSubFilename += pszIcon;
+        osSubFilename = CPLFormFilename(CPLGetPath(pszBaseFilename), pszIcon, NULL);
         osSubFilename = KMLRemoveSlash(osSubFilename);
     }
 
@@ -1625,9 +1665,7 @@ static void KmlSuperOverlayComputeDepth(CPLString osFilename,
                     osSubFilename = CPLSPrintf("/vsicurl_streaming/%s", pszHref);
                 else
                 {
-                    osSubFilename = CPLGetPath(osFilename);
-                    osSubFilename += "/";
-                    osSubFilename += pszHref;
+                    osSubFilename = CPLFormFilename(CPLGetPath(osFilename), pszHref, NULL),
                     osSubFilename = KMLRemoveSlash(osSubFilename);
                 }
 
@@ -1955,7 +1993,7 @@ CPLErr KmlSingleDocRasterRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                                     0, 0, nXSize, nYSize,
                                                     pImage,
                                                     nXSize, nYSize,
-                                                    GDT_Byte, 1, nBlockXSize);
+                                                    GDT_Byte, 1, nBlockXSize, NULL);
 
             /* Expand color table */
             if( eErr == CE_None && poColorTable != NULL )
@@ -1989,7 +2027,7 @@ CPLErr KmlSingleDocRasterRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                                 0, 0, nXSize, nYSize,
                                                 pImage,
                                                 nXSize, nYSize,
-                                                GDT_Byte, 1, nBlockXSize);
+                                                GDT_Byte, 1, nBlockXSize, NULL);
     }
     else if( nBand == 4 && poImageDS->GetRasterCount() == 3 )
     {
@@ -2297,9 +2335,7 @@ GDALDataset *KmlSuperOverlayReadDataset::Open(const char* pszFilename,
             osSubFilename = CPLSPrintf("/vsicurl_streaming/%s", pszHref);
         else
         {
-            osSubFilename = CPLGetPath(osFilename);
-            osSubFilename += "/";
-            osSubFilename += pszHref;
+            osSubFilename = CPLFormFilename(CPLGetPath(osFilename), pszHref, NULL);
             osSubFilename = KMLRemoveSlash(osSubFilename);
         }
 
@@ -2447,6 +2483,7 @@ void GDALRegister_KMLSUPEROVERLAY()
         poDriver = new GDALDriver();
       
         poDriver->SetDescription( "KMLSUPEROVERLAY" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Kml Super Overlay" );
         poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES, 
@@ -2480,4 +2517,3 @@ void GDALRegister_KMLSUPEROVERLAY()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

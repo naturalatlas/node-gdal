@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_conv.h 27121 2014-04-03 22:08:55Z rouault $
+ * $Id: cpl_conv.h 28601 2015-03-03 11:06:40Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Convenience functions declarations.
@@ -102,6 +102,8 @@ double CPL_DLL CPLScanDouble( const char *, int );
 long CPL_DLL CPLScanLong( const char *, int );
 unsigned long CPL_DLL CPLScanULong( const char *, int );
 GUIntBig CPL_DLL CPLScanUIntBig( const char *, int );
+GIntBig CPL_DLL CPLAtoGIntBig( const char* pszString );
+GIntBig CPL_DLL CPLAtoGIntBigEx( const char* pszString, int bWarn, int *pbOverflow );
 void CPL_DLL *CPLScanPointer( const char *, int );
 
 /* -------------------------------------------------------------------- */
@@ -210,6 +212,7 @@ void CPL_DLL CPLStringToComplex( const char *pszString,
 /* -------------------------------------------------------------------- */
 int CPL_DLL CPLUnlinkTree( const char * );
 int CPL_DLL CPLCopyFile( const char *pszNewPath, const char *pszOldPath );
+int CPL_DLL CPLCopyTree( const char *pszNewPath, const char *pszOldPath );
 int CPL_DLL CPLMoveFile( const char *pszNewPath, const char *pszOldPath );
 
 /* -------------------------------------------------------------------- */

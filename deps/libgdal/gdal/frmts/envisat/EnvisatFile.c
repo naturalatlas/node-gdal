@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: EnvisatFile.c 27731 2014-09-24 07:58:14Z rouault $
+ * $Id: EnvisatFile.c 28843 2015-04-02 21:13:08Z kyle $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Low Level Envisat file access (read/write) API.
@@ -28,12 +28,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_string.h"
+
 #ifndef APP_BUILD
 #  define GDAL_BUILD
 #  include "cpl_conv.h"
 #  include "EnvisatFile.h"
 
-CPL_CVSID("$Id: EnvisatFile.c 27731 2014-09-24 07:58:14Z rouault $");
+CPL_CVSID("$Id: EnvisatFile.c 28843 2015-04-02 21:13:08Z kyle $");
 
 #else
 #  include "APP/app.h"
@@ -76,7 +78,6 @@ struct EnvisatFile_tag
 
     int		ds_count;
     EnvisatDatasetInfo **ds_info;
-    
 };
 
 #ifdef GDAL_BUILD
@@ -145,7 +146,7 @@ static int EnvisatFile_SetupLevel0( EnvisatFile *self )
     self->dsd_offset = 0;
     self->ds_count = 1;
     self->ds_info = (EnvisatDatasetInfo **) 
-        calloc(sizeof(EnvisatDatasetInfo*),self->ds_count);
+        CPLCalloc(sizeof(EnvisatDatasetInfo*),self->ds_count);
 
     if( self->ds_info == NULL )
         return FAILURE;
@@ -174,11 +175,11 @@ static int EnvisatFile_SetupLevel0( EnvisatFile *self )
     /* 
      * Then build the dataset into structure from that. 
      */
-    ds_info = (EnvisatDatasetInfo *) calloc(sizeof(EnvisatDatasetInfo),1);
+    ds_info = (EnvisatDatasetInfo *) CPLCalloc(sizeof(EnvisatDatasetInfo),1);
     
-    ds_info->ds_name = strdup( "ASAR SOURCE PACKETS         " );
-    ds_info->ds_type = strdup( "M" );
-    ds_info->filename = strdup( "                                                              " );
+    ds_info->ds_name = CPLStrdup( "ASAR SOURCE PACKETS         " );
+    ds_info->ds_type = CPLStrdup("M");
+    ds_info->filename = CPLStrdup("                                                              ");
     ds_info->ds_offset = 3203;
     ds_info->dsr_size = -1;
     ds_info->num_dsr = 0;
@@ -260,12 +261,12 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
     /*
      * Create, and initialize the EnvisatFile structure. 
      */
-    self = (EnvisatFile *) calloc(sizeof(EnvisatFile),1);
+    self = (EnvisatFile *) CPLCalloc(sizeof(EnvisatFile),1);
     if( self == NULL )
         return FAILURE;
 
     self->fp = fp;
-    self->filename = strdup( filename );
+    self->filename = CPLStrdup(filename);
     self->header_dirty = 0;
     self->updatable = (strcmp(mode,"rb+") == 0);
 
@@ -275,7 +276,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
 
     if( VSIFReadL( mph_data, 1, MPH_SIZE, fp ) != MPH_SIZE )
     {
-        free( self );
+        CPLFree( self );
         SendError( "VSIFReadL() for mph failed." );
         return FAILURE;
     }
@@ -318,13 +319,13 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         return FAILURE;
     }
 
-    sph_data = (char *) malloc(sph_size + 1 );
+    sph_data = (char *) CPLMalloc(sph_size + 1 );
     if( sph_data == NULL )
         return FAILURE;
 
     if( (int) VSIFReadL( sph_data, 1, sph_size, fp ) != sph_size )
     {
-        free( self );
+        CPLFree( self );
         SendError( "VSIFReadL() for sph failed." );
         return FAILURE;
     }
@@ -355,7 +356,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
     }
 
     self->ds_info = (EnvisatDatasetInfo **) 
-        calloc(sizeof(EnvisatDatasetInfo*),num_dsd);
+        CPLCalloc(sizeof(EnvisatDatasetInfo*),num_dsd);
     if( self->ds_info == NULL )
         return FAILURE;
 
@@ -379,15 +380,15 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         /* 
          * Then build the dataset into structure from that. 
          */
-        ds_info = (EnvisatDatasetInfo *) calloc(sizeof(EnvisatDatasetInfo),1);
+        ds_info = (EnvisatDatasetInfo *) CPLCalloc(sizeof(EnvisatDatasetInfo),1);
 
-        ds_info->ds_name = strdup( 
+        ds_info->ds_name = CPLStrdup(
             S_NameValueList_FindValue( "DS_NAME", 
                                        dsdh_count, dsdh_entries, "" ));
-        ds_info->ds_type = strdup( 
+        ds_info->ds_type = CPLStrdup(
             S_NameValueList_FindValue( "DS_TYPE", 
                                        dsdh_count, dsdh_entries, "" ));
-        ds_info->filename = strdup( 
+        ds_info->filename = CPLStrdup(
             S_NameValueList_FindValue( "FILENAME", 
                                        dsdh_count, dsdh_entries, "" ));
         ds_info->ds_offset = atoi(
@@ -409,7 +410,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         self->ds_count++;
     }
     
-    free( sph_data );
+    CPLFree( sph_data );
 
     /*
      * Return successfully.
@@ -471,7 +472,7 @@ int EnvisatFile_Create( EnvisatFile **self_ptr,
     VSIFSeekL( fp, 0, SEEK_END );
     template_size = (int) VSIFTellL( fp );
 
-    template_data = (char *) malloc(template_size);
+    template_data = (char *) CPLMalloc(template_size);
     
     VSIFSeekL( fp, 0, SEEK_SET );
     VSIFReadL( template_data, template_size, 1, fp );
@@ -497,7 +498,7 @@ int EnvisatFile_Create( EnvisatFile **self_ptr,
     VSIFWriteL( template_data, template_size, 1, fp );
     VSIFCloseL( fp );
 
-    free( template_data );
+    CPLFree( template_data );
 
     /*
      * Now just open the file normally. 
@@ -602,7 +603,7 @@ static int EnvisatFile_RewriteHeader( EnvisatFile *self )
         int	dsdh_count = 0, key_index;
         EnvisatNameValue **dsdh_entries = NULL;
 
-        dsd_text = (char *) calloc(1,dsd_size+1);
+        dsd_text = (char *) CPLCalloc(1,dsd_size+1);
         if( VSIFSeekL( self->fp, self->dsd_offset + dsd * dsd_size, 
                    SEEK_SET ) != 0 )
         {
@@ -620,7 +621,7 @@ static int EnvisatFile_RewriteHeader( EnvisatFile *self )
                                    &dsdh_count, &dsdh_entries ) == FAILURE )
             return FAILURE;
 
-        free( dsd_text );
+        CPLFree( dsd_text );
 
         key_index = S_NameValueList_FindKey( "DS_OFFSET", 
                                              dsdh_count, dsdh_entries );
@@ -704,18 +705,18 @@ void EnvisatFile_Close( EnvisatFile *self )
     {
         if( self->ds_info != NULL && self->ds_info[i] != NULL )
         {
-            free( self->ds_info[i]->ds_name );
-            free( self->ds_info[i]->ds_type );
-            free( self->ds_info[i]->filename );
-            free( self->ds_info[i] );
+            CPLFree( self->ds_info[i]->ds_name );
+            CPLFree( self->ds_info[i]->ds_type );
+            CPLFree( self->ds_info[i]->filename );
+            CPLFree( self->ds_info[i] );
         }
     }
     if( self->ds_info != NULL )
-        free( self->ds_info );
+        CPLFree( self->ds_info );
     if( self->filename != NULL )
-        free( self->filename );
+        CPLFree( self->filename );
 
-    free( self );
+    CPLFree( self );
 }
 
 /*-----------------------------------------------------------------------------
@@ -1171,7 +1172,7 @@ int EnvisatFile_SetKeyValueAsDouble( EnvisatFile *self,
         }
 
         sprintf( format, "%%+0%d.%df", length, decimals );
-        sprintf( string_value, format, value );
+        CPLsprintf( string_value, format, value );
 
         if( (int)strlen(string_value) > length )
             string_value[length] = '\0';
@@ -1204,33 +1205,33 @@ Returns:
 -----------------------------------------------------------------------------*/
 
 int EnvisatFile_GetDatasetIndex( EnvisatFile *self, const char *ds_name )
-{
-    char	padded_ds_name[100];
-    size_t i;
-    int ii;
 
-    /* 
+{
+    int		i;
+    char	padded_ds_name[100];
+
+    /*
      * Padd the name.  While the normal product spec says the DS_NAME will
      * be 28 characters, I try to pad more than this incase the specification
-     * is changed. 
+     * is changed.
      */
     strncpy( padded_ds_name, ds_name, sizeof(padded_ds_name) );
     padded_ds_name[sizeof(padded_ds_name)-1] = 0;
-    for( i = strlen(padded_ds_name); i < sizeof(padded_ds_name)-1; i++ )
+    for( i = strlen(padded_ds_name); (size_t)i < sizeof(padded_ds_name)-1; i++ )
     {
         padded_ds_name[i] = ' ';
     }
     padded_ds_name[i] = '\0';
 
-    /* 
+    /*
      * Compare only for the full length of DS_NAME we have saved.
      */
-    for( ii = 0; ii < self->ds_count; ii++ )
+    for( i = 0; i < self->ds_count; i++ )
     {
-        if( strncmp( padded_ds_name, self->ds_info[ii]->ds_name, 
-                     strlen(self->ds_info[ii]->ds_name) ) == 0 )
+        if( strncmp( padded_ds_name, self->ds_info[i]->ds_name, 
+                     strlen(self->ds_info[i]->ds_name) ) == 0 )
         {
-            return ii;
+            return i;
         }
     }
 
@@ -1739,7 +1740,7 @@ int S_NameValueList_Parse( const char *text, int text_offset,
         line_offset = (int) (next_text - text) + text_offset;
         while( *next_text != '\0' && *next_text != '\n' )
         {
-          if( (size_t)line_len > sizeof(line)-1 )
+          if( line_len > ((int)sizeof(line) - 1) )
             {
                 SendError( "S_NameValueList_Parse(): "
                            "Corrupt line, longer than 1024 characters." );
@@ -1764,8 +1765,8 @@ int S_NameValueList_Parse( const char *text, int text_offset,
         /*
          * Create the name/value info structure. 
          */
-        entry = (EnvisatNameValue *) calloc(sizeof(EnvisatNameValue),1);
-        entry->literal_line = strdup(line);
+        entry = (EnvisatNameValue *) CPLCalloc(sizeof(EnvisatNameValue),1);
+        entry->literal_line = CPLStrdup(line);
 
         /*
          * Capture the key.  We take everything up to the equal sign.  There
@@ -1773,7 +1774,7 @@ int S_NameValueList_Parse( const char *text, int text_offset,
          * key.
          */
         equal_index = strstr(line, "=") - line;
-        entry->key = (char *) malloc(equal_index+1);
+        entry->key = (char *) CPLMalloc(equal_index+1);
         strncpy( entry->key, line, equal_index );
         entry->key[equal_index] = '\0';
         entry->value_offset = line_offset + equal_index + 1;
@@ -1789,7 +1790,7 @@ int S_NameValueList_Parse( const char *text, int text_offset,
                  src_char++ ) {}
 
             line[src_char] = '\0';
-            entry->value = strdup( line + equal_index + 2 );
+            entry->value = CPLStrdup(line + equal_index + 2);
             entry->value_offset += 1;
         }
 
@@ -1813,11 +1814,11 @@ int S_NameValueList_Parse( const char *text, int text_offset,
                      dst_char++ ) {}
 
                 line[dst_char] = '\0';
-                entry->units = strdup( line + src_char + 1 );
+                entry->units = CPLStrdup( line + src_char + 1 );
             }
 
             line[src_char] = '\0';
-            entry->value = strdup( line + equal_index + 1 );
+            entry->value = CPLStrdup( line + equal_index + 1 );
         }
 
         /*
@@ -1825,7 +1826,7 @@ int S_NameValueList_Parse( const char *text, int text_offset,
          */
         (*entry_count)++;
         *entries = (EnvisatNameValue **)
-            realloc( *entries, *entry_count * sizeof(EnvisatNameValue*) );
+            CPLRealloc( *entries, *entry_count * sizeof(EnvisatNameValue*) );
 
         if( *entries == NULL )
         {
@@ -1921,18 +1922,17 @@ void S_NameValueList_Destroy( int *entry_count,
 
     for( i = 0; i < *entry_count; i++ )
     {
-        free( (*entries)[i]->key );
-        free( (*entries)[i]->value );
-        free( (*entries)[i]->units );
-        free( (*entries)[i]->literal_line );
-        free( (*entries)[i] );
+        CPLFree( (*entries)[i]->key );
+        CPLFree( (*entries)[i]->value );
+        CPLFree( (*entries)[i]->units );
+        CPLFree( (*entries)[i]->literal_line );
+        CPLFree( (*entries)[i] );
     }
 
-    free( *entries );
+    CPLFree( *entries );
     
     *entry_count = 0;
     *entries = NULL;
 }
 
 /* EOF */
-

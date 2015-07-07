@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf4imagedataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hdf4imagedataset.cpp 29212 2015-05-20 09:28:31Z rouault $
  *
  * Project:  Hierarchical Data Format Release 4 (HDF4)
  * Purpose:  Read subdatasets of HDF4 file.
@@ -47,7 +47,7 @@
 
 #include "nasakeywordhandler.h"
 
-CPL_CVSID("$Id: hdf4imagedataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hdf4imagedataset.cpp 29212 2015-05-20 09:28:31Z rouault $");
 
 CPL_C_START
 void    GDALRegister_HDF4(void);
@@ -59,7 +59,7 @@ CPL_C_END
 const char      *pszGDALSignature =
         "Created with GDAL (http://www.remotesensing.org/gdal/)";
 
-extern void *hHDF4Mutex;
+extern CPLMutex *hHDF4Mutex;
 
 /************************************************************************/
 /* ==================================================================== */
@@ -1219,14 +1219,14 @@ void HDF4ImageDataset::CaptureL1GMTLInfo()
     else
         return;
 
-    dfULX = atof(oMTL.GetKeyword((osPrefix+"UL_CORNER_LON").c_str(), "0" ));
-    dfULY = atof(oMTL.GetKeyword((osPrefix+"UL_CORNER_LAT").c_str(), "0" ));
-    dfLRX = atof(oMTL.GetKeyword((osPrefix+"LR_CORNER_LON").c_str(), "0" ));
-    dfLRY = atof(oMTL.GetKeyword((osPrefix+"LR_CORNER_LAT").c_str(), "0" ));
-    dfLLX = atof(oMTL.GetKeyword((osPrefix+"LL_CORNER_LON").c_str(), "0" ));
-    dfLLY = atof(oMTL.GetKeyword((osPrefix+"LL_CORNER_LAT").c_str(), "0" ));
-    dfURX = atof(oMTL.GetKeyword((osPrefix+"UR_CORNER_LON").c_str(), "0" ));
-    dfURY = atof(oMTL.GetKeyword((osPrefix+"UR_CORNER_LAT").c_str(), "0" ));
+    dfULX = CPLAtof(oMTL.GetKeyword((osPrefix+"UL_CORNER_LON").c_str(), "0" ));
+    dfULY = CPLAtof(oMTL.GetKeyword((osPrefix+"UL_CORNER_LAT").c_str(), "0" ));
+    dfLRX = CPLAtof(oMTL.GetKeyword((osPrefix+"LR_CORNER_LON").c_str(), "0" ));
+    dfLRY = CPLAtof(oMTL.GetKeyword((osPrefix+"LR_CORNER_LAT").c_str(), "0" ));
+    dfLLX = CPLAtof(oMTL.GetKeyword((osPrefix+"LL_CORNER_LON").c_str(), "0" ));
+    dfLLY = CPLAtof(oMTL.GetKeyword((osPrefix+"LL_CORNER_LAT").c_str(), "0" ));
+    dfURX = CPLAtof(oMTL.GetKeyword((osPrefix+"UR_CORNER_LON").c_str(), "0" ));
+    dfURY = CPLAtof(oMTL.GetKeyword((osPrefix+"UR_CORNER_LAT").c_str(), "0" ));
 
     CPLFree( pszGCPProjection );
     pszGCPProjection = CPLStrdup( "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9108\"]],AXIS[\"Lat\",NORTH],AXIS[\"Long\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]" );
@@ -1890,10 +1890,6 @@ void HDF4ImageDataset::GetGridAttrs( int32 hGD )
 /*      download.osgeo.org/gdal/data/hdf4/A2006005182000.L2_LAC_SST.x.hdf */
 /*                                                                      */
 /*      As reported in ticket #1895.                                    */
-/*                                                                      */
-/*      Note that we don't check that the dimensions of the latitude    */
-/*      and longitude exactly match the dimensions of the basedata,     */
-/*      though we ought to.                                             */
 /************************************************************************/
 
 void HDF4ImageDataset::ProcessModisSDSGeolocation(void)
@@ -1916,6 +1912,9 @@ void HDF4ImageDataset::ProcessModisSDSGeolocation(void)
     if ( SDfileinfo( hSD, &nDatasets, &nAttributes ) != 0 )
 	return;
 
+
+    int nLongitudeWidth = 0, nLongitudeHeight = 0;
+    int nLatitudeWidth = 0, nLatitudeHeight = 0;
     for( iDSIndex = 0; iDSIndex < nDatasets; iDSIndex++ )
     {
         int32	    iRank, iNumType, nAttrs, iSDS;
@@ -1928,10 +1927,24 @@ void HDF4ImageDataset::ProcessModisSDSGeolocation(void)
                        &nAttrs) == 0 )
         {
             if( EQUAL(szName,"latitude") )
+            {
                 iYIndex = iDSIndex;
+                if( iRank == 2 )
+                {
+                    nLatitudeWidth = aiDimSizes[1];
+                    nLatitudeHeight = aiDimSizes[0];
+                }
+            }
 
             if( EQUAL(szName,"longitude") )
+            {
                 iXIndex = iDSIndex;
+                if( iRank == 2 )
+                {
+                    nLongitudeWidth = aiDimSizes[1];
+                    nLongitudeHeight = aiDimSizes[0];
+                }
+            }
         }
 
         SDendaccess(iSDS);
@@ -1939,6 +1952,20 @@ void HDF4ImageDataset::ProcessModisSDSGeolocation(void)
 
     if( iXIndex == -1 || iYIndex == -1 )
         return;
+
+    int nPixelOffset = 0, nLineOffset = 0;
+    int nPixelStep = 1, nLineStep = 1;
+    if( nLongitudeWidth != nLatitudeWidth || nLongitudeHeight != nLatitudeHeight )
+    {
+        CPLDebug("HDF4", "Longitude and latitude subdatasets don't have same dimensions...");
+    }
+    else if( nLongitudeWidth > 0 && nLongitudeHeight > 0 )
+    {
+        nPixelStep = (int)(0.5 + 1.0 * nRasterXSize / nLongitudeWidth);
+        nLineStep = (int)(0.5 + 1.0 * nRasterYSize / nLongitudeHeight);
+        nPixelOffset = (nPixelStep-1) / 2;
+        nLineOffset = (nLineStep-1) / 2;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      We found geolocation information.  Record it as metadata.       */
@@ -1957,11 +1984,11 @@ void HDF4ImageDataset::ProcessModisSDSGeolocation(void)
     SetMetadataItem( "Y_DATASET", osWrk, "GEOLOCATION" );
     SetMetadataItem( "Y_BAND", "1" , "GEOLOCATION" );
 
-    SetMetadataItem( "PIXEL_OFFSET", "0", "GEOLOCATION" );
-    SetMetadataItem( "PIXEL_STEP", "1", "GEOLOCATION" );
+    SetMetadataItem( "PIXEL_OFFSET", CPLSPrintf("%d", nPixelOffset), "GEOLOCATION" );
+    SetMetadataItem( "PIXEL_STEP", CPLSPrintf("%d", nPixelStep), "GEOLOCATION" );
 
-    SetMetadataItem( "LINE_OFFSET", "0", "GEOLOCATION" );
-    SetMetadataItem( "LINE_STEP", "1", "GEOLOCATION" );
+    SetMetadataItem( "LINE_OFFSET", CPLSPrintf("%d", nLineOffset), "GEOLOCATION" );
+    SetMetadataItem( "LINE_STEP", CPLSPrintf("%d", nLineStep), "GEOLOCATION" );
 }
 
 /************************************************************************/
@@ -2602,8 +2629,11 @@ GDALDataset *HDF4ImageDataset::Open( GDALOpenInfo * poOpenInfo )
     HDF4ImageDataset    *poDS;
 
     poDS = new HDF4ImageDataset( );
-    poDS->fp = poOpenInfo->fp;
-    poOpenInfo->fp = NULL;
+    if( poOpenInfo->fpL != NULL )
+    {
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = NULL;
+    }
     
     CPLMutexHolderD(&hHDF4Mutex);
 
@@ -2695,7 +2725,7 @@ GDALDataset *HDF4ImageDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Try opening the dataset.                                        */
 /* -------------------------------------------------------------------- */
     int32       iAttribute, nValues, iAttrNumType;
-    double      dfNoData, dfScale, dfOffset;
+    double      dfNoData = 0, dfScale = 1, dfOffset = 0;
     int         bNoDataSet = FALSE, bHaveScale = FALSE, bHaveOffset = FALSE;
     const char  *pszUnits = NULL, *pszDescription = NULL;
 
@@ -3451,7 +3481,7 @@ GDALDataset *HDF4ImageDataset::Open( GDALOpenInfo * poOpenInfo )
               char *pszString = (char *) pszValue;
               while ( *pszValue && i < 6 )
               {
-                  poDS->adfGeoTransform[i++] = strtod(pszString, &pszString);
+                  poDS->adfGeoTransform[i++] = CPLStrtod(pszString, &pszString);
                   pszString++;
               }
               poDS->bHasGeoTransform = TRUE;
@@ -3807,6 +3837,7 @@ void GDALRegister_HDF4Image()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "HDF4Image" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "HDF4 Dataset" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

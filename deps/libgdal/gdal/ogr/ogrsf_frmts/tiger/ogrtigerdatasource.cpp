@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrtigerdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include <ctype.h>
 
-CPL_CVSID("$Id: ogrtigerdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrtigerdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                        TigerClassifyVersion()                        */
@@ -239,6 +239,7 @@ OGRTigerDataSource::~OGRTigerDataSource()
 void OGRTigerDataSource::AddLayer( OGRTigerLayer * poNewLayer )
 
 {
+    poNewLayer->SetDescription( poNewLayer->GetName() );
     papoLayers = (OGRTigerLayer **)
         CPLRealloc( papoLayers, sizeof(void*) * ++nLayers );
     
@@ -815,22 +816,21 @@ int OGRTigerDataSource::Create( const char *pszNameIn, char **papszOptions )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer *OGRTigerDataSource::CreateLayer( const char *pszLayerName, 
-                                           OGRSpatialReference *poSpatRef, 
-                                           CPL_UNUSED OGRwkbGeometryType eGType, 
-                                           CPL_UNUSED char **papszOptions )
-
+OGRLayer *OGRTigerDataSource::ICreateLayer( const char *pszLayerName,
+                                            OGRSpatialReference *poSpatRef,
+                                            CPL_UNUSED OGRwkbGeometryType eGType,
+                                            CPL_UNUSED char **papszOptions )
 {
     OGRTigerLayer       *poLayer = NULL;
 
     if( GetLayer( pszLayerName ) != NULL )
         return GetLayer( pszLayerName );
 
-    if( poSpatRef != NULL && 
-        (!poSpatRef->IsGeographic() 
+    if( poSpatRef != NULL &&
+        (!poSpatRef->IsGeographic()
          || !EQUAL(poSpatRef->GetAttrValue("DATUM"),
                    "North_American_Datum_1983")) )
     {

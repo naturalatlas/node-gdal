@@ -1,5 +1,5 @@
 /****************************************************************************
- * $Id: gs7bgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: gs7bgdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implements the Golden Software Surfer 7 Binary Grid Format.
@@ -61,7 +61,7 @@
 # define SHRT_MAX 32767
 #endif /* SHRT_MAX */
 
-CPL_CVSID("$Id: gs7bgdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: gs7bgdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void    GDALRegister_GS7BG(void);
@@ -836,7 +836,7 @@ GDALDataset *GS7BGDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return poDS;
 }
@@ -1107,7 +1107,9 @@ CPLErr GS7BGDataset::WriteHeader( VSILFILE *fp, GInt32 nXSize, GInt32 nYSize,
 /************************************************************************/
 
 GDALDataset *GS7BGDataset::Create( const char * pszFilename,
-                                   int nXSize, int nYSize, int nBands,
+                                   int nXSize,
+                                   int nYSize,
+                                   int nBands,
                                    GDALDataType eType,
                                    CPL_UNUSED char **papszParmList )
 
@@ -1185,7 +1187,8 @@ GDALDataset *GS7BGDataset::Create( const char * pszFilename,
 
 GDALDataset *GS7BGDataset::CreateCopy( const char *pszFilename,
                                        GDALDataset *poSrcDS,
-                                       int bStrict, CPL_UNUSED char **papszOptions,
+                                       int bStrict,
+                                       CPL_UNUSED char **papszOptions,
                                        GDALProgressFunc pfnProgress,
                                        void *pProgressData )
 {
@@ -1271,7 +1274,7 @@ GDALDataset *GS7BGDataset::CreateCopy( const char *pszFilename,
     {
         eErr = poSrcBand->RasterIO( GF_Read, 0, iRow,
                     nXSize, 1, pfData,
-                    nXSize, 1, GDT_Float64, 0, 0 );
+                    nXSize, 1, GDT_Float64, 0, 0, NULL );
 
         if( eErr != CE_None )
         {
@@ -1355,6 +1358,7 @@ void GDALRegister_GS7BG()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "GS7BG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "Golden Software 7 Binary Grid (.grd)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

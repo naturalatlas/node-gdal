@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnadatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrbnadatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNADataSource class
@@ -102,16 +102,16 @@ OGRLayer *OGRBNADataSource::GetLayer( int iLayer )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRBNADataSource::CreateLayer( const char * pszLayerName,
-                                          CPL_UNUSED OGRSpatialReference *poSRS,
-                                          OGRwkbGeometryType eType,
-                                          CPL_UNUSED char ** papszOptions )
+OGRLayer * OGRBNADataSource::ICreateLayer( const char * pszLayerName,
+                                           CPL_UNUSED OGRSpatialReference *poSRS,
+                                           OGRwkbGeometryType eType,
+                                           CPL_UNUSED char ** papszOptions )
 {
     BNAFeatureType bnaFeatureType;
-    
+
     switch(eType)
     {
         case wkbPolygon:
@@ -156,22 +156,6 @@ int OGRBNADataSource::Open( const char * pszFilename, int bUpdateIn)
 
     pszName = CPLStrdup( pszFilename );
     bUpdate = bUpdateIn;
-
-/* -------------------------------------------------------------------- */
-/*      Determine what sort of object this is.                          */
-/* -------------------------------------------------------------------- */
-    VSIStatBufL sStatBuf;
-
-    if( VSIStatExL( pszFilename, &sStatBuf, VSI_STAT_NATURE_FLAG ) != 0 )
-        return FALSE;
-    
-// -------------------------------------------------------------------- 
-//      Does this appear to be a .bna file?
-// --------------------------------------------------------------------
-    if( !(EQUAL( CPLGetExtension(pszFilename), "bna" )
-           || ((EQUALN( pszFilename, "/vsigzip/", 9) || EQUALN( pszFilename, "/vsizip/", 8)) &&
-               (strstr( pszFilename, ".bna") || strstr( pszFilename, ".BNA")))) )
-        return FALSE;
     
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
     if (fp)

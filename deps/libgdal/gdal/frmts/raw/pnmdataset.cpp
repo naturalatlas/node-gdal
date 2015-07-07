@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pnmdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pnmdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  PNM Driver
  * Purpose:  Portable anymap file format imlementation
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include <ctype.h>
 
-CPL_CVSID("$Id: pnmdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pnmdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void    GDALRegister_PNM(void);
@@ -414,6 +414,7 @@ void GDALRegister_PNM()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "PNM" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "Portable Pixmap Format (netpbm)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

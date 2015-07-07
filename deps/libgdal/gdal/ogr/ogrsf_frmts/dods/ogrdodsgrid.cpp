@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdodsgrid.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrdodsgrid.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGR/DODS Interface
  * Purpose:  Implements OGRDODSGridLayer class, which implements the
@@ -32,7 +32,7 @@
 #include "ogr_dods.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdodsgrid.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrdodsgrid.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRDODSGridLayer()                          */
@@ -431,7 +431,7 @@ int OGRDODSGridLayer::ArrayEntryToField( Array *poArray, void *pRawData,
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRDODSGridLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( nFeatureId < 0 || nFeatureId >= nMaxRawIndex )
@@ -589,7 +589,7 @@ int OGRDODSGridLayer::ProvideDataDDS()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRDODSGridLayer::GetFeatureCount( int bForce )
+GIntBig OGRDODSGridLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom == NULL && m_poAttrQuery == NULL )

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrkmllayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrkmllayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGRKMLLayer class.
@@ -92,6 +92,7 @@ OGRKMLLayer::OGRKMLLayer( const char * pszName,
     poDS_ = poDSIn;
     
     poFeatureDefn_ = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn_->GetName() );
     poFeatureDefn_->Reference();
     poFeatureDefn_->SetGeomType( eReqType );
     if( poFeatureDefn_->GetGeomFieldCount() != 0 )
@@ -162,6 +163,8 @@ OGRFeature *OGRKMLLayer::GetNextFeature()
     /*      Loop till we find a feature matching our criteria.              */
     /* -------------------------------------------------------------------- */
     KML *poKMLFile = poDS_->GetKMLFile();
+    if( poKMLFile == NULL )
+        return NULL;
     poKMLFile->selectLayer(nLayerNumber_);
 
     while(TRUE)
@@ -215,7 +218,12 @@ OGRFeature *OGRKMLLayer::GetNextFeature()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRKMLLayer::GetFeatureCount( int bForce )
+GIntBig OGRKMLLayer::GetFeatureCount(
+#ifndef HAVE_EXPAT
+CPL_UNUSED
+#endif
+                                 int bForce
+                                 )
 {
     int nCount = 0;
 
@@ -315,10 +323,10 @@ CPLString OGRKMLLayer::WriteSchema()
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRKMLLayer::CreateFeature( OGRFeature* poFeature )
+OGRErr OGRKMLLayer::ICreateFeature( OGRFeature* poFeature )
 {
     CPLAssert( NULL != poFeature );
     CPLAssert( NULL != poDS_ );
@@ -503,10 +511,6 @@ OGRErr OGRKMLLayer::CreateFeature( OGRFeature* poFeature )
             if (poFeatureDefn_->GetFieldDefn(iField)->GetType() == OFTReal)
             {
                 pszEscaped = CPLStrdup( pszRaw );
-                /* Use point as decimal separator */
-                char* pszComma = strchr(pszEscaped, ',');
-                if (pszComma)
-                    *pszComma = '.';
             }
             else
             {
@@ -599,11 +603,12 @@ int OGRKMLLayer::TestCapability( const char * pszCap )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRKMLLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRKMLLayer::CreateField( OGRFieldDefn *poField,
+                                 CPL_UNUSED int bApproxOK )
 {
     if( !bWriter_ || iNextKMLId_ != 0 )
         return OGRERR_FAILURE;
-		  
+
 	OGRFieldDefn oCleanCopy( poField );
     poFeatureDefn_->AddFieldDefn( &oCleanCopy );
 
@@ -618,4 +623,3 @@ void OGRKMLLayer::SetLayerNumber( int nLayer )
 {
     nLayerNumber_ = nLayer;
 }
-

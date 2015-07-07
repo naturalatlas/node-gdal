@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: doq2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: doq2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  USGS DOQ Driver (Second Generation Format)
  * Purpose:  Implementation of DOQ2Dataset
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: doq2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: doq2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_DOQ2(void);
@@ -195,12 +195,12 @@ GDALDataset *DOQ2Dataset::Open( GDALOpenInfo * poOpenInfo )
         }
         else if( EQUAL(papszTokens[0],"XY_ORIGIN") && CSLCount(papszTokens) >= 3 )
         {
-            dfULXMap = atof(papszTokens[1]);
-            dfULYMap = atof(papszTokens[2]);
+            dfULXMap = CPLAtof(papszTokens[1]);
+            dfULYMap = CPLAtof(papszTokens[2]);
         }
         else if( EQUAL(papszTokens[0],"HORIZONTAL_RESOLUTION") )
         {
-            dfXDim = dfYDim = atof(papszTokens[1]);
+            dfXDim = dfYDim = CPLAtof(papszTokens[1]);
         }
 	else if( EQUAL(papszTokens[0],"BAND_ORGANIZATION") )
         {
@@ -432,6 +432,7 @@ void GDALRegister_DOQ2()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "DOQ2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "USGS DOQ (New Style)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

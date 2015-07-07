@@ -56,6 +56,7 @@ typedef struct
 
 OGRErr              SQLCommand(sqlite3 *poDb, const char * pszSQL);
 int                 SQLGetInteger(sqlite3 * poDb, const char * pszSQL, OGRErr *err);
+GIntBig             SQLGetInteger64(sqlite3 * poDb, const char * pszSQL, OGRErr *err);
 
 OGRErr              SQLResultInit(SQLResult * poResult);
 OGRErr              SQLQuery(sqlite3 *poDb, const char * pszSQL, SQLResult * poResult);
@@ -66,13 +67,12 @@ OGRErr              SQLResultFree(SQLResult * poResult);
 
 int                 SQLiteFieldFromOGR(OGRFieldType nType);
 
-OGRFieldType        GPkgFieldToOGR(const char *pszGpkgType);
-const char*         GPkgFieldFromOGR(OGRFieldType nType);
+OGRFieldType        GPkgFieldToOGR(const char *pszGpkgType, OGRFieldSubType& eSubType, int& nMaxWidth);
+const char*         GPkgFieldFromOGR(OGRFieldType nType, OGRFieldSubType eSubType, int nMaxWidth);
 OGRwkbGeometryType  GPkgGeometryTypeToWKB(const char *pszGpkgType, int bHasZ);
-const char*         GPkgGeometryTypeFromWKB(OGRwkbGeometryType oType);
 
 GByte*              GPkgGeometryFromOGR(const OGRGeometry *poGeometry, int iSrsId, size_t *szWkb);
-OGRGeometry*        GPkgGeometryToOGR(GByte *pabyGpkg, size_t szGpkg, OGRSpatialReference *poSrs);
+OGRGeometry*        GPkgGeometryToOGR(const GByte *pabyGpkg, size_t szGpkg, OGRSpatialReference *poSrs);
 OGRErr              GPkgEnvelopeToOGR(GByte *pabyGpkg, size_t szGpkg, OGREnvelope *poEnv);
 
 OGRErr              GPkgHeaderFromWKB(const GByte *pabyGpkg, GPkgHeader *poHeader);

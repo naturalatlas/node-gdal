@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgrasslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgrasslayer.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGRASSLayer class.
@@ -32,7 +32,7 @@
 #include "ogrgrass.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrgrasslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgrasslayer.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 /************************************************************************/
 /*                           OGRGRASSLayer()                            */
@@ -87,6 +87,7 @@ OGRGRASSLayer::OGRGRASSLayer( int layerIndex,  struct Map_info * map )
     }
 
     poFeatureDefn = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     // Get type definition
@@ -116,7 +117,7 @@ OGRGRASSLayer::OGRGRASSLayer( int layerIndex,  struct Map_info * map )
     }
 
     if (Vect_is_3d(poMap))
-        poFeatureDefn->SetGeomType ( (OGRwkbGeometryType)(eGeomType | wkb25DBit) );
+        poFeatureDefn->SetGeomType ( wkbSetZ(eGeomType) );
     else
         poFeatureDefn->SetGeomType ( eGeomType );
 
@@ -277,7 +278,7 @@ bool OGRGRASSLayer::StartDbDriver()
     if ( poDriver == NULL) 
     {
 	CPLError( CE_Failure, CPLE_AppDefined, "Cannot open database %s by driver %s, "
-		  "check if GISBASE enviroment variable is set, the driver is available "
+		  "check if GISBASE environment variable is set, the driver is available "
 		  " and the database is accessible.", poLink->driver, poLink->database );
 	return false;
     } 
@@ -336,7 +337,7 @@ void OGRGRASSLayer::ResetReading()
 /*      If we already have an FID list, we can easily resposition       */
 /*      ourselves in it.                                                */
 /************************************************************************/
-OGRErr OGRGRASSLayer::SetNextByIndex( long nIndex )
+OGRErr OGRGRASSLayer::SetNextByIndex( GIntBig nIndex )
 {
     if( m_poFilterGeom != NULL || m_poAttrQuery != NULL ) 
     {
@@ -389,7 +390,7 @@ OGRErr OGRGRASSLayer::SetAttributeFilter( const char *query )
 
     paQueryMatch = (char *) CPLMalloc ( nTotalCount );
     memset ( paQueryMatch, 0x0, nTotalCount );
-    pszQuery = strdup ( query );
+    pszQuery = CPLStrdup(query);
 
     OGRLayer::SetAttributeFilter(query); // Otherwise crash on delete
 
@@ -783,7 +784,7 @@ OGRFeature *OGRGRASSLayer::GetNextFeature()
 /************************************************************************/
 /*                             GetFeature()                             */
 /************************************************************************/
-OGRFeature *OGRGRASSLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRGRASSLayer::GetFeature( GIntBig nFeatureId )
 
 {
     CPLDebug ( "GRASS", "OGRGRASSLayer::GetFeature nFeatureId = %ld", nFeatureId );
@@ -990,17 +991,17 @@ bool OGRGRASSLayer::SetAttributes ( OGRFeature *poFeature, dbTable *table )
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /************************************************************************/
-OGRErr OGRGRASSLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRGRASSLayer::ISetFeature( OGRFeature *poFeature )
 {
     return OGRERR_FAILURE;
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
-OGRErr OGRGRASSLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGRASSLayer::ICreateFeature( OGRFeature *poFeature )
 {
     return OGRERR_FAILURE;
 }
@@ -1013,7 +1014,7 @@ OGRErr OGRGRASSLayer::CreateFeature( OGRFeature *poFeature )
 /*      Eventually we should consider implementing a more efficient     */
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
-int OGRGRASSLayer::GetFeatureCount( int bForce )
+GIntBig OGRGRASSLayer::GetFeatureCount( int bForce )
 {
     if( m_poFilterGeom != NULL || m_poAttrQuery != NULL )
         return OGRLayer::GetFeatureCount( bForce );

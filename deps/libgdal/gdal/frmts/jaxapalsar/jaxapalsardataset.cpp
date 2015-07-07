@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jaxapalsardataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: jaxapalsardataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  PALSAR JAXA imagery reader
  * Purpose:  Support for PALSAR L1.1/1.5 imagery and appropriate metadata from
@@ -32,7 +32,7 @@
 
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: jaxapalsardataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: jaxapalsardataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_PALSARJaxa(void);
@@ -298,8 +298,9 @@ PALSARJaxaRasterBand::~PALSARJaxaRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr PALSARJaxaRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-	void *pImage )
+CPLErr PALSARJaxaRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                         int nBlockYOff,
+                                         void *pImage )
 {
     int nNumBytes = 0;
     if (nFileType == level_11) {
@@ -647,6 +648,7 @@ void GDALRegister_PALSARJaxa() {
     if( GDALGetDriverByName( "JAXAPALSAR" ) == NULL ) {
         poDriver = new GDALDriver();
         poDriver->SetDescription( "JAXAPALSAR" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "JAXA PALSAR Product Reader (Level 1.1/1.5)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

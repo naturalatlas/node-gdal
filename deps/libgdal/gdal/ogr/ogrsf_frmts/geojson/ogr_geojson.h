@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogr_geojson.h 29111 2015-05-02 18:06:16Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -35,6 +35,7 @@
 
 #include <cstdio>
 #include <vector> // used by OGRGeoJSONLayer
+#include "ogrgeojsonutils.h"
 
 #define SPACE_FOR_BBOX  80
 
@@ -63,7 +64,7 @@ public:
     //
     OGRFeatureDefn* GetLayerDefn();
     
-    int GetFeatureCount( int bForce = TRUE );
+    GIntBig GetFeatureCount( int bForce = TRUE );
     void ResetReading();
     OGRFeature* GetNextFeature();
     int TestCapability( const char* pszCap );
@@ -82,8 +83,8 @@ private:
     FeaturesSeq seqFeatures_;
     FeaturesSeq::iterator iterCurrent_;
 
-    /* poDS_ retained for ABI compatibility. */
-    /* CPL_UNUSED */ OGRGeoJSONDataSource* poDS_;
+
+    // CPL_UNUSED OGRGeoJSONDataSource* poDS_;
     OGRFeatureDefn* poFeatureDefn_;
     CPLString sFIDColumn_;
 };
@@ -109,7 +110,7 @@ public:
 
     void ResetReading() { }
     OGRFeature* GetNextFeature() { return NULL; }
-    OGRErr CreateFeature( OGRFeature* poFeature );
+    OGRErr ICreateFeature( OGRFeature* poFeature );
     OGRErr CreateField(OGRFieldDefn* poField, int bApproxOK);
     int TestCapability( const char* pszCap );
 
@@ -140,11 +141,12 @@ public:
     //
     // OGRDataSource Interface
     //
-    int Open( const char* pszSource );
+    int Open( GDALOpenInfo* poOpenInfo,
+               GeoJSONSourceType nSrcType );
     const char* GetName();
     int GetLayerCount();
     OGRLayer* GetLayer( int nLayer );
-    OGRLayer* CreateLayer( const char* pszName,
+    OGRLayer* ICreateLayer( const char* pszName,
                            OGRSpatialReference* poSRS = NULL,
                            OGRwkbGeometryType eGType = wkbUnknown,
                            char** papszOptions = NULL );
@@ -176,6 +178,7 @@ public:
 
     int  GetFpOutputIsSeekable() const { return bFpOutputIsSeekable_; }
     int  GetBBOXInsertLocation() const { return nBBOXInsertLocation_; }
+    int  HasOtherPages() const { return bOtherPages_; }
 
 private:
 
@@ -184,6 +187,7 @@ private:
     //
     char* pszName_;
     char* pszGeoData_;
+    vsi_l_offset nGeoDataLen_;
     OGRLayer** papoLayers_;
     int nLayers_;
     VSILFILE* fpOut_;
@@ -193,6 +197,7 @@ private:
     // 
     GeometryTranslation flTransGeom_;
     AttributesTranslation flTransAttrs_;
+    int bOtherPages_; /* ERSI Feature Service specific */
 
     int bFpOutputIsSeekable_;
     int nBBOXInsertLocation_;
@@ -201,39 +206,10 @@ private:
     // Priavte utility functions
     //
     void Clear();
-    int ReadFromFile( const char* pszSource, VSILFILE* fpIn );
+    int ReadFromFile( GDALOpenInfo* poOpenInfo );
     int ReadFromService( const char* pszSource );
-    void LoadLayers();
+    void LoadLayers(char** papszOpenOptions);
 };
 
-
-/************************************************************************/
-/*                           OGRGeoJSONDriver                           */
-/************************************************************************/
-
-class OGRGeoJSONDriver : public OGRSFDriver
-{
-public:
-
-    OGRGeoJSONDriver();
-    ~OGRGeoJSONDriver();
-
-    //
-    // OGRSFDriver Interface
-    //
-    const char* GetName();
-    OGRDataSource* Open( const char* pszName, int bUpdate );
-    OGRDataSource* CreateDataSource( const char* pszName, char** papszOptions );
-    OGRErr DeleteDataSource( const char* pszName );
-    int TestCapability( const char* pszCap );
-
-    //
-    // OGRGeoJSONDriver Interface
-    //
-    // NOTE: New version of Open() based on Andrey's RFC 10.
-    OGRDataSource* Open( const char* pszName, int bUpdate,
-                         char** papszOptions );
-
-};
 
 #endif /* OGR_GEOJSON_H_INCLUDED */

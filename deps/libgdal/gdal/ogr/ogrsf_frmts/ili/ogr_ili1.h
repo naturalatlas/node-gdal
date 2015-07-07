@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ili1.h 26979 2014-02-23 21:55:20Z pka $
+ * $Id: ogr_ili1.h 29109 2015-05-02 11:45:44Z rouault $
  *
  * Project:  Interlis 1 Translator
  * Purpose:   Definition of classes for OGR Interlis 1 driver.
@@ -44,15 +44,15 @@ class OGRILI1DataSource;
 class OGRILI1Layer : public OGRLayer
 {
 private:
+#ifdef notused
     OGRSpatialReference *poSRS;
+#endif
     OGRFeatureDefn      *poFeatureDefn;
     GeomFieldInfos      oGeomFieldInfos;
 
     int                 nFeatures;
     OGRFeature          **papoFeatures;
     int                 nFeatureIdx;
-
-    int                 bWriter;
 
     int                 bGeomsJoined;
 
@@ -72,12 +72,13 @@ private:
     OGRFeature *        GetNextFeatureRef();
     OGRFeature *        GetFeatureRef( long nFID );
 
-    int                 GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE );
 
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     int                 GeometryAppend( OGRGeometry *poGeometry );
 
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    GeomFieldInfos      GetGeomFieldInfos() { return oGeomFieldInfos; }
 
     OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE );
 
@@ -85,7 +86,7 @@ private:
 
   private:
     void                JoinGeomLayers();
-    void                JoinSurfaceLayer( OGRILI1Layer* poSurfacePolyLayer, int nSurfaceFieldIndex );
+    void                JoinSurfaceLayer( OGRILI1Layer* poSurfaceLineLayer, int nSurfaceFieldIndex );
     OGRMultiPolygon*    Polygonize( OGRGeometryCollection* poLines, bool fix_crossing_lines = false );
     void                PolygonizeAreaLayer( OGRILI1Layer* poAreaLineLayer, int nAreaFieldIndex, int nPointFieldIndex );
 };
@@ -109,7 +110,7 @@ class OGRILI1DataSource : public OGRDataSource
                 OGRILI1DataSource();
                ~OGRILI1DataSource();
 
-    int         Open( const char *, int bTestOpen );
+    int         Open( const char *, char** papszOpenOptions, int bTestOpen );
     int         Create( const char *pszFile, char **papszOptions );
 
     const char *GetName() { return pszName; }
@@ -119,30 +120,12 @@ class OGRILI1DataSource : public OGRDataSource
 
     FILE       *GetTransferFile() { return fpTransfer; }
 
-    virtual OGRLayer *CreateLayer( const char *,
+    virtual OGRLayer *ICreateLayer( const char *,
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );
 
     int         TestCapability( const char * );
-};
-
-/************************************************************************/
-/*                            OGRILI1Driver                             */
-/************************************************************************/
-
-class OGRILI1Driver : public OGRSFDriver
-{
-  public:
-                ~OGRILI1Driver();
-
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
-
-    int                 TestCapability( const char * );
 };
 
 #endif /* _OGR_ILI1_H_INCLUDED */

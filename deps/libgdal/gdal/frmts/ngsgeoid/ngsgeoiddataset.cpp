@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ngsgeoiddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ngsgeoiddataset.cpp 28202 2014-12-23 20:12:45Z rouault $
  *
  * Project:  NGSGEOID driver
  * Purpose:  GDALDataset driver for NGSGEOID dataset.
@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ngsgeoiddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ngsgeoiddataset.cpp 28202 2014-12-23 20:12:45Z rouault $");
 
 CPL_C_START
 void    GDALRegister_NGSGEOID(void);
@@ -113,7 +113,8 @@ NGSGEOIDRasterBand::NGSGEOIDRasterBand( NGSGEOIDDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr NGSGEOIDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr NGSGEOIDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                       int nBlockYOff,
                                        void * pImage )
 
 {
@@ -276,7 +277,7 @@ int NGSGEOIDDataset::GetHeaderInfo( const GByte* pBuffer,
     /*CPLDebug("NGSGEOID", "SLAT=%f, WLON=%f, DLAT=%f, DLON=%f, NLAT=%d, NLON=%d, IKIND=%d",
              dfSLAT, dfWLON, dfDLAT, dfDLON, nNLAT, nNLON, nIKIND);*/
 
-    if (nNLAT <= 0 || nNLON <= 0 || dfDLAT <= 0.0 || dfDLON <= 0.0)
+    if (nNLAT <= 0 || nNLON <= 0 || dfDLAT <= 1e-15 || dfDLON <= 1e-15)
         return FALSE;
 
     /* Grids go over +180 in longitude */
@@ -411,6 +412,7 @@ void GDALRegister_NGSGEOID()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "NGSGEOID" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "NOAA NGS Geoid Height Grids" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -425,4 +427,3 @@ void GDALRegister_NGSGEOID()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

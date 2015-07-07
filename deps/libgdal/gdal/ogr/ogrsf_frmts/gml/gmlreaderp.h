@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreaderp.h 27531 2014-07-14 20:33:03Z rouault $
+ * $Id: gmlreaderp.h 29217 2015-05-21 09:08:48Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Private Declarations for OGR free GML Reader code.
@@ -34,6 +34,7 @@
 #include "gmlreader.h"
 #include "ogr_api.h"
 #include "cpl_vsi.h"
+#include "cpl_multiproc.h"
 
 #include <string>
 #include <vector>
@@ -462,6 +463,10 @@ private:
     int           m_bSetWidthFlag;
     
     int           m_bReportAllAttributes;
+    
+    int           m_bIsWFSJointLayer;
+    
+    int           m_bEmptyAsNull;
 
     int           ParseXMLHugeFile( const char *pszOutputFilename, 
                                     const int bSqliteIsTempFile,
@@ -502,7 +507,9 @@ public:
                                        int pbSqliteIsTempFile,
                                        int iSqliteCacheMB );
 
-    int              PrescanForSchema(int bGetExtents = TRUE, int bAnalyzeSRSPerFeature = TRUE );
+    int              PrescanForSchema(int bGetExtents = TRUE,
+                                      int bAnalyzeSRSPerFeature = TRUE,
+                                      int bOnlyDetectSRS = FALSE );
     int              PrescanForTemplate( void );
     int              ReArrangeTemplateClasses( GFSTemplateList *pCC );
     void             ResetReading();
@@ -545,9 +552,16 @@ public:
 
     int         IsSequentialLayers() const { return m_bSequentialLayers == TRUE; }
     
+    void        SetReportAllAttributes(int bFlag) { m_bReportAllAttributes = bFlag; }
     int         ReportAllAttributes() const { return m_bReportAllAttributes; }
+    
+    void             SetIsWFSJointLayer( int bFlag ) { m_bIsWFSJointLayer = bFlag; }
+    int              IsWFSJointLayer() const { return m_bIsWFSJointLayer; }
+    
+    void             SetEmptyAsNull( int bFlag ) { m_bEmptyAsNull = bFlag; }
+    int              IsEmptyAsNull() const { return m_bEmptyAsNull; }
 
-    static void* hMutex;
+    static CPLMutex* hMutex;
 };
 
 #endif /* _CPL_GMLREADERP_H_INCLUDED */

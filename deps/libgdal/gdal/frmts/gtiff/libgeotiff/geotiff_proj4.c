@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: geotiff_proj4.c 1979 2011-02-24 22:17:39Z warmerdam $
+ * $Id: geotiff_proj4.c 2594 2014-12-27 16:46:35Z rouault $
  *
  * Project:  libgeotiff
  * Purpose:  Code to convert a normalized GeoTIFF definition into a PROJ.4
@@ -57,7 +57,7 @@ static char **OSRProj4Tokenize( const char *pszFull )
 
     papszTokens = (char **) calloc(sizeof(char*),nMaxTokens);
 
-    pszFullWrk = strdup( pszFull );
+    pszFullWrk = CPLStrdup(pszFull);
 
     for( i=0; pszFullWrk[i] != '\0' && nTokens != nMaxTokens-1; i++ )
     {
@@ -70,7 +70,7 @@ static char **OSRProj4Tokenize( const char *pszFull )
                 {
                     if( strstr(pszStart,"=") != NULL )
                     {
-                        papszTokens[nTokens++] = strdup(pszStart);
+                        papszTokens[nTokens++] = CPLStrdup(pszStart);
                     }
                     else
                     {
@@ -78,7 +78,7 @@ static char **OSRProj4Tokenize( const char *pszFull )
                         strncpy( szAsBoolean,pszStart, sizeof(szAsBoolean)-1-4);
                         szAsBoolean[sizeof(szAsBoolean)-1-4] = '\0';
                         strcat( szAsBoolean,"=yes" );
-                        papszTokens[nTokens++] = strdup(szAsBoolean);
+                        papszTokens[nTokens++] = CPLStrdup(szAsBoolean);
                     }
                 }
                 pszStart = pszFullWrk + i + 1;
@@ -99,10 +99,10 @@ static char **OSRProj4Tokenize( const char *pszFull )
     if( pszStart != NULL && strlen(pszStart) > 0 )
     {
         if (nTokens != 199)
-            papszTokens[nTokens++] = strdup( pszStart );
+            papszTokens[nTokens++] = CPLStrdup(pszStart);
     }
 
-    free( pszFullWrk );
+    CPLFree( pszFullWrk );
 
     return papszTokens;
 }
@@ -848,7 +848,7 @@ char * GTIFGetProj4Defn( GTIFDefn * psDefn )
     double      dfFalseEasting, dfFalseNorthing;
 
     if( psDefn == NULL || !psDefn->DefnSet )
-        return strdup("");
+        return CPLStrdup("");
 
     szProjection[0] = '\0';
     
@@ -946,13 +946,21 @@ char * GTIFGetProj4Defn( GTIFDefn * psDefn )
 /* -------------------------------------------------------------------- */
     else if( psDefn->CTProjection == CT_Mercator )
     {
-        sprintf( szProjection+strlen(szProjection),
-           "+proj=merc +lat_ts=%.9f +lon_0=%.9f +k=%f +x_0=%.3f +y_0=%.3f ",
-                 psDefn->ProjParm[0],
-                 psDefn->ProjParm[1],
-                 psDefn->ProjParm[4],
-                 dfFalseEasting,
-                 dfFalseNorthing );
+        if( psDefn->ProjParm[2] != 0.0 ) /* Mercator 2SP: FIXME we need a better way of detecting it */
+            sprintf( szProjection+strlen(szProjection),
+                    "+proj=merc +lat_ts=%.9f +lon_0=%.9f +x_0=%.3f +y_0=%.3f ",
+                    psDefn->ProjParm[2],
+                    psDefn->ProjParm[1],
+                    dfFalseEasting,
+                    dfFalseNorthing );
+        else
+            sprintf( szProjection+strlen(szProjection),
+                    "+proj=merc +lat_ts=%.9f +lon_0=%.9f +k=%f +x_0=%.3f +y_0=%.3f ",
+                    psDefn->ProjParm[0],
+                    psDefn->ProjParm[1],
+                    psDefn->ProjParm[4],
+                    dfFalseEasting,
+                    dfFalseNorthing );
     }
 
 /* -------------------------------------------------------------------- */
@@ -1294,9 +1302,9 @@ char * GTIFGetProj4Defn( GTIFDefn * psDefn )
     strcat( szProjection, szUnits );
     
     /* If we don't have anything, reset */
-    if (strstr(szProjection,"+proj=") == NULL) { return strdup(""); }
+    if (strstr(szProjection, "+proj=") == NULL) { return CPLStrdup(""); }
 
-    return( strdup( szProjection ) );
+    return( CPLStrdup( szProjection ) );
 }
 
 #if !defined(HAVE_LIBPROJ)

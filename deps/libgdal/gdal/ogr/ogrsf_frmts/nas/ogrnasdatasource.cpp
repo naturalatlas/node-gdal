@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnasdatasource.cpp 28132 2014-12-11 22:31:03Z jef $
+ * $Id: ogrnasdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnasdatasource.cpp 28132 2014-12-11 22:31:03Z jef $");
+CPL_CVSID("$Id: ogrnasdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 static const char *apszURNNames[] =
 {
@@ -79,88 +79,9 @@ OGRNASDataSource::~OGRNASDataSource()
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRNASDataSource::Open( const char * pszNewName, int bTestOpen )
+int OGRNASDataSource::Open( const char * pszNewName )
 
 {
-    FILE        *fp;
-    char        szHeader[8192];
-
-/* -------------------------------------------------------------------- */
-/*      Open the source file.                                           */
-/* -------------------------------------------------------------------- */
-    fp = VSIFOpen( pszNewName, "r" );
-    if( fp == NULL )
-    {
-        if( !bTestOpen )
-            CPLError( CE_Failure, CPLE_OpenFailed,
-                      "Failed to open NAS file `%s'.",
-                      pszNewName );
-
-        return FALSE;
-    }
-
-/* -------------------------------------------------------------------- */
-/*      If we aren't sure it is NAS, load a header chunk and check      */
-/*      for signs it is NAS                                             */
-/* -------------------------------------------------------------------- */
-    if( bTestOpen )
-    {
-        size_t nRead = VSIFRead( szHeader, 1, sizeof(szHeader), fp );
-        if (nRead <= 0)
-        {
-            VSIFClose( fp );
-            return FALSE;
-        }
-        szHeader[MIN(nRead, sizeof(szHeader))-1] = '\0';
-
-/* -------------------------------------------------------------------- */
-/*      Check for a UTF-8 BOM and skip if found                         */
-/*                                                                      */
-/*      TODO: BOM is variable-length parameter and depends on encoding. */
-/*            Add BOM detection for other encodings.                    */
-/* -------------------------------------------------------------------- */
-
-        // Used to skip to actual beginning of XML data
-        char* szPtr = szHeader;
-
-        if( ( (unsigned char)szHeader[0] == 0xEF )
-            && ( (unsigned char)szHeader[1] == 0xBB )
-            && ( (unsigned char)szHeader[2] == 0xBF) )
-        {
-            szPtr += 3;
-        }
-
-/* -------------------------------------------------------------------- */
-/*      Here, we expect the opening chevrons of NAS tree root element   */
-/* -------------------------------------------------------------------- */
-        bool bFound = FALSE;
-        if( szPtr[0] == '<' && strstr(szPtr,"opengis.net/gml") != NULL )
-        {
-            char **papszIndicators = CSLTokenizeStringComplex( CPLGetConfigOption( "NAS_INDICATOR", "NAS-Operationen.xsd;NAS-Operationen_optional.xsd;AAA-Fachschema.xsd" ), ";", 0, 0 );
-
-            for( int i = 0; papszIndicators[i] && !bFound; i++ )
-            {
-                bFound = strstr( szPtr, papszIndicators[i] ) != NULL;
-            }
-
-            CSLDestroy( papszIndicators );
-        }
-
-        if( !bFound )
-        {
-            /*CPLDebug( "NAS",
-                      "Skipping. No chevrons of NAS found [%s]\n", szPtr );*/
-            VSIFClose( fp );
-            return FALSE;
-        }
-    }
-
-/* -------------------------------------------------------------------- */
-/*      We assume now that it is NAS.  Close and instantiate a          */
-/*      NASReader on it.                                                */
-/* -------------------------------------------------------------------- */
-    VSIFClose( fp );
-
     poReader = CreateNASReader();
     if( poReader == NULL )
     {

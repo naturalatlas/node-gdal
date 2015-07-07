@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrelasticdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrelasticdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -28,8 +28,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-/* This pragma was for what? */
-/* #pragma warning( disable : 4251 ) */
+// What was this supposed to do?
+// #pragma warning( disable : 4251 )
 
 #include "ogr_elastic.h"
 #include "cpl_conv.h"
@@ -37,7 +37,7 @@
 #include "cpl_csv.h"
 #include "cpl_http.h"
 
-CPL_CVSID("$Id: ogrelasticdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrelasticdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                        OGRElasticDataSource()                        */
@@ -87,13 +87,13 @@ OGRLayer *OGRElasticDataSource::GetLayer(int iLayer) {
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRElasticDataSource::CreateLayer(const char * pszLayerName,
-                                             OGRSpatialReference *poSRS,
-                                             CPL_UNUSED OGRwkbGeometryType eType,
-                                             CPL_UNUSED char ** papszOptions) {
+OGRLayer * OGRElasticDataSource::ICreateLayer(const char * pszLayerName,
+                                              OGRSpatialReference *poSRS,
+                                              CPL_UNUSED OGRwkbGeometryType eType,
+                                              CPL_UNUSED char ** papszOptions) {
     nLayers++;
     papoLayers = (OGRElasticLayer **) CPLRealloc(papoLayers, nLayers * sizeof (OGRElasticLayer*));
     papoLayers[nLayers - 1] = new OGRElasticLayer(pszName, pszLayerName, this, poSRS, TRUE);

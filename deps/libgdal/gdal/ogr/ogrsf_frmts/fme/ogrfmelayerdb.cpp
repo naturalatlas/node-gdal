@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfmelayerdb.cpp 12123 2007-09-11 23:57:40Z warmerdam $
+ * $Id: ogrfmelayerdb.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Implementation of the OGRFMELayerDB class.  This is the
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrfmelayerdb.cpp 12123 2007-09-11 23:57:40Z warmerdam $");
+CPL_CVSID("$Id: ogrfmelayerdb.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGRFMELayerDB()                            */
@@ -431,7 +431,7 @@ int OGRFMELayerDB::CreateReader()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRFMELayerDB::GetFeatureCount( int bForce )
+GIntBig OGRFMELayerDB::GetFeatureCount( int bForce )
 
 {
     /*

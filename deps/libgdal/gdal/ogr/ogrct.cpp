@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrct.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrct.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRSCoordinateTransformation class.
@@ -39,7 +39,7 @@
 #include "proj_api.h"
 #endif
 
-CPL_CVSID("$Id: ogrct.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrct.cpp 28459 2015-02-12 13:48:21Z rouault $");
 
 /* ==================================================================== */
 /*      PROJ.4 interface stuff.                                         */
@@ -60,7 +60,7 @@ typedef struct { double u, v; } projUV;
 
 #endif
 
-static void *hPROJMutex = NULL;
+static CPLMutex *hPROJMutex = NULL;
 
 static projPJ       (*pfn_pj_init_plus)(const char *) = NULL;
 static projPJ       (*pfn_pj_init)(int, char**) = NULL;
@@ -184,10 +184,9 @@ static const char* GetProjLibraryName()
 /*                          LoadProjLibrary()                           */
 /************************************************************************/
 
-static int LoadProjLibrary()
+static int LoadProjLibrary_unlocked()
 
 {
-    CPLMutexHolderD( &hPROJMutex );
     static int  bTriedToLoad = FALSE;
     const char *pszLibName;
     
@@ -286,6 +285,13 @@ static int LoadProjLibrary()
     return( TRUE );
 }
 
+static int LoadProjLibrary()
+
+{
+    CPLMutexHolderD( &hPROJMutex );
+    return LoadProjLibrary_unlocked();
+}
+
 /************************************************************************/
 /*                         OCTProj4Normalize()                          */
 /*                                                                      */
@@ -303,8 +309,10 @@ char *OCTProj4Normalize( const char *pszProj4Src )
 
     CPLMutexHolderD( &hPROJMutex );
 
-    if( !LoadProjLibrary() || pfn_pj_dalloc == NULL || pfn_pj_get_def == NULL )
+    if( !LoadProjLibrary_unlocked() || pfn_pj_dalloc == NULL || pfn_pj_get_def == NULL )
         return CPLStrdup( pszProj4Src );
+
+    CPLLocaleC  oLocaleEnforcer;
 
     psPJSource = pfn_pj_init_plus( pszProj4Src );
 
@@ -540,6 +548,7 @@ int OGRProj4CT::Initialize( OGRSpatialReference * poSourceIn,
                             OGRSpatialReference * poTargetIn )
 
 {
+    CPLLocaleC  oLocaleEnforcer;
     if (pjctx != NULL)
     {
         return InitializeNoLock(poSourceIn, poTargetIn);
@@ -579,7 +588,7 @@ int OGRProj4CT::InitializeNoLock( OGRSpatialReference * poSourceIn,
         OGR_SRSNode *poUNITS = poSRSSource->GetAttrNode( "GEOGCS|UNIT" );
         if( poUNITS && poUNITS->GetChildCount() >= 2 )
         {
-            dfSourceToRadians = atof(poUNITS->GetChild(1)->GetValue());
+            dfSourceToRadians = CPLAtof(poUNITS->GetChild(1)->GetValue());
             if( dfSourceToRadians == 0.0 )
                 dfSourceToRadians = DEG_TO_RAD;
         }
@@ -594,7 +603,7 @@ int OGRProj4CT::InitializeNoLock( OGRSpatialReference * poSourceIn,
         OGR_SRSNode *poUNITS = poSRSTarget->GetAttrNode( "GEOGCS|UNIT" );
         if( poUNITS && poUNITS->GetChildCount() >= 2 )
         {
-            double dfTargetToRadians = atof(poUNITS->GetChild(1)->GetValue());
+            double dfTargetToRadians = CPLAtof(poUNITS->GetChild(1)->GetValue());
             if( dfTargetToRadians != 0.0 )
                 dfTargetFromRadians = 1 / dfTargetToRadians;
         }
@@ -609,14 +618,14 @@ int OGRProj4CT::InitializeNoLock( OGRSpatialReference * poSourceIn,
     {
         bSourceWrap = bTargetWrap = TRUE;
         dfSourceWrapLong = dfTargetWrapLong = 
-            atof(CPLGetConfigOption( "CENTER_LONG", "" ));
+            CPLAtof(CPLGetConfigOption( "CENTER_LONG", "" ));
         CPLDebug( "OGRCT", "Wrap at %g.", dfSourceWrapLong );
     }
 
     pszCENTER_LONG = poSRSSource->GetExtension( "GEOGCS", "CENTER_LONG" );
     if( pszCENTER_LONG != NULL )
     {
-        dfSourceWrapLong = atof(pszCENTER_LONG);
+        dfSourceWrapLong = CPLAtof(pszCENTER_LONG);
         bSourceWrap = TRUE;
         CPLDebug( "OGRCT", "Wrap source at %g.", dfSourceWrapLong );
     }
@@ -624,7 +633,7 @@ int OGRProj4CT::InitializeNoLock( OGRSpatialReference * poSourceIn,
     pszCENTER_LONG = poSRSTarget->GetExtension( "GEOGCS", "CENTER_LONG" );
     if( pszCENTER_LONG != NULL )
     {
-        dfTargetWrapLong = atof(pszCENTER_LONG);
+        dfTargetWrapLong = CPLAtof(pszCENTER_LONG);
         bTargetWrap = TRUE;
         CPLDebug( "OGRCT", "Wrap target at %g.", dfTargetWrapLong );
     }
@@ -633,11 +642,11 @@ int OGRProj4CT::InitializeNoLock( OGRSpatialReference * poSourceIn,
     
     /* The threshold is rather experimental... Works well with the cases of ticket #2305 */
     if (bSourceLatLong)
-        dfThreshold = atof(CPLGetConfigOption( "THRESHOLD", ".1" ));
+        dfThreshold = CPLAtof(CPLGetConfigOption( "THRESHOLD", ".1" ));
     else
         /* 1 works well for most projections, except for +proj=aeqd that requires */
         /* a tolerance of 10000 */
-        dfThreshold = atof(CPLGetConfigOption( "THRESHOLD", "10000" ));
+        dfThreshold = CPLAtof(CPLGetConfigOption( "THRESHOLD", "10000" ));
 
 /* -------------------------------------------------------------------- */
 /*      Establish PROJ.4 handle for source if projection.               */
@@ -941,7 +950,7 @@ int OGRProj4CT::TransformEx( int nCount, double *x, double *y, double *z,
 /* -------------------------------------------------------------------- */
 /*      Try to report an error through CPL.  Get proj.4 error string    */
 /*      if possible.  Try to avoid reporting thousands of error         */
-/*      ... supress further error reporting on this OGRProj4CT if we    */
+/*      ... suppress further error reporting on this OGRProj4CT if we   */
 /*      have already reported 20 errors.                                */
 /* -------------------------------------------------------------------- */
     if( err != 0 )
@@ -973,7 +982,7 @@ int OGRProj4CT::TransformEx( int nCount, double *x, double *y, double *z,
         else if( nErrorCount == 20 )
         {
             CPLError( CE_Failure, CPLE_AppDefined, 
-                      "Reprojection failed, err = %d, further errors will be supressed on the transform object.", 
+                      "Reprojection failed, err = %d, further errors will be suppressed on the transform object.", 
                       err );
         }
 

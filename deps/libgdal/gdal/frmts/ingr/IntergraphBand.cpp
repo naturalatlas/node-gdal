@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: IntergraphBand.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: IntergraphBand.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Intergraph Raster Format support
  * Purpose:  Read/Write Intergraph Raster Format, band support
@@ -952,7 +952,7 @@ CPLErr IntergraphBitmapBand::IReadBlock( int nBlockXOff,
 
     poGDS->hVirtual.poBand->RasterIO( GF_Read, 0, 0, 
         nVirtualXSize, nVirtualYSize, pImage, 
-        nVirtualXSize, nVirtualYSize, GDT_Byte, 0, 0 );
+        nVirtualXSize, nVirtualYSize, GDT_Byte, 0, 0, NULL );
 
     // --------------------------------------------------------------------
     // Reshape blocks if needed

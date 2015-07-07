@@ -174,7 +174,7 @@ static void OGRLIBKMLPostProcessOutput(std::string& oKml)
     size_t nPos = 0;
 
     /* Manually add <?xml> node since libkml does not produce it currently */
-    /* and this is usefull in some circumstances (#5407) */
+    /* and this is useful in some circumstances (#5407) */
     if( !(oKml[0] == '<' && oKml[1] == '?') )
         oKml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + oKml;
 
@@ -569,7 +569,7 @@ void OGRLIBKMLDataSource::WriteDir (
 
 ******************************************************************************/
 
-OGRErr OGRLIBKMLDataSource::SyncToDisk (
+void OGRLIBKMLDataSource::FlushCache (
      )
 {
 
@@ -592,8 +592,6 @@ OGRErr OGRLIBKMLDataSource::SyncToDisk (
 
         bUpdated = FALSE;
     }
-
-    return OGRERR_NONE;
 }
 
 /******************************************************************************
@@ -611,7 +609,7 @@ OGRLIBKMLDataSource::~OGRLIBKMLDataSource (  )
 
     /***** sync the DS to disk *****/
 
-    SyncToDisk (  );
+    FlushCache (  );
 
     CPLFree ( pszName );
 
@@ -1711,12 +1709,10 @@ void OGRLIBKMLDataSource::ParseDocumentOptions(KmlPtr poKml,
             }
             if( pszNLCExpires != NULL )
             {
-                int year, month, day, hour, minute, tz;
-                float fSecond;
-                if( OGRParseXMLDateTime( pszNLCExpires, &year, &month, &day,
-                                        &hour, &minute, &fSecond, &tz) )
+                OGRField sField;
+                if( OGRParseXMLDateTime( pszNLCExpires, &sField) )
                 {
-                    char* pszXMLDate = OGRGetXMLDateTime(year, month, day, hour, minute, (int)fSecond, tz);
+                    char* pszXMLDate = OGRGetXMLDateTime(&sField);
                     nlc->set_expires(pszXMLDate);
                     CPLFree(pszXMLDate);
                 }
@@ -2193,7 +2189,7 @@ OGRLIBKMLLayer *OGRLIBKMLDataSource::CreateLayerKmz (
 }
 
 /******************************************************************************
- CreateLayer()
+ICreateLayer()
  
  Args:          pszLayerName    name of the layer to create
                 poOgrSRS        the SRS of the layer
@@ -2204,7 +2200,7 @@ OGRLIBKMLLayer *OGRLIBKMLDataSource::CreateLayerKmz (
 
 ******************************************************************************/
 
-OGRLayer *OGRLIBKMLDataSource::CreateLayer (
+OGRLayer *OGRLIBKMLDataSource::ICreateLayer(
     const char *pszLayerName,
     OGRSpatialReference * poOgrSRS,
     OGRwkbGeometryType eGType,

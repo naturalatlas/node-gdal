@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rcreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: rcreatecopy.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  R Format Driver
  * Purpose:  CreateCopy() implementation for R stats package object format.
@@ -30,7 +30,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: rcreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: rcreatecopy.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -84,10 +84,12 @@ static void RWriteString( VSILFILE *fp, int bASCII, const char *pszValue )
 /************************************************************************/
 
 GDALDataset *
-RCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-             CPL_UNUSED int bStrict, char ** papszOptions, 
-             GDALProgressFunc pfnProgress, void * pProgressData )
-
+RCreateCopy( const char * pszFilename,
+             GDALDataset *poSrcDS,
+             CPL_UNUSED int bStrict,
+             char ** papszOptions,
+             GDALProgressFunc pfnProgress,
+             void * pProgressData )
 {
     int  nBands = poSrcDS->GetRasterCount();
     int  nXSize = poSrcDS->GetRasterXSize();
@@ -181,14 +183,14 @@ RCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
             eErr = poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1, 
                                      padfScanline, nXSize, 1, GDT_Float64,
-                                     sizeof(double), 0 );
+                                     sizeof(double), 0, NULL );
 
             if( bASCII )
             {
                 for( iValue = 0; iValue < nXSize; iValue++ )
                 {
                     char szValue[128];
-                    sprintf(szValue,"%.16g\n", padfScanline[iValue] );
+                    CPLsprintf(szValue,"%.16g\n", padfScanline[iValue] );
                     VSIFWriteL( szValue, 1, strlen(szValue), fp );
                 }
             }
@@ -243,9 +245,9 @@ RCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         return NULL;
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
-    GDALPamDataset *poDS = 
+    GDALPamDataset *poDS =
         (GDALPamDataset *) GDALOpen( pszFilename, GA_ReadOnly );
 
     if( poDS )
@@ -253,4 +255,3 @@ RCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
     return poDS;
 }
-

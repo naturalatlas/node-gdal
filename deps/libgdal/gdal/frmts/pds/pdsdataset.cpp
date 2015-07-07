@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pdsdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  PDS Driver; Planetary Data System Format
  * Purpose:  Implementation of PDSDataset
@@ -47,11 +47,18 @@
 #include "cpl_string.h" 
 #include "nasakeywordhandler.h"
 
-CPL_CVSID("$Id: pdsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pdsdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void	GDALRegister_PDS(void);
 CPL_C_END
+
+enum PDSLayout
+{
+    PDS_BSQ,
+    PDS_BIP,
+    PDS_BIL
+};
 
 /************************************************************************/
 /* ==================================================================== */
@@ -106,7 +113,10 @@ public:
     
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *,
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     static int          Identify( GDALOpenInfo * );
     static GDALDataset *Open( GDALOpenInfo * );
@@ -227,7 +237,9 @@ CPLErr PDSDataset::IRasterIO( GDALRWFlag eRWFlag,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
                               int nBandCount, int *panBandMap,
-                              int nPixelSpace, int nLineSpace, int nBandSpace)
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg)
 
 {
     if( poCompressedDS != NULL )
@@ -235,13 +247,14 @@ CPLErr PDSDataset::IRasterIO( GDALRWFlag eRWFlag,
                                          nXOff, nYOff, nXSize, nYSize, 
                                          pData, nBufXSize, nBufYSize, 
                                          eBufType, nBandCount, panBandMap,
-                                         nPixelSpace, nLineSpace, nBandSpace );
+                                         nPixelSpace, nLineSpace, nBandSpace,
+                                         psExtraArg);
     else
         return RawDataset::IRasterIO( eRWFlag, 
                                       nXOff, nYOff, nXSize, nYSize, 
                                       pData, nBufXSize, nBufYSize, 
                                       eBufType, nBandCount, panBandMap,
-                                      nPixelSpace, nLineSpace, nBandSpace );
+                                      nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 }
 
 /************************************************************************/
@@ -307,8 +320,8 @@ void PDSDataset::ParseSRS()
 
     value = GetKeyword(osPrefix + "IMAGE_MAP_PROJECTION.MAP_SCALE");
     if (strlen(value) > 0 ) {
-        dfXDim = atof(value);
-        dfYDim = atof(value) * -1;
+        dfXDim = CPLAtof(value);
+        dfYDim = CPLAtof(value) * -1;
 
         CPLString osKey(osPrefix + "IMAGE_MAP_PROJECTION.MAP_SCALE");
         CPLString unit = GetKeywordUnit(osKey,2); //KM
@@ -331,7 +344,7 @@ void PDSDataset::ParseSRS()
 /*      Calculate upper left corner of pixel in meters from the         */
 /*      upper  left center pixel sample/line offsets.  It doesn't       */
 /*      mean the defaults will work for every PDS image, as these       */
-/*      values are used inconsistantly.  Thus we have included          */
+/*      values are used inconsistently.  Thus we have included          */
 /*      conversion options to allow the user to override the            */
 /*      documented PDS3 default. Jan. 2011, for known mapping issues    */
 /*      see GDAL PDS page or mapping within ISIS3 source (USGS)         */
@@ -345,28 +358,28 @@ void PDSDataset::ParseSRS()
     double   dfLineOffset_Mult;
 
     dfSampleOffset_Shift = 
-        atof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "-0.5" ));
     
     dfLineOffset_Shift = 
-        atof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "-0.5" ));
 
     dfSampleOffset_Mult =
-        atof(CPLGetConfigOption( "PDS_SampleProjOffset_Mult", "-1.0") );
+        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Mult", "-1.0") );
 
     dfLineOffset_Mult = 
-        atof( CPLGetConfigOption( "PDS_LineProjOffset_Mult", "1.0") );
+        CPLAtof( CPLGetConfigOption( "PDS_LineProjOffset_Mult", "1.0") );
 
     /***********   Grab LINE_PROJECTION_OFFSET ************/
     value = GetKeyword(osPrefix + "IMAGE_MAP_PROJECTION.LINE_PROJECTION_OFFSET");
     if (strlen(value) > 0) {
-        yulcenter = atof(value);
+        yulcenter = CPLAtof(value);
         dfULYMap = ((yulcenter + dfLineOffset_Shift) * -dfYDim * dfLineOffset_Mult);
         //notice dfYDim is negative here which is why it is again negated here
     }
     /***********   Grab SAMPLE_PROJECTION_OFFSET ************/
     value = GetKeyword(osPrefix + "IMAGE_MAP_PROJECTION.SAMPLE_PROJECTION_OFFSET");
     if( strlen(value) > 0 ) {
-        xulcenter = atof(value);
+        xulcenter = CPLAtof(value);
         dfULXMap = ((xulcenter + dfSampleOffset_Shift) * dfXDim * dfSampleOffset_Mult);
     }
 
@@ -395,27 +408,27 @@ void PDSDataset::ParseSRS()
      
     /******  Grab semi_major & convert to KM ******/
     semi_major = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.A_AXIS_RADIUS")) * 1000.0;
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.A_AXIS_RADIUS")) * 1000.0;
     
     /******  Grab semi-minor & convert to KM ******/
     semi_minor = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.C_AXIS_RADIUS")) * 1000.0;
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.C_AXIS_RADIUS")) * 1000.0;
 
     /***********   Grab CENTER_LAT ************/
     center_lat = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.CENTER_LATITUDE"));
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.CENTER_LATITUDE"));
 
     /***********   Grab CENTER_LON ************/
     center_lon = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.CENTER_LONGITUDE"));
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.CENTER_LONGITUDE"));
 
     /**********   Grab 1st std parallel *******/
     first_std_parallel = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.FIRST_STANDARD_PARALLEL"));
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.FIRST_STANDARD_PARALLEL"));
 
     /**********   Grab 2nd std parallel *******/
     second_std_parallel = 
-        atof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.SECOND_STANDARD_PARALLEL"));
+        CPLAtof(GetKeyword( osPrefix + "IMAGE_MAP_PROJECTION.SECOND_STANDARD_PARALLEL"));
      
     /*** grab  PROJECTION_LATITUDE_TYPE = "PLANETOCENTRIC" ****/
     // Need to further study how ocentric/ographic will effect the gdal library.
@@ -672,13 +685,13 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
     // ^IMAGE             = 10851 <BYTES>
     // ^SPECTRAL_QUBE = 5  for multi-band images
 
-    CPLString osImageKeyword = osPrefix + "^IMAGE";
-    CPLString osQube = GetKeyword( osImageKeyword, "" );
+    CPLString osImageKeyword = "IMAGE";
+    CPLString osQube = GetKeyword( osPrefix + "^" + osImageKeyword, "" );
     CPLString osTargetFile = GetDescription();
 
     if (EQUAL(osQube,"")) {
-        osImageKeyword = "^SPECTRAL_QUBE";
-        osQube = GetKeyword( osImageKeyword );
+        osImageKeyword = "SPECTRAL_QUBE";
+        osQube = GetKeyword( osPrefix + "^" + osImageKeyword );
     }
 
     int nQube = atoi(osQube);
@@ -688,13 +701,13 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
     if( osQube.size() && osQube[0] == '(' )
     {
         osQube = "\"";
-        osQube += GetKeywordSub( osImageKeyword, 1 );
+        osQube += GetKeywordSub( osPrefix + "^" + osImageKeyword, 1 );
         osQube +=  "\"";
-        nDetachedOffset = atoi(GetKeywordSub( osImageKeyword, 2, "1")) - 1;
+        nDetachedOffset = atoi(GetKeywordSub( osPrefix + "^" + osImageKeyword, 2, "1")) - 1;
 
         // If this is not explicitly in bytes, then it is assumed to be in
         // records, and we need to translate to bytes.
-        if (strstr(GetKeywordSub(osImageKeyword,2),"<BYTES>") != NULL)
+        if (strstr(GetKeywordSub(osPrefix + "^" + osImageKeyword, 2),"<BYTES>") != NULL)
             bDetachedOffsetInBytes = TRUE;
     }
 
@@ -723,15 +736,18 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
     int nSkipBytes = 0;
     int itype;
     int record_bytes;
+    int nSuffixItems = 0, nSuffixLines = 0;
+    int nSuffixBytes = 4; // Default as per PDS specification 
     char chByteOrder = 'M';  //default to MSB
-    double dfNoData = 0.0;
+    double dfNoData = 0.0, dfScale = 1.0, dfOffset = 0.0;
+    const char *pszUnit = NULL, *pszDesc = NULL;
  
     /* -------------------------------------------------------------------- */
     /*      Checks to see if this is raw PDS image not compressed image     */
     /*      so ENCODING_TYPE either does not exist or it equals "N/A".      */
     /*      Compressed types will not be supported in this routine          */
     /* -------------------------------------------------------------------- */
-    const char *value;
+    CPLString value;
 
     CPLString osEncodingType = GetKeyword(osPrefix+"IMAGE.ENCODING_TYPE","N/A");
     CleanString(osEncodingType);
@@ -753,35 +769,35 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
     /** are there own keywords  "LINES" and "LINE_SAMPLES"    **/
     /** if not NULL then CORE_ITEMS keyword i.e. (234,322,2)  **/
     /***********************************************************/
-    char szLayout[10] = "BSQ"; //default to band seq.
-    value = GetKeyword( osPrefix+"IMAGE.AXIS_NAME", "" );
+    int eLayout = PDS_BSQ; //default to band seq.
+    value = GetKeyword( osPrefix+osImageKeyword+".AXIS_NAME", "" );
     if (EQUAL(value,"(SAMPLE,LINE,BAND)") ) {
-        strcpy(szLayout,"BSQ");
-        nCols = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",1));
-        nRows = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",2));
-        nBands = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",3));
+        eLayout = PDS_BSQ;
+        nCols = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",1));
+        nRows = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",2));
+        nBands = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",3));
     }
     else if (EQUAL(value,"(BAND,LINE,SAMPLE)") ) {
-        strcpy(szLayout,"BIP");
-        nBands = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",1));
-        nRows = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",2));
-        nCols = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",3));
+        eLayout = PDS_BIP;
+        nBands = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",1));
+        nRows = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",2));
+        nCols = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",3));
     }
     else if (EQUAL(value,"(SAMPLE,BAND,LINE)") ) {
-        strcpy(szLayout,"BIL");
-        nCols = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",1));
-        nBands = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",2));
-        nRows = atoi(GetKeywordSub(osPrefix+"IMAGE.CORE_ITEMS",3));
+        eLayout = PDS_BIL;
+        nCols = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",1));
+        nBands = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",2));
+        nRows = atoi(GetKeywordSub(osPrefix+osImageKeyword+".CORE_ITEMS",3));
     }
     else if ( EQUAL(value,"") ) {
-        strcpy(szLayout,"BSQ");
-        nCols = atoi(GetKeyword(osPrefix+"IMAGE.LINE_SAMPLES",""));
-        nRows = atoi(GetKeyword(osPrefix+"IMAGE.LINES",""));
-        nBands = atoi(GetKeyword(osPrefix+"IMAGE.BANDS","1"));
+        eLayout = PDS_BSQ;
+        nCols = atoi(GetKeyword(osPrefix+osImageKeyword+".LINE_SAMPLES",""));
+        nRows = atoi(GetKeyword(osPrefix+osImageKeyword+".LINES",""));
+        nBands = atoi(GetKeyword(osPrefix+osImageKeyword+".BANDS","1"));
     }
     else {
         CPLError( CE_Failure, CPLE_OpenFailed, 
-                  "%s layout not supported. Abort\n\n", value);
+                  "%s layout not supported. Abort\n\n", value.c_str() );
         return FALSE;
     }
     
@@ -830,32 +846,88 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
 
     /**** Grab format type - pds supports 1,2,4,8,16,32,64 (in theory) **/
     /**** I have only seen 8, 16, 32 (float) in released datasets      **/
-    itype = atoi(GetKeyword(osPrefix+"IMAGE.SAMPLE_BITS",""));
-    switch(itype) {
-      case 8 :
-        eDataType = GDT_Byte;
-        dfNoData = NULL1;
-        break;
-      case 16 :
-        if( strstr(osST,"UNSIGNED") != NULL )
-            eDataType = GDT_UInt16;
-        else
-            eDataType = GDT_Int16;
-        dfNoData = NULL2;
-        break;
-      case 32 :
-        eDataType = GDT_Float32;
-        dfNoData = NULL3;
-        break;
-      case 64 :
-        eDataType = GDT_Float64;
-        dfNoData = NULL3;
-        break;
-      default :
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "Sample_bits of %d is not supported in this gdal PDS reader.",
-                  itype); 
-        return FALSE;
+    CPLString osSB = GetKeyword(osPrefix+"IMAGE.SAMPLE_BITS","");
+    if ( osSB.size() > 0 )
+    {
+        itype = atoi(osSB);
+        switch(itype) {
+          case 8 :
+            eDataType = GDT_Byte;
+            dfNoData = NULL1;
+            break;
+          case 16 :
+            if( strstr(osST,"UNSIGNED") != NULL )
+                eDataType = GDT_UInt16;
+            else
+                eDataType = GDT_Int16;
+            dfNoData = NULL2;
+            break;
+          case 32 :
+            eDataType = GDT_Float32;
+            dfNoData = NULL3;
+            break;
+          case 64 :
+            eDataType = GDT_Float64;
+            dfNoData = NULL3;
+            break;
+          default :
+            CPLError( CE_Failure, CPLE_AppDefined,
+                      "Sample_bits of %d is not supported in this gdal PDS reader.",
+                      itype); 
+            return FALSE;
+        }
+
+        dfOffset = CPLAtofM(GetKeyword(osPrefix+"IMAGE.OFFSET","0.0"));
+        dfScale = CPLAtofM(GetKeyword(osPrefix+"IMAGE.SCALING_FACTOR","1.0"));
+    }
+    else /* No IMAGE object, search for the QUBE. */
+    {
+        osSB = GetKeyword(osPrefix+"SPECTRAL_QUBE.CORE_ITEM_BYTES","");
+        itype = atoi(osSB);
+        switch(itype) {
+          case 1 :
+            eDataType = GDT_Byte;
+            break;
+          case 2 :
+            if( strstr(osST,"UNSIGNED") != NULL )
+                eDataType = GDT_UInt16;
+            else
+                eDataType = GDT_Int16;
+            break;
+          case 4 :
+            eDataType = GDT_Float32;
+            break;
+          default :
+            CPLError( CE_Failure, CPLE_AppDefined,
+                      "CORE_ITEM_BYTES of %d is not supported in this gdal PDS reader.",
+                      itype); 
+            return FALSE;
+        }
+
+        /* Parse suffix dimensions if defined. */
+        value = GetKeyword( osPrefix + "SPECTRAL_QUBE.SUFFIX_ITEMS", "" );
+        if ( value.size() > 0 )
+        {
+            value = GetKeyword(osPrefix + "SPECTRAL_QUBE.SUFFIX_BYTES", "");
+            if ( value.size() > 0 )
+                nSuffixBytes = atoi( value );
+
+            nSuffixItems = atoi(
+                GetKeywordSub(osPrefix+"SPECTRAL_QUBE.SUFFIX_ITEMS",1));
+            nSuffixLines = atoi(
+                GetKeywordSub(osPrefix+"SPECTRAL_QUBE.SUFFIX_ITEMS",2));
+        }
+
+        value = GetKeyword( osPrefix + "SPECTRAL_QUBE.CORE_NULL", "" );
+        if ( value.size() > 0 )
+            dfNoData = CPLAtofM( value );
+
+        dfOffset = CPLAtofM(
+            GetKeyword(osPrefix + "SPECTRAL_QUBE.CORE_BASE", "0.0") );
+        dfScale = CPLAtofM(
+            GetKeyword(osPrefix + "SPECTRAL_QUBE.CORE_MULTIPLIER", "1.0") );
+        pszUnit = GetKeyword(osPrefix + "SPECTRAL_QUBE.CORE_UNIT", NULL);
+        pszDesc = GetKeyword(osPrefix + "SPECTRAL_QUBE.CORE_NAME", NULL);
     }
 
 /* -------------------------------------------------------------------- */
@@ -940,19 +1012,20 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
     int     nLineOffset = record_bytes;
     int	    nPixelOffset, nBandOffset;
 
-    if( EQUAL(szLayout,"BIP") )
+    if( eLayout == PDS_BIP )
     {
         nPixelOffset = nItemSize * nBands;
         nBandOffset = nItemSize;
         nLineOffset = ((nPixelOffset * nCols + record_bytes - 1)/record_bytes)
             * record_bytes;
     }
-    else if( EQUAL(szLayout,"BSQ") )
+    else if( eLayout == PDS_BSQ )
     {
         nPixelOffset = nItemSize;
         nLineOffset = ((nPixelOffset * nCols + record_bytes - 1)/record_bytes)
             * record_bytes;
-        nBandOffset = nLineOffset * nRows;
+        nBandOffset = nLineOffset * nRows
+            + nSuffixLines * (nCols + nSuffixItems) * nSuffixBytes;
     }
     else /* assume BIL */
     {
@@ -997,16 +1070,18 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
                                        CPLAtofM(pszStdDev));
             }
         }
-        
+
         poBand->SetNoDataValue( dfNoData );
 
         SetBand( i+1, poBand );
 
         // Set offset/scale values at the PAM level.
-        poBand->SetOffset( 
-            CPLAtofM(GetKeyword(osPrefix+"IMAGE.OFFSET","0.0")));
-        poBand->SetScale( 
-            CPLAtofM(GetKeyword(osPrefix+"IMAGE.SCALING_FACTOR","1.0")));
+        poBand->SetOffset( dfOffset );
+        poBand->SetScale( dfScale );
+        if ( pszUnit )
+            poBand->SetUnitType( pszUnit );
+        if ( pszDesc )
+            poBand->SetDescription( pszDesc );
     }
 
     return TRUE;
@@ -1335,6 +1410,7 @@ void GDALRegister_PDS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "PDS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "NASA Planetary Data System" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrkmldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrkmldatasource.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGRKMLDataSource class.
@@ -232,7 +232,7 @@ int OGRKMLDataSource::Open( const char * pszNewName, int bTestOpen )
             poGeotype = wkbUnknown;
         
         if (poGeotype != wkbUnknown && poKMLFile_->is25D())
-            poGeotype = (OGRwkbGeometryType) (poGeotype | wkb25DBit);
+            poGeotype = wkbSetZ(poGeotype);
 
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
@@ -335,14 +335,14 @@ int OGRKMLDataSource::Create( const char* pszName, char** papszOptions )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRKMLDataSource::CreateLayer( const char * pszLayerName,
-                               OGRSpatialReference *poSRS,
-                               OGRwkbGeometryType eType,
-                               CPL_UNUSED char ** papszOptions )
+OGRKMLDataSource::ICreateLayer( const char * pszLayerName,
+                                OGRSpatialReference *poSRS,
+                                OGRwkbGeometryType eType,
+                                CPL_UNUSED char ** papszOptions )
 {
     CPLAssert( NULL != pszLayerName);
 

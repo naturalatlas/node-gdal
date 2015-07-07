@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: doq1dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: doq1dataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  USGS DOQ Driver (First Generation Format)
  * Purpose:  Implementation of DOQ1Dataset
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: doq1dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: doq1dataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 static double DOQGetField( unsigned char *, int );
 static void DOQGetDescription( GDALDataset *, unsigned char * );
@@ -347,6 +347,7 @@ void GDALRegister_DOQ1()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "DOQ1" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "USGS DOQ (Old Style)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -378,7 +379,7 @@ static double DOQGetField( unsigned char *pabyData, int nBytes )
             szWork[i] = 'E';
     }
 
-    return atof(szWork);
+    return CPLAtof(szWork);
 }
 
 /************************************************************************/

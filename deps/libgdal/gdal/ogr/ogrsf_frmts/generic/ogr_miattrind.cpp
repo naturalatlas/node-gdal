@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_miattrind.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_miattrind.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements interface to MapInfo .ID files used as attribute
@@ -33,7 +33,7 @@
 #include "mitab/mitab_priv.h"
 #include "cpl_minixml.h"
 
-CPL_CVSID("$Id: ogr_miattrind.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_miattrind.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRMIAttrIndex                            */
@@ -58,12 +58,12 @@ public:
                ~OGRMIAttrIndex();
 
     GByte      *BuildKey( OGRField *psKey );
-    long        GetFirstMatch( OGRField *psKey );
-    long       *GetAllMatches( OGRField *psKey );
-    long       *GetAllMatches( OGRField *psKey, long* panFIDList, int* nFIDCount, int* nLength );
+    GIntBig     GetFirstMatch( OGRField *psKey );
+    GIntBig    *GetAllMatches( OGRField *psKey );
+    GIntBig    *GetAllMatches( OGRField *psKey, GIntBig* panFIDList, int* nFIDCount, int* nLength );
 
-    OGRErr      AddEntry( OGRField *psKey, long nFID );
-    OGRErr      RemoveEntry( OGRField *psKey, long nFID );
+    OGRErr      AddEntry( OGRField *psKey, GIntBig nFID );
+    OGRErr      RemoveEntry( OGRField *psKey, GIntBig nFID );
 
     OGRErr      Clear();
 };
@@ -268,7 +268,8 @@ OGRErr OGRMILayerAttrIndex::LoadConfigFromXML(const char* pszRawXML)
 
     CPLDebug( "OGR", "Restored %d field indexes for layer %s from %s on %s.",
               nIndexCount, poLayer->GetLayerDefn()->GetName(), 
-              pszMetadataFilename, pszMIINDFilename );
+              pszMetadataFilename ? pszMetadataFilename : "--unknown--",
+              pszMIINDFilename );
 
     return OGRERR_NONE;
 }
@@ -702,7 +703,7 @@ OGRMIAttrIndex::~OGRMIAttrIndex()
 /*                              AddEntry()                              */
 /************************************************************************/
 
-OGRErr OGRMIAttrIndex::AddEntry( OGRField *psKey, long nFID )
+OGRErr OGRMIAttrIndex::AddEntry( OGRField *psKey, GIntBig nFID )
 
 {
     GByte *pabyKey = BuildKey( psKey );
@@ -710,7 +711,10 @@ OGRErr OGRMIAttrIndex::AddEntry( OGRField *psKey, long nFID )
     if( psKey == NULL )
         return OGRERR_FAILURE;
 
-    if( poINDFile->AddEntry( iIndex, pabyKey, nFID+1 ) != 0 )
+    if( nFID >= INT_MAX )
+        return OGRERR_FAILURE;
+
+    if( poINDFile->AddEntry( iIndex, pabyKey, (int)nFID+1 ) != 0 )
         return OGRERR_FAILURE;
     else
         return OGRERR_NONE;
@@ -720,7 +724,7 @@ OGRErr OGRMIAttrIndex::AddEntry( OGRField *psKey, long nFID )
 /*                            RemoveEntry()                             */
 /************************************************************************/
 
-OGRErr OGRMIAttrIndex::RemoveEntry( OGRField * /*psKey*/, long /*nFID*/ )
+OGRErr OGRMIAttrIndex::RemoveEntry( OGRField * /*psKey*/, GIntBig /*nFID*/ )
 
 {
     return OGRERR_UNSUPPORTED_OPERATION;
@@ -738,6 +742,17 @@ GByte *OGRMIAttrIndex::BuildKey( OGRField *psKey )
       case OFTInteger:
         return poINDFile->BuildKey( iIndex, psKey->Integer );
         break;
+
+      case OFTInteger64:
+      {
+        if( (GIntBig)(int)psKey->Integer64 != psKey->Integer64 )
+        {
+            CPLError(CE_Warning, CPLE_NotSupported,
+                     "64bit integer value passed to OGRMIAttrIndex::BuildKey()");
+        }
+        return poINDFile->BuildKey( iIndex, (int)psKey->Integer64 );
+        break;
+      }
 
       case OFTReal:
         return poINDFile->BuildKey( iIndex, psKey->Real );
@@ -758,11 +773,11 @@ GByte *OGRMIAttrIndex::BuildKey( OGRField *psKey )
 /*                           GetFirstMatch()                            */
 /************************************************************************/
 
-long OGRMIAttrIndex::GetFirstMatch( OGRField *psKey )
+GIntBig OGRMIAttrIndex::GetFirstMatch( OGRField *psKey )
 
 {
     GByte *pabyKey = BuildKey( psKey );
-    long nFID;
+    GIntBig nFID;
 
     nFID = poINDFile->FindFirst( iIndex, pabyKey );
     if( nFID < 1 )
@@ -775,14 +790,14 @@ long OGRMIAttrIndex::GetFirstMatch( OGRField *psKey )
 /*                           GetAllMatches()                            */
 /************************************************************************/
 
-long *OGRMIAttrIndex::GetAllMatches( OGRField *psKey, long* panFIDList, int* nFIDCount, int* nLength )
+GIntBig *OGRMIAttrIndex::GetAllMatches( OGRField *psKey, GIntBig* panFIDList, int* nFIDCount, int* nLength )
 {
     GByte *pabyKey = BuildKey( psKey );
-    long nFID;
+    GIntBig nFID;
 
     if (panFIDList == NULL)
     {
-        panFIDList = (long *) CPLMalloc(sizeof(long) * 2);
+        panFIDList = (GIntBig *) CPLMalloc(sizeof(GIntBig) * 2);
         *nFIDCount = 0;
         *nLength = 2;
     }
@@ -793,7 +808,7 @@ long *OGRMIAttrIndex::GetAllMatches( OGRField *psKey, long* panFIDList, int* nFI
         if( *nFIDCount >= *nLength-1 )
         {
             *nLength = (*nLength) * 2 + 10;
-            panFIDList = (long *) CPLRealloc(panFIDList, sizeof(long)* (*nLength));
+            panFIDList = (GIntBig *) CPLRealloc(panFIDList, sizeof(GIntBig)* (*nLength));
         }
         panFIDList[(*nFIDCount)++] = nFID - 1;
         
@@ -805,7 +820,7 @@ long *OGRMIAttrIndex::GetAllMatches( OGRField *psKey, long* panFIDList, int* nFI
     return panFIDList;
 }
 
-long *OGRMIAttrIndex::GetAllMatches( OGRField *psKey )
+GIntBig *OGRMIAttrIndex::GetAllMatches( OGRField *psKey )
 {
     int nFIDCount, nLength;
     return GetAllMatches( psKey, NULL, &nFIDCount, &nLength );

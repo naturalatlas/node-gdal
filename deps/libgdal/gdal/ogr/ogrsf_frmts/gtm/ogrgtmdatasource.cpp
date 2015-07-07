@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgtmdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgtmdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of OGRGTMDataSource class.
@@ -324,7 +324,8 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
 /*                               Create()                               */
 /************************************************************************/
 
-int OGRGTMDataSource::Create( const char* pszFilename, CPL_UNUSED char** papszOptions )
+int OGRGTMDataSource::Create( const char* pszFilename,
+                              CPL_UNUSED char** papszOptions )
 {
     CPLAssert( NULL != pszFilename );
 
@@ -447,13 +448,13 @@ OGRLayer* OGRGTMDataSource::GetLayer( int iLayer )
 
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRGTMDataSource::CreateLayer( const char * pszLayerName,
-                                          OGRSpatialReference *poSRS,
-                                          OGRwkbGeometryType eType,
-                                          CPL_UNUSED char ** papszOptions )
+OGRLayer * OGRGTMDataSource::ICreateLayer( const char * pszLayerName,
+                                           OGRSpatialReference *poSRS,
+                                           OGRwkbGeometryType eType,
+                                           CPL_UNUSED char ** papszOptions )
 {
     if (eType == wkbPoint || eType == wkbPoint25D)
     {
@@ -640,4 +641,3 @@ void OGRGTMDataSource::rewindTrack()
 
     poGTMFile->rewindTrack();
 }
-

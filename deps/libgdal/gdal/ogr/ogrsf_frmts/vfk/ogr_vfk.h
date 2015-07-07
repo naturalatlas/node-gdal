@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_vfk.h 26468 2013-09-14 09:46:19Z rouault $
+ * $Id: ogr_vfk.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/VFK driver.
@@ -72,7 +72,7 @@ public:
     ~OGRVFKLayer();
 
     OGRFeature          *GetNextFeature();
-    OGRFeature          *GetFeature(long);
+    OGRFeature          *GetFeature(GIntBig);
 
     OGRFeatureDefn      *GetLayerDefn() { return poFeatureDefn; }
 
@@ -80,7 +80,7 @@ public:
     
     int                  TestCapability(const char *);
 
-    int                  GetFeatureCount(int = TRUE);
+    GIntBig              GetFeatureCount(int = TRUE);
 };
 
 /************************************************************************/
@@ -115,20 +115,6 @@ public:
     int            TestCapability(const char *);
 
     IVFKReader    *GetReader() const { return poReader; }
-};
-
-/************************************************************************/
-/*                            OGRVFKDriver                              */
-/************************************************************************/
-class OGRVFKDriver:public OGRSFDriver
-{
-public:
-    ~OGRVFKDriver();
-                
-    const char    *GetName();
-    OGRDataSource *Open(const char *, int);
-    
-    int            TestCapability(const char *);
 };
 
 #endif // GDAL_OGR_VFK_H_INCLUDED

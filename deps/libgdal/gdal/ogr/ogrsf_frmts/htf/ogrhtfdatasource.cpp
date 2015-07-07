@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrhtfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrhtfdatasource.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  HTF Translator
  * Purpose:  Implements OGRHTFDataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrhtfdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrhtfdatasource.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                          OGRHTFDataSource()                          */
@@ -105,14 +105,9 @@ OGRLayer* OGRHTFDataSource::GetLayerByName( const char* pszLayerName )
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRHTFDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGRHTFDataSource::Open( const char * pszFilename )
 
 {
-    if (bUpdateIn)
-    {
-        return FALSE;
-    }
-
     pszName = CPLStrdup( pszFilename );
 
 // -------------------------------------------------------------------- 
@@ -122,19 +117,6 @@ int OGRHTFDataSource::Open( const char * pszFilename, int bUpdateIn)
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
     if (fp == NULL)
         return FALSE;
-
-    char szBuffer[11];
-    int nbRead = (int)VSIFReadL(szBuffer, 1, sizeof(szBuffer) - 1, fp);
-    szBuffer[nbRead] = '\0';
-
-    int bIsHTF = strcmp(szBuffer, "HTF HEADER") == 0;
-    if (!bIsHTF)
-    {
-        VSIFCloseL(fp);
-        return FALSE;
-    }
-
-    VSIFSeekL(fp, 0, SEEK_SET);
 
     const char* pszLine;
     int bEndOfHTFHeader = FALSE;
@@ -199,22 +181,22 @@ int OGRHTFDataSource::Open( const char * pszFilename, int bUpdateIn)
         else if (strncmp(pszLine, "SW GRID COORDINATE - EASTING: ", 30) == 0)
         {
             bHasSWEasting = TRUE;
-            dfSWEasting = atof(pszLine + 30);
+            dfSWEasting = CPLAtof(pszLine + 30);
         }
         else if (strncmp(pszLine, "SW GRID COORDINATE - NORTHING: ", 31) == 0)
         {
             bHasSWNorthing = TRUE;
-            dfSWNorthing = atof(pszLine + 31);
+            dfSWNorthing = CPLAtof(pszLine + 31);
         }
         else if (strncmp(pszLine, "NE GRID COORDINATE - EASTING: ", 30) == 0)
         {
             bHasNEEasting = TRUE;
-            dfNEEasting = atof(pszLine + 30);
+            dfNEEasting = CPLAtof(pszLine + 30);
         }
         else if (strncmp(pszLine, "NE GRID COORDINATE - NORTHING: ", 31) == 0)
         {
             bHasNENorthing = TRUE;
-            dfNENorthing = atof(pszLine + 31);
+            dfNENorthing = CPLAtof(pszLine + 31);
         }
         else if (strncmp(pszLine, "TOTAL SOUNDINGS: ", 17) == 0)
         {

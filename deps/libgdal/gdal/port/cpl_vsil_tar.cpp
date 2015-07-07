@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_tar.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_tar.cpp 28588 2015-03-01 20:44:43Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for tar files (.tar).
@@ -29,7 +29,7 @@
 
 #include "cpl_vsi_virtual.h"
 
-CPL_CVSID("$Id: cpl_vsil_tar.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_tar.cpp 28588 2015-03-01 20:44:43Z rouault $");
 
 
 /************************************************************************/
@@ -130,12 +130,12 @@ int VSITarReader::GotoNextFile()
         abyHeader[115] != '\0' ||
         abyHeader[123] != '\0' ||
         (abyHeader[135] != '\0' && abyHeader[135] != ' ') ||
-        (abyHeader[147] != '\0' && abyHeader[147] != ' ') ||
-        abyHeader[154] != '\0' ||
-        abyHeader[155] != ' ')
+        (abyHeader[147] != '\0' && abyHeader[147] != ' '))
     {
         return FALSE;
     }
+    if( abyHeader[124] < '0' || abyHeader[124] > '7' )
+        return FALSE;
 
     osNextFileName = abyHeader;
     nNextFileSize = 0;

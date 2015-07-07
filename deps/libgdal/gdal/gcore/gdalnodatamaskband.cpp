@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalnodatamaskband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalnodatamaskband.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALNoDataMaskBand, a class implementing all
@@ -31,7 +31,7 @@
 
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalnodatamaskband.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalnodatamaskband.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /*                        GDALNoDataMaskBand()                          */
@@ -142,7 +142,8 @@ CPLErr GDALNoDataMaskBand::IReadBlock( int nXBlockOff, int nYBlockOff,
                                nXBlockOff * nBlockXSize, nYBlockOff * nBlockYSize,
                                nXSizeRequest, nYSizeRequest,
                                pabySrc, nXSizeRequest, nYSizeRequest,
-                               eWrkDT, 0, nBlockXSize * (GDALGetDataTypeSize(eWrkDT)/8) );
+                               eWrkDT, 0, nBlockXSize * (GDALGetDataTypeSize(eWrkDT)/8),
+                               NULL );
     if( eErr != CE_None )
     {
         CPLFree(pabySrc);
@@ -249,7 +250,8 @@ CPLErr GDALNoDataMaskBand::IRasterIO( GDALRWFlag eRWFlag,
                                       int nXOff, int nYOff, int nXSize, int nYSize,
                                       void * pData, int nBufXSize, int nBufYSize,
                                       GDALDataType eBufType,
-                                      int nPixelSpace, int nLineSpace )
+                                      GSpacing nPixelSpace, GSpacing nLineSpace,
+                                      GDALRasterIOExtraArg* psExtraArg )
 {
     /* Optimization in common use case (#4488) */
     /* This avoids triggering the block cache on this band, which helps */
@@ -262,7 +264,7 @@ CPLErr GDALNoDataMaskBand::IRasterIO( GDALRWFlag eRWFlag,
         CPLErr eErr = poParent->RasterIO( GF_Read, nXOff, nYOff, nXSize, nYSize,
                                           pData, nBufXSize, nBufYSize,
                                           eBufType,
-                                          nPixelSpace, nLineSpace );
+                                          nPixelSpace, nLineSpace, psExtraArg );
         if (eErr != CE_None)
             return eErr;
 
@@ -282,5 +284,5 @@ CPLErr GDALNoDataMaskBand::IRasterIO( GDALRWFlag eRWFlag,
     return GDALRasterBand::IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                       pData, nBufXSize, nBufYSize,
                                       eBufType,
-                                      nPixelSpace, nLineSpace );
+                                      nPixelSpace, nLineSpace, psExtraArg );
 }

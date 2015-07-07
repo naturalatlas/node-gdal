@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnalayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrbnalayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNALayer class.
@@ -74,6 +74,7 @@ OGRBNALayer::OGRBNALayer( const char *pszFilename,
                                                    layerName ));
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( eLayerGeomType );
+    SetDescription( poFeatureDefn->GetName() );
     this->bnaFeatureType = bnaFeatureType;
 
     if (! bWriter )
@@ -146,6 +147,8 @@ void  OGRBNALayer::SetFeatureIndexTable(int nFeatures, OffsetAndLine* offsetAndL
 void OGRBNALayer::ResetReading()
 
 {
+    if( fpBNA == NULL )
+        return;
     eof = FALSE;
     failed = FALSE;
     curLine = 0;
@@ -164,7 +167,7 @@ OGRFeature *OGRBNALayer::GetNextFeature()
     BNARecord* record;
     int offset, line;
 
-    if (failed || eof) return NULL;
+    if (failed || eof || fpBNA == NULL) return NULL;
 
     while(1)
     {
@@ -284,10 +287,10 @@ void OGRBNALayer::WriteCoord(VSILFILE* fp, double dfX, double dfY)
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRBNALayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     int i,j,k,n;
@@ -560,7 +563,8 @@ OGRErr OGRBNALayer::CreateFeature( OGRFeature *poFeature )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRBNALayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRBNALayer::CreateField( OGRFieldDefn *poField,
+                                 CPL_UNUSED int bApproxOK )
 {
     if( !bWriter || nFeatures != 0)
         return OGRERR_FAILURE;
@@ -829,16 +833,16 @@ void OGRBNALayer::FastParseUntil ( int interestFID)
 /*                           GetFeature()                               */
 /************************************************************************/
 
-OGRFeature *  OGRBNALayer::GetFeature( long nFID )
+OGRFeature *  OGRBNALayer::GetFeature( GIntBig nFID )
 {
     OGRFeature  *poFeature;
     BNARecord* record;
     int ok;
     
-    if (nFID < 0)
+    if (nFID < 0 || (GIntBig)(int)nFID != nFID)
         return NULL;
 
-    FastParseUntil(nFID);
+    FastParseUntil((int)nFID);
 
     if (nFID >= nFeatures)
         return NULL;
@@ -847,7 +851,7 @@ OGRFeature *  OGRBNALayer::GetFeature( long nFID )
     curLine = offsetAndLineFeaturesTable[nFID].line;
     record =  BNA_GetNextRecord(fpBNA, &ok, &curLine, TRUE, bnaFeatureType);
 
-    poFeature = BuildFeatureFromBNARecord(record, nFID);
+    poFeature = BuildFeatureFromBNARecord(record, (int)nFID);
 
     BNA_FreeRecord(record);
 
@@ -868,4 +872,3 @@ int OGRBNALayer::TestCapability( const char * pszCap )
     else
         return FALSE;
 }
-

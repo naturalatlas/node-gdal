@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntf.h 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ntf.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  NTF Translator
  * Purpose:  Main declarations for NTF translator.
@@ -396,15 +396,15 @@ class OGRNTFLayer : public OGRLayer
     OGRFeature *        GetNextFeature();
 
 #ifdef notdef    
-    OGRFeature         *GetFeature( long nFeatureId );
-    OGRErr              SetFeature( OGRFeature *poFeature );
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
+    OGRErr              ISetFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
 #endif
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
 #ifdef notdef    
-    int                 GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int );
 #endif
     
     int                 TestCapability( const char * );
@@ -436,11 +436,11 @@ class OGRNTFFeatureClassLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    OGRFeature         *GetFeature( long nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
-    int                 GetFeatureCount( int = TRUE );
+    GIntBig             GetFeatureCount( int = TRUE );
     
     int                 TestCapability( const char * );
 };
@@ -477,11 +477,11 @@ class OGRNTFRasterLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    OGRFeature         *GetFeature( long nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
-    int                 GetFeatureCount( int = TRUE );
+    GIntBig             GetFeatureCount( int = TRUE );
     
     int                 TestCapability( const char * );
 };
@@ -556,20 +556,6 @@ class OGRNTFDataSource : public OGRDataSource
     NTFGenericClass     *GetGClass( int i ) { return aoGenericClass + i; }
     void                WorkupGeneric( NTFFileReader * );
     void                EstablishGenericLayers();
-};
-
-/************************************************************************/
-/*                             OGRNTFDriver                             */
-/************************************************************************/
-
-class OGRNTFDriver : public OGRSFDriver
-{
-  public:
-                ~OGRNTFDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-    int                 TestCapability( const char * );
 };
 
 /************************************************************************/

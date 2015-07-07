@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: GDapi.c 15522 2008-10-13 06:17:52Z dron $
+ * $Id: GDapi.c 29336 2015-06-14 17:37:21Z rouault $
  *
  * This module has a number of additions and improvements over the original
  * implementation to be suitable for usage in GDAL HDF driver.
@@ -85,6 +85,7 @@ Jun  05, 2003 Bruce Beaumont / Abe Taaheri
                                 end of GDll2mm_cea
                              Added return statement to GDll2mm_cea
 ******************************************************************************/
+#include "cpl_string.h"
 #include "stdio.h"
 #include "mfhdf.h"
 #include "hcomp.h"
@@ -494,10 +495,10 @@ GDcreate(int32 fid, char *gridname, int32 xdimsize, int32 ydimsize,
 		}
 		else
 		{
-		    sprintf(refstr1, "%s%f%s%f%s",
+		    CPLsprintf(refstr1, "%s%f%s%f%s",
 			    "(", upleftpt[0], ",", upleftpt[1], ")");
 
-		    sprintf(refstr2, "%s%f%s%f%s",
+		    CPLsprintf(refstr2, "%s%f%s%f%s",
 			    "(", lowrightpt[0], ",", lowrightpt[1], ")");
 		}
 
@@ -1067,7 +1068,7 @@ GDdefproj(int32 gridID, int32 projcode, int32 zonecode, int32 spherecode,
 		    /* else projparm[i] is non-zero floating point ... */
 		    else
 		    {
-			sprintf(utlbuf, "%f%s",	projparm[i], ",");
+			CPLsprintf(utlbuf, "%f%s",	projparm[i], ",");
 		    }
 		}
 		strcat(projparmbuf, utlbuf);
@@ -3958,7 +3959,7 @@ GDwrrdfield(int32 gridID, char *fieldname, char *code,
 
 
 		/*
-		 * If strideOne is true use NULL paramater for stride. This
+		 * If strideOne is true use NULL parameter for stride. This
 		 * is a work-around to HDF compression problem
 		 */
 		if (strideOne == 1)
@@ -6318,7 +6319,7 @@ GDll2ij(int32 projcode, int32 zonecode, float64 projparm[],
     float64         xMtr;	/* X value in meters from GCTP */
     float64         yMtr;	/* Y value in meters from GCTP */
     float64         lonrad0;	/* Longitude in radians of upleft point */
-    float64         latrad0;	/* Latitude in radians of upleft point */
+    float64         latrad0 = 0;	/* Latitude in radians of upleft point */
     float64         lonrad;	/* Longitude in radians of point */
     float64         latrad;	/* Latitude in radians of point */
     float64         scaleX;	/* X scale factor */
@@ -6595,8 +6596,8 @@ GDrs2ll(int32 projcode, float64 projparm[],
     float64         yMtr;	    /* Y value in meters from GCTP */
     float64         epsilon;
     float64         beta;
-    float64         qp_cea;
-    float64         kz_cea;
+    float64         qp_cea = 0;
+    float64         kz_cea = 0;
     float64         eccen, eccen_sq;
     float64         phi1, sinphi1, cosphi1;
     float64         scaleX, scaleY;
@@ -7619,10 +7620,10 @@ GDdefboxregion(int32 gridID, float64 cornerlon[], float64 cornerlat[])
     int32           spherecode;	    /* Sphere code */
     int32           row[32];	    /* Row array */
     int32           col[32];	    /* Column array */
-    int32           minCol;	    /* Minimun column value */
-    int32           minRow;	    /* Minimun row value */
-    int32           maxCol;	    /* Maximun column value */
-    int32           maxRow;	    /* Maximun row value */
+    int32           minCol = 0;	    /* Minimun column value */
+    int32           minRow = 0;	    /* Minimun row value */
+    int32           maxCol = 0;	    /* Maximun column value */
+    int32           maxRow = 0;	    /* Maximun row value */
     int32           npnts;	    /* Number of boundary
                                        (edge & tangent) pnts */
 

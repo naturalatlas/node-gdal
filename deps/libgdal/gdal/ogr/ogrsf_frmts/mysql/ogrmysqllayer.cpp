@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqllayer.cpp 26679 2013-12-01 11:35:25Z rouault $
+ * $Id: ogrmysqllayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLLayer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmysqllayer.cpp 26679 2013-12-01 11:35:25Z rouault $");
+CPL_CVSID("$Id: ogrmysqllayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGRMySQLLayer()                            */
@@ -177,7 +177,7 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
                 return NULL;
             }
 
-            poFeature->SetFID( atoi(papszRow[iField]) );
+            poFeature->SetFID( CPLAtoGIntBig(papszRow[iField]) );
         }
 
         if( papszRow[iField] == NULL ) 
@@ -294,7 +294,7 @@ OGRFeature *OGRMySQLLayer::GetNextRawFeature()
 /*      Note that we actually override this in OGRMySQLTableLayer.      */
 /************************************************************************/
 
-OGRFeature *OGRMySQLLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRMySQLLayer::GetFeature( GIntBig nFeatureId )
 
 {
     return OGRLayer::GetFeature( nFeatureId );

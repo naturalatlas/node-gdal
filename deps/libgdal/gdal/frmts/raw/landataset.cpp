@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: landataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: landataset.cpp 28435 2015-02-07 14:35:34Z rouault $
  *
  * Project:  eCognition
  * Purpose:  Implementation of Erdas .LAN / .GIS format.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: landataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: landataset.cpp 28435 2015-02-07 14:35:34Z rouault $");
 
 CPL_C_START
 void	GDALRegister_LAN(void);
@@ -200,7 +200,8 @@ LAN4BitRasterBand::~LAN4BitRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr LAN4BitRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr LAN4BitRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                      int nBlockYOff,
                                       void * pImage )
 
 {
@@ -415,26 +416,40 @@ GDALDataset *LANDataset::Open( GDALOpenInfo * poOpenInfo )
 
     if( EQUALN(poDS->pachHeader,"HEADER",7) )
     {
-        poDS->nRasterXSize = (int) *((float *) (poDS->pachHeader + 16));
-        poDS->nRasterYSize = (int) *((float *) (poDS->pachHeader + 20));
+        float fTmp;
+        memcpy(&fTmp, poDS->pachHeader + 16, 4);
+        CPL_LSBPTR32(&fTmp);
+        poDS->nRasterXSize = (int) fTmp;
+        memcpy(&fTmp, poDS->pachHeader + 20, 4);
+        CPL_LSBPTR32(&fTmp);
+        poDS->nRasterYSize = (int) fTmp;
     }
     else
     {
-        poDS->nRasterXSize = *((GInt32 *) (poDS->pachHeader + 16));
-        poDS->nRasterYSize = *((GInt32 *) (poDS->pachHeader + 20));
+        GInt32 nTmp;
+        memcpy(&nTmp, poDS->pachHeader + 16, 4);
+        CPL_LSBPTR32(&nTmp);
+        poDS->nRasterXSize = nTmp;
+        memcpy(&nTmp, poDS->pachHeader + 20, 4);
+        CPL_LSBPTR32(&nTmp);
+        poDS->nRasterYSize = nTmp;
     }
 
-    if( *((GInt16 *) (poDS->pachHeader + 6)) == 0 )
+    GInt16 nTmp16;
+    memcpy(&nTmp16, poDS->pachHeader + 6, 2);
+    CPL_LSBPTR16(&nTmp16);
+
+    if( nTmp16 == 0 )
     {
         eDataType = GDT_Byte;
         nPixelOffset = 1;
     }
-    else if( *((GInt16 *) (poDS->pachHeader + 6)) == 1 ) /* 4bit! */
+    else if( nTmp16 == 1 ) /* 4bit! */
     {
         eDataType = GDT_Byte;
         nPixelOffset = -1;
     }
-    else if( *((GInt16 *) (poDS->pachHeader + 6)) == 2 )
+    else if( nTmp16 == 2 )
     {
         nPixelOffset = 2;
         eDataType = GDT_Int16;
@@ -443,13 +458,15 @@ GDALDataset *LANDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
                   "Unsupported pixel type (%d).", 
-                  *((GInt16 *) (poDS->pachHeader + 6)) );
+                  nTmp16 );
                   
         delete poDS;
         return NULL;
     }
 
-    nBandCount = *((GInt16 *) (poDS->pachHeader + 8));
+    memcpy(&nTmp16, poDS->pachHeader + 8, 2);
+    CPL_LSBPTR16(&nTmp16);
+    nBandCount = nTmp16;
 
     if (!GDALCheckDatasetDimensions(poDS->nRasterXSize, poDS->nRasterYSize) ||
         !GDALCheckBandCount(nBandCount, FALSE))
@@ -492,12 +509,22 @@ GDALDataset *LANDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Try to interprete georeferencing.                               */
 /* -------------------------------------------------------------------- */
-    poDS->adfGeoTransform[0] = *((float *) (poDS->pachHeader + 112));
-    poDS->adfGeoTransform[1] = *((float *) (poDS->pachHeader + 120));
+    float fTmp;
+
+    memcpy(&fTmp, poDS->pachHeader + 112, 4);
+    CPL_LSBPTR32(&fTmp);
+    poDS->adfGeoTransform[0] = fTmp;
+    memcpy(&fTmp, poDS->pachHeader + 120, 4);
+    CPL_LSBPTR32(&fTmp);
+    poDS->adfGeoTransform[1] = fTmp;
     poDS->adfGeoTransform[2] = 0.0;
-    poDS->adfGeoTransform[3] = *((float *) (poDS->pachHeader + 116));
+    memcpy(&fTmp, poDS->pachHeader + 116, 4);
+    CPL_LSBPTR32(&fTmp);
+    poDS->adfGeoTransform[3] = fTmp;
     poDS->adfGeoTransform[4] = 0.0;
-    poDS->adfGeoTransform[5] = - *((float *) (poDS->pachHeader + 124));
+    memcpy(&fTmp, poDS->pachHeader + 124, 4);
+    CPL_LSBPTR32(&fTmp);
+    poDS->adfGeoTransform[5] = - fTmp;
 
     // adjust for center of pixel vs. top left corner of pixel.
     poDS->adfGeoTransform[0] -= poDS->adfGeoTransform[1] * 0.5;
@@ -518,7 +545,9 @@ GDALDataset *LANDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Try to come up with something for the coordinate system.        */
 /* -------------------------------------------------------------------- */
-    int nCoordSys = *((GInt16 *) (poDS->pachHeader + 88));
+    memcpy(&nTmp16, poDS->pachHeader + 88, 2);
+    CPL_LSBPTR16(&nTmp16);
+    int nCoordSys = nTmp16;
 
     if( nCoordSys == 0 )
     {
@@ -848,10 +877,11 @@ void LANDataset::CheckForStatistics()
 /************************************************************************/
 
 GDALDataset *LANDataset::Create( const char * pszFilename,
-                                 int nXSize, int nYSize, int nBands,
+                                 int nXSize,
+                                 int nYSize,
+                                 int nBands,
                                  GDALDataType eType,
                                  CPL_UNUSED char ** papszOptions )
-
 {
     if( eType != GDT_Byte && eType != GDT_Int16 )
     {
@@ -997,6 +1027,7 @@ void GDALRegister_LAN()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "LAN" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Erdas .LAN/.GIS" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -1011,4 +1042,3 @@ void GDALRegister_LAN()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

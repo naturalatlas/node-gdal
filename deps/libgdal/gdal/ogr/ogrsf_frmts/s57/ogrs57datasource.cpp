@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrs57datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrs57datasource.cpp 28348 2015-01-23 15:27:13Z rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements OGRS57DataSource class
@@ -32,13 +32,13 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrs57datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrs57datasource.cpp 28348 2015-01-23 15:27:13Z rouault $");
 
 /************************************************************************/
 /*                          OGRS57DataSource()                          */
 /************************************************************************/
 
-OGRS57DataSource::OGRS57DataSource()
+OGRS57DataSource::OGRS57DataSource(char** papszOpenOptions)
 
 {
     nLayers = 0;
@@ -60,22 +60,29 @@ OGRS57DataSource::OGRS57DataSource()
 /* -------------------------------------------------------------------- */
 /*      Allow initialization of options from the environment.           */
 /* -------------------------------------------------------------------- */
-    const char *pszOptString = CPLGetConfigOption( "OGR_S57_OPTIONS", NULL );
-    papszOptions = NULL;
-
-    if ( pszOptString )
+    if( papszOpenOptions != NULL )
     {
-        char    **papszCurOption;
+        papszOptions = CSLDuplicate(papszOpenOptions);
+    }
+    else
+    {
+        const char *pszOptString = CPLGetConfigOption( "OGR_S57_OPTIONS", NULL );
+        papszOptions = NULL;
 
-        papszOptions = 
-            CSLTokenizeStringComplex( pszOptString, ",", FALSE, FALSE );
-
-        if ( papszOptions && *papszOptions )
+        if ( pszOptString )
         {
-            CPLDebug( "S57", "The following S57 options are being set:" );
-            papszCurOption = papszOptions;
-            while( *papszCurOption )
-                CPLDebug( "S57", "    %s", *papszCurOption++ );
+            char    **papszCurOption;
+
+            papszOptions = 
+                CSLTokenizeStringComplex( pszOptString, ",", FALSE, FALSE );
+
+            if ( papszOptions && *papszOptions )
+            {
+                CPLDebug( "S57", "The following S57 options are being set:" );
+                papszCurOption = papszOptions;
+                while( *papszCurOption )
+                    CPLDebug( "S57", "    %s", *papszCurOption++ );
+            }
         }
     }
 }
@@ -147,43 +154,12 @@ int OGRS57DataSource::TestCapability( const char * )
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRS57DataSource::Open( const char * pszFilename, int bTestOpen )
+int OGRS57DataSource::Open( const char * pszFilename )
 
 {
     int         iModule;
     
     pszName = CPLStrdup( pszFilename );
-    
-/* -------------------------------------------------------------------- */
-/*      Check a few bits of the header to see if it looks like an       */
-/*      S57 file (really, if it looks like an ISO8211 file).            */
-/* -------------------------------------------------------------------- */
-    if( bTestOpen )
-    {
-        VSILFILE    *fp;
-        char    pachLeader[10];
-
-        VSIStatBufL sStatBuf;
-        if (VSIStatExL( pszFilename, &sStatBuf, VSI_STAT_EXISTS_FLAG | VSI_STAT_NATURE_FLAG ) != 0 ||
-            VSI_ISDIR(sStatBuf.st_mode))
-            return FALSE;
-
-        fp = VSIFOpenL( pszFilename, "rb" );
-        if( fp == NULL )
-            return FALSE;
-        
-        if( VSIFReadL( pachLeader, 1, 10, fp ) != 10
-            || (pachLeader[5] != '1' && pachLeader[5] != '2'
-                && pachLeader[5] != '3' )
-            || pachLeader[6] != 'L'
-            || (pachLeader[8] != '1' && pachLeader[8] != ' ') )
-        {
-            VSIFCloseL( fp );
-            return FALSE;
-        }
-
-        VSIFCloseL( fp );
-    }
 
 /* -------------------------------------------------------------------- */
 /*      Setup reader options.                                           */
@@ -193,8 +169,14 @@ int OGRS57DataSource::Open( const char * pszFilename, int bTestOpen )
 
     poModule = new S57Reader( pszFilename );
 
-    papszReaderOptions = CSLSetNameValue(papszReaderOptions, 
+    if( GetOption(S57O_LNAM_REFS) == NULL )
+        papszReaderOptions = CSLSetNameValue(papszReaderOptions, 
                                          S57O_LNAM_REFS, "ON" );
+    else
+        papszReaderOptions = 
+            CSLSetNameValue( papszReaderOptions, S57O_LNAM_REFS, 
+                             GetOption(S57O_LNAM_REFS));
+
     if( GetOption(S57O_UPDATES) != NULL )
         papszReaderOptions = 
             CSLSetNameValue( papszReaderOptions, S57O_UPDATES, 
@@ -235,8 +217,14 @@ int OGRS57DataSource::Open( const char * pszFilename, int bTestOpen )
             CSLSetNameValue( papszReaderOptions, S57O_RECODE_BY_DSSI,
                              GetOption(S57O_RECODE_BY_DSSI) );
 
-    poModule->SetOptions( papszReaderOptions );
+    int bRet = poModule->SetOptions( papszReaderOptions );
     CSLDestroy( papszReaderOptions );
+    
+    if( !bRet )
+    {
+        delete poModule;
+        return FALSE;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Try opening.                                                    */
@@ -244,7 +232,7 @@ int OGRS57DataSource::Open( const char * pszFilename, int bTestOpen )
 /*      Eventually this should check for catalogs, and if found         */
 /*      instantiate a whole series of modules.                          */
 /* -------------------------------------------------------------------- */
-    if( !poModule->Open( bTestOpen ) )
+    if( !poModule->Open( TRUE ) )
     {
         delete poModule;
 
@@ -477,14 +465,15 @@ OGRErr OGRS57DataSource::GetDSExtent( OGREnvelope *psExtent, int bForce )
 /*      Create a new S57 file, and represent it as a datasource.        */
 /************************************************************************/
 
-int OGRS57DataSource::Create( const char *pszFilename, CPL_UNUSED char **papszOptions )
+int OGRS57DataSource::Create( const char *pszFilename,
+                              char **papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Instantiate the class registrar if possible.                    */
 /* -------------------------------------------------------------------- */
     if( OGRS57Driver::GetS57Registrar() == NULL )
     {
-        CPLError( CE_Failure, CPLE_AppDefined, 
+        CPLError( CE_Failure, CPLE_AppDefined,
                   "Unable to load s57objectclasses.csv, unable to continue." );
         return FALSE;
     }
@@ -541,9 +530,52 @@ int OGRS57DataSource::Create( const char *pszFilename, CPL_UNUSED char **papszOp
 /* -------------------------------------------------------------------- */
 /*      Write out "header" records.                                     */
 /* -------------------------------------------------------------------- */
-    poWriter->WriteDSID( pszFilename, "20010409", "03.1", 540, "" );
+    int nEXPP = 1, nINTU = 4, nAGEN = 540, nNOMR = 0, nNOGR = 0,
+        nNOLR = 0, nNOIN = 0, nNOCN = 0, nNOED = 0;
+    const char
+        *pszEXPP = CSLFetchNameValue(papszOptions, "S57_EXPP"),
+        *pszINTU = CSLFetchNameValue(papszOptions, "S57_INTU"),
+        *pszEDTN = CSLFetchNameValue(papszOptions, "S57_EDTN"),
+        *pszUPDN = CSLFetchNameValue(papszOptions, "S57_UPDN"),
+        *pszUADT = CSLFetchNameValue(papszOptions, "S57_UADT"),
+        *pszISDT = CSLFetchNameValue(papszOptions, "S57_ISDT"),
+        *pszSTED = CSLFetchNameValue(papszOptions, "S57_STED"),
+        *pszAGEN = CSLFetchNameValue(papszOptions, "S57_AGEN"),
+        *pszCOMT = CSLFetchNameValue(papszOptions, "S57_COMT"),
+        *pszNOMR = CSLFetchNameValue(papszOptions, "S57_NOMR"),
+        *pszNOGR = CSLFetchNameValue(papszOptions, "S57_NOGR"),
+        *pszNOLR = CSLFetchNameValue(papszOptions, "S57_NOLR"),
+        *pszNOIN = CSLFetchNameValue(papszOptions, "S57_NOIN"),
+        *pszNOCN = CSLFetchNameValue(papszOptions, "S57_NOCN"),
+        *pszNOED = CSLFetchNameValue(papszOptions, "S57_NOED");
+    if (pszEXPP) nEXPP = atoi(pszEXPP);
+    if (pszINTU) nINTU = atoi(pszINTU);
+    if (pszAGEN) nAGEN = atoi(pszAGEN);
+    if (pszNOMR) nNOMR = atoi(pszNOMR);
+    if (pszNOGR) nNOGR = atoi(pszNOGR);
+    if (pszNOLR) nNOLR = atoi(pszNOLR);
+    if (pszNOIN) nNOIN = atoi(pszNOIN);
+    if (pszNOCN) nNOCN = atoi(pszNOCN);
+    if (pszNOED) nNOED = atoi(pszNOED);
+    poWriter->WriteDSID( nEXPP, nINTU, CPLGetFilename( pszFilename ),
+                         pszEDTN, pszUPDN, pszUADT, pszISDT, pszSTED, nAGEN,
+                         pszCOMT, nNOMR, nNOGR, nNOLR, nNOIN, nNOCN, nNOED );
 
-    poWriter->WriteDSPM();
+    int nHDAT = 2, nVDAT = 17, nSDAT = 23, nCSCL = 52000;
+    const char
+        *pszHDAT = CSLFetchNameValue(papszOptions, "S57_HDAT"),
+        *pszVDAT = CSLFetchNameValue(papszOptions, "S57_VDAT"),
+        *pszSDAT = CSLFetchNameValue(papszOptions, "S57_SDAT"),
+        *pszCSCL = CSLFetchNameValue(papszOptions, "S57_CSCL");
+    if (pszHDAT)
+        nHDAT = atoi(pszHDAT);
+    if (pszVDAT)
+        nVDAT = atoi(pszVDAT);
+    if (pszSDAT)
+        nSDAT = atoi(pszSDAT);
+    if (pszCSCL)
+        nCSCL = atoi(pszCSCL);
+    poWriter->WriteDSPM(nHDAT, nVDAT, nSDAT, nCSCL);
 
 
     return TRUE;

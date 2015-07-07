@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocisession.cpp 27575 2014-08-06 19:40:30Z ilucena $
+ * $Id: ogrocisession.cpp 28481 2015-02-13 17:11:15Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of OGROCISession, which encapsulates much of the
@@ -31,7 +31,7 @@
 #include "ogr_oci.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrocisession.cpp 27575 2014-08-06 19:40:30Z ilucena $");
+CPL_CVSID("$Id: ogrocisession.cpp 28481 2015-02-13 17:11:15Z rouault $");
 
 /************************************************************************/
 /*                          OGRGetOCISession()                          */
@@ -286,7 +286,8 @@ int OGROCISession::EstablishSession( const char *pszUserid,
     if( oSetNLSTimeFormat.Execute( "ALTER SESSION SET NLS_DATE_FORMAT='YYYY/MM/DD' \
         NLS_TIME_FORMAT='HH24:MI:SS' NLS_TIME_TZ_FORMAT='HH24:MI:SS TZHTZM' \
         NLS_TIMESTAMP_FORMAT='YYYY/MM/DD HH24:MI:SS' \
-        NLS_TIMESTAMP_TZ_FORMAT='YYYY/MM/DD HH24:MI:SS TZHTZM'" ) != CE_None )
+        NLS_TIMESTAMP_TZ_FORMAT='YYYY/MM/DD HH24:MI:SS TZHTZM' \
+        NLS_NUMERIC_CHARACTERS = '. '" ) != CE_None )
         return OGRERR_FAILURE;
 
     return TRUE;
@@ -358,6 +359,7 @@ OGROCISession::GetParmInfo( OCIParam *hParmDesc, OGRFieldDefn *poOGRDefn,
 {
     ub2 nOCIType, nOCILen;
     ub4 nColLen;
+    ub1 bOCINull;
     char *pszColName;
     char szTermColName[128];
     
@@ -381,7 +383,13 @@ OGROCISession::GetParmInfo( OCIParam *hParmDesc, OGRFieldDefn *poOGRDefn,
                     &nColLen, OCI_ATTR_NAME, hError ), 
         "OCIAttrGet(Name)") )
         return CE_Failure;
-    
+
+    if( Failed(
+        OCIAttrGet( hParmDesc, OCI_DTYPE_PARAM, (dvoid **)&bOCINull,
+                    0, OCI_ATTR_IS_NULL, hError ), 
+        "OCIAttrGet(Null)") )
+        return CE_Failure;
+
     if( nColLen >= sizeof(szTermColName) )                              
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
@@ -395,6 +403,7 @@ OGROCISession::GetParmInfo( OCIParam *hParmDesc, OGRFieldDefn *poOGRDefn,
     szTermColName[nColLen] = '\0';
     
     poOGRDefn->SetName( szTermColName );
+    poOGRDefn->SetNullable( bOCINull );
 
 /* -------------------------------------------------------------------- */
 /*      Attempt to classify as an OGRType.                              */
@@ -444,12 +453,12 @@ OGROCISession::GetParmInfo( OCIParam *hParmDesc, OGRFieldDefn *poOGRDefn,
             }
             else if( byPrecision < 38 )
             {
-                poOGRDefn->SetType( OFTInteger );
+                poOGRDefn->SetType( (byPrecision < 10) ? OFTInteger : OFTInteger64 );
                 poOGRDefn->SetWidth( byPrecision );
             }
             else
             {
-                poOGRDefn->SetType( OFTInteger );
+                poOGRDefn->SetType( OFTInteger64 );
             }
         }
         break;

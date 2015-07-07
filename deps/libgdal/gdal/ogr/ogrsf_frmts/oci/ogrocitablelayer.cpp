@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocitablelayer.cpp 28319 2015-01-15 23:29:32Z martinl $
+ * $Id: ogrocitablelayer.cpp 28809 2015-03-28 17:10:07Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCITableLayer class.  This class provides
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrocitablelayer.cpp 28319 2015-01-15 23:29:32Z martinl $");
+CPL_CVSID("$Id: ogrocitablelayer.cpp 28809 2015-03-28 17:10:07Z rouault $");
 
 static int nDiscarded = 0;
 static int nHits = 0;
@@ -45,7 +45,7 @@ static int nHits = 0;
 /************************************************************************/
 
 OGROCITableLayer::OGROCITableLayer( OGROCIDataSource *poDSIn, 
-                                    const char * pszTableName,
+                                    const char * pszTableName, OGRwkbGeometryType eGType,
                                     int nSRIDIn, int bUpdate, int bNewLayerIn )
 
 {
@@ -69,6 +69,9 @@ OGROCITableLayer::OGROCITableLayer( OGROCIDataSource *poDSIn,
         bHaveSpatialIndex = HSI_UNKNOWN;
 
     poFeatureDefn = ReadTableDefinition( pszTableName );
+    if( eGType != wkbUnknown && poFeatureDefn->GetGeomFieldCount() > 0 )
+        poFeatureDefn->GetGeomFieldDefn(0)->SetType(eGType);
+    SetDescription( poFeatureDefn->GetName() );
 
     nSRID = nSRIDIn;
     if( nSRID == -1 )
@@ -254,6 +257,7 @@ OGRFeatureDefn *OGROCITableLayer::ReadTableDefinition( const char * pszTable )
 /* -------------------------------------------------------------------- */
     const char *pszExpectedFIDName = 
         CPLGetConfigOption( "OCI_FID", "OGR_FID" );
+    int bGeomFieldNullable = FALSE;
 
 /* -------------------------------------------------------------------- */
 /*      Parse the returned table information.                           */
@@ -283,12 +287,14 @@ OGRFeatureDefn *OGROCITableLayer::ReadTableDefinition( const char * pszTable )
                 CPLFree( pszGeomName );
                 pszGeomName = CPLStrdup( oField.GetNameRef() );
                 iGeomColumn = iRawFld;
+                bGeomFieldNullable = oField.IsNullable();
             }
             continue;                   
         }
 
         if( EQUAL(oField.GetNameRef(),pszExpectedFIDName) 
-            && oField.GetType() == OFTInteger )
+            && (oField.GetType() == OFTInteger ||
+                oField.GetType() == OFTInteger64) )
         {
             pszFIDName = CPLStrdup(oField.GetNameRef());
             continue;
@@ -297,6 +303,39 @@ OGRFeatureDefn *OGROCITableLayer::ReadTableDefinition( const char * pszTable )
         poDefn->AddFieldDefn( &oField );
     }
 
+    CPLString osSQL;
+    osSQL.Printf("SELECT COLUMN_NAME, DATA_DEFAULT FROM user_tab_columns WHERE DATA_DEFAULT IS NOT NULL AND TABLE_NAME = '%s'",
+                 CPLString(pszTable).toupper().c_str());
+    OGRLayer* poSQLLyr = poDS->ExecuteSQL(osSQL, NULL, NULL);
+    if( poSQLLyr != NULL )
+    {
+        OGRFeature* poFeature;
+        while( (poFeature = poSQLLyr->GetNextFeature()) != NULL )
+        {
+            const char* pszColName = poFeature->GetFieldAsString(0);
+            const char* pszDefault = poFeature->GetFieldAsString(1);
+            int nIdx = poDefn->GetFieldIndex(pszColName);
+            if( nIdx >= 0 )
+                poDefn->GetFieldDefn(nIdx)->SetDefault(pszDefault);
+            delete poFeature;
+        }
+        poDS->ReleaseResultSet(poSQLLyr);
+    }
+
+    if( EQUAL(pszExpectedFIDName, "OGR_FID") && pszFIDName )
+    {
+        for(int i=0;i<poDefn->GetFieldCount();i++)
+        {
+            // This is presumably a Integer since we always create Integer64 with a
+            // defined precision
+            if( poDefn->GetFieldDefn(i)->GetType() == OFTInteger64 &&
+                poDefn->GetFieldDefn(i)->GetWidth() == 0 )
+            {
+                poDefn->GetFieldDefn(i)->SetType(OFTInteger);
+            }
+        }
+    }
+    
     /* -------------------------------------------------------------------- */
     /*      Identify Geometry dimension                                     */
     /* -------------------------------------------------------------------- */
@@ -363,6 +402,58 @@ OGRFeatureDefn *OGROCITableLayer::ReadTableDefinition( const char * pszTable )
         {
             CPLDebug( "OCI", "get dim based of existing data or index failed." );
         }
+        
+        {
+            OGROCIStringBuf oDimCmd2;
+            OGROCIStatement oDimStatement2( poSession );
+            char **papszResult2;
+
+            CPLErrorReset();
+            oDimCmd2.Appendf( 1024,
+                "select m.SDO_LAYER_GTYPE "
+                "from all_sdo_index_metadata m, all_sdo_index_info i "
+                "where i.index_name = m.sdo_index_name "
+                "and i.sdo_index_owner = m.sdo_index_owner "
+                "and i.table_name = upper('%s')",
+                osTableName.c_str() );
+
+            oDimStatement2.Execute( oDimCmd2.GetString() );
+
+            papszResult2 = oDimStatement2.SimpleFetchRow();
+
+            if( CSLCount( papszResult2 ) > 0 )
+            {
+                const char* pszLayerGType = papszResult2[0];
+                OGRwkbGeometryType eGeomType = wkbUnknown;
+                if( EQUAL(pszLayerGType, "POINT") )
+                    eGeomType = wkbPoint;
+                else if( EQUAL(pszLayerGType, "LINE") )
+                    eGeomType = wkbLineString;
+                else if( EQUAL(pszLayerGType, "POLYGON") )
+                    eGeomType = wkbPolygon;
+                else if( EQUAL(pszLayerGType, "MULTIPOINT") )
+                    eGeomType = wkbMultiPoint;
+                else if( EQUAL(pszLayerGType, "MULTILINE") )
+                    eGeomType = wkbMultiLineString;
+                else if( EQUAL(pszLayerGType, "MULTIPOLYGON") )
+                    eGeomType = wkbMultiPolygon;
+                else if( !EQUAL(pszLayerGType, "COLLECTION") )
+                    CPLDebug("OCI", "LAYER_GTYPE = %s", pszLayerGType );
+                if( iDim == 3 )
+                    eGeomType = wkbSetZ(eGeomType);
+                poDefn->GetGeomFieldDefn(0)->SetType( eGeomType );
+                poDefn->GetGeomFieldDefn(0)->SetNullable( bGeomFieldNullable );
+            }
+            else
+            {
+                // we want to clear any errors to avoid confusing the application.
+                CPLErrorReset();
+            }
+        }
+    }
+    else
+    {
+        poDefn->SetGeomType(wkbNone);
     }
 
     bValidTable = TRUE;
@@ -498,7 +589,7 @@ void OGROCITableLayer::BuildFullQueryStatement()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGROCITableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGROCITableLayer::GetFeature( GIntBig nFeatureId )
 
 {
 
@@ -525,7 +616,7 @@ OGRFeature *OGROCITableLayer::GetFeature( long nFeatureId )
     oCmd.Append( poFeatureDefn->GetName() );
     oCmd.Append( " " );
     oCmd.Appendf( 50+strlen(pszFIDName), 
-                  " WHERE \"%s\" = %ld ", 
+                  " WHERE \"%s\" = " CPL_FRMT_GIB " ", 
                   pszFIDName, nFeatureId );
 
 /* -------------------------------------------------------------------- */
@@ -555,7 +646,7 @@ OGRFeature *OGROCITableLayer::GetFeature( long nFeatureId )
     if( poFeature != NULL && poFeature->GetFID() != nFeatureId )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
-                  "OGROCITableLayer::GetFeature(%ld) ... query returned feature %ld instead!",
+                  "OGROCITableLayer::GetFeature(" CPL_FRMT_GIB ") ... query returned feature " CPL_FRMT_GIB " instead!",
                   nFeatureId, poFeature->GetFID() );
         delete poFeature;
         return NULL;
@@ -698,7 +789,7 @@ OGRErr OGROCITableLayer::SetAttributeFilter( const char *pszQuery )
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /*                                                                      */
 /*      We implement SetFeature() by deleting the existing row (if      */
 /*      it exists), and then using CreateFeature() to write it out      */
@@ -706,7 +797,7 @@ OGRErr OGROCITableLayer::SetAttributeFilter( const char *pszQuery )
 /*      existing FID if possible.                                       */
 /************************************************************************/
 
-OGRErr OGROCITableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGROCITableLayer::ISetFeature( OGRFeature *poFeature )
 
 {
 /* -------------------------------------------------------------------- */
@@ -715,7 +806,7 @@ OGRErr OGROCITableLayer::SetFeature( OGRFeature *poFeature )
     if( pszFIDName == NULL )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
-                  "OGROCITableLayer::SetFeature(%ld) failed because there is "
+                  "OGROCITableLayer::ISetFeature(" CPL_FRMT_GIB ") failed because there is "
                   "no apparent FID column on table %s.",
                   poFeature->GetFID(), 
                   poFeatureDefn->GetName() );
@@ -726,27 +817,15 @@ OGRErr OGROCITableLayer::SetFeature( OGRFeature *poFeature )
     if( poFeature->GetFID() == OGRNullFID )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
-                  "OGROCITableLayer::SetFeature(%ld) failed because the feature "
+                  "OGROCITableLayer::ISetFeature(" CPL_FRMT_GIB ") failed because the feature "
                   "has no FID!", poFeature->GetFID() );
 
         return OGRERR_FAILURE;
     }
 
-/* -------------------------------------------------------------------- */
-/*      Prepare the delete command, and execute.  We don't check the    */
-/*      error result of the execute, since attempting to Set a          */
-/*      non-existing feature may be OK.                                 */
-/* -------------------------------------------------------------------- */
-    OGROCIStringBuf     oCmdText;
-    OGROCIStatement     oCmdStatement( poDS->GetSession() );
-
-    oCmdText.Appendf( strlen(poFeatureDefn->GetName())+strlen(pszFIDName)+100,
-                      "DELETE FROM %s WHERE \"%s\" = %d",
-                      poFeatureDefn->GetName(), 
-                      pszFIDName, 
-                      poFeature->GetFID() );
-
-    oCmdStatement.Execute( oCmdText.GetString() );
+    OGRErr eErr = DeleteFeature(poFeature->GetFID());
+    if( eErr != OGRERR_NONE )
+        return eErr;
 
     return CreateFeature( poFeature );
 }
@@ -755,7 +834,7 @@ OGRErr OGROCITableLayer::SetFeature( OGRFeature *poFeature )
 /*                           DeleteFeature()                            */
 /************************************************************************/
 
-OGRErr OGROCITableLayer::DeleteFeature( long nFID )
+OGRErr OGROCITableLayer::DeleteFeature( GIntBig nFID )
 
 {
 /* -------------------------------------------------------------------- */
@@ -764,7 +843,7 @@ OGRErr OGROCITableLayer::DeleteFeature( long nFID )
     if( pszFIDName == NULL )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
-                  "OGROCITableLayer::DeleteFeature(%ld) failed because there is "
+                  "OGROCITableLayer::DeleteFeature(" CPL_FRMT_GIB ") failed because there is "
                   "no apparent FID column on table %s.",
                   nFID, 
                   poFeatureDefn->GetName() );
@@ -775,7 +854,7 @@ OGRErr OGROCITableLayer::DeleteFeature( long nFID )
     if( nFID == OGRNullFID )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
-                  "OGROCITableLayer::DeleteFeature(%ld) failed for Null FID", 
+                  "OGROCITableLayer::DeleteFeature(" CPL_FRMT_GIB ") failed for Null FID", 
                   nFID );
 
         return OGRERR_FAILURE;
@@ -790,22 +869,22 @@ OGRErr OGROCITableLayer::DeleteFeature( long nFID )
     OGROCIStatement     oCmdStatement( poDS->GetSession() );
 
     oCmdText.Appendf( strlen(poFeatureDefn->GetName())+strlen(pszFIDName)+100,
-                      "DELETE FROM %s WHERE \"%s\" = %d",
+                      "DELETE FROM %s WHERE \"%s\" = " CPL_FRMT_GIB,
                       poFeatureDefn->GetName(), 
                       pszFIDName, 
                       nFID );
 
     if( oCmdStatement.Execute( oCmdText.GetString() ) == CE_None )
-        return OGRERR_NONE;
+        return (oCmdStatement.GetAffectedRows() > 0) ? OGRERR_NONE : OGRERR_NON_EXISTING_FEATURE;
     else
         return OGRERR_FAILURE;
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGROCITableLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGROCITableLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
 /* -------------------------------------------------------------------- */
@@ -910,12 +989,12 @@ OGRErr OGROCITableLayer::UnboundCreateFeature( OGRFeature *poFeature )
             OGRPoint *poPoint = (OGRPoint *) poGeometry;
 
             if( nDimension == 2 )
-                sprintf( szSDO_GEOMETRY,
+                CPLsprintf( szSDO_GEOMETRY,
                          "%s(%d,%s,MDSYS.SDO_POINT_TYPE(%.16g,%.16g,0),NULL,NULL)",
                          SDO_GEOMETRY, 2001, szSRID, 
                          poPoint->getX(), poPoint->getY() );
             else
-                sprintf( szSDO_GEOMETRY, 
+                CPLsprintf( szSDO_GEOMETRY, 
                          "%s(%d,%s,MDSYS.SDO_POINT_TYPE(%.16g,%.16g,%.16g),NULL,NULL)",
                          SDO_GEOMETRY, 3001, szSRID, 
                          poPoint->getX(), poPoint->getY(), poPoint->getZ() );
@@ -951,7 +1030,7 @@ OGRErr OGROCITableLayer::UnboundCreateFeature( OGRFeature *poFeature )
 
     if( pszFIDName != NULL )
     {
-        long  nFID;
+        GIntBig  nFID;
 
         if( bNeedComma )
             strcat( pszCommand+nOffset, ", " );
@@ -969,7 +1048,7 @@ OGRErr OGROCITableLayer::UnboundCreateFeature( OGRFeature *poFeature )
             nFID = iNextFIDToWrite++;
             poFeature->SetFID( nFID );
         }
-        sprintf( pszCommand+nOffset, "%ld", nFID );
+        sprintf( pszCommand+nOffset, CPL_FRMT_GIB, nFID );
     }
 
 /* -------------------------------------------------------------------- */
@@ -996,6 +1075,7 @@ OGRErr OGROCITableLayer::UnboundCreateFeature( OGRFeature *poFeature )
         }
         
         if( poFldDefn->GetType() == OFTInteger 
+            || poFldDefn->GetType() == OFTInteger64
             || poFldDefn->GetType() == OFTReal )
         {
             if( poFldDefn->GetWidth() > 0 && bPreservePrecision
@@ -1324,7 +1404,7 @@ int OGROCITableLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGROCITableLayer::GetFeatureCount( int bForce )
+GIntBig OGROCITableLayer::GetFeatureCount( int bForce )
 
 {
 /* -------------------------------------------------------------------- */
@@ -1358,7 +1438,7 @@ int OGROCITableLayer::GetFeatureCount( int bForce )
         return OGROCILayer::GetFeatureCount( bForce );
     }
     
-    return atoi(papszResult[0]);
+    return CPLAtoGIntBig(papszResult[0]);
 }
 
 /************************************************************************/
@@ -1532,95 +1612,10 @@ void OGROCITableLayer::UpdateLayerExtents()
 }
 
 /************************************************************************/
-/*                          FinalizeNewLayer()                          */
-/*                                                                      */
-/*      Our main job here is to update the USER_SDO_GEOM_METADATA       */
-/*      table to include the correct array of dimension object with     */
-/*      the appropriate extents for this layer.  We may also do         */
-/*      spatial indexing at this point.                                 */
+/*                   AllocAndBindForWrite()                             */
 /************************************************************************/
 
-void OGROCITableLayer::FinalizeNewLayer()
-
-{
-    UpdateLayerExtents();
-
-/* -------------------------------------------------------------------- */
-/*      For new layers we try to create a spatial index.                */
-/* -------------------------------------------------------------------- */
-    if( bNewLayer && sExtent.IsInit() )
-    {
-/* -------------------------------------------------------------------- */
-/*      If the user has disabled INDEX support then don't create the    */
-/*      index.                                                          */
-/* -------------------------------------------------------------------- */
-        if( !CSLFetchBoolean( papszOptions, "INDEX", TRUE ) )
-            return;
-
-/* -------------------------------------------------------------------- */
-/*      Establish an index name.  For some reason Oracle 8.1.7 does     */
-/*      not support spatial index names longer than 18 characters so    */
-/*      we magic up an index name if it would be too long.              */
-/* -------------------------------------------------------------------- */
-        char  szIndexName[20];
-
-        if( strlen(poFeatureDefn->GetName()) < 15 )
-            sprintf( szIndexName, "%s_idx", poFeatureDefn->GetName() );
-        else if( strlen(poFeatureDefn->GetName()) < 17 )
-            sprintf( szIndexName, "%si", poFeatureDefn->GetName() );
-        else
-        {
-            int i, nHash = 0;
-            const char *pszSrcName = poFeatureDefn->GetName();
-
-            for( i = 0; pszSrcName[i] != '\0'; i++ )
-                nHash = (nHash + i * pszSrcName[i]) % 987651;
-        
-            sprintf( szIndexName, "OSI_%d", nHash );
-        }
-
-        poDS->GetSession()->CleanName( szIndexName );
-
-/* -------------------------------------------------------------------- */
-/*      Try creating an index on the table now.  Use a simple 5         */
-/*      level quadtree based index.  Would R-tree be a better default?  */
-/* -------------------------------------------------------------------- */
-        OGROCIStringBuf  sIndexCmd;
-        OGROCIStatement oExecStatement( poDS->GetSession() );
-    
-
-        sIndexCmd.Appendf( 10000, "CREATE INDEX \"%s\" ON %s(\"%s\") "
-                           "INDEXTYPE IS MDSYS.SPATIAL_INDEX ",
-                           szIndexName, 
-                           poFeatureDefn->GetName(), 
-                           pszGeomName );
-
-        if( CSLFetchNameValue( papszOptions, "INDEX_PARAMETERS" ) != NULL )
-        {
-            sIndexCmd.Append( " PARAMETERS( '" );
-            sIndexCmd.Append( CSLFetchNameValue(papszOptions,"INDEX_PARAMETERS") );
-            sIndexCmd.Append( "' )" );
-        }
-
-        if( oExecStatement.Execute( sIndexCmd.GetString() ) != CE_None )
-        {
-            CPLString osDropCommand;
-            osDropCommand.Printf( "DROP INDEX \"%s\"", szIndexName );
-            oExecStatement.Execute( osDropCommand );
-        }
-    }  
-}
-
-/************************************************************************/
-/*                   AllocAndBindForWrite(int eType)                    */
-/************************************************************************/
-
-/* -------------------------------------------------------------------- */
-/*      PJH: modified with geometry type parameter so as not to         */
-/*      attempt to write geometry if there is none to write as          */
-/*      Oracle will default the value of the column to Null.            */
-/* -------------------------------------------------------------------- */
-int OGROCITableLayer::AllocAndBindForWrite(int eType)
+int OGROCITableLayer::AllocAndBindForWrite()
 
 {
     OGROCISession      *poSession = poDS->GetSession();
@@ -1644,7 +1639,7 @@ int OGROCITableLayer::AllocAndBindForWrite(int eType)
     oCmdBuf.Append( "\"(\"" );
     oCmdBuf.Append( pszFIDName );
 
-    if (eType != wkbNone)
+    if (GetGeomType() != wkbNone)
     {
        oCmdBuf.Append( "\",\"" );
        oCmdBuf.Append( pszGeomName );
@@ -1658,7 +1653,7 @@ int OGROCITableLayer::AllocAndBindForWrite(int eType)
 
     oCmdBuf.Append( "\") VALUES ( :fid " );
 
-    if (eType != wkbNone)
+    if (GetGeomType() != wkbNone)
         oCmdBuf.Append( ", :geometry" );
 
     for( i = 0; i < poFeatureDefn->GetFieldCount(); i++ )
@@ -1678,7 +1673,7 @@ int OGROCITableLayer::AllocAndBindForWrite(int eType)
 /* -------------------------------------------------------------------- */
 /*      Setup geometry indicator information.                           */
 /* -------------------------------------------------------------------- */
-    if (eType != wkbNone)
+    if (GetGeomType() != wkbNone)
     {
         pasWriteGeomInd = (SDO_GEOMETRY_ind *)
             CPLCalloc(sizeof(SDO_GEOMETRY_ind),nWriteCacheMax);
@@ -1774,6 +1769,16 @@ int OGROCITableLayer::AllocAndBindForWrite(int eType)
                     sizeof(int), SQLT_INT, papaeWriteFieldInd[i] ) != CE_None )
                 return FALSE;
         }
+        else if( poFldDefn->GetType() == OFTInteger64 )
+        {
+            papWriteFields[i] = 
+                (void *) CPLCalloc( sizeof(GIntBig), nWriteCacheMax );
+
+            if( poBoundStatement->BindScalar( 
+                    szFieldPlaceholderName, papWriteFields[i],
+                    sizeof(GIntBig), SQLT_INT, papaeWriteFieldInd[i] ) != CE_None )
+                return FALSE;
+        }
         else if( poFldDefn->GetType() == OFTReal )
         {
             papWriteFields[i] = (void *) CPLCalloc( sizeof(double), 
@@ -1817,26 +1822,29 @@ OGRErr OGROCITableLayer::BoundCreateFeature( OGRFeature *poFeature )
     OGRErr             eErr;
     OCINumber          oci_number; 
 
+    /* If an unset field has a default value, the current implementation */
+    /* of BoundCreateFeature() doesn't work. */
+    for( i = 0; i < poFeatureDefn->GetFieldCount(); i++ )
+    { 
+        if( !poFeature->IsFieldSet( i ) &&
+            poFeature->GetFieldDefnRef(i)->GetDefault() != NULL )
+        {
+            FlushPendingFeatures();
+            return UnboundCreateFeature(poFeature);
+        }
+    }
+
+    if( !poFeature->Validate( OGR_F_VAL_NULL | OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT, TRUE ) )
+        return OGRERR_FAILURE;
+
     iCache = nWriteCacheUsed;
 
 /* -------------------------------------------------------------------- */
-/*  PJH: Initiate the Insert, passing the geometry type as there is no  */
-/*  need to give null geometry to Oracle                                */
+/*  Initiate the Insert                                                 */
 /* -------------------------------------------------------------------- */
     if( nWriteCacheMax == 0 )
     {
-        int eType;
-        if( poFeature->GetGeometryRef() == NULL )
-        {
-            eType = wkbNone;
-        }
-        else
-        {
-            eType = 1; /* PJH: properly, this should be the gType from the geometry */
-                       /* but the actual value does not matter, so long as it is    */
-                       /* not wkbNone                                               */
-        }
-        if( !AllocAndBindForWrite(eType) )
+        if( !AllocAndBindForWrite() )
             return OGRERR_FAILURE;
     }
 
@@ -1953,6 +1961,16 @@ OGRErr OGROCITableLayer::BoundCreateFeature( OGRFeature *poFeature )
                           (uword)sizeof(int), OCI_NUMBER_SIGNED,
                           &(psGeom->sdo_gtype) );
     }
+    else if( pasWriteGeomInd != NULL )
+    {
+        SDO_GEOMETRY_ind  *psInd  = pasWriteGeomInd + iCache;
+        psInd->_atomic = OCI_IND_NULL;
+        psInd->sdo_srid = OCI_IND_NULL;
+        psInd->sdo_point._atomic = OCI_IND_NULL;
+        psInd->sdo_elem_info = OCI_IND_NULL;
+        psInd->sdo_ordinates = OCI_IND_NULL;
+        psInd->sdo_gtype = OCI_IND_NULL;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Set the FID.                                                    */
@@ -1987,6 +2005,10 @@ OGRErr OGROCITableLayer::BoundCreateFeature( OGRFeature *poFeature )
         if( poFldDefn->GetType() == OFTInteger )
             ((int *) (papWriteFields[i]))[iCache] = 
                 poFeature->GetFieldAsInteger( i );
+
+        else if( poFldDefn->GetType() == OFTInteger64 )
+            ((GIntBig *) (papWriteFields[i]))[iCache] = 
+                poFeature->GetFieldAsInteger64( i );
 
         else if( poFldDefn->GetType() == OFTReal )
             ((double *) (papWriteFields[i]))[iCache] = 
@@ -2074,6 +2096,8 @@ OGRErr OGROCITableLayer::SyncToDisk()
 
     CreateSpatialIndex();
 
+    bNewLayer = FALSE;
+
     return eErr;
 }
 
@@ -2093,7 +2117,8 @@ void OGROCITableLayer::CreateSpatialIndex()
 /*      If the user has disabled INDEX support then don't create the    */
 /*      index.                                                          */
 /* -------------------------------------------------------------------- */
-        if( !CSLFetchBoolean( papszOptions, "INDEX", TRUE ) )
+        if( !CSLFetchBoolean( papszOptions, "SPATIAL_INDEX", TRUE ) ||
+            !CSLFetchBoolean( papszOptions, "INDEX", TRUE ) )
             return;
 
 /* -------------------------------------------------------------------- */
@@ -2134,10 +2159,37 @@ void OGROCITableLayer::CreateSpatialIndex()
                            poFeatureDefn->GetName(),
                            pszGeomName );
 
-        if( CSLFetchNameValue( papszOptions, "INDEX_PARAMETERS" ) != NULL )
+        int bAddLayerGType = CSLTestBoolean(
+            CSLFetchNameValueDef( papszOptions, "ADD_LAYER_GTYPE", "YES") ) &&
+            GetGeomType() != wkbUnknown;
+      
+        CPLString osParams(CSLFetchNameValueDef(papszOptions,"INDEX_PARAMETERS", ""));
+        if( bAddLayerGType || osParams.size() != 0 )
         {
             sIndexCmd.Append( " PARAMETERS( '" );
-            sIndexCmd.Append( CSLFetchNameValue(papszOptions,"INDEX_PARAMETERS") );
+            if( osParams.size() != 0 )
+                sIndexCmd.Append( osParams.c_str() );
+            if( bAddLayerGType &&
+                osParams.ifind("LAYER_GTYPE") == std::string::npos )
+            {
+                if( osParams.size() != 0 )
+                    sIndexCmd.Append( ", " );
+                sIndexCmd.Append( "LAYER_GTYPE=" );
+                if( wkbFlatten(GetGeomType()) == wkbPoint )
+                    sIndexCmd.Append( "POINT" );
+                else if( wkbFlatten(GetGeomType()) == wkbLineString )
+                    sIndexCmd.Append( "LINE" );
+                else if( wkbFlatten(GetGeomType()) == wkbPolygon )
+                    sIndexCmd.Append( "POLYGON" );
+                else if( wkbFlatten(GetGeomType()) == wkbMultiPoint )
+                    sIndexCmd.Append( "MULTIPOINT" );
+                else if( wkbFlatten(GetGeomType()) == wkbMultiLineString )
+                    sIndexCmd.Append( "MULTILINE" );
+                else if( wkbFlatten(GetGeomType()) == wkbMultiPolygon )
+                    sIndexCmd.Append( "MULTIPOLYGON" );
+                else
+                    sIndexCmd.Append( "COLLECTION" );
+            }
             sIndexCmd.Append( "' )" );
         }
 

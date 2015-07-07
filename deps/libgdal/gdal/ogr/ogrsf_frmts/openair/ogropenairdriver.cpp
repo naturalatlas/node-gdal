@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogropenairdriver.cpp 29253 2015-05-27 08:49:16Z rouault $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirDriver.
@@ -30,39 +30,67 @@
 #include "ogr_openair.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogropenairdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogropenairdriver.cpp 29253 2015-05-27 08:49:16Z rouault $");
 
 extern "C" void RegisterOGROpenAir();
-
-/************************************************************************/
-/*                         ~OGROpenAirDriver()                          */
-/************************************************************************/
-
-OGROpenAirDriver::~OGROpenAirDriver()
-
-{
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGROpenAirDriver::GetName()
-
-{
-    return "OpenAir";
-}
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGROpenAirDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
+    if( poOpenInfo->eAccess == GA_Update ||
+        poOpenInfo->fpL == NULL ||
+        !poOpenInfo->TryToIngest(10000) )
+        return NULL;
+
+    int bIsOpenAir = (strstr((const char*)poOpenInfo->pabyHeader, "\nAC ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAN ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAL ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAH") != NULL);
+    if( !bIsOpenAir )
+    {
+        /* Some files such http://soaringweb.org/Airspace/CZ/CZ_combined_2014_05_01.txt */
+        /* have very long comments in the header, so we will have to check */
+        /* further, but only do this is we have a hint that the file might be */
+        /* a candidate */
+        int nLen = poOpenInfo->nHeaderBytes;
+        if( nLen < 10000 )
+            return NULL;
+        /* Check the 'Airspace' word in the header */
+        if( strstr((const char*)poOpenInfo->pabyHeader, "Airspace") == NULL )
+            return NULL;
+        // Check that the header is at least UTF-8
+        // but do not take into account partial UTF-8 characters at the end
+        int nTruncated = 0;
+        while(nLen > 0)
+        {
+            if( (poOpenInfo->pabyHeader[nLen-1] & 0xc0) != 0x80 )
+            {
+                break;
+            }
+            nLen --;
+            nTruncated ++;
+            if( nTruncated == 7 )
+                return NULL;
+        }
+        if( !CPLIsUTF8((const char*)poOpenInfo->pabyHeader, nLen) )
+            return NULL;
+        if( !poOpenInfo->TryToIngest(30000) )
+            return NULL;
+        bIsOpenAir = (strstr((const char*)poOpenInfo->pabyHeader, "\nAC ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAN ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAL ") != NULL &&
+                  strstr((const char*)poOpenInfo->pabyHeader, "\nAH") != NULL);
+        if( !bIsOpenAir )
+            return NULL;
+    }
+
     OGROpenAirDataSource   *poDS = new OGROpenAirDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate ) )
+    if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
         poDS = NULL;
@@ -72,21 +100,30 @@ OGRDataSource *OGROpenAirDriver::Open( const char * pszFilename, int bUpdate )
 }
 
 /************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGROpenAirDriver::TestCapability( CPL_UNUSED const char * pszCap )
-{
-    return FALSE;
-}
-
-/************************************************************************/
-/*                           RegisterOGROpenAir()                           */
+/*                         RegisterOGROpenAir()                         */
 /************************************************************************/
 
 void RegisterOGROpenAir()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGROpenAirDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "OpenAir" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "OpenAir" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "OpenAir" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_openair.html" );
+
+        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+
+        poDriver->pfnOpen = OGROpenAirDriverOpen;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
 

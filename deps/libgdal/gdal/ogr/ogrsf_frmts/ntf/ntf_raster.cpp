@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntf_raster.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ntf_raster.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  NTF Translator
  * Purpose:  Handle UK Ordnance Survey Raster DTM products.  Includes some
@@ -31,7 +31,7 @@
 
 #include "ntf.h"
 
-CPL_CVSID("$Id: ntf_raster.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ntf_raster.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -346,7 +346,7 @@ OGRFeature *OGRNTFRasterLayer::GetNextFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRNTFRasterLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRNTFRasterLayer::GetFeature( GIntBig nFeatureId )
 
 {
     int         iReqColumn, iReqRow;
@@ -363,8 +363,8 @@ OGRFeature *OGRNTFRasterLayer::GetFeature( long nFeatureId )
 /* -------------------------------------------------------------------- */
 /*      Do we need to load a different column.                          */
 /* -------------------------------------------------------------------- */
-    iReqColumn = (nFeatureId - 1) / poReader->GetRasterYSize();
-    iReqRow = nFeatureId - iReqColumn * poReader->GetRasterXSize() - 1;
+    iReqColumn = ((int)nFeatureId - 1) / poReader->GetRasterYSize();
+    iReqRow = (int)nFeatureId - iReqColumn * poReader->GetRasterXSize() - 1;
     
     if( iReqColumn != iColumnOffset )
     {
@@ -401,7 +401,7 @@ OGRFeature *OGRNTFRasterLayer::GetFeature( long nFeatureId )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRNTFRasterLayer::GetFeatureCount( CPL_UNUSED int bForce )
+GIntBig OGRNTFRasterLayer::GetFeatureCount( CPL_UNUSED int bForce )
 {
     return nFeatureCount;
 }
@@ -429,5 +429,3 @@ int OGRNTFRasterLayer::TestCapability( const char * pszCap )
     else 
         return FALSE;
 }
-
-

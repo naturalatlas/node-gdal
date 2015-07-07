@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgftdatasource.cpp 28939 2015-04-17 19:01:24Z rouault $
  *
  * Project:  Google Fusion Table Translator
  * Purpose:  Implements OGRGFTDataSource class
@@ -29,7 +29,7 @@
 
 #include "ogr_gft.h"
 
-CPL_CVSID("$Id: ogrgftdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgftdatasource.cpp 28939 2015-04-17 19:01:24Z rouault $");
 
 #define GDAL_API_KEY "AIzaSyA_2h1_wXMOLHNSVeo-jf1ACME-M1XMgP0"
 #define FUSION_TABLE_SCOPE "https://www.googleapis.com/Fauth/fusiontables"
@@ -65,7 +65,8 @@ OGRGFTDataSource::~OGRGFTDataSource()
 
     if (bMustCleanPersistant)
     {
-        char** papszOptions = CSLAddString(NULL, CPLSPrintf("CLOSE_PERSISTENT=GFT:%p", this));
+        char** papszOptions = NULL;
+        papszOptions = CSLSetNameValue(papszOptions, "CLOSE_PERSISTENT", CPLSPrintf("GFT:%p", this));
         CPLHTTPFetch( GetAPIURL(), papszOptions);
         CSLDestroy(papszOptions);
     }
@@ -174,9 +175,6 @@ CPLString OGRGFTGetOptionValue(const char* pszFilename,
 int OGRGFTDataSource::Open( const char * pszFilename, int bUpdateIn)
 
 {
-    if (!EQUALN(pszFilename, "GFT:", 4))
-        return FALSE;
-
     bReadWrite = bUpdateIn;
 
     pszName = CPLStrdup( pszFilename );
@@ -301,13 +299,13 @@ const char*  OGRGFTDataSource::GetAPIURL() const
 }
 
 /************************************************************************/
-/*                           CreateLayer()                              */
+/*                          ICreateLayer()                              */
 /************************************************************************/
 
-OGRLayer   *OGRGFTDataSource::CreateLayer( const char *pszName,
-                                           CPL_UNUSED OGRSpatialReference *poSpatialRef,
-                                           OGRwkbGeometryType eGType,
-                                           char ** papszOptions )
+OGRLayer   *OGRGFTDataSource::ICreateLayer( const char *pszName,
+                                            CPL_UNUSED OGRSpatialReference *poSpatialRef,
+                                            OGRwkbGeometryType eGType,
+                                            char ** papszOptions )
 {
     if (!bReadWrite)
     {

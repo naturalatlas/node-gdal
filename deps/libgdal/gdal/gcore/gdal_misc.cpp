@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_misc.cpp 27121 2014-04-03 22:08:55Z rouault $
+ * $Id: gdal_misc.cpp 29326 2015-06-10 20:36:31Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Free standing functions for GDAL.
@@ -35,9 +35,10 @@
 #include <ctype.h>
 #include <string>
 
-CPL_CVSID("$Id: gdal_misc.cpp 27121 2014-04-03 22:08:55Z rouault $");
+CPL_CVSID("$Id: gdal_misc.cpp 29326 2015-06-10 20:36:31Z rouault $");
 
 #include "ogr_spatialref.h"
+#include "gdal_mdreader.h"
 
 /************************************************************************/
 /*                           __pure_virtual()                           */
@@ -956,7 +957,7 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
     {
         if ( EQUALN(papszLines[iLine], "MSF,", 4) )
         {
-            dfMSF = atof(papszLines[iLine] + 4);
+            dfMSF = CPLAtof(papszLines[iLine] + 4);
             if (dfMSF <= 0.01) /* Suspicious values */
             {
                 CPLDebug("OZI", "Suspicious MSF value : %s", papszLines[iLine]);
@@ -1262,7 +1263,7 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
 /*      possible.  Otherwise we will need to use them as GCPs.          */
 /* -------------------------------------------------------------------- */
     if( !GDALGCPsToGeoTransform( nCoordinateCount, asGCPs, padfGeoTransform, 
-                                 FALSE ) )
+                                 CSLTestBoolean(CPLGetConfigOption("TAB_APPROX_GEOTRANSFORM", "NO")) ) )
     {
         if (pnGCPCount && ppasGCPs)
         {
@@ -1316,6 +1317,9 @@ int GDALReadTabFile2( const char * pszBaseFilename,
 
     if (ppszTabFileNameOut)
         *ppszTabFileNameOut = NULL;
+
+    if( !GDALCanFileAcceptSidecarFile(pszBaseFilename) )
+        return FALSE;
 
     pszTAB = CPLResetExtension( pszBaseFilename, "tab" );
 
@@ -1514,6 +1518,9 @@ int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
 
     if (ppszWorldFileNameOut)
         *ppszWorldFileNameOut = NULL;
+
+    if( !GDALCanFileAcceptSidecarFile(pszBaseFilename) )
+        return FALSE;
 
 /* -------------------------------------------------------------------- */
 /*      If we aren't given an extension, try both the unix and          */
@@ -2143,10 +2150,12 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
 /* -------------------------------------------------------------------- */
     if( !bApproxOK )
     {
-        double dfPixelSize = ABS(padfGeoTransform[1]) 
+        // FIXME? Not sure if it is the more accurate way of computing
+        // pixel size
+        double dfPixelSize = 0.5 * (ABS(padfGeoTransform[1]) 
             + ABS(padfGeoTransform[2])
             + ABS(padfGeoTransform[4])
-            + ABS(padfGeoTransform[5]);
+            + ABS(padfGeoTransform[5]));
 
         for( i = 0; i < nGCPCount; i++ )
         {
@@ -2165,7 +2174,11 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
 
             if( ABS(dfErrorX) > 0.25 * dfPixelSize 
                 || ABS(dfErrorY) > 0.25 * dfPixelSize )
+            {
+                CPLDebug("GDAL", "dfErrorX/dfPixelSize = %.2f, dfErrorY/dfPixelSize = %.2f",
+                         ABS(dfErrorX)/dfPixelSize, ABS(dfErrorY)/dfPixelSize);
                 return FALSE;
+            }
         }
     }
 
@@ -2269,7 +2282,9 @@ void GDALComposeGeoTransforms(const double *padfGT1, const double *padfGT2,
  *
  * @param nArgc number of values in the argument list.
  * @param ppapszArgv pointer to the argument list array (will be updated in place).
- * @param nOptions unused for now.
+ * @param nOptions a or-able combination of GDAL_OF_RASTER and GDAL_OF_VECTOR
+ *                 to determine which drivers should be displayed by --formats.
+ *                 If set to 0, GDAL_OF_RASTER is assumed.
  *
  * @return updated nArgc argument count.  Return of 0 requests terminate 
  * without error, return of -1 requests exit with error code.
@@ -2283,8 +2298,6 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
     int  iArg;
     char **papszArgv = *ppapszArgv;
 
-    (void) nOptions;
-    
 /* -------------------------------------------------------------------- */
 /*      Preserve the program name.                                      */
 /* -------------------------------------------------------------------- */
@@ -2475,35 +2488,59 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
         else if( EQUAL(papszArgv[iArg], "--formats") )
         {
             int iDr;
+            
+            if( nOptions == 0 )
+                nOptions = GDAL_OF_RASTER;
 
             printf( "Supported Formats:\n" );
             for( iDr = 0; iDr < GDALGetDriverCount(); iDr++ )
             {
                 GDALDriverH hDriver = GDALGetDriver(iDr);
-                const char *pszRWFlag, *pszVirtualIO, *pszSubdatasets;
-                
-                if( GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATE, NULL ) )
-                    pszRWFlag = "rw+";
-                else if( GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATECOPY, 
-                                              NULL ) )
-                    pszRWFlag = "rw";
+
+                const char *pszRFlag = "", *pszWFlag, *pszVirtualIO, *pszSubdatasets, *pszKind;
+                char** papszMD = GDALGetMetadata( hDriver, NULL );
+
+                if( nOptions == GDAL_OF_RASTER &&
+                    !CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+                    continue;
+                if( nOptions == GDAL_OF_VECTOR &&
+                    !CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+                    continue;
+
+                if( CSLFetchBoolean( papszMD, GDAL_DCAP_OPEN, FALSE ) )
+                    pszRFlag = "r";
+
+                if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATE, FALSE ) )
+                    pszWFlag = "w+";
+                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATECOPY, FALSE ) )
+                    pszWFlag = "w";
                 else
-                    pszRWFlag = "ro";
-                
-                if( GDALGetMetadataItem( hDriver, GDAL_DCAP_VIRTUALIO, NULL) )
+                    pszWFlag = "o";
+
+                if( CSLFetchBoolean( papszMD, GDAL_DCAP_VIRTUALIO, FALSE ) )
                     pszVirtualIO = "v";
                 else
                     pszVirtualIO = "";
 
-                pszSubdatasets = GDALGetMetadataItem( hDriver, GDAL_DMD_SUBDATASETS, NULL );
-                if( pszSubdatasets && CSLTestBoolean( pszSubdatasets ) )
+                if( CSLFetchBoolean( papszMD, GDAL_DMD_SUBDATASETS, FALSE ) )
                     pszSubdatasets = "s";
                 else
                     pszSubdatasets = "";
 
-                printf( "  %s (%s%s%s): %s\n",
+                if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) &&
+                    CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ))
+                    pszKind = "raster,vector";
+                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+                    pszKind = "raster";
+                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+                    pszKind = "vector";
+                else
+                    pszKind = "unknown kind";
+
+                printf( "  %s -%s- (%s%s%s%s): %s\n",
                         GDALGetDriverShortName( hDriver ),
-                        pszRWFlag, pszVirtualIO, pszSubdatasets,
+                        pszKind,
+                        pszRFlag, pszWFlag, pszVirtualIO, pszSubdatasets,
                         GDALGetDriverLongName( hDriver ) );
             }
 
@@ -2544,10 +2581,16 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             printf( "  Long Name: %s\n", GDALGetDriverLongName( hDriver ) );
 
             papszMD = GDALGetMetadata( hDriver, NULL );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+                printf( "  Supports: Raster\n" );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+                printf( "  Supports: Vector\n" );
 
-            if( CSLFetchNameValue( papszMD, GDAL_DMD_EXTENSION ) )
-                printf( "  Extension: %s\n", 
-                        CSLFetchNameValue( papszMD, GDAL_DMD_EXTENSION ) );
+            const char* pszExt = CSLFetchNameValue( papszMD, GDAL_DMD_EXTENSIONS );
+            if( pszExt != NULL )
+                printf( "  Extension%s: %s\n", (strchr(pszExt, ' ') ? "s" : ""),
+                        pszExt );
+
             if( CSLFetchNameValue( papszMD, GDAL_DMD_MIMETYPE ) )
                 printf( "  Mime Type: %s\n", 
                         CSLFetchNameValue( papszMD, GDAL_DMD_MIMETYPE ) );
@@ -2557,6 +2600,8 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             
             if( CSLFetchBoolean( papszMD, GDAL_DMD_SUBDATASETS, FALSE ) )
                 printf( "  Supports: Subdatasets\n" );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_OPEN, FALSE ) )
+                printf( "  Supports: Open() - Open existing dataset.\n" );
             if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATE, FALSE ) )
                 printf( "  Supports: Create() - Create writeable dataset.\n" );
             if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATECOPY, FALSE ) )
@@ -2566,6 +2611,15 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONDATATYPES ) )
                 printf( "  Creation Datatypes: %s\n",
                         CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONDATATYPES ) );
+            if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATATYPES ) )
+                printf( "  Creation Field Datatypes: %s\n",
+                        CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATATYPES ) );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_NOTNULL_FIELDS, FALSE ) )
+                printf( "  Supports: Creating fields with NOT NULL constraint.\n" );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_DEFAULT_FIELDS, FALSE ) )
+                printf( "  Supports: Creating fields with DEFAULT values.\n" );
+            if( CSLFetchBoolean( papszMD, GDAL_DCAP_NOTNULL_GEOMFIELDS, FALSE ) )
+                printf( "  Supports: Creating geometry fields with NOT NULL constraint.\n" );
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONOPTIONLIST ) )
             {
                 CPLXMLNode *psCOL = 
@@ -2578,6 +2632,39 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
                 CPLDestroyXMLNode( psCOL );
                 
                 printf( "\n%s\n", pszFormattedXML );
+                CPLFree( pszFormattedXML );
+            }
+            if( CSLFetchNameValue( papszMD, GDAL_DS_LAYER_CREATIONOPTIONLIST ) )
+            {
+                CPLXMLNode *psCOL = 
+                    CPLParseXMLString( 
+                        CSLFetchNameValue( papszMD, 
+                                           GDAL_DS_LAYER_CREATIONOPTIONLIST ) );
+                char *pszFormattedXML = 
+                    CPLSerializeXMLTree( psCOL );
+
+                CPLDestroyXMLNode( psCOL );
+                
+                printf( "\n%s\n", pszFormattedXML );
+                CPLFree( pszFormattedXML );
+            }
+
+            if( CSLFetchNameValue( papszMD, GDAL_DMD_CONNECTION_PREFIX ) )
+                printf( "  Connection prefix: %s\n", 
+                        CSLFetchNameValue( papszMD, GDAL_DMD_CONNECTION_PREFIX ) );
+
+            if( CSLFetchNameValue( papszMD, GDAL_DMD_OPENOPTIONLIST ) )
+            {
+                CPLXMLNode *psCOL = 
+                    CPLParseXMLString( 
+                        CSLFetchNameValue( papszMD, 
+                                           GDAL_DMD_OPENOPTIONLIST ) );
+                char *pszFormattedXML = 
+                    CPLSerializeXMLTree( psCOL );
+
+                CPLDestroyXMLNode( psCOL );
+                
+                printf( "%s\n", pszFormattedXML );
                 CPLFree( pszFormattedXML );
             }
             return 0;
@@ -2690,37 +2777,37 @@ static int _FetchDblFromMD( char **papszMD, const char *pszKey,
 int CPL_STDCALL GDALExtractRPCInfo( char **papszMD, GDALRPCInfo *psRPC )
 
 {
-    if( CSLFetchNameValue( papszMD, "LINE_NUM_COEFF" ) == NULL )
+    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == NULL )
         return FALSE;
 
-    if( CSLFetchNameValue( papszMD, "LINE_NUM_COEFF" ) == NULL 
-        || CSLFetchNameValue( papszMD, "LINE_DEN_COEFF" ) == NULL 
-        || CSLFetchNameValue( papszMD, "SAMP_NUM_COEFF" ) == NULL 
-        || CSLFetchNameValue( papszMD, "SAMP_DEN_COEFF" ) == NULL )
+    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == NULL
+        || CSLFetchNameValue( papszMD, RPC_LINE_DEN_COEFF ) == NULL
+        || CSLFetchNameValue( papszMD, RPC_SAMP_NUM_COEFF ) == NULL
+        || CSLFetchNameValue( papszMD, RPC_SAMP_DEN_COEFF ) == NULL )
     {
         CPLError( CE_Failure, CPLE_AppDefined, 
                  "Some required RPC metadata missing in GDALExtractRPCInfo()");
         return FALSE;
     }
 
-    _FetchDblFromMD( papszMD, "LINE_OFF", &(psRPC->dfLINE_OFF), 1, 0.0 );
-    _FetchDblFromMD( papszMD, "LINE_SCALE", &(psRPC->dfLINE_SCALE), 1, 1.0 );
-    _FetchDblFromMD( papszMD, "SAMP_OFF", &(psRPC->dfSAMP_OFF), 1, 0.0 );
-    _FetchDblFromMD( papszMD, "SAMP_SCALE", &(psRPC->dfSAMP_SCALE), 1, 1.0 );
-    _FetchDblFromMD( papszMD, "HEIGHT_OFF", &(psRPC->dfHEIGHT_OFF), 1, 0.0 );
-    _FetchDblFromMD( papszMD, "HEIGHT_SCALE", &(psRPC->dfHEIGHT_SCALE),1, 1.0);
-    _FetchDblFromMD( papszMD, "LAT_OFF", &(psRPC->dfLAT_OFF), 1, 0.0 );
-    _FetchDblFromMD( papszMD, "LAT_SCALE", &(psRPC->dfLAT_SCALE), 1, 1.0 );
-    _FetchDblFromMD( papszMD, "LONG_OFF", &(psRPC->dfLONG_OFF), 1, 0.0 );
-    _FetchDblFromMD( papszMD, "LONG_SCALE", &(psRPC->dfLONG_SCALE), 1, 1.0 );
+    _FetchDblFromMD( papszMD, RPC_LINE_OFF, &(psRPC->dfLINE_OFF), 1, 0.0 );
+    _FetchDblFromMD( papszMD, RPC_LINE_SCALE, &(psRPC->dfLINE_SCALE), 1, 1.0 );
+    _FetchDblFromMD( papszMD, RPC_SAMP_OFF, &(psRPC->dfSAMP_OFF), 1, 0.0 );
+    _FetchDblFromMD( papszMD, RPC_SAMP_SCALE, &(psRPC->dfSAMP_SCALE), 1, 1.0 );
+    _FetchDblFromMD( papszMD, RPC_HEIGHT_OFF, &(psRPC->dfHEIGHT_OFF), 1, 0.0 );
+    _FetchDblFromMD( papszMD, RPC_HEIGHT_SCALE, &(psRPC->dfHEIGHT_SCALE),1, 1.0);
+    _FetchDblFromMD( papszMD, RPC_LAT_OFF, &(psRPC->dfLAT_OFF), 1, 0.0 );
+    _FetchDblFromMD( papszMD, RPC_LAT_SCALE, &(psRPC->dfLAT_SCALE), 1, 1.0 );
+    _FetchDblFromMD( papszMD, RPC_LONG_OFF, &(psRPC->dfLONG_OFF), 1, 0.0 );
+    _FetchDblFromMD( papszMD, RPC_LONG_SCALE, &(psRPC->dfLONG_SCALE), 1, 1.0 );
 
-    _FetchDblFromMD( papszMD, "LINE_NUM_COEFF", psRPC->adfLINE_NUM_COEFF, 
+    _FetchDblFromMD( papszMD, RPC_LINE_NUM_COEFF, psRPC->adfLINE_NUM_COEFF,
                      20, 0.0 );
-    _FetchDblFromMD( papszMD, "LINE_DEN_COEFF", psRPC->adfLINE_DEN_COEFF, 
+    _FetchDblFromMD( papszMD, RPC_LINE_DEN_COEFF, psRPC->adfLINE_DEN_COEFF,
                      20, 0.0 );
-    _FetchDblFromMD( papszMD, "SAMP_NUM_COEFF", psRPC->adfSAMP_NUM_COEFF, 
+    _FetchDblFromMD( papszMD, RPC_SAMP_NUM_COEFF, psRPC->adfSAMP_NUM_COEFF,
                      20, 0.0 );
-    _FetchDblFromMD( papszMD, "SAMP_DEN_COEFF", psRPC->adfSAMP_DEN_COEFF, 
+    _FetchDblFromMD( papszMD, RPC_SAMP_DEN_COEFF, psRPC->adfSAMP_DEN_COEFF,
                      20, 0.0 );
     
     _FetchDblFromMD( papszMD, "MIN_LONG", &(psRPC->dfMIN_LONG), 1, -180.0 );
@@ -2784,7 +2871,10 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
             /* Avoid causing failure in opening of main file from SWIG bindings */
             /* when auxiliary file cannot be opened (#3269) */
             CPLTurnFailureIntoWarning(TRUE);
-            poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+            if( poDependentDS != NULL && poDependentDS->GetShared() )
+                poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+            else
+                poODS = (GDALDataset *) GDALOpen( osAuxFilename, eAccess );
             CPLTurnFailureIntoWarning(FALSE);
         }
         VSIFCloseL( fp );
@@ -2878,7 +2968,10 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
                 /* Avoid causing failure in opening of main file from SWIG bindings */
                 /* when auxiliary file cannot be opened (#3269) */
                 CPLTurnFailureIntoWarning(TRUE);
-                poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+                if( poDependentDS != NULL && poDependentDS->GetShared() )
+                    poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+                else
+                    poODS = (GDALDataset *) GDALOpen( osAuxFilename, eAccess );
                 CPLTurnFailureIntoWarning(FALSE);
             }
             VSIFCloseL( fp );
@@ -3151,19 +3244,143 @@ void GDALDeserializeGCPListFromXML( CPLXMLNode* psGCPList,
         CPLFree( psGCP->pszInfo );
         psGCP->pszInfo = CPLStrdup(CPLGetXMLValue(psXMLGCP,"Info",""));
 
-        psGCP->dfGCPPixel = atof(CPLGetXMLValue(psXMLGCP,"Pixel","0.0"));
-        psGCP->dfGCPLine = atof(CPLGetXMLValue(psXMLGCP,"Line","0.0"));
+        psGCP->dfGCPPixel = CPLAtof(CPLGetXMLValue(psXMLGCP,"Pixel","0.0"));
+        psGCP->dfGCPLine = CPLAtof(CPLGetXMLValue(psXMLGCP,"Line","0.0"));
 
-        psGCP->dfGCPX = atof(CPLGetXMLValue(psXMLGCP,"X","0.0"));
-        psGCP->dfGCPY = atof(CPLGetXMLValue(psXMLGCP,"Y","0.0"));
+        psGCP->dfGCPX = CPLAtof(CPLGetXMLValue(psXMLGCP,"X","0.0"));
+        psGCP->dfGCPY = CPLAtof(CPLGetXMLValue(psXMLGCP,"Y","0.0"));
         const char* pszZ = CPLGetXMLValue(psXMLGCP,"Z",NULL);
         if( pszZ == NULL )
         {
             /* Note: GDAL 1.10.1 and older generated #GCPZ, but could not read it back */
             pszZ = CPLGetXMLValue(psXMLGCP,"GCPZ","0.0");
         }
-        psGCP->dfGCPZ = atof(pszZ);
+        psGCP->dfGCPZ = CPLAtof(pszZ);
 
         (*pnGCPCount) ++;
     }
+}
+
+/************************************************************************/
+/*                   GDALSerializeOpenOptionsToXML()                    */
+/************************************************************************/
+
+void GDALSerializeOpenOptionsToXML( CPLXMLNode* psParentNode, char** papszOpenOptions)
+{
+    if( papszOpenOptions != NULL )
+    {
+        CPLXMLNode* psOpenOptions = CPLCreateXMLNode( psParentNode, CXT_Element, "OpenOptions" );
+        CPLXMLNode* psLastChild = NULL;
+
+        for(char** papszIter = papszOpenOptions; *papszIter != NULL; papszIter ++ )
+        {
+            const char *pszRawValue;
+            char *pszKey = NULL;
+            CPLXMLNode *psOOI;
+
+            pszRawValue = CPLParseNameValue( *papszIter, &pszKey );
+
+            psOOI = CPLCreateXMLNode( NULL, CXT_Element, "OOI" );
+            if( psLastChild == NULL )
+                psOpenOptions->psChild = psOOI;
+            else
+                psLastChild->psNext = psOOI;
+            psLastChild = psOOI;
+
+            CPLSetXMLValue( psOOI, "#key", pszKey );
+            CPLCreateXMLNode( psOOI, CXT_Text, pszRawValue );
+
+            CPLFree( pszKey );
+        }
+    }
+}
+
+/************************************************************************/
+/*                  GDALDeserializeOpenOptionsFromXML()                 */
+/************************************************************************/
+
+char** GDALDeserializeOpenOptionsFromXML( CPLXMLNode* psParentNode )
+{
+    char** papszOpenOptions = NULL;
+    CPLXMLNode* psOpenOptions = CPLGetXMLNode(psParentNode, "OpenOptions");
+    if( psOpenOptions != NULL )
+    {
+        CPLXMLNode* psOOI;
+        for( psOOI = psOpenOptions->psChild; psOOI != NULL;
+                psOOI = psOOI->psNext )
+        {
+            if( !EQUAL(psOOI->pszValue,"OOI")
+                || psOOI->eType != CXT_Element
+                || psOOI->psChild == NULL
+                || psOOI->psChild->psNext == NULL
+                || psOOI->psChild->eType != CXT_Attribute
+                || psOOI->psChild->psChild == NULL )
+                continue;
+
+            char* pszName = psOOI->psChild->psChild->pszValue;
+            char* pszValue = psOOI->psChild->psNext->pszValue;
+            if( pszName != NULL && pszValue != NULL )
+                papszOpenOptions = CSLSetNameValue( papszOpenOptions, pszName, pszValue );
+        }
+    }
+    return papszOpenOptions;
+}
+
+/************************************************************************/
+/*                    GDALRasterIOGetResampleAlg()                      */
+/************************************************************************/
+
+GDALRIOResampleAlg GDALRasterIOGetResampleAlg(const char* pszResampling)
+{
+    GDALRIOResampleAlg eResampleAlg = GRIORA_NearestNeighbour;
+    if( EQUALN(pszResampling, "NEAR", 4) )
+        eResampleAlg = GRIORA_NearestNeighbour;
+    else if( EQUAL(pszResampling, "BILINEAR") )
+        eResampleAlg = GRIORA_Bilinear;
+    else if( EQUAL(pszResampling, "CUBIC") )
+        eResampleAlg = GRIORA_Cubic;
+    else if( EQUAL(pszResampling, "CUBICSPLINE") )
+        eResampleAlg = GRIORA_CubicSpline;
+    else if( EQUAL(pszResampling, "LANCZOS") )
+        eResampleAlg = GRIORA_Lanczos;
+    else if( EQUAL(pszResampling, "AVERAGE") )
+        eResampleAlg = GRIORA_Average;
+    else if( EQUAL(pszResampling, "MODE") )
+        eResampleAlg = GRIORA_Mode;
+    else if( EQUAL(pszResampling, "GAUSS") )
+        eResampleAlg = GRIORA_Gauss;
+    else
+        CPLError(CE_Warning, CPLE_NotSupported,
+                "GDAL_RASTERIO_RESAMPLING = %s not supported", pszResampling);
+    return eResampleAlg;
+}
+
+/************************************************************************/
+/*                   GDALRasterIOExtraArgSetResampleAlg()               */
+/************************************************************************/
+
+void GDALRasterIOExtraArgSetResampleAlg(GDALRasterIOExtraArg* psExtraArg,
+                                        int nXSize, int nYSize,
+                                        int nBufXSize, int nBufYSize)
+{
+    if( (nBufXSize != nXSize || nBufYSize != nYSize) &&
+        psExtraArg->eResampleAlg == GRIORA_NearestNeighbour  )
+    {
+        const char* pszResampling = CPLGetConfigOption("GDAL_RASTERIO_RESAMPLING", NULL);
+        if( pszResampling != NULL )
+        {
+            psExtraArg->eResampleAlg = GDALRasterIOGetResampleAlg(pszResampling);
+        }
+    }
+}
+
+/************************************************************************/
+/*                     GDALCanFileAcceptSidecarFile()                   */
+/************************************************************************/
+
+int GDALCanFileAcceptSidecarFile(const char* pszFilename)
+{
+    if( strstr(pszFilename, "/vsicurl/") && strchr(pszFilename, '?') )
+        return FALSE;
+    return TRUE;
 }

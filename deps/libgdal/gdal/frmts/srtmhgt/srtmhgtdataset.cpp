@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: srtmhgtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: srtmhgtdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  SRTM HGT Driver
  * Purpose:  SRTM HGT File Read Support.
@@ -38,7 +38,7 @@
 
 #define SRTMHG_NODATA_VALUE -32768
 
-CPL_CVSID("$Id: srtmhgtdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: srtmhgtdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void	GDALRegister_SRTMHGT(void);
@@ -385,10 +385,12 @@ GDALDataset* SRTMHGTDataset::Open(GDALOpenInfo* poOpenInfo)
 /*                              CreateCopy()                            */
 /************************************************************************/
 
-GDALDataset * SRTMHGTDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                                          int bStrict, CPL_UNUSED char ** papszOptions, 
-                                          GDALProgressFunc pfnProgress, void * pProgressData )
-
+GDALDataset * SRTMHGTDataset::CreateCopy( const char * pszFilename,
+                                          GDALDataset *poSrcDS,
+                                          int bStrict,
+                                          CPL_UNUSED char ** papszOptions,
+                                          GDALProgressFunc pfnProgress,
+                                          void * pProgressData )
 {
     int  nBands = poSrcDS->GetRasterCount();
     int  nXSize = poSrcDS->GetRasterXSize();
@@ -504,7 +506,7 @@ GDALDataset * SRTMHGTDataset::CreateCopy( const char * pszFilename, GDALDataset 
     {
         poSrcBand->RasterIO( GF_Read, 0, iY, nXSize, 1,
                             (void *) panData, nXSize, 1,
-                            GDT_Int16, 0, 0 );
+                            GDT_Int16, 0, 0, NULL );
 
         /* Translate nodata values */
         if (bSrcBandHasNoData && srcBandNoData != SRTMHG_NODATA_VALUE)
@@ -566,6 +568,7 @@ void GDALRegister_SRTMHGT()
   {
     poDriver = new GDALDriver();
     poDriver->SetDescription("SRTMHGT");
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
     poDriver->SetMetadataItem(GDAL_DMD_LONGNAME, "SRTMHGT File Format");
     poDriver->SetMetadataItem(GDAL_DMD_EXTENSION, "hgt");
     poDriver->SetMetadataItem(GDAL_DMD_HELPTOPIC, 
@@ -582,4 +585,3 @@ void GDALRegister_SRTMHGT()
     GetGDALDriverManager()->RegisterDriver(poDriver);
   }
 }
-

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtadataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gtadataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  GTA read/write Driver
  * Purpose:  GDAL bindings over GTA library.
@@ -91,7 +91,7 @@
 #include <gta/gta.hpp>
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: gtadataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gtadataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 CPL_C_START
 void    GDALRegister_GTA(void);
@@ -1641,7 +1641,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                 CPLErr eErr = poSrcBand->RasterIO( GF_Read, 0, iLine,
                         poSrcDS->GetRasterXSize(), 1,
                         pDst, poSrcDS->GetRasterXSize(), 1, eDT,
-                        oHeader.element_size(), 0 );
+                        oHeader.element_size(), 0, NULL );
                 if( eErr != CE_None )
                 {
                     CPLError( CE_Failure, CPLE_FileIO, "Cannot read source data set.\n" );
@@ -1671,7 +1671,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     oGTAIO.close();
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
 
     GTADataset *poDS = (GTADataset *) GDALOpen( pszFilename,
@@ -1697,6 +1697,7 @@ void GDALRegister_GTA()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "GTA" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                 "Generic Tagged Arrays (.gta)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

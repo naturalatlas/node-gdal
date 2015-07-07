@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ecwcreatecopy.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: ecwcreatecopy.cpp 29054 2015-04-29 19:31:41Z rouault $
  *
  * Project:  GDAL ECW Driver
  * Purpose:  ECW CreateCopy method implementation.
@@ -32,7 +32,7 @@
 #include "gdaljp2metadata.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ecwcreatecopy.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: ecwcreatecopy.cpp 29054 2015-04-29 19:31:41Z rouault $");
 
 #if defined(FRMT_ecw) && defined(HAVE_COMPRESS)
 
@@ -92,11 +92,13 @@ public:
                         GDALDataType eType, 
                         const char *pszWKT, double *padfGeoTransform,
                         int nGCPCount, const GDAL_GCP *pasGCPList,
-                        int bIsJPEG2000, int bPixelIsPoint );
+                        int bIsJPEG2000, int bPixelIsPoint, char** papszRPCMD,
+                        GDALDataset* poSrcDS = NULL );
     CPLErr  CloseDown();
 
     CPLErr  PrepareCoverageBox( const char *pszWKT, double *padfGeoTransform );
     CPLErr  WriteJP2Box( GDALJP2Box * );
+    void    WriteXMLBoxes();
     CPLErr  WriteLineBIL(UINT16 nBands, void **ppOutputLine, UINT32 *pLineSteps = NULL);
     virtual NCSEcwCellType WriteReadLineGetCellType() {
         return sFileInfo.eCellType;
@@ -212,7 +214,7 @@ CNCSError GDALECWCompressor::WriteReadLine( UINT32 nNextLine,
                                 pabyLineBuf, sFileInfo.nSizeX, 1, 
                                 eWorkDT, 
                                 sFileInfo.nBands, panBandMap,
-                                nWordSize, 0, nWordSize * sFileInfo.nSizeX );
+                                nWordSize, 0, nWordSize * sFileInfo.nSizeX, NULL );
 
     for( iBand = 0; iBand < (int) sFileInfo.nBands; iBand++ )
     {
@@ -323,7 +325,7 @@ CPLErr  GDALECWCompressor::PrepareCoverageBox(
 /* -------------------------------------------------------------------- */
     char szDoc[4000];
 
-    sprintf( szDoc, 
+    CPLsprintf( szDoc, 
 "<gml:FeatureCollection\n"
 "   xmlns:gml=\"http://www.opengis.net/gml\"\n"
 "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -496,6 +498,21 @@ CPLErr GDALECWCompressor::WriteJP2Box( GDALJP2Box * poBox )
 }
 
 /************************************************************************/
+/*                         WriteXMLBoxes()                              */
+/************************************************************************/
+
+void GDALECWCompressor::WriteXMLBoxes()
+{
+    int nBoxes = 0;
+    GDALJP2Box** papoBoxes = GDALJP2Metadata::CreateXMLBoxes(m_poSrcDS, &nBoxes);
+    for(int i=0;i<nBoxes;i++)
+    {
+        WriteJP2Box(papoBoxes[i]);
+    }
+    CPLFree(papoBoxes);
+}
+
+/************************************************************************/
 /*                            WriteLineBIL()                            */
 /************************************************************************/
 
@@ -522,7 +539,8 @@ CPLErr GDALECWCompressor::Initialize(
     GDALDataType eType, 
     const char *pszWKT, double *padfGeoTransform,
     int nGCPCount, const GDAL_GCP *pasGCPList,
-    int bIsJPEG2000, int bPixelIsPoint )
+    int bIsJPEG2000, int bPixelIsPoint, char** papszRPCMD,
+    GDALDataset* poSrcDS )
 
 {
      const char *pszOption;
@@ -582,7 +600,7 @@ CPLErr GDALECWCompressor::Initialize(
     if( CSLFetchNameValue(papszOptions, "TARGET") != NULL )
     {
         fTargetCompression = (float) 
-            atof(CSLFetchNameValue(papszOptions, "TARGET"));
+            CPLAtof(CSLFetchNameValue(papszOptions, "TARGET"));
 
         /* The max allowed value should be 100 - 100 / 65535 = 99.9984740978 */
         /* so that nCompressionRate fits on a uint16 (see below) */
@@ -817,7 +835,7 @@ CPLErr GDALECWCompressor::Initialize(
 
         pszOption = CSLFetchNameValue(papszOptions, "GEODATA_USAGE");
         if( pszOption == NULL )
-            // Default to supressing ECW SDK geodata, just use our own stuff.
+            // Default to suppressing ECW SDK geodata, just use our own stuff.
             SetGeodataUsage( JP2_GEODATA_USE_NONE );
         else if( EQUAL(pszOption,"NONE") )
             SetGeodataUsage( JP2_GEODATA_USE_NONE );
@@ -843,7 +861,7 @@ CPLErr GDALECWCompressor::Initialize(
         if( pszOption != NULL )
             SetParameter( 
                 CNCSJP2FileView::JPC_DECOMPRESS_RECONSTRUCTION_PARAMETER, 
-                (IEEE4) atof(pszOption) );
+                (IEEE4) CPLAtof(pszOption) );
     }
                                   
 /* -------------------------------------------------------------------- */
@@ -928,7 +946,7 @@ CPLErr GDALECWCompressor::Initialize(
           padfGeoTransform[3] == 0.0 &&
           padfGeoTransform[4] == 0.0 &&
           padfGeoTransform[5] == 1.0) ||
-         nGCPCount > 0 )
+         nGCPCount > 0  || papszRPCMD != NULL )
     {
         GDALJP2Metadata oJP2MD;
 
@@ -936,14 +954,33 @@ CPLErr GDALECWCompressor::Initialize(
         oJP2MD.SetGeoTransform( padfGeoTransform );
         oJP2MD.SetGCPs( nGCPCount, pasGCPList );
         oJP2MD.bPixelIsPoint = bPixelIsPoint;
+        oJP2MD.SetRPCMD( papszRPCMD );
 
         if (bIsJPEG2000) {
-
+            if( CSLFetchBoolean(papszOptions, "WRITE_METADATA", FALSE) )
+            {
+                if( !CSLFetchBoolean(papszOptions, "MAIN_MD_DOMAIN_ONLY", FALSE) )
+                {
+                    WriteXMLBoxes();
+                }
+                WriteJP2Box(GDALJP2Metadata::CreateGDALMultiDomainMetadataXMLBox(
+                        m_poSrcDS, CSLFetchBoolean(papszOptions, "MAIN_MD_DOMAIN_ONLY", FALSE)));
+            }
             if( CSLFetchBoolean( papszOptions, "GMLJP2", TRUE ) )
-                WriteJP2Box( oJP2MD.CreateGMLJP2(nXSize,nYSize) );
+            {
+                const char* pszGMLJP2V2Def = CSLFetchNameValue( papszOptions, "GMLJP2V2_DEF" );
+                if( pszGMLJP2V2Def != NULL )
+                    WriteJP2Box( oJP2MD.CreateGMLJP2V2(nXSize,nYSize,pszGMLJP2V2Def,poSrcDS) );
+                else
+                    WriteJP2Box( oJP2MD.CreateGMLJP2(nXSize,nYSize) );
+            }
             if( CSLFetchBoolean( papszOptions, "GeoJP2", TRUE ) )
                 WriteJP2Box( oJP2MD.CreateJP2GeoTIFF() );
-
+            if( CSLFetchBoolean(papszOptions, "WRITE_METADATA", FALSE) &&
+                !CSLFetchBoolean(papszOptions, "MAIN_MD_DOMAIN_ONLY", FALSE) )
+            {
+                WriteJP2Box(GDALJP2Metadata::CreateXMPBox(m_poSrcDS));
+            }
         }
     }
 /* -------------------------------------------------------------------- */
@@ -1216,7 +1253,9 @@ ECWCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                                 eType, pszWKT, adfGeoTransform, 
                                 poSrcDS->GetGCPCount(), 
                                 poSrcDS->GetGCPs(),
-                                bIsJPEG2000, bPixelIsPoint )
+                                bIsJPEG2000, bPixelIsPoint,
+                                poSrcDS->GetMetadata("RPC"),
+                                poSrcDS )
         != CE_None )
     {
         for (i=0;i<nBands;i++)
@@ -1246,7 +1285,7 @@ ECWCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     pfnProgress( 1.001, NULL, pProgressData );
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
     GDALOpenInfo oOpenInfo(pszFilename, GA_ReadOnly);
     GDALPamDataset *poDS;
@@ -1266,7 +1305,7 @@ ECWCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             }
             double dHistMin, dHistMax;
             int nBuckets;
-            int *pHistogram;
+            GUIntBig *pHistogram;
             if (poSrcDS->GetRasterBand(i)->GetDefaultHistogram(&dHistMin, &dHistMax,&nBuckets,&pHistogram, FALSE, NULL, NULL) == CE_None){
                 poDS->GetRasterBand(i)->SetDefaultHistogram(dHistMin, dHistMax, nBuckets, pHistogram);
                 VSIFree(pHistogram);
@@ -1275,7 +1314,11 @@ ECWCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 #endif
 
         ((ECWDataset *)poDS)->SetPreventCopyingSomeMetadata(TRUE);
-        poDS->CloneInfo( poSrcDS, GCIF_PAM_DEFAULT );
+        int nFlags = GCIF_PAM_DEFAULT;
+        if( bIsJPEG2000 &&
+            !CSLFetchBoolean(papszOptions, "WRITE_METADATA", FALSE) )
+            nFlags &= ~GCIF_METADATA;
+        poDS->CloneInfo( poSrcDS, nFlags );
         ((ECWDataset *)poDS)->SetPreventCopyingSomeMetadata(FALSE);
     }
 
@@ -1475,7 +1518,7 @@ class IRasterIORequest
                           int nXOff, int nYOff, int nXSize, int nYSize,
                           void * pData, int nBufXSize, int nBufYSize,
                           GDALDataType eBufType, 
-                          int nPixelSpace, int nLineSpace ) :
+                          GSpacing nPixelSpace, GSpacing nLineSpace ) :
                             poBand(poBand),
                             nXOff(nXOff),
                             nYOff(nYOff),
@@ -1547,7 +1590,9 @@ class CPL_DLL ECWWriteDataset : public GDALDataset
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
                               int nBandCount, int *panBandMap,
-                              int nPixelSpace, int nLineSpace, int nBandSpace);
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 #endif
 };
 
@@ -1592,7 +1637,8 @@ class ECWWriteRasterBand : public GDALRasterBand
                               int nXOff, int nYOff, int nXSize, int nYSize,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace);
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 #endif
 };
 
@@ -1750,7 +1796,7 @@ CPLErr ECWWriteDataset::Crystalize()
                                    eDataType, 
                                    pszProjection, adfGeoTransform, 
                                    0, NULL,
-                                   bIsJPEG2000, FALSE );
+                                   bIsJPEG2000, FALSE, NULL );
 
     if( eErr == CE_None )
         bCrystalized = TRUE;
@@ -1824,7 +1870,9 @@ CPLErr ECWWriteDataset::IRasterIO( GDALRWFlag eRWFlag,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
                               int nBandCount, int *panBandMap,
-                              int nPixelSpace, int nLineSpace, int nBandSpace)
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg)
 {
     ECWWriteRasterBand* po4thBand = NULL;
     IRasterIORequest* poIORequest = NULL;
@@ -1888,7 +1936,7 @@ CPLErr ECWWriteDataset::IRasterIO( GDALRWFlag eRWFlag,
                               pData, nBufXSize, nBufYSize,
                               eBufType, 
                               nBandCount, panBandMap,
-                              nPixelSpace, nLineSpace, nBandSpace);
+                              nPixelSpace, nLineSpace, nBandSpace, psExtraArg);
 }
 #endif
 
@@ -1957,7 +2005,8 @@ CPLErr ECWWriteRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                               int nXOff, int nYOff, int nXSize, int nYSize,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace)
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg)
 {
     if( eRWFlag == GF_Write && nBand == 4 && poGDS->nBands == 4 &&
         poGDS->nPrevIRasterIOBand < 0 )
@@ -1979,7 +2028,7 @@ CPLErr ECWWriteRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                               nXOff, nYOff, nXSize, nYSize,
                               pData, nBufXSize, nBufYSize,
                               eBufType, 
-                              nPixelSpace, nLineSpace );
+                              nPixelSpace, nLineSpace, psExtraArg );
 }
 #endif
 

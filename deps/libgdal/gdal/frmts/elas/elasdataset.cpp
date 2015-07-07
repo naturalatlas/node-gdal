@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: elasdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: elasdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  ELAS Translator
  * Purpose:  Complete implementation of ELAS translator module for GDAL.
@@ -30,7 +30,7 @@
 
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: elasdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: elasdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_ELAS(void);
@@ -153,9 +153,9 @@ ELASRasterBand::ELASRasterBand( ELASDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr ELASRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr ELASRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
                                    void * pImage )
-
 {
     ELASDataset	*poGDS = (ELASDataset *) poDS;
     CPLErr		eErr = CE_None;
@@ -188,9 +188,9 @@ CPLErr ELASRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
 /*                            IWriteBlock()                             */
 /************************************************************************/
 
-CPLErr ELASRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                     void * pImage )
-
+CPLErr ELASRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff,
+                                    int nBlockYOff,
+                                    void * pImage )
 {
     ELASDataset	*poGDS = (ELASDataset *) poDS;
     CPLErr		eErr = CE_None;
@@ -453,7 +453,7 @@ GDALDataset *ELASDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return( poDS );
 }
@@ -672,6 +672,7 @@ void GDALRegister_ELAS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "ELAS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "ELAS" );
         poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES, 

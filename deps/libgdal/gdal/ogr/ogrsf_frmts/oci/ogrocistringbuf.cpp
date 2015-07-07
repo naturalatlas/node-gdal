@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocistringbuf.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrocistringbuf.cpp 28429 2015-02-06 20:56:30Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Simple string buffer used to accumulate text of commands 
@@ -31,7 +31,7 @@
 #include "ogr_oci.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrocistringbuf.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrocistringbuf.cpp 28429 2015-02-06 20:56:30Z rouault $");
 
 /************************************************************************/
 /*                          OGROCIStringBuf()                           */
@@ -102,7 +102,7 @@ void OGROCIStringBuf::Appendf( int nMax, const char *pszFormat, ... )
         pszBuffer = szSimpleBuf;
 
     va_start(args, pszFormat);
-    vsprintf(pszBuffer, pszFormat, args);
+    CPLvsnprintf(pszBuffer, nMax, pszFormat, args);
     va_end(args);
 
     Append( pszBuffer );

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmdblayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmdblayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMDBLayer class
@@ -33,7 +33,7 @@
 #include "ogrpgeogeometry.h"
 #include "ogrgeomediageometry.h"
 
-CPL_CVSID("$Id: ogrmdblayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmdblayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                            OGRMDBLayer()                            */
@@ -108,6 +108,7 @@ CPLErr OGRMDBLayer::BuildFeatureDefn()
 
 {
     poFeatureDefn = new OGRFeatureDefn( poMDBTable->GetName() );
+    SetDescription( poFeatureDefn->GetName() );
 
     poFeatureDefn->Reference();
 
@@ -200,7 +201,7 @@ void OGRMDBLayer::ResetReading()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRMDBLayer::GetFeatureCount(int bForce)
+GIntBig OGRMDBLayer::GetFeatureCount(int bForce)
 {
     if (m_poFilterGeom != NULL || m_poAttrQuery != NULL)
         return OGRLayer::GetFeatureCount(bForce);
@@ -356,7 +357,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRMDBLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRMDBLayer::GetFeature( GIntBig nFeatureId )
 
 {
     /* This should be implemented directly! */
@@ -482,7 +483,7 @@ const char *OGRMDBLayer::GetFIDColumn()
 /*                             Initialize()                             */
 /************************************************************************/
 
-CPLErr OGRMDBLayer::Initialize( const char *pszTableName,
+CPLErr OGRMDBLayer::Initialize( CPL_UNUSED const char *pszTableName,
                                 const char *pszGeomCol,
                                 int nShapeType,
                                 double dfExtentLeft,
@@ -557,7 +558,7 @@ CPLErr OGRMDBLayer::Initialize( const char *pszTableName,
     }
 
     if( eOGRType != wkbUnknown && eOGRType != wkbNone && bHasZ )
-        eOGRType = (OGRwkbGeometryType)(((int) eOGRType) | wkb25DBit);
+        eOGRType = wkbSetZ(eOGRType);
 
     poFeatureDefn->SetGeomType(eOGRType);
 
@@ -569,7 +570,7 @@ CPLErr OGRMDBLayer::Initialize( const char *pszTableName,
 /*                             Initialize()                             */
 /************************************************************************/
 
-CPLErr OGRMDBLayer::Initialize( const char *pszTableName,
+CPLErr OGRMDBLayer::Initialize( CPL_UNUSED const char *pszTableName,
                                 const char *pszGeomCol,
                                 OGRSpatialReference* poSRS )
 

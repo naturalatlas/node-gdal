@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpolygoncorrections.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: tigerpolygoncorrections.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPolygonCorrections, providing access to .RTB files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpolygoncorrections.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: tigerpolygoncorrections.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 #define FILE_CODE       "B"
 
@@ -70,7 +70,8 @@ static const TigerRecordInfo rtB_info =
 /************************************************************************/
 
 TigerPolygonCorrections::TigerPolygonCorrections( OGRTigerDataSource * poDSIn,
-                                                  CPL_UNUSED const char * pszPrototypeModule ) : TigerFileBase(&rtB_info, FILE_CODE)
+                                                  CPL_UNUSED const char * pszPrototypeModule ) :
+    TigerFileBase(&rtB_info, FILE_CODE)
 {
     OGRFieldDefn        oField("",OFTInteger);
 

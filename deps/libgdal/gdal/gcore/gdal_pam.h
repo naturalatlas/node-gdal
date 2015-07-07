@@ -1,8 +1,8 @@
 /******************************************************************************
- * $Id: gdal_pam.h 26117 2013-06-29 20:22:34Z rouault $
+ * $Id: gdal_pam.h 28899 2015-04-14 09:27:00Z rouault $
  *
  * Project:  GDAL Core
- * Purpose:  Declaration for Peristable Auxilary Metadata classes.
+ * Purpose:  Declaration for Peristable Auxiliary Metadata classes.
  * Author:   Frank Warmerdam, warmerdam@pobox.com
  *
  ******************************************************************************
@@ -99,6 +99,8 @@ public:
     CPLString   osPhysicalFilename;
     CPLString   osSubdatasetName;
     CPLString   osAuxFilename;
+
+    int         bHasMetadata;
 };
 
 /* ******************************************************************** */
@@ -263,17 +265,17 @@ class CPL_DLL GDALPamRasterBand : public GDALRasterBand
     CPLErr SetScale( double );
 
     virtual CPLErr  GetHistogram( double dfMin, double dfMax,
-                          int nBuckets, int * panHistogram,
+                          int nBuckets, GUIntBig * panHistogram,
                           int bIncludeOutOfRange, int bApproxOK,
                           GDALProgressFunc, void *pProgressData );
 
     virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                        int *pnBuckets, int ** ppanHistogram,
+                                        int *pnBuckets, GUIntBig ** ppanHistogram,
                                         int bForce,
                                         GDALProgressFunc, void *pProgressData);
 
     virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                        int nBuckets, int *panHistogram );
+                                        int nBuckets, GUIntBig *panHistogram );
 
     virtual CPLErr      SetMetadata( char ** papszMetadata,
                                      const char * pszDomain = "" );
@@ -294,7 +296,7 @@ class CPL_DLL GDALPamRasterBand : public GDALRasterBand
 // These are mainly helper functions for internal use.
 int CPL_DLL PamParseHistogram( CPLXMLNode *psHistItem, 
                                double *pdfMin, double *pdfMax, 
-                               int *pnBuckets, int **ppanHistogram, 
+                               int *pnBuckets, GUIntBig **ppanHistogram, 
                                int *pbIncludeOutOfRange, int *pbApproxOK );
 CPLXMLNode CPL_DLL *
 PamFindMatchingHistogram( CPLXMLNode *psSavedHistograms,
@@ -302,7 +304,7 @@ PamFindMatchingHistogram( CPLXMLNode *psSavedHistograms,
                           int bIncludeOutOfRange, int bApproxOK );
 CPLXMLNode CPL_DLL *
 PamHistogramToXMLTree( double dfMin, double dfMax,
-                       int nBuckets, int * panHistogram,
+                       int nBuckets, GUIntBig * panHistogram,
                        int bIncludeOutOfRange, int bApprox );
 
 // For managing the proxy file database.

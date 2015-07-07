@@ -42,7 +42,7 @@
 #define GEOTRSFRM_ROTATION_PARAM2      4
 #define GEOTRSFRM_NS_RES               5
 
-CPL_CVSID("$Id: rpftocdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rpftocdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 
 /** Overview of used classes :
@@ -1270,6 +1270,7 @@ void GDALRegister_RPFTOC()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "RPFTOC" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Raster Product Format TOC format" );
         

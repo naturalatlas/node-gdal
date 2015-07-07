@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgutility.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgutility.cpp 27784 2014-10-02 15:43:18Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Utility methods
@@ -30,13 +30,14 @@
 #include "ogr_pg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgutility.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgutility.cpp 27784 2014-10-02 15:43:18Z rouault $");
 
 /************************************************************************/
 /*                         OGRPG_PQexec()                               */
 /************************************************************************/
 
-PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllowed)
+PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllowed,
+                       int bErrorAsDebug)
 {
     PGresult* hResult;
 #if defined(PG_PRE74)
@@ -77,6 +78,7 @@ PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllo
         CPLDebug("PG", "PQexec(%s) = %s%s", query, pszRetCode, szNTuples);
     else
         CPLDebug("PG", "PQexecParams(%s) = %s%s", query, pszRetCode, szNTuples);
+#endif
 
 /* -------------------------------------------------------------------- */
 /*      Generate an error report if an error occured.                   */
@@ -84,9 +86,11 @@ PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllo
     if ( !hResult || (PQresultStatus(hResult) == PGRES_NONFATAL_ERROR ||
                       PQresultStatus(hResult) == PGRES_FATAL_ERROR ) )
     {
-        CPLDebug( "PG", "%s", PQerrorMessage( conn ) );
+        if( bErrorAsDebug )
+            CPLDebug("PG", "%s", PQerrorMessage( conn ) );
+        else
+            CPLError( CE_Failure, CPLE_AppDefined, "%s", PQerrorMessage( conn ) );
     }
-#endif
 
     return hResult;
 }

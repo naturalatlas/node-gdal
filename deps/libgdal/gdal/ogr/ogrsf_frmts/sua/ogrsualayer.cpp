@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsualayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsualayer.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUALayer class.
@@ -34,7 +34,7 @@
 #include "ogr_xplane_geo_utils.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogrsualayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsualayer.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRSUALayer()                             */
@@ -51,6 +51,7 @@ OGRSUALayer::OGRSUALayer( VSILFILE* fp )
     poSRS = new OGRSpatialReference(SRS_WKT_WGS84);
 
     poFeatureDefn = new OGRFeatureDefn( "layer" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbPolygon );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -256,7 +257,7 @@ OGRFeature *OGRSUALayer::GetNextRawFeature()
             /*const char* pszRADIUS = strstr(pszLine, "RADIUS=");
             if (pszRADIUS == NULL)
                 continue;
-            double dfRADIUS = atof(pszRADIUS + 7) * 1852;*/
+            double dfRADIUS = CPLAtof(pszRADIUS + 7) * 1852;*/
 
             const char* pszCENTRE = strstr(pszLine, "CENTRE=");
             if (pszCENTRE == NULL)
@@ -307,7 +308,7 @@ OGRFeature *OGRSUALayer::GetNextRawFeature()
             const char* pszRADIUS = strstr(pszLine, "RADIUS=");
             if (pszRADIUS == NULL)
                 continue;
-            double dfRADIUS = atof(pszRADIUS + 7) * 1852;
+            double dfRADIUS = CPLAtof(pszRADIUS + 7) * 1852;
 
             const char* pszCENTRE = strstr(pszLine, "CENTRE=");
             if (pszCENTRE == NULL)
@@ -365,4 +366,3 @@ int OGRSUALayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
-

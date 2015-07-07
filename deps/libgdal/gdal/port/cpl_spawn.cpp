@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_spawn.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_spawn.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement CPLSystem().
@@ -39,7 +39,7 @@
 #define IN_FOR_PARENT   0
 #define OUT_FOR_PARENT  1
 
-CPL_CVSID("$Id: cpl_spawn.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_spawn.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 static void FillFileFromPipe(CPL_FILE_HANDLE pipe_fd, VSILFILE* fout);
 

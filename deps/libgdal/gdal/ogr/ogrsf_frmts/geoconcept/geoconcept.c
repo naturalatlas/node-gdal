@@ -3964,7 +3964,7 @@ static OGRErr GCIOAPI_CALL _readConfigMap_GCIO (
             res= OGRERR_CORRUPT_DATA;
             goto onError;
           }
-          if( sscanf(k,"%lf", &r)!=1 )
+          if( CPLsscanf(k,"%lf", &r)!=1 )
           {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Invalid Precision found : '%s'.\n",
@@ -4720,8 +4720,8 @@ GCField GCIOAPI_CALL1(*) FindFeatureField_GCIO (
 
 /* -------------------------------------------------------------------- */
 static char GCIOAPI_CALL1(*) _escapeString_GCIO (
-                                                 CPL_UNUSED GCExportFileH* H,
-                                                 const char *theString
+                                                  CPL_UNUSED GCExportFileH* H,
+                                                  const char *theString
                                                 )
 {
   int l, i, o;

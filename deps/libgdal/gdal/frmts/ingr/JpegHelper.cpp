@@ -142,9 +142,9 @@ static const GByte ZIGZAG[64] = {
   { int i; for( i = 0; i < 64; i++ ) tb[i] = (GByte) (tb[i] op vl); }
 
 int JPGHLP_HeaderMaker( GByte *pabyBuffer,
-                        const int nCols, 
-                        const int nRows, 
-                        const int nComponents, 
+                        const int nCols,
+                        const int nRows,
+                        const int nComponents,
                         CPL_UNUSED const int nRestart,
                         const int nQuality )
 {

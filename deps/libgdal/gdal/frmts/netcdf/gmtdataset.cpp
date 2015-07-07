@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmtdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: gmtdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  netCDF read/write Driver
  * Purpose:  GDAL bindings over netCDF library for GMT Grids.
@@ -33,9 +33,9 @@
 #include "netcdf.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gmtdataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: gmtdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
-extern void *hNCMutex; /* shared with netcdf. See netcdfdataset.cpp */
+extern CPLMutex *hNCMutex; /* shared with netcdf. See netcdfdataset.cpp */
 
 /************************************************************************/
 /* ==================================================================== */
@@ -211,7 +211,7 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Does this file have the GMT magic number?                    */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->fp == NULL || poOpenInfo->nHeaderBytes < 50 )
+    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 50 )
         return NULL;
 
     if( poOpenInfo->pabyHeader[0] != 'C' 
@@ -372,7 +372,7 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
     CPLAcquireMutex(hNCMutex, 1000.0);
 
     return( poDS );
@@ -557,7 +557,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         start[0] = iLine * nXSize;
         poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1, 
-                          padfData, nXSize, 1, GDT_Float64, 0, 0 );
+                          padfData, nXSize, 1, GDT_Float64, 0, 0, NULL );
         err = nc_put_vara_double( cdfid, z_id, start, edge, padfData );
         if( err != NC_NOERR )
         {
@@ -577,9 +577,9 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     nc_close (cdfid);
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
-    GDALPamDataset *poDS = (GDALPamDataset *) 
+    GDALPamDataset *poDS = (GDALPamDataset *)
         GDALOpen( pszFilename, GA_ReadOnly );
 
     if( poDS )
@@ -605,6 +605,7 @@ void GDALRegister_GMT()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GMT" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "GMT NetCDF Grid Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

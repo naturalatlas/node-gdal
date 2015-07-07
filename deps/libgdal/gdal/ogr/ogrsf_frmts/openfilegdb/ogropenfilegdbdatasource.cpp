@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenfilegdbdatasource.cpp 27771 2014-09-30 22:45:12Z rouault $
+ * $Id: ogropenfilegdbdatasource.cpp 29024 2015-04-26 10:42:08Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Open FileGDB OGR driver.
@@ -151,9 +151,10 @@ int OGROpenFileGDBDataSource::Open( const char* pszFilename )
             OGROpenFileGDBLayer* poLayer = new OGROpenFileGDBLayer(
                                 m_pszName, pszLyrName, "", "");
             const char* pszTablX = CPLResetExtension(m_pszName, "gdbtablx");
-            if( !FileExists(pszTablX) &&
-                poLayer->GetLayerDefn()->GetFieldCount() == 0 &&
-                poLayer->GetFeatureCount() == 0 )
+            if( (!FileExists(pszTablX) &&
+                 poLayer->GetLayerDefn()->GetFieldCount() == 0 &&
+                 poLayer->GetFeatureCount() == 0) ||
+                !poLayer->IsValidLayerDefn() )
             {
                 delete poLayer;
                 return FALSE;
@@ -426,6 +427,7 @@ int OGROpenFileGDBDataSource::OpenFileGDBv9(int iGDBFeatureClasses,
                 /* Is it a non-spatial table ? */
                 if( strcmp(psField->String, "{7A566981-C114-11D2-8A28-006097AFF44E}") == 0 )
                 {
+                    aosName.push_back( "" );
                     AddLayer( osName, nInterestTable, nCandidateLayers, nLayersSDC,
                               "", "", NULL, wkbNone );
                 }
@@ -596,6 +598,7 @@ OGROpenFileGDBSingleFeatureLayer::OGROpenFileGDBSingleFeatureLayer(const char* p
                                                                    const char *pszVal )
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     OGRFieldDefn oField( "FIELD_1", OFTString );
     poFeatureDefn->AddFieldDefn( &oField );
@@ -651,13 +654,13 @@ class OGROpenFileGDBSimpleSQLLayer: public OGRLayer
 
        virtual void        ResetReading();
        virtual OGRFeature* GetNextFeature();
-       virtual OGRFeature* GetFeature( long nFeatureId );
+       virtual OGRFeature* GetFeature( GIntBig nFeatureId );
        virtual OGRFeatureDefn* GetLayerDefn() { return poFeatureDefn; }
        virtual int         TestCapability( const char * );
        virtual const char* GetFIDColumn() { return poBaseLayer->GetFIDColumn(); }
        virtual OGRErr      GetExtent( OGREnvelope *psExtent, int bForce )
                             { return poBaseLayer->GetExtent(psExtent, bForce); }
-       virtual int         GetFeatureCount(int bForce);
+       virtual GIntBig     GetFeatureCount(int bForce);
 };
 
 /***********************************************************************/
@@ -702,6 +705,7 @@ OGROpenFileGDBSimpleSQLLayer::OGROpenFileGDBSimpleSQLLayer(
             }
         }
     }
+    SetDescription( poFeatureDefn->GetName() );
     ResetReading();
 }
 
@@ -731,7 +735,7 @@ void OGROpenFileGDBSimpleSQLLayer::ResetReading()
 /*                          GetFeature()                               */
 /***********************************************************************/
 
-OGRFeature* OGROpenFileGDBSimpleSQLLayer::GetFeature( long nFeatureId )
+OGRFeature* OGROpenFileGDBSimpleSQLLayer::GetFeature( GIntBig nFeatureId )
 {
     OGRFeature* poSrcFeature = poBaseLayer->GetFeature(nFeatureId);
     if( poSrcFeature == NULL )
@@ -780,7 +784,7 @@ OGRFeature* OGROpenFileGDBSimpleSQLLayer::GetNextFeature()
 /*                         GetFeatureCount()                           */
 /***********************************************************************/
 
-int OGROpenFileGDBSimpleSQLLayer::GetFeatureCount( int bForce )
+GIntBig OGROpenFileGDBSimpleSQLLayer::GetFeatureCount( int bForce )
 {
 
     /* No filter */
@@ -924,7 +928,8 @@ OGRLayer* OGROpenFileGDBDataSource::ExecuteSQL( const char *pszSQLCommand,
 /*      MIN/MAX/SUM/AVG/COUNT optimization                              */
 /* -------------------------------------------------------------------- */
         if( oSelect.join_count == 0 && oSelect.poOtherSelect == NULL &&
-            oSelect.table_count == 1 && oSelect.order_specs == 0 )
+            oSelect.table_count == 1 && oSelect.order_specs == 0 &&
+            oSelect.query_mode != SWQM_DISTINCT_LIST )
         {
             OGROpenFileGDBLayer* poLayer = 
                 (OGROpenFileGDBLayer*)GetLayerByName( oSelect.table_defs[0].table_name);
@@ -1054,7 +1059,8 @@ OGRLayer* OGROpenFileGDBDataSource::ExecuteSQL( const char *pszSQLCommand,
 /*      ORDER BY optimization                                           */
 /* -------------------------------------------------------------------- */
         if( oSelect.join_count == 0 && oSelect.poOtherSelect == NULL &&
-            oSelect.table_count == 1 && oSelect.order_specs == 1 )
+            oSelect.table_count == 1 && oSelect.order_specs == 1 &&
+            oSelect.query_mode != SWQM_DISTINCT_LIST )
         {
             OGROpenFileGDBLayer* poLayer = 
                 (OGROpenFileGDBLayer*)GetLayerByName( oSelect.table_defs[0].table_name);
@@ -1105,11 +1111,11 @@ OGRLayer* OGROpenFileGDBDataSource::ExecuteSQL( const char *pszSQLCommand,
                 }
                 if( eErr == OGRERR_NONE )
                 {
-                    swq_op op = SWQ_UNKNOWN;
+                    int op = -1;
                     swq_expr_node* poValue = NULL;
                     if( oSelect.where_expr != NULL )
                     {
-                        op = (swq_op)oSelect.where_expr->nOperation;
+                        op = oSelect.where_expr->nOperation;
                         poValue = oSelect.where_expr->papoSubExpr[1];
                     }
 
@@ -1150,4 +1156,37 @@ OGRLayer* OGROpenFileGDBDataSource::ExecuteSQL( const char *pszSQLCommand,
 void OGROpenFileGDBDataSource::ReleaseResultSet( OGRLayer * poResultsSet )
 {
     delete poResultsSet;
+}
+
+/***********************************************************************/
+/*                           GetFileList()                             */
+/***********************************************************************/
+
+char** OGROpenFileGDBDataSource::GetFileList()
+{
+    int nInterestTable = -1;
+    const char* pszFilenameWithoutPath = CPLGetFilename(m_pszName);
+    CPLString osFilenameRadix;
+    if( strlen(pszFilenameWithoutPath) == strlen("a00000000.gdbtable") &&
+        pszFilenameWithoutPath[0] == 'a' &&
+        sscanf(pszFilenameWithoutPath, "a%08x.gdbtable", &nInterestTable) == 1 )
+    {
+        osFilenameRadix = CPLSPrintf("a%08x.", nInterestTable);
+    }
+
+    char** papszFiles = VSIReadDir(m_osDirName);
+    CPLStringList osStringList;
+    char** papszIter = papszFiles;
+    for( ; papszIter != NULL && *papszIter != NULL ; papszIter ++ )
+    {
+        if( strcmp(*papszIter, ".") == 0 || strcmp(*papszIter, "..") == 0 )
+            continue;
+        if( osFilenameRadix.size() == 0 ||
+            strncmp(*papszIter, osFilenameRadix, osFilenameRadix.size()) == 0 )
+        {
+            osStringList.AddString(CPLFormFilename(m_osDirName, *papszIter, NULL));
+        }
+    }
+    CSLDestroy(papszFiles);
+    return osStringList.StealList();
 }

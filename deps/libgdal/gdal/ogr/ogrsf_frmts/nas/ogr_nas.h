@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_nas.h 27713 2014-09-21 15:51:47Z jef $
+ * $Id: ogr_nas.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  NAS Reader
  * Purpose:  Declarations for OGR wrapper classes for NAS, and NAS<->OGR
@@ -65,7 +65,7 @@ class OGRNASLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    int                 GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE );
     OGRErr              GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
@@ -93,7 +93,7 @@ class OGRNASRelationLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    int                 GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE );
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
     int                 TestCapability( const char * );
 
@@ -128,7 +128,7 @@ class OGRNASDataSource : public OGRDataSource
                         OGRNASDataSource();
                         ~OGRNASDataSource();
 
-    int                 Open( const char *, int bTestOpen );
+    int                 Open( const char * );
     int                 Create( const char *pszFile, char **papszOptions );
 
     const char          *GetName() { return pszName; }
@@ -142,21 +142,6 @@ class OGRNASDataSource : public OGRDataSource
     void                GrowExtents( OGREnvelope *psGeomBounds );
 
     void                PopulateRelations();
-};
-
-/************************************************************************/
-/*                             OGRNASDriver                             */
-/************************************************************************/
-
-class OGRNASDriver : public OGRSFDriver
-{
-  public:
-                ~OGRNASDriver();
-
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    int                 TestCapability( const char * );
 };
 
 #endif /* _OGR_NAS_H_INCLUDED */

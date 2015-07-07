@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf5dataset.cpp 28365 2015-01-27 10:39:30Z rouault $
+ * $Id: hdf5dataset.cpp 28822 2015-03-30 13:56:19Z rouault $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  HDF5 Datasets. Open HDF5 file, fetch metadata and list of
@@ -40,7 +40,7 @@
 #include "cpl_string.h"
 #include "hdf5dataset.h"
 
-CPL_CVSID("$Id: hdf5dataset.cpp 28365 2015-01-27 10:39:30Z rouault $");
+CPL_CVSID("$Id: hdf5dataset.cpp 28822 2015-03-30 13:56:19Z rouault $");
 
 CPL_C_START
 void GDALRegister_HDF5(void);
@@ -65,6 +65,7 @@ void GDALRegister_HDF5()
     {
         poDriver = new GDALDriver();
         poDriver->SetDescription("HDF5");
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem(GDAL_DMD_LONGNAME,
                                   "Hierarchical Data Format Release 5");
         poDriver->SetMetadataItem(GDAL_DMD_HELPTOPIC,
@@ -221,7 +222,28 @@ int HDF5Dataset::Identify( GDALOpenInfo * poOpenInfo )
     if( poOpenInfo->pabyHeader )
     {
         if( memcmp(poOpenInfo->pabyHeader,achSignature,8) == 0 )
+        {
+            /* The tests to avoid opening KEA and BAG drivers are not */
+            /* necessary when drivers are built in the core lib, as they */
+            /* are registered after HDF5, but in the case of plugins, we */
+            /* cannot do assumptions about the registration order */
+
+            /* Avoid opening kea files if the kea driver is available */
+            if( EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "KEA") &&
+                GDALGetDriverByName("KEA") != NULL )
+            {
+                return FALSE;
+            }
+
+            /* Avoid opening kea files if the bag driver is available */
+            if( EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "BAG") &&
+                GDALGetDriverByName("BAG") != NULL )
+            {
+                return FALSE;
+            }
+
             return TRUE;
+        }
 
         if( memcmp(poOpenInfo->pabyHeader,"<HDF_UserBlock>",15) == 0)
         {
@@ -788,7 +810,7 @@ herr_t HDF5AttrIterate( hid_t hH5ObjID,
         }
         else if( H5Tequal( H5T_NATIVE_FLOAT,  hAttrNativeType ) ) {
             for( i=0; i < nAttrElmts; i++ ) {
-                sprintf( szData, "%.8g ",  ((float *)buf)[i] );
+                CPLsprintf( szData, "%.8g ",  ((float *)buf)[i] );
                 if( CPLStrlcat(szValue, szData, MAX_METADATA_LEN) >=
                                                             MAX_METADATA_LEN )
                     CPLError( CE_Warning, CPLE_OutOfMemory,
@@ -797,7 +819,7 @@ herr_t HDF5AttrIterate( hid_t hH5ObjID,
         }
         else if( H5Tequal( H5T_NATIVE_DOUBLE, hAttrNativeType ) ) {
             for( i=0; i < nAttrElmts; i++ ) {
-                sprintf( szData, "%.15g ",  ((double *)buf)[i] );
+                CPLsprintf( szData, "%.15g ",  ((double *)buf)[i] );
                 if( CPLStrlcat(szValue, szData, MAX_METADATA_LEN) >=
                                                             MAX_METADATA_LEN )
                     CPLError( CE_Warning, CPLE_OutOfMemory,

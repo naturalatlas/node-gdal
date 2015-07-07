@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: adrgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: adrgdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Purpose:  ADRG reader
  * Author:   Even Rouault, even.rouault at mines-paris.org
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "iso8211.h"
 
-CPL_CVSID("$Id: adrgdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: adrgdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 #define N_ELEMENTS(x)  (sizeof(x)/sizeof(x[0]))
 
@@ -761,7 +761,7 @@ double ADRGDataset::GetLongitudeFromString(const char* str)
     strncpy(mm, str, 2);
     str+=2;
     strncpy(ssdotss, str, 5);
-    return sign * (atof(ddd) + atof(mm) / 60 + atof(ssdotss) / 3600);
+    return sign * (CPLAtof(ddd) + CPLAtof(mm) / 60 + CPLAtof(ssdotss) / 3600);
 }
 
 /************************************************************************/
@@ -780,7 +780,7 @@ double ADRGDataset::GetLatitudeFromString(const char* str)
     strncpy(mm, str, 2);
     str+=2;
     strncpy(ssdotss, str, 5);
-    return sign * (atof(ddd) + atof(mm) / 60 + atof(ssdotss) / 3600);
+    return sign * (CPLAtof(ddd) + CPLAtof(mm) / 60 + CPLAtof(ssdotss) / 3600);
 }
 
 /************************************************************************/
@@ -1568,8 +1568,12 @@ GDALDataset *ADRGDataset::Open( GDALOpenInfo * poOpenInfo )
 /*                               Create()                               */
 /************************************************************************/
 
-GDALDataset *ADRGDataset::Create(const char* pszFilename, int nXSize, int nYSize,
-                                 int nBands, GDALDataType eType, CPL_UNUSED char **papszOptions)
+GDALDataset *ADRGDataset::Create(const char* pszFilename,
+                                 int nXSize,
+                                 int nYSize,
+                                 int nBands,
+                                 GDALDataType eType,
+                                 CPL_UNUSED char **papszOptions)
 {
     int i;
 
@@ -2246,6 +2250,7 @@ void GDALRegister_ADRG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "ADRG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "ARC Digitized Raster Graphics" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -2262,4 +2267,3 @@ void GDALRegister_ADRG()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

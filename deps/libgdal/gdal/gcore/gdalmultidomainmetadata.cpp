@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalmultidomainmetadata.cpp 27723 2014-09-22 18:21:08Z goatbar $
+ * $Id: gdalmultidomainmetadata.cpp 29038 2015-04-28 09:03:36Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALMultiDomainMetadata class.  This class
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include <map>
 
-CPL_CVSID("$Id: gdalmultidomainmetadata.cpp 27723 2014-09-22 18:21:08Z goatbar $");
+CPL_CVSID("$Id: gdalmultidomainmetadata.cpp 29038 2015-04-28 09:03:36Z rouault $");
 
 /************************************************************************/
 /*                      GDALMultiDomainMetadata()                       */
@@ -234,6 +234,7 @@ int GDALMultiDomainMetadata::XMLInit( CPLXMLNode *psTree, CPL_UNUSED int bMerge 
             
             char *pszDoc = CPLSerializeXMLTree( psSubDoc );
 
+            poMDList->Clear();
             poMDList->AddStringDirectly( pszDoc );
         }
 
@@ -279,6 +280,10 @@ CPLXMLNode *GDALMultiDomainMetadata::Serialize()
          iDomain++)
     {
         char **papszMD = papoMetadataLists[iDomain]->List();
+        // Do not serialize empty domains
+        if( papszMD == NULL || papszMD[0] == NULL )
+            continue;
+
         CPLXMLNode *psMD;
         int bFormatXML = FALSE;
         
@@ -308,6 +313,7 @@ CPLXMLNode *GDALMultiDomainMetadata::Serialize()
         if( !bFormatXML )
         {
             CPLXMLNode* psLastChild = NULL;
+            // To go after domain attribute
             if( psMD->psChild != NULL )
             {
                 psLastChild = psMD->psChild;
@@ -344,4 +350,3 @@ CPLXMLNode *GDALMultiDomainMetadata::Serialize()
 
     return psFirst;
 }
-

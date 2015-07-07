@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravce00datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogravce00datasource.cpp 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCE00DataSource class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravce00datasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogravce00datasource.cpp 28039 2014-11-30 18:24:59Z rouault $");
 
 /************************************************************************/
 /*                        OGRAVCE00DataSource()                         */
@@ -73,7 +73,7 @@ int OGRAVCE00DataSource::Open( const char * pszNewName, int bTestOpen )
 
 {
 /* -------------------------------------------------------------------- */
-/*      Open the source file.  Supress error reporting if we are in     */
+/*      Open the source file.  Suppress error reporting if we are in    */
 /*      TestOpen mode.                                                  */
 /* -------------------------------------------------------------------- */
     int bCompressed = FALSE;

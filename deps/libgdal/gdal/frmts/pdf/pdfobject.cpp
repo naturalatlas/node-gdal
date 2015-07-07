@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfobject.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pdfobject.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset.
@@ -27,14 +27,12 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-/* hack for PDF driver and poppler >= 0.15.0 that defines incompatible "typedef bool GBool" */
-/* in include/poppler/goo/gtypes.h with the one defined in cpl_port.h */
-#define CPL_GBOOL_DEFINED
+#include "gdal_pdf.h"
 
 #include <vector>
 #include "pdfobject.h"
 
-CPL_CVSID("$Id: pdfobject.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pdfobject.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                        ROUND_TO_INT_IF_CLOSE()                       */
@@ -198,11 +196,11 @@ void GDALPDFObject::Serialize(CPLString& osStr)
             else if (CanRepresentRealAsString())
             {
                 /* Used for OGC BP numeric values */
-                sprintf(szReal, "(%.16g)", dfReal);
+                CPLsprintf(szReal, "(%.16g)", dfReal);
             }
             else
             {
-                sprintf(szReal, "%.16f", dfReal);
+                CPLsprintf(szReal, "%.16f", dfReal);
 
                 /* Remove non significant trailing zeroes */
                 char* pszDot = strchr(szReal, '.');

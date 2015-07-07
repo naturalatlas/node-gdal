@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_segy.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_segy.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  SEG-Y Translator
  * Purpose:  Definition of classes for OGR SEG-Y driver.
@@ -118,7 +118,7 @@ class OGRSEGYHeaderLayer: public OGRLayer
   public:
                         OGRSEGYHeaderLayer(const char* pszLayerName,
                                            SEGYBinaryFileHeader* psBFH,
-                                           char* pszHeaderText);
+                                           const char* pszHeaderText);
                         ~OGRSEGYHeaderLayer();
 
     virtual OGRFeature *        GetNextFeature();
@@ -145,8 +145,7 @@ class OGRSEGYDataSource : public OGRDataSource
                         OGRSEGYDataSource();
                         ~OGRSEGYDataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename, const char* pszHeaderText );
 
     virtual const char*         GetName() { return pszName; }
 
@@ -155,20 +154,5 @@ class OGRSEGYDataSource : public OGRDataSource
 
     virtual int                 TestCapability( const char * );
 };
-
-/************************************************************************/
-/*                            OGRSEGYDriver                             */
-/************************************************************************/
-
-class OGRSEGYDriver : public OGRSFDriver
-{
-  public:
-                ~OGRSEGYDriver();
-
-    virtual const char*         GetName();
-    virtual OGRDataSource*      Open( const char *, int );
-    virtual int                 TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_SEGY_H_INCLUDED */

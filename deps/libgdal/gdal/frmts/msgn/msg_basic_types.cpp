@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msg_basic_types.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: msg_basic_types.cpp 28435 2015-02-07 14:35:34Z rouault $
  *
  * Project:  MSG Native Reader
  * Purpose:  Basic types implementation.
@@ -30,7 +30,7 @@
 #include "msg_basic_types.h"
 #include "cpl_port.h"
 
-CPL_CVSID("$Id: msg_basic_types.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: msg_basic_types.cpp 28435 2015-02-07 14:35:34Z rouault $");
 
 #include <stdio.h>
 
@@ -75,18 +75,17 @@ void to_native(IMAGE_DESCRIPTION_RECORD& r) {
     r.referencegrid_visir.numberOfLines = CPL_MSBWORD32(r.referencegrid_visir.numberOfLines);
     r.referencegrid_visir.numberOfColumns = CPL_MSBWORD32(r.referencegrid_visir.numberOfColumns);
     // should floats be swapped too?
-    unsigned int t;
+    float f;
 
-    // convert float using CPL_MSBWORD32
-    // TODO: Fix strict aliasing issue
-    t = *(unsigned int *)&r.referencegrid_visir.lineDirGridStep;
-    t = CPL_MSBWORD32(t);
-    r.referencegrid_visir.lineDirGridStep = *(float *)&t;
+    // convert float using CPL_MSBPTR32
+    memcpy(&f, &r.referencegrid_visir.lineDirGridStep, sizeof(f));
+    CPL_MSBPTR32(&f);
+    r.referencegrid_visir.lineDirGridStep = f;
 
-    // convert float using CPL_MSBWORD32
-    t = *(unsigned int *)&r.referencegrid_visir.columnDirGridStep;
-    t = CPL_MSBWORD32(t);
-    r.referencegrid_visir.columnDirGridStep = *(float *)&t;
+    // convert float using CPL_MSBPTR32
+    memcpy(&f, &r.referencegrid_visir.columnDirGridStep, sizeof(f));
+    CPL_MSBPTR32(&f);
+    r.referencegrid_visir.columnDirGridStep = f;
 }
 
 void to_string(PH_DATA& d) {

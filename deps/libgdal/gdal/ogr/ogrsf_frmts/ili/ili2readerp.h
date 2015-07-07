@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili2readerp.h 27184 2014-04-14 22:21:56Z pka $
+ * $Id: ili2readerp.h 29140 2015-05-03 20:09:32Z pka $
  *
  * Project:  Interlis 2 Reader
  * Purpose:  Private Declarations for Reader code.
@@ -138,7 +138,6 @@ public:
              ILI2Reader();
             ~ILI2Reader();
 
-    void     SetArcDegrees(double arcDegrees);
     void     SetSourceFile( const char *pszFilename );
     int      ReadModel( ImdReader *poImdReader, const char *modelFilename );
     int      SaveClasses( const char *pszFile );
@@ -151,7 +150,7 @@ public:
     void     SetFieldValues(OGRFeature *feature, DOMElement* elem);
     const char* GetLayerName(/*IOM_BASKET model, IOM_OBJECT table*/);
     void     AddField(OGRLayer* layer/*, IOM_BASKET model, IOM_OBJECT obj*/);
-    OGRLineString *getArc(DOMElement *elem);
+    OGRCircularString *getArc(DOMElement *elem);
     OGRGeometry *getGeometry(DOMElement *elem, int type);
     void     setFieldDefn(OGRFeatureDefn *featureDef, DOMElement* elem);
 };

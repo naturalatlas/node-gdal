@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalcolortable.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalcolortable.cpp 28082 2014-12-05 18:06:30Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Color table implementation.
@@ -30,7 +30,7 @@
 
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalcolortable.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalcolortable.cpp 28082 2014-12-05 18:06:30Z rouault $");
 
 /************************************************************************/
 /*                           GDALColorTable()                           */
@@ -459,4 +459,23 @@ GDALCreateColorRamp( GDALColorTableH hTable,
 
     ((GDALColorTable *) hTable)->CreateColorRamp( nStartIndex, psStartColor, 
                                                   nEndIndex, psEndColor );
+}
+
+/************************************************************************/
+/*                           IsSame()                                   */
+/************************************************************************/
+
+/**
+ * \brief Returns if the current color table is the same as another one.
+ *
+ * @param poOtherCT other color table to be compared to.
+ * @return TRUE if both color tables are identical.
+ * @since GDAL 2.0
+ */
+
+int GDALColorTable::IsSame(const GDALColorTable* poOtherCT) const
+{
+    return aoEntries.size() == poOtherCT->aoEntries.size() &&
+           (aoEntries.size() == 0 ||
+            memcmp(&aoEntries[0], &poOtherCT->aoEntries[0], aoEntries.size() * sizeof(GDALColorEntry)) == 0);
 }

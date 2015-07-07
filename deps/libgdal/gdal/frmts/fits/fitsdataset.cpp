@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fitsdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: fitsdataset.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  FITS Driver
  * Purpose:  Implement FITS raster read/write support
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include <string.h>
 
-CPL_CVSID("$Id: fitsdataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: fitsdataset.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 CPL_C_START
 #include <fitsio.h>
@@ -281,9 +281,9 @@ FITSDataset::~FITSDataset() {
 	    // if you want finer control, use the underlying FITS
 	    // handle. Note: to avoid a compiler warning we copy the
 	    // const value string to a non const one...
-	    char* valueCpy = strdup(value);
+            char* valueCpy = CPLStrdup(value);
 	    fits_update_key_longstr(hFITS, key, valueCpy, 0, &status);
-	    free(valueCpy);
+	    CPLFree(valueCpy);
 
 	    // Check for errors
 	    if (status) {
@@ -510,7 +510,7 @@ GDALDataset* FITSDataset::Open(GDALOpenInfo* poOpenInfo) {
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-      dataset->oOvManager.Initialize( dataset, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+      dataset->oOvManager.Initialize( dataset, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
       return dataset;
   }
@@ -609,6 +609,7 @@ void GDALRegister_FITS() {
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "FITS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Flexible Image Transport System" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

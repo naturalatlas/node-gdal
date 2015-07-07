@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_opt.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_opt.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  OpenGIS Simple Features
  * Purpose:  Functions for getting list of projection types, and their parms.
@@ -31,7 +31,7 @@
 #include "ogr_srs_api.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogr_opt.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_opt.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 static const char *papszParameterDefinitions[] = {
     SRS_PP_CENTRAL_MERIDIAN,    "Central Meridian",     "Long",  "0.0",
@@ -468,6 +468,12 @@ static const char *papszProjectionDefinitions[] = {
     SRS_PP_FALSE_EASTING, 
     SRS_PP_FALSE_NORTHING,
 
+    "*",
+    SRS_PT_QSC,
+    "Quadrilateralized Spherical Cube",
+    SRS_PP_LATITUDE_OF_ORIGIN,
+    SRS_PP_CENTRAL_MERIDIAN,
+
     NULL
 };
 
@@ -603,7 +609,7 @@ int OPTGetParameterInfo( const char * pszProjectionMethod,
             if( ppszType != NULL )
                 *ppszType = (char *)papszParameterDefinitions[i+2];
             if( pdfDefaultValue != NULL )
-                *pdfDefaultValue = atof(papszParameterDefinitions[i+3]);
+                *pdfDefaultValue = CPLAtof(papszParameterDefinitions[i+3]);
 
             return TRUE;
         }

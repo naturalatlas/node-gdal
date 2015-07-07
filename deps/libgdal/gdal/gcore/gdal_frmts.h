@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_frmts.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_frmts.h 28859 2015-04-07 08:40:10Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Prototypes for all format specific driver initializations.
@@ -120,6 +120,7 @@ void CPL_DLL GDALRegister_DIPEx(void);
 void CPL_DLL GDALRegister_ISIS3(void);
 void CPL_DLL GDALRegister_ISIS2(void);
 void CPL_DLL GDALRegister_PDS(void);
+void CPL_DLL GDALRegister_VICAR(void);
 void CPL_DLL GDALRegister_IDRISI(void);
 void CPL_DLL GDALRegister_Terragen(void);
 void CPL_DLL GDALRegister_WCS(void);
@@ -178,6 +179,9 @@ void CPL_DLL GDALRegister_MBTiles(void);
 void CPL_DLL GDALRegister_ARG(void);
 void CPL_DLL GDALRegister_IRIS(void);
 void CPL_DLL GDALRegister_KRO(void);
+void CPL_DLL GDALRegister_KEA(void);
+void CPL_DLL GDALRegister_ROIPAC(void);
+void CPL_DLL GDALRegister_PLMOSAIC(void);
 CPL_C_END
 
 #endif /* ndef GDAL_FRMTS_H_INCLUDED */

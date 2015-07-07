@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvgdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsvgdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGDataSource class
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvgdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsvgdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                          OGRSVGDataSource()                          */
@@ -110,7 +110,8 @@ void OGRSVGDataSource::startElementValidateCbk(const char *pszName,
 /*                      dataHandlerValidateCbk()                        */
 /************************************************************************/
 
-void OGRSVGDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
+void OGRSVGDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data,
+                                              CPL_UNUSED int nLen)
 {
     nDataHandlerCounter ++;
     if (nDataHandlerCounter >= BUFSIZ)
@@ -140,15 +141,9 @@ static void XMLCALL dataHandlerValidateCbk(void *pUserData, const char *data, in
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRSVGDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGRSVGDataSource::Open( const char * pszFilename )
 
 {
-    if (bUpdateIn)
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-                    "OGR/SVG driver does not support opening a file in update mode");
-        return FALSE;
-    }
 #ifdef HAVE_EXPAT
     pszName = CPLStrdup( pszFilename );
 

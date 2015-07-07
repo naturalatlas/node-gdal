@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_rat.cpp 27723 2014-09-22 18:21:08Z goatbar $
+ * $Id: gdal_rat.cpp 29243 2015-05-24 15:53:26Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALRasterAttributeTable and related classes.
@@ -30,8 +30,10 @@
 
 #include "gdal_priv.h"
 #include "gdal_rat.h"
+#include "json.h"
+#include "ogrgeojsonwriter.h"
 
-CPL_CVSID("$Id: gdal_rat.cpp 27723 2014-09-22 18:21:08Z goatbar $");
+CPL_CVSID("$Id: gdal_rat.cpp 29243 2015-05-24 15:53:26Z rouault $");
 
 /**
  * \class GDALRasterAttributeTable
@@ -374,7 +376,7 @@ int GDALRasterAttributeTable::GetRowOfValue( int nValue ) const
  * @return CE_None on success or CE_Failure if something goes wrong.
  */
 
-CPLErr GDALRasterAttributeTable::CreateColumn( CPL_UNUSED const char *pszFieldName, 
+CPLErr GDALRasterAttributeTable::CreateColumn( CPL_UNUSED const char *pszFieldName,
                                                CPL_UNUSED GDALRATFieldType eFieldType,
                                                CPL_UNUSED GDALRATFieldUsage eFieldUsage )
 {
@@ -422,7 +424,7 @@ CPLErr CPL_STDCALL GDALRATCreateColumn( GDALRasterAttributeTableH hRAT,
  * @return CE_None on success or CE_Failure on failure.
  */
 
-CPLErr GDALRasterAttributeTable::SetLinearBinning( CPL_UNUSED double dfRow0MinIn, 
+CPLErr GDALRasterAttributeTable::SetLinearBinning( CPL_UNUSED double dfRow0MinIn,
                                                    CPL_UNUSED double dfBinSizeIn )
 {
     return CE_Failure;
@@ -514,12 +516,12 @@ CPLXMLNode *GDALRasterAttributeTable::Serialize() const
 
     if( GetLinearBinning(&dfRow0Min, &dfBinSize) )
     {
-        sprintf( szValue, "%.16g", dfRow0Min );
+        CPLsprintf( szValue, "%.16g", dfRow0Min );
         CPLCreateXMLNode( 
             CPLCreateXMLNode( psTree, CXT_Attribute, "Row0Min" ), 
             CXT_Text, szValue );
 
-        sprintf( szValue, "%.16g", dfBinSize );
+        CPLsprintf( szValue, "%.16g", dfBinSize );
         CPLCreateXMLNode( 
             CPLCreateXMLNode( psTree, CXT_Attribute, "BinSize" ), 
             CXT_Text, szValue );
@@ -580,7 +582,7 @@ CPLXMLNode *GDALRasterAttributeTable::Serialize() const
             if( GetTypeOfCol(iCol) == GFT_Integer )
                 sprintf( szValue, "%d", GetValueAsInt(iRow, iCol) );
             else if( GetTypeOfCol(iCol) == GFT_Real )
-                sprintf( szValue, "%.16g", GetValueAsDouble(iRow, iCol) );
+                CPLsprintf( szValue, "%.16g", GetValueAsDouble(iRow, iCol) );
             else
                 pszValue = GetValueAsString(iRow, iCol);
 
@@ -589,6 +591,99 @@ CPLXMLNode *GDALRasterAttributeTable::Serialize() const
     }
 
     return psTree;
+}
+
+/************************************************************************/
+/*                             SerializeJSON()                              */
+/************************************************************************/
+
+void *GDALRasterAttributeTable::SerializeJSON() const
+
+{
+    json_object *poRAT = json_object_new_object();
+
+    if( ( GetColumnCount() == 0 ) && ( GetRowCount() == 0 ) ) 
+        return poRAT;
+
+
+/* -------------------------------------------------------------------- */
+/*      Add attributes with regular binning info if appropriate.        */
+/* -------------------------------------------------------------------- */
+    double dfRow0Min, dfBinSize;
+    json_object *poRow0Min, *poBinSize;
+
+    if( GetLinearBinning(&dfRow0Min, &dfBinSize) )
+    {
+        poRow0Min = json_object_new_double_with_precision( dfRow0Min, 16 );
+        json_object_object_add( poRAT, "row0Min", poRow0Min );
+
+        poBinSize = json_object_new_double_with_precision( dfBinSize, 16 );
+        json_object_object_add( poRAT, "binSize", poBinSize );
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Define each column.                                             */
+/* -------------------------------------------------------------------- */
+    int iCol;
+    int iColCount = GetColumnCount();
+    json_object *poFieldDefnArray = json_object_new_array();
+    json_object *poFieldDefn, *poColumnIndex, *poName, *poType, *poUsage;
+
+    for( iCol = 0; iCol < iColCount; iCol++ )
+    {
+        poFieldDefn = json_object_new_object();
+
+        poColumnIndex = json_object_new_int( iCol );
+        json_object_object_add( poFieldDefn, "index", poColumnIndex );
+
+        poName = json_object_new_string( GetNameOfCol(iCol) );
+        json_object_object_add( poFieldDefn, "name", poName );
+
+        poType = json_object_new_int( (int) GetTypeOfCol(iCol) );
+        json_object_object_add( poFieldDefn, "type", poType );
+
+        poUsage = json_object_new_int( (int) GetUsageOfCol(iCol) );
+        json_object_object_add( poFieldDefn, "usage", poUsage );
+
+        json_object_array_add( poFieldDefnArray, poFieldDefn );
+    }
+
+    json_object_object_add( poRAT, "fieldDefn", poFieldDefnArray );
+
+/* -------------------------------------------------------------------- */
+/*      Write out each row.                                             */
+/* -------------------------------------------------------------------- */
+    int iRow;
+    int iRowCount = GetRowCount();
+    json_object *poRowArray = json_object_new_array();
+    json_object *poRow, *poRowIndex, *poFArray, *poF;
+
+    for( iRow = 0; iRow < iRowCount; iRow++ )
+    {
+        poRow = json_object_new_object();
+
+        poRowIndex = json_object_new_int(iRow);
+        json_object_object_add( poRow, "index", poRowIndex );
+
+        poFArray = json_object_new_array();
+
+        for( iCol = 0; iCol < iColCount; iCol++ )
+        {
+            if( GetTypeOfCol(iCol) == GFT_Integer )
+                poF = json_object_new_int( GetValueAsInt(iRow, iCol) );
+            else if( GetTypeOfCol(iCol) == GFT_Real )
+                poF = json_object_new_double_with_precision( GetValueAsDouble(iRow, iCol), 16 );
+            else
+                poF = json_object_new_string( GetValueAsString(iRow, iCol) );
+
+            json_object_array_add( poFArray, poF );
+        }
+        json_object_object_add( poRow, "f", poFArray );
+        json_object_array_add( poRowArray, poRow );
+    }
+    json_object_object_add( poRAT, "row", poRowArray );
+
+    return poRAT;
 }
 
 /************************************************************************/
@@ -607,8 +702,8 @@ CPLErr GDALRasterAttributeTable::XMLInit( CPLXMLNode *psTree,
     if( CPLGetXMLValue( psTree, "Row0Min", NULL ) 
         && CPLGetXMLValue( psTree, "BinSize", NULL ) )
     {
-        SetLinearBinning( atof(CPLGetXMLValue( psTree, "Row0Min","" )), 
-                          atof(CPLGetXMLValue( psTree, "BinSize","" )) );
+        SetLinearBinning( CPLAtof(CPLGetXMLValue( psTree, "Row0Min","" )), 
+                          CPLAtof(CPLGetXMLValue( psTree, "BinSize","" )) );
     }
 
 /* -------------------------------------------------------------------- */
@@ -1353,7 +1448,7 @@ GDALDefaultRasterAttributeTable::GetValueAsDouble( int iRow, int iField ) const
         return aoFields[iField].adfValues[iRow];
 
       case GFT_String:
-        return atof( aoFields[iField].aosValues[iRow].c_str() );
+        return CPLAtof( aoFields[iField].aosValues[iRow].c_str() );
     }
 
     return 0;
@@ -1443,7 +1538,7 @@ void GDALDefaultRasterAttributeTable::SetValue( int iRow, int iField,
         break;
         
       case GFT_Real:
-        aoFields[iField].adfValues[iRow] = atof(pszValue);
+        aoFields[iField].adfValues[iRow] = CPLAtof(pszValue);
         break;
         
       case GFT_String:
@@ -1579,7 +1674,7 @@ void GDALDefaultRasterAttributeTable::SetValue( int iRow, int iField,
       {
           char szValue[100];
 
-          sprintf( szValue, "%.15g", dfValue );
+          CPLsprintf( szValue, "%.15g", dfValue );
           aoFields[iField].aosValues[iRow] = szValue;
       }
       break;
@@ -1817,4 +1912,22 @@ GDALRATClone( GDALRasterAttributeTableH hRAT )
     VALIDATE_POINTER1( hRAT, "GDALRATClone", NULL );
 
     return ((GDALRasterAttributeTable *) hRAT)->Clone();
+}
+
+/************************************************************************/
+/*                            GDALRATSerializeJSON()                    */
+/************************************************************************/
+
+/**
+ * \brief Serialize Raster Attribute Table in Json format
+ *
+ * This function is the same as the C++ method GDALRasterAttributeTable::SerializeJSON()
+ */
+void* CPL_STDCALL 
+GDALRATSerializeJSON( GDALRasterAttributeTableH hRAT )
+
+{
+    VALIDATE_POINTER1( hRAT, "GDALRATSerializeJSON", NULL );
+
+    return ((GDALRasterAttributeTable *) hRAT)->SerializeJSON();
 }

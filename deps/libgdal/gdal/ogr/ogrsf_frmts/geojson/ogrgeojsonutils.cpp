@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonutils.cpp 27613 2014-08-30 15:55:30Z rouault $
+ * $Id: ogrgeojsonutils.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of private utilities used within OGR GeoJSON Driver.
@@ -78,49 +78,22 @@ int GeoJSONIsObject( const char* pszText )
 /************************************************************************/
 
 static
-int GeoJSONFileIsObject( const char* pszSource, VSILFILE** pfp ) 
+int GeoJSONFileIsObject( GDALOpenInfo* poOpenInfo ) 
 { 
-    CPLAssert( NULL != pszSource ); 
- 
-    VSILFILE* fp = NULL; 
-    fp = VSIFOpenL( pszSource, "rb" ); 
-    if( NULL == fp ) 
-    { 
-        return FALSE; 
-    } 
-    
     // by default read first 6000 bytes 
     // 6000 was chosen as enough bytes to  
     // enable all current tests to pass 
-    vsi_l_offset nToReadLen = 6000; 
-    vsi_l_offset nDataLen = 0; 
 
-    char* pszGeoData = (char*)VSIMalloc((size_t)(nToReadLen + 1)); 
-    if( NULL == pszGeoData ) 
+    if( poOpenInfo->fpL == NULL ||
+        !poOpenInfo->TryToIngest(6000) ) 
     { 
-        VSIFCloseL(fp); 
         return FALSE; 
     } 
 
-    nDataLen = VSIFReadL( pszGeoData, 1, (size_t)nToReadLen, fp );
-    pszGeoData[nDataLen] = '\0'; 
-    if( nDataLen == 0 ) 
-    { 
-        VSIFCloseL( fp ); 
-        CPLFree( pszGeoData ); 
-        return FALSE; 
-    }
-
-    if( !GeoJSONIsObject(pszGeoData) )
+    if( !GeoJSONIsObject((const char*)poOpenInfo->pabyHeader) )
     {
-        CPLFree( pszGeoData ); 
-        VSIFCloseL( fp ); 
         return FALSE;
     }
-
-    *pfp = fp;
-
-    CPLFree( pszGeoData ); 
 
     return TRUE; 
 } 
@@ -129,33 +102,37 @@ int GeoJSONFileIsObject( const char* pszSource, VSILFILE** pfp )
 /*                           GeoJSONGetSourceType()                     */
 /************************************************************************/
 
-GeoJSONSourceType GeoJSONGetSourceType( const char* pszSource, VSILFILE** pfp )
+GeoJSONSourceType GeoJSONGetSourceType( GDALOpenInfo* poOpenInfo )
 {
     GeoJSONSourceType srcType = eGeoJSONSourceUnknown;
-
-    *pfp = NULL;
 
     // NOTE: Sometimes URL ends with .geojson token, for example
     //       http://example/path/2232.geojson
     //       It's important to test beginning of source first.
-    if ( eGeoJSONProtocolUnknown != GeoJSONGetProtocolType( pszSource ) )
+    if ( eGeoJSONProtocolUnknown != GeoJSONGetProtocolType( poOpenInfo->pszFilename ) )
     {
+        if( (strstr(poOpenInfo->pszFilename, "SERVICE=WFS") ||
+             strstr(poOpenInfo->pszFilename, "service=WFS") ||
+             strstr(poOpenInfo->pszFilename, "service=wfs")) &&
+             !strstr(poOpenInfo->pszFilename, "json") )
+            return srcType;
         srcType = eGeoJSONSourceService;
     }
-    else if( EQUAL( CPLGetExtension( pszSource ), "geojson" )
-             || EQUAL( CPLGetExtension( pszSource ), "json" )
-             || EQUAL( CPLGetExtension( pszSource ), "topojson" )
-             || ((EQUALN( pszSource, "/vsigzip/", 9) || EQUALN( pszSource, "/vsizip/", 8)) &&
-                 (strstr( pszSource, ".json") || strstr( pszSource, ".JSON") ||
-                  strstr( pszSource, ".geojson") || strstr( pszSource, ".GEOJSON")) ))
+    else if( EQUAL( CPLGetExtension( poOpenInfo->pszFilename ), "geojson" )
+             || EQUAL( CPLGetExtension( poOpenInfo->pszFilename ), "json" )
+             || EQUAL( CPLGetExtension( poOpenInfo->pszFilename ), "topojson" )
+             || ((EQUALN( poOpenInfo->pszFilename, "/vsigzip/", 9) || EQUALN( poOpenInfo->pszFilename, "/vsizip/", 8)) &&
+                 (strstr( poOpenInfo->pszFilename, ".json") || strstr( poOpenInfo->pszFilename, ".JSON") ||
+                  strstr( poOpenInfo->pszFilename, ".geojson") || strstr( poOpenInfo->pszFilename, ".GEOJSON")) ))
     {
-        srcType = eGeoJSONSourceFile;
+        if( poOpenInfo->fpL != NULL )
+            srcType = eGeoJSONSourceFile;
     }
-    else if( GeoJSONIsObject( pszSource ) )
+    else if( GeoJSONIsObject( poOpenInfo->pszFilename ) )
     {
         srcType = eGeoJSONSourceText;
     }
-    else if( GeoJSONFileIsObject( pszSource, pfp ) )
+    else if( GeoJSONFileIsObject( poOpenInfo ) )
     {
         srcType = eGeoJSONSourceFile;
     }
@@ -188,43 +165,39 @@ GeoJSONProtocolType GeoJSONGetProtocolType( const char* pszSource )
 #define MY_INT64_MAX ((((GIntBig)0x7FFFFFFF) << 32) | 0xFFFFFFFF)
 #define MY_INT64_MIN ((((GIntBig)0x80000000) << 32))
 
-OGRFieldType GeoJSONPropertyToFieldType( json_object* poObject )
+OGRFieldType GeoJSONPropertyToFieldType( json_object* poObject,
+                                         OGRFieldSubType& eSubType )
 {
+    eSubType = OFSTNone;
+
     if (poObject == NULL) { return OFTString; }
 
     json_type type = json_object_get_type( poObject );
 
     if( json_type_boolean == type )
+    {
+        eSubType = OFSTBoolean;
         return OFTInteger;
+    }
     else if( json_type_double == type )
         return OFTReal;
     else if( json_type_int == type )
     {
         GIntBig nVal = json_object_get_int64(poObject);
-        if( nVal == MY_INT64_MIN || nVal == MY_INT64_MAX )
+        if( nVal != (GIntBig)(int) nVal )
         {
-            static int bWarned = FALSE;
-            if( !bWarned )
+            if( nVal == MY_INT64_MIN || nVal == MY_INT64_MAX )
             {
-                bWarned = TRUE;
-                CPLError(CE_Warning, CPLE_AppDefined,
-                         "Integer values ranging out of 64bit integer range "
-                         "have been found. Will be clamped to INT64_MIN/INT64_MAX");
+                static int bWarned = FALSE;
+                if( !bWarned )
+                {
+                    bWarned = TRUE;
+                    CPLError(CE_Warning, CPLE_AppDefined,
+                             "Integer values probably ranging out of 64bit integer range "
+                             "have been found. Will be clamped to INT64_MIN/INT64_MAX");
+                }
             }
-            return OFTString;
-        }
-        // FIXME when we have 64bit integer
-        if( nVal != (int) nVal )
-        {
-            static int bWarned = FALSE;
-            if( !bWarned )
-            {
-                bWarned = TRUE;
-                CPLDebug("GeoJSON",
-                         "64b-bit integer have been found. Will be reported as "
-                         "strings");
-            }
-            return OFTString;
+            return OFTInteger64;
         }
         else
         {
@@ -239,25 +212,65 @@ OGRFieldType GeoJSONPropertyToFieldType( json_object* poObject )
         if (nSize == 0)
             return OFTStringList; /* we don't know, so let's assume it's a string list */
         OGRFieldType eType = OFTIntegerList;
+        int bOnlyBoolean = TRUE;
         for(int i=0;i<nSize;i++)
         {
             json_object* poRow = json_object_array_get_idx(poObject, i);
             if (poRow != NULL)
             {
                 type = json_object_get_type( poRow );
+                bOnlyBoolean &= (type == json_type_boolean);
                 if (type == json_type_string)
                     return OFTStringList;
                 else if (type == json_type_double)
                     eType = OFTRealList;
+                else if (eType == OFTIntegerList &&
+                         type == json_type_int)
+                {
+                    GIntBig nVal = json_object_get_int64(poRow);
+                    if( nVal != (GIntBig)(int)nVal )
+                        eType = OFTInteger64List;
+                }
                 else if (type != json_type_int &&
                          type != json_type_boolean)
                     return OFTString;
             }
         }
+        if( bOnlyBoolean )
+            eSubType = OFSTBoolean;
         return eType;
     }
     else
         return OFTString; /* null, object */
+}
+
+/************************************************************************/
+/*                        GeoJSONStringPropertyToFieldType()            */
+/************************************************************************/
+
+OGRFieldType GeoJSONStringPropertyToFieldType( json_object* poObject )
+{
+    if (poObject == NULL) { return OFTString; }
+    const char* pszStr = json_object_get_string( poObject );
+
+    OGRField sWrkField;
+    CPLPushErrorHandler(CPLQuietErrorHandler);
+    int bSuccess = OGRParseDate( pszStr, &sWrkField, 0 );
+    CPLPopErrorHandler();
+    CPLErrorReset();
+    if( bSuccess )
+    {
+        int bHasDate = strchr( pszStr, '/' ) != NULL ||
+                        strchr( pszStr, '-' ) != NULL;
+        int bHasTime = strchr( pszStr, ':' ) != NULL;
+        if( bHasDate && bHasTime )
+            return OFTDateTime;
+        else if( bHasDate )
+            return OFTDate;
+        else
+            return OFTTime;
+    }
+    return OFTString;
 }
 
 /************************************************************************/

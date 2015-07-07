@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalrasterpolygonenumerator.cpp 24379 2012-05-04 01:26:19Z warmerdam $
+ * $Id: gdalrasterpolygonenumerator.cpp 28826 2015-03-30 17:51:14Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Raster Polygon Enumerator
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include <vector>
 
-CPL_CVSID("$Id: gdalrasterpolygonenumerator.cpp 24379 2012-05-04 01:26:19Z warmerdam $");
+CPL_CVSID("$Id: gdalrasterpolygonenumerator.cpp 28826 2015-03-30 17:51:14Z rouault $");
 
 /************************************************************************/
 /*                    GDALRasterPolygonEnumerator()                     */
@@ -174,7 +174,11 @@ void GDALRasterPolygonEnumerator::ProcessLine(
     {
         for( i=0; i < nXSize; i++ )
         {
-            if( i == 0 || panThisLineVal[i] != panThisLineVal[i-1] )
+            if( panThisLineVal[i] == GP_NODATA_MARKER )
+            {
+                panThisLineId[i] = -1;
+            }
+            else if( i == 0 || panThisLineVal[i] != panThisLineVal[i-1] )
             {
                 panThisLineId[i] = NewPolygon( panThisLineVal[i] );
             }
@@ -191,7 +195,11 @@ void GDALRasterPolygonEnumerator::ProcessLine(
 /* -------------------------------------------------------------------- */
     for( i = 0; i < nXSize; i++ )
     {
-        if( i > 0 && panThisLineVal[i] == panThisLineVal[i-1] )
+        if( panThisLineVal[i] == GP_NODATA_MARKER )
+        {
+            panThisLineId[i] = -1;
+        }
+        else if( i > 0 && panThisLineVal[i] == panThisLineVal[i-1] )
         {
             panThisLineId[i] = panThisLineId[i-1];        
 

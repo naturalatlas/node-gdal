@@ -55,6 +55,8 @@ OGRGMELayer::OGRGMELayer(OGRGMEDataSource* poDS,
     osTableId = pszTableId;
     bInTransaction = false;
     m_poFilterGeom = NULL;
+    iGxIdField = -1;
+    SetDescription( pszTableId );
 }
 
 
@@ -75,6 +77,8 @@ OGRGMELayer::OGRGMELayer(OGRGMEDataSource* poDS,
     osProjectId = CSLFetchNameValue( papszOptions, "projectId" );
     osDraftACL = CSLFetchNameValueDef( papszOptions, "draftAccessList", "Map Editors" );
     osPublishedACL = CSLFetchNameValueDef( papszOptions, "publishedAccessList", "Map Viewers" );
+    iGxIdField = -1;
+    SetDescription( pszTableName );
     // TODO: support tags and description
 }
 
@@ -369,7 +373,7 @@ OGRFeature *OGRGMELayer::GetNextRawFeature()
     const char *gx_id = OGRGMEGetJSONString(properties_obj, "gx_id");
     if (gx_id) {
         CPLString gmeId(gx_id);
-        omnosIdToGMEKey[++m_nFeaturesRead] = gmeId;
+        omnosIdToGMEKey[(int)(++m_nFeaturesRead)] = gmeId;
         poFeature->SetFID(m_nFeaturesRead);
         CPLDebug("GME", "Mapping ids: \"%s\" to %d", gx_id, (int)m_nFeaturesRead);
     }
@@ -587,7 +591,7 @@ OGRErr OGRGMELayer::BatchDelete()
 {
     json_object *pjoBatchDelete = json_object_new_object();
     json_object *pjoGxIds = json_object_new_array();
-    std::vector<long>::const_iterator fit;
+    std::vector<GIntBig>::const_iterator fit;
     CPLDebug("GME", "BatchDelete() - <%d>", (int)oListOfDeletedFeatures.size() );
     if (oListOfDeletedFeatures.size() == 0) {
         CPLDebug("GME", "Empty list, not doing BatchDelete");
@@ -595,12 +599,12 @@ OGRErr OGRGMELayer::BatchDelete()
     }
     for ( fit = oListOfDeletedFeatures.begin(); fit != oListOfDeletedFeatures.end(); fit++)
     {
-        long nFID = *fit;
+        GIntBig nFID = *fit;
         if (nFID > 0) {
-            CPLString osGxId(omnosIdToGMEKey[nFID]);
-            CPLDebug("GME", "Deleting feature %ld -> '%s'", nFID, osGxId.c_str());
+            CPLString osGxId(omnosIdToGMEKey[(int)nFID]);
+            CPLDebug("GME", "Deleting feature " CPL_FRMT_GIB " -> '%s'", nFID, osGxId.c_str());
             json_object *pjoGxId = json_object_new_string(osGxId.c_str());
-            omnosIdToGMEKey.erase(nFID);
+            omnosIdToGMEKey.erase((int)nFID);
             json_object_array_add( pjoGxIds, pjoGxId );
         }
     }
@@ -644,9 +648,9 @@ OGRErr OGRGMELayer::BatchRequest(const char *pszMethod, std::map<int, OGRFeature
     }
     for ( fit = omnpoFeatures.begin(); fit != omnpoFeatures.end(); fit++)
     {
-        long nFID = fit->first;
+        GIntBig nFID = fit->first;
         OGRFeature *poFeature = fit->second;
-        CPLDebug("GME", "Processing feature: %ld", nFID );
+        CPLDebug("GME", "Processing feature: " CPL_FRMT_GIB, nFID );
         json_object *pjoFeature = OGRGMEFeatureToGeoJSON(poFeature);
 
         if (pjoFeature != NULL)
@@ -706,10 +710,10 @@ unsigned int OGRGMELayer::GetBatchPatchSize()
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGMELayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGMELayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     if (!poFeature)
@@ -718,30 +722,38 @@ OGRErr OGRGMELayer::CreateFeature( OGRFeature *poFeature )
         return OGRERR_FAILURE;
     }
 
-    long nFID = ++m_nFeaturesRead;
+    GIntBig nFID = ++m_nFeaturesRead;
     poFeature->SetFID(nFID);
 
     int nGxId = poFeature->GetFieldIndex("gx_id");
     CPLDebug("GME", "gx_id is field %d", iGxIdField);
     CPLString osGxId;
-    CPLDebug("GME", "Inserting feature %ld as %s", poFeature->GetFID(), osGxId.c_str());
+    CPLDebug("GME", "Inserting feature " CPL_FRMT_GIB " as %s", poFeature->GetFID(), osGxId.c_str());
     if (nGxId >= 0) {
         iGxIdField = nGxId;
         if(poFeature->IsFieldSet(iGxIdField)) {
           osGxId = poFeature->GetFieldAsString(iGxIdField);
-          CPLDebug("GME", "Feature already has %ld gx_id='%s'", poFeature->GetFID(),
+          CPLDebug("GME", "Feature already has " CPL_FRMT_GIB " gx_id='%s'", poFeature->GetFID(),
                    osGxId.c_str());
         }
         else {
-            osGxId = CPLSPrintf("GDAL-%ld", nFID);
+            osGxId = CPLSPrintf("GDAL-" CPL_FRMT_GIB "", nFID);
             CPLDebug("GME", "Setting field %d as %s", iGxIdField, osGxId.c_str() );
             poFeature->SetField( iGxIdField, osGxId.c_str() );
         }
     }
-    omnosIdToGMEKey[poFeature->GetFID()] = osGxId;
-    omnpoInsertedFeatures[nFID] = poFeature->Clone();
 
     if (bInTransaction) {
+        unsigned int iBatchSize = GetBatchPatchSize();
+        if (omnpoInsertedFeatures.size() >= iBatchSize) {
+            CPLDebug("GME", "BatchInsert, reached BatchSize of %d", iBatchSize);
+            OGRErr iBatchInsertResult = BatchInsert();
+            if (iBatchInsertResult != OGRERR_NONE) {
+                return iBatchInsertResult;
+            }
+        }
+        omnosIdToGMEKey[(int)poFeature->GetFID()] = osGxId;
+        omnpoInsertedFeatures[(int)nFID] = poFeature->Clone();
         CPLDebug("GME", "In Transaction, added feature to memory only");
         bDirty = true;
         return OGRERR_NONE;
@@ -753,31 +765,39 @@ OGRErr OGRGMELayer::CreateFeature( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
 
-OGRErr OGRGMELayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRGMELayer::ISetFeature( OGRFeature *poFeature )
 
 {
     if (!poFeature)
         return OGRERR_FAILURE;
-    long nFID = poFeature->GetFID();
+    GIntBig nFID = poFeature->GetFID();
     if(bInTransaction) {
         std::map<int, OGRFeature *>::const_iterator fit;
-        fit = omnpoInsertedFeatures.find(nFID);
+        fit = omnpoInsertedFeatures.find((int)nFID);
         if (fit != omnpoInsertedFeatures.end()) {
-            omnpoInsertedFeatures[nFID] = poFeature->Clone();
-            CPLDebug("GME", "Updated Feature %ld in Transaction", nFID);
+            omnpoInsertedFeatures[(int)nFID] = poFeature->Clone();
+            CPLDebug("GME", "Updated Feature " CPL_FRMT_GIB " in Transaction", nFID);
         }
         else {
+            unsigned int iBatchSize = GetBatchPatchSize();
+            if (omnpoUpdatedFeatures.size() >= iBatchSize) {
+                CPLDebug("GME", "BatchPatch, reached BatchSize of %d", iBatchSize);
+                OGRErr iBatchInsertResult = BatchPatch();
+                if (iBatchInsertResult != OGRERR_NONE) {
+                    return iBatchInsertResult;
+                }
+            }
             CPLDebug("GME", "In Transaction, add update to Transaction");
             bDirty = true;
-            omnpoUpdatedFeatures[nFID] = poFeature->Clone();
+            omnpoUpdatedFeatures[(int)nFID] = poFeature->Clone();
         }
         return OGRERR_NONE;
     }
     else {
-        omnpoUpdatedFeatures[nFID] = poFeature->Clone();
+        omnpoUpdatedFeatures[(int)nFID] = poFeature->Clone();
         CPLDebug("GME", "Not in Transaction, BatchPatch()");
         return BatchPatch();
     }
@@ -787,16 +807,24 @@ OGRErr OGRGMELayer::SetFeature( OGRFeature *poFeature )
 /*                           DeleteteFeature()                          */
 /************************************************************************/
 
-OGRErr OGRGMELayer::DeleteFeature( long nFID )
+OGRErr OGRGMELayer::DeleteFeature( GIntBig nFID )
 {
     if(bInTransaction) {
         std::map<int, OGRFeature *>::iterator fit;
-        fit = omnpoInsertedFeatures.find(nFID);
+        fit = omnpoInsertedFeatures.find((int)nFID);
         if (fit != omnpoInsertedFeatures.end()) {
             omnpoInsertedFeatures.erase(fit);
-            CPLDebug("GME", "Found %ld in omnpoInsertedFeatures", nFID);
+            CPLDebug("GME", "Found " CPL_FRMT_GIB " in omnpoInsertedFeatures", nFID);
         }
         else {
+            unsigned int iBatchSize = GetBatchPatchSize();
+            if (oListOfDeletedFeatures.size() >= iBatchSize) {
+                CPLDebug("GME", "BatchDelete, reached BatchSize of %d", iBatchSize);
+                OGRErr iBatchResult = BatchDelete();
+                if (iBatchResult != OGRERR_NONE) {
+                    return iBatchResult;
+                }
+            }
             CPLDebug("GME", "In Transaction, adding feature to List");
             bDirty = true;
             oListOfDeletedFeatures.push_back(nFID); 
@@ -813,7 +841,8 @@ OGRErr OGRGMELayer::DeleteFeature( long nFID )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGMELayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRGMELayer::CreateField( OGRFieldDefn *poField,
+                                 CPL_UNUSED int bApproxOK )
 {
     CPLDebug("GME", "create field %s of type %s, pending = %d",
              poField->GetNameRef(), OGRFieldDefn::GetFieldTypeName(poField->GetType()),
@@ -903,11 +932,16 @@ bool OGRGMELayer::CreateTableIfNotCreated()
 
     for (int iOGRField = 0; iOGRField < poFeatureDefn->GetFieldCount(); iOGRField++ )
     {
-        if (iOGRField == iGxIdField)
+        if ((iOGRField == iGxIdField) && (iGxIdField >= 0))
             continue; // don't create the gx_id field.
+        const char *pszFieldName = poFeatureDefn->GetFieldDefn(iOGRField)->GetNameRef();
+        if (EQUAL(pszFieldName, "gx_id")) {
+            iGxIdField = iOGRField;
+            continue;
+        }
         json_object *pjoColumn = json_object_new_object();
         json_object *pjoFieldName =
-            json_object_new_string( poFeatureDefn->GetFieldDefn(iOGRField)->GetNameRef() );
+            json_object_new_string( pszFieldName );
         json_object *pjoFieldType;
 
         switch(poFeatureDefn->GetFieldDefn(iOGRField)->GetType()) {
@@ -1014,7 +1048,7 @@ OGRErr OGRGMELayer::CommitTransaction()
 {
     if (!bInTransaction)
     {
-        CPLError(CE_Failure, CPLE_AppDefined, "Should be in transaction");
+        CPLError(CE_Failure, CPLE_AppDefined, "Cannot commit, not in transaction");
         return OGRERR_FAILURE;
     }
     bInTransaction = FALSE;
@@ -1029,7 +1063,7 @@ OGRErr OGRGMELayer::RollbackTransaction()
 {
     if (!bInTransaction)
     {
-        CPLError(CE_Failure, CPLE_AppDefined, "Should be in transaction");
+        CPLError(CE_Failure, CPLE_AppDefined, "Cannot rollback, not in transaction.");
         return OGRERR_FAILURE;
     }
     bInTransaction = FALSE;

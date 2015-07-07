@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkdatablock.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vfkdatablock.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  VFK Reader - Data block definition
  * Purpose:  Implements VFKDataBlock class.
@@ -186,7 +186,12 @@ int IVFKDataBlock::AddProperty(const char *pszName, const char *pszType)
     return m_nPropertyCount;
 }
 
-int IVFKDataBlock::GetFeatureCount()
+/*!
+  \brief Get number of features for given data block
+  
+  \return number of features
+*/
+GIntBig IVFKDataBlock::GetFeatureCount()
 {
     if (m_nFeatureCount < 0) {
         m_poReader->ReadDataRecords(this); /* read VFK data records */
@@ -398,7 +403,7 @@ IVFKFeature *IVFKDataBlock::GetFeatureByIndex(int iIndex) const
 
   \return pointer to feature definition or NULL on failure (not found)
 */
-IVFKFeature *IVFKDataBlock::GetFeature(long nFID)
+IVFKFeature *IVFKDataBlock::GetFeature(GIntBig nFID)
 {
     if (m_nFeatureCount < 0) {
         m_poReader->ReadDataRecords(this);
@@ -471,7 +476,7 @@ int IVFKDataBlock::LoadGeometry()
 
     if (nInvalid > 0) {
         CPLError(CE_Warning, CPLE_AppDefined, 
-                 "%s: %d features with invalid or empty geometry found", m_pszName, nInvalid);
+                 "%s: %d features with invalid or empty geometry", m_pszName, nInvalid);
     }
 
 #ifdef DEBUG_TIMING
@@ -593,7 +598,7 @@ void IVFKDataBlock::AddFeature(IVFKFeature *poNewFeature)
 */
 int IVFKDataBlock::GetRecordCount(RecordType iRec) const
 {
-    return m_nRecordCount[iRec];
+    return (int) m_nRecordCount[iRec];
 }
 
 /*!
@@ -714,7 +719,7 @@ VFKFeatureList VFKDataBlock::GetFeatures(int idx1, int idx2, GUIntBig value)
 
   \return number of features or -1 on error
 */
-int VFKDataBlock::GetFeatureCount(const char *pszName, const char *pszValue)
+GIntBig VFKDataBlock::GetFeatureCount(const char *pszName, const char *pszValue)
 {
     int nfeatures, propIdx;
     VFKFeature *poVFKFeature;

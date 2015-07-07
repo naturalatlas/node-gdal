@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfmelayercached.cpp 14412 2008-05-09 15:02:27Z warmerdam $
+ * $Id: ogrfmelayercached.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Implementation of the OGRFMELayerCached class.  This is the
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrfmelayercached.cpp 14412 2008-05-09 15:02:27Z warmerdam $");
+CPL_CVSID("$Id: ogrfmelayercached.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                         OGRFMELayerCached()                          */
@@ -248,7 +248,7 @@ void OGRFMELayerCached::ResetReading()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRFMELayerCached::GetFeatureCount( int bForce )
+GIntBig OGRFMELayerCached::GetFeatureCount( int bForce )
 
 {
     int    nResult;

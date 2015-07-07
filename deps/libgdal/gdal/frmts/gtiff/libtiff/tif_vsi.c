@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tif_vsi.c 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: tif_vsi.c 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Implement system hook functions for libtiff on top of CPL/VSI,

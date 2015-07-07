@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodbclayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrodbclayer.cpp 29014 2015-04-25 18:14:49Z tamas $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRODBCLayer class, code shared between 
@@ -32,7 +32,7 @@
 #include "ogr_odbc.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrodbclayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrodbclayer.cpp 29014 2015-04-25 18:14:49Z tamas $");
 
 /************************************************************************/
 /*                            OGRODBCLayer()                            */
@@ -104,6 +104,7 @@ CPLErr OGRODBCLayer::BuildFeatureDefn( const char *pszLayerName,
 
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     int    nRawColumns = poStmt->GetColCount();
 
     poFeatureDefn->Reference();
@@ -127,6 +128,11 @@ CPLErr OGRODBCLayer::BuildFeatureDefn( const char *pszLayerName,
             case SQL_C_SLONG:
             case SQL_C_ULONG:
                 oField.SetType( OFTInteger );
+                break;
+
+            case SQL_C_SBIGINT:
+            case SQL_C_UBIGINT:
+                oField.SetType( OFTInteger64 );
                 break;
 
             case SQL_C_BINARY:
@@ -332,7 +338,7 @@ OGRFeature *OGRODBCLayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRODBCLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRODBCLayer::GetFeature( GIntBig nFeatureId )
 
 {
     /* This should be implemented directly! */

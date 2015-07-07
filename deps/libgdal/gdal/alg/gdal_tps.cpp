@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_tps.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdal_tps.cpp 29207 2015-05-18 17:23:45Z mloskot $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Thin Plate Spline transformer (GDAL wrapper portion)
@@ -37,7 +37,7 @@
 #include "cpl_atomic_ops.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdal_tps.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gdal_tps.cpp 29207 2015-05-18 17:23:45Z mloskot $");
 
 CPL_C_START
 CPLXMLNode *GDALSerializeTPSTransformer( void *pTransformArg );
@@ -63,19 +63,36 @@ typedef struct
 } TPSTransformInfo;
 
 /************************************************************************/
-/*                       GDALCloneTPSTransformer()                      */
+/*                   GDALCreateSimilarTPSTransformer()                  */
 /************************************************************************/
 
-void* GDALCloneTPSTransformer( void *hTransformArg )
+static
+void* GDALCreateSimilarTPSTransformer( void *hTransformArg, double dfRatioX, double dfRatioY )
 {
-    VALIDATE_POINTER1( hTransformArg, "GDALCloneTPSTransformer", NULL );
+    VALIDATE_POINTER1( hTransformArg, "GDALCreateSimilarTPSTransformer", NULL );
 
-    TPSTransformInfo *psInfo = 
-        (TPSTransformInfo *) hTransformArg;
-
-    /* We can just use a ref count, since using the source transformation */
-    /* is thread-safe */
-    CPLAtomicInc(&(psInfo->nRefCount));
+    TPSTransformInfo *psInfo = (TPSTransformInfo *) hTransformArg;
+    
+    if( dfRatioX == 1.0 && dfRatioY == 1.0 )
+    {
+        /* We can just use a ref count, since using the source transformation */
+        /* is thread-safe */
+        CPLAtomicInc(&(psInfo->nRefCount));
+    }
+    else
+    {
+        GDAL_GCP *pasGCPList = GDALDuplicateGCPs( psInfo->nGCPCount,
+                                                  psInfo->pasGCPList );
+        for(int i=0;i<psInfo->nGCPCount;i++)
+        {
+            pasGCPList[i].dfGCPPixel /= dfRatioX;
+            pasGCPList[i].dfGCPLine /= dfRatioY;
+        }
+        psInfo = (TPSTransformInfo *) GDALCreateTPSTransformer( psInfo->nGCPCount, pasGCPList,
+                                           psInfo->bReversed );
+        GDALDeinitGCPs( psInfo->nGCPCount, pasGCPList );
+        CPLFree( pasGCPList );
+    }
 
     return psInfo;
 }
@@ -144,11 +161,12 @@ void *GDALCreateTPSTransformerInt( int nGCPCount, const GDAL_GCP *pasGCPList,
     psInfo->poForward = new VizGeorefSpline2D( 2 );
     psInfo->poReverse = new VizGeorefSpline2D( 2 );
 
-    strcpy( psInfo->sTI.szSignature, "GTI" );
+    memcpy( psInfo->sTI.abySignature, GDAL_GTI2_SIGNATURE, strlen(GDAL_GTI2_SIGNATURE) );
     psInfo->sTI.pszClassName = "GDALTPSTransformer";
     psInfo->sTI.pfnTransform = GDALTPSTransform;
     psInfo->sTI.pfnCleanup = GDALDestroyTPSTransformer;
     psInfo->sTI.pfnSerialize = GDALSerializeTPSTransformer;
+    psInfo->sTI.pfnCreateSimilar = GDALCreateSimilarTPSTransformer;
 
 /* -------------------------------------------------------------------- */
 /*      Attach all the points to the transformation.                    */
@@ -191,7 +209,7 @@ void *GDALCreateTPSTransformerInt( int nGCPCount, const GDAL_GCP *pasGCPList,
     if( nThreads > 1 )
     {
         /* Compute direct and reverse transforms in parallel */
-        void* hThread = CPLCreateJoinableThread(GDALTPSComputeForwardInThread, psInfo);
+        CPLJoinableThread* hThread = CPLCreateJoinableThread(GDALTPSComputeForwardInThread, psInfo);
         psInfo->bReverseSolved = psInfo->poReverse->solve() != 0;
         if( hThread != NULL )
             CPLJoinThread(hThread);
@@ -230,7 +248,8 @@ void *GDALCreateTPSTransformerInt( int nGCPCount, const GDAL_GCP *pasGCPList,
 void GDALDestroyTPSTransformer( void *pTransformArg )
 
 {
-    VALIDATE_POINTER0( pTransformArg, "GDALDestroyTPSTransformer" );
+    if( pTransformArg == NULL )
+        return;
 
     TPSTransformInfo *psInfo = (TPSTransformInfo *) pTransformArg;
 
@@ -271,11 +290,11 @@ void GDALDestroyTPSTransformer( void *pTransformArg )
  * @return TRUE.
  */
 
-int GDALTPSTransform( void *pTransformArg, int bDstToSrc, 
-                      int nPointCount, 
-                      double *x, double *y, CPL_UNUSED double *z,
+int GDALTPSTransform( void *pTransformArg, int bDstToSrc,
+                      int nPointCount,
+                      double *x, double *y,
+                      CPL_UNUSED double *z,
                       int *panSuccess )
-
 {
     VALIDATE_POINTER1( pTransformArg, "GDALTPSTransform", 0 );
 

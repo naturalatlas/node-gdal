@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shape2ogr.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: shape2ogr.cpp 29234 2015-05-22 19:17:03Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements translation of Shapefile shapes into OGR
@@ -32,7 +32,7 @@
 #include "ogrshape.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: shape2ogr.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: shape2ogr.cpp 29234 2015-05-22 19:17:03Z rouault $");
 
 /************************************************************************/
 /*                        RingStartEnd                                  */
@@ -460,7 +460,8 @@ OGRGeometry *SHPReadOGRObject( SHPHandle hSHP, int iShape, SHPObject *psShape )
 /*                         SHPWriteOGRObject()                          */
 /************************************************************************/
 
-OGRErr SHPWriteOGRObject( SHPHandle hSHP, int iShape, OGRGeometry *poGeom )
+OGRErr SHPWriteOGRObject( SHPHandle hSHP, int iShape, OGRGeometry *poGeom,
+                          int bRewind)
 
 {
     int nReturnedShapeID;
@@ -846,7 +847,8 @@ OGRErr SHPWriteOGRObject( SHPHandle hSHP, int iShape, OGRGeometry *poGeom )
         psShape = SHPCreateObject( hSHP->nShapeType, iShape, nRings,
                                    panRingStart, NULL,
                                    nVertex, padfX, padfY, padfZ, NULL );
-        SHPRewindObject( hSHP, psShape );
+        if( bRewind )
+            SHPRewindObject( hSHP, psShape );
         nReturnedShapeID = SHPWriteObject( hSHP, iShape, psShape );
         SHPDestroyObject( psShape );
         
@@ -873,19 +875,20 @@ OGRErr SHPWriteOGRObject( SHPHandle hSHP, int iShape, OGRGeometry *poGeom )
 
 OGRFeatureDefn *SHPReadOGRFeatureDefn( const char * pszName,
                                        SHPHandle hSHP, DBFHandle hDBF,
-                                       const char* pszSHPEncoding )
+                                       const char* pszSHPEncoding,
+                                       int bAdjustType )
 
 {
     OGRFeatureDefn      *poDefn = new OGRFeatureDefn( pszName );
     int                 iField;
+    int                 nAdjustableFields = 0;
+    int                 nFieldCount = (hDBF) ? DBFGetFieldCount(hDBF) : 0;
 
     poDefn->Reference();
 
-    for( iField = 0; 
-         hDBF != NULL && iField < DBFGetFieldCount( hDBF ); 
-         iField++ )
+    for( iField = 0; iField < nFieldCount; iField++ )
     {
-        char            szFieldName[20];
+        char            szFieldName[12] = {};
         int             nWidth, nPrecision;
         DBFFieldType    eDBFType;
         OGRFieldDefn    oField("", OFTInteger);
@@ -921,13 +924,86 @@ OGRFeatureDefn *SHPReadOGRFeatureDefn( const char * pszName,
             oField.SetType( OFTDate );
         }
         else if( eDBFType == FTDouble )
-            oField.SetType( OFTReal );
+        {
+            nAdjustableFields += (nPrecision == 0);
+            if( nPrecision == 0 && nWidth < 19 )
+                oField.SetType( OFTInteger64 );
+            else
+                oField.SetType( OFTReal );
+        }
         else if( eDBFType == FTInteger )
             oField.SetType( OFTInteger );
         else
             oField.SetType( OFTString );
 
         poDefn->AddFieldDefn( &oField );
+    }
+    
+    /* Do an optional past if requested and needed to demote Integer64->Integer */
+    /* or Real->Integer64/Integer */
+    if( nAdjustableFields && bAdjustType )
+    {
+        int* panAdjustableField = (int*)CPLCalloc(sizeof(int), nFieldCount);
+        for( iField = 0; iField < nFieldCount; iField++ )
+        {
+            OGRFieldType eType = poDefn->GetFieldDefn(iField)->GetType();
+            if( poDefn->GetFieldDefn(iField)->GetPrecision() == 0 &&
+               (eType == OFTInteger64 || eType == OFTReal) )
+            {
+                panAdjustableField[iField] = TRUE;
+                poDefn->GetFieldDefn(iField)->SetType(OFTInteger);
+                //poDefn->GetFieldDefn(iField)->SetWidth(0);
+            }
+        }
+       
+        int nRowCount = DBFGetRecordCount(hDBF);
+        for( int iRow = 0; iRow < nRowCount && nAdjustableFields; iRow ++ )
+        {
+           for( iField = 0; iField < nFieldCount; iField++ )
+           {
+               if( panAdjustableField[iField] )
+               {
+                   const char* pszValue = DBFReadStringAttribute( hDBF, iRow, iField );
+                   int nValueLength = (int)strlen(pszValue);
+                   //if( nValueLength >= poDefn->GetFieldDefn(iField)->GetWidth())
+                   //    poDefn->GetFieldDefn(iField)->SetWidth(nValueLength);
+                   if( nValueLength >= 10 )
+                   {
+                       int bOverflow;
+                       GIntBig nVal = CPLAtoGIntBigEx(pszValue, FALSE, &bOverflow);
+                       if( bOverflow )
+                       {
+                           poDefn->GetFieldDefn(iField)->SetType(OFTReal);
+                           panAdjustableField[iField] = FALSE;
+                           nAdjustableFields --;
+                           
+                           /*char            szFieldName[12] = {};
+                           int             nWidth, nPrecision;
+                           DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                            &nWidth, &nPrecision );
+                           poDefn->GetFieldDefn(iField)->SetWidth(nWidth);*/
+                       }
+                       else if( (GIntBig)(int)nVal != nVal )
+                       {
+                           poDefn->GetFieldDefn(iField)->SetType(OFTInteger64);
+                           if( poDefn->GetFieldDefn(iField)->GetWidth() <= 18 )
+                           {
+                               panAdjustableField[iField] = FALSE;
+                               nAdjustableFields --;
+                               
+                               /*char            szFieldName[12] = {};
+                               int             nWidth, nPrecision;
+                               DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                                &nWidth, &nPrecision );
+                               poDefn->GetFieldDefn(iField)->SetWidth(nWidth);*/
+                           }
+                       }
+                   }
+               }
+           }
+        }
+        
+        CPLFree(panAdjustableField);
     }
 
     if( hSHP == NULL )
@@ -1002,6 +1078,8 @@ OGRFeature *SHPReadOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
         CPLError( CE_Failure, CPLE_AppDefined, 
                   "Attempt to read shape with feature id (%d), but it is marked deleted.",
                   iShape );
+        if( psShape != NULL )
+            SHPDestroyObject(psShape);
         return NULL;
     }
 
@@ -1066,17 +1144,11 @@ OGRFeature *SHPReadOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
           break;
 
           case OFTInteger:
-
-            if( !DBFIsAttributeNULL( hDBF, iShape, iField ) )
-                poFeature->SetField( iField,
-                                    DBFReadIntegerAttribute( hDBF, iShape,
-                                                             iField ) );
-            break;
-
+          case OFTInteger64:
           case OFTReal:
             if( !DBFIsAttributeNULL( hDBF, iShape, iField ) )
                 poFeature->SetField( iField,
-                                    DBFReadDoubleAttribute( hDBF, iShape,
+                                    DBFReadStringAttribute( hDBF, iShape,
                                                             iField ) );
             break;
 
@@ -1134,7 +1206,7 @@ OGRFeature *SHPReadOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
 static OGRErr GrowField(DBFHandle hDBF, int iField, OGRFieldDefn* poFieldDefn,
                         int nNewSize)
 {
-    char            szFieldName[20];
+    char            szFieldName[20] = {};
     int             nOriWidth, nPrecision;
     char            chNativeType;
     /* DBFFieldType    eDBFType; */
@@ -1172,7 +1244,8 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
                            OGRFeatureDefn * poDefn, 
                            OGRFeature * poFeature,
                            const char *pszSHPEncoding,
-                           int* pbTruncationWarningEmitted )
+                           int* pbTruncationWarningEmitted,
+                           int bRewind )
 
 {
 #ifdef notdef
@@ -1196,8 +1269,8 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
 
     if( hSHP != NULL )
     {
-        eErr = SHPWriteOGRObject( hSHP, poFeature->GetFID(),
-                                  poFeature->GetGeometryRef() );
+        eErr = SHPWriteOGRObject( hSHP, (int)poFeature->GetFID(),
+                                  poFeature->GetGeometryRef(), bRewind );
         if( eErr != OGRERR_NONE )
             return eErr;
     }
@@ -1240,8 +1313,8 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
 /* -------------------------------------------------------------------- */
     if( DBFGetFieldCount( hDBF ) == 1 && poDefn->GetFieldCount() == 0 )
     {
-        DBFWriteIntegerAttribute( hDBF, poFeature->GetFID(), 0, 
-                                  poFeature->GetFID() );
+        DBFWriteIntegerAttribute( hDBF, (int)poFeature->GetFID(), 0, 
+                                  (int)poFeature->GetFID() );
     }
 
 /* -------------------------------------------------------------------- */
@@ -1251,7 +1324,7 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
     {
         if( !poFeature->IsFieldSet( iField ) )
         {
-            DBFWriteNULLAttribute( hDBF, poFeature->GetFID(), iField );
+            DBFWriteNULLAttribute( hDBF, (int)poFeature->GetFID(), iField );
             continue;
         }
 
@@ -1283,7 +1356,27 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
                             poFieldDefn->GetNameRef(),
                             OGR_DBF_MAX_FIELD_WIDTH);
                 }
+
                 nStrLen = OGR_DBF_MAX_FIELD_WIDTH;
+
+                if(EQUAL(pszSHPEncoding, CPL_ENC_UTF8))
+                {
+                    const char *p = pszStr + nStrLen;
+                    int byteCount = nStrLen;
+                    while(byteCount > 0)
+                    {
+                        if( (*p & 0xc0) != 0x80 )
+                        {
+                            nStrLen = byteCount;
+                            break;
+                        }
+
+                        byteCount--;
+                        p--;
+                    }
+
+                    pszEncoded[nStrLen] = 0;
+                }
               }
 
               if ( nStrLen > poFieldDefn->GetWidth() )
@@ -1295,7 +1388,7 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
                   }
               }
 
-              DBFWriteStringAttribute( hDBF, poFeature->GetFID(), iField,
+              DBFWriteStringAttribute( hDBF, (int)poFeature->GetFID(), iField,
                                               pszStr );
 
               CPLFree( pszEncoded );
@@ -1303,12 +1396,13 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
           break;
 
           case OFTInteger:
+          case OFTInteger64:
           {
               char szFormat[20];
               char szValue[32];
               int nFieldWidth = poFieldDefn->GetWidth();
-              sprintf(szFormat, "%%%dd", MIN(nFieldWidth, (int)sizeof(szValue)-1));
-              sprintf(szValue, szFormat, poFeature->GetFieldAsInteger(iField) );
+              sprintf(szFormat, "%%%d" CPL_FRMT_GB_WITHOUT_PREFIX "d", MIN(nFieldWidth, (int)sizeof(szValue)-1));
+              sprintf(szValue, szFormat, poFeature->GetFieldAsInteger64(iField) );
               int nStrLen = strlen(szValue);
               if( nStrLen > nFieldWidth )
               {
@@ -1318,7 +1412,7 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
                   }
               }
 
-              DBFWriteAttributeDirectly( hDBF, poFeature->GetFID(), iField, 
+              DBFWriteAttributeDirectly( hDBF, (int)poFeature->GetFID(), iField, 
                                          szValue );
 
               break;
@@ -1334,18 +1428,18 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
                 if( nCounter <= 10 )
                 {
                     CPLError(CE_Warning, CPLE_AppDefined,
-                             "Value %.18g of field %s with 0 decimal of feature %ld is bigger than 2^53. Precision loss likely occured or going to happen.%s",
+                             "Value %.18g of field %s with 0 decimal of feature " CPL_FRMT_GIB " is bigger than 2^53. Precision loss likely occured or going to happen.%s",
                              dfVal, poFieldDefn->GetNameRef(), poFeature->GetFID(),
                              (nCounter == 10) ? " This warning will not be emitted anymore." : "");
                     nCounter ++;
                 }
             }
-            int ret = DBFWriteDoubleAttribute( hDBF, poFeature->GetFID(), iField, 
+            int ret = DBFWriteDoubleAttribute( hDBF, (int)poFeature->GetFID(), iField, 
                                                dfVal );
             if( !ret )
             {
                 CPLError(CE_Warning, CPLE_AppDefined,
-                         "Value %.18g of field %s of feature %ld not successfully written. "
+                         "Value %.18g of field %s of feature " CPL_FRMT_GIB " not successfully written. "
                          "Possibly due to too larger number with respect to field width",
                          dfVal, poFieldDefn->GetNameRef(), poFeature->GetFID());
             }
@@ -1354,20 +1448,16 @@ OGRErr SHPWriteOGRFeature( SHPHandle hSHP, DBFHandle hDBF,
 
           case OFTDate:
           {
-              int  nYear, nMonth, nDay;
+              const OGRField* psField = poFeature->GetRawFieldRef(iField);
 
-              if( poFeature->GetFieldAsDateTime( iField, &nYear, &nMonth, &nDay,
-                                                 NULL, NULL, NULL, NULL ) )
+              if( psField->Date.Year < 0 || psField->Date.Year > 9999 )
               {
-                  if( nYear < 0 || nYear > 9999 )
-                  {
-                      CPLError(CE_Warning, CPLE_NotSupported,
-                               "Year < 0 or > 9999 is not a valid date for shapefile");
-                  }
-                  else
-                      DBFWriteIntegerAttribute( hDBF, poFeature->GetFID(), iField, 
-                                            nYear*10000 + nMonth*100 + nDay );
+                  CPLError(CE_Warning, CPLE_NotSupported,
+                          "Year < 0 or > 9999 is not a valid date for shapefile");
               }
+              else
+                  DBFWriteIntegerAttribute( hDBF, (int)poFeature->GetFID(), iField, 
+                                            psField->Date.Year*10000 + psField->Date.Month*100 + psField->Date.Day );
           }
           break;
 

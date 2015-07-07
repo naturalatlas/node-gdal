@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsosidatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsosidatasource.cpp 27794 2014-10-04 10:13:46Z rouault $
  *
  * Project:  SOSI Data Source
  * Purpose:  Provide SOSI Data to OGR.
@@ -498,10 +498,13 @@ int  OGRSOSIDataSource::Create( const char *pszFilename ) {
 }
 
 /************************************************************************/
-/*                              CreateLayer()                           */
+/*                             ICreateLayer()                           */
 /************************************************************************/
 
-OGRLayer *OGRSOSIDataSource::CreateLayer( const char *pszName, OGRSpatialReference  *poSpatialRef, OGRwkbGeometryType eGType, char **papszOptions ) {
+OGRLayer *OGRSOSIDataSource::ICreateLayer( const char *pszName,
+                                           OGRSpatialReference  *poSpatialRef,
+                                           OGRwkbGeometryType eGType,
+                                           CPL_UNUSED char **papszOptions ) {
     /* SOSI does not really support layers - so let's first see that the global settings are consistent */
     if (poSRS == NULL) {
         if (poSpatialRef!=NULL) {

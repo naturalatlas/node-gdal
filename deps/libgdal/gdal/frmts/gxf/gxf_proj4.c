@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxf_proj4.c 25164 2012-10-20 13:42:32Z rouault $
+ * $Id: gxf_proj4.c 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  GXF Reader
  * Purpose:  Handle GXF to PROJ.4 projection transformation.
@@ -30,7 +30,7 @@
 
 #include "gxfopen.h"
 
-CPL_CVSID("$Id: gxf_proj4.c 25164 2012-10-20 13:42:32Z rouault $");
+CPL_CVSID("$Id: gxf_proj4.c 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                     GXFGetMapProjectionAsPROJ4()                     */
@@ -237,14 +237,14 @@ char *GXFGetMapProjectionAsPROJ4( GXFHandle hGXF )
         strcat( szPROJ4, " +alpha=" );
         strcat( szPROJ4, papszMethods[3] );
 
-        if( atof(papszMethods[4]) < 0.00001 )
+        if( CPLAtof(papszMethods[4]) < 0.00001 )
         {
             strcat( szPROJ4, " +not_rot" );
         }
         else
         {
 #ifdef notdef            
-            if( atof(papszMethods[4]) + atof(papszMethods[3]) < 0.00001 )
+            if( CPLAtof(papszMethods[4]) + CPLAtof(papszMethods[3]) < 0.00001 )
                 /* ok */;
             else
                 /* notdef: no way to specify arbitrary angles! */;

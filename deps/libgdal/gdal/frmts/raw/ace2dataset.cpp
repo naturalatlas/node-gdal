@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ace2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ace2dataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  ACE2 Driver
  * Purpose:  Implementation of ACE2 elevation format read support.
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ace2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ace2dataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void    GDALRegister_ACE2(void);
@@ -385,6 +385,7 @@ void GDALRegister_ACE2()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "ACE2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "ACE2" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

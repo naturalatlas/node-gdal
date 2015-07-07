@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_pds.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_pds.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  PDS Translator
  * Purpose:  Definition of classes for OGR .pdstable driver.
@@ -93,11 +93,11 @@ class OGRPDSLayer : public OGRLayer
 
     virtual int                 TestCapability( const char * );
 
-    virtual int                 GetFeatureCount(int bForce = TRUE );
+    virtual GIntBig             GetFeatureCount(int bForce = TRUE );
 
-    virtual OGRFeature         *GetFeature( long nFID );
+    virtual OGRFeature         *GetFeature( GIntBig nFID );
 
-    virtual OGRErr              SetNextByIndex( long nIndex );
+    virtual OGRErr              SetNextByIndex( GIntBig nIndex );
 };
 
 /************************************************************************/
@@ -126,8 +126,7 @@ class OGRPDSDataSource : public OGRDataSource
                         OGRPDSDataSource();
                         ~OGRPDSDataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     virtual const char*         GetName() { return pszName; }
 
@@ -138,20 +137,5 @@ class OGRPDSDataSource : public OGRDataSource
 
     static void         CleanString( CPLString &osInput );
 };
-
-/************************************************************************/
-/*                              OGRPDSDriver                            */
-/************************************************************************/
-
-class OGRPDSDriver : public OGRSFDriver
-{
-  public:
-                ~OGRPDSDriver();
-
-    virtual const char*         GetName();
-    virtual OGRDataSource*      Open( const char *, int );
-    virtual int                 TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_PDS_H_INCLUDED */

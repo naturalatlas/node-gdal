@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrshapedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrshapedatasource.cpp 28585 2015-03-01 19:42:37Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRShapeDataSource class.
@@ -35,7 +35,7 @@
 
 //#define IMMEDIATE_OPENING 1
 
-CPL_CVSID("$Id: ogrshapedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrshapedatasource.cpp 28585 2015-03-01 19:42:37Z rouault $");
 
 
 /************************************************************************/
@@ -44,6 +44,10 @@ CPL_CVSID("$Id: ogrshapedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
 
 SHPHandle OGRShapeDataSource::DS_SHPOpen( const char * pszShapeFile, const char * pszAccess )
 {
+    /* Do lazy shx loading for /vsicurl/ */
+    if( strncmp(pszShapeFile, "/vsicurl/", strlen("/vsicurl/")) == 0 &&
+        strcmp(pszAccess, "r") == 0 )
+        pszAccess = "rl";
     SHPHandle hSHP = SHPOpenLL( pszShapeFile, pszAccess, (SAHooks*) VSI_SHP_GetHook(b2GBLimit) );
     if( hSHP != NULL )
         SHPSetFastModeReadObject( hSHP, TRUE );
@@ -73,7 +77,9 @@ OGRShapeDataSource::OGRShapeDataSource()
     bSingleFileDataSource = FALSE;
     poPool = new OGRLayerPool();
     b2GBLimit = CSLTestBoolean(CPLGetConfigOption("SHAPE_2GB_LIMIT", "FALSE"));
+    papszOpenOptions = NULL;
 }
+
 
 /************************************************************************/
 /*                        ~OGRShapeDataSource()                         */
@@ -94,19 +100,22 @@ OGRShapeDataSource::~OGRShapeDataSource()
     delete poPool;
 
     CPLFree( papoLayers );
+    CSLDestroy( papszOpenOptions );
 }
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRShapeDataSource::Open( const char * pszNewName, int bUpdate,
+int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
                               int bTestOpen, int bForceSingleFileDataSource )
 
 {
-    VSIStatBufL  stat;
-    
     CPLAssert( nLayers == 0 );
+    
+    const char * pszNewName = poOpenInfo->pszFilename;
+    int bUpdate = poOpenInfo->eAccess == GA_Update;
+    papszOpenOptions = CSLDuplicate( poOpenInfo->papszOpenOptions );
     
     pszName = CPLStrdup( pszNewName );
 
@@ -119,7 +128,7 @@ int OGRShapeDataSource::Open( const char * pszNewName, int bUpdate,
 /*      This is only utilized when the OGRShapeDriver::Create()         */
 /*      method wants to create a stub OGRShapeDataSource for a          */
 /*      single shapefile.  The driver will take care of creating the    */
-/*      file by calling CreateLayer().                                  */
+/*      file by callingICreateLayer().                                  */
 /* -------------------------------------------------------------------- */
     if( bSingleFileDataSource )
         return TRUE;
@@ -127,8 +136,7 @@ int OGRShapeDataSource::Open( const char * pszNewName, int bUpdate,
 /* -------------------------------------------------------------------- */
 /*      Is the given path a directory or a regular file?                */
 /* -------------------------------------------------------------------- */
-    if( VSIStatExL( pszNewName, &stat, VSI_STAT_EXISTS_FLAG | VSI_STAT_NATURE_FLAG ) != 0 
-        || (!VSI_ISDIR(stat.st_mode) && !VSI_ISREG(stat.st_mode)) )
+    if( !poOpenInfo->bStatOK )
     {
         if( !bTestOpen )
             CPLError( CE_Failure, CPLE_AppDefined,
@@ -141,7 +149,7 @@ int OGRShapeDataSource::Open( const char * pszNewName, int bUpdate,
 /* -------------------------------------------------------------------- */
 /*      Build a list of filenames we figure are Shape files.            */
 /* -------------------------------------------------------------------- */
-    if( VSI_ISREG(stat.st_mode) )
+    if( !poOpenInfo->bIsDirectory )
     {
         if( !OpenFile( pszNewName, bUpdate, bTestOpen ) )
         {
@@ -381,6 +389,8 @@ int OGRShapeDataSource::OpenFile( const char *pszNewName, int bUpdate,
 
     poLayer = new OGRShapeLayer( this, pszNewName, hSHP, hDBF, NULL, FALSE, bUpdate,
                                  wkbNone );
+    poLayer->SetModificationDate(
+            CSLFetchNameValue( papszOpenOptions, "DBF_DATE_LAST_UPDATE" ) );
 
 /* -------------------------------------------------------------------- */
 /*      Add layer to data source layer list.                            */
@@ -414,11 +424,11 @@ void OGRShapeDataSource::AddLayer(OGRShapeLayer* poLayer)
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRShapeDataSource::CreateLayer( const char * pszLayerName,
+OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
                                  OGRSpatialReference *poSRS,
                                  OGRwkbGeometryType eType,
                                  char ** papszOptions )
@@ -689,6 +699,9 @@ OGRShapeDataSource::CreateLayer( const char * pszLayerName,
     CPLFree( pszFilename );
 
     poLayer->SetResizeAtClose( CSLFetchBoolean( papszOptions, "RESIZE", FALSE ) );
+    poLayer->CreateSpatialIndexAtClose( CSLFetchBoolean( papszOptions, "SPATIAL_INDEX", FALSE ) );
+    poLayer->SetModificationDate(
+        CSLFetchNameValue( papszOptions, "DBF_DATE_LAST_UPDATE" ) );
 
 /* -------------------------------------------------------------------- */
 /*      Add layer to data source layer list.                            */
@@ -1077,4 +1090,20 @@ void OGRShapeDataSource::SetLastUsedLayer( OGRShapeLayer* poLayer )
         return;
 
     poPool->SetLastUsedLayer(poLayer);
+}
+
+/************************************************************************/
+/*                            GetFileList()                             */
+/************************************************************************/
+
+char** OGRShapeDataSource::GetFileList()
+{
+    CPLStringList       oFileList;
+    GetLayerCount();
+    for(int i=0;i<nLayers;i++)
+    {
+        OGRShapeLayer* poLayer = papoLayers[i];
+        poLayer->AddToFileList(oFileList);
+    }
+    return oFileList.StealList();
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgresultlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpgresultlayer.cpp 28481 2015-02-13 17:11:15Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGResultLayer class, access the resultset from
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "ogr_pg.h"
 
-CPL_CVSID("$Id: ogrpgresultlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpgresultlayer.cpp 28481 2015-02-13 17:11:15Z rouault $");
 
 #define PQexec this_is_an_error
 
@@ -60,19 +60,60 @@ OGRPGResultLayer::OGRPGResultLayer( OGRPGDataSource *poDSIn,
     pszGeomTableSchemaName = NULL;
 
     /* Find at which index the geometry column is */
+    /* and prepare a request to identify not-nullable fields */
     int iGeomCol = -1;
-    if (poFeatureDefn->GetGeomFieldCount() == 1)
+    CPLString osRequest;
+    std::map< std::pair<int,int>, int> oMapAttributeToFieldIndex;
+
+    int iRawField;
+    for( iRawField = 0; iRawField < PQnfields(hInitialResultIn); iRawField++ )
     {
-        int iRawField;
-        for( iRawField = 0; iRawField < PQnfields(hInitialResultIn); iRawField++ )
+        if( poFeatureDefn->GetGeomFieldCount() == 1 &&
+            strcmp(PQfname(hInitialResultIn,iRawField),
+                poFeatureDefn->GetGeomFieldDefn(0)->GetNameRef()) == 0 )
         {
-            if( strcmp(PQfname(hInitialResultIn,iRawField),
-                    poFeatureDefn->GetGeomFieldDefn(0)->GetNameRef()) == 0 )
+            iGeomCol = iRawField;
+        }
+
+        Oid tableOID = PQftable(hInitialResultIn, iRawField);
+        int tableCol = PQftablecol(hInitialResultIn, iRawField);
+        if( tableOID != InvalidOid && tableCol > 0 )
+        {
+            if( osRequest.size() )
+                osRequest += " OR ";
+            osRequest += "(attrelid = ";
+            osRequest += CPLSPrintf("%d", tableOID); 
+            osRequest += " AND attnum = ";
+            osRequest += CPLSPrintf("%d)", tableCol); 
+            oMapAttributeToFieldIndex[std::pair<int,int>(tableOID,tableCol)] = iRawField;
+        }
+    }
+
+    if( osRequest.size() )
+    {
+        osRequest = "SELECT attnum, attrelid FROM pg_attribute WHERE attnotnull = 't' AND (" + osRequest + ")";
+        PGresult* hResult = OGRPG_PQexec(poDS->GetPGConn(), osRequest );
+        if( hResult && PQresultStatus(hResult) == PGRES_TUPLES_OK)
+        {
+            int iCol;
+            for( iCol = 0; iCol < PQntuples(hResult); iCol++ )
             {
-                iGeomCol = iRawField;
-                break;
+                const char* pszAttNum = PQgetvalue(hResult,iCol,0);
+                const char* pszAttRelid = PQgetvalue(hResult,iCol,1);
+                int iRawField = oMapAttributeToFieldIndex[std::pair<int,int>(atoi(pszAttRelid),atoi(pszAttNum))];
+                const char* pszFieldname = PQfname(hInitialResultIn,iRawField);
+                int iFieldIdx = poFeatureDefn->GetFieldIndex(pszFieldname);
+                if( iFieldIdx >= 0 )
+                    poFeatureDefn->GetFieldDefn(iFieldIdx)->SetNullable(FALSE);
+                else
+                {
+                    iFieldIdx = poFeatureDefn->GetGeomFieldIndex(pszFieldname);
+                    if( iFieldIdx >= 0 )
+                        poFeatureDefn->GetGeomFieldDefn(iFieldIdx)->SetNullable(FALSE);
+                }
             }
         }
+        OGRPGClearResult( hResult );
     }
 
 #ifndef PG_PRE74
@@ -149,7 +190,7 @@ void OGRPGResultLayer::ResetReading()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRPGResultLayer::GetFeatureCount( int bForce )
+GIntBig OGRPGResultLayer::GetFeatureCount( int bForce )
 
 {
     if( TestCapability(OLCFastFeatureCount) == FALSE )
@@ -286,7 +327,6 @@ void OGRPGResultLayer::SetSpatialFilter( int iGeomField, OGRGeometry * poGeomIn 
             {
                 char szBox3D_1[128];
                 char szBox3D_2[128];
-                char* pszComma;
                 OGREnvelope  sEnvelope;
 
                 m_poFilterGeom->getEnvelope( &sEnvelope );
@@ -301,12 +341,8 @@ void OGRPGResultLayer::SetSpatialFilter( int iGeomField, OGRGeometry * poGeomIn 
                     if( sEnvelope.MaxY > 90.0 )
                         sEnvelope.MaxY = 90.0;
                 }
-                snprintf(szBox3D_1, sizeof(szBox3D_1), "%.18g %.18g", sEnvelope.MinX, sEnvelope.MinY);
-                while((pszComma = strchr(szBox3D_1, ',')) != NULL)
-                    *pszComma = '.';
-                snprintf(szBox3D_2, sizeof(szBox3D_2), "%.18g %.18g", sEnvelope.MaxX, sEnvelope.MaxY);
-                while((pszComma = strchr(szBox3D_2, ',')) != NULL)
-                    *pszComma = '.';
+                CPLsnprintf(szBox3D_1, sizeof(szBox3D_1), "%.18g %.18g", sEnvelope.MinX, sEnvelope.MinY);
+                CPLsnprintf(szBox3D_2, sizeof(szBox3D_2), "%.18g %.18g", sEnvelope.MaxX, sEnvelope.MaxY);
                 osWHERE.Printf("WHERE %s && %s('BOX3D(%s, %s)'::box3d,%d) ",
                                OGRPGEscapeColumnName(poGeomFieldDefn->GetNameRef()).c_str(),
                                (poDS->sPostGISVersion.nMajor >= 2) ? "ST_SetSRID" : "SetSRID",

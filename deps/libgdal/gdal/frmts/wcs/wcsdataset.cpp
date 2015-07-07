@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wcsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: wcsdataset.cpp 28218 2014-12-25 18:09:13Z goatbar $
  *
  * Project:  WCS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WCS.
@@ -34,7 +34,7 @@
 #include "cpl_http.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: wcsdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: wcsdataset.cpp 28218 2014-12-25 18:09:13Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -70,7 +70,10 @@ class CPL_DLL WCSDataset : public GDALPamDataset
     int         TestUseBlockIO( int, int, int, int, int, int );
     CPLErr      DirectRasterIO( GDALRWFlag, int, int, int, int,
                                 void *, int, int, GDALDataType,
-                                int, int *, int, int, int );
+                                int, int *,
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GSpacing nBandSpace,
+                                GDALRasterIOExtraArg* psExtraArg);
     CPLErr      GetCoverage( int nXOff, int nYOff, int nXSize, int nYSize,
                              int nBufXSize, int nBufYSize, 
                              int nBandCount, int *panBandList,
@@ -78,7 +81,10 @@ class CPL_DLL WCSDataset : public GDALPamDataset
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *,
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     int		DescribeCoverage();
     int         ExtractGridInfo100();
@@ -131,7 +137,8 @@ class WCSRasterBand : public GDALPamRasterBand
     
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
   public:
 
@@ -320,7 +327,7 @@ CPLErr WCSRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
             eErr = poTileBand->RasterIO( GF_Read, 
                                          0, 0, nBlockXSize, nBlockYSize, 
                                          pImage, nBlockXSize, nBlockYSize, 
-                                         eDataType, 0, 0 );
+                                         eDataType, 0, 0, NULL );
         }
         else
         {
@@ -338,7 +345,7 @@ CPLErr WCSRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                             0, 0, nBlockXSize, nBlockYSize,
                                             poBlock->GetDataRef(),
                                             nBlockXSize, nBlockYSize,
-                                            eDataType, 0, 0 );
+                                            eDataType, 0, 0, NULL );
                 poBlock->DropLock();
             }
             else
@@ -364,7 +371,8 @@ CPLErr WCSRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                  int nXOff, int nYOff, int nXSize, int nYSize,
                                  void * pData, int nBufXSize, int nBufYSize,
                                  GDALDataType eBufType,
-                                 int nPixelSpace, int nLineSpace )
+                                 GSpacing nPixelSpace, GSpacing nLineSpace,
+                                 GDALRasterIOExtraArg* psExtraArg)
     
 {
     if( (poODS->nMaxCols > 0 && poODS->nMaxCols < nBufXSize)
@@ -376,14 +384,14 @@ CPLErr WCSRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamRasterBand::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nPixelSpace, nLineSpace );
+            nPixelSpace, nLineSpace, psExtraArg );
     else
         return poODS->DirectRasterIO( 
             eRWFlag, 
             nXOff * nResFactor, nYOff * nResFactor, 
             nXSize * nResFactor, nYSize * nResFactor,
             pData, nBufXSize, nBufYSize, eBufType, 
-            1, &nBand, nPixelSpace, nLineSpace, 0 );
+            1, &nBand, nPixelSpace, nLineSpace, 0, psExtraArg );
 }
 
 /************************************************************************/
@@ -393,7 +401,6 @@ CPLErr WCSRasterBand::IRasterIO( GDALRWFlag eRWFlag,
 double WCSRasterBand::GetNoDataValue( int *pbSuccess )
 
 {
-    CPLLocaleC  oLocaleEnforcer;
     const char *pszSV = CPLGetXMLValue( poODS->psService, "NoDataValue", NULL);
 
     if( pszSV == NULL )
@@ -402,7 +409,7 @@ double WCSRasterBand::GetNoDataValue( int *pbSuccess )
     {
         if( pbSuccess )
             *pbSuccess = TRUE;
-        return atof(pszSV);
+        return CPLAtof(pszSV);
     }
 }
 
@@ -500,9 +507,12 @@ WCSDataset::~WCSDataset()
 /*      (FALSE) for a given request configuration and environment.      */
 /************************************************************************/
 
-int WCSDataset::TestUseBlockIO( CPL_UNUSED int nXOff, CPL_UNUSED int nYOff, int nXSize, int nYSize,
-                                int nBufXSize, int nBufYSize )
-
+int WCSDataset::TestUseBlockIO( CPL_UNUSED int nXOff,
+                                CPL_UNUSED int nYOff,
+                                int nXSize,
+                                int nYSize,
+                                int nBufXSize,
+                                int nBufYSize )
 {
     int bUseBlockedIO = bForceCachedIO;
 
@@ -528,7 +538,9 @@ CPLErr WCSDataset::IRasterIO( GDALRWFlag eRWFlag,
                               void * pData, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType, 
                               int nBandCount, int *panBandMap,
-                              int nPixelSpace, int nLineSpace, int nBandSpace)
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg)
 
 {
     if( (nMaxCols > 0 && nMaxCols < nBufXSize)
@@ -542,12 +554,12 @@ CPLErr WCSDataset::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamDataset::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     else
         return DirectRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 }
 
 /************************************************************************/
@@ -556,25 +568,32 @@ CPLErr WCSDataset::IRasterIO( GDALRWFlag eRWFlag,
 /*      Make exactly one request to the server for this data.           */
 /************************************************************************/
 
-CPLErr 
+CPLErr
 WCSDataset::DirectRasterIO( CPL_UNUSED GDALRWFlag eRWFlag,
-                            int nXOff, int nYOff, int nXSize, int nYSize,
-                            void * pData, int nBufXSize, int nBufYSize,
-                            GDALDataType eBufType, 
-                            int nBandCount, int *panBandMap,
-                            int nPixelSpace, int nLineSpace, int nBandSpace)
-
+                            int nXOff,
+                            int nYOff,
+                            int nXSize,
+                            int nYSize,
+                            void * pData,
+                            int nBufXSize,
+                            int nBufYSize,
+                            GDALDataType eBufType,
+                            int nBandCount,
+                            int *panBandMap,
+                            GSpacing nPixelSpace, GSpacing nLineSpace,
+                            GSpacing nBandSpace,
+                            CPL_UNUSED GDALRasterIOExtraArg* psExtraArg)
 {
-    CPLDebug( "WCS", "DirectRasterIO(%d,%d,%d,%d) -> (%d,%d) (%d bands)\n", 
-              nXOff, nYOff, nXSize, nYSize, 
+    CPLDebug( "WCS", "DirectRasterIO(%d,%d,%d,%d) -> (%d,%d) (%d bands)\n",
+              nXOff, nYOff, nXSize, nYSize,
               nBufXSize, nBufYSize, nBandCount );
 
 /* -------------------------------------------------------------------- */
 /*      Get the coverage.                                               */
 /* -------------------------------------------------------------------- */
     CPLHTTPResult *psResult = NULL;
-    CPLErr eErr = 
-        GetCoverage( nXOff, nYOff, nXSize, nYSize, nBufXSize, nBufYSize, 
+    CPLErr eErr =
+        GetCoverage( nXOff, nYOff, nXSize, nYSize, nBufXSize, nBufYSize,
                      nBandCount, panBandMap, &psResult );
 
     if( eErr != CE_None )
@@ -639,7 +658,7 @@ WCSDataset::DirectRasterIO( CPL_UNUSED GDALRWFlag eRWFlag,
                                      0, 0, nBufXSize, nBufYSize,
                                      ((GByte *) pData) + 
                                      iBand * nBandSpace, nBufXSize, nBufYSize, 
-                                     eBufType, nPixelSpace, nLineSpace );
+                                     eBufType, nPixelSpace, nLineSpace, NULL );
     }
     
 /* -------------------------------------------------------------------- */
@@ -665,8 +684,6 @@ CPLErr WCSDataset::GetCoverage( int nXOff, int nYOff, int nXSize, int nYSize,
                                 CPLHTTPResult **ppsResult )
 
 {
-    CPLLocaleC oLocaleEnforcer;
-
 /* -------------------------------------------------------------------- */
 /*      Figure out the georeferenced extents.                           */
 /* -------------------------------------------------------------------- */
@@ -948,7 +965,6 @@ int WCSDataset::DescribeCoverage()
 int WCSDataset::ExtractGridInfo100()
 
 {
-    CPLLocaleC  oLocaleEnforcer; 
     CPLXMLNode * psCO = CPLGetXMLNode( psService, "CoverageOffering" );
 
     if( psCO == NULL )
@@ -1174,7 +1190,7 @@ int WCSDataset::ExtractGridInfo100()
     {
         const char *pszSV = CPLGetXMLValue( psCO, "rangeSet.RangeSet.nullValues.singleValue", NULL );
         
-        if( pszSV != NULL && (atof(pszSV) != 0.0 || *pszSV == '0') )
+        if( pszSV != NULL && (CPLAtof(pszSV) != 0.0 || *pszSV == '0') )
         {
             bServiceDirty = TRUE;
             CPLCreateXMLElementAndValue( psService, "NoDataValue", 
@@ -1278,7 +1294,6 @@ static int ParseBoundingBox( CPLXMLNode *psBoundingBox, CPLString &osCRS,
                              double &dfUpperX, double &dfUpperY )
 
 {
-    CPLLocaleC  oLocaleEnforcer; 
     int nRet = TRUE;
 
     osCRS = CPLGetXMLValue( psBoundingBox, "crs", "" );
@@ -1292,10 +1307,10 @@ static int ParseBoundingBox( CPLXMLNode *psBoundingBox, CPLString &osCRS,
 
     if( CSLCount(papszLC) >= 2 && CSLCount(papszUC) >= 2 )
     {
-        dfLowerX = atof(papszLC[0]);
-        dfLowerY = atof(papszLC[1]);
-        dfUpperX = atof(papszUC[0]);
-        dfUpperY = atof(papszUC[1]);
+        dfLowerX = CPLAtof(papszLC[0]);
+        dfLowerY = CPLAtof(papszLC[1]);
+        dfUpperX = CPLAtof(papszUC[0]);
+        dfUpperY = CPLAtof(papszUC[1]);
     }
     else
         nRet = FALSE;
@@ -1316,8 +1331,6 @@ static int ParseBoundingBox( CPLXMLNode *psBoundingBox, CPLString &osCRS,
 int WCSDataset::ExtractGridInfo()
 
 {
-    CPLLocaleC  oLocaleEnforcer; 
-
     if( nVersion == 100 )
         return ExtractGridInfo100();
 
@@ -1367,12 +1380,12 @@ int WCSDataset::ExtractGridInfo()
         if( CSLCount(papszOffsetTokens) == 4
             && CSLCount(papszOriginTokens) == 2 )
         {
-            adfGeoTransform[0] = atof(papszOriginTokens[0]);
-            adfGeoTransform[1] = atof(papszOffsetTokens[0]);
-            adfGeoTransform[2] = atof(papszOffsetTokens[1]);
-            adfGeoTransform[3] = atof(papszOriginTokens[1]);
-            adfGeoTransform[4] = atof(papszOffsetTokens[2]);
-            adfGeoTransform[5] = atof(papszOffsetTokens[3]);
+            adfGeoTransform[0] = CPLAtof(papszOriginTokens[0]);
+            adfGeoTransform[1] = CPLAtof(papszOffsetTokens[0]);
+            adfGeoTransform[2] = CPLAtof(papszOffsetTokens[1]);
+            adfGeoTransform[3] = CPLAtof(papszOriginTokens[1]);
+            adfGeoTransform[4] = CPLAtof(papszOffsetTokens[2]);
+            adfGeoTransform[5] = CPLAtof(papszOffsetTokens[3]);
         }
         else
         {
@@ -1388,12 +1401,12 @@ int WCSDataset::ExtractGridInfo()
         if( CSLCount(papszOffsetTokens) == 6
             && CSLCount(papszOriginTokens) == 3 )
         {
-            adfGeoTransform[0] = atof(papszOriginTokens[0]);
-            adfGeoTransform[1] = atof(papszOffsetTokens[0]);
-            adfGeoTransform[2] = atof(papszOffsetTokens[1]);
-            adfGeoTransform[3] = atof(papszOriginTokens[1]);
-            adfGeoTransform[4] = atof(papszOffsetTokens[3]);
-            adfGeoTransform[5] = atof(papszOffsetTokens[4]);
+            adfGeoTransform[0] = CPLAtof(papszOriginTokens[0]);
+            adfGeoTransform[1] = CPLAtof(papszOffsetTokens[0]);
+            adfGeoTransform[2] = CPLAtof(papszOffsetTokens[1]);
+            adfGeoTransform[3] = CPLAtof(papszOriginTokens[1]);
+            adfGeoTransform[4] = CPLAtof(papszOffsetTokens[3]);
+            adfGeoTransform[5] = CPLAtof(papszOffsetTokens[4]);
         }
         else
         {
@@ -1409,12 +1422,12 @@ int WCSDataset::ExtractGridInfo()
         if( CSLCount(papszOffsetTokens) == 2
             && CSLCount(papszOriginTokens) == 2 )
         {
-            adfGeoTransform[0] = atof(papszOriginTokens[0]);
-            adfGeoTransform[1] = atof(papszOffsetTokens[0]);
+            adfGeoTransform[0] = CPLAtof(papszOriginTokens[0]);
+            adfGeoTransform[1] = CPLAtof(papszOffsetTokens[0]);
             adfGeoTransform[2] = 0.0;
-            adfGeoTransform[3] = atof(papszOriginTokens[1]);
+            adfGeoTransform[3] = CPLAtof(papszOriginTokens[1]);
             adfGeoTransform[4] = 0.0;
-            adfGeoTransform[5] = atof(papszOffsetTokens[1]);
+            adfGeoTransform[5] = CPLAtof(papszOffsetTokens[1]);
         }
         else
         {
@@ -1598,7 +1611,7 @@ int WCSDataset::ExtractGridInfo()
         const char *pszSV = 
             CPLGetXMLValue( psCO, "Range.Field.NullValue", NULL );
         
-        if( pszSV != NULL && (atof(pszSV) != 0.0 || *pszSV == '0') )
+        if( pszSV != NULL && (CPLAtof(pszSV) != 0.0 || *pszSV == '0') )
         {
             bServiceDirty = TRUE;
             CPLCreateXMLElementAndValue( psService, "NoDataValue", 
@@ -2402,6 +2415,7 @@ void GDALRegister_WCS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "WCS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "OGC Web Coverage Service" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

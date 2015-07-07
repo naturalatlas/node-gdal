@@ -1,5 +1,5 @@
 #ifndef DOXYGEN_SKIP
-/* $Id: vrt_tutorial.dox 27700 2014-09-20 13:42:12Z goatbar $ */
+/* $Id: vrt_tutorial.dox 29342 2015-06-14 18:00:24Z rouault $ */
 #endif /* DOXYGEN_SKIP */
 
 /*!
@@ -45,6 +45,9 @@ This tutorial will cover the .vrt file format (suitable for users editing
 for developers.<p>
 
 \section gdal_vrttut_format .vrt Format
+
+A <a href="http://svn.osgeo.org/gdal/trunk/gdal/data/gdalvrt.xsd">XML schema of the GDAL VRT format</a>
+is available.<p>
 
 Virtual files stored on disk are kept in an XML format with the following
 elements.<p>
@@ -97,8 +100,10 @@ georeferenced coordinates in the same format as the SRS element.<P>
 
 <li> <b>Metadata</b>: This element contains a list of metadata name/value 
 pairs associated with the VRTDataset as a whole, or a VRTRasterBand.   It has
-<MDI> (metadata item) subelements which have a "key" attribute and the value
-as the data of the element.  
+&lt;MDI&gt; (metadata item) subelements which have a "key" attribute and the value
+as the data of the element. The Metadata element can be repeated multiple times,
+in which case it must be accompanied with a "domain" attribute to indicate the
+name of the metadata domain.
 
 \code
   <Metadata>
@@ -260,6 +265,12 @@ The relativeToVRT attribute on the SourceFilename indicates whether the
 filename should be interpreted as relative to the .vrt file (value is 1)
 or not relative to the .vrt file (value is 0).  The default is 0.
 
+The shared attribute, added in GDAL 2.0.0, on the SourceFilename indicates whether the
+dataset should be shared (value is 1) or not (value is 0). The default is 1.
+If several VRT datasets refering to the same underlying sources are used in a multithreaded context,
+shared should be set to 0. Alternatively, the VRT_SHARED_SOURCE configuration
+option can be set to 0 to force non-shared mode.
+
 Some characteristics of the source band can be specified in the optional
 SourceProperties tag to enable the VRT driver to differ the opening of the source
 dataset until it really needs to read data from it. This is particularly useful
@@ -279,13 +290,48 @@ a mask band. For example mask,1 means the the mask band of the first band of the
       <DstRect xOff="0" yOff="0" xSize="512" ySize="512"/>
     </SimpleSource>
 \endcode
+
+Starting with GDAL 2.0, a OpenOptions subelement can be added to specify
+the open options to apply when opening the source dataset. It has &lt;OOI&gt; (open option item)
+subelements which have a "key" attribute and the value as the data of the element.
+
+\code
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">utm.tif</SourceFilename>
+      <OpenOptions>
+          <OOI key="OVERVIEW_LEVEL">0</OOI>
+      </OpenOptions>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="256" RasterYSize="256" DataType="Byte" BlockXSize="128" BlockYSize="128"/>
+      <SrcRect xOff="0" yOff="0" xSize="256" ySize="256"/>
+      <DstRect xOff="0" yOff="0" xSize="256" ySize="256"/>
+    </SimpleSource>
+\endcode
+
+Starting with GDAL 2.0, a resampling attribute can be specified on a SimpleSource
+or ComplexSource element to specified the resampling algorithm used when the
+size of the destination rectangle is not the same as the size of the source
+rectangle. The values allowed for that attribute are : nearest,bilinear,cubic,
+cubicspline,lanczos,average,mode.
+
+\code
+    <SimpleSource resampling="cubic">
+      <SourceFilename relativeToVRT="1">utm.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="256" RasterYSize="256" DataType="Byte" BlockXSize="128" BlockYSize="128"/>
+      <SrcRect xOff="0" yOff="0" xSize="256" ySize="256"/>
+      <DstRect xOff="0" yOff="0" xSize="128" ySize="128"/>
+    </SimpleSource>
+\endcode
+
 </li>
 
 <li> <b>AveragedSource</b>: The AveragedSource is derived from the
 SimpleSource and shares the same properties except that it uses an averaging
 resampling instead of a nearest neighbour algorithm as in SimpleSource, when
 the size of the destination rectangle is not the same as the size of the source
-rectangle
+rectangle. Note: starting with GDAL 2.0, a more general mechanism to specify
+resampling algorithms can be used. See above paragraph about the 'resampling' attribute.
 
 <li> <b>ComplexSource</b>: The ComplexSource is derived from the
 SimpleSource (so it shares the SourceFilename, SourceBand, SrcRect and 
@@ -830,5 +876,27 @@ reason for that is that the VRT dataset uses GDALOpenShared when opening the
 underlying datasets. So, if you open twice the same VRT dataset by the same
 thread, both VRT datasets will share the same handles to the underlying
 datasets.
+
+The shared attribute, added in GDAL 2.0.0, on the SourceFilename indicates whether the
+dataset should be shared (value is 1) or not (value is 0). The default is 1.
+If several VRT datasets refering to the same underlying sources are used in a multithreaded context,
+shared should be set to 0. Alternatively, the VRT_SHARED_SOURCE configuration
+option can be set to 0 to force non-shared mode.
+
+\section gdal_vrttut_perf Performance considerations
+
+A VRT can reference many (hundreds, thousands, or more) datasets. Due to
+operating system limitations, and for performance at opening time, it is
+not reasonable/possible to open them all at the same time. GDAL has a "pool"
+of datasets opened by VRT files whose maximum limit is 100 by default. When it
+needs to access a dataset referenced by a VRT, it checks if it is already in
+the pool of open datasets. If not, when the pool has reached its limit, it closes
+the least recently used dataset to be able to open the new one. This maximum
+limit of the pool can be increased by setting the GDAL_MAX_DATASET_POOL_SIZE
+ configuration option to a bigger value. Note that a typical user process on
+Linux is limited to 1024 simultaneously opened files, and you should let some
+margin for shared libraries, etc...
+As of GDAL 2.0, gdal_translate and gdalwarp, by default, increase the pool size
+to 450.
 
 */

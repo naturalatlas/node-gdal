@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sdedataset.cpp 22255 2011-04-29 19:03:26Z warmerdam $
+ * $Id: sdedataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  ESRI ArcSDE Raster reader
  * Purpose:  Dataset implementaion for ESRI ArcSDE Rasters
@@ -526,6 +526,7 @@ void GDALRegister_SDE()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "SDE" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "ESRI ArcSDE" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

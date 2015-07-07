@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsdelayer.cpp 26688 2013-12-02 19:07:41Z rouault $
+ * $Id: ogrsdelayer.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSDELayer class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsdelayer.cpp 26688 2013-12-02 19:07:41Z rouault $");
+CPL_CVSID("$Id: ogrsdelayer.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 /************************************************************************/
 /*                            OGRSDELayer()                             */
@@ -118,19 +118,19 @@ int OGRSDELayer::Initialize( const char *pszTableName,
 /*      Determine DBMS table owner name and the table name part         */
 /*      from pszTableName which is a fully-qualified table name         */
 /* -------------------------------------------------------------------- */
-    char               *pszTableNameCopy = strdup( pszTableName );
+    char               *pszTableNameCopy = CPLStrdup( pszTableName );
     char               *pszPeriodPtr;
     
     if( (pszPeriodPtr = strstr( pszTableNameCopy,"." )) != NULL )
     {
         *pszPeriodPtr  = '\0';
-        pszOwnerName   = strdup( pszTableNameCopy );
-        pszDbTableName = strdup( pszPeriodPtr+1 );
+        pszOwnerName = CPLStrdup(pszTableNameCopy);
+        pszDbTableName = CPLStrdup(pszPeriodPtr + 1);
     }
     else
     {
         pszOwnerName   = NULL;
-        pszDbTableName = strdup( pszTableName );
+        pszDbTableName = CPLStrdup(pszTableName);
     }
     
     CPLFree( pszTableNameCopy );
@@ -174,6 +174,7 @@ int OGRSDELayer::Initialize( const char *pszTableName,
     }
 
     poFeatureDefn = new OGRFeatureDefn( pszTableName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
 /* -------------------------------------------------------------------- */
@@ -1077,7 +1078,7 @@ OGRErr OGRSDELayer::TranslateOGRGeometry( OGRGeometry *poGeom,
 /* -------------------------------------------------------------------- */    
     int                 b3D = FALSE;
     
-    b3D = poGeom->getGeometryType() & wkb25DBit;
+    b3D = wkbHasZ(poGeom->getGeometryType());
     
 /* -------------------------------------------------------------------- */
 /*      Translate POINT/MULTIPOINT type.                                */
@@ -2063,7 +2064,7 @@ OGRFeature *OGRSDELayer::GetNextFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRSDELayer::GetFeature( long nFeatureId )
+OGRFeature *OGRSDELayer::GetFeature( GIntBig nFeatureId )
 
 {
     int nSDEErr;
@@ -2186,7 +2187,7 @@ OGRErr OGRSDELayer::ResetStream()
 /*      operator in the database.                                       */
 /************************************************************************/
 
-int OGRSDELayer::GetFeatureCount( int bForce )
+GIntBig OGRSDELayer::GetFeatureCount( int bForce )
 
 {
 /* -------------------------------------------------------------------- */
@@ -2405,9 +2406,9 @@ OGRErr OGRSDELayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK )
 
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
-OGRErr OGRSDELayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRSDELayer::ISetFeature( OGRFeature *poFeature )
 
 {
     LONG                nSDEErr;
@@ -2443,9 +2444,9 @@ OGRErr OGRSDELayer::SetFeature( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
-OGRErr OGRSDELayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRSDELayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     LONG                nSDEErr;
@@ -2503,7 +2504,7 @@ OGRErr OGRSDELayer::CreateFeature( OGRFeature *poFeature )
 /************************************************************************/
 /*                           DeleteFeature()                            */
 /************************************************************************/
-OGRErr OGRSDELayer::DeleteFeature( long nFID )
+OGRErr OGRSDELayer::DeleteFeature( GIntBig nFID )
 
 {
     LONG                nSDEErr;

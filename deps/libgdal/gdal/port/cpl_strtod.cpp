@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_strtod.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_strtod.cpp 29252 2015-05-26 10:00:08Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Functions to convert ASCII string to floating point number.
@@ -34,7 +34,7 @@
 
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: cpl_strtod.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_strtod.cpp 29252 2015-05-26 10:00:08Z rouault $");
 
 // XXX: with GCC 2.95 strtof() function is only available when in c99 mode.
 // Fix it here not touching the compiler options.
@@ -68,6 +68,14 @@ static float CPLNaN(void)
         return 1.0 / ZERO; /* MSVC doesn't like 1.0 / 0.0 */
     }
     #define INFINITY CPLInfinity()
+    static CPL_INLINE double CPLNegInfinity(void)
+    {
+        static double ZERO = 0;
+        return -1.0 / ZERO; /* MSVC doesn't like -1.0 / 0.0 */
+    }
+    #define NEG_INFINITY CPLNegInfinity()
+#else
+    #define NEG_INFINITY (-INFINITY)
 #endif
 
 /************************************************************************/
@@ -116,16 +124,16 @@ double CPLAtofDelim(const char *nptr, char point)
  * custom delimiter.
  *
  * IMPORTANT NOTE.
- * Existance of this function does not mean you should always use it.
+ * Existence of this function does not mean you should always use it.
  * Sometimes you should use standard locale aware atof(3) and its family. When
  * you need to process the user's input (for example, command line parameters)
- * use atof(3), because user works in localized environment and her input will
- * be done accordingly the locale set. In particular that means we should not
+ * use atof(3), because the user works in a localized environment and the user's input will
+ * be done according to the locale set. In particular that means we should not
  * make assumptions about character used as decimal delimiter, it can be
  * either "." or ",".
  * But when you are parsing some ASCII file in predefined format, you most
  * likely need CPLAtof(), because such files distributed across the systems
- * with different locales and floating point representation shoudl be
+ * with different locales and floating point representation should be
  * considered as a part of file format. If the format uses "." as a delimiter
  * the same character must be used when parsing number regardless of actual
  * locale setting.
@@ -204,17 +212,21 @@ static char* CPLReplacePointByLocalePoint(const char* pszNumber, char point)
     struct lconv *poLconv = localeconv();
     if ( poLconv
          && poLconv->decimal_point
-         && strlen(poLconv->decimal_point) > 0 )
+         && poLconv->decimal_point[0] != '\0' )
     {
         char    byPoint = poLconv->decimal_point[0];
 
         if (point != byPoint)
         {
+            const char* pszLocalePoint = strchr(pszNumber, byPoint);
             const char* pszPoint = strchr(pszNumber, point);
-            if (pszPoint)
+            if (pszPoint || pszLocalePoint)
             {
                 char* pszNew = CPLStrdup(pszNumber);
-                pszNew[pszPoint - pszNumber] = byPoint;
+                if( pszLocalePoint )
+                    pszNew[pszLocalePoint - pszNumber] = ' ';
+                if( pszPoint )
+                    pszNew[pszPoint - pszNumber] = byPoint;
                 return pszNew;
             }
         }
@@ -253,23 +265,41 @@ double CPLStrtodDelim(const char *nptr, char **endptr, char point)
     {
         if (strcmp(nptr, "-1.#QNAN") == 0 ||
             strcmp(nptr, "-1.#IND") == 0)
+        {
+            if( endptr ) *endptr = (char*)nptr + strlen(nptr);
             return NAN;
+        }
 
         if (strcmp(nptr,"-inf") == 0 ||
-            strcmp(nptr,"-1.#INF") == 0)
-            return -INFINITY;
+            EQUALN (nptr,"-1.#INF",strlen("-1.#INF")))
+        {
+            if( endptr ) *endptr = (char*)nptr + strlen(nptr);
+            return NEG_INFINITY;
+        }
     }
     else if (nptr[0] == '1')
     {
         if (strcmp(nptr, "1.#QNAN") == 0)
+        {
+            if( endptr ) *endptr = (char*)nptr + strlen(nptr);
             return NAN;
-        if (strcmp (nptr,"1.#INF") == 0)
+        }
+        if( EQUALN (nptr,"1.#INF",strlen("1.#INF")) )
+        {
+            if( endptr ) *endptr = (char*)nptr + strlen(nptr);
             return INFINITY;
+        }
     }
     else if (nptr[0] == 'i' && strcmp(nptr,"inf") == 0)
+    {
+        if( endptr ) *endptr = (char*)nptr + strlen(nptr);
         return INFINITY;
+    }
     else if (nptr[0] == 'n' && strcmp(nptr,"nan") == 0)
+    {
+        if( endptr ) *endptr = (char*)nptr + strlen(nptr);
         return NAN;
+    }
 
 /* -------------------------------------------------------------------- */
 /*  We are implementing a simple method here: copy the input string     */

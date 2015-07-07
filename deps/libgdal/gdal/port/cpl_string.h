@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_string.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_string.h 28025 2014-11-28 00:01:32Z rouault $
  *
  * Name:     cpl_string.h
  * Project:  CPL - Common Portability Library
@@ -94,16 +94,13 @@ char CPL_DLL **CSLInsertString(char **papszStrList, int nInsertAtLineNo,
 char CPL_DLL **CSLRemoveStrings(char **papszStrList, int nFirstLineToDelete,
                          int nNumToRemove, char ***ppapszRetStrings) CPL_WARN_UNUSED_RESULT;
 int CPL_DLL CSLFindString( char **, const char * );
+int CPL_DLL CSLFindStringCaseSensitive( char **, const char * );
 int CPL_DLL CSLPartialFindString( char **papszHaystack, 
 	const char * pszNeedle );
 int CPL_DLL CSLFindName(char **papszStrList, const char *pszName);
 int CPL_DLL CSLTestBoolean( const char *pszValue );
 int CPL_DLL CSLFetchBoolean( char **papszStrList, const char *pszKey, 
                              int bDefault );
-
-const char CPL_DLL *CPLSPrintf(const char *fmt, ...) CPL_PRINT_FUNC_FORMAT(1, 2);
-char CPL_DLL **CSLAppendPrintf(char **papszStrList, const char *fmt, ...) CPL_PRINT_FUNC_FORMAT(2, 3) CPL_WARN_UNUSED_RESULT;
-int CPL_DLL CPLVASPrintf(char **buf, const char *fmt, va_list args );
 
 const char CPL_DLL *
       CPLParseNameValue(const char *pszNameValue, char **ppszKey );
@@ -153,6 +150,19 @@ CPLValueType CPL_DLL CPLGetValueType(const char* pszValue);
 size_t CPL_DLL CPLStrlcpy(char* pszDest, const char* pszSrc, size_t nDestSize);
 size_t CPL_DLL CPLStrlcat(char* pszDest, const char* pszSrc, size_t nDestSize);
 size_t CPL_DLL CPLStrnlen (const char *pszStr, size_t nMaxLen);
+
+/* -------------------------------------------------------------------- */
+/*      Locale independant formatting functions.                        */
+/* -------------------------------------------------------------------- */
+int CPL_DLL CPLvsnprintf(char *str, size_t size, const char* fmt, va_list args);
+int CPL_DLL CPLsnprintf(char *str, size_t size, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(3,4);
+int CPL_DLL CPLsprintf(char *str, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(2, 3);
+int CPL_DLL CPLprintf(const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(1, 2);
+int CPL_DLL CPLsscanf(const char* str, const char* fmt, ...); /* caution: only works with limited number of formats */
+
+const char CPL_DLL *CPLSPrintf(const char *fmt, ...) CPL_PRINT_FUNC_FORMAT(1, 2);
+char CPL_DLL **CSLAppendPrintf(char **papszStrList, const char *fmt, ...) CPL_PRINT_FUNC_FORMAT(2, 3) CPL_WARN_UNUSED_RESULT;
+int CPL_DLL CPLVASPrintf(char **buf, const char *fmt, va_list args );
 
 /* -------------------------------------------------------------------- */
 /*      RFC 23 character set conversion/recoding API (cpl_recode.cpp).  */
@@ -343,7 +353,7 @@ class CPL_DLL CPLStringList
     CPLStringList &AddNameValue( const char *pszKey, const char *pszValue );
     CPLStringList &SetNameValue( const char *pszKey, const char *pszValue );
 
-    CPLStringList &Assign( char **papszList, int bTakeOwnership=TRUE );
+    CPLStringList &Assign( char **papszListIn, int bTakeOwnership=TRUE );
     CPLStringList &operator=(char **papszListIn) { return Assign( papszListIn, TRUE ); }
     CPLStringList &operator=(const CPLStringList& oOther);
 

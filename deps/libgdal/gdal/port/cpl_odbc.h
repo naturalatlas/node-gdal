@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_odbc.h 20579 2010-09-12 11:43:35Z rouault $
+ * $Id: cpl_odbc.h 29025 2015-04-26 11:50:20Z tamas $
  *
  * Project:  OGR ODBC Driver
  * Purpose:  Declarations for ODBC Access Cover API.
@@ -214,6 +214,7 @@ class CPL_DLL CPLODBCStatement {
     _SQLULEN      *m_panColSize;
     SQLSMALLINT   *m_panColPrecision;
     SQLSMALLINT   *m_panColNullable;
+    char         **m_papszColColumnDef;
 
     char         **m_papszColValues;
     _SQLLEN       *m_panColValueLengths;
@@ -253,11 +254,13 @@ class CPL_DLL CPLODBCStatement {
     short          GetColSize( int );
     short          GetColPrecision( int );
     short          GetColNullable( int );
+    const char    *GetColColumnDef( int );
 
     int            GetColId( const char * );
     const char    *GetColData( int, const char * = NULL );
     const char    *GetColData( const char *, const char * = NULL );
     int            GetColDataLength( int );
+    int            GetRowCountAffected();
 
     // Fetch special metadata.
     int            GetColumns( const char *pszTable, 

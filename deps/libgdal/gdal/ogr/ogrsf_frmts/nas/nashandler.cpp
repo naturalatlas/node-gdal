@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: nashandler.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: nashandler.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  NAS Reader
  * Purpose:  Implementation of NASHandler class.

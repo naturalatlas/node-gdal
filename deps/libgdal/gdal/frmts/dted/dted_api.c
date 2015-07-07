@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dted_api.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: dted_api.c 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  DTED Translator
  * Purpose:  Implementation of DTED/CDED access functions.
@@ -31,7 +31,7 @@
 #include "dted_api.h"
 
 #ifndef AVOID_CPL
-CPL_CVSID("$Id: dted_api.c 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: dted_api.c 28831 2015-04-01 16:46:05Z rouault $");
 #endif
 
 static int bWarnedTwoComplement = FALSE;
@@ -88,17 +88,8 @@ DTEDInfo * DTEDOpen( const char * pszFilename,
                      int bTestOpen )
 
 {
-    VSILFILE   *fp;
-    char        achRecord[DTED_UHL_SIZE];
-    DTEDInfo    *psDInfo = NULL;
-    double      dfLLOriginX, dfLLOriginY;
-    int deg = 0;
-    int min = 0;
-    int sec = 0;
-    int bSwapLatLong = FALSE;
-    char szResult[81];
-    int bIsWeirdDTED;
-    char chHemisphere;
+    VSILFILE* fp;
+
 /* -------------------------------------------------------------------- */
 /*      Open the physical file.                                         */
 /* -------------------------------------------------------------------- */
@@ -124,6 +115,30 @@ DTEDInfo * DTEDOpen( const char * pszFilename,
 
         return NULL;
     }
+
+    return DTEDOpenEx( fp, pszFilename, pszAccess, bTestOpen );
+}
+
+/************************************************************************/
+/*                             DTEDOpenEx()                             */
+/************************************************************************/
+
+DTEDInfo * DTEDOpenEx( VSILFILE   *fp,
+                       const char * pszFilename,
+                       const char * pszAccess,
+                       int bTestOpen )
+
+{
+    char        achRecord[DTED_UHL_SIZE];
+    DTEDInfo    *psDInfo = NULL;
+    double      dfLLOriginX, dfLLOriginY;
+    int deg = 0;
+    int min = 0;
+    int sec = 0;
+    int bSwapLatLong = FALSE;
+    char szResult[81];
+    int bIsWeirdDTED;
+    char chHemisphere;
 
 /* -------------------------------------------------------------------- */
 /*      Read, trying to find the UHL record.  Skip VOL or HDR           */
@@ -983,9 +998,9 @@ char *DTEDGetMetadata( DTEDInfo *psDInfo, DTEDMetaDataCode eCode )
 
     DTEDGetMetadataLocation( psDInfo, eCode, &pszFieldSrc, &nFieldLen );
     if( pszFieldSrc == NULL )
-        return strdup( "" );
+        return CPLStrdup( "" );
 
-    pszResult = (char *) malloc(nFieldLen+1);
+    pszResult = (char *) CPLMalloc(nFieldLen+1);
     strncpy( pszResult, pszFieldSrc, nFieldLen );
     pszResult[nFieldLen] = '\0';
 

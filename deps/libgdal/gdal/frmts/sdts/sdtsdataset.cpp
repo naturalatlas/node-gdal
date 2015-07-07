@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sdtsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: sdtsdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  SDTS Translator
  * Purpose:  GDALDataset driver for SDTS Raster translator.
@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: sdtsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: sdtsdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /**
  \file sdtsdataset.cpp
@@ -289,7 +289,7 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return( poDS );
 }
@@ -400,6 +400,7 @@ void GDALRegister_SDTS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "SDTS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "SDTS Raster" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

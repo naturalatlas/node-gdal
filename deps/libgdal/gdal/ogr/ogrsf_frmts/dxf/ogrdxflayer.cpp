@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxflayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxflayer.cpp 27945 2014-11-11 01:33:15Z rouault $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFLayer class.
@@ -33,7 +33,7 @@
 #include "ogrdxf_polyline_smooth.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: ogrdxflayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxflayer.cpp 27945 2014-11-11 01:33:15Z rouault $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
@@ -63,6 +63,8 @@ OGRDXFLayer::OGRDXFLayer( OGRDXFDataSource *poDS )
         OGRFieldDefn  oBlockAngleField( "BlockAngle", OFTReal );
         poFeatureDefn->AddFieldDefn( &oBlockAngleField );
     }
+    
+    SetDescription( poFeatureDefn->GetName() );
 }
 
 /************************************************************************/
@@ -265,10 +267,7 @@ void OGRDXFLayer::PrepareLineStyle( OGRFeature *poFeature )
     if( dfWeight > 0.0 )
     {
         char szBuffer[64];
-        snprintf(szBuffer, sizeof(szBuffer), "%.2g", dfWeight);
-        char* pszComma = strchr(szBuffer, ',');
-        if (pszComma)
-            *pszComma = '.';
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.2g", dfWeight);
         osStyle += CPLString().Printf( ",w:%sg", szBuffer );
     }
 
@@ -526,25 +525,18 @@ OGRFeature *OGRDXFLayer::TranslateMTEXT()
 /* -------------------------------------------------------------------- */
     CPLString osStyle;
     char szBuffer[64];
-    char* pszComma;
 
     osStyle.Printf("LABEL(f:\"Arial\",t:\"%s\"",osText.c_str());
 
     if( dfAngle != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
-        pszComma = strchr(szBuffer, ',');
-        if (pszComma)
-            *pszComma = '.';
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
         osStyle += CPLString().Printf(",a:%s", szBuffer);
     }
 
     if( dfHeight != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
-        pszComma = strchr(szBuffer, ',');
-        if (pszComma)
-            *pszComma = '.';
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
         osStyle += CPLString().Printf(",s:%sg", szBuffer);
     }
 
@@ -696,25 +688,18 @@ OGRFeature *OGRDXFLayer::TranslateTEXT()
 /* -------------------------------------------------------------------- */
     CPLString osStyle;
     char szBuffer[64];
-    char* pszComma;
 
     osStyle.Printf("LABEL(f:\"Arial\",t:\"%s\"",osText.c_str());
 
     if( dfAngle != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
-        pszComma = strchr(szBuffer, ',');
-        if (pszComma)
-            *pszComma = '.';
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
         osStyle += CPLString().Printf(",a:%s", szBuffer);
     }
 
     if( dfHeight != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
-        pszComma = strchr(szBuffer, ',');
-        if (pszComma)
-            *pszComma = '.';
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
         osStyle += CPLString().Printf(",s:%sg", szBuffer);
     }
 

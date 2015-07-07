@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfaridpcm.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: nitfaridpcm.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  ARIDPCM reading code.
@@ -32,7 +32,7 @@
 #include "nitflib.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: nitfaridpcm.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: nitfaridpcm.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 static const int neighbourhood_size_75[4] = { 23, 47, 74, 173 };
 static const int bits_per_level_by_busycode_75[4/*busy code*/][4/*level*/] = { 
@@ -199,11 +199,15 @@ get_bits( unsigned char *buffer, int first_bit, int num_bits )
 /*      Compute the delta value for a particular (i,j) location.        */
 /************************************************************************/
 static int
-get_delta( unsigned char *srcdata, 
+get_delta( unsigned char *srcdata,
            int nInputBytes,
-           int busy_code, CPL_UNUSED int comrat,
-           int block_offset, CPL_UNUSED int block_size, 
-           int i, int j, int *pbError )
+           int busy_code,
+           CPL_UNUSED int comrat,
+           int block_offset,
+           CPL_UNUSED int block_size,
+           int i,
+           int j,
+           int *pbError )
 
 {
     CPLAssert( comrat == CR075 );

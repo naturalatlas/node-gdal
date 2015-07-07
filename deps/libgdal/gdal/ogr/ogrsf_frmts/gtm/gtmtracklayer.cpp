@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtmtracklayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gtmtracklayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of GTMTrackLayer class.
@@ -36,7 +36,7 @@ GTMTrackLayer::GTMTrackLayer( const char* pszName,
                               OGRGTMDataSource* poDSIn )
 {
     poCT = NULL;
-  
+
     /* We are implementing just WGS84, although GTM supports other datum
        formats. */
     if( poSRSIn != NULL )
@@ -79,6 +79,7 @@ GTMTrackLayer::GTMTrackLayer( const char* pszName,
     nTotalFCount = poDS->getNTracks();
 
     poFeatureDefn = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType ( wkbLineString );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -216,9 +217,9 @@ inline void GTMTrackLayer::WriteTrackpoint( double lat, double lon, float altitu
 
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
-OGRErr GTMTrackLayer::CreateFeature (OGRFeature *poFeature)
+OGRErr GTMTrackLayer::ICreateFeature (OGRFeature *poFeature)
 {
     VSILFILE* fpTmpTrackpoints = poDS->getTmpTrackpointsFP();
     if (fpTmpTrackpoints == NULL)
@@ -348,7 +349,7 @@ OGRFeature* GTMTrackLayer::GetNextFeature()
     return NULL;
 }
 
-int GTMTrackLayer::GetFeatureCount(int bForce)
+GIntBig GTMTrackLayer::GetFeatureCount(int bForce)
 {
     if (m_poFilterGeom == NULL && m_poAttrQuery == NULL)
         return poDS->getNTracks();
@@ -362,4 +363,3 @@ void GTMTrackLayer::ResetReading()
     nNextFID = 0;
     poDS->rewindTrack();
 }
-

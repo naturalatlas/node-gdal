@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomedialayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrgeomedialayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaLayer class, code shared between
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogrgeomediageometry.h"
 
-CPL_CVSID("$Id: ogrgeomedialayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrgeomedialayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRGeomediaLayer()                          */
@@ -105,6 +105,7 @@ CPLErr OGRGeomediaLayer::BuildFeatureDefn( const char *pszLayerName,
 
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     int    nRawColumns = poStmt->GetColCount();
 
     poFeatureDefn->Reference();
@@ -306,7 +307,7 @@ OGRFeature *OGRGeomediaLayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRGeomediaLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRGeomediaLayer::GetFeature( GIntBig nFeatureId )
 
 {
     /* This should be implemented directly! */

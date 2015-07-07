@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: krodataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: krodataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  KRO format reader/writer
  * Purpose:  Implementation of KOLOR Raw Format
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: krodataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: krodataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /* http://www.autopano.net/wiki-en/Format_KRO */
 
@@ -220,7 +220,9 @@ GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
 /************************************************************************/
 
 GDALDataset *KRODataset::Create( const char * pszFilename,
-                                 int nXSize, int nYSize, int nBands,
+                                 int nXSize,
+                                 int nYSize,
+                                 int nBands,
                                  GDALDataType eType,
                                  CPL_UNUSED char ** papszOptions )
 {
@@ -300,6 +302,7 @@ void GDALRegister_KRO()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "KRO" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "KOLOR Raw" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "kro" );

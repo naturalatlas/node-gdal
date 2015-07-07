@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalbridge.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: gdalbridge.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  GDAL Bridge 
  * Purpose:  Implementation of GDALBridgeInitialize()
@@ -85,7 +85,7 @@ static void *GBGetSymbolCheck( const char *pszLibrary,
 
         if( i < MAX_SYMBOL-1 )
         {
-            papszErrorList[i] = strdup( pszSymbolName );
+            papszErrorList[i] = CPLStrdup( pszSymbolName );
             papszErrorList[i+1] = NULL;
         }
     }
@@ -512,7 +512,7 @@ int GDALBridgeInitialize( const char * pszTargetDir, FILE *fpReportFailure )
         for( iError = 0; apszFailed[iError] != NULL; iError++ )
         {
             fprintf( fpReportFailure, "  o %s\n", apszFailed[iError] );
-            free( apszFailed[iError] );
+            CPLFree( apszFailed[iError] );
         }
     }
 

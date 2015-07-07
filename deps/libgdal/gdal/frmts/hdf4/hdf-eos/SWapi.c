@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: SWapi.c 18599 2010-01-19 21:10:50Z rouault $
+ * $Id: SWapi.c 29336 2015-06-14 17:37:21Z rouault $
  *
  * This module has a number of additions and improvements over the original
  * implementation to be suitable for usage in GDAL HDF driver.
@@ -4922,7 +4922,7 @@ SWwrrdfield(int32 swathID, const char *fieldname, const char *code,
 
 
 		/*
-		 * If strideOne is true use NULL paramater for stride. This
+		 * If strideOne is true use NULL parameter for stride. This
 		 * is a work-around to HDF compression problem
 		 */
 		if (strideOne == 1)
@@ -5906,7 +5906,7 @@ SWregionindex(int32 swathID, float64 cornerlon[], float64 cornerlat[],
     intn            k;		/* Loop index */
 
     intn            l=0;	/* Loop index */
-    intn            tmpVal;     /* temp value for start region Delyth Jones*/
+    intn            tmpVal = 0;     /* temp value for start region Delyth Jones*/
   /*intn            j1;  */     /* Loop index */
     intn            status;	/* routine return status variable */
     intn	    mapstatus;	/* status for type of mapping */
@@ -6542,7 +6542,7 @@ SWdeftimeperiod(int32 swathID, float64 starttime, float64 stoptime,
 
     intn            i;		    /* Loop index */
     intn            j;		    /* Loop index */
-    intn            k;		    /* Loop index */
+    intn            k = 0;		    /* Loop index */
     intn            status;	    /* routine return status variable */
     intn            statTime;	    /* Status from SWfieldinfo for time */
 
@@ -9443,8 +9443,8 @@ SWdefscanregion(int32 swathID, char *fieldname, float64 range[], int32 mode)
 
     int32           regionID = -1;	/* Region ID (return) */
 
-    float64	    scan[2];
-    float64	    original_scan[2];
+    float64	    scan[2] = {0,0};
+    float64	    original_scan[2] = {0,0};
 
     char            dimlist[256];	/* Dimension list */
     char	    swathname[80];

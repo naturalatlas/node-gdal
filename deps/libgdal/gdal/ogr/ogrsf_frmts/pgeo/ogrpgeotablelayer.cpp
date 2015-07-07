@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeotablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrpgeotablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoTableLayer class, access to an existing table.
@@ -32,7 +32,7 @@
 #include "ogr_pgeo.h"
 #include "ogrpgeogeometry.h"
 
-CPL_CVSID("$Id: ogrpgeotablelayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrpgeotablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRPGeoTableLayer()                         */
@@ -78,6 +78,8 @@ CPLErr OGRPGeoTableLayer::Initialize( const char *pszTableName,
 
 {
     CPLODBCSession *poSession = poDS->GetSession();
+    
+    SetDescription( pszTableName );
 
     CPLFree( pszGeomColumn );
     if( pszGeomCol == NULL )
@@ -130,7 +132,7 @@ CPLErr OGRPGeoTableLayer::Initialize( const char *pszTableName,
     }
 
     if( eOGRType != wkbUnknown && eOGRType != wkbNone && bHasZ )
-        eOGRType = (OGRwkbGeometryType)(((int) eOGRType) | wkb25DBit);
+        eOGRType = wkbSetZ(eOGRType);
 
 /* -------------------------------------------------------------------- */
 /*      Do we have a simple primary key?                                */
@@ -268,7 +270,7 @@ void OGRPGeoTableLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRPGeoTableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRPGeoTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( pszFIDColumn == NULL )
@@ -281,7 +283,7 @@ OGRFeature *OGRPGeoTableLayer::GetFeature( long nFeatureId )
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
     poStmt->Append( poFeatureDefn->GetName() );
-    poStmt->Appendf( " WHERE %s = %ld", pszFIDColumn, nFeatureId );
+    poStmt->Appendf( " WHERE %s = " CPL_FRMT_GIB, pszFIDColumn, nFeatureId );
 
     if( !poStmt->ExecuteSQL() )
     {
@@ -346,7 +348,7 @@ int OGRPGeoTableLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRPGeoTableLayer::GetFeatureCount( int bForce )
+GIntBig OGRPGeoTableLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom != NULL )
@@ -367,7 +369,7 @@ int OGRPGeoTableLayer::GetFeatureCount( int bForce )
         return OGRPGeoLayer::GetFeatureCount(bForce);
     }
 
-    return atoi(oStmt.GetColData(0));
+    return CPLAtoGIntBig(oStmt.GetColData(0));
 }
 
 /************************************************************************/

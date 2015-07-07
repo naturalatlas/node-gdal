@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnaslayer.cpp 27713 2014-09-21 15:51:47Z jef $
+ * $Id: ogrnaslayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_port.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrnaslayer.cpp 27713 2014-09-21 15:51:47Z jef $");
+CPL_CVSID("$Id: ogrnaslayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGRNASLayer()                              */
@@ -59,6 +59,7 @@ OGRNASLayer::OGRNASLayer( const char * pszName,
         poFeatureDefn = new OGRFeatureDefn( pszName+4 );
     else
         poFeatureDefn = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
     poFeatureDefn->SetGeomType( eReqType );
@@ -150,16 +151,8 @@ OGRFeature *OGRNASLayer::GetNextFeature()
         if (papsGeometry[0] != NULL)
         {
             poGeom = (OGRGeometry*) OGR_G_CreateFromGMLTree(papsGeometry[0]);
-
-            if( EQUAL( papsGeometry[0]->pszValue, "CompositeCurve" ) ||
-                EQUAL( papsGeometry[0]->pszValue, "MultiCurve" ) ||
-                EQUAL( papsGeometry[0]->pszValue, "LineString" ) ||
-                EQUAL( papsGeometry[0]->pszValue, "MultiLineString" ) ||
-                EQUAL( papsGeometry[0]->pszValue, "Curve" ) )
-            {
-                poGeom = OGRGeometryFactory::forceToLineString( poGeom, false );
-            }
-
+            poGeom = NASReader::ConvertGeometry(poGeom);
+            poGeom = OGRGeometryFactory::forceTo(poGeom, GetGeomType());
             // poGeom->dumpReadable( 0, "NAS: " );
 
             // We assume the OGR_G_CreateFromGMLTree() function would have already
@@ -236,6 +229,9 @@ OGRFeature *OGRNASLayer::GetNextFeature()
             }
         }
 
+        poOGRFeature->SetGeometryDirectly( poGeom );
+        poGeom = NULL;
+
 /* -------------------------------------------------------------------- */
 /*      Test against the attribute query.                               */
 /* -------------------------------------------------------------------- */
@@ -249,14 +245,6 @@ OGRFeature *OGRNASLayer::GetNextFeature()
 /* -------------------------------------------------------------------- */
 /*      Wow, we got our desired feature. Return it.                     */
 /* -------------------------------------------------------------------- */
-        if( poGeom && poOGRFeature->SetGeometryDirectly( poGeom ) != OGRERR_NONE )
-        {
-            int iId = poNASFeature->GetClass()->GetPropertyIndex( "gml_id" );
-            const GMLProperty *poIdProp = poNASFeature->GetProperty(iId);
-            CPLError( CE_Warning, CPLE_AppDefined, "NAS: could not set geometry (gml_id:%s)",
-                      poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)" );
-        }
-
         delete poNASFeature;
 
         return poOGRFeature;
@@ -269,7 +257,7 @@ OGRFeature *OGRNASLayer::GetNextFeature()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRNASLayer::GetFeatureCount( int bForce )
+GIntBig OGRNASLayer::GetFeatureCount( int bForce )
 
 {
     if( poFClass == NULL )

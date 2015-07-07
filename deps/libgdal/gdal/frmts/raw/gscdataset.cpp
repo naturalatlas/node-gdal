@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gscdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gscdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  GSC Geogrid format driver.
  * Purpose:  Implements support for reading and writing GSC Geogrid format.
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gscdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gscdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -230,6 +230,7 @@ void GDALRegister_GSC()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GSC" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "GSC Geogrid" );
 //        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

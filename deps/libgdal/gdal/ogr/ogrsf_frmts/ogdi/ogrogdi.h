@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrogdi.h 26688 2013-12-02 19:07:41Z rouault $
+ * $Id: ogrogdi.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGDI Bridge
  * Purpose:  Private definitions within the OGDI driver to implement
@@ -72,11 +72,11 @@ class OGROGDILayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    OGRFeature         *GetFeature( long nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
 
     OGRFeatureDefn *    GetLayerDefn() { return m_poFeatureDefn; }
 
-    int                 GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int );
 
     int                 TestCapability( const char * );
 

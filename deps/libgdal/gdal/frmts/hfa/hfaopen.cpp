@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaopen.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: hfaopen.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Supporting functions for HFA (.img) ... main (C callable) API
@@ -42,7 +42,7 @@
 #include <limits.h>
 #include <vector>
 
-CPL_CVSID("$Id: hfaopen.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: hfaopen.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 
 static const char *apszAuxMetadataItems[] = {
@@ -208,7 +208,12 @@ HFAHandle HFAOpen( const char * pszFilename, const char * pszAccess )
 /* -------------------------------------------------------------------- */
 /*      Instantiate the root entry.                                     */
 /* -------------------------------------------------------------------- */
-    psInfo->poRoot = new HFAEntry( psInfo, psInfo->nRootPos, NULL, NULL );
+    psInfo->poRoot = HFAEntry::New( psInfo, psInfo->nRootPos, NULL, NULL );
+    if( psInfo->poRoot == NULL )
+    {
+        CPLFree(psInfo);
+        return NULL;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Read the dictionary                                             */
@@ -2034,17 +2039,17 @@ CPLErr HFAFlush( HFAHandle hHFA )
 /*      Suitable for use with primary layers, and overviews.            */
 /************************************************************************/
 
-int 
+int
 HFACreateLayer( HFAHandle psInfo, HFAEntry *poParent,
                 const char *pszLayerName,
-                int bOverview, int nBlockSize, 
-                int bCreateCompressed, int bCreateLargeRaster, 
+                int bOverview, int nBlockSize,
+                int bCreateCompressed, int bCreateLargeRaster,
                 int bDependentLayer,
-                int nXSize, int nYSize, int nDataType, 
+                int nXSize, int nYSize, int nDataType,
                 CPL_UNUSED char **papszOptions,
-                
+
                 // these are only related to external (large) files
-                GIntBig nStackValidFlagsOffset, 
+                GIntBig nStackValidFlagsOffset,
                 GIntBig nStackDataOffset,
                 int nStackCount, int nStackIndex )
 
@@ -2313,7 +2318,8 @@ HFAHandle HFACreate( const char * pszFilename,
     {
         nBlockSize = atoi( pszValue );
         // check for sane values
-        if ( ( nBlockSize < 32 ) || (nBlockSize > 2048) )
+        if ( (( nBlockSize < 32 ) || (nBlockSize > 2048))
+            && !CSLTestBoolean(CPLGetConfigOption("FORCE_BLOCKSIZE", "NO")) )
         {
             nBlockSize = 64;
         }
@@ -2368,11 +2374,11 @@ HFAHandle HFACreate( const char * pszFilename,
 /* -------------------------------------------------------------------- */
 /*      Check whether we should create external large file with         */
 /*      image.  We create a spill file if the amount of imagery is      */
-/*      close to 2GB.  We don't check the amount of auxilary            */
+/*      close to 2GB.  We don't check the amount of auxiliary            */
 /*      information, so in theory if there were an awful lot of         */
 /*      non-imagery data our approximate size could be smaller than     */
 /*      the file will actually we be.  We leave room for 10MB of        */
-/*      auxilary data.                                                  */
+/*      auxiliary data.                                                  */
 /*      We can also force spill file creation using option              */
 /*      SPILL_FILE=YES.                                                 */
 /* -------------------------------------------------------------------- */
@@ -2758,7 +2764,7 @@ CPLErr HFASetMetadata( HFAHandle hHFA, int nBand, char **papszMD )
             {
               case 'd':
               {
-                  double dfValue = atof( pszValue );
+                  double dfValue = CPLAtof( pszValue );
                   poEntry->SetDoubleField( pszFieldName, dfValue );
               }
               break;
@@ -2781,8 +2787,8 @@ CPLErr HFASetMetadata( HFAHandle hHFA, int nBand, char **papszMD )
         }
         else if ( EQUALN( "STATISTICS_HISTOBINVALUES", pszKey, strlen(pszKey) ) )
         {
-            pszBinValues = strdup( pszValue );
-	}
+            pszBinValues = CPLStrdup( pszValue );
+        }
         else
             papszGDALMD = CSLAddString( papszGDALMD, papszMD[iColumn] );
 
@@ -2847,7 +2853,7 @@ CPLErr HFASetMetadata( HFAHandle hHFA, int nBand, char **papszMD )
                 {
                     *pszEnd = 0;
                     VSIFSeekL( hHFA->fp, nOffset + 8*nBin, SEEK_SET );
-                    double nValue = atof( pszWork );
+                    double nValue = CPLAtof( pszWork );
                     HFAStandard( 8, &nValue );
 
                     VSIFWriteL( (void *)&nValue, 1, 8, hHFA->fp );
@@ -2898,7 +2904,7 @@ CPLErr HFASetMetadata( HFAHandle hHFA, int nBand, char **papszMD )
                         } else {
                             // Histogram were written as doubles, as is now the default behaviour
                             VSIFSeekL( hHFA->fp, nOffset + 8*nBin, SEEK_SET );
-                            double nValue = atof( pszWork );
+                            double nValue = CPLAtof( pszWork );
                             HFAStandard( 8, &nValue );
                             VSIFWriteL( (void *)&nValue, 1, 8, hHFA->fp );
                         }
@@ -2907,7 +2913,7 @@ CPLErr HFASetMetadata( HFAHandle hHFA, int nBand, char **papszMD )
                 }
             }
         }
-        free( pszBinValues );
+        CPLFree( pszBinValues );
     }
 
 /* -------------------------------------------------------------------- */

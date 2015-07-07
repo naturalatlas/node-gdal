@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrociwritablelayer.cpp 27583 2014-08-12 16:06:37Z martinl $
+ * $Id: ogrociwritablelayer.cpp 28481 2015-02-13 17:11:15Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCIWritableLayer class.  This provides
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrociwritablelayer.cpp 27583 2014-08-12 16:06:37Z martinl $");
+CPL_CVSID("$Id: ogrociwritablelayer.cpp 28481 2015-02-13 17:11:15Z rouault $");
 
 /************************************************************************/
 /*                        OGROCIWritableLayer()                         */
@@ -273,6 +273,13 @@ OGRErr OGROCIWritableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK 
         else
             strcpy( szFieldType, "INTEGER" );
     }
+    else if( oField.GetType() == OFTInteger64 )
+    {
+        if( bPreservePrecision && oField.GetWidth() != 0 )
+            sprintf( szFieldType, "NUMBER(%d)", oField.GetWidth() );
+        else
+            strcpy( szFieldType, "NUMBER(20)" );
+    }
     else if( oField.GetType() == OFTReal )
     {
         if( bPreservePrecision && oField.GetWidth() != 0 )
@@ -288,18 +295,22 @@ OGRErr OGROCIWritableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK 
         else
             sprintf( szFieldType, "VARCHAR2(%d)", oField.GetWidth() );
     }
-    else if ( oField.GetType() == OFTDate ||
-              oField.GetType() == OFTDateTime )
+    else if ( oField.GetType() == OFTDate )
     {
         sprintf( szFieldType, "DATE" );
     }
+    else if ( oField.GetType() == OFTDateTime )
+    {
+        sprintf( szFieldType, "TIMESTAMP" );
+    }
     else if( bApproxOK )
     {
+        oField.SetDefault(NULL);
         CPLError( CE_Warning, CPLE_NotSupported,
                   "Can't create field %s with type %s on Oracle layers.  Creating as VARCHAR.",
                   oField.GetNameRef(),
                   OGRFieldDefn::GetFieldTypeName(oField.GetType()) );
-        strcpy( szFieldType, "VARCHAR(2047)" );
+        strcpy( szFieldType, "VARCHAR2(2047)" );
     }
     else
     {
@@ -317,11 +328,12 @@ OGRErr OGROCIWritableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK 
     OGROCIStringBuf     oCommand;
     OGROCIStatement     oAddField( poSession );
 
-    oCommand.MakeRoomFor( 40 + strlen(poFeatureDefn->GetName())
+    oCommand.MakeRoomFor( 70 + strlen(poFeatureDefn->GetName())
                           + strlen(oField.GetNameRef())
-                          + strlen(szFieldType) );
+                          + strlen(szFieldType)
+                          + (oField.GetDefault() ? strlen(oField.GetDefault()) : 0) );
 
-    snprintf( szFieldName, sizeof( szFieldName ), oField.GetNameRef());
+    snprintf( szFieldName, sizeof( szFieldName ), "%s", oField.GetNameRef());
     szFieldName[sizeof( szFieldName )-1] = '\0';
     if ( strlen(oField.GetNameRef()) > sizeof ( szFieldName ) )
     {
@@ -332,7 +344,15 @@ OGRErr OGROCIWritableLayer::CreateField( OGRFieldDefn *poFieldIn, int bApproxOK 
         oField.SetName(szFieldName);
     }
     sprintf( oCommand.GetString(), "ALTER TABLE %s ADD \"%s\" %s", 
-             poFeatureDefn->GetName(), szFieldName, szFieldType );
+             poFeatureDefn->GetName(), szFieldName, szFieldType);
+    if( oField.GetDefault() != NULL && !oField.IsDefaultDriverSpecific() )
+    {
+        sprintf( oCommand.GetString() + strlen(oCommand.GetString()),
+                 " DEFAULT %s", oField.GetDefault() );
+    }
+    if( !oField.IsNullable() )
+        strcat( oCommand.GetString(), " NOT NULL");
+    
     if( oAddField.Execute( oCommand.GetString() ) != CE_None )
         return OGRERR_FAILURE;
 
@@ -379,9 +399,9 @@ void OGROCIWritableLayer::ParseDIMINFO( const char *pszOptionName,
         return;
     }
 
-    *pdfMin = atof(papszTokens[0]);
-    *pdfMax = atof(papszTokens[1]);
-    *pdfRes = atof(papszTokens[2]);
+    *pdfMin = CPLAtof(papszTokens[0]);
+    *pdfMax = CPLAtof(papszTokens[1]);
+    *pdfRes = CPLAtof(papszTokens[2]);
 
     CSLDestroy( papszTokens );
 }
@@ -410,12 +430,12 @@ OGRErr OGROCIWritableLayer::TranslateToSDOGeometry( OGRGeometry * poGeometry,
         OGRPoint *poPoint = (OGRPoint *) poGeometry;
 
         if( nDimension == 2 )
-            sprintf( szResult, 
+            CPLsprintf( szResult, 
                      "%s(%d,%s,MDSYS.SDO_POINT_TYPE(%.16g,%.16g,0.0),NULL,NULL)",
                      SDO_GEOMETRY, 2001, szSRID, 
                      poPoint->getX(), poPoint->getY() );
         else
-            sprintf( szResult, 
+            CPLsprintf( szResult, 
                      "%s(%d,%s,MDSYS.SDO_POINT_TYPE(%.16g,%.16g,%.16g),NULL,NULL)",
                      SDO_GEOMETRY, 3001, szSRID, 
                      poPoint->getX(), poPoint->getY(), poPoint->getZ() );

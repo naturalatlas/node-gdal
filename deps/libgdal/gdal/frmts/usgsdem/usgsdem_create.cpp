@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: usgsdem_create.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: usgsdem_create.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  USGS DEM Driver
  * Purpose:  CreateCopy() implementation.
@@ -37,7 +37,7 @@
 #include "gdalwarper.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: usgsdem_create.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: usgsdem_create.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 typedef struct 
 {
@@ -112,7 +112,7 @@ const char *USGSDEMDecToPackedDMS( double dfDec )
     nMinutes = (int) floor( ( dfDec - nDegrees ) * 60.0 );
     dfSeconds = (dfDec - nDegrees) * 3600.0 - nMinutes * 60.0;
 
-    sprintf( szPackBuf, "%4d%2d%7.4f", 
+    CPLsprintf( szPackBuf, "%4d%2d%7.4f", 
              nSign * nDegrees, nMinutes, dfSeconds );
     return szPackBuf;
 }
@@ -185,9 +185,9 @@ static void USGSDEMPrintDouble( char *pszBuffer, double dfValue )
         return;
 
 #if defined(HAVE_SNPRINTF)
-    snprintf( szTemp, DOUBLE_BUFFER_SIZE, pszFormat, dfValue );
+    CPLsnprintf( szTemp, DOUBLE_BUFFER_SIZE, pszFormat, dfValue );
 #else
-    sprintf( szTemp, pszFormat, dfValue );
+    CPLsprintf( szTemp, pszFormat, dfValue );
 #endif
     szTemp[DOUBLE_BUFFER_SIZE - 1] = '\0';
 
@@ -235,9 +235,9 @@ static void USGSDEMPrintSingle( char *pszBuffer, double dfValue )
         return;
 
 #if defined(HAVE_SNPRINTF)
-    snprintf( szTemp, DOUBLE_BUFFER_SIZE, pszFormat, dfValue );
+    CPLsnprintf( szTemp, DOUBLE_BUFFER_SIZE, pszFormat, dfValue );
 #else
-    sprintf( szTemp, pszFormat, dfValue );
+    CPLsprintf( szTemp, pszFormat, dfValue );
 #endif
     szTemp[DOUBLE_BUFFER_SIZE - 1] = '\0';
 
@@ -878,8 +878,8 @@ USGSDEM_LookupNTSByLoc( double dfULLong, double dfULLat,
         if( CSLCount( papszTokens ) != 4 )
             continue;
 
-        if( ABS(dfULLong - atof(papszTokens[2])) < 0.01 
-            && ABS(dfULLat - atof(papszTokens[3])) < 0.01 )
+        if( ABS(dfULLong - CPLAtof(papszTokens[2])) < 0.01 
+            && ABS(dfULLat - CPLAtof(papszTokens[3])) < 0.01 )
         {
             bGotHit = TRUE;
             strncpy( pszTile, papszTokens[0], 7 );
@@ -940,8 +940,8 @@ USGSDEM_LookupNTSByTile( const char *pszTile, char *pszName,
             bGotHit = TRUE;
             if( pszName != NULL )
                 strncpy( pszName, papszTokens[1], 100 );
-            *pdfULLong = atof(papszTokens[2]);
-            *pdfULLat = atof(papszTokens[3]);
+            *pdfULLong = CPLAtof(papszTokens[2]);
+            *pdfULLat = CPLAtof(papszTokens[3]);
         }
 
         CSLDestroy( papszTokens );
@@ -1268,7 +1268,7 @@ static int USGSDEMProductSetup_DEFAULT( USGSDEMWriteInfo *psWInfo )
 /*      made to translate it properly into the USGS nodata value.       */
 /************************************************************************/
 
-static int USGSDEMLoadRaster( USGSDEMWriteInfo *psWInfo,
+static int USGSDEMLoadRaster( CPL_UNUSED USGSDEMWriteInfo *psWInfo,
                               CPL_UNUSED GDALRasterBand *poSrcBand )
 {
     CPLErr eErr;
@@ -1394,9 +1394,12 @@ static int USGSDEMLoadRaster( USGSDEMWriteInfo *psWInfo,
 /************************************************************************/
 
 GDALDataset *
-USGSDEMCreateCopy( const char *pszFilename, GDALDataset *poSrcDS, 
-                   int bStrict, char **papszOptions,
-                   CPL_UNUSED GDALProgressFunc pfnProgress, CPL_UNUSED void * pProgressData )
+USGSDEMCreateCopy( const char *pszFilename,
+                   GDALDataset *poSrcDS,
+                   int bStrict,
+                   char **papszOptions,
+                   CPL_UNUSED GDALProgressFunc pfnProgress,
+                   CPL_UNUSED void * pProgressData )
 {
     USGSDEMWriteInfo sWInfo;
 
@@ -1466,11 +1469,11 @@ USGSDEMCreateCopy( const char *pszFilename, GDALDataset *poSrcDS,
      }
      else 
      {
-         // XXX: We are using atof() here instead of CPLAtof() because
+         // XXX: We are using CPLAtof() here instead of CPLAtof() because
          // zResolution value comes from user's input and supposed to be
-         // written according to user's current locale. atof() honors locale
+         // written according to user's current locale. CPLAtof() honors locale
          // setting, CPLAtof() is not.
-         sWInfo.dfElevStepSize = atof( zResolution );
+         sWInfo.dfElevStepSize = CPLAtof( zResolution );
          if ( sWInfo.dfElevStepSize <= 0 )
          {
              /* don't allow negative values */
@@ -1560,9 +1563,9 @@ USGSDEMCreateCopy( const char *pszFilename, GDALDataset *poSrcDS,
     USGSDEMWriteCleanup( &sWInfo );
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
-    GDALPamDataset *poDS = (GDALPamDataset *) 
+    GDALPamDataset *poDS = (GDALPamDataset *)
         GDALOpen( pszFilename, GA_ReadOnly );
 
     if( poDS )

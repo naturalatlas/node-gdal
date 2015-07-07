@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgftdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTDriver.
@@ -33,7 +33,7 @@
 
 /* http://code.google.com/intl/fr/apis/fusiontables/docs/developers_reference.html */
 
-CPL_CVSID("$Id: ogrgftdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgftdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 extern "C" void RegisterOGRGFT();
 
@@ -63,6 +63,9 @@ const char *OGRGFTDriver::GetName()
 OGRDataSource *OGRGFTDriver::Open( const char * pszFilename, int bUpdate )
 
 {
+    if (!EQUALN(pszFilename, "GFT:", 4))
+        return FALSE;
+
     OGRGFTDataSource   *poDS = new OGRGFTDataSource();
 
     if( !poDS->Open( pszFilename, bUpdate ) )
@@ -113,6 +116,10 @@ int OGRGFTDriver::TestCapability( const char * pszCap )
 void RegisterOGRGFT()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRGFTDriver );
+    OGRSFDriver* poDriver = new OGRGFTDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "Google Fusion Tables" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_gft.html" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }
-

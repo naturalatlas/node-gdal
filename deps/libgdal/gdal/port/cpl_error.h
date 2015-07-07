@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_error.h 26282 2013-08-08 21:15:36Z rouault $
+ * $Id: cpl_error.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Name:     cpl_error.h
  * Project:  CPL - Common Portability Library
@@ -62,6 +62,7 @@ int CPL_DLL CPL_STDCALL CPLGetLastErrorNo( void );
 CPLErr CPL_DLL CPL_STDCALL CPLGetLastErrorType( void );
 const char CPL_DLL * CPL_STDCALL CPLGetLastErrorMsg( void );
 void CPL_DLL * CPL_STDCALL CPLGetErrorHandlerUserData(void);
+void CPL_DLL CPLErrorSetState( CPLErr eErrClass, int err_no, const char* pszMsg );
 void CPL_DLL CPLCleanupErrorMutex( void );
 
 typedef void (CPL_STDCALL *CPLErrorHandler)(CPLErr, int, const char*);

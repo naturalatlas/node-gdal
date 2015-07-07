@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: IntergraphDataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: IntergraphDataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Intergraph Raster Format support
  * Purpose:  Read/Write Intergraph Raster Format, dataset support
@@ -804,7 +804,7 @@ GDALDataset *IntergraphDataset::CreateCopy( const char *pszFilename,
                     iXOffset, iYOffset, 
                     nBlockXSize, nBlockYSize,
                     pData, nBlockXSize, nBlockYSize,
-                    eType, 0, 0 );
+                    eType, 0, 0, NULL );
                 if( eErr != CE_None )
                 {
                     return NULL;
@@ -813,7 +813,7 @@ GDALDataset *IntergraphDataset::CreateCopy( const char *pszFilename,
                     iXOffset, iYOffset, 
                     nBlockXSize, nBlockYSize,
                     pData, nBlockXSize, nBlockYSize,
-                    eType, 0, 0 );
+                    eType, 0, 0, NULL );
                 if( eErr != CE_None )
                 {
                     return NULL;
@@ -892,6 +892,7 @@ void GDALRegister_INGR()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "INGR" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "Intergraph Raster" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_IntergraphRaster.html" );
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );

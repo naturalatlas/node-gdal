@@ -1,5 +1,5 @@
 /******************************************************************************
-* $Id: FGdbUtils.cpp 27044 2014-03-16 23:41:27Z rouault $
+* $Id: FGdbUtils.cpp 28573 2015-02-27 18:13:19Z rouault $
 *
 * Project:  OpenGIS Simple Features Reference Implementation
 * Purpose:  Different utility functions used in FileGDB OGR driver.
@@ -36,7 +36,7 @@
 #include "ogr_api.h"
 #include "ogrpgeogeometry.h"
 
-CPL_CVSID("$Id: FGdbUtils.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: FGdbUtils.cpp 28573 2015-02-27 18:13:19Z rouault $");
 
 using std::string;
 
@@ -68,7 +68,7 @@ std::string WStringToString(const std::wstring& utf16string)
 /*                                GDBErr()                               */
 /*************************************************************************/
 
-bool GDBErr(long int hr, std::string desc)
+bool GDBErr(long int hr, std::string desc, CPLErr errType, const char* pszAddMsg)
 {
     std::wstring fgdb_error_desc_w;
     fgdbError er;
@@ -76,13 +76,13 @@ bool GDBErr(long int hr, std::string desc)
     if ( er == S_OK )
     {
         std::string fgdb_error_desc = WStringToString(fgdb_error_desc_w);
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "Error: %s (%s)", desc.c_str(), fgdb_error_desc.c_str());
+        CPLError( errType, CPLE_AppDefined,
+                  "%s (%s)%s", desc.c_str(), fgdb_error_desc.c_str(), pszAddMsg);
     }
     else
     {
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "Error (%ld): %s", hr, desc.c_str());
+        CPLError( errType, CPLE_AppDefined,
+                  "Error (%ld): %s%s", hr, desc.c_str(), pszAddMsg);
     }
     // FIXME? EvenR: not sure if ClearErrors() is really necessary, but as it, it causes crashes in case of
     // repeated errors
@@ -239,7 +239,7 @@ bool OGRGeometryToGDB(OGRwkbGeometryType ogrType, std::string *gdbType, bool *ha
 
 // We could make this function far more robust by doing automatic coertion of types,
 // and/or skipping fields we do not know. But our purposes this works fine
-bool GDBToOGRFieldType(std::string gdbType, OGRFieldType* pOut)
+bool GDBToOGRFieldType(std::string gdbType, OGRFieldType* pOut, OGRFieldSubType* pSubType)
 {
     /*
     ESRI types
@@ -274,14 +274,25 @@ bool GDBToOGRFieldType(std::string gdbType, OGRFieldType* pOut)
     /** Time *///                                   OFTTime = 10,               NO
     /** Date and Time *///                          OFTDateTime = 11            YES
 
-    if (gdbType == "esriFieldTypeSmallInteger" ||
-        gdbType == "esriFieldTypeInteger")
+    *pSubType = OFSTNone;
+    if (gdbType == "esriFieldTypeSmallInteger" )
+    {
+        *pSubType = OFSTInt16;
+        *pOut = OFTInteger;
+        return true;
+    }
+    else if (gdbType == "esriFieldTypeInteger")
     {
         *pOut = OFTInteger;
         return true;
     }
-    else if (gdbType == "esriFieldTypeSingle" ||
-        gdbType == "esriFieldTypeDouble")
+    else if (gdbType == "esriFieldTypeSingle" )
+    {
+        *pSubType = OFSTFloat32;
+        *pOut = OFTReal;
+        return true;
+    }
+    else if (gdbType == "esriFieldTypeDouble")
     {
         *pOut = OFTReal;
         return true;
@@ -321,18 +332,25 @@ bool GDBToOGRFieldType(std::string gdbType, OGRFieldType* pOut)
 /*                            OGRToGDBFieldType()                        */
 /*************************************************************************/
 
-bool OGRToGDBFieldType(OGRFieldType ogrType, std::string* gdbType)
+bool OGRToGDBFieldType(OGRFieldType ogrType, OGRFieldSubType eSubType, std::string* gdbType)
 {
     switch(ogrType)
     {
         case OFTInteger:
         {
-            *gdbType = "esriFieldTypeInteger";
+            if( eSubType == OFSTInt16 )
+                *gdbType = "esriFieldTypeSmallInteger";
+            else
+                *gdbType = "esriFieldTypeInteger";
             break;
         }
         case OFTReal:
+        case OFTInteger64:
         {
-            *gdbType = "esriFieldTypeDouble";
+             if( eSubType == OFSTFloat32 )
+                *gdbType = "esriFieldTypeSingle";
+            else
+                *gdbType = "esriFieldTypeDouble";
             break;
         }
         case OFTString:
@@ -411,6 +429,10 @@ bool GDBFieldTypeToWidthPrecision(std::string &gdbType, int *width, int *precisi
     else if(gdbType == "esriFieldTypeBlob" )
     {
         *width = 0;
+    }
+    else if(gdbType == "esriFieldTypeGlobalID" )
+    {
+        *width = 38;
     }
     else
     {

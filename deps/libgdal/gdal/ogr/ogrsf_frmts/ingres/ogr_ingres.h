@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ingres.h 19509 2010-04-23 16:49:33Z warmerdam $
+ * $Id: ogr_ingres.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Declarations for Ingres OGR Driver Classes.
@@ -117,7 +117,7 @@ class OGRIngresLayer : public OGRLayer
 
     virtual OGRFeature *GetNextFeature();
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
@@ -164,17 +164,17 @@ class OGRIngresTableLayer : public OGRIngresLayer
 
     OGRErr              Initialize(const char* pszTableName);
     
-//    virtual OGRFeature *GetFeature( long nFeatureId );
+//    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     virtual void        ResetReading();
-//    virtual int         GetFeatureCount( int );
+//    virtual GIntBig     GetFeatureCount( int );
 
     void                SetSpatialFilter( OGRGeometry * );
 
     virtual OGRErr      SetAttributeFilter( const char * );
 
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
-    virtual OGRErr      SetFeature( OGRFeature *poFeature );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
@@ -213,7 +213,7 @@ class OGRIngresResultLayer : public OGRIngresLayer
 
 
     virtual void        ResetReading();
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 };
 
 /************************************************************************/
@@ -264,7 +264,7 @@ class OGRIngresDataSource : public OGRDataSource
     int                 GetLayerCount() { return nLayers; }
     OGRLayer            *GetLayer( int );
 
-    virtual OGRLayer    *CreateLayer( const char *, 
+    virtual OGRLayer    *ICreateLayer( const char *, 
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

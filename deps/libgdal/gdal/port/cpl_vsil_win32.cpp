@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_vsil_win32.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsil_win32.cpp 27491 2014-07-05 11:24:48Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for Win32.
@@ -30,7 +30,7 @@
 
 #include "cpl_vsi_virtual.h"
 
-CPL_CVSID("$Id: cpl_vsil_win32.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_win32.cpp 27491 2014-07-05 11:24:48Z rouault $");
 
 #if defined(WIN32)
 
@@ -273,7 +273,9 @@ vsi_l_offset VSIWin32Handle::Tell()
 int VSIWin32Handle::Flush()
 
 {
-    FlushFileBuffers( hFile );
+    /* Nothing needed to offer the same guarantee as POSIX fflush() */
+    /* FlushFileBuffers() would be closer to fsync() */
+    /* See http://trac.osgeo.org/gdal/ticket/5556 */
     return 0;
 }
 

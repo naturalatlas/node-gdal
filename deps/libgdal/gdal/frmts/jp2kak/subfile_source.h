@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: subfile_source.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: subfile_source.h 27787 2014-10-03 01:08:03Z rcoup $
  *
  * Project:  JPEG-2000
  * Purpose:  Implements read-only virtual io on a subregion of a file.
@@ -31,6 +31,11 @@
 #include "kdu_file_io.h"
 #include "cpl_error.h"
 #include "cpl_vsi_virtual.h"
+
+#if KDU_MAJOR_VERSION > 7 || (KDU_MAJOR_VERSION == 7 && KDU_MINOR_VERSION >= 5)
+    using namespace kdu_core;
+    using namespace kdu_supp;
+#endif
 
 #define IO_CHUNK_SIZE 65536L
 #define IO_BUFFER_SIZE 1048576L

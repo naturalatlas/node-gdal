@@ -160,6 +160,7 @@ OGRGmtLayer::OGRGmtLayer( const char * pszFilename, int bUpdate )
 /*      known.                                                          */
 /* -------------------------------------------------------------------- */
     poFeatureDefn = new OGRFeatureDefn( CPLGetBasename(pszFilename) );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
 
@@ -522,7 +523,7 @@ OGRFeature *OGRGmtLayer::GetNextRawFeature()
         {
             // Parse point line. 
             double dfX, dfY, dfZ = 0.0;
-            int nDim = sscanf( osLine, "%lf %lf %lf", &dfX, &dfY, &dfZ );
+            int nDim = CPLsscanf( osLine, "%lf %lf %lf", &dfX, &dfY, &dfZ );
                 
             if( nDim >= 2 )
             {
@@ -808,10 +809,10 @@ OGRErr OGRGmtLayer::CompleteHeader( OGRGeometry *poThisGeom )
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGmtLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGmtLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     if( !bUpdate )

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdgndatasource.cpp 23431 2011-11-27 15:02:24Z rouault $
+ * $Id: ogrdgndatasource.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDataSource class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdgndatasource.cpp 23431 2011-11-27 15:02:24Z rouault $");
+CPL_CVSID("$Id: ogrdgndatasource.cpp 27959 2014-11-14 18:29:21Z rouault $");
 
 /************************************************************************/
 /*                         OGRDGNDataSource()                           */
@@ -165,7 +165,7 @@ OGRLayer *OGRDGNDataSource::GetLayer( int iLayer )
 /*                                                                      */
 /*      Called by OGRDGNDriver::Create() method to setup a stub         */
 /*      OGRDataSource object without the associated file created        */
-/*      yet.  It will be created by the CreateLayer() call.             */
+/*      yet.  It will be created by theICreateLayer() call.             */
 /************************************************************************/
 
 int OGRDGNDataSource::PreCreate( const char *pszFilename, 
@@ -179,10 +179,10 @@ int OGRDGNDataSource::PreCreate( const char *pszFilename,
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer *OGRDGNDataSource::CreateLayer( const char *pszLayerName, 
+OGRLayer *OGRDGNDataSource::ICreateLayer( const char *pszLayerName, 
                                          OGRSpatialReference *poSRS, 
                                          OGRwkbGeometryType eGeomType, 
                                          char **papszExtraOptions )
@@ -227,7 +227,7 @@ OGRLayer *OGRDGNDataSource::CreateLayer( const char *pszLayerName,
     papszOptions = CSLInsertStrings( papszOptions, 0, papszExtraOptions );
 
     b3DRequested = CSLFetchBoolean( papszOptions, "3D", 
-                                    (((int) eGeomType) & wkb25DBit) );
+                                    wkbHasZ(eGeomType) );
 
     pszSeed = CSLFetchNameValue( papszOptions, "SEED" );
     if( pszSeed )
@@ -287,14 +287,14 @@ OGRLayer *OGRDGNDataSource::CreateLayer( const char *pszLayerName,
         nCreationFlags &= ~DGNCF_USE_SEED_ORIGIN;
         if( CSLCount(papszTuple) == 3 )
         {
-            dfOriginX = atof(papszTuple[0]);
-            dfOriginY = atof(papszTuple[1]);
-            dfOriginZ = atof(papszTuple[2]);
+            dfOriginX = CPLAtof(papszTuple[0]);
+            dfOriginY = CPLAtof(papszTuple[1]);
+            dfOriginZ = CPLAtof(papszTuple[2]);
         }
         else if( CSLCount(papszTuple) == 2 )
         {
-            dfOriginX = atof(papszTuple[0]);
-            dfOriginY = atof(papszTuple[1]);
+            dfOriginX = CPLAtof(papszTuple[0]);
+            dfOriginY = CPLAtof(papszTuple[1]);
             dfOriginZ = 0.0;
         }
         else

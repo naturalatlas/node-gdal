@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sagadataset.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: sagadataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  * Project:  SAGA GIS Binary Driver
  * Purpose:  Implements the SAGA GIS Binary Grid Format.
  * Author:   Volker Wichmann, wichmann@laserdata.at
@@ -37,7 +37,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: sagadataset.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: sagadataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 #ifndef INT_MAX
 # define INT_MAX 2147483647
@@ -673,7 +673,7 @@ GDALDataset *SAGADataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return poDS;
 }
@@ -1084,6 +1084,7 @@ void GDALRegister_SAGA()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "SAGA" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "SAGA GIS Binary Grid (.sdat)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

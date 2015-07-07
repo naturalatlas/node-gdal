@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ndfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ndfdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  NDF Driver
  * Purpose:  Implementation of NLAPS Data Format read support.
@@ -32,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ndfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ndfdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -336,7 +336,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         int i;
         for( i = 0; i < 15; i++ )
-            adfUSGSParms[i] = atof(papszParmTokens[i]);
+            adfUSGSParms[i] = CPLAtof(papszParmTokens[i]);
     }
     CSLDestroy(papszParmTokens);
     papszParmTokens = NULL;
@@ -390,17 +390,17 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         && CSLCount(papszUR) == 4 
         && CSLCount(papszLL) == 4 )
     {
-        poDS->adfGeoTransform[0] = atof(papszUL[2]);
+        poDS->adfGeoTransform[0] = CPLAtof(papszUL[2]);
         poDS->adfGeoTransform[1] = 
-            (atof(papszUR[2]) - atof(papszUL[2])) / (poDS->nRasterXSize-1);
+            (CPLAtof(papszUR[2]) - CPLAtof(papszUL[2])) / (poDS->nRasterXSize-1);
         poDS->adfGeoTransform[2] = 
-            (atof(papszUR[3]) - atof(papszUL[3])) / (poDS->nRasterXSize-1);
+            (CPLAtof(papszUR[3]) - CPLAtof(papszUL[3])) / (poDS->nRasterXSize-1);
 
-        poDS->adfGeoTransform[3] = atof(papszUL[3]);
+        poDS->adfGeoTransform[3] = CPLAtof(papszUL[3]);
         poDS->adfGeoTransform[4] = 
-            (atof(papszLL[2]) - atof(papszUL[2])) / (poDS->nRasterYSize-1);
+            (CPLAtof(papszLL[2]) - CPLAtof(papszUL[2])) / (poDS->nRasterYSize-1);
         poDS->adfGeoTransform[5] = 
-            (atof(papszLL[3]) - atof(papszUL[3])) / (poDS->nRasterYSize-1);
+            (CPLAtof(papszLL[3]) - CPLAtof(papszUL[3])) / (poDS->nRasterYSize-1);
 
         // Move origin up-left half a pixel.
         poDS->adfGeoTransform[0] -= poDS->adfGeoTransform[1] * 0.5;
@@ -441,6 +441,7 @@ void GDALRegister_NDF()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "NDF" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "NLAPS Data Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

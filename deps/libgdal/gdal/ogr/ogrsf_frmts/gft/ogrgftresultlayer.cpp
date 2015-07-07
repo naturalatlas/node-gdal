@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgftresultlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgftresultlayer.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTResultLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_gft.h"
 
-CPL_CVSID("$Id: ogrgftresultlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgftresultlayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                        OGRGFTResultLayer()                           */
@@ -47,6 +47,8 @@ OGRGFTResultLayer::OGRGFTResultLayer(OGRGFTDataSource* poDS,
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbUnknown );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
+    
+    SetDescription( poFeatureDefn->GetName() );
 }
 
 /************************************************************************/

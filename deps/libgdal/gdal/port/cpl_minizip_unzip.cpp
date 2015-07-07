@@ -1952,4 +1952,3 @@ extern int ZEXPORT cpl_unzSetOffset (unzFile file, uLong64 pos)
     s->current_file_ok = (err == UNZ_OK);
     return err;
 }
-

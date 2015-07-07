@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hugefileresolver.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: hugefileresolver.cpp 27766 2014-09-28 20:13:12Z goatbar $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLReader::HugeFileResolver() method.
@@ -47,7 +47,7 @@
 
 #include <stack>
 
-CPL_CVSID("$Id: hugefileresolver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: hugefileresolver.cpp 27766 2014-09-28 20:13:12Z goatbar $");
 
 /****************************************************/
 /*      SQLite is absolutely required in order to   */
@@ -1462,8 +1462,9 @@ static int gmlHugeSetChild( struct huge_parent *pParent,
     return FALSE;
 }
 
-static int gmlHugeResolveEdges( struct huge_helper *helper,
-                                CPL_UNUSED CPLXMLNode *psNode, sqlite3 *hDB )
+static int gmlHugeResolveEdges( CPL_UNUSED struct huge_helper *helper,
+                                CPL_UNUSED CPLXMLNode *psNode,
+                                sqlite3 *hDB )
 {
 /* resolving GML <Edge> xlink:href */
     CPLString      osCommand;
@@ -2054,9 +2055,9 @@ int GMLReader::HugeFileResolver( const char *pszFile,
 /*    simply output an error message              */
 /**************************************************/
 
-int GMLReader::HugeFileResolver( const char *pszFile,
-                                 int bSqliteIsTempFile,
-                                 int iSqliteCacheMB )
+int GMLReader::HugeFileResolver( CPL_UNUSED const char *pszFile,
+                                 CPL_UNUSED int bSqliteIsTempFile,
+                                 CPL_UNUSED int iSqliteCacheMB )
 
 {
     CPLError( CE_Failure, CPLE_NotSupported,
@@ -2065,9 +2066,9 @@ int GMLReader::HugeFileResolver( const char *pszFile,
     return FALSE;
 }
 
-int GMLReader::ParseXMLHugeFile( const char *pszOutputFilename,
-                                 const int bSqliteIsTempFile,
-                                 const int iSqliteCacheMB )
+int GMLReader::ParseXMLHugeFile( CPL_UNUSED const char *pszOutputFilename,
+                                 CPL_UNUSED const int bSqliteIsTempFile,
+                                 CPL_UNUSED const int iSqliteCacheMB )
 {
     CPLError( CE_Failure, CPLE_NotSupported,
               "OGR was built without SQLite3 support\n"

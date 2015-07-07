@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_curl.cpp 28190 2014-12-21 22:42:54Z rouault $
+ * $Id: cpl_vsil_curl.cpp 28798 2015-03-27 19:37:50Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for HTTP/FTP files
@@ -34,7 +34,7 @@
 #include "cpl_time.h"
 #include "cpl_vsil_curl_priv.h"
 
-CPL_CVSID("$Id: cpl_vsil_curl.cpp 28190 2014-12-21 22:42:54Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_curl.cpp 28798 2015-03-27 19:37:50Z rouault $");
 
 #ifndef HAVE_CURL
 
@@ -47,10 +47,10 @@ void VSIInstallCurlFileHandler(void)
 /*                      VSICurlInstallReadCbk()                         */
 /************************************************************************/
 
-int VSICurlInstallReadCbk (VSILFILE* fp,
-                           VSICurlReadCbkFunc pfnReadCbk,
-                           void* pfnUserData,
-                           int bStopOnInterrruptUntilUninstall)
+int VSICurlInstallReadCbk (CPL_UNUSED VSILFILE* fp,
+                           CPL_UNUSED VSICurlReadCbkFunc pfnReadCbk,
+                           CPL_UNUSED void* pfnUserData,
+                           CPL_UNUSED int bStopOnInterrruptUntilUninstall)
 {
     return FALSE;
 }
@@ -60,7 +60,7 @@ int VSICurlInstallReadCbk (VSILFILE* fp,
 /*                    VSICurlUninstallReadCbk()                         */
 /************************************************************************/
 
-int VSICurlUninstallReadCbk(VSILFILE* fp)
+int VSICurlUninstallReadCbk(CPL_UNUSED VSILFILE* fp)
 {
     return FALSE;
 }
@@ -197,7 +197,7 @@ typedef struct
 
 class VSICurlFilesystemHandler : public VSIFilesystemHandler 
 {
-    void           *hMutex;
+    CPLMutex       *hMutex;
 
     CachedRegion  **papsRegions;
     int             nRegions;
@@ -586,6 +586,7 @@ vsi_l_offset VSICurlHandle::GetFileSize()
     /* listed in CPL_VSIL_CURL_ALLOWED_EXTENSIONS exist on the server */
     /* This can speeds up dramatically open experience, in case the server */
     /* cannot return a file list */
+    /* {noext} can be used as a special token to mean file with no extension */
     /* For example : */
     /* gdalinfo --config CPL_VSIL_CURL_ALLOWED_EXTENSIONS ".tif" /vsicurl/http://igskmncngs506.cr.usgs.gov/gmted/Global_tiles_GMTED/075darcsec/bln/W030/30N030W_20101117_gmted_bln075.tif */
     const char* pszAllowedExtensions =
@@ -598,7 +599,15 @@ vsi_l_offset VSICurlHandle::GetFileSize()
         for(int i=0;papszExtensions[i] != NULL;i++)
         {
             int nExtensionLen = strlen(papszExtensions[i]);
-            if (nURLLen > nExtensionLen &&
+            if( EQUAL(papszExtensions[i], "{noext}") )
+            {
+                if( nURLLen > 4 && strchr(pszURL + nURLLen - 4, '.') == NULL )
+                {
+                    bFound = TRUE;
+                    break;
+                }
+            }
+            else if (nURLLen > nExtensionLen &&
                 EQUAL(pszURL + nURLLen - nExtensionLen, papszExtensions[i]))
             {
                 bFound = TRUE;
@@ -1391,7 +1400,9 @@ end:
 /*                               Write()                                */
 /************************************************************************/
 
-size_t VSICurlHandle::Write( CPL_UNUSED const void *pBuffer, CPL_UNUSED size_t nSize, CPL_UNUSED size_t nMemb )
+size_t VSICurlHandle::Write( CPL_UNUSED const void *pBuffer,
+                             CPL_UNUSED size_t nSize,
+                             CPL_UNUSED size_t nMemb )
 {
     return 0;
 }
@@ -2553,7 +2564,8 @@ int VSICurlFilesystemHandler::Unlink( CPL_UNUSED const char *pszFilename )
 /*                               Rename()                               */
 /************************************************************************/
 
-int VSICurlFilesystemHandler::Rename( CPL_UNUSED const char *oldpath, CPL_UNUSED const char *newpath )
+int VSICurlFilesystemHandler::Rename( CPL_UNUSED const char *oldpath,
+                                      CPL_UNUSED const char *newpath )
 {
     return -1;
 }
@@ -2562,7 +2574,8 @@ int VSICurlFilesystemHandler::Rename( CPL_UNUSED const char *oldpath, CPL_UNUSED
 /*                               Mkdir()                                */
 /************************************************************************/
 
-int VSICurlFilesystemHandler::Mkdir( CPL_UNUSED const char *pszDirname, CPL_UNUSED long nMode )
+int VSICurlFilesystemHandler::Mkdir( CPL_UNUSED const char *pszDirname,
+                                     CPL_UNUSED long nMode )
 {
     return -1;
 }
@@ -2641,9 +2654,9 @@ char** VSICurlFilesystemHandler::ReadDir( const char *pszDirname )
  * A special file handler is installed that allows reading on-the-fly of files
  * available through HTTP/FTP web protocols, without downloading the entire file.
  *
- * Recognized filenames are of the form /vsicurl/http://path/to/remote/ressource or
- * /vsicurl/ftp://path/to/remote/ressource where path/to/remote/ressource is the
- * URL of a remote ressource.
+ * Recognized filenames are of the form /vsicurl/http://path/to/remote/resource or
+ * /vsicurl/ftp://path/to/remote/resource where path/to/remote/resource is the
+ * URL of a remote resource.
  *
  * Partial downloads (requires the HTTP server to support random reading) are done
  * with a 16 KB granularity by default. If the driver detects sequential reading

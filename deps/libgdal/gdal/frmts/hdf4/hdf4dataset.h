@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf4dataset.h 26569 2013-10-29 23:51:12Z rouault $
+ * $Id: hdf4dataset.h 28879 2015-04-09 11:05:49Z dron $
  *
  * Project:  Hierarchical Data Format Release 4 (HDF4)
  * Purpose:  Header file for HDF4 datasets reader.
@@ -69,11 +69,10 @@ class HDF4Dataset : public GDALPamDataset
 
     static char **HDF4EOSTokenizeAttrs( const char *pszString );
     static char **HDF4EOSGetObject( char **papszAttrList, char **ppszAttrName,
-                                    char **ppszAttrValue );
+                                    char **ppszAttrClass, char **ppszAttrValue );
      
   protected:
 
-    FILE	*fp;
     int32	hGR, hSD;
     int32	nImages;
     HDF4SubdatasetType iSubdatasetType;

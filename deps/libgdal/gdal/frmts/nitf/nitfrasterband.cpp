@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: nitfrasterband.cpp 28899 2015-04-14 09:27:00Z rouault $
  *
  * Project:  NITF Read/Write Translator
  * Purpose:  NITFRasterBand (and related proxy band) implementations.
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: nitfrasterband.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: nitfrasterband.cpp 28899 2015-04-14 09:27:00Z rouault $");
 
 /************************************************************************/
 /*                       NITFMakeColorTable()                           */
@@ -309,11 +309,11 @@ RB_PROXY_METHOD_WITH_RET_AND_CALL_OTHER_METHOD(CPLErr, CE_Failure, IRasterIO, Ra
                                 int nXOff, int nYOff, int nXSize, int nYSize,
                                 void * pData, int nBufXSize, int nBufYSize,
                                 GDALDataType eBufType,
-                                int nPixelSpace,
-                                int nLineSpace ),
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GDALRasterIOExtraArg* psExtraArg ),
                         (eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                 pData, nBufXSize, nBufYSize, eBufType,
-                                nPixelSpace, nLineSpace ) )
+                                nPixelSpace, nLineSpace, psExtraArg ) )
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, FlushCache, (), ())
 
@@ -330,7 +330,7 @@ RB_PROXY_METHOD_WITH_RET(int, 0, HasArbitraryOverviews, (), ())
 RB_PROXY_METHOD_WITH_RET(int, 0,  GetOverviewCount, (), ())
 RB_PROXY_METHOD_WITH_RET(GDALRasterBand*, NULL,  GetOverview, (int arg1), (arg1))
 RB_PROXY_METHOD_WITH_RET(GDALRasterBand*, NULL,  GetRasterSampleOverview,
-                        (int arg1), (arg1))
+                        (GUIntBig arg1), (arg1))
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, BuildOverviews,
                         (const char * arg1, int arg2, int *arg3,

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqldatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrmysqldatasource.cpp 29019 2015-04-25 20:34:19Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLDataSource class.
@@ -37,7 +37,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmysqldatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrmysqldatasource.cpp 29019 2015-04-25 20:34:19Z rouault $");
 /************************************************************************/
 /*                         OGRMySQLDataSource()                         */
 /************************************************************************/
@@ -109,24 +109,11 @@ void OGRMySQLDataSource::ReportError( const char *pszDescription )
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRMySQLDataSource::Open( const char * pszNewName, int bUpdate,
-                              int bTestOpen )
+int OGRMySQLDataSource::Open( const char * pszNewName, char** papszOpenOptions,
+                              int bUpdate )
 
 {
     CPLAssert( nLayers == 0 );
-
-/* -------------------------------------------------------------------- */
-/*      Verify MySQL prefix.                                            */
-/* -------------------------------------------------------------------- */
-    if( !EQUALN(pszNewName,"MYSQL:",6) )
-    {
-        if( !bTestOpen )
-            CPLError( CE_Failure, CPLE_AppDefined, 
-                      "%s does not conform to MySQL naming convention,"
-                      " MYSQL:dbname[, user=..][,password=..][,host=..][,port=..][tables=table;table;...]",
-                      pszNewName );
-        return FALSE;
-    }
     
 /* -------------------------------------------------------------------- */
 /*      Use options process to get .my.cnf file contents.               */
@@ -135,10 +122,40 @@ int OGRMySQLDataSource::Open( const char * pszNewName, int bUpdate,
     char **papszTableNames=NULL;
     std::string oHost, oPassword, oUser, oDB;
 
+    CPLString osNewName(pszNewName);
+    const char* apszOpenOptions[] = { "dbname", "port", "user", "password",
+                                      "host", "tables" };
+    for(int i=0; i <(int)(sizeof(apszOpenOptions)/sizeof(char*));i++)
+    {
+        const char* pszVal = CSLFetchNameValue(papszOpenOptions, apszOpenOptions[i]);
+        if( pszVal )
+        {
+            if( osNewName[osNewName.size()-1] != ':' )
+                osNewName += ",";
+            if( i > 0 )
+            {
+                osNewName += apszOpenOptions[i];
+                osNewName += "=";
+            }
+            if( EQUAL(apszOpenOptions[i], "tables") )
+            {
+                for( ; *pszVal; ++pszVal )
+                {
+                    if( *pszVal == ',' )
+                        osNewName += ";";
+                    else
+                        osNewName += *pszVal;
+                }
+            }
+            else
+                osNewName += pszVal;
+        }
+    }
+    
 /* -------------------------------------------------------------------- */
 /*      Parse out connection information.                               */
 /* -------------------------------------------------------------------- */
-    char **papszItems = CSLTokenizeString2( pszNewName+6, ",", 
+    char **papszItems = CSLTokenizeString2( osNewName+6, ",", 
                                             CSLT_HONOURSTRINGS );
 
     if( CSLCount(papszItems) < 1 )
@@ -281,7 +298,7 @@ int OGRMySQLDataSource::Open( const char * pszNewName, int bUpdate,
     {
         //  FIXME: This should be fixed to deal with tables 
         //  for which we can't open because the name is bad/ 
-        OpenTable( papszTableNames[iRecord], bUpdate, FALSE );
+        OpenTable( papszTableNames[iRecord], bUpdate );
     }
 
     CSLDestroy( papszTableNames );
@@ -293,8 +310,8 @@ int OGRMySQLDataSource::Open( const char * pszNewName, int bUpdate,
 /*                             OpenTable()                              */
 /************************************************************************/
 
-int OGRMySQLDataSource::OpenTable( const char *pszNewName, int bUpdate,
-                                   CPL_UNUSED int bTestOpen )
+int OGRMySQLDataSource::OpenTable( const char *pszNewName, int bUpdate )
+
 {
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
@@ -805,11 +822,11 @@ int OGRMySQLDataSource::DeleteLayer( int iLayer)
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
+OGRMySQLDataSource::ICreateLayer( const char * pszLayerNameIn,
                               OGRSpatialReference *poSRS,
                               OGRwkbGeometryType eType,
                               char ** papszOptions )
@@ -873,10 +890,15 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     if (!pszGeomColumnName)
         pszGeomColumnName="SHAPE";
 
-    pszExpectedFIDName = CSLFetchNameValue( papszOptions, "MYSQL_FID" );
+    pszExpectedFIDName = CSLFetchNameValue( papszOptions, "FID" );
+    if (!pszExpectedFIDName)
+        pszExpectedFIDName = CSLFetchNameValue( papszOptions, "MYSQL_FID" );
     if (!pszExpectedFIDName)
         pszExpectedFIDName="OGR_FID";
 
+    int bFID64 = CSLFetchBoolean(papszOptions, "FID64", FALSE);
+    const char* pszFIDType = bFID64 ? "BIGINT": "INT";
+    
 
     CPLDebug("MYSQL","Geometry Column Name %s.", pszGeomColumnName);
     CPLDebug("MYSQL","FID Column Name %s.", pszExpectedFIDName);
@@ -885,16 +907,16 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     {
         osCommand.Printf(
                  "CREATE TABLE `%s` ( "
-                 "   %s INT UNIQUE NOT NULL AUTO_INCREMENT )",
-                 pszLayerName, pszExpectedFIDName );
+                 "   %s %s UNIQUE NOT NULL AUTO_INCREMENT )",
+                 pszLayerName, pszExpectedFIDName, pszFIDType );
     }
     else
     {
         osCommand.Printf(
                  "CREATE TABLE `%s` ( "
-                 "   %s INT UNIQUE NOT NULL AUTO_INCREMENT, "
+                 "   %s %s UNIQUE NOT NULL AUTO_INCREMENT, "
                  "   %s GEOMETRY NOT NULL )",
-                 pszLayerName, pszExpectedFIDName, pszGeomColumnName );
+                 pszLayerName, pszExpectedFIDName, pszFIDType, pszGeomColumnName );
     }
 
     if( CSLFetchNameValue( papszOptions, "ENGINE" ) != NULL )
@@ -1051,6 +1073,8 @@ OGRMySQLDataSource::CreateLayer( const char * pszLayerNameIn,
     eErr = poLayer->Initialize(pszLayerName);
     if (eErr == OGRERR_FAILURE)
         return NULL;
+    if( eType != wkbNone )
+        poLayer->GetLayerDefn()->GetGeomFieldDefn(0)->SetNullable(FALSE);
 
     poLayer->SetLaunderFlag( CSLFetchBoolean(papszOptions,"LAUNDER",TRUE) );
     poLayer->SetPrecisionFlag( CSLFetchBoolean(papszOptions,"PRECISION",TRUE));

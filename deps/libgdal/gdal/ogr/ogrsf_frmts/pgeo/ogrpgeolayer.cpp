@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeolayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrpgeolayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoLayer class, code shared between 
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogrpgeogeometry.h"
 
-CPL_CVSID("$Id: ogrpgeolayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrpgeolayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                            OGRPGeoLayer()                            */
@@ -105,6 +105,7 @@ CPLErr OGRPGeoLayer::BuildFeatureDefn( const char *pszLayerName,
 
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     int    nRawColumns = poStmt->GetColCount();
 
     poFeatureDefn->Reference();
@@ -312,7 +313,7 @@ OGRFeature *OGRPGeoLayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRPGeoLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRPGeoLayer::GetFeature( GIntBig nFeatureId )
 
 {
     /* This should be implemented directly! */

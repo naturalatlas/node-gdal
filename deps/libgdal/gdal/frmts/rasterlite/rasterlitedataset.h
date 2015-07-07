@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterlitedataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rasterlitedataset.h 27566 2014-08-05 09:37:57Z rouault $
  *
  * Project:  GDAL Rasterlite driver
  * Purpose:  Implement GDAL Rasterlite support using OGR SQLite driver
@@ -31,8 +31,17 @@
 #define RASTERLITE_DATASET_INCLUDED
 
 #include "gdal_pam.h"
+#include "ogr_api.h"
 
 char** RasterliteGetTileDriverOptions(char** papszOptions);
+
+OGRDataSourceH RasterliteOpenSQLiteDB(const char* pszFilename,
+                                      GDALAccess eAccess);
+CPLString RasterliteGetPixelSizeCond(double dfPixelXSize,
+                                     double dfPixelYSize,
+                                     const char* pszTablePrefixWithDot = "");
+CPLString RasterliteGetSpatialFilterCond(double minx, double miny,
+                                         double maxx, double maxy);
 
 class RasterliteBand;
 

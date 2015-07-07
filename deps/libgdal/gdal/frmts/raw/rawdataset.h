@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rawdataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rawdataset.h 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Raw Translator
  * Purpose:  Implementation of RawDataset class.  Intented to be subclassed
@@ -52,7 +52,10 @@ class CPL_DLL RawDataset : public GDALPamDataset
   protected:
     virtual CPLErr      IRasterIO( GDALRWFlag, int, int, int, int,
                                    void *, int, int, GDALDataType,
-                                   int, int *, int, int, int );
+                                   int, int *,
+                                   GSpacing nPixelSpace, GSpacing nLineSpace,
+                                   GSpacing nBandSpace,
+                                   GDALRasterIOExtraArg* psExtraArg );
   public:
                  RawDataset();
                  ~RawDataset() = 0;
@@ -108,7 +111,8 @@ protected:
 
     virtual CPLErr  IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     int         CanUseDirectIO(int nXOff, int nYOff, int nXSize, int nYSize,
                                GDALDataType eBufType);

@@ -99,6 +99,8 @@ int swqlex( YYSTYPE *ppNode, swq_parse_context *context )
         char chQuote = *pszInput;
         int bFoundEndQuote = FALSE;
 
+        int nRet = *pszInput == '"' ? SWQT_IDENTIFIER : SWQT_STRING;
+
         pszInput++;
 
         token = (char *) CPLMalloc(strlen(pszInput)+1);
@@ -106,11 +108,11 @@ int swqlex( YYSTYPE *ppNode, swq_parse_context *context )
 
         while( *pszInput != '\0' )
         {
-            if( *pszInput == '\\' && pszInput[1] == '"' )
+            if( chQuote == '"' && *pszInput == '\\' && pszInput[1] == '"' )
                 pszInput++;
-            else if( *pszInput == '\\' && pszInput[1] == '\'' )
+            else if( chQuote == '\'' && *pszInput == '\\' && pszInput[1] == '\'' )
                 pszInput++;
-            else if( *pszInput == '\'' && pszInput[1] == '\'' )
+            else if( chQuote == '\'' && *pszInput == '\'' && pszInput[1] == '\'' )
                 pszInput++;
             else if( *pszInput == chQuote )
             {
@@ -136,7 +138,7 @@ int swqlex( YYSTYPE *ppNode, swq_parse_context *context )
 
         context->pszNext = pszInput;
 
-        return SWQT_STRING;
+        return nRet;
     }
 
 /* -------------------------------------------------------------------- */
@@ -182,7 +184,11 @@ int swqlex( YYSTYPE *ppNode, swq_parse_context *context )
         }
         else
         {
-            *ppNode = new swq_expr_node( atoi(osToken) );
+            GIntBig nVal = CPLAtoGIntBig(osToken);
+            if( (GIntBig)(int)nVal == nVal )
+                *ppNode = new swq_expr_node( (int)nVal );
+            else
+                *ppNode = new swq_expr_node( nVal );
             return SWQT_INTEGER_NUMBER;
         }
     }
@@ -337,7 +343,7 @@ swq_select_summarize( swq_select *select_info,
     
     if( def->distinct_flag )
     {
-        int  i;
+        GIntBig  i;
 
         /* This should be implemented with a much more complicated
            data structure to achieve any sort of efficiency. */
@@ -358,9 +364,9 @@ swq_select_summarize( swq_select *select_info,
             char  **old_list = summary->distinct_list;
             
             summary->distinct_list = (char **) 
-                CPLMalloc(sizeof(char *) * (summary->count+1));
+                CPLMalloc(sizeof(char *) * (size_t)(summary->count+1));
             memcpy( summary->distinct_list, old_list, 
-                    sizeof(char *) * summary->count );
+                    sizeof(char *) * (size_t)summary->count );
             summary->distinct_list[(summary->count)++] = 
                 (value != NULL) ? CPLStrdup( value ) : NULL;
 
@@ -424,9 +430,12 @@ swq_select_summarize( swq_select *select_info,
                def->field_type == SWQ_TIME ||
                def->field_type == SWQ_TIMESTAMP)
             {
-                int nYear, nMonth, nDay, nHour, nMin, nSec;
-                if( sscanf(value, "%04d/%02d/%02d %02d:%02d:%02d",
-                           &nYear, &nMonth, &nDay, &nHour, &nMin, &nSec) == 6 )
+                int nYear, nMonth, nDay, nHour = 0, nMin = 0;
+                float fSec = 0 ;
+                if( sscanf(value, "%04d/%02d/%02d %02d:%02d:%f",
+                           &nYear, &nMonth, &nDay, &nHour, &nMin, &fSec) == 6 ||
+                    sscanf(value, "%04d/%02d/%02d",
+                           &nYear, &nMonth, &nDay) == 3 )
                 {
                     struct tm brokendowntime;
                     brokendowntime.tm_year = nYear - 1900;
@@ -434,9 +443,10 @@ swq_select_summarize( swq_select *select_info,
                     brokendowntime.tm_mday = nDay;
                     brokendowntime.tm_hour = nHour;
                     brokendowntime.tm_min = nMin;
-                    brokendowntime.tm_sec = nSec;
+                    brokendowntime.tm_sec = (int)fSec;
                     summary->count++;
                     summary->sum += CPLYMDHMSToUnixTime(&brokendowntime);
+                    summary->sum += fmod((double)fSec, 1);
                 }
             }
             else
@@ -470,7 +480,7 @@ swq_select_summarize( swq_select *select_info,
 
 static int FORCE_CDECL swq_compare_int( const void *item1, const void *item2 )
 {
-    int  v1, v2;
+    GIntBig  v1, v2;
 
     const char* pszStr1 = *((const char **) item1);
     const char* pszStr2 = *((const char **) item2);
@@ -479,8 +489,8 @@ static int FORCE_CDECL swq_compare_int( const void *item1, const void *item2 )
     else if (pszStr2 == NULL)
         return 1;
 
-    v1 = atoi(pszStr1);
-    v2 = atoi(pszStr2);
+    v1 = CPLAtoGIntBig(pszStr1);
+    v2 = CPLAtoGIntBig(pszStr2);
 
     if( v1 < v2 )
         return -1;
@@ -535,7 +545,7 @@ const char *swq_select_finish_summarize( swq_select *select_info )
 
 {
     int (FORCE_CDECL *compare_func)(const void *, const void*);
-    int count = 0;
+    GIntBig count = 0;
     char **distinct_list = NULL;
 
     if( select_info->query_mode != SWQM_DISTINCT_LIST 
@@ -552,7 +562,8 @@ const char *swq_select_finish_summarize( swq_select *select_info )
     if( select_info->column_summary == NULL )
         return NULL;
 
-    if( select_info->column_defs[0].field_type == SWQ_INTEGER )
+    if( select_info->column_defs[0].field_type == SWQ_INTEGER ||
+        select_info->column_defs[0].field_type == SWQ_INTEGER64 )
         compare_func = swq_compare_int;
     else if( select_info->column_defs[0].field_type == SWQ_FLOAT )
         compare_func = swq_compare_real;
@@ -562,7 +573,7 @@ const char *swq_select_finish_summarize( swq_select *select_info )
     distinct_list = select_info->column_summary[0].distinct_list;
     count = select_info->column_summary[0].count;
 
-    qsort( distinct_list, count, sizeof(char *), compare_func );
+    qsort( distinct_list, (size_t)count, sizeof(char *), compare_func );
 
 /* -------------------------------------------------------------------- */
 /*      Do we want the list ascending in stead of descending?           */
@@ -570,7 +581,7 @@ const char *swq_select_finish_summarize( swq_select *select_info )
     if( !select_info->order_defs[0].ascending_flag )
     {
         char *saved;
-        int i;
+        GIntBig i;
 
         for( i = 0; i < count/2; i++ )
         {
@@ -596,17 +607,29 @@ void swq_select_free( swq_select *select_info )
 /************************************************************************/
 /*                         swq_identify_field()                         */
 /************************************************************************/
-static 
-int swq_identify_field_internal( const char *field_token, const char* table_name,
+int swq_identify_field_internal( const char* table_name, const char *field_token, 
                                  swq_field_list *field_list,
-                                 swq_field_type *this_type, int *table_id, int tables_enabled );
+                                 swq_field_type *this_type, int *table_id,
+                                 int bOneMoreTimeOK );
 
-int swq_identify_field( const char *token, swq_field_list *field_list,
-                        swq_field_type *this_type, int *table_id )
+int swq_identify_field( const char* table_name, const char *field_token, 
+                                 swq_field_list *field_list,
+                                 swq_field_type *this_type, int *table_id )
 
 {
-    CPLString osTableName;
-    const char *field_token = token;
+    return swq_identify_field_internal(table_name, field_token, field_list,
+                                       this_type, table_id, TRUE);
+}
+
+int swq_identify_field_internal( const char* table_name, const char *field_token, 
+                                 swq_field_list *field_list,
+                                 swq_field_type *this_type, int *table_id,
+                                 int bOneMoreTimeOK )
+
+{
+    int i;
+    if( table_name == NULL ) table_name = "";
+
     int   tables_enabled;
 
     if( field_list->table_count > 0 && field_list->table_ids != NULL )
@@ -614,75 +637,6 @@ int swq_identify_field( const char *token, swq_field_list *field_list,
     else
         tables_enabled = FALSE;
 
-/* -------------------------------------------------------------------- */
-/*      Parse out table name if present, and table support enabled.     */
-/* -------------------------------------------------------------------- */
-    if( tables_enabled && strchr(token, '.') != NULL )
-    {
-        int dot_offset = (int)(strchr(token,'.') - token);
-
-        osTableName = token;
-        osTableName.resize(dot_offset);
-        field_token = token + dot_offset + 1;
-
-#ifdef notdef
-        /* We try to detect if a.b is the a.b field */
-        /* of the main table, or the b field of the a table */
-        /* If both exists, report an error. */
-        /* This works, but I'm not sure this is a good idea to */
-        /* enable that. It is a sign that our SQL grammar is somewhat */
-        /* ambiguous */
-
-        swq_field_type eTypeWithTablesEnabled;
-        int            nTableIdWithTablesEnabled;
-        int nRetWithTablesEnabled = swq_identify_field_internal(
-            field_token, osTableName.c_str(), field_list,
-            &eTypeWithTablesEnabled, &nTableIdWithTablesEnabled, TRUE);
-
-        swq_field_type eTypeWithTablesDisabled;
-        int            nTableIdWithTablesDisabled;
-        int nRetWithTablesDisabled = swq_identify_field_internal(
-            token, "", field_list,
-            &eTypeWithTablesDisabled, &nTableIdWithTablesDisabled, FALSE);
-
-        if( nRetWithTablesEnabled >= 0 && nRetWithTablesDisabled >= 0 )
-        {
-            CPLError(CE_Failure, CPLE_AppDefined,
-                        "Ambiguous situation. Both %s exists as a field in "
-                        "main table and %s exists as a field in %s table",
-                        token, osTableName.c_str(), field_token);
-            return -1;
-        }
-        else if( nRetWithTablesEnabled >= 0 )
-        {
-            if( this_type != NULL ) *this_type = eTypeWithTablesEnabled;
-            if( table_id != NULL ) *table_id = nTableIdWithTablesEnabled;
-            return nRetWithTablesEnabled;
-        }
-        else if( nRetWithTablesDisabled >= 0 )
-        {
-            if( this_type != NULL ) *this_type = eTypeWithTablesDisabled;
-            if( table_id != NULL ) *table_id = nTableIdWithTablesDisabled;
-            return nRetWithTablesDisabled;
-        }
-        else
-        {
-            return -1;
-        }
-#endif
-    }
-
-    return swq_identify_field_internal(field_token, osTableName.c_str(), field_list,
-                                       this_type, table_id, tables_enabled);
-}
-
-
-int swq_identify_field_internal( const char *field_token, const char* table_name,
-                                 swq_field_list *field_list,
-                                 swq_field_type *this_type, int *table_id, int tables_enabled )
-
-{
-    int i;
 /* -------------------------------------------------------------------- */
 /*      Search for matching field.                                      */
 /* -------------------------------------------------------------------- */
@@ -704,6 +658,8 @@ int swq_identify_field_internal( const char *field_token, const char* table_name
 //            if( t_id != 0 && table_name[0] == '\0' )
 //                continue;
         }
+        else if( table_name[0] != '\0' )
+            break;
 
         /* We have a match, return various information */
         if( this_type != NULL )
@@ -721,6 +677,70 @@ int swq_identify_field_internal( const char *field_token, const char* table_name
             return i;
         else
             return field_list->ids[i];
+    }
+
+/* -------------------------------------------------------------------- */
+/*      When there is no ambiguity, try to accept quoting errors...     */
+/* -------------------------------------------------------------------- */
+    if( bOneMoreTimeOK && !CSLTestBoolean(CPLGetConfigOption("OGR_SQL_STRICT", "FALSE")) )
+    {
+        if( table_name[0] )
+        {
+            CPLString osAggregatedName(CPLSPrintf("%s.%s", table_name, field_token));
+
+            // Check there's no table called table_name, or a field called with
+            // the aggregated name
+            for( i = 0; i < field_list->count; i++ )
+            {
+                if( tables_enabled )
+                {
+                    int t_id = field_list->table_ids[i];
+                    if( EQUAL(table_name,field_list->table_defs[t_id].table_alias) )
+                        break;
+                }
+            }
+            if( i == field_list->count )
+            {
+                int ret = swq_identify_field_internal( NULL,
+                                            osAggregatedName, 
+                                            field_list,
+                                            this_type, table_id, FALSE );
+                if( ret >= 0 )
+                {
+                    CPLError(CE_Warning, CPLE_AppDefined,
+                            "Passed field name %s.%s should have been surrounded by double quotes. "
+                            "Accepted since there is no ambiguity...",
+                            table_name, field_token);
+                }
+                return ret;
+            }
+        }
+        else
+        {
+            // If the fieldname is a.b (and there's no . in b), then 
+            // it might be an error in providing it as being quoted where it should
+            // not have been quoted.
+            const char* pszDot = strchr(field_token, '.');
+            if( pszDot && strchr(pszDot+1, '.') == NULL )
+            {
+                CPLString osTableName(field_token);
+                osTableName.resize(pszDot - field_token);
+                CPLString osFieldName(pszDot + 1);
+
+                int ret = swq_identify_field_internal( osTableName,
+                                            osFieldName, 
+                                            field_list,
+                                            this_type, table_id, FALSE );
+                if( ret >= 0 )
+                {
+                    CPLError(CE_Warning, CPLE_AppDefined,
+                            "Passed field name %s should NOT have been surrounded by double quotes. "
+                            "Accepted since there is no ambiguity...",
+                            field_token);
+                }
+                return ret;
+            }
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -743,6 +763,8 @@ CPLErr swq_expr_compile( const char *where_clause,
                          int field_count,
                          char **field_names, 
                          swq_field_type *field_types, 
+                         int bCheck,
+                         swq_custom_func_registrar* poCustomFuncRegistrar,
                          swq_expr_node **expr_out )
 
 {
@@ -757,7 +779,8 @@ CPLErr swq_expr_compile( const char *where_clause,
     field_list.table_count = 0;
     field_list.table_defs = NULL;
 
-    return swq_expr_compile2( where_clause, &field_list, expr_out );
+    return swq_expr_compile2( where_clause, &field_list,
+                              bCheck, poCustomFuncRegistrar, expr_out );
 }
 
 
@@ -767,6 +790,8 @@ CPLErr swq_expr_compile( const char *where_clause,
 
 CPLErr swq_expr_compile2( const char *where_clause, 
                           swq_field_list *field_list,
+                          int bCheck,
+                          swq_custom_func_registrar* poCustomFuncRegistrar,
                           swq_expr_node **expr_out )
 
 {
@@ -776,10 +801,11 @@ CPLErr swq_expr_compile2( const char *where_clause,
     context.pszInput = where_clause;
     context.pszNext = where_clause;
     context.pszLastValid = where_clause;
-    context.nStartToken = SWQT_LOGICAL_START;
+    context.nStartToken = SWQT_VALUE_START;
+    context.bAcceptCustomFuncs = poCustomFuncRegistrar != NULL;
     
     if( swqparse( &context ) == 0 
-        && context.poRoot->Check( field_list, FALSE ) != SWQ_ERROR )
+        && bCheck && context.poRoot->Check( field_list, FALSE, FALSE, poCustomFuncRegistrar ) != SWQ_ERROR )
     {
         *expr_out = context.poRoot;
 
@@ -843,6 +869,7 @@ const char* SWQFieldTypeToString( swq_field_type field_type )
     switch(field_type)
     {
         case SWQ_INTEGER:   return "integer";
+        case SWQ_INTEGER64: return "bigint";
         case SWQ_FLOAT:     return "float";
         case SWQ_STRING:    return "string";
         case SWQ_BOOLEAN:   return "boolean";

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvglayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsvglayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGLayer class.
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvglayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsvglayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                            OGRSVGLayer()                             */
@@ -47,6 +47,7 @@ OGRSVGLayer::OGRSVGLayer( const char* pszFilename,
     this->poDS = poDS;
     this->svgGeomType = svgGeomType;
     osLayerName = pszLayerName;
+    SetDescription( pszLayerName );
 
     poFeatureDefn = NULL;
 
@@ -777,7 +778,8 @@ void OGRSVGLayer::endElementLoadSchemaCbk(CPL_UNUSED const char *pszName)
 /*                   dataHandlerLoadSchemaCbk()                         */
 /************************************************************************/
 
-void OGRSVGLayer::dataHandlerLoadSchemaCbk(CPL_UNUSED const char *data, CPL_UNUSED int nLen)
+void OGRSVGLayer::dataHandlerLoadSchemaCbk(CPL_UNUSED const char *data,
+                                           CPL_UNUSED int nLen)
 {
     if (bStopParsing) return;
 
@@ -831,7 +833,7 @@ OGRwkbGeometryType OGRSVGLayer::GetGeomType()
 /*                           GetGeomType()                              */
 /************************************************************************/
 
-int OGRSVGLayer::GetFeatureCount( int bForce )
+GIntBig OGRSVGLayer::GetFeatureCount( int bForce )
 {
     if (m_poAttrQuery != NULL || m_poFilterGeom != NULL)
         return OGRLayer::GetFeatureCount(bForce);

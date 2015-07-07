@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ili2.h 26953 2014-02-16 17:47:12Z pka $
+ * $Id: ogr_ili2.h 29109 2015-05-02 11:45:44Z rouault $
  *
  * Project:  Interlis 2 Translator
  * Purpose:   Definition of classes for OGR Interlis 2 driver.
@@ -60,14 +60,14 @@ private:
 
                        ~OGRILI2Layer();
 
-    OGRErr              SetFeature(OGRFeature *poFeature);
+    OGRErr              ISetFeature(OGRFeature *poFeature);
     
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    int                 GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE );
 
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
@@ -99,38 +99,20 @@ class OGRILI2DataSource : public OGRDataSource
                 OGRILI2DataSource();
                ~OGRILI2DataSource();
 
-    int         Open( const char *, int bTestOpen );
+    int         Open( const char *, char** papszOpenOptions, int bTestOpen );
     int         Create( const char *pszFile, char **papszOptions );
 
     const char *GetName() { return pszName; }
     int         GetLayerCount() { return listLayer.size(); }
     OGRLayer   *GetLayer( int );
 
-    virtual OGRLayer *CreateLayer( const char *, 
+    virtual OGRLayer *ICreateLayer( const char *, 
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );
 
     VSILFILE *  GetOutputFP() { return fpOutput; }
     int         TestCapability( const char * );
-};
-
-/************************************************************************/
-/*                            OGRILI2Driver                             */
-/************************************************************************/
-
-class OGRILI2Driver : public OGRSFDriver
-{
-  public:
-                ~OGRILI2Driver();
-
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
-
-    int                 TestCapability( const char * );
 };
 
 #endif /* _OGR_ILI2_H_INCLUDED */

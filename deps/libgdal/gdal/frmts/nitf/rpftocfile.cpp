@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rpftocfile.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rpftocfile.cpp 29260 2015-05-29 09:13:17Z rouault $
  *
  * Project:  RPF A.TOC read Library
  * Purpose:  Module responsible for opening a RPF TOC file, populating RPFToc
@@ -49,7 +49,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: rpftocfile.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rpftocfile.cpp 29260 2015-05-29 09:13:17Z rouault $");
 
 /************************************************************************/
 /*                        RPFTOCTrim()                                    */
@@ -497,10 +497,22 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         frameEntry->directory[pathLength] = 0;
         if (pathLength > 0 && frameEntry->directory[pathLength-1] == '/')
             frameEntry->directory[pathLength-1] = 0;
-        
+
         if (frameEntry->directory[0] == '.' && frameEntry->directory[1] == '/')
+        {
             memmove(frameEntry->directory, frameEntry->directory+2, strlen(frameEntry->directory+2)+1);
-        
+
+            // Some A.TOC have subdirectory names like ".//X/" ... (#5979)
+            // Check if it wasn't intended to be "./X/" instead
+            VSIStatBufL sStatBuf;
+            if( frameEntry->directory[0] == '/' &&
+                VSIStatL(CPLFormFilename(CPLGetDirname(pszFilename), frameEntry->directory+1, NULL), &sStatBuf) == 0 &&
+                VSI_ISDIR(sStatBuf.st_mode) )
+            {
+                memmove(frameEntry->directory, frameEntry->directory+1, strlen(frameEntry->directory+1)+1);
+            }
+        }
+
         {
             char* baseDir = CPLStrdup(CPLGetDirname(pszFilename));
             VSIStatBufL sStatBuf;

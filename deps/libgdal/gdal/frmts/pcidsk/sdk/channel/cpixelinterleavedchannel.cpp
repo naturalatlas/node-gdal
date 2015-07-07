@@ -40,7 +40,7 @@ using namespace PCIDSK;
 /*                      CPixelInterleavedChannel()                      */
 /************************************************************************/
 
-CPixelInterleavedChannel::CPixelInterleavedChannel( PCIDSKBuffer &image_header, 
+CPixelInterleavedChannel::CPixelInterleavedChannel( PCIDSKBuffer &image_header,
                                                     uint64 ih_offset,
                                                     CPL_UNUSED PCIDSKBuffer &file_header,
                                                     int channelnum,
@@ -259,4 +259,3 @@ int CPixelInterleavedChannel::WriteBlock( int block_index, void *buffer )
 
     return 1;
 }
-

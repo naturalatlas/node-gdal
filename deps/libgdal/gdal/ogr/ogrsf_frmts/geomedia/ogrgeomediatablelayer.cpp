@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediatablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomediatablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaTableLayer class, access to an existing table.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_geomedia.h"
 
-CPL_CVSID("$Id: ogrgeomediatablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeomediatablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRGeomediaTableLayer()                     */
@@ -205,7 +205,7 @@ void OGRGeomediaTableLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRGeomediaTableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRGeomediaTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( pszFIDColumn == NULL )
@@ -218,7 +218,7 @@ OGRFeature *OGRGeomediaTableLayer::GetFeature( long nFeatureId )
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
     poStmt->Append( poFeatureDefn->GetName() );
-    poStmt->Appendf( " WHERE %s = %ld", pszFIDColumn, nFeatureId );
+    poStmt->Appendf( " WHERE %s = " CPL_FRMT_GIB, pszFIDColumn, nFeatureId );
 
     if( !poStmt->ExecuteSQL() )
     {
@@ -280,7 +280,7 @@ int OGRGeomediaTableLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRGeomediaTableLayer::GetFeatureCount( int bForce )
+GIntBig OGRGeomediaTableLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom != NULL )

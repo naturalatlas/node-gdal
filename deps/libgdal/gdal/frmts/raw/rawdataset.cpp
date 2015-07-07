@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rawdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: rawdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Generic Raw Binary Driver
  * Purpose:  Implementation of RawDataset and RawRasterBand classes.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: rawdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: rawdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /*                           RawRasterBand()                            */
@@ -348,9 +348,9 @@ CPLErr RawRasterBand::AccessLine( int iLine )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr RawRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr RawRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
                                   void * pImage )
-
 {
     CPLErr		eErr;
 
@@ -360,7 +360,7 @@ CPLErr RawRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
         return CE_Failure;
 
     eErr = AccessLine( nBlockYOff );
-    
+
 /* -------------------------------------------------------------------- */
 /*      Copy data from disk buffer to user block buffer.                */
 /* -------------------------------------------------------------------- */
@@ -375,9 +375,9 @@ CPLErr RawRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
 /*                            IWriteBlock()                             */
 /************************************************************************/
 
-CPLErr RawRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr RawRasterBand::IWriteBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
                                    void * pImage )
-
 {
     CPLErr		eErr = CE_None;
 
@@ -574,7 +574,10 @@ int RawRasterBand::IsSignificantNumberOfLinesLoaded( int nLineOff, int nLines )
 /*                           CanUseDirectIO()                           */
 /************************************************************************/
 
-int RawRasterBand::CanUseDirectIO(CPL_UNUSED int nXOff, int nYOff, int nXSize, int nYSize,
+int RawRasterBand::CanUseDirectIO(CPL_UNUSED int nXOff,
+                                  int nYOff,
+                                  int nXSize,
+                                  int nYSize,
                                   CPL_UNUSED GDALDataType eBufType)
 {
 
@@ -590,7 +593,7 @@ int RawRasterBand::CanUseDirectIO(CPL_UNUSED int nXOff, int nYOff, int nXSize, i
 /* and no significant number of requested scanlines are already in the  */
 /* cache.                                                               */
 /* -------------------------------------------------------------------- */
-    if( nPixelOffset < 0 ) 
+    if( nPixelOffset < 0 )
     {
         return FALSE;
     }
@@ -620,7 +623,8 @@ CPLErr RawRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                  int nXOff, int nYOff, int nXSize, int nYSize,
                                  void * pData, int nBufXSize, int nBufYSize,
                                  GDALDataType eBufType,
-                                 int nPixelSpace, int nLineSpace )
+                                 GSpacing nPixelSpace, GSpacing nLineSpace,
+                                 GDALRasterIOExtraArg* psExtraArg )
 
 {
     int         nBandDataSize = GDALGetDataTypeSize(eDataType) / 8;
@@ -633,7 +637,7 @@ CPLErr RawRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                           nXSize, nYSize,
                                           pData, nBufXSize, nBufYSize,
                                           eBufType,
-                                          nPixelSpace, nLineSpace );
+                                          nPixelSpace, nLineSpace, psExtraArg );
     }
 
     CPLDebug("RAW", "Using direct IO implementation");
@@ -652,7 +656,7 @@ CPLErr RawRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         {
             if( OverviewRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize, 
                                   pData, nBufXSize, nBufYSize, 
-                                  eBufType, nPixelSpace, nLineSpace ) == CE_None )
+                                  eBufType, nPixelSpace, nLineSpace, psExtraArg ) == CE_None )
                 return CE_None;
         }
 
@@ -731,6 +735,14 @@ CPLErr RawRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                        (vsi_l_offset)iPixel * nPixelSpace,
                                        eBufType, nPixelSpace, 1 );
                     }
+                }
+
+                if( psExtraArg->pfnProgress != NULL &&
+                    !psExtraArg->pfnProgress(1.0 * (iLine + 1) / nBufYSize, "",
+                                            psExtraArg->pProgressData) )
+                {
+                    CPLFree( pabyData );
+                    return CE_Failure;
                 }
             }
 
@@ -1155,7 +1167,9 @@ CPLErr RawDataset::IRasterIO( GDALRWFlag eRWFlag,
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType,
                               int nBandCount, int *panBandMap, 
-                              int nPixelSpace, int nLineSpace, int nBandSpace )
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg )
 
 {
     const char* pszInterleave;
@@ -1179,6 +1193,10 @@ CPLErr RawDataset::IRasterIO( GDALRWFlag eRWFlag,
         }
         if( iBandIndex == nBandCount )
         {
+
+            GDALProgressFunc  pfnProgressGlobal = psExtraArg->pfnProgress;
+            void             *pProgressDataGlobal = psExtraArg->pProgressData;
+
             CPLErr eErr = CE_None;
             for( iBandIndex = 0; 
                 iBandIndex < nBandCount && eErr == CE_None; 
@@ -1194,11 +1212,23 @@ CPLErr RawDataset::IRasterIO( GDALRWFlag eRWFlag,
                 }
 
                 pabyBandData = ((GByte *) pData) + iBandIndex * nBandSpace;
-                
+
+                psExtraArg->pfnProgress = GDALScaledProgress;
+                psExtraArg->pProgressData = 
+                    GDALCreateScaledProgress( 1.0 * iBandIndex / nBandCount,
+                                            1.0 * (iBandIndex + 1) / nBandCount,
+                                            pfnProgressGlobal,
+                                            pProgressDataGlobal );
+
                 eErr = poBand->RasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize, 
                                         (void *) pabyBandData, nBufXSize, nBufYSize,
-                                        eBufType, nPixelSpace, nLineSpace );
+                                        eBufType, nPixelSpace, nLineSpace, psExtraArg );
+
+                GDALDestroyScaledProgress( psExtraArg->pProgressData );
             }
+
+            psExtraArg->pfnProgress = pfnProgressGlobal;
+            psExtraArg->pProgressData = pProgressDataGlobal;
 
             return eErr;
         }
@@ -1207,7 +1237,6 @@ CPLErr RawDataset::IRasterIO( GDALRWFlag eRWFlag,
     return  GDALDataset::IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                     pData, nBufXSize, nBufYSize, eBufType, 
                                     nBandCount, panBandMap, 
-                                    nPixelSpace, nLineSpace, nBandSpace );
+                                    nPixelSpace, nLineSpace, nBandSpace,
+                                    psExtraArg);
 }
-
-

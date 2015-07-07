@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmdbdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmdbdatasource.cpp 27794 2014-10-04 10:13:46Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMDBDataSource class.
@@ -33,7 +33,7 @@
 #include <vector>
 #include "ogrgeomediageometry.h"
 
-CPL_CVSID("$Id: ogrmdbdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmdbdatasource.cpp 27794 2014-10-04 10:13:46Z rouault $");
 
 /************************************************************************/
 /*                         OGRMDBDataSource()                          */
@@ -286,8 +286,7 @@ int OGRMDBDataSource::OpenGeomediaWarehouse(OGRMDBTable* poGAliasTable)
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRMDBDataSource::Open( const char * pszNewName, int bUpdate,
-                              int bTestOpen )
+int OGRMDBDataSource::Open( const char * pszNewName )
 
 {
     CPLAssert( nLayers == 0 );
@@ -349,7 +348,7 @@ int OGRMDBDataSource::Open( const char * pszNewName, int bUpdate,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRMDBDataSource::TestCapability( const char * pszCap )
+int OGRMDBDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 
 {
     return FALSE;

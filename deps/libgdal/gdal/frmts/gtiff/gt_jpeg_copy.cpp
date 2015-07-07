@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_jpeg_copy.cpp 27899 2014-10-23 13:36:59Z rouault $
+ * $Id: gt_jpeg_copy.cpp 28213 2014-12-25 00:42:13Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Specialized copy of JPEG content into TIFF.
@@ -31,9 +31,9 @@
 #include "gt_jpeg_copy.h"
 
 /* Note: JPEG_DIRECT_COPY is not defined by default, because it is mainly */
-/* usefull for debugging purposes */
+/* useful for debugging purposes */
 
-CPL_CVSID("$Id: gt_jpeg_copy.cpp 27899 2014-10-23 13:36:59Z rouault $");
+CPL_CVSID("$Id: gt_jpeg_copy.cpp 28213 2014-12-25 00:42:13Z rouault $");
 
 #if defined(JPEG_DIRECT_COPY) || defined(HAVE_LIBJPEG)
 
@@ -339,6 +339,7 @@ static void GTIFF_ErrorExitJPEG(j_common_ptr cinfo)
 /*                      GTIFF_Set_TIFFTAG_JPEGTABLES()                  */
 /************************************************************************/
 
+static
 void GTIFF_Set_TIFFTAG_JPEGTABLES(TIFF* hTIFF,
                                   jpeg_decompress_struct& sDInfo,
                                   jpeg_compress_struct& sCInfo)
@@ -346,8 +347,27 @@ void GTIFF_Set_TIFFTAG_JPEGTABLES(TIFF* hTIFF,
     char szTmpFilename[128];
     sprintf(szTmpFilename, "/vsimem/tables_%p", &sDInfo);
     VSILFILE* fpTABLES = VSIFOpenL(szTmpFilename, "wb+");
+    
+    uint16  nPhotometric;
+    TIFFGetField( hTIFF, TIFFTAG_PHOTOMETRIC, &nPhotometric );
 
     jpeg_vsiio_dest( &sCInfo, fpTABLES );
+
+    // Avoid unnecessary tables to be emitted
+    if( nPhotometric != PHOTOMETRIC_YCBCR )
+    {
+        JQUANT_TBL* qtbl;
+        JHUFF_TBL* htbl;
+        qtbl = sCInfo.quant_tbl_ptrs[1];
+        if (qtbl != NULL)
+            qtbl->sent_table = TRUE;
+        htbl = sCInfo.dc_huff_tbl_ptrs[1];
+        if (htbl != NULL)
+            htbl->sent_table = TRUE;
+        htbl = sCInfo.ac_huff_tbl_ptrs[1];
+        if (htbl != NULL)
+            htbl->sent_table = TRUE;
+    }
     jpeg_write_tables( &sCInfo );
 
     VSIFCloseL(fpTABLES);
@@ -486,7 +506,8 @@ CPLErr GTIFF_CopyFromJPEG_WriteAdditionalTags(TIFF* hTIFF,
 static CPLErr GTIFF_CopyBlockFromJPEG(TIFF* hTIFF,
                                       jpeg_decompress_struct& sDInfo,
                                       int iX, int iY,
-                                      int nXBlocks, CPL_UNUSED int nYBlocks,
+                                      int nXBlocks,
+                                      CPL_UNUSED int nYBlocks,
                                       int nXSize, int nYSize,
                                       int nBlockXSize, int nBlockYSize,
                                       int iMCU_sample_width, int iMCU_sample_height,
@@ -724,10 +745,12 @@ CPLErr GTIFF_CopyFromJPEG(GDALDataset* poDS, GDALDataset* poSrcDS,
 /* -------------------------------------------------------------------- */
     struct jpeg_error_mgr sJErr;
     struct jpeg_decompress_struct sDInfo;
+    memset(&sDInfo, 0, sizeof(sDInfo));
     jmp_buf setjmp_buffer;
     if (setjmp(setjmp_buffer))
     {
         VSIFCloseL(fpJPEG);
+        jpeg_destroy_decompress(&sDInfo);
         return CE_Failure;
     }
 

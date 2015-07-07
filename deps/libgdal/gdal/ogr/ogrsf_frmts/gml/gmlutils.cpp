@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlutils.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gmlutils.cpp 27576 2014-08-06 22:23:51Z rouault $
  *
  * Project:  GML Utils
  * Purpose:  GML reader
@@ -200,7 +200,7 @@ OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry
     {
         OGRGeometry* poSubGeom = GML2OGRGeometry_XMLNode( papsGeometry[i],
                                                           bGetSecondaryGeometryOption,
-                                                          0, FALSE, TRUE,
+                                                          0, 0, FALSE, TRUE,
                                                           bFaceHoleNegative );
         if (poSubGeom)
         {

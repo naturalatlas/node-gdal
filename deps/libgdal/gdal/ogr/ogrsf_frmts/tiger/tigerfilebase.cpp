@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerfilebase.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: tigerfilebase.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerBaseFile class, providing common services to all
@@ -34,7 +34,7 @@
 #include "cpl_error.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: tigerfilebase.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: tigerfilebase.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                           TigerFileBase()                            */
@@ -394,7 +394,8 @@ int TigerFileBase::WriteRecord( char *pachRecord, int nRecLen,
 /*      Setup our access to be to the module indicated in the feature.  */
 /************************************************************************/
 
-int TigerFileBase::SetWriteModule( const char *pszExtension, CPL_UNUSED int nRecLen,
+int TigerFileBase::SetWriteModule( const char *pszExtension,
+                                   CPL_UNUSED int nRecLen,
                                    OGRFeature *poFeature )
 {
 /* -------------------------------------------------------------------- */

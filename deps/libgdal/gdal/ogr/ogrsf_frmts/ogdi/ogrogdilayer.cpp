@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrogdilayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrogdilayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGDI Bridge
  * Purpose:  Implements OGROGDILayer class.
@@ -57,7 +57,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrogdilayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrogdilayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGROGDILayer()                            */
@@ -391,7 +391,7 @@ OGRFeature *OGROGDILayer::GetNextRawFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGROGDILayer::GetFeature( long nFeatureId )
+OGRFeature *OGROGDILayer::GetFeature( GIntBig nFeatureId )
 
 {
     ecs_Result  *psResult;
@@ -451,7 +451,7 @@ OGRFeature *OGROGDILayer::GetFeature( long nFeatureId )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGROGDILayer::GetFeatureCount( int bForce )
+GIntBig OGROGDILayer::GetFeatureCount( int bForce )
 
 {
     if( m_nTotalShapeCount == -1)
@@ -553,6 +553,7 @@ void OGROGDILayer::BuildFeatureDefn()
                                                     pszGeomName ));
 
     m_poFeatureDefn = new OGRFeatureDefn(pszFeatureDefnName);
+    SetDescription( m_poFeatureDefn->GetName() );
     CPLFree(pszFeatureDefnName);
     pszFeatureDefnName = NULL;
     

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrntffeatureclasslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrntffeatureclasslayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  UK NTF Reader
  * Purpose:  Implements OGRNTFFeatureClassLayer class.
@@ -30,7 +30,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                      OGRNTFFeatureClassLayer()                       */
@@ -52,6 +52,7 @@ OGRNTFFeatureClassLayer::OGRNTFFeatureClassLayer( OGRNTFDataSource *poDSIn )
 /*      Establish the schema.                                           */
 /* -------------------------------------------------------------------- */
     poFeatureDefn = new OGRFeatureDefn( "FEATURE_CLASSES" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->SetGeomType( wkbNone );
     poFeatureDefn->Reference();
 
@@ -124,7 +125,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetNextFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRNTFFeatureClassLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRNTFFeatureClassLayer::GetFeature( GIntBig nFeatureId )
 
 {
     char        *pszFCName, *pszFCId;
@@ -132,7 +133,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetFeature( long nFeatureId )
     if( nFeatureId < 0 || nFeatureId >= poDS->GetFCCount() )
         return NULL;
     
-    poDS->GetFeatureClass( nFeatureId, &pszFCId, &pszFCName );
+    poDS->GetFeatureClass( (int)nFeatureId, &pszFCId, &pszFCName );
     
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding feature.                                 */
@@ -155,7 +156,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetFeature( long nFeatureId )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRNTFFeatureClassLayer::GetFeatureCount( CPL_UNUSED int bForce )
+GIntBig OGRNTFFeatureClassLayer::GetFeatureCount( CPL_UNUSED int bForce )
 {
     return poDS->GetFCCount();
 }
@@ -183,4 +184,3 @@ int OGRNTFFeatureClassLayer::TestCapability( const char * pszCap )
     else 
         return FALSE;
 }
-

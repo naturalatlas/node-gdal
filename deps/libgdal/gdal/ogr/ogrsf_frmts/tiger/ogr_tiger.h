@@ -1,6 +1,6 @@
 /*-*-C++-*-*/
 /******************************************************************************
- * $Id: ogr_tiger.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_tiger.h 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Main declarations for Tiger translator.
@@ -83,7 +83,7 @@ const char * TigerVersionString( TigerVersion );
 /*****************************************************************************/
 /* The TigerFieldInfo and TigerRecordInfo structures hold information about  */
 /* the schema of a TIGER record type.  In each layer implementation file     */
-/* there are statically initalized variables of these types that describe    */
+/* there are statically initialized variables of these types that describe    */
 /* the record types associated with that layer.  In the case where different */
 /* TIGER versions have different schemas, there is a                         */
 /* TigerFieldInfo/TigerRecordInfo for each version, and the constructor      */
@@ -517,15 +517,15 @@ class OGRTigerLayer : public OGRLayer
 
     void                ResetReading();
     OGRFeature *        GetNextFeature();
-    OGRFeature         *GetFeature( long nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
 
     OGRFeatureDefn *    GetLayerDefn();
 
-    int                 GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int );
 
     int                 TestCapability( const char * );
 
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
 };
@@ -596,29 +596,10 @@ class OGRTigerDataSource : public OGRDataSource
 
     void                DeleteModuleFiles( const char *pszModule );
 
-    virtual OGRLayer    *CreateLayer( const char *,
+    virtual OGRLayer    *ICreateLayer( const char *,
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );
-};
-
-/************************************************************************/
-/*                            OGRTigerDriver                            */
-/************************************************************************/
-
-class OGRTigerDriver : public OGRSFDriver
-{
-  public:
-                ~OGRTigerDriver();
-
-    const char *GetName();
-
-    OGRDataSource *Open( const char *, int );
-
-    virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
-
-    int         TestCapability( const char * );
 };
 
 #endif /* ndef _OGR_TIGER_H_INCLUDED */

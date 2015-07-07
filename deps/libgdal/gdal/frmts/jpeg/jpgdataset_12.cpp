@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jpgdataset_12.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: jpgdataset_12.cpp 28028 2014-11-30 11:46:11Z rouault $
  *
  * Project:  JPEG JFIF Driver
  * Purpose:  Implement GDAL JPEG Support based on IJG libjpeg.
@@ -33,10 +33,13 @@
 #include "jpgdataset.cpp"
 
 GDALDataset* JPEGDataset12Open(const char* pszFilename,
+                               VSILFILE* fpLin,
                                char** papszSiblingFiles,
-                               int nScaleFactor)
+                               int nScaleFactor,
+                               int bDoPAMInitialize)
 {
-    return JPGDataset12::Open(pszFilename, papszSiblingFiles, nScaleFactor);
+    return JPGDataset12::Open(pszFilename, fpLin, papszSiblingFiles, nScaleFactor,
+                              bDoPAMInitialize);
 }
 
 GDALDataset* JPEGDataset12CreateCopy( const char * pszFilename,

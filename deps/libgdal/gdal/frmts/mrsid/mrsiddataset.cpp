@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: mrsiddataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: mrsiddataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  Multi-resolution Seamless Image Database (MrSID)
  * Purpose:  Read/write LizardTech's MrSID file format - Version 4+ SDK.
@@ -39,7 +39,7 @@
 #include <geo_normalize.h>
 #include <geovalues.h>
 
-CPL_CVSID("$Id: mrsiddataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: mrsiddataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 CPL_C_START
 double GTIFAngleToDD( double dfAngle, int nUOMAngle );
@@ -259,8 +259,10 @@ class MrSIDDataset : public GDALJP2AbstractDataset
     char                *GetOGISDefn( GTIFDefn * );
 
     virtual CPLErr      IRasterIO( GDALRWFlag, int, int, int, int, void *,
-                                   int, int, GDALDataType, int, int *,int,
-                                   int, int );
+                                   int, int, GDALDataType, int, int *,
+                                   GSpacing nPixelSpace, GSpacing nLineSpace,
+                                   GSpacing nBandSpace,
+                                   GDALRasterIOExtraArg* psExtraArg);
 
   protected:
     virtual int         CloseDependentDatasets();
@@ -312,7 +314,8 @@ class MrSIDRasterBand : public GDALPamRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     virtual CPLErr          IReadBlock( int, int, void * );
     virtual GDALColorInterp GetColorInterpretation();
@@ -610,7 +613,8 @@ CPLErr MrSIDRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                                    int nXOff, int nYOff, int nXSize, int nYSize,
                                    void * pData, int nBufXSize, int nBufYSize,
                                    GDALDataType eBufType,
-                                   int nPixelSpace, int nLineSpace )
+                                   GSpacing nPixelSpace, GSpacing nLineSpace,
+                                   GDALRasterIOExtraArg* psExtraArg)
     
 {
 /* -------------------------------------------------------------------- */
@@ -624,7 +628,7 @@ CPLErr MrSIDRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         return GDALRasterBand::IRasterIO( eRWFlag, nXOff, nYOff,
                                           nXSize, nYSize, pData,
                                           nBufXSize, nBufYSize, eBufType,
-                                          nPixelSpace, nLineSpace );
+                                          nPixelSpace, nLineSpace, psExtraArg );
     }
 
 /* -------------------------------------------------------------------- */
@@ -632,7 +636,7 @@ CPLErr MrSIDRasterBand::IRasterIO( GDALRWFlag eRWFlag,
 /* -------------------------------------------------------------------- */
     return poGDS->IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize, pData, 
                              nBufXSize, nBufYSize, eBufType, 
-                             1, &nBand, nPixelSpace, nLineSpace, 0 );
+                             1, &nBand, nPixelSpace, nLineSpace, 0, psExtraArg );
 }
 
 /************************************************************************/
@@ -823,7 +827,9 @@ CPLErr MrSIDDataset::IRasterIO( GDALRWFlag eRWFlag,
                                 void * pData, int nBufXSize, int nBufYSize,
                                 GDALDataType eBufType, 
                                 int nBandCount, int *panBandMap,
-                                int nPixelSpace, int nLineSpace, int nBandSpace )
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GSpacing nBandSpace,
+                                GDALRasterIOExtraArg* psExtraArg )
 
 {
 /* -------------------------------------------------------------------- */
@@ -844,7 +850,7 @@ CPLErr MrSIDDataset::IRasterIO( GDALRWFlag eRWFlag,
         return GDALDataset::BlockBasedRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     CPLDebug( "MrSID", "RasterIO() - using optimized dataset level IO." );
     
 /* -------------------------------------------------------------------- */
@@ -1446,10 +1452,10 @@ static GDALDataset* JP2Open( GDALOpenInfo *poOpenInfo )
 
 GDALDataset *MrSIDDataset::Open( GDALOpenInfo * poOpenInfo, int bIsJP2 )
 {
-    if(poOpenInfo->fp)
+    if(poOpenInfo->fpL)
     {
-        VSIFClose( poOpenInfo->fp );
-        poOpenInfo->fp = NULL;
+        VSIFCloseL( poOpenInfo->fpL );
+        poOpenInfo->fpL = NULL;
     }
 
 /* -------------------------------------------------------------------- */
@@ -2551,8 +2557,7 @@ void MrSIDDataset::GetGTIFDefn()
                             &dfInvFlattening ) == 1 )
     {
         if( dfInvFlattening != 0.0 )
-            psDefn->SemiMinor = 
-                psDefn->SemiMajor * (1 - 1.0/dfInvFlattening);
+            psDefn->SemiMinor = OSRCalcSemiMinorFromInvFlattening(psDefn->SemiMajor, dfInvFlattening);
     }
 
 /* -------------------------------------------------------------------- */
@@ -2744,11 +2749,8 @@ char *MrSIDDataset::GetOGISDefn( GTIFDefn *psDefn )
         dfSemiMajor = SRS_WGS84_SEMIMAJOR;
         dfInvFlattening = SRS_WGS84_INVFLATTENING;
     }
-    else if( (psDefn->SemiMinor / psDefn->SemiMajor) < 0.99999999999999999
-             || (psDefn->SemiMinor / psDefn->SemiMajor) > 1.00000000000000001 )
-        dfInvFlattening = -1.0 / (psDefn->SemiMinor/psDefn->SemiMajor - 1.0);
     else
-        dfInvFlattening = 0.0; /* special flag for infinity */
+        dfInvFlattening = OSRCalcInvFlattening(psDefn->SemiMajor,psDefn->SemiMinor);
 
     oSRS.SetGeogCS( pszGeogName, pszDatumName, 
                     pszSpheroidName, dfSemiMajor, dfInvFlattening,
@@ -3146,7 +3148,7 @@ LT_STATUS MrSIDDummyImageReader::decodeStrip(LTISceneBuffer& stripData,
 
     poDS->RasterIO( GF_Read, nXOff, nYOff, nBufXSize, nBufYSize, 
                     pData, nBufXSize, nBufYSize, eDataType, nBands, NULL, 
-                    0, 0, 0 );
+                    0, 0, 0, NULL );
 
     stripData.importDataBSQ( pData );
     CPLFree( pData );
@@ -3259,7 +3261,7 @@ MrSIDCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         // check for compression option
         const char* pszValue = CSLFetchNameValue(papszOptions, "COMPRESSION");
         if( pszValue != NULL )
-            poMG2ImageWriter->params().setCompressionRatio( (float)atof(pszValue) );
+            poMG2ImageWriter->params().setCompressionRatio( (float)CPLAtof(pszValue) );
 
         poImageWriter = poMG2ImageWriter;
 
@@ -3394,9 +3396,9 @@ MrSIDCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
     delete poImageWriter;
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
-    GDALPamDataset *poDS = (GDALPamDataset *) 
+    GDALPamDataset *poDS = (GDALPamDataset *)
         GDALOpen( pszFilename, GA_ReadOnly );
 
     if( poDS )
@@ -3497,7 +3499,7 @@ JP2CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     // check for compression option
     const char* pszValue = CSLFetchNameValue(papszOptions, "COMPRESSION");
     if( pszValue != NULL )
-        oImageWriter.params().setCompressionRatio( (float)atof(pszValue) );
+        oImageWriter.params().setCompressionRatio( (float)CPLAtof(pszValue) );
         
     pszValue = CSLFetchNameValue(papszOptions, "XMLPROFILE");
     if( pszValue != NULL )
@@ -3523,9 +3525,9 @@ JP2CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                   getLastStatusString( eStat ) );
         return NULL;
     }
-  
+
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
     GDALOpenInfo oOpenInfo(pszFilename, GA_ReadOnly);
     GDALPamDataset *poDS = (GDALPamDataset*) JP2Open(&oOpenInfo);
@@ -3558,6 +3560,7 @@ void GDALRegister_MrSID()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "MrSID" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                         "Multi-resolution Seamless Image Database (MrSID)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_mrsid.html" );
@@ -3601,6 +3604,7 @@ void GDALRegister_MrSID()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "JP2MrSID" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                         "MrSID JPEG2000" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_jp2mrsid.html" );

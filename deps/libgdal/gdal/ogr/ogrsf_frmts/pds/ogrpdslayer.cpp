@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpdslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrpdslayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  PDS Translator
  * Purpose:  Implements OGRPDSLayer class.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrpdslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrpdslayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                           OGRPDSLayer()                              */
@@ -56,6 +56,7 @@ OGRPDSLayer::OGRPDSLayer(   CPLString osTableID,
     nLatitudeIndex = -1;
 
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone );
 
@@ -701,7 +702,7 @@ int OGRPDSLayer::TestCapability( const char * pszCap )
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRPDSLayer::GetFeatureCount(int bForce )
+GIntBig OGRPDSLayer::GetFeatureCount(int bForce )
 {
     if (TestCapability(OLCFastFeatureCount))
         return nRecords;
@@ -713,12 +714,12 @@ int OGRPDSLayer::GetFeatureCount(int bForce )
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRPDSLayer::GetFeature( long nFID )
+OGRFeature *OGRPDSLayer::GetFeature( GIntBig nFID )
 {
     if (nFID < 0 || nFID >= nRecords)
         return NULL;
 
-    nNextFID = nFID;
+    nNextFID = (int)nFID;
     VSIFSeekL( fpPDS, nStartBytes + nNextFID * nRecordSize, SEEK_SET );
     return GetNextRawFeature();
 }
@@ -727,7 +728,7 @@ OGRFeature *OGRPDSLayer::GetFeature( long nFID )
 /*                         SetNextByIndex()                             */
 /************************************************************************/
 
-OGRErr OGRPDSLayer::SetNextByIndex( long nIndex )
+OGRErr OGRPDSLayer::SetNextByIndex( GIntBig nIndex )
 {
     if (!TestCapability(OLCFastSetNextByIndex))
         return OGRLayer::SetNextByIndex( nIndex );
@@ -735,7 +736,7 @@ OGRErr OGRPDSLayer::SetNextByIndex( long nIndex )
     if (nIndex < 0 || nIndex >= nRecords)
         return OGRERR_FAILURE;
 
-    nNextFID = nIndex;
+    nNextFID = (int)nIndex;
     VSIFSeekL( fpPDS, nStartBytes + nNextFID * nRecordSize, SEEK_SET );
     return OGRERR_NONE;
 }

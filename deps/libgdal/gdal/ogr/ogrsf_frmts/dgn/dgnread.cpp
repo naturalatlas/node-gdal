@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnread.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: dgnread.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  DGN Access Library element reading code.
@@ -29,7 +29,7 @@
 
 #include "dgnlibp.h"
 
-CPL_CVSID("$Id: dgnread.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: dgnread.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 static DGNElemCore *DGNParseTCB( DGNInfo * );
 static DGNElemCore *DGNParseColorTable( DGNInfo * );
@@ -1850,4 +1850,3 @@ void DGNBuildIndex( DGNInfo *psDGN )
 
     psDGN->max_element_count = nMaxElements;
 }
-

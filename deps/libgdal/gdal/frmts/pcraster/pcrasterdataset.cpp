@@ -1,12 +1,12 @@
 /******************************************************************************
- * $Id: pcrasterdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: pcrasterdataset.cpp 29187 2015-05-13 14:20:13Z kdejong $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster CSF 2.0 raster file driver
- * Author:   Kor de Jong, k.dejong at geog.uu.nl
+ * Author:   Kor de Jong, Oliver Schmitz
  *
  ******************************************************************************
- * Copyright (c) 2004, Kor de Jong
+ * Copyright (c) PCRaster owners
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,20 +27,22 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "gdal_pam.h"
-#include "cpl_string.h"
-
-CPL_CVSID("$Id: pcrasterdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
-
-#ifndef INCLUDED_PCRASTERDATASET
-#include "pcrasterdataset.h"
-#define INCLUDED_PCRASTERDATASET
-#endif
-
 #ifndef INCLUDED_IOSTREAM
 #include <iostream>
 #define INCLUDED_IOSTREAM
 #endif
+
+#ifndef INCLUDED_GDAL_PAM
+#include "gdal_pam.h"
+#define INCLUDED_GDAL_PAM
+#endif
+
+#ifndef INCLUDED_CPL_STRING
+#include "cpl_string.h"
+#define INCLUDED_CPL_STRING
+#endif
+
+CPL_CVSID("$Id: pcrasterdataset.cpp 29187 2015-05-13 14:20:13Z kdejong $");
 
 // PCRaster library headers.
 
@@ -48,6 +50,11 @@ CPL_CVSID("$Id: pcrasterdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
 #ifndef INCLUDED_PCRASTERRASTERBAND
 #include "pcrasterrasterband.h"
 #define INCLUDED_PCRASTERRASTERBAND
+#endif
+
+#ifndef INCLUDED_PCRASTERDATASET
+#include "pcrasterdataset.h"
+#define INCLUDED_PCRASTERDATASET
 #endif
 
 #ifndef INCLUDED_PCRASTERUTIL
@@ -80,7 +87,7 @@ GDALDataset* PCRasterDataset::open(
 {
   PCRasterDataset* dataset = 0;
 
-  if(info->fp && info->nHeaderBytes >= static_cast<int>(CSF_SIZE_SIG) &&
+  if(info->fpL && info->nHeaderBytes >= static_cast<int>(CSF_SIZE_SIG) &&
          strncmp((char*)info->pabyHeader, CSF_SIG, CSF_SIZE_SIG) == 0) {
     MOPEN_PERM mode = info->eAccess == GA_Update
          ? M_READ_WRITE
@@ -123,12 +130,12 @@ GDALDataset* PCRasterDataset::open(
   cell representations.
 */
 GDALDataset* PCRasterDataset::createCopy(
-         char const* filename,
-         GDALDataset* source,
-         CPL_UNUSED int strict,
-         CPL_UNUSED char** options,
-         GDALProgressFunc progress,
-         void* progressData)
+    char const* filename,
+    GDALDataset* source,
+    CPL_UNUSED int strict,
+    CPL_UNUSED char** options,
+    GDALProgressFunc progress,
+    void* progressData)
 {
   // Checks.
   int nrBands = source->GetRasterCount();
@@ -244,7 +251,7 @@ GDALDataset* PCRasterDataset::createCopy(
 
     // Get row from source.
     if(raster->RasterIO(GF_Read, 0, row, nrCols, 1, buffer, nrCols, 1,
-         raster->GetRasterDataType(), 0, 0) != CE_None) {
+         raster->GetRasterDataType(), 0, 0, NULL) != CE_None) {
       CPLError(CE_Failure, CPLE_FileIO,
          "PCRaster driver: Error reading from source raster");
       errorCode = CE_Failure;
@@ -285,14 +292,14 @@ GDALDataset* PCRasterDataset::createCopy(
       return NULL;
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.        */
 /* -------------------------------------------------------------------- */
-  GDALPamDataset *poDS = (GDALPamDataset *) 
+  GDALPamDataset *poDS = (GDALPamDataset *)
         GDALOpen( filename, GA_Update );
 
   if( poDS )
       poDS->CloneInfo( source, GCIF_PAM_DEFAULT );
-  
+
   return poDS;
 }
 
@@ -323,7 +330,8 @@ PCRasterDataset::PCRasterDataset(
   CPLAssert(d_cellRepresentation != CR_UNDEFINED);
   d_valueScale = RgetValueScale(d_map);
   CPLAssert(d_valueScale != VS_UNDEFINED);
-  d_missingValue = ::missingValue(d_cellRepresentation);
+  d_defaultNoDataValue = ::missingValue(d_cellRepresentation);
+  d_location_changed = false;
 
   // Create band information objects.
   nBands = 1;
@@ -413,11 +421,141 @@ CSF_VS PCRasterDataset::valueScale() const
 /*!
   \return    Missing value
 */
-double PCRasterDataset::missingValue() const
+double PCRasterDataset::defaultNoDataValue() const
 {
-  return d_missingValue;
+  return d_defaultNoDataValue;
 }
 
+
+GDALDataset* PCRasterDataset::create(
+     const char* filename,
+     int nr_cols,
+     int nr_rows,
+     int nrBands,
+     GDALDataType gdalType,
+     char** papszParmList)
+{
+  // Checks
+  if(nrBands != 1){
+    CPLError(CE_Failure, CPLE_NotSupported,
+         "PCRaster driver : "
+         "attempt to create dataset with too many bands (%d); "
+         "must be 1 band.\n", nrBands);
+    return NULL;
+  }
+
+  int row_col_max = INT4_MAX - 1;
+  if(nr_cols > row_col_max){
+    CPLError(CE_Failure, CPLE_NotSupported,
+         "PCRaster driver : "
+         "attempt to create dataset with too many columns (%d); "
+         "must be smaller than %d.", nr_cols, row_col_max);
+    return NULL;
+  }
+
+  if(nr_rows > row_col_max){
+    CPLError(CE_Failure, CPLE_NotSupported,
+         "PCRaster driver : "
+         "attempt to create dataset with too many rows (%d); "
+         "must be smaller than %d.", nr_rows, row_col_max);
+    return NULL;
+  }
+
+  if(gdalType != GDT_Byte &&
+     gdalType != GDT_Int32 &&
+     gdalType != GDT_Float32){
+     CPLError( CE_Failure, CPLE_AppDefined,
+       "PCRaster driver: "
+       "attempt to create dataset with an illegal data type (%s); "
+       "use either Byte, Int32 or Float32.",
+       GDALGetDataTypeName(gdalType));
+    return NULL;
+  }
+
+  // value scale must be specified by the user,
+  // determines cell representation
+  const char *valueScale = CSLFetchNameValue(
+    papszParmList,"PCRASTER_VALUESCALE");
+
+  if(valueScale == NULL){
+    CPLError(CE_Failure, CPLE_AppDefined,
+         "PCRaster driver: value scale can not be determined; "
+         "specify PCRASTER_VALUESCALE.");
+    return NULL;
+  }
+
+
+  CSF_VS csf_value_scale = string2ValueScale(valueScale);
+
+  if(csf_value_scale == VS_UNDEFINED){
+    CPLError( CE_Failure, CPLE_AppDefined,
+         "PCRaster driver: value scale can not be determined (%s); "
+         "use either VS_BOOLEAN, VS_NOMINAL, VS_ORDINAL, VS_SCALAR, "
+         "VS_DIRECTION, VS_LDD",
+          valueScale);
+    return NULL;
+  }
+
+  CSF_CR csf_cell_representation = GDALType2CellRepresentation(gdalType, false);
+
+  // default values
+  REAL8 west = 0.0;
+  REAL8 north = 0.0;
+  REAL8 length = 1.0;
+  REAL8 angle = 0.0;
+  CSF_PT projection = PT_YDECT2B;
+
+  // Create a new raster
+  MAP* map = Rcreate(filename, nr_rows, nr_cols, csf_cell_representation,
+         csf_value_scale, projection, west, north, angle, length);
+
+  if(!map){
+    CPLError(CE_Failure, CPLE_OpenFailed,
+         "PCRaster driver: Unable to create raster %s", filename);
+    return NULL;
+  }
+
+  Mclose(map);
+  map = NULL;
+
+/* -------------------------------------------------------------------- */
+/*      Re-open dataset, and copy any auxiliary pam information.        */
+/* -------------------------------------------------------------------- */
+  GDALPamDataset *poDS = (GDALPamDataset *)
+        GDALOpen(filename, GA_Update);
+
+  return poDS;
+}
+
+
+CPLErr PCRasterDataset::SetGeoTransform(double* transform)
+{
+  if((transform[2] != 0.0) || (transform[4] != 0.0)) {
+    CPLError(CE_Failure, CPLE_NotSupported,
+             "PCRaster driver: "
+             "rotated geotransformations are not supported.");
+    return CE_Failure;
+  }
+
+  if(transform[1] != transform[5] * -1.0 ) {
+    CPLError(CE_Failure, CPLE_NotSupported,
+             "PCRaster driver: "
+             "only the same width and height for cells is supported." );
+    return CE_Failure;
+  }
+
+  d_west = transform[0];
+  d_north = transform[3];
+  d_cellSize = transform[1];
+  d_location_changed = true;
+
+  return CE_None;
+}
+
+
+bool PCRasterDataset::location_changed() const {
+  return d_location_changed;
+}
 
 
 //------------------------------------------------------------------------------
@@ -429,6 +567,3 @@ double PCRasterDataset::missingValue() const
 //------------------------------------------------------------------------------
 // DEFINITION OF FREE FUNCTIONS
 //------------------------------------------------------------------------------
-
-
-

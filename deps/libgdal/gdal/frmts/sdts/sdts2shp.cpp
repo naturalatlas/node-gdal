@@ -1,5 +1,5 @@
 /* ****************************************************************************
- * $Id: sdts2shp.cpp 19952 2010-07-02 05:44:18Z warmerdam $
+ * $Id: sdts2shp.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  SDTS Translator
  * Purpose:  Mainline for converting to ArcView Shapefiles.
@@ -31,7 +31,7 @@
 #include "shapefil.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: sdts2shp.cpp 19952 2010-07-02 05:44:18Z warmerdam $");
+CPL_CVSID("$Id: sdts2shp.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 static int  bVerbose = FALSE;
 
@@ -111,7 +111,7 @@ int main( int nArgc, char ** papszArgv )
 /* -------------------------------------------------------------------- */
 /*      Massage shapefile name to have no extension.                    */
 /* -------------------------------------------------------------------- */
-    pszShapefile = strdup( pszShapefile );
+    pszShapefile = CPLStrdup(pszShapefile);
     for( i = strlen(pszShapefile)-1; i >= 0; i-- )
     {
         if( pszShapefile[i] == '.' )

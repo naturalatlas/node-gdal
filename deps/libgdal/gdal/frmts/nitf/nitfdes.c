@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdes.c 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: nitfdes.c 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module responsible for implementation of DE segments.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: nitfdes.c 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: nitfdes.c 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                          NITFDESAccess()                             */
@@ -350,7 +350,7 @@ retry:
                             memcpy(&dfVal, pachDataIter, 8);
                             CPL_MSBPTR64(&dfVal);
                             pachDataIter += 8;
-                            sprintf(szAttrNameValue, "NITF_ATT_Q%d_%d=%.16g", j+1, i, dfVal);
+                            CPLsprintf(szAttrNameValue, "NITF_ATT_Q%d_%d=%.16g", j+1, i, dfVal);
                             papszMD[nMDSize + i * 4 + j] = CPLStrdup(szAttrNameValue);
                         }
                     }
@@ -429,7 +429,7 @@ int   NITFDESGetTRE( NITFDES* psDES,
     psSegInfo = psDES->psFile->pasSegmentInfo + psDES->iSegment;
     fp = psDES->psFile->fp;
 
-    if ((GUIntBig)nOffset >= psSegInfo->nSegmentSize)
+    if ((size_t)nOffset >= psSegInfo->nSegmentSize)
         return FALSE;
 
     VSIFSeekL(fp, psSegInfo->nSegmentStart + nOffset, SEEK_SET);
@@ -460,7 +460,7 @@ int   NITFDESGetTRE( NITFDES* psDES,
                  nTRESize, szTRETempName);
         return FALSE;
     }
-    if ((GUIntBig)(nOffset + 11 + nTRESize) > psSegInfo->nSegmentSize)
+    if ((size_t)(nOffset + 11 + nTRESize) > psSegInfo->nSegmentSize)
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Cannot read %s TRE. Not enough bytes : remaining %d, expected %d",

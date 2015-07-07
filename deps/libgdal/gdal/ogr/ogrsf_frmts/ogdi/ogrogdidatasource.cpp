@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrogdidatasource.cpp 19711 2010-05-14 21:26:42Z rouault $
+ * $Id: ogrogdidatasource.cpp 27794 2014-10-04 10:13:46Z rouault $
  *
  * Project:  OGDI Bridge
  * Purpose:  Implements OGROGDIDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrogdidatasource.cpp 19711 2010-05-14 21:26:42Z rouault $");
+CPL_CVSID("$Id: ogrogdidatasource.cpp 27794 2014-10-04 10:13:46Z rouault $");
 
 /************************************************************************/
 /*                         OGROGDIDataSource()                          */
@@ -267,7 +267,7 @@ void OGROGDIDataSource::IAddLayer( const char *pszLayerName,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGROGDIDataSource::TestCapability( const char * pszCap )
+int OGROGDIDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 
 {
     return FALSE;

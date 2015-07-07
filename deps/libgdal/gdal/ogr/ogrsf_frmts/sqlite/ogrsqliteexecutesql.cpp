@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteexecutesql.cpp 27730 2014-09-24 00:59:45Z goatbar $
+ * $Id: ogrsqliteexecutesql.cpp 28612 2015-03-04 15:22:08Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Run SQL requests with SQLite SQL engine
@@ -467,7 +467,6 @@ static void OGR2SQLITEGetPotentialLayerNames(const char *pszSQLCommand,
 /*               OGR2SQLITE_IgnoreAllFieldsExceptGeometry()             */
 /************************************************************************/
 
-#if defined(HAVE_SPATIALITE)
 static
 void OGR2SQLITE_IgnoreAllFieldsExceptGeometry(OGRLayer* poLayer)
 {
@@ -482,7 +481,6 @@ void OGR2SQLITE_IgnoreAllFieldsExceptGeometry(OGRLayer* poLayer)
     poLayer->SetIgnoredFields((const char**)papszIgnored);
     CSLDestroy(papszIgnored);
 }
-#endif  // HAVE_SPATIALITE
 
 
 /************************************************************************/
@@ -496,13 +494,7 @@ int OGR2SQLITEDealWithSpatialColumn(OGRLayer* poLayer,
                                     OGRSQLiteDataSource* poSQLiteDS,
                                     sqlite3* hDB,
                                     int bSpatialiteDB,
-#ifndef HAVE_SPATIALITE
-CPL_UNUSED
-#endif
                                     const std::set<LayerDesc>& oSetLayers,
-#ifndef HAVE_SPATIALITE
-CPL_UNUSED
-#endif
                                     const std::set<CPLString>& oSetSpatialIndex
                                    )
 {
@@ -536,9 +528,7 @@ CPL_UNUSED
         nSRSId = poSQLiteDS->FetchSRSId(poSRS);
 
     CPLString osSQL;
-#ifdef HAVE_SPATIALITE
     int bCreateSpatialIndex = FALSE;
-#endif
     if( !bSpatialiteDB )
     {
         osSQL.Printf("INSERT INTO geometry_columns (f_table_name, "
@@ -548,7 +538,7 @@ CPL_UNUSED
                     pszLayerNameEscaped,
                     pszGeomColEscaped,
                         (int) wkbFlatten(poLayer->GetGeomType()),
-                    ( poLayer->GetGeomType() & wkb25DBit ) ? 3 : 2,
+                    wkbHasZ( poLayer->GetGeomType() ) ? 3 : 2,
                     nSRSId);
     }
 #ifdef HAVE_SPATIALITE
@@ -590,7 +580,7 @@ CPL_UNUSED
         {
             int nGeomType = poLayer->GetGeomType();
             int nCoordDimension = 2;
-            if( nGeomType & wkb25DBit )
+            if( wkbHasZ((OGRwkbGeometryType)nGeomType) )
             {
                 nGeomType += 1000;
                 nCoordDimension = 3;
@@ -617,7 +607,7 @@ CPL_UNUSED
                         "VALUES ('%s','%s','%s','%s',%d, %d)",
                         pszLayerNameEscaped,
                         pszGeomColEscaped, pszGeometryType,
-                        ( poLayer->GetGeomType() & wkb25DBit ) ? "XYZ" : "XY",
+                        wkbHasZ( poLayer->GetGeomType() ) ? "XYZ" : "XY",
                         nSRSId, bCreateSpatialIndex );
         }
     }
@@ -716,7 +706,7 @@ CPL_UNUSED
 /*                          OGRSQLiteExecuteSQL()                       */
 /************************************************************************/
 
-OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
+OGRLayer * OGRSQLiteExecuteSQL( GDALDataset* poDS,
                                 const char *pszStatement,
                                 OGRGeometry *poSpatialFilter,
                                 CPL_UNUSED const char *pszDialect )
@@ -751,7 +741,7 @@ OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
     static vsi_l_offset nEmptyDBSize = 0;
     static GByte* pabyEmptyDB = NULL;
     {
-        static void* hMutex = NULL;
+        static CPLMutex* hMutex = NULL;
         CPLMutexHolder oMutexHolder(&hMutex);
         static int bTried = FALSE;
         if( !bTried &&
@@ -774,7 +764,7 @@ OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
         }
     }
 
-    /* The following configuration option is usefull mostly for debugging/testing */
+    /* The following configuration option is useful mostly for debugging/testing */
     if( pabyEmptyDB != NULL && CSLTestBoolean(CPLGetConfigOption("OGR_SQLITE_DIALECT_USE_SPATIALITE", "YES")) )
     {
         GByte* pabyEmptyDBClone = (GByte*)VSIMalloc(nEmptyDBSize);
@@ -788,7 +778,7 @@ OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
 
         poSQLiteDS = new OGRSQLiteDataSource();
         CPLSetThreadLocalConfigOption("OGR_SQLITE_STATIC_VIRTUAL_OGR", "NO");
-        nRet = poSQLiteDS->Open( pszTmpDBName, TRUE );
+        nRet = poSQLiteDS->Open( pszTmpDBName, TRUE, NULL );
         CPLSetThreadLocalConfigOption("OGR_SQLITE_STATIC_VIRTUAL_OGR", pszOldVal);
         if( !nRet )
         {
@@ -1062,7 +1052,7 @@ std::set<LayerDesc> OGRSQLiteGetReferencedLayers(const char* pszStatement)
 OGRLayer * OGRSQLiteExecuteSQL( OGRDataSource* poDS,
                                 const char *pszStatement,
                                 OGRGeometry *poSpatialFilter,
-                                CPL_UNUSED const char *pszDialect )
+                                const char *pszDialect )
 {
     CPLError(CE_Failure, CPLE_NotSupported,
                 "The SQLite version is to old to support the SQLite SQL dialect");

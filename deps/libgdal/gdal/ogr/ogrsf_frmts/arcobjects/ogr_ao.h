@@ -70,13 +70,13 @@ public:
 
   virtual void        ResetReading();
   virtual OGRFeature* GetNextFeature();
-  virtual OGRFeature* GetFeature( long nFeatureId );
+  virtual OGRFeature* GetFeature( GIntBig nFeatureId );
 
   HRESULT GetTable(ITable** ppTable);
 
 
   virtual OGRErr      GetExtent( OGREnvelope *psExtent, int bForce );
-  virtual int         GetFeatureCount( int bForce );
+  virtual GIntBig     GetFeatureCount( int bForce );
   virtual OGRErr      SetAttributeFilter( const char *pszQuery );
   virtual void 	      SetSpatialFilterRect (double dfMinX, double dfMinY, double dfMaxX, double dfMaxY);
   virtual void        SetSpatialFilter( OGRGeometry * );
@@ -85,9 +85,9 @@ public:
   virtual OGRErr      CreateField( OGRFieldDefn *poFieldIn,
   int bApproxOK );
 
-  virtual OGRErr      SetFeature( OGRFeature *poFeature );
-  virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-  virtual OGRErr      DeleteFeature( long nFID );
+  virtual OGRErr      ISetFeature( OGRFeature *poFeature );
+  virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
+  virtual OGRErr      DeleteFeature( GIntBig nFID );
 */
    OGRFeatureDefn *    GetLayerDefn() { return m_pFeatureDefn; }
 
@@ -115,7 +115,7 @@ protected:
     //buffers are used for avoiding constant reallocation of temp memory
     unsigned char* m_pBuffer;
     long  m_bufferSize; //in bytes
-    bool  m_supressColumnMappingError;
+    bool  m_suppressColumnMappingError;
     bool  m_forceMulti;
 };
 
@@ -139,7 +139,7 @@ public:
 
   
   /*
-  virtual OGRLayer* CreateLayer( const char *,
+  virtual OGRLayer* ICreateLayer( const char *,
                                  OGRSpatialReference* = NULL,
                                  OGRwkbGeometryType = wkbUnknown,
                                  char** = NULL );

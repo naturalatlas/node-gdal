@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeodatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrpgeodatasource.cpp 28368 2015-01-27 14:25:17Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoDataSource class.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogrpgeodatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrpgeodatasource.cpp 28368 2015-01-27 14:25:17Z rouault $");
 
 /************************************************************************/
 /*                         OGRPGeoDataSource()                          */
@@ -110,12 +110,19 @@ int OGRPGeoDataSource::Open( const char * pszNewName, int bUpdate,
 /*                                                                      */
 /* -------------------------------------------------------------------- */
     char *pszDSN;
+    const char* pszOptionName = "";
+    const char* pszDSNStringTemplate = NULL;
     if( EQUALN(pszNewName,"PGEO:",5) )
         pszDSN = CPLStrdup( pszNewName + 5 );
     else
     {
-        const char *pszDSNStringTemplate = NULL;
-        pszDSNStringTemplate = CPLGetConfigOption( "PGEO_DRIVER_TEMPLATE", "DRIVER=Microsoft Access Driver (*.mdb);DBQ=%s");
+        pszOptionName = "PGEO_DRIVER_TEMPLATE";
+        pszDSNStringTemplate = CPLGetConfigOption( pszOptionName, NULL );
+        if( pszDSNStringTemplate == NULL )
+        {
+            pszOptionName = "";
+            pszDSNStringTemplate = "DRIVER=Microsoft Access Driver (*.mdb);DBQ=%s";
+        }
         if (!CheckDSNStringTemplate(pszDSNStringTemplate))
         {
             CPLError( CE_Failure, CPLE_AppDefined,
@@ -133,11 +140,28 @@ int OGRPGeoDataSource::Open( const char * pszNewName, int bUpdate,
 
     if( !oSession.EstablishSession( pszDSN, NULL, NULL ) )
     {
-        CPLError( CE_Failure, CPLE_AppDefined, 
-                  "Unable to initialize ODBC connection to DSN for %s,\n"
-                  "%s", pszDSN, oSession.GetLastError() );
-        CPLFree( pszDSN );
-        return FALSE;
+        int bError = TRUE;
+        if( !EQUALN(pszNewName,"PGEO:",5) )
+        {
+            // Trying with another template (#5594)
+            pszDSNStringTemplate = "DRIVER=Microsoft Access Driver (*.mdb, *.accdb);DBQ=%s";
+            CPLFree( pszDSN );
+            pszDSN = (char *) CPLMalloc(strlen(pszNewName)+strlen(pszDSNStringTemplate)+100);
+            sprintf( pszDSN, pszDSNStringTemplate,  pszNewName );
+            CPLDebug( "PGeo", "EstablishSession(%s)", pszDSN );
+            if( oSession.EstablishSession( pszDSN, NULL, NULL ) )
+            {
+                bError = FALSE;
+            }
+        }
+        if( bError )
+        {
+            CPLError( CE_Failure, CPLE_AppDefined, 
+                    "Unable to initialize ODBC connection to DSN for %s,\n"
+                    "%s", pszDSN, oSession.GetLastError() );
+            CPLFree( pszDSN );
+            return FALSE;
+        }
     }
 
     CPLFree( pszDSN );
@@ -192,10 +216,10 @@ int OGRPGeoDataSource::Open( const char * pszNewName, int bUpdate,
         if( poLayer->Initialize( papszRecord[0],         // TableName
                                  papszRecord[1],         // FieldName
                                  atoi(papszRecord[2]),   // ShapeType
-                                 atof(papszRecord[3]),   // ExtentLeft
-                                 atof(papszRecord[4]),   // ExtentRight
-                                 atof(papszRecord[5]),   // ExtentBottom
-                                 atof(papszRecord[6]),   // ExtentTop
+                                 CPLAtof(papszRecord[3]),   // ExtentLeft
+                                 CPLAtof(papszRecord[4]),   // ExtentRight
+                                 CPLAtof(papszRecord[5]),   // ExtentBottom
+                                 CPLAtof(papszRecord[6]),   // ExtentTop
                                  atoi(papszRecord[7]),   // SRID
                                  atoi(papszRecord[8]))  // HasZ
             != CE_None )

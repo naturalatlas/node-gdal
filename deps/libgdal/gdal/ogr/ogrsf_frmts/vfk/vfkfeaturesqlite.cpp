@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkfeaturesqlite.cpp 26343 2013-08-20 14:51:07Z martinl $
+ * $Id: vfkfeaturesqlite.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  VFK Reader - Feature definition (SQLite)
  * Purpose:  Implements VFKFeatureSQLite class.
@@ -45,7 +45,7 @@
 VFKFeatureSQLite::VFKFeatureSQLite(IVFKDataBlock *poDataBlock) : IVFKFeature(poDataBlock)
 {
     m_hStmt  = NULL;
-    m_iRowId = m_poDataBlock->GetFeatureCount() + 1; /* starts at 1 */
+    m_iRowId = (int)m_poDataBlock->GetFeatureCount() + 1; /* starts at 1 */
 
     /* set FID from DB */
     SetFIDFromDB(); /* -> m_nFID */
@@ -58,7 +58,7 @@ VFKFeatureSQLite::VFKFeatureSQLite(IVFKDataBlock *poDataBlock) : IVFKFeature(poD
   \param iRowId feature DB rowid (starts at 1)
   \param nFID feature id
 */
-VFKFeatureSQLite::VFKFeatureSQLite(IVFKDataBlock *poDataBlock, int iRowId, long nFID) : IVFKFeature(poDataBlock)
+VFKFeatureSQLite::VFKFeatureSQLite(IVFKDataBlock *poDataBlock, int iRowId, GIntBig nFID) : IVFKFeature(poDataBlock)
 {
     m_hStmt  = NULL;
     m_iRowId = iRowId;
@@ -82,6 +82,16 @@ OGRErr VFKFeatureSQLite::SetFIDFromDB()
     FinalizeSQL();
     
     return OGRERR_NONE;
+}
+
+/*!
+  \brief Set DB row id
+
+  \param iRowId row id to be set
+*/
+void VFKFeatureSQLite::SetRowId(int iRowId)
+{
+    m_iRowId = iRowId;
 }
 
 /*!
@@ -146,7 +156,7 @@ VFKFeatureSQLite::VFKFeatureSQLite(const VFKFeature *poVFKFeature) : IVFKFeature
 {
     m_nFID   = poVFKFeature->m_nFID;
     m_hStmt  = NULL;
-    m_iRowId = m_poDataBlock->GetFeatureCount() + 1; /* starts at 1 */
+    m_iRowId = (int)m_poDataBlock->GetFeatureCount() + 1; /* starts at 1 */
 }
 
 /*!

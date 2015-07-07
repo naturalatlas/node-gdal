@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_gml.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_gml.h 29214 2015-05-20 13:47:29Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Declarations for OGR wrapper classes for GML, and GML<->OGR
@@ -52,7 +52,7 @@ class OGRGMLLayer : public OGRLayer
 {
     OGRFeatureDefn     *poFeatureDefn;
 
-    int                 iNextGMLId;
+    GIntBig             iNextGMLId;
     int                 nTotalGMLCount;
     int                 bInvalidFIDFound;
     char                *pszFIDPrefix;
@@ -70,8 +70,6 @@ class OGRGMLLayer : public OGRLayer
 
     int                 bFaceHoleNegative;
 
-    OGRGeometry        *ConvertGeomToMultiIfNecessary(OGRGeometry* poGeom);
-
   public:
                         OGRGMLLayer( const char * pszName, 
                                      int bWriter,
@@ -82,10 +80,10 @@ class OGRGMLLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-    int                 GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE );
     OGRErr              GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
@@ -152,22 +150,29 @@ class OGRGMLDataSource : public OGRDataSource
     ReadMode            eReadMode;
     GMLFeature         *poStoredGMLFeature;
     OGRGMLLayer        *poLastReadLayer;
+    
+    int                 bEmptyAsNull;
 
-    void                FindAndParseBoundedBy(VSILFILE* fp);
+    void                FindAndParseTopElements(VSILFILE* fp);
     void                SetExtents(double dfMinX, double dfMinY, double dfMaxX, double dfMaxY);
+    
+    void                BuildJointClassFromXSD();
+    void                BuildJointClassFromScannedSchema();
+    
+    void                WriteTopElements();
 
   public:
                         OGRGMLDataSource();
                         ~OGRGMLDataSource();
 
-    int                 Open( const char * );
+    int                 Open( GDALOpenInfo* poOpenInfo );
     int                 Create( const char *pszFile, char **papszOptions );
 
     const char          *GetName() { return pszName; }
     int                 GetLayerCount() { return nLayers; }
     OGRLayer            *GetLayer( int );
 
-    virtual OGRLayer    *CreateLayer( const char *, 
+    virtual OGRLayer    *ICreateLayer( const char *, 
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );
@@ -204,29 +209,14 @@ class OGRGMLDataSource : public OGRDataSource
     const char         *GetAppPrefix();
     int                 RemoveAppPrefix();
     int                 WriteFeatureBoundedBy();
+    const char         *GetSRSDimensionLoc();
 
     virtual OGRLayer *          ExecuteSQL( const char *pszSQLCommand,
                                             OGRGeometry *poSpatialFilter,
                                             const char *pszDialect );
     virtual void                ReleaseResultSet( OGRLayer * poResultsSet );
-};
-
-/************************************************************************/
-/*                             OGRGMLDriver                             */
-/************************************************************************/
-
-class OGRGMLDriver : public OGRSFDriver
-{
-  public:
-                ~OGRGMLDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
     
-    int                 TestCapability( const char * );
+    static int          CheckHeader(const char* pszStr);
 };
 
 #endif /* _OGR_GML_H_INCLUDED */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_erm.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_srs_erm.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implement ERMapper projection conversions.
@@ -31,7 +31,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogr_srs_erm.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_srs_erm.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                         OSRImportFromERM()                           */
@@ -111,7 +111,7 @@ OGRErr OGRSpatialReference::importFromERM( const char *pszProj,
             return eErr;
 
         if( EQUAL(pszUnits,"FEET") )
-            SetLinearUnits( SRS_UL_US_FOOT, atof(SRS_UL_US_FOOT_CONV));
+            SetLinearUnits( SRS_UL_US_FOOT, CPLAtof(SRS_UL_US_FOOT_CONV));
         else
             SetLinearUnits( SRS_UL_METER, 1.0 );
     }
@@ -203,7 +203,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
     }
 
 /* -------------------------------------------------------------------- */
-/*      Is our GEOGCS name already defined in ecw_cs.dat?               */
+/*      Is our GEOGCS name already defined in ecw_cs.wkt?               */
 /* -------------------------------------------------------------------- */
     OGRSpatialReference oSRSWork;
     const char *pszWKTDatum = GetAttrValue( "DATUM" );
@@ -302,7 +302,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
     }
 
 /* -------------------------------------------------------------------- */
-/*      Is our PROJCS name already defined in ecw_cs.dat?               */
+/*      Is our PROJCS name already defined in ecw_cs.wkt?               */
 /* -------------------------------------------------------------------- */
     else
     {

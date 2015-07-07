@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogdidataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogdidataset.cpp 28216 2014-12-25 18:02:53Z goatbar $
  *
  * Name:     ogdidataset.cpp
  * Project:  OGDI Bridge
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ogdidataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogdidataset.cpp 28216 2014-12-25 18:02:53Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_OGDI(void);
@@ -69,19 +69,17 @@ class CPL_DLL OGDIDataset : public GDALDataset
     char	**papszSubDatasets;
 
   public:
-    		OGDIDataset();
-    		~OGDIDataset();
-                
+    OGDIDataset();
+    ~OGDIDataset();
+
     static GDALDataset *Open( GDALOpenInfo * );
 
-    int		GetClientID() { return nClientID; }
+    int GetClientID() { return nClientID; }
 
     virtual const char *GetProjectionRef(void);
     virtual CPLErr GetGeoTransform( double * );
 
-    virtual void *GetInternalHandle( const char * );
-
-    virtual char      **GetMetadataDomainList();
+    virtual char **GetMetadataDomainList();
     virtual char **GetMetadata( const char * pszDomain = "" );
 };
 
@@ -106,7 +104,9 @@ class OGDIRasterBand : public GDALRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace,
+                              GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     CPLErr         EstablishAccess( int nXOff, int nYOff, 
                                     int nXSize, int nYSize,
@@ -232,27 +232,31 @@ OGDIRasterBand::~OGDIRasterBand()
 CPLErr OGDIRasterBand::IReadBlock( int, int nBlockYOff, void * pImage )
 
 {
+    GDALRasterIOExtraArg sExtraArg;
+    INIT_RASTERIO_EXTRA_ARG(sExtraArg);
+
     return IRasterIO( GF_Read, 0, nBlockYOff, nBlockXSize, 1, 
                       pImage, nBlockXSize, 1, eDataType, 
-                      GDALGetDataTypeSize(eDataType)/8, 0 );
+                      GDALGetDataTypeSize(eDataType)/8, 0, &sExtraArg );
 }
 
 /************************************************************************/
 /*                             IRasterIO()                              */
 /************************************************************************/
 
-CPLErr OGDIRasterBand::IRasterIO( GDALRWFlag eRWFlag,
+CPLErr OGDIRasterBand::IRasterIO( CPL_UNUSED GDALRWFlag eRWFlag,
                                   int nXOff, int nYOff, int nXSize, int nYSize,
                                   void * pData, int nBufXSize, int nBufYSize,
                                   GDALDataType eBufType,
-                                  int nPixelSpace, int nLineSpace )
-
+                                  GSpacing nPixelSpace,
+                                  GSpacing nLineSpace,
+                                  CPL_UNUSED GDALRasterIOExtraArg* psExtraArg )
 {
     OGDIDataset	*poODS = (OGDIDataset *) poDS;
     CPLErr    eErr;
 #ifdef notdef
-    CPLDebug( "OGDIRasterBand", 
-              "RasterIO(%d,%d,%d,%d -> %dx%d)", 
+    CPLDebug( "OGDIRasterBand",
+              "RasterIO(%d,%d,%d,%d -> %dx%d)",
               nXOff, nYOff, nXSize, nYSize, nBufXSize, nBufYSize );
 #endif
 
@@ -495,7 +499,8 @@ GDALColorTable *OGDIRasterBand::GetColorTable()
 CPLErr OGDIRasterBand::AdviseRead( int nXOff, int nYOff, 
                                    int nXSize, int nYSize,
                                    int nBufXSize, int nBufYSize, 
-                                   GDALDataType eDT, char **papszOptions )
+                                   CPL_UNUSED GDALDataType eDT,
+                                   CPL_UNUSED char **papszOptions )
 
 {
     return EstablishAccess( nXOff, nYOff, nXSize, nYSize, 
@@ -685,7 +690,7 @@ GDALDataset *OGDIDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     psResult = cln_GetVersion(nClientID);
     
-    if( (ECSERROR(psResult) || atof(ECSTEXT(psResult)) >= 3.1)
+    if( (ECSERROR(psResult) || CPLAtof(ECSTEXT(psResult)) >= 3.1)
         && CSLCount(papszMatrices) == 0 
         && CSLCount(papszImages) == 0 )
     {
@@ -946,19 +951,6 @@ CPLErr OGDIDataset::GetGeoTransform( double * padfTransform )
 }
 
 /************************************************************************/
-/*                         GetInternalHandle()                          */
-/************************************************************************/
-
-void *OGDIDataset::GetInternalHandle( const char * pszRequest )
-
-{
-    if( EQUAL(pszRequest,"ClientID") )
-        return (void *) nClientID;
-    else
-        return NULL;
-}
-
-/************************************************************************/
 /*                          GDALRegister_OGDI()                        */
 /************************************************************************/
 
@@ -975,6 +967,7 @@ void GDALRegister_OGDI()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "OGDI" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "OGDI Bridge" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -986,4 +979,3 @@ void GDALRegister_OGDI()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

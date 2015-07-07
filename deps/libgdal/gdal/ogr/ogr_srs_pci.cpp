@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_pci.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogr_srs_pci.cpp 28565 2015-02-27 10:26:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference translation to/from PCI georeferencing
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogr_srs_pci.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogr_srs_pci.cpp 28565 2015-02-27 10:26:21Z rouault $");
 
 typedef struct 
 {
@@ -270,7 +270,7 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
              || EQUALN( pszProj, "FOOT", 4 ) )
     {
         SetLocalCS( "FEET" );
-        SetLinearUnits( "FEET", atof(SRS_UL_FOOT_CONV) );
+        SetLinearUnits( "FEET", CPLAtof(SRS_UL_FOOT_CONV) );
     }
 
     else if( EQUALN( pszProj, "ACEA", 4 ) )
@@ -438,7 +438,7 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
 
         SetStatePlane( iZone, !bIsNAD27 );
         SetLinearUnitsAndUpdateParameters( SRS_UL_FOOT,
-                                           atof(SRS_UL_FOOT_CONV) );
+                                           CPLAtof(SRS_UL_FOOT_CONV) );
     }
 
     else if( EQUALN( pszProj, "SPAF", 4 ) )
@@ -449,7 +449,7 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
 
         SetStatePlane( iZone, !bIsNAD27 );
         SetLinearUnitsAndUpdateParameters( SRS_UL_US_FOOT,
-                                           atof(SRS_UL_US_FOOT_CONV) );
+                                           CPLAtof(SRS_UL_US_FOOT_CONV) );
     }
 
     else if( EQUALN( pszProj, "TM", 2 ) )
@@ -621,12 +621,7 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
                         {
                             dfSemiMajor = CPLAtof( papszLineItems[2] );
                             double dfSemiMinor = CPLAtof( papszLineItems[3] );
-
-                            if( ABS(dfSemiMajor - dfSemiMinor) < 0.01 )
-                                dfInvFlattening = 0.0;
-                            else
-                                dfInvFlattening = 
-                                    dfSemiMajor / (dfSemiMajor - dfSemiMinor);
+                            dfInvFlattening = OSRCalcInvFlattening(dfSemiMajor, dfSemiMinor);
                             break;
                         }
                         CSLDestroy( papszLineItems );
@@ -644,16 +639,8 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
                 && padfPrjParams[0] != 0.0 )
             {
                 dfSemiMajor = padfPrjParams[0];
-
-                if( ABS(padfPrjParams[0] - padfPrjParams[1]) < 0.01 )
-                {
-                    dfInvFlattening = 0.0;
-                }
-                else
-                {
-                    dfInvFlattening =
-                        padfPrjParams[0]/(padfPrjParams[0]-padfPrjParams[1]);
-                }
+                double dfSemiMinor = padfPrjParams[1];
+                dfInvFlattening = OSRCalcInvFlattening(dfSemiMajor, dfSemiMinor);
             }
 
 /* -------------------------------------------------------------------- */
@@ -732,7 +719,7 @@ OGRErr OGRSpatialReference::importFromPCI( const char *pszProj,
         if( EQUAL( pszUnits, "METRE" ) )
             SetLinearUnits( SRS_UL_METER, 1.0 );
         else if( EQUAL( pszUnits, "DEGREE" ) )
-            SetAngularUnits( SRS_UA_DEGREE, atof(SRS_UA_DEGREE_CONV) );
+            SetAngularUnits( SRS_UA_DEGREE, CPLAtof(SRS_UA_DEGREE_CONV) );
         else
             SetLinearUnits( SRS_UL_METER, 1.0 );
     }
@@ -821,9 +808,9 @@ OGRErr OGRSpatialReference::exportToPCI( char **ppszProj, char **ppszUnits,
     double dfFromGreenwich = 0.0;
 
     if( poPRIMEM != NULL && poPRIMEM->GetChildCount() >= 2
-        && atof(poPRIMEM->GetChild(1)->GetValue()) != 0.0 )
+        && CPLAtof(poPRIMEM->GetChild(1)->GetValue()) != 0.0 )
     {
-        dfFromGreenwich = atof(poPRIMEM->GetChild(1)->GetValue());
+        dfFromGreenwich = CPLAtof(poPRIMEM->GetChild(1)->GetValue());
     }
 #endif
 
@@ -1190,13 +1177,7 @@ OGRErr OGRSpatialReference::exportToPCI( char **ppszProj, char **ppszUnits,
         {
             const char *pszCSV = CSVFilename( "pci_ellips.txt" );
             FILE *fp = NULL;
-            double dfSemiMinor;
-
-            if( dfInvFlattening == 0.0 )
-                dfSemiMinor = dfSemiMajor;
-            else
-                dfSemiMinor = dfSemiMajor * (1.0 - 1.0/dfInvFlattening);
-
+            double dfSemiMinor = OSRCalcSemiMinorFromInvFlattening(dfSemiMajor, dfInvFlattening);
 
             if( pszCSV )
                 fp = VSIFOpen( pszCSV, "r" );
@@ -1228,15 +1209,7 @@ OGRErr OGRSpatialReference::exportToPCI( char **ppszProj, char **ppszUnits,
         {                                   
             CPLPrintStringFill( szEarthModel, "E999", 4 );
             (*ppadfPrjParams)[0] = dfSemiMajor;
-            if ( ABS( dfInvFlattening ) < 0.000000000001 )
-            {
-                (*ppadfPrjParams)[1] = dfSemiMajor;
-            }
-            else
-            {
-                (*ppadfPrjParams)[1] =
-                    dfSemiMajor * (1.0 - 1.0/dfInvFlattening);
-            }
+            (*ppadfPrjParams)[1] = OSRCalcSemiMinorFromInvFlattening(dfSemiMajor, dfInvFlattening);
         }
     }
 

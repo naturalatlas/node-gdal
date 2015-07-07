@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sar_ceosdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: sar_ceosdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  GDALDataset driver for CEOS translator.
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: sar_ceosdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: sar_ceosdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_SAR_CEOS(void);
@@ -237,9 +237,9 @@ SAR_CEOSRasterBand::SAR_CEOSRasterBand( SAR_CEOSDataset *poGDS, int nBand,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr SAR_CEOSRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr SAR_CEOSRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                       int nBlockYOff,
                                        void * pImage )
-
 {
     struct CeosSARImageDesc *ImageDesc;
     int	   offset;
@@ -371,9 +371,9 @@ Im(SVV) = byte(10) ysca/127
 
 */
 
-CPLErr CCPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr CCPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
                                   void * pImage )
-
 {
     struct CeosSARImageDesc *ImageDesc;
     int	   offset;
@@ -517,9 +517,9 @@ PALSARRasterBand::PALSARRasterBand( SAR_CEOSDataset *poGDS, int nBand )
 /*      Based on ERSDAC-VX-CEOS-004                                     */
 /************************************************************************/
 
-CPLErr PALSARRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr PALSARRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                     int nBlockYOff,
                                      void * pImage )
-
 {
     struct CeosSARImageDesc *ImageDesc;
     int	   offset;
@@ -1530,9 +1530,9 @@ int SAR_CEOSDataset::ScanForMapProjection()
         pasGCPList[i].pszId = CPLStrdup( szId );
     
         GetCeosField( record, 1073+32*i, "A16", szField );
-        pasGCPList[i].dfGCPY = atof(szField);
+        pasGCPList[i].dfGCPY = CPLAtof(szField);
         GetCeosField( record, 1089+32*i, "A16", szField );
-        pasGCPList[i].dfGCPX = atof(szField);
+        pasGCPList[i].dfGCPX = CPLAtof(szField);
         pasGCPList[i].dfGCPZ = 0.0;
     }
     
@@ -2161,8 +2161,7 @@ ProcessData( VSILFILE *fp, int fileid, CeosSARVolume_t *sar, int max_records,
             max_records--;
         if(max_bytes > 0)
         {
-            // TODO: Make sure that this cast is safe.
-            if( (vsi_l_offset)record->Length <= max_bytes )
+          if( (vsi_l_offset)record->Length <= max_bytes )
                 max_bytes -= record->Length;
             else {
                 CPLDebug( "SAR_CEOS", "Partial record found.  %d > " CPL_FRMT_GUIB,
@@ -2191,6 +2190,7 @@ void GDALRegister_SAR_CEOS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "SAR_CEOS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "CEOS SAR Image" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -2202,4 +2202,3 @@ void GDALRegister_SAR_CEOS()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

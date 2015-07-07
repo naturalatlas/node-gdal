@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrmemdriver.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemDriver class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrmemdriver.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          ~OGRMemDriver()                           */
@@ -92,6 +92,9 @@ int OGRMemDriver::TestCapability( const char * pszCap )
 void RegisterOGRMEM()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRMemDriver );
-}
+    OGRSFDriver* poDriver = new OGRMemDriver;
+    
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime Time IntegerList Integer64List RealList StringList Binary" );
 
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
+}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsi.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsi.h 28476 2015-02-13 14:40:11Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -202,6 +202,8 @@ void CPL_DLL *VSIMalloc2( size_t nSize1, size_t nSize2 ) CPL_WARN_UNUSED_RESULT;
 */
 void CPL_DLL *VSIMalloc3( size_t nSize1, size_t nSize2, size_t nSize3 ) CPL_WARN_UNUSED_RESULT;
 
+GIntBig CPL_DLL CPLGetPhysicalRAM(void);
+GIntBig CPL_DLL CPLGetUsablePhysicalRAM(void);
 
 /* ==================================================================== */
 /*      Other...                                                        */
@@ -239,6 +241,9 @@ VSILFILE CPL_DLL *VSIFileFromMemBuffer( const char *pszFilename,
 GByte CPL_DLL *VSIGetMemFileBuffer( const char *pszFilename, 
                                     vsi_l_offset *pnDataLength, 
                                     int bUnlinkAndSeize );
+
+typedef size_t (*VSIWriteFunction)(const void* ptr, size_t size, size_t nmemb, FILE* stream);
+void CPL_DLL VSIStdoutSetRedirection( VSIWriteFunction pFct, FILE* stream );
 
 /* ==================================================================== */
 /*      Time quering.                                                   */

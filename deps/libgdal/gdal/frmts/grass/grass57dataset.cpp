@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grass57dataset.cpp 28291 2015-01-05 14:45:07Z martinl $
+ * $Id: grass57dataset.cpp 28534 2015-02-21 14:34:39Z rouault $
  *
  * Project:  GRASS Driver
  * Purpose:  Implement GRASS raster read/write support
@@ -63,7 +63,7 @@ char *GPJ_grass_to_wkt(struct Key_Value *,
 
 #define GRASS_MAX_COLORS 100000  // what is the right value
 
-CPL_CVSID("$Id: grass57dataset.cpp 28291 2015-01-05 14:45:07Z martinl $");
+CPL_CVSID("$Id: grass57dataset.cpp 28534 2015-02-21 14:34:39Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GRASS(void);
@@ -182,7 +182,10 @@ class GRASSRasterBand : public GDALRasterBand
     virtual        ~GRASSRasterBand();
 
     virtual CPLErr IReadBlock( int, int, void * );
-    virtual CPLErr IRasterIO ( GDALRWFlag, int, int, int, int, void *, int, int, GDALDataType, int, int );
+    virtual CPLErr IRasterIO ( GDALRWFlag, int, int, int, int, void *, int, int, GDALDataType,
+                               GSpacing nPixelSpace,
+                               GSpacing nLineSpace,
+                               GDALRasterIOExtraArg* psExtraArg);
     virtual GDALColorInterp GetColorInterpretation();
     virtual GDALColorTable *GetColorTable();
     virtual double GetMinimum( int *pbSuccess = NULL );
@@ -528,7 +531,9 @@ CPLErr GRASSRasterBand::IRasterIO ( GDALRWFlag eRWFlag,
 	                           int nXOff, int nYOff, int nXSize, int nYSize,
 				   void * pData, int nBufXSize, int nBufYSize,
 				   GDALDataType eBufType,
-				   int nPixelSpace, int nLineSpace )
+				   GSpacing nPixelSpace,
+                   GSpacing nLineSpace,
+                   GDALRasterIOExtraArg* psExtraArg )
 {
     /* GRASS library does that, we have only calculate and reset the region in map units
      * and if the region has changed, reopen the raster */
@@ -866,7 +871,7 @@ GDALDataset *GRASSDataset::Open( GDALOpenInfo * poOpenInfo )
         static char* gisbaseEnv = NULL;
         const char *gisbase = GRASS_GISBASE;
         CPLError( CE_Warning, CPLE_AppDefined, "GRASS warning: GISBASE "
-                "enviroment variable was not set, using:\n%s", gisbase );
+                "environment variable was not set, using:\n%s", gisbase );
         char buf[2000];
         snprintf ( buf, sizeof(buf), "GISBASE=%s", gisbase );
         buf[sizeof(buf)-1] = '\0';
@@ -1042,8 +1047,9 @@ void GDALRegister_GRASS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GRASS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
-                                   "GRASS Database Rasters (5.7+)" );
+                                   "GRASS Rasters (5.7+)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
                                    "frmt_grass.html" );
         

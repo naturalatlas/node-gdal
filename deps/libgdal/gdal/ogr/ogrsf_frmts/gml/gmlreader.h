@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreader.h 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gmlreader.h 29051 2015-04-29 17:18:37Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Public Declarations for OGR free GML Reader code.
@@ -47,7 +47,13 @@ typedef enum {
     GMLPT_IntegerList = 6, 
     GMLPT_RealList = 7,
     GMLPT_FeatureProperty = 8,
-    GMLPT_FeaturePropertyList = 9
+    GMLPT_FeaturePropertyList = 9,
+    GMLPT_Boolean = 10,
+    GMLPT_BooleanList = 11,
+    GMLPT_Short = 12,
+    GMLPT_Float = 13,
+    GMLPT_Integer64 = 14,
+    GMLPT_Integer64List = 15
 } GMLPropertyType;
 
 /************************************************************************/
@@ -70,6 +76,7 @@ class CPL_DLL GMLPropertyDefn
     char             *m_pszSrcElement;
     size_t            m_nSrcElementLen;
     char             *m_pszCondition;
+    int               m_bNullable;
 
 public:
     
@@ -90,6 +97,9 @@ public:
 
     void        SetCondition( const char *pszCondition );
     const char *GetCondition() const { return m_pszCondition; }
+    
+    void        SetNullable( int bNullable ) { m_bNullable = bNullable; }
+    int         IsNullable() const { return m_bNullable; }
 
     void        AnalysePropertyValue( const GMLProperty* psGMLProperty,
                                       int bSetWidth = TRUE );
@@ -108,10 +118,12 @@ class CPL_DLL GMLGeometryPropertyDefn
     char       *m_pszSrcElement;
     int         m_nGeometryType;
     int         m_nAttributeIndex;
+    int         m_bNullable;
     
 public:
         GMLGeometryPropertyDefn( const char *pszName, const char *pszSrcElement,
-                                 int nType, int nAttributeIndex = -1 );
+                                 int nType, int nAttributeIndex,
+                                 int bNullable );
        ~GMLGeometryPropertyDefn();
 
         const char *GetName() const { return m_pszName; } 
@@ -121,6 +133,8 @@ public:
         const char *GetSrcElement() const { return m_pszSrcElement; }
         
         int GetAttributeIndex() const { return m_nAttributeIndex; }
+
+        int IsNullable() const { return m_bNullable; }
 };
 
 /************************************************************************/
@@ -140,7 +154,7 @@ class CPL_DLL GMLFeatureClass
 
     int         m_bSchemaLocked;
 
-    int         m_nFeatureCount;
+    GIntBig     m_nFeatureCount;
 
     char        *m_pszExtraInfo;
 
@@ -151,7 +165,7 @@ class CPL_DLL GMLFeatureClass
     double      m_dfYMax;
 
     char       *m_pszSRSName;
-    int         m_bSRSNameConsistant;
+    int         m_bSRSNameConsistent;
 
 public:
             GMLFeatureClass( const char *pszName = "" );
@@ -169,10 +183,12 @@ public:
     GMLPropertyDefn *GetProperty( const char *pszName ) const 
         { return GetProperty( GetPropertyIndex(pszName) ); }
     int         GetPropertyIndexBySrcElement( const char *pszElement, int nLen ) const;
-    
+    void        StealProperties();
+
     int         GetGeometryPropertyCount() const { return m_nGeometryPropertyCount; }
     GMLGeometryPropertyDefn *GetGeometryProperty( int iIndex ) const;
     int         GetGeometryPropertyIndexBySrcElement( const char *pszElement ) const;
+    void        StealGeometryProperties();
 
     int         HasFeatureProperties();
 
@@ -186,8 +202,8 @@ public:
     const char  *GetExtraInfo();
     void        SetExtraInfo( const char * );
 
-    int         GetFeatureCount();
-    void        SetFeatureCount( int );
+    GIntBig     GetFeatureCount();
+    void        SetFeatureCount( GIntBig );
 
     int         HasExtents() const { return m_bHaveExtents; }
     void        SetExtents( double dfXMin, double dfXMax, 
@@ -261,7 +277,7 @@ public:
     virtual void SetClassListLocked( int bFlag ) = 0;
 
     virtual void SetSourceFile( const char *pszFilename ) = 0;
-    virtual void SetFP( CPL_UNUSED VSILFILE* fp ) { }
+    virtual void SetFP( CPL_UNUSED VSILFILE* fp ) {}
     virtual const char* GetSourceFileName() = 0;
 
     virtual int  GetClassCount() const = 0;
@@ -286,7 +302,9 @@ public:
                                    int pbSqlitIsTempFile,
                                    int iSqliteCacheMB ) = 0;
 
-    virtual int PrescanForSchema( int bGetExtents = TRUE, int bAnalyzeSRSPerFeature = TRUE ) = 0;
+    virtual int PrescanForSchema( int bGetExtents = TRUE,
+                                  int bAnalyzeSRSPerFeature = TRUE,
+                                  int bOnlyDetectSRS = FALSE ) = 0;
     virtual int PrescanForTemplate( void ) = 0;
 
     virtual int HasStoppedParsing() = 0;

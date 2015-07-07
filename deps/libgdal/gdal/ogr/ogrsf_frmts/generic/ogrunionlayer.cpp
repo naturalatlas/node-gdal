@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrunionlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrunionlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRUnionLayer class
@@ -31,7 +31,7 @@
 #include "ogrwarpedlayer.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrunionlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrunionlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                      OGRUnionLayerGeomFieldDefn()                    */
@@ -86,6 +86,8 @@ OGRUnionLayer::OGRUnionLayer( const char* pszName,
                               int bTakeLayerOwnership )
 {
     CPLAssert(nSrcLayersIn > 0);
+    
+    SetDescription( pszName );
 
     osName = pszName;
     nSrcLayers = nSrcLayersIn;
@@ -225,8 +227,19 @@ static void MergeFieldDefn(OGRFieldDefn* poFieldDefn,
     if( poFieldDefn->GetType() != poSrcFieldDefn->GetType() )
     {
         if( poSrcFieldDefn->GetType() == OFTReal &&
-            poFieldDefn->GetType() == OFTInteger)
+            (poFieldDefn->GetType() == OFTInteger ||
+             poFieldDefn->GetType() == OFTInteger64) )
             poFieldDefn->SetType(OFTReal);
+        if( poFieldDefn->GetType() == OFTReal &&
+            (poSrcFieldDefn->GetType() == OFTInteger ||
+             poSrcFieldDefn->GetType() == OFTInteger64) )
+            poFieldDefn->SetType(OFTReal);
+        else if( poSrcFieldDefn->GetType() == OFTInteger64 &&
+                 poFieldDefn->GetType() == OFTInteger)
+            poFieldDefn->SetType(OFTInteger64);
+        else if( poFieldDefn->GetType() == OFTInteger64 &&
+                 poSrcFieldDefn->GetType() == OFTInteger)
+            poFieldDefn->SetType(OFTInteger64);
         else
             poFieldDefn->SetType(OFTString);
     }
@@ -632,14 +645,14 @@ void OGRUnionLayer::AutoWarpLayerIfNecessary(int iLayer)
                     (poSRS != NULL && poSRS2 == NULL) )
                 {
                     CPLError(CE_Warning, CPLE_AppDefined,
-                            "SRS of geometry field '%s' layer %s not consistant with UnionLayer SRS",
+                            "SRS of geometry field '%s' layer %s not consistent with UnionLayer SRS",
                             GetLayerDefn()->GetGeomFieldDefn(i)->GetNameRef(),
                             papoSrcLayers[iLayer]->GetName());
                 }
                 else if (poSRS != NULL && poSRS2 != NULL &&
                         poSRS != poSRS2 && !poSRS->IsSame(poSRS2))
                 {
-                    CPLDebug("VRT", "SRS of geometry field '%s' layer %s not consistant with UnionLayer SRS. "
+                    CPLDebug("VRT", "SRS of geometry field '%s' layer %s not consistent with UnionLayer SRS. "
                             "Trying auto warping",
                             GetLayerDefn()->GetGeomFieldDefn(i)->GetNameRef(),
                             papoSrcLayers[iLayer]->GetName());
@@ -707,7 +720,7 @@ OGRFeature *OGRUnionLayer::GetNextFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRUnionLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRUnionLayer::GetFeature( GIntBig nFeatureId )
 {
     OGRFeature* poFeature = NULL;
 
@@ -747,10 +760,10 @@ OGRFeature *OGRUnionLayer::GetFeature( long nFeatureId )
 }
 
 /************************************************************************/
-/*                          CreateFeature()                             */
+/*                          ICreateFeature()                             */
 /************************************************************************/
 
-OGRErr OGRUnionLayer::CreateFeature( OGRFeature* poFeature )
+OGRErr OGRUnionLayer::ICreateFeature( OGRFeature* poFeature )
 {
     if( osSourceLayerFieldName.size() == 0 )
     {
@@ -799,10 +812,10 @@ OGRErr OGRUnionLayer::CreateFeature( OGRFeature* poFeature )
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /************************************************************************/
 
-OGRErr OGRUnionLayer::SetFeature( OGRFeature* poFeature )
+OGRErr OGRUnionLayer::ISetFeature( OGRFeature* poFeature )
 {
     if( !bPreserveSrcFID )
     {
@@ -943,7 +956,7 @@ void OGRUnionLayer::ApplyAttributeFilterToSrcLayer(int iSubLayer)
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRUnionLayer::GetFeatureCount( int bForce )
+GIntBig OGRUnionLayer::GetFeatureCount( int bForce )
 {
     if (nFeatureCount >= 0 &&
         m_poFilterGeom == NULL && m_poAttrQuery == NULL)
@@ -954,7 +967,7 @@ int OGRUnionLayer::GetFeatureCount( int bForce )
     if( !GetAttrFilterPassThroughValue() )
         return OGRLayer::GetFeatureCount(bForce);
 
-    int nRet = 0;
+    GIntBig nRet = 0;
     for(int i = 0; i < nSrcLayers; i++)
     {
         AutoWarpLayerIfNecessary(i);
@@ -1099,6 +1112,9 @@ int  OGRUnionLayer::TestCapability( const char * pszCap )
     }
 
     if( EQUAL(pszCap, OLCIgnoreFields) )
+        return TRUE;
+
+    if( EQUAL(pszCap,OLCCurveGeometries) )
         return TRUE;
 
     return FALSE;

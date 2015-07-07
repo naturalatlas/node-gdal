@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sde.h 22263 2011-04-30 02:51:52Z warmerdam $
+ * $Id: ogr_sde.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR SDE driver.
@@ -122,18 +122,18 @@ class OGRSDELayer : public OGRLayer
     OGRErr              ResetStream();
 
     virtual OGRFeature *GetNextFeature();
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     virtual OGRErr      GetExtent( OGREnvelope *psExtent, int bForce );
-    virtual int         GetFeatureCount( int bForce );
+    virtual GIntBig     GetFeatureCount( int bForce );
 
     virtual OGRErr      SetAttributeFilter( const char *pszQuery );
     
     virtual OGRErr      CreateField( OGRFieldDefn *poFieldIn,
                                      int bApproxOK );
 
-    virtual OGRErr      SetFeature( OGRFeature *poFeature );
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
     
@@ -185,7 +185,7 @@ class OGRSDEDataSource : public OGRDataSource
     int                 GetLayerCount() { return nLayers; }
     OGRLayer            *GetLayer( int );
     
-    virtual OGRLayer    *CreateLayer( const char *,
+    virtual OGRLayer    *ICreateLayer( const char *,
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

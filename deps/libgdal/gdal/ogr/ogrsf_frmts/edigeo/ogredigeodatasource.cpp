@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogredigeodatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogredigeodatasource.cpp 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  EDIGEO Translator
  * Purpose:  Implements OGREDIGEODataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogredigeodatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogredigeodatasource.cpp 28039 2014-11-30 18:24:59Z rouault $");
 
 #ifndef M_PI
 # define M_PI  3.1415926535897932384626433832795
@@ -61,7 +61,7 @@ OGREDIGEODataSource::OGREDIGEODataSource()
 
     iATR = iDI3 = iDI4 = iHEI = iFON = -1;
     iATR_VAL = iANGLE = iSIZE = iOBJ_LNK = iOBJ_LNK_LAYER = -1;
-    dfSizeFactor = atof(CPLGetConfigOption("OGR_EDIGEO_FONT_SIZE_FACTOR", "2"));
+    dfSizeFactor = CPLAtof(CPLGetConfigOption("OGR_EDIGEO_FONT_SIZE_FACTOR", "2"));
     if (dfSizeFactor <= 0 || dfSizeFactor >= 100)
         dfSizeFactor = 2;
 
@@ -270,7 +270,7 @@ int OGREDIGEODataSource::ReadGEO()
             poSRS->importFromProj4("+proj=lcc +lat_1=44 +lat_2=49 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS81 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
         else
         {
-            CPLDebug("EDIGEO", "Cannot resolve %s SRS. Check that the IGNF file is in the directory of PROJ.4 ressource files", osREL.c_str());
+            CPLDebug("EDIGEO", "Cannot resolve %s SRS. Check that the IGNF file is in the directory of PROJ.4 resource files", osREL.c_str());
             delete poSRS;
             poSRS = NULL;
         }
@@ -316,10 +316,10 @@ int OGREDIGEODataSource::ReadGEN()
     if (CSLCount(papszTokens1) == 2 && CSLCount(papszTokens2) == 2)
     {
         bExtentValid = TRUE;
-        dfMinX = atof(papszTokens1[0]);
-        dfMinY = atof(papszTokens1[1]);
-        dfMaxX = atof(papszTokens2[0]);
-        dfMaxY = atof(papszTokens2[1]);
+        dfMinX = CPLAtof(papszTokens1[0]);
+        dfMinY = CPLAtof(papszTokens1[1]);
+        dfMaxX = CPLAtof(papszTokens2[0]);
+        dfMaxY = CPLAtof(papszTokens2[1]);
     }
     CSLDestroy(papszTokens1);
     CSLDestroy(papszTokens2);
@@ -771,8 +771,8 @@ skip_read_next_line:
             const char* pszY = strchr(pszLine+8, ';');
             if (pszY)
             {
-                double dfX = atof(pszLine + 8);
-                double dfY = atof(pszY + 1);
+                double dfX = CPLAtof(pszLine + 8);
+                double dfY = CPLAtof(pszY + 1);
                 aXY.push_back(xyPairType (dfX, dfY));
             }
         }
@@ -1349,21 +1349,10 @@ static int OGREDIGEOSortForQGIS(const void* a, const void* b)
 /*                                Open()                                */
 /************************************************************************/
 
-int OGREDIGEODataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGREDIGEODataSource::Open( const char * pszFilename )
 
 {
-    if (bUpdateIn)
-    {
-        return FALSE;
-    }
-
     pszName = CPLStrdup( pszFilename );
-
-/* -------------------------------------------------------------------- */
-/*      Does this appear to be a .THF file?                             */
-/* -------------------------------------------------------------------- */
-    if( !EQUAL(CPLGetExtension(pszFilename), "thf") )
-        return FALSE;
 
     fpTHF = VSIFOpenL(pszFilename, "rb");
     if (fpTHF == NULL)
@@ -1568,4 +1557,3 @@ void OGREDIGEODataSource::CreateLabelLayers()
 
     poLayer->ResetReading();
 }
-

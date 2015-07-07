@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_minizip_zip.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_minizip_zip.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -319,7 +319,8 @@ local void ziplocal_putValue_inmemory (void *dest, uLong x, int nbByte)
 /****************************************************************************/
 
 
-local uLong ziplocal_TmzDateToDosDate(const tm_zip*ptm, CPL_UNUSED uLong dosDate)
+local uLong ziplocal_TmzDateToDosDate(const tm_zip *ptm,
+                                      CPL_UNUSED uLong dosDate)
 {
     uLong year = (uLong)ptm->tm_year;
     if (year>1980)

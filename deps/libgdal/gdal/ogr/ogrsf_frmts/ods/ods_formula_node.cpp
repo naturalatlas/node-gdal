@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ods_formula_node.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ods_formula_node.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Component: ODS formula Engine
  * Purpose: Implementation of the ods_formula_node class used to represent a
@@ -1157,7 +1157,7 @@ std::string ods_formula_node::TransformToString() const
     }
     else if (field_type == ODS_FIELD_TYPE_FLOAT)
     {
-        snprintf(szTmp, sizeof(szTmp), "%.16g", float_value);
+        CPLsnprintf(szTmp, sizeof(szTmp), "%.16g", float_value);
         return szTmp;
     }
     else if (field_type == ODS_FIELD_TYPE_STRING)

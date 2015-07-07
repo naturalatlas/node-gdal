@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmutexeddatasource.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmutexeddatasource.h 28601 2015-03-03 11:06:40Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLMutexedDataSource class
@@ -31,6 +31,9 @@
 #define _OGRMUTEXEDDATASOURCELAYER_H_INCLUDED
 
 #include "ogrsf_frmts.h"
+#include "cpl_multiproc.h"
+#include "ogrmutexedlayer.h"
+#include <map>
 
 /** OGRMutexedDataSource class protects all virtual methods of OGRDataSource
  *  with a mutex.
@@ -44,17 +47,25 @@ class CPL_DLL OGRMutexedDataSource : public OGRDataSource
   protected:
     OGRDataSource *m_poBaseDataSource;
     int            m_bHasOwnership;
-    void          *m_hGlobalMutex;
+    CPLMutex      *m_hGlobalMutex;
+    int            m_bWrapLayersInMutexedLayer;
+    std::map<OGRLayer*, OGRMutexedLayer* > m_oMapLayers;
+    std::map<OGRMutexedLayer*, OGRLayer* > m_oReverseMapLayers;
+    
+    OGRLayer*           WrapLayerIfNecessary(OGRLayer* poLayer);
 
   public:
 
     /* The construction of the object isn't protected by the mutex */
                  OGRMutexedDataSource(OGRDataSource* poBaseDataSource,
                                       int bTakeOwnership,
-                                      void* hMutexIn);
+                                      CPLMutex* hMutexIn,
+                                      int bWrapLayersInMutexedLayer);
 
     /* The destruction of the object isn't protected by the mutex */
     virtual     ~OGRMutexedDataSource();
+    
+    OGRDataSource*      GetBaseDataSource() { return m_poBaseDataSource; }
 
     virtual const char  *GetName();
 
@@ -65,7 +76,7 @@ class CPL_DLL OGRMutexedDataSource : public OGRDataSource
 
     virtual int         TestCapability( const char * );
 
-    virtual OGRLayer   *CreateLayer( const char *pszName, 
+    virtual OGRLayer   *ICreateLayer( const char *pszName, 
                                      OGRSpatialReference *poSpatialRef = NULL,
                                      OGRwkbGeometryType eGType = wkbUnknown,
                                      char ** papszOptions = NULL );
@@ -82,8 +93,21 @@ class CPL_DLL OGRMutexedDataSource : public OGRDataSource
                                     OGRGeometry *poSpatialFilter,
                                     const char *pszDialect );
     virtual void        ReleaseResultSet( OGRLayer * poResultsSet );
+    
+    virtual void        FlushCache();
 
-    virtual OGRErr      SyncToDisk();
+    virtual OGRErr      StartTransaction(int bForce=FALSE);
+    virtual OGRErr      CommitTransaction();
+    virtual OGRErr      RollbackTransaction();
+
+    virtual char      **GetMetadata( const char * pszDomain = "" );
+    virtual CPLErr      SetMetadata( char ** papszMetadata,
+                                     const char * pszDomain = "" );
+    virtual const char *GetMetadataItem( const char * pszName,
+                                         const char * pszDomain = "" );
+    virtual CPLErr      SetMetadataItem( const char * pszName,
+                                         const char * pszValue,
+                                         const char * pszDomain = "" );
 };
 
 #endif // _OGRMUTEXEDDATASOURCELAYER_H_INCLUDED

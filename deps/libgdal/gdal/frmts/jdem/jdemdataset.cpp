@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: jdemdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  JDEM Reader
  * Purpose:  All code for Japanese DEM Reader
@@ -30,7 +30,7 @@
 
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: jdemdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: jdemdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_JDEM(void);
@@ -157,10 +157,13 @@ JDEMRasterBand::~JDEMRasterBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr JDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
+CPLErr JDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
+                                   void * pImage )
+
 {
     JDEMDataset *poGDS = (JDEMDataset *) poDS;
+    int		i;
     
     if (pszRecord == NULL)
     {
@@ -197,7 +200,7 @@ CPLErr JDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
         return CE_Failure;
     }
 
-    for( int i = 0; i < nBlockXSize; i++ )
+    for( i = 0; i < nBlockXSize; i++ )
         ((float *) pImage)[i] = (float)
             (JDEMGetField( pszRecord + 9 + 5 * i, 5) * 0.1);
 
@@ -303,6 +306,9 @@ int JDEMDataset::Identify( GDALOpenInfo * poOpenInfo )
 GDALDataset *JDEMDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
+/* -------------------------------------------------------------------- */
+/*      Confirm that the header is compatible with a JDEM dataset.      */
+/* -------------------------------------------------------------------- */
     if (!Identify(poOpenInfo))
         return NULL;
 
@@ -316,6 +322,12 @@ GDALDataset *JDEMDataset::Open( GDALOpenInfo * poOpenInfo )
                   " datasets.\n" );
         return NULL;
     }
+    
+    /* Check that the file pointer from GDALOpenInfo* is available */
+    if( poOpenInfo->fpL == NULL )
+    {
+        return NULL;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
@@ -324,12 +336,9 @@ GDALDataset *JDEMDataset::Open( GDALOpenInfo * poOpenInfo )
 
     poDS = new JDEMDataset();
 
-    poDS->fp = VSIFOpenL( poOpenInfo->pszFilename, "rb" );
-    if (poDS->fp == NULL)
-    {
-        delete poDS;
-        return NULL;
-    }
+    /* Borrow the file pointer from GDALOpenInfo* */
+    poDS->fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = NULL;
     
 /* -------------------------------------------------------------------- */
 /*      Read the header.                                                */
@@ -380,6 +389,7 @@ void GDALRegister_JDEM()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "JDEM" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Japanese DEM (.mem)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

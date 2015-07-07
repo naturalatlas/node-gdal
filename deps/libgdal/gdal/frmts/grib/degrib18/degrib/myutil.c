@@ -458,7 +458,9 @@ static int FileMatch (const char *filename, const char *filter)
 }
 **/
 
-int myGlob (CPL_UNUSED const char *dirName, CPL_UNUSED const char *filter, CPL_UNUSED size_t *Argc,
+int myGlob (CPL_UNUSED const char *dirName,
+            CPL_UNUSED const char *filter,
+            CPL_UNUSED size_t *Argc,
             CPL_UNUSED char ***Argv)
 {
 return 0; // TODO: reimplement for Win32

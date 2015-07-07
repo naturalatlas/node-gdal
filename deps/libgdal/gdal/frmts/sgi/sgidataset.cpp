@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sgidataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: sgidataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  SGI Image Driver
  * Purpose:  Implement SGI Image Support based on Paul Bourke's SGI Image code.
@@ -36,7 +36,7 @@
 #include "cpl_port.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: sgidataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: sgidataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_SGI(void);
@@ -266,12 +266,12 @@ SGIRasterBand::SGIRasterBand(SGIDataset* poDS, int nBand)
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr SGIRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr SGIRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff,
+                                 int nBlockYOff,
 				 void*  pImage)
-
 {
     SGIDataset* poGDS = (SGIDataset*) poDS;
-    
+
     CPLAssert(nBlockXOff == 0);
 
 /* -------------------------------------------------------------------- */
@@ -284,9 +284,9 @@ CPLErr SGIRasterBand::IReadBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff,
 /*                             IWritelock()                             */
 /************************************************************************/
 
-CPLErr SGIRasterBand::IWriteBlock(CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr SGIRasterBand::IWriteBlock(CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
                                   void*  pImage)
-
 {
     SGIDataset* poGDS = (SGIDataset*) poDS;
     ImageRec *image = &(poGDS->image);
@@ -685,9 +685,11 @@ GDALDataset* SGIDataset::Open(GDALOpenInfo* poOpenInfo)
 /************************************************************************/
 
 GDALDataset *SGIDataset::Create( const char * pszFilename,
-                                 int nXSize, int nYSize, int nBands,
-                                 GDALDataType eType, CPL_UNUSED char **papszOptions )
-
+                                 int nXSize,
+                                 int nYSize,
+                                 int nBands,
+                                 GDALDataType eType,
+                                 CPL_UNUSED char **papszOptions )
 {
     if( eType != GDT_Byte )
     {
@@ -816,6 +818,7 @@ void GDALRegister_SGI()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription("SGI");
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem(GDAL_DMD_LONGNAME, 
                                   "SGI Image File Format 1.0");
         poDriver->SetMetadataItem(GDAL_DMD_EXTENSION, "rgb");
@@ -828,4 +831,3 @@ void GDALRegister_SGI()
         GetGDALDriverManager()->RegisterDriver(poDriver);
     }
 }
-

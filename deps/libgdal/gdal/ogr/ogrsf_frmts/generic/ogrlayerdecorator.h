@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerdecorator.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrlayerdecorator.h 28601 2015-03-03 11:06:40Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLayerDecorator class
@@ -32,7 +32,7 @@
 
 #include "ogrsf_frmts.h"
 
-class OGRLayerDecorator : public OGRLayer
+class CPL_DLL OGRLayerDecorator : public OGRLayer
 {
   protected:
     OGRLayer *m_poDecoratedLayer;
@@ -56,11 +56,11 @@ class OGRLayerDecorator : public OGRLayer
 
     virtual void        ResetReading();
     virtual OGRFeature *GetNextFeature();
-    virtual OGRErr      SetNextByIndex( long nIndex );
-    virtual OGRFeature *GetFeature( long nFID );
-    virtual OGRErr      SetFeature( OGRFeature *poFeature );
-    virtual OGRErr      CreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( long nFID );
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex );
+    virtual OGRFeature *GetFeature( GIntBig nFID );
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
+    virtual OGRErr      DeleteFeature( GIntBig nFID );
 
     virtual const char *GetName();
     virtual OGRwkbGeometryType GetGeomType();
@@ -68,14 +68,11 @@ class OGRLayerDecorator : public OGRLayer
 
     virtual OGRSpatialReference *GetSpatialRef();
 
-    virtual int         GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
     virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce = TRUE);
     virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
     virtual int         TestCapability( const char * );
-
-    /* Deprecated (and un-implemented method) --> we won't decorate it ! */
-    /* virtual const char *GetInfo( const char * ); */
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE );
@@ -98,6 +95,15 @@ class OGRLayerDecorator : public OGRLayer
     virtual const char *GetGeometryColumn();
 
     virtual OGRErr      SetIgnoredFields( const char **papszFields );
+
+    virtual char      **GetMetadata( const char * pszDomain = "" );
+    virtual CPLErr      SetMetadata( char ** papszMetadata,
+                                     const char * pszDomain = "" );
+    virtual const char *GetMetadataItem( const char * pszName,
+                                         const char * pszDomain = "" );
+    virtual CPLErr      SetMetadataItem( const char * pszName,
+                                         const char * pszValue,
+                                         const char * pszDomain = "" );
 
     OGRLayer* GetBaseLayer()    { return m_poDecoratedLayer; }
 };

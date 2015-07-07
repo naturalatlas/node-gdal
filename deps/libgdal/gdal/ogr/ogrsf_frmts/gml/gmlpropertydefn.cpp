@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: gmlpropertydefn.cpp 27132 2014-04-05 21:48:58Z rouault $
+ * $Id: gmlpropertydefn.cpp 28481 2015-02-13 17:11:15Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLPropertyDefn
@@ -55,6 +55,7 @@ GMLPropertyDefn::GMLPropertyDefn( const char *pszName,
     m_nWidth = 0; 
     m_nPrecision = 0;
     m_pszCondition = NULL;
+    m_bNullable = TRUE;
 }
 
 /************************************************************************/
@@ -122,6 +123,8 @@ void GMLPropertyDefn::AnalysePropertyValue( const GMLProperty* psGMLProperty,
         {
             if( m_eType == GMLPT_Integer )
                 m_eType = GMLPT_IntegerList;
+            else if( m_eType == GMLPT_Integer64 )
+                m_eType = GMLPT_Integer64List;
             else if( m_eType == GMLPT_Real )
                 m_eType = GMLPT_RealList;
             else if( m_eType == GMLPT_String )
@@ -129,6 +132,8 @@ void GMLPropertyDefn::AnalysePropertyValue( const GMLProperty* psGMLProperty,
                 m_eType = GMLPT_StringList;
                 m_nWidth = 0;
             }
+            else if( m_eType == GMLPT_Boolean )
+                m_eType = GMLPT_BooleanList;
         }
         const char* pszValue = psGMLProperty->papszSubProperties[j];
 /* -------------------------------------------------------------------- */
@@ -140,27 +145,23 @@ void GMLPropertyDefn::AnalysePropertyValue( const GMLProperty* psGMLProperty,
 
         CPLValueType valueType = CPLGetValueType(pszValue);
 
-        /* This might not fit into a int32. For now, let's */
-        /* consider this as a real value then. */
-        /* FIXME once RFC31 / 64 bit support is set, we could */
-        /* choose a different behaviour */
-        if (valueType == CPL_VALUE_INTEGER && strlen(pszValue) >= 10)
-        {
-            /* Skip leading spaces */
-            while( isspace( (unsigned char)*pszValue ) )
-                pszValue ++;
-            char szVal[32];
-            sprintf(szVal, "%d", atoi(pszValue));
-            if (strcmp(pszValue, szVal) != 0)
-                valueType = CPL_VALUE_REAL;
-        }
-
         if (valueType == CPL_VALUE_STRING
             && m_eType != GMLPT_String 
             && m_eType != GMLPT_StringList )
         {
-            if( m_eType == GMLPT_IntegerList
-                || m_eType == GMLPT_RealList )
+            if( (m_eType == GMLPT_Untyped || m_eType == GMLPT_Boolean) &&
+                (strcmp(pszValue, "true") == 0 ||
+                 strcmp(pszValue, "false") == 0) )
+                m_eType = GMLPT_Boolean;
+            else if( m_eType == GMLPT_BooleanList )
+            {
+                if( !(strcmp(pszValue, "true") == 0 ||
+                      strcmp(pszValue, "false") == 0) )
+                    m_eType = GMLPT_StringList;
+            }
+            else if( m_eType == GMLPT_IntegerList ||
+                     m_eType == GMLPT_Integer64List ||
+                     m_eType == GMLPT_RealList )
                 m_eType = GMLPT_StringList;
             else
                 m_eType = GMLPT_String;
@@ -179,16 +180,30 @@ void GMLPropertyDefn::AnalysePropertyValue( const GMLProperty* psGMLProperty,
                     SetWidth( nWidth );
             }
         }
-        else if( m_eType == GMLPT_Untyped || m_eType == GMLPT_Integer )
+        else if( m_eType == GMLPT_Untyped || m_eType == GMLPT_Integer ||
+                 m_eType == GMLPT_Integer64 )
         {
             if( bIsReal )
                 m_eType = GMLPT_Real;
-            else
-                m_eType = GMLPT_Integer;
+            else if( m_eType != GMLPT_Integer64 )
+            {
+                GIntBig nVal = CPLAtoGIntBig(pszValue);
+                if( (GIntBig)(int)nVal != nVal )
+                    m_eType = GMLPT_Integer64;
+                else
+                    m_eType = GMLPT_Integer;
+            }
         }
-        else if( m_eType == GMLPT_IntegerList && bIsReal )
+        else if( (m_eType == GMLPT_IntegerList ||
+                  m_eType == GMLPT_Integer64List) && bIsReal )
         {
             m_eType = GMLPT_RealList;
+        }
+        else if( m_eType == GMLPT_IntegerList && valueType == CPL_VALUE_INTEGER )
+        {
+            GIntBig nVal = CPLAtoGIntBig(pszValue);
+            if( (GIntBig)(int)nVal != nVal )
+                m_eType = GMLPT_Integer64List;
         }
     }
 }
@@ -200,13 +215,15 @@ void GMLPropertyDefn::AnalysePropertyValue( const GMLProperty* psGMLProperty,
 GMLGeometryPropertyDefn::GMLGeometryPropertyDefn( const char *pszName,
                                                   const char *pszSrcElement,
                                                   int nType,
-                                                  int nAttributeIndex )
+                                                  int nAttributeIndex,
+                                                  int bNullable )
 {
     m_pszName = (pszName == NULL || pszName[0] == '\0') ?
                         CPLStrdup(pszSrcElement) : CPLStrdup(pszName);
     m_pszSrcElement = CPLStrdup(pszSrcElement);
     m_nGeometryType = nType;
     m_nAttributeIndex = nAttributeIndex;
+    m_bNullable = bNullable;
 }
 
 /************************************************************************/

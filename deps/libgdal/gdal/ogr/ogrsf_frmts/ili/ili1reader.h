@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili1reader.h 26979 2014-02-23 21:55:20Z pka $
+ * $Id: ili1reader.h 29093 2015-05-01 18:50:08Z pka $
  *
  * Project:  Interlis 1 Reader
  * Purpose:  Private Declarations for Reader code.
@@ -47,7 +47,6 @@ public:
     virtual OGRLayer *GetLayer( int ) = 0;
     virtual OGRLayer *GetLayerByName( const char* ) = 0;
     virtual int  GetLayerCount() = 0;
-    virtual void SetArcDegrees(double newArcDegrees) = 0;
 };
 
 IILI1Reader *CreateILI1Reader();

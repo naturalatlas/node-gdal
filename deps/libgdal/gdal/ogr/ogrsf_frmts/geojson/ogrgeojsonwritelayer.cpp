@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonwritelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeojsonwritelayer.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONWriteLayer class (OGR GeoJSON Driver).
@@ -50,6 +50,7 @@ OGRGeoJSONWriteLayer::OGRGeoJSONWriteLayer( const char* pszName,
 
     poFeatureDefn_->Reference();
     poFeatureDefn_->SetGeomType( eGType );
+    SetDescription( poFeatureDefn_->GetName() );
 
     nCoordPrecision = atoi(CSLFetchNameValueDef(papszOptions, "COORDINATE_PRECISION", "-1"));
 }
@@ -107,10 +108,10 @@ OGRGeoJSONWriteLayer::~OGRGeoJSONWriteLayer()
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGeoJSONWriteLayer::CreateFeature( OGRFeature* poFeature )
+OGRErr OGRGeoJSONWriteLayer::ICreateFeature( OGRFeature* poFeature )
 {
     VSILFILE* fp = poDS_->GetOutputFile();
 

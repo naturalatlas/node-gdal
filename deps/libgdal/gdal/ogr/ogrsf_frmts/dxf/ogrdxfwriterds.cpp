@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxfwriterds.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrdxfwriterds.cpp 27945 2014-11-11 01:33:15Z rouault $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFWriterDS - the OGRDataSource class used for
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdxfwriterds.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrdxfwriterds.cpp 27945 2014-11-11 01:33:15Z rouault $");
 
 /************************************************************************/
 /*                          OGRDXFWriterDS()                          */
@@ -128,7 +128,8 @@ int OGRDXFWriterDS::TestCapability( const char * pszCap )
 
 {
     if( EQUAL(pszCap,ODsCCreateLayer) )
-        return TRUE;
+        // Unable to have more than one OGR entities layer in a DXF file, with one options blocks layer.
+        return poBlocksLayer == NULL || poLayer == NULL;
     else
         return FALSE;
 }
@@ -255,10 +256,10 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer *OGRDXFWriterDS::CreateLayer( const char *pszName, 
+OGRLayer *OGRDXFWriterDS::ICreateLayer( const char *pszName, 
                                        OGRSpatialReference *, 
                                        OGRwkbGeometryType, 
                                        char ** )
@@ -312,10 +313,7 @@ static int WriteValue( VSILFILE *fp, int nCode, double dfValue )
 {
     char szLinePair[64];
 
-    snprintf(szLinePair, sizeof(szLinePair), "%3d\n%.15g\n", nCode, dfValue );
-    char* pszComma = strchr(szLinePair, ',');
-    if (pszComma)
-        *pszComma = '.';
+    CPLsnprintf(szLinePair, sizeof(szLinePair), "%3d\n%.15g\n", nCode, dfValue );
     size_t nLen = strlen(szLinePair);
     if( VSIFWriteL( szLinePair, 1, nLen, fp ) != nLen )
     {

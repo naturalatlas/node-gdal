@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: mbtilesdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: mbtilesdataset.cpp 28884 2015-04-12 20:48:02Z rouault $
  *
  * Project:  GDAL MBTiles driver
  * Purpose:  Implement GDAL MBTiles support using OGR SQLite driver
@@ -39,11 +39,25 @@
 
 extern "C" void GDALRegister_MBTiles();
 
-CPL_CVSID("$Id: mbtilesdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: mbtilesdataset.cpp 28884 2015-04-12 20:48:02Z rouault $");
 
 static const char * const apszAllowedDrivers[] = {"JPEG", "PNG", NULL};
 
 class MBTilesBand;
+
+/************************************************************************/
+/*                         MBTILESOpenSQLiteDB()                        */
+/************************************************************************/
+
+OGRDataSourceH MBTILESOpenSQLiteDB(const char* pszFilename,
+                                      GDALAccess eAccess)
+{
+    const char* apszAllowedDrivers[] = { "SQLITE", NULL };
+    return (OGRDataSourceH)GDALOpenEx(pszFilename,
+                                      GDAL_OF_VECTOR |
+                                      ((eAccess == GA_Update) ? GDAL_OF_UPDATE : 0),
+                                      apszAllowedDrivers, NULL, NULL);
+}
 
 /************************************************************************/
 /* ==================================================================== */
@@ -183,7 +197,9 @@ CPLErr MBTilesBand::IReadBlock( int nBlockXOff, int nBlockYOff, void * pImage)
                                             nDataSize, FALSE);
         VSIFCloseL(fp);
 
-        GDALDatasetH hDSTile = GDALOpenInternal(osMemFileName.c_str(), GA_ReadOnly, apszAllowedDrivers);
+        GDALDatasetH hDSTile = GDALOpenEx(osMemFileName.c_str(),
+                                          GDAL_OF_RASTER | GDAL_OF_INTERNAL,
+                                          apszAllowedDrivers, NULL, NULL);
         if (hDSTile != NULL)
         {
             int nTileBands = GDALGetRasterCount(hDSTile);
@@ -772,8 +788,11 @@ const char *MBTilesBand::GetMetadataItem( const char * pszName,
             double adfInvGeoTransform[6];
             double dfGeoX, dfGeoY;
 
-            if( sscanf( pszName+9, "%lf_%lf", &dfGeoX, &dfGeoY ) != 2 )
+            dfGeoX = CPLAtof(pszName + 9);
+            const char* pszUnderscore = strchr(pszName + 9, '_');
+            if( !pszUnderscore )
                 return NULL;
+            dfGeoY = CPLAtof(pszUnderscore + 1);
 
             if( GetDataset() == NULL )
                 return NULL;
@@ -1030,8 +1049,7 @@ int MBTilesDataset::CloseDependentDatasets()
 /*                          GetGeoTransform()                           */
 /************************************************************************/
 
-//#define MAX_GM 20037508.3427892
-#define MAX_GM 20037500.
+#define MAX_GM 20037508.34
 
 CPLErr MBTilesDataset::GetGeoTransform(double* padfGeoTransform)
 {
@@ -1275,7 +1293,9 @@ int MBTilesGetMinMaxZoomLevel(OGRDataSourceH hDS, int bHasMap,
 /************************************************************************/
 
 static
-int MBTilesGetBounds(OGRDataSourceH hDS, CPL_UNUSED int nMinLevel, int nMaxLevel,
+int MBTilesGetBounds(OGRDataSourceH hDS,
+                     CPL_UNUSED int nMinLevel,
+                     int nMaxLevel,
                      int& nMinTileRow, int& nMaxTileRow,
                      int& nMinTileCol, int &nMaxTileCol)
 {
@@ -1295,12 +1315,12 @@ int MBTilesGetBounds(OGRDataSourceH hDS, CPL_UNUSED int nMinLevel, int nMaxLevel
             const char* pszBounds = OGR_F_GetFieldAsString(hFeat, 0);
             char** papszTokens = CSLTokenizeString2(pszBounds, ",", 0);
             if (CSLCount(papszTokens) != 4 ||
-                fabs(atof(papszTokens[0])) > 180 ||
-                fabs(atof(papszTokens[1])) > 86 ||
-                fabs(atof(papszTokens[2])) > 180 ||
-                fabs(atof(papszTokens[3])) > 86 ||
-                atof(papszTokens[0]) > atof(papszTokens[2]) ||
-                atof(papszTokens[1]) > atof(papszTokens[3]))
+                fabs(CPLAtof(papszTokens[0])) > 180 ||
+                fabs(CPLAtof(papszTokens[1])) > 86 ||
+                fabs(CPLAtof(papszTokens[2])) > 180 ||
+                fabs(CPLAtof(papszTokens[3])) > 86 ||
+                CPLAtof(papszTokens[0]) > CPLAtof(papszTokens[2]) ||
+                CPLAtof(papszTokens[1]) > CPLAtof(papszTokens[3]))
             {
                 CPLError(CE_Failure, CPLE_AppDefined, "Invalid value for 'bounds' metadata");
                 CSLDestroy(papszTokens);
@@ -1314,10 +1334,10 @@ int MBTilesGetBounds(OGRDataSourceH hDS, CPL_UNUSED int nMinLevel, int nMaxLevel
             #define LAT_TO_NORTHING(lat) \
                 6378137 * log(tan(FORTPI + .5 * (lat) / 180 * (4 * FORTPI)))
 
-            nMinTileCol = (int)(((atof(papszTokens[0]) + 180) / 360) * (1 << nMaxLevel));
-            nMaxTileCol = (int)(((atof(papszTokens[2]) + 180) / 360) * (1 << nMaxLevel));
-            nMinTileRow = (int)(0.5 + ((LAT_TO_NORTHING(atof(papszTokens[1])) + MAX_GM) / (2* MAX_GM)) * (1 << nMaxLevel));
-            nMaxTileRow = (int)(0.5 + ((LAT_TO_NORTHING(atof(papszTokens[3])) + MAX_GM) / (2* MAX_GM)) * (1 << nMaxLevel));
+            nMinTileCol = (int)(((CPLAtof(papszTokens[0]) + 180) / 360) * (1 << nMaxLevel));
+            nMaxTileCol = (int)(((CPLAtof(papszTokens[2]) + 180) / 360) * (1 << nMaxLevel));
+            nMinTileRow = (int)(0.5 + ((LAT_TO_NORTHING(CPLAtof(papszTokens[1])) + MAX_GM) / (2* MAX_GM)) * (1 << nMaxLevel));
+            nMaxTileRow = (int)(0.5 + ((LAT_TO_NORTHING(CPLAtof(papszTokens[3])) + MAX_GM) / (2* MAX_GM)) * (1 << nMaxLevel));
 
             bHasBounds = TRUE;
 
@@ -1353,9 +1373,9 @@ int MBTilesGetBounds(OGRDataSourceH hDS, CPL_UNUSED int nMinLevel, int nMaxLevel
             OGR_F_IsFieldSet(hFeat, 3))
         {
             nMinTileCol = OGR_F_GetFieldAsInteger(hFeat, 0);
-            nMaxTileCol = OGR_F_GetFieldAsInteger(hFeat, 1);
+            nMaxTileCol = OGR_F_GetFieldAsInteger(hFeat, 1) + 1;
             nMinTileRow = OGR_F_GetFieldAsInteger(hFeat, 2);
-            nMaxTileRow = OGR_F_GetFieldAsInteger(hFeat, 3);
+            nMaxTileRow = OGR_F_GetFieldAsInteger(hFeat, 3) + 1;
             bHasBounds = TRUE;
         }
 
@@ -1480,7 +1500,9 @@ static int MBTilesCurlReadCbk(CPL_UNUSED VSILFILE* fp,
 /************************************************************************/
 
 static
-int MBTilesGetBandCount(OGRDataSourceH &hDS, CPL_UNUSED int nMinLevel, int nMaxLevel,
+int MBTilesGetBandCount(OGRDataSourceH &hDS,
+                        CPL_UNUSED int nMinLevel,
+                        int nMaxLevel,
                         int nMinTileRow, int nMaxTileRow,
                         int nMinTileCol, int nMaxTileCol)
 {
@@ -1553,7 +1575,7 @@ int MBTilesGetBandCount(OGRDataSourceH &hDS, CPL_UNUSED int nMinLevel, int nMaxL
             /* No worry ! This will be fast because the /vsicurl/ cache has cached the already */
             /* read blocks */
             OGRReleaseDataSource(hDS);
-            hDS = OGROpen(osDSName.c_str(), FALSE, NULL);
+            hDS = MBTILESOpenSQLiteDB(osDSName.c_str(), GA_ReadOnly);
             if (hDS == NULL)
                 return -1;
 
@@ -1607,8 +1629,8 @@ int MBTilesGetBandCount(OGRDataSourceH &hDS, CPL_UNUSED int nMinLevel, int nMaxL
     VSIFCloseL(VSIFileFromMemBuffer( osMemFileName.c_str(), pabyData,
                                     nDataSize, FALSE));
 
-    GDALDatasetH hDSTile =
-        GDALOpenInternal(osMemFileName.c_str(), GA_ReadOnly, apszAllowedDrivers);
+    GDALDatasetH hDSTile = GDALOpenEx(osMemFileName.c_str(), GDAL_OF_RASTER,
+                                          apszAllowedDrivers, NULL, NULL);
     if (hDSTile == NULL)
     {
         VSIUnlink(osMemFileName.c_str());
@@ -1672,7 +1694,7 @@ GDALDataset* MBTilesDataset::Open(GDALOpenInfo* poOpenInfo)
 /*      Open underlying OGR DB                                          */
 /* -------------------------------------------------------------------- */
 
-    OGRDataSourceH hDS = OGROpen(poOpenInfo->pszFilename, FALSE, NULL);
+    OGRDataSourceH hDS = MBTILESOpenSQLiteDB(poOpenInfo->pszFilename, GA_ReadOnly);
 
     MBTilesDataset* poDS = NULL;
 
@@ -1746,7 +1768,7 @@ GDALDataset* MBTilesDataset::Open(GDALOpenInfo* poOpenInfo)
         if (bHasMinMaxLevel && (nMinLevel < 0 || nMinLevel > nMaxLevel))
         {
             CPLError(CE_Failure, CPLE_AppDefined,
-                     "Inconsistant values : min(zoom_level) = %d, max(zoom_level) = %d",
+                     "Inconsistent values : min(zoom_level) = %d, max(zoom_level) = %d",
                      nMinLevel, nMaxLevel);
             goto end;
         }
@@ -1899,6 +1921,7 @@ void GDALRegister_MBTiles()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "MBTiles" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "MBTiles" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

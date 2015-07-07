@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogringresdatasource.cpp 26506 2013-09-30 18:17:55Z rouault $
+ * $Id: ogringresdatasource.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIngresDataSource class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogringresdatasource.cpp 26506 2013-09-30 18:17:55Z rouault $");
+CPL_CVSID("$Id: ogringresdatasource.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                            SetConnParam()                            */
@@ -853,11 +853,11 @@ int OGRIngresDataSource::DeleteLayer( int iLayer)
 
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRIngresDataSource::CreateLayer( const char * pszLayerNameIn,
+OGRIngresDataSource::ICreateLayer( const char * pszLayerNameIn,
                               OGRSpatialReference *poSRS,
                               OGRwkbGeometryType eType,
                               char ** papszOptions )

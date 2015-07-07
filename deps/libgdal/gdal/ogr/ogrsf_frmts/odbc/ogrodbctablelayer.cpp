@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodbctablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrodbctablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRODBCTableLayer class, access to an existing table.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_odbc.h"
 
-CPL_CVSID("$Id: ogrodbctablelayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrodbctablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 /************************************************************************/
 /*                          OGRODBCTableLayer()                         */
 /************************************************************************/
@@ -82,6 +82,8 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 
     CPLFree( pszFIDColumn );
     pszFIDColumn = NULL;
+    
+    SetDescription( pszLayerName );
 
 /* -------------------------------------------------------------------- */
 /*      Parse out schema name if present in layer.  We assume a         */
@@ -275,7 +277,7 @@ void OGRODBCTableLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRODBCTableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRODBCTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( pszFIDColumn == NULL )
@@ -288,7 +290,7 @@ OGRFeature *OGRODBCTableLayer::GetFeature( long nFeatureId )
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
     poStmt->Append( poFeatureDefn->GetName() );
-    poStmt->Appendf( " WHERE %s = %ld", pszFIDColumn, nFeatureId );
+    poStmt->Appendf( " WHERE %s = " CPL_FRMT_GIB, pszFIDColumn, nFeatureId );
 
     if( !poStmt->ExecuteSQL() )
     {
@@ -347,7 +349,7 @@ int OGRODBCTableLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRODBCTableLayer::GetFeatureCount( int bForce )
+GIntBig OGRODBCTableLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom != NULL )
@@ -368,7 +370,7 @@ int OGRODBCTableLayer::GetFeatureCount( int bForce )
         return OGRODBCLayer::GetFeatureCount(bForce);
     }
 
-    return atoi(oStmt.GetColData(0));
+    return CPLAtoGIntBig(oStmt.GetColData(0));
 }
 
 /************************************************************************/

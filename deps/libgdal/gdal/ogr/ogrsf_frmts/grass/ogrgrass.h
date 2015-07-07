@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgrass.h 20157 2010-07-28 19:32:04Z rouault $
+ * $Id: ogrgrass.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/GRASS driver.
@@ -55,16 +55,16 @@ class OGRGRASSLayer : public OGRLayer
 
     // Layer info
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
-    int                 GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int );
     OGRErr              GetExtent(OGREnvelope *psExtent, int bForce);
     virtual OGRSpatialReference *GetSpatialRef();
     int                 TestCapability( const char * );
 
     // Reading
     void                ResetReading();
-    virtual OGRErr      SetNextByIndex( long nIndex );
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex );
     OGRFeature *        GetNextFeature();
-    OGRFeature         *GetFeature( long nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId );
 
     // Filters
     virtual OGRErr 	SetAttributeFilter( const char *query );
@@ -72,8 +72,8 @@ class OGRGRASSLayer : public OGRLayer
 
     // Write access, not supported:
     virtual OGRErr      CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE );
-    OGRErr              SetFeature( OGRFeature *poFeature );
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ISetFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     
   private:
     char		*pszName;
@@ -142,7 +142,7 @@ class OGRGRASSDataSource : public OGRDataSource
     int                 TestCapability( const char * );
 
     // Not implemented (returns NULL):
-    virtual OGRLayer    *CreateLayer( const char *, 
+    virtual OGRLayer    *ICreateLayer( const char *, 
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

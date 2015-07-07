@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_avc.h 14784 2008-06-28 22:25:49Z warmerdam $
+ * $Id: ogr_avc.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  Arc/Info Coverage (E00 & Binary) Reader
  * Purpose:  Declarations for OGR wrapper classes for coverage access.
@@ -129,7 +129,7 @@ class OGRAVCBinLayer : public OGRAVCLayer
 
     void		ResetReading();
     OGRFeature *	GetNextFeature();
-    OGRFeature *	GetFeature( long nFID );
+    OGRFeature *	GetFeature( GIntBig nFID );
 
     int                 TestCapability( const char * );
 };
@@ -160,21 +160,6 @@ class OGRAVCBinDataSource : public OGRAVCDataSource
     int                 TestCapability( const char * );
 
     AVCE00ReadPtr       GetInfo() { return psAVC; }
-};
-
-/************************************************************************/
-/*                           OGRAVCBinDriver                            */
-/************************************************************************/
-
-class OGRAVCBinDriver : public OGRSFDriver
-{
-  public:
-    		~OGRAVCBinDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    int                 TestCapability( const char * );
 };
 
 /* ==================================================================== */
@@ -210,8 +195,8 @@ class OGRAVCE00Layer : public OGRAVCLayer
 
     void		ResetReading();
     OGRFeature *	GetNextFeature();
-    OGRFeature *GetFeature( long nFID );
-    int GetFeatureCount(int bForce);
+    OGRFeature *GetFeature( GIntBig nFID );
+    GIntBig GetFeatureCount(int bForce);
     int CheckSetupTable(AVCE00Section *psTblSectionIn);
     int AppendTableFields( OGRFeature *poFeature );
 };
@@ -245,19 +230,5 @@ class OGRAVCE00DataSource : public OGRAVCDataSource
     virtual OGRSpatialReference *GetSpatialRef();
 };
 
-/************************************************************************/
-/*                           OGRAVCE00Driver                            */
-/************************************************************************/
-
-class OGRAVCE00Driver : public OGRSFDriver
-{
-  public:
-    		~OGRAVCE00Driver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-
-    int                 TestCapability( const char * );
-};
 
 #endif /* _OGR_AVC_H_INCLUDED */

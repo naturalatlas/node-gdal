@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmysqlresultlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrmysqlresultlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLResultLayer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "ogr_mysql.h"
 
-CPL_CVSID("$Id: ogrmysqlresultlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrmysqlresultlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                        OGRMySQLResultLayer()                         */
@@ -79,6 +79,7 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
 /*      Parse the returned table information.                           */
 /* -------------------------------------------------------------------- */
     OGRFeatureDefn *poDefn = new OGRFeatureDefn( "sql_statement" );
+    SetDescription( poDefn->GetName() );
     int            iRawField;
 
     poDefn->Reference();
@@ -298,7 +299,7 @@ void OGRMySQLResultLayer::ResetReading()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRMySQLResultLayer::GetFeatureCount( int bForce )
+GIntBig OGRMySQLResultLayer::GetFeatureCount( int bForce )
 
 {
     // I wonder if we could do anything smart here...

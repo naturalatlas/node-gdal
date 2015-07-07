@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_port.h 27701 2014-09-20 15:07:02Z goatbar $
+ * $Id: cpl_port.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -219,16 +219,30 @@ typedef int             GBool;
 typedef __int64          GIntBig;
 typedef unsigned __int64 GUIntBig;
 
+#define GINTBIG_MIN     ((GIntBig)(0x80000000) << 32)
+#define GINTBIG_MAX     (((GIntBig)(0x7FFFFFFF) << 32) | 0xFFFFFFFFU)
+
 #elif HAVE_LONG_LONG
 
 typedef long long        GIntBig;
 typedef unsigned long long GUIntBig;
+
+#define GINTBIG_MIN     ((GIntBig)(0x80000000) << 32)
+#define GINTBIG_MAX     (((GIntBig)(0x7FFFFFFF) << 32) | 0xFFFFFFFFU)
 
 #else
 
 typedef long             GIntBig;
 typedef unsigned long    GUIntBig;
 
+#define GINTBIG_MIN     INT_MIN
+#define GINTBIG_MAX     INT_MAX
+#endif
+
+#if SIZEOF_VOIDP == 8
+typedef GIntBig          GPtrDiff_t;
+#else
+typedef int              GPtrDiff_t;
 #endif
 
 #if defined(__MSVCRT__) || (defined(WIN32) && defined(_MSC_VER))
@@ -294,7 +308,7 @@ typedef unsigned long    GUIntBig;
 #endif
 
 /* TODO : support for other compilers needed */
-#if defined(__GNUC__) || defined(_MSC_VER)
+#if (defined(__GNUC__) && !defined(__NO_INLINE__)) || defined(_MSC_VER)
 #define HAS_CPL_INLINE  1
 #define CPL_INLINE __inline
 #elif defined(__SUNPRO_CC)
@@ -600,6 +614,12 @@ static char *cvsid_aw() { return( cvsid_aw() ? ((char *) NULL) : cpl_cvsid ); }
 #else
   #define CPL_WARN_DEPRECATED(x)
 #endif
+#endif
+
+#ifdef WARN_STANDARD_PRINTF
+int vsnprintf(char *str, size_t size, const char* fmt, va_list args) CPL_WARN_DEPRECATED("Use CPLvsnprintf() instead");
+int snprintf(char *str, size_t size, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(3,4) CPL_WARN_DEPRECATED("Use CPLsnprintf() instead");
+int sprintf(char *str, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(2, 3) CPL_WARN_DEPRECATED("Use CPLsprintf() instead");
 #endif
 
 #endif /* ndef CPL_BASE_H_INCLUDED */

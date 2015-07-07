@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_priv.h 27874 2014-10-17 18:36:22Z rouault $
+ * $Id: gdal_priv.h 29284 2015-06-03 13:26:10Z rouault $
  *
  * Name:     gdal_priv.h
  * Project:  GDAL Core
@@ -57,7 +57,10 @@ class GDALAsyncReader;
 #include "cpl_conv.h"
 #include "cpl_string.h"
 #include "cpl_minixml.h"
+#include "cpl_multiproc.h"
 #include <vector>
+#include <map>
+#include "ogr_core.h"
 
 #define GMO_VALID                0x0001
 #define GMO_IGNORE_UNIMPLEMENTED 0x0002
@@ -124,7 +127,7 @@ class CPL_DLL GDALMajorObject
     virtual            ~GDALMajorObject();
 
     int                 GetMOFlags();
-    void                SetMOFlags(int nFlags);
+    void                SetMOFlags(int nFlagsIn);
                         
     virtual const char *GetDescription() const;
     virtual void        SetDescription( const char * );
@@ -174,7 +177,7 @@ class CPL_DLL GDALDefaultOverviews
                GDALDefaultOverviews();
                ~GDALDefaultOverviews();
 
-    void       Initialize( GDALDataset *poDS, const char *pszName = NULL, 
+    void       Initialize( GDALDataset *poDSIn, const char *pszName = NULL, 
                            char **papszSiblingFiles = NULL,
                            int bNameIsOVR = FALSE );
 
@@ -223,57 +226,77 @@ class CPL_DLL GDALDefaultOverviews
 
 class CPL_DLL GDALOpenInfo
 {
+    int         bHasGotSiblingFiles;
+    char        **papszSiblingFiles;
+    int         nHeaderBytesTried;
+
   public:
-                GDALOpenInfo( const char * pszFile, GDALAccess eAccessIn,
+                GDALOpenInfo( const char * pszFile, int nOpenFlagsIn,
                               char **papszSiblingFiles = NULL );
                 ~GDALOpenInfo( void );
 
     char        *pszFilename;
-    char        **papszSiblingFiles;
+    char**      papszOpenOptions;
 
     GDALAccess  eAccess;
+    int         nOpenFlags;
 
     int         bStatOK;
     int         bIsDirectory;
 
-    FILE        *fp;
+    VSILFILE   *fpL;
 
     int         nHeaderBytes;
     GByte       *pabyHeader;
 
+    int         TryToIngest(int nBytes);
+    char      **GetSiblingFiles();
 };
 
 /* ******************************************************************** */
 /*                             GDALDataset                              */
 /* ******************************************************************** */
 
-/* Internal method for now. Might be subject to later revisions */
-GDALDatasetH GDALOpenInternal( const char * pszFilename, GDALAccess eAccess,
-                               const char* const * papszAllowedDrivers);
-GDALDatasetH GDALOpenInternal( GDALOpenInfo& oOpenInfo,
-                               const char* const * papszAllowedDrivers);
+class OGRLayer;
+class OGRGeometry;
+class OGRSpatialReference;
+class OGRStyleTable;
+class swq_select;
+class swq_select_parse_options;
+typedef struct GDALSQLParseInfo GDALSQLParseInfo;
+
+#ifdef DETECT_OLD_IRASTERIO
+typedef void signature_changed;
+#endif
+
+#ifdef GDAL_COMPILATION
+#define OPTIONAL_OUTSIDE_GDAL(val)
+#else
+#define OPTIONAL_OUTSIDE_GDAL(val) = val
+#endif
 
 //! A set of associated raster bands, usually from one file.
 
 class CPL_DLL GDALDataset : public GDALMajorObject
 {
-    friend GDALDatasetH CPL_STDCALL GDALOpen( const char *, GDALAccess);
-    friend GDALDatasetH CPL_STDCALL GDALOpenShared( const char *, GDALAccess);
-
-    /* Internal method for now. Might be subject to later revisions */
-    friend GDALDatasetH GDALOpenInternal( const char *, GDALAccess, const char* const * papszAllowedDrivers);
-    friend GDALDatasetH GDALOpenInternal( GDALOpenInfo& oOpenInfo,
-                                          const char* const * papszAllowedDrivers);
+    friend GDALDatasetH CPL_STDCALL GDALOpenEx( const char* pszFilename,
+                                 unsigned int nOpenFlags,
+                                 const char* const* papszAllowedDrivers,
+                                 const char* const* papszOpenOptions,
+                                 const char* const* papszSiblingFiles );
+    friend void CPL_STDCALL GDALClose( GDALDatasetH hDS );
 
     friend class GDALDriver;
     friend class GDALDefaultOverviews;
     friend class GDALProxyDataset;
     friend class GDALDriverManager;
+    
+    void AddToDatasetOpenList();
 
   protected:
     GDALDriver  *poDriver;
     GDALAccess  eAccess;
-    
+
     // Stored raster information.
     int         nRasterXSize;
     int         nRasterYSize;
@@ -284,8 +307,13 @@ class CPL_DLL GDALDataset : public GDALMajorObject
 
     int         nRefCount;
     int         bShared;
+    GByte       bIsInternal;
+    GByte       bSuppressOnClose;
+    GByte       bReserved1;
+    GByte       bReserved2;
 
                 GDALDataset(void);
+
     void        RasterInitialize( int, int );
     void        SetBand( int, GDALRasterBand * );
 
@@ -293,14 +321,22 @@ class CPL_DLL GDALDataset : public GDALMajorObject
     
     virtual CPLErr IBuildOverviews( const char *, int, int *,
                                     int, int *, GDALProgressFunc, void * );
-    
+
+#ifdef DETECT_OLD_IRASTERIO
+    virtual signature_changed IRasterIO( GDALRWFlag, int, int, int, int,
+                              void *, int, int, GDALDataType,
+                              int, int *, int, int, int ) {};
+#endif
+
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *, GSpacing, GSpacing, GSpacing,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     CPLErr BlockBasedRasterIO( GDALRWFlag, int, int, int, int,
                                void *, int, int, GDALDataType,
-                               int, int *, int, int, int );
+                               int, int *, GSpacing, GSpacing, GSpacing,
+                               GDALRasterIOExtraArg* psExtraArg );
     void   BlockBasedFlushCache();
 
     CPLErr ValidateRasterIOOrAdviseReadParameters(
@@ -311,8 +347,16 @@ class CPL_DLL GDALDataset : public GDALMajorObject
                                int nBandCount, int *panBandMap);
 
     virtual int         CloseDependentDatasets();
+    
+    int                 ValidateLayerCreationOptions( const char* const* papszLCO );
+    
+    char            **papszOpenOptions;
 
     friend class GDALRasterBand;
+    
+    int                 EnterReadWrite(GDALRWFlag eRWFlag);
+    void                LeaveReadWrite();
+    
     
   public:
     virtual     ~GDALDataset();
@@ -336,7 +380,9 @@ class CPL_DLL GDALDataset : public GDALMajorObject
     virtual void *GetInternalHandle( const char * );
     virtual GDALDriver *GetDriver(void);
     virtual char      **GetFileList(void);
-
+    
+    virtual     const char* GetDriverName();
+    
     virtual int    GetGCPCount();
     virtual const char *GetGCPProjection();
     virtual const GDAL_GCP *GetGCPs();
@@ -349,7 +395,7 @@ class CPL_DLL GDALDataset : public GDALMajorObject
                                int nBandCount, int *panBandList,
                                char **papszOptions );
 
-    virtual CPLErr          CreateMaskBand( int nFlags );
+    virtual CPLErr          CreateMaskBand( int nFlagsIn );
 
     virtual GDALAsyncReader* 
         BeginAsyncReader(int nXOff, int nYOff, int nXSize, int nYSize,
@@ -362,7 +408,12 @@ class CPL_DLL GDALDataset : public GDALMajorObject
 
     CPLErr      RasterIO( GDALRWFlag, int, int, int, int,
                           void *, int, int, GDALDataType,
-                          int, int *, int, int, int );
+                          int, int *, GSpacing, GSpacing, GSpacing,
+                          GDALRasterIOExtraArg* psExtraArg
+#ifndef DOXYGEN_SKIP
+                          OPTIONAL_OUTSIDE_GDAL(NULL)
+#endif
+                          );
 
     int           Reference();
     int           Dereference();
@@ -370,6 +421,10 @@ class CPL_DLL GDALDataset : public GDALMajorObject
 
     int           GetShared();
     void          MarkAsShared();
+    
+    void          MarkSuppressOnClose() { bSuppressOnClose = TRUE; }
+    
+    char        **GetOpenOptions() { return papszOpenOptions; }
 
     static GDALDataset **GetOpenDatasets( int *pnDatasetCount );
 
@@ -377,6 +432,77 @@ class CPL_DLL GDALDataset : public GDALMajorObject
                            int, int *, GDALProgressFunc, void * );
 
     void ReportError(CPLErr eErrClass, int err_no, const char *fmt, ...)  CPL_PRINT_FUNC_FORMAT (4, 5);
+
+private:
+    CPLMutex        *m_hMutex;
+
+    OGRLayer*       BuildLayerFromSelectInfo(swq_select* psSelectInfo,
+                                             OGRGeometry *poSpatialFilter,
+                                             const char *pszDialect,
+                                             swq_select_parse_options* poSelectParseOptions);
+
+  public:
+
+    virtual int         GetLayerCount();
+    virtual OGRLayer    *GetLayer(int);
+    virtual OGRLayer    *GetLayerByName(const char *);
+    virtual OGRErr      DeleteLayer(int);
+
+    virtual int         TestCapability( const char * );
+
+    virtual OGRLayer   *CreateLayer( const char *pszName, 
+                                     OGRSpatialReference *poSpatialRef = NULL,
+                                     OGRwkbGeometryType eGType = wkbUnknown,
+                                     char ** papszOptions = NULL );
+    virtual OGRLayer   *CopyLayer( OGRLayer *poSrcLayer, 
+                                   const char *pszNewName, 
+                                   char **papszOptions = NULL );
+
+    virtual OGRStyleTable *GetStyleTable();
+    virtual void        SetStyleTableDirectly( OGRStyleTable *poStyleTable );
+                            
+    virtual void        SetStyleTable(OGRStyleTable *poStyleTable);
+
+    virtual OGRLayer *  ExecuteSQL( const char *pszStatement,
+                                    OGRGeometry *poSpatialFilter,
+                                    const char *pszDialect );
+    virtual void        ReleaseResultSet( OGRLayer * poResultsSet );
+
+    int                 GetRefCount() const;
+    int                 GetSummaryRefCount() const;
+    OGRErr              Release();
+
+    virtual OGRErr      StartTransaction(int bForce=FALSE);
+    virtual OGRErr      CommitTransaction();
+    virtual OGRErr      RollbackTransaction();
+    
+    static int          IsGenericSQLDialect(const char* pszDialect);
+    
+    // Semi-public methods. Only to be used by in-tree drivers.
+    GDALSQLParseInfo*   BuildParseInfo(swq_select* psSelectInfo,
+                                       swq_select_parse_options* poSelectParseOptions);
+    void                DestroyParseInfo(GDALSQLParseInfo* psParseInfo );
+    OGRLayer *          ExecuteSQL( const char *pszStatement,
+                                    OGRGeometry *poSpatialFilter,
+                                    const char *pszDialect,
+                                    swq_select_parse_options* poSelectParseOptions);
+
+  protected:
+
+    virtual OGRLayer   *ICreateLayer( const char *pszName, 
+                                     OGRSpatialReference *poSpatialRef = NULL,
+                                     OGRwkbGeometryType eGType = wkbUnknown,
+                                     char ** papszOptions = NULL );
+
+    OGRErr              ProcessSQLCreateIndex( const char * );
+    OGRErr              ProcessSQLDropIndex( const char * );
+    OGRErr              ProcessSQLDropTable( const char * );
+    OGRErr              ProcessSQLAlterTableAddColumn( const char * );
+    OGRErr              ProcessSQLAlterTableDropColumn( const char * );
+    OGRErr              ProcessSQLAlterTableAlterColumn( const char * );
+    OGRErr              ProcessSQLAlterTableRenameColumn( const char * );
+
+    OGRStyleTable      *m_poStyleTable;
 };
 
 /* ******************************************************************** */
@@ -404,6 +530,11 @@ class CPL_DLL GDALRasterBlock
     
     GDALRasterBlock     *poNext;
     GDALRasterBlock     *poPrevious;
+    
+    int                  bMustDetach;
+    
+    void        Touch_unlocked( void );
+    void        Detach_unlocked( void );
 
   public:
                 GDALRasterBlock( GDALRasterBand *, int, int );
@@ -428,12 +559,14 @@ class CPL_DLL GDALRasterBlock
     int         GetLockCount() { return nLockCount; }
 
     void        *GetDataRef( void ) { return pData; }
+    int          GetBlockSize() { return nXSize * nYSize * (GDALGetDataTypeSize(eType) / 8); }
 
     /// @brief Accessor to source GDALRasterBand object.
     /// @return source raster band of the raster block.
     GDALRasterBand *GetBand() { return poBand; }
 
-    static int  FlushCacheBlock();
+    static void FlushDirtyBlocks();
+    static int  FlushCacheBlock(int bDirtyBlocksOnly = FALSE);
     static void Verify();
 
     static int  SafeLockBlock( GDALRasterBlock ** );
@@ -459,6 +592,7 @@ public:
                 ~GDALColorTable();
 
     GDALColorTable *Clone() const;
+    int             IsSame(const GDALColorTable* poOtherCT) const;
 
     GDALPaletteInterp GetPaletteInterpretation() const;
 
@@ -484,6 +618,7 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     void           SetFlushBlockErr( CPLErr eErr );
 
     friend class GDALRasterBlock;
+    CPLErr         UnreferenceBlock( int nXBlockOff, int nYBlockOff );
 
   protected:
     GDALDataset *poDS;
@@ -512,22 +647,36 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     GDALRasterBand *poMask;
     bool        bOwnMask;
     int         nMaskFlags;
-    
+
     void        InvalidateMaskBand();
 
     friend class GDALDataset;
     friend class GDALProxyRasterBand;
     friend class GDALDefaultOverviews;
 
+    CPLErr RasterIOResampled( GDALRWFlag, int, int, int, int,
+                              void *, int, int, GDALDataType,
+                              GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg );
+
+    int          EnterReadWrite(GDALRWFlag eRWFlag);
+    void         LeaveReadWrite();
+
   protected:
     virtual CPLErr IReadBlock( int, int, void * ) = 0;
     virtual CPLErr IWriteBlock( int, int, void * );
+
+#ifdef DETECT_OLD_IRASTERIO
+    virtual signature_changed IRasterIO( GDALRWFlag, int, int, int, int,
+                              void *, int, int, GDALDataType,
+                              int, int ) {};
+#endif
+
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg );
     CPLErr         OverviewRasterIO( GDALRWFlag, int, int, int, int,
                                      void *, int, int, GDALDataType,
-                                     int, int );
+                                     GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg );
 
     int            InitBlockInfo();
 
@@ -550,7 +699,11 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     
     CPLErr      RasterIO( GDALRWFlag, int, int, int, int,
                           void *, int, int, GDALDataType,
-                          int, int );
+                          GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg
+#ifndef DOXYGEN_SKIP
+                          OPTIONAL_OUTSIDE_GDAL(NULL)
+#endif
+                          );
     CPLErr      ReadBlock( int, int, void * );
 
     CPLErr      WriteBlock( int, int, void * );
@@ -599,7 +752,7 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     virtual int HasArbitraryOverviews();
     virtual int GetOverviewCount();
     virtual GDALRasterBand *GetOverview(int);
-    virtual GDALRasterBand *GetRasterSampleOverview( int );
+    virtual GDALRasterBand *GetRasterSampleOverview( GUIntBig );
     virtual CPLErr BuildOverviews( const char *, int, int *,
                                    GDALProgressFunc, void * );
 
@@ -608,23 +761,23 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
                                GDALDataType eDT, char **papszOptions );
 
     virtual CPLErr  GetHistogram( double dfMin, double dfMax,
-                          int nBuckets, int * panHistogram,
+                          int nBuckets, GUIntBig * panHistogram,
                           int bIncludeOutOfRange, int bApproxOK,
                           GDALProgressFunc, void *pProgressData );
 
     virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                        int *pnBuckets, int ** ppanHistogram,
+                                        int *pnBuckets, GUIntBig ** ppanHistogram,
                                         int bForce,
                                         GDALProgressFunc, void *pProgressData);
     virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                        int nBuckets, int *panHistogram );
+                                        int nBuckets, GUIntBig *panHistogram );
 
     virtual GDALRasterAttributeTable *GetDefaultRAT();
     virtual CPLErr SetDefaultRAT( const GDALRasterAttributeTable * );
 
     virtual GDALRasterBand *GetMaskBand();
     virtual int             GetMaskFlags();
-    virtual CPLErr          CreateMaskBand( int nFlags );
+    virtual CPLErr          CreateMaskBand( int nFlagsIn );
 
     virtual CPLVirtualMem  *GetVirtualMemAuto( GDALRWFlag eRWFlag,
                                                int *pnPixelSpace,
@@ -664,7 +817,7 @@ class CPL_DLL GDALNoDataMaskBand : public GDALRasterBand
     virtual CPLErr IReadBlock( int, int, void * );
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg );
 
   public:
                 GDALNoDataMaskBand( GDALRasterBand * );
@@ -700,7 +853,7 @@ class GDALRescaledAlphaBand : public GDALRasterBand
     virtual CPLErr IReadBlock( int, int, void * );
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing, GSpacing, GDALRasterIOExtraArg* psExtraArg );
 
   public:
                 GDALRescaledAlphaBand( GDALRasterBand * );
@@ -729,6 +882,10 @@ class CPL_DLL GDALDriver : public GDALMajorObject
                         GDALDriver();
                         ~GDALDriver();
 
+    virtual CPLErr      SetMetadataItem( const char * pszName,
+                                 const char * pszValue,
+                                 const char * pszDomain = "" );
+
 /* -------------------------------------------------------------------- */
 /*      Public C++ methods.                                             */
 /* -------------------------------------------------------------------- */
@@ -746,7 +903,7 @@ class CPL_DLL GDALDriver : public GDALMajorObject
                                      int, char **,
                                      GDALProgressFunc pfnProgress, 
                                      void * pProgressData ) CPL_WARN_UNUSED_RESULT;
-    
+
 /* -------------------------------------------------------------------- */
 /*      The following are semiprivate, not intended to be accessed      */
 /*      by anyone but the formats instantiating and populating the      */
@@ -770,12 +927,24 @@ class CPL_DLL GDALDriver : public GDALMajorObject
 
     void                (*pfnUnloadDriver)(GDALDriver *);
 
+    /* Return 1 if the passed file is certainly recognized by the driver */
+    /* Return 0 if the passed file is certainly NOT recognized by the driver */
+    /* Return -1 if the passed file may be or may not be recognized by the driver,
+       and that a potentially costly test must be done with pfnOpen */
     int                 (*pfnIdentify)( GDALOpenInfo * );
 
     CPLErr              (*pfnRename)( const char * pszNewName,
                                       const char * pszOldName );
     CPLErr              (*pfnCopyFiles)( const char * pszNewName,
                                          const char * pszOldName );
+
+    /* For legacy OGR drivers */
+    GDALDataset         *(*pfnOpenWithDriverArg)( GDALDriver*, GDALOpenInfo * );
+    GDALDataset         *(*pfnCreateVectorOnly)( GDALDriver*,
+                                                 const char * pszName,
+                                                 char ** papszOptions );
+    CPLErr              (*pfnDeleteDataSource)( GDALDriver*,
+                                                 const char * pszName );
 
 /* -------------------------------------------------------------------- */
 /*      Helper methods.                                                 */
@@ -810,8 +979,13 @@ class CPL_DLL GDALDriverManager : public GDALMajorObject
 {
     int         nDrivers;
     GDALDriver  **papoDrivers;
-
-    char        *pszHome;
+    std::map<CPLString, GDALDriver*> oMapNameToDrivers;
+    
+    GDALDriver  *GetDriver_unlocked( int iDriver )
+            { return (iDriver >= 0 && iDriver < nDrivers) ? papoDrivers[iDriver] : NULL; }
+    
+    GDALDriver  *GetDriverByName_unlocked( const char * pszName )
+            { return oMapNameToDrivers[CPLString(pszName).toupper()]; }
     
  public:
                 GDALDriverManager();
@@ -822,14 +996,10 @@ class CPL_DLL GDALDriverManager : public GDALMajorObject
     GDALDriver  *GetDriverByName( const char * );
 
     int         RegisterDriver( GDALDriver * );
-    void        MoveDriver( GDALDriver *, int );
     void        DeregisterDriver( GDALDriver * );
 
     void        AutoLoadDrivers();
     void        AutoSkipDrivers();
-
-    const char *GetHome();
-    void        SetHome( const char * );
 };
 
 CPL_C_START
@@ -902,6 +1072,29 @@ GDALRegenerateOverviewsMultiBand(int nBands, GDALRasterBand** papoSrcBands,
                                  const char * pszResampling, 
                                  GDALProgressFunc pfnProgress, void * pProgressData );
 
+typedef CPLErr (*GDALResampleFunction)
+                      ( double dfXRatioDstToSrc,
+                        double dfYRatioDstToSrc,
+                        double dfSrcXDelta,
+                        double dfSrcYDelta,
+                        GDALDataType eWrkDataType,
+                        void * pChunk,
+                        GByte * pabyChunkNodataMask,
+                        int nChunkXOff, int nChunkXSize,
+                        int nChunkYOff, int nChunkYSize,
+                        int nDstXOff, int nDstXOff2,
+                        int nDstYOff, int nDstYOff2,
+                        GDALRasterBand * poOverview,
+                        const char * pszResampling,
+                        int bHasNoData, float fNoDataValue,
+                        GDALColorTable* poColorTable,
+                        GDALDataType eSrcDataType);
+
+GDALResampleFunction GDALGetResampleFunction(const char* pszResampling,
+                                                 int* pnRadius);
+GDALDataType GDALGetOvrWorkDataType(const char* pszResampling,
+                                        GDALDataType eSrcDataType);
+
 CPL_C_START
 
 #ifndef WIN32CE
@@ -934,9 +1127,17 @@ GDALDefaultBuildOverviews( GDALDataset *hSrcDS, const char * pszBasename,
 int CPL_DLL GDALBandGetBestOverviewLevel(GDALRasterBand* poBand,
                                          int &nXOff, int &nYOff,
                                          int &nXSize, int &nYSize,
-                                         int nBufXSize, int nBufYSize);
+                                         int nBufXSize, int nBufYSize) CPL_WARN_DEPRECATED("Use GDALBandGetBestOverviewLevel2 instead");
+int CPL_DLL GDALBandGetBestOverviewLevel2(GDALRasterBand* poBand,
+                                         int &nXOff, int &nYOff,
+                                         int &nXSize, int &nYSize,
+                                         int nBufXSize, int nBufYSize,
+                                         GDALRasterIOExtraArg* psExtraArg);
 
-int CPL_DLL GDALOvLevelAdjust( int nOvLevel, int nXSize );
+int CPL_DLL GDALOvLevelAdjust( int nOvLevel, int nXSize ) CPL_WARN_DEPRECATED("Use GDALOvLevelAdjust2 instead");
+int CPL_DLL GDALOvLevelAdjust2( int nOvLevel, int nXSize, int nYSize );
+int CPL_DLL GDALComputeOvFactor( int nOvrXSize, int nRasterXSize,
+                                 int nOvrYSize, int nRasterYSize );
 
 GDALDataset CPL_DLL *
 GDALFindAssociatedAuxFile( const char *pszBasefile, GDALAccess eAccess,
@@ -959,7 +1160,7 @@ int CPL_DLL GDALCheckDatasetDimensions( int nXSize, int nYSize );
 int CPL_DLL GDALCheckBandCount( int nBands, int bIsZeroAllowed );
 
 
-// Test if 2 floating point values match. Usefull when comparing values
+// Test if 2 floating point values match. Useful when comparing values
 // stored as a string at some point. See #3573, #4183, #4506
 #define ARE_REAL_EQUAL(dfVal1, dfVal2) \
  (dfVal1 == dfVal2 || fabs(dfVal1 - dfVal2) < 1e-10 || (dfVal2 != 0 && fabs(1 - dfVal1 / dfVal2) < 1e-10 ))
@@ -975,11 +1176,14 @@ int GDALReadTabFile2( const char * pszBaseFilename,
                       int *pnGCPCount, GDAL_GCP **ppasGCPs,
                       char** papszSiblingFiles, char** ppszTabFileNameOut );
 
+void CPL_DLL GDALCopyRasterIOExtraArg(GDALRasterIOExtraArg* psDestArg,
+                                      GDALRasterIOExtraArg* psSrcArg);
+
 CPL_C_END
 
 void GDALNullifyOpenDatasetsList();
-void** GDALGetphDMMutex();
-void** GDALGetphDLMutex();
+CPLMutex** GDALGetphDMMutex();
+CPLMutex** GDALGetphDLMutex();
 void GDALNullifyProxyPoolSingleton();
 GDALDriver* GDALGetAPIPROXYDriver();
 void GDALSetResponsiblePIDForCurrentThread(GIntBig responsiblePID);
@@ -992,6 +1196,23 @@ CPLErr EXIFExtractMetadata(char**& papszMetadata,
                            void *fpL, int nOffset,
                            int bSwabflag, int nTIFFHEADER,
                            int& nExifOffset, int& nInterOffset, int& nGPSOffset);
+
+int GDALValidateOpenOptions( GDALDriverH hDriver,
+                             const char* const* papszOptionOptions);
+int GDALValidateOptions( const char* pszOptionList,
+                         const char* const* papszOptionsToValidate,
+                         const char* pszErrorMessageOptionType,
+                         const char* pszErrorMessageContainerName);
+
+GDALRIOResampleAlg GDALRasterIOGetResampleAlg(const char* pszResampling);
+
+void GDALRasterIOExtraArgSetResampleAlg(GDALRasterIOExtraArg* psExtraArg,
+                                        int nXSize, int nYSize,
+                                        int nBufXSize, int nBufYSize);
+
+/* CPL_DLL exported, but only for gdalwarp */
+GDALDataset CPL_DLL* GDALCreateOverviewDataset(GDALDataset* poDS, int nOvrLevel,
+                                               int bThisLevelOnly, int bOwnDS);
 
 #define DIV_ROUND_UP(a, b) ( ((a) % (b)) == 0 ? ((a) / (b)) : (((a) / (b)) + 1) )
 
@@ -1011,5 +1232,10 @@ void GDALDeserializeGCPListFromXML( CPLXMLNode* psGCPList,
                                     int* pnGCPCount,
                                     char** ppszGCPProjection );
 CPL_C_END
+
+void GDALSerializeOpenOptionsToXML( CPLXMLNode* psParentNode, char** papszOpenOptions);
+char** GDALDeserializeOpenOptionsFromXML( CPLXMLNode* psParentNode );
+
+int GDALCanFileAcceptSidecarFile(const char* pszFilename);
 
 #endif /* ndef GDAL_PRIV_H_INCLUDED */

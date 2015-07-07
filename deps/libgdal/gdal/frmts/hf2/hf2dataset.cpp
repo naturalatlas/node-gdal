@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hf2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hf2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  HF2 driver
  * Purpose:  GDALDataset driver for HF2/HFZ dataset.
@@ -31,7 +31,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: hf2dataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hf2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void    GDALRegister_HF2(void);
@@ -330,7 +330,7 @@ int HF2Dataset::Identify( GDALOpenInfo * poOpenInfo)
 
     GDALOpenInfo* poOpenInfoToDelete = NULL;
     /*  GZipped .hf2 files are common, so automagically open them */
-    /*  if the /vsigzip/ has not been explicitely passed */
+    /*  if the /vsigzip/ has not been explicitly passed */
     CPLString osFilename(poOpenInfo->pszFilename);
     if ((EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "hfz") ||
         (strlen(poOpenInfo->pszFilename) > 6 &&
@@ -341,7 +341,7 @@ int HF2Dataset::Identify( GDALOpenInfo * poOpenInfo)
         osFilename += poOpenInfo->pszFilename;
         poOpenInfo = poOpenInfoToDelete =
                 new GDALOpenInfo(osFilename.c_str(), GA_ReadOnly,
-                                 poOpenInfo->papszSiblingFiles);
+                                 poOpenInfo->GetSiblingFiles());
     }
 
     if (poOpenInfo->nHeaderBytes < 28)
@@ -374,7 +374,7 @@ GDALDataset *HF2Dataset::Open( GDALOpenInfo * poOpenInfo )
 
     GDALOpenInfo* poOpenInfoToDelete = NULL;
     /*  GZipped .hf2 files are common, so automagically open them */
-    /*  if the /vsigzip/ has not been explicitely passed */
+    /*  if the /vsigzip/ has not been explicitly passed */
     CPLString osFilename(poOpenInfo->pszFilename);
     if ((EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "hfz") ||
         (strlen(poOpenInfo->pszFilename) > 6 &&
@@ -385,7 +385,7 @@ GDALDataset *HF2Dataset::Open( GDALOpenInfo * poOpenInfo )
         osFilename += poOpenInfo->pszFilename;
         poOpenInfo = poOpenInfoToDelete =
                 new GDALOpenInfo(osFilename.c_str(), GA_ReadOnly,
-                                 poOpenInfo->papszSiblingFiles);
+                                 poOpenInfo->GetSiblingFiles());
     }
 
 /* -------------------------------------------------------------------- */
@@ -805,7 +805,7 @@ GDALDataset* HF2Dataset::CreateCopy( const char * pszFilename,
 
             if( ABS(dfLinear - 0.3048) < 0.0000001 )
                 nExtentUnits = 2;
-            else if( ABS(dfLinear - atof(SRS_UL_US_FOOT_CONV)) < 0.00000001 )
+            else if( ABS(dfLinear - CPLAtof(SRS_UL_US_FOOT_CONV)) < 0.00000001 )
                 nExtentUnits = 3;
             else
                 nExtentUnits = 1;
@@ -924,7 +924,7 @@ GDALDataset* HF2Dataset::CreateCopy( const char * pszFilename,
                                                 i * nTileSize, MAX(0, nYSize - (j + 1) * nTileSize),
                                                 nReqXSize, nReqYSize,
                                                 pTileBuffer, nReqXSize, nReqYSize,
-                                                eReqDT, 0, 0);
+                                                eReqDT, 0, 0, NULL);
             if (eErr != CE_None)
                 break;
 
@@ -1081,6 +1081,7 @@ void GDALRegister_HF2()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "HF2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "HF2/HFZ heightfield raster" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

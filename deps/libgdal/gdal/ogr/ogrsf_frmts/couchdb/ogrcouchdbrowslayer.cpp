@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbrowslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcouchdbrowslayer.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBRowsLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_couchdb.h"
 
-CPL_CVSID("$Id: ogrcouchdbrowslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcouchdbrowslayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                         OGRCouchDBRowsLayer()                        */
@@ -47,6 +47,8 @@ OGRCouchDBRowsLayer::OGRCouchDBRowsLayer(OGRCouchDBDataSource* poDS) :
 
     OGRFieldDefn oFieldRev("_rev", OFTString);
     poFeatureDefn->AddFieldDefn(&oFieldRev);
+
+    SetDescription( poFeatureDefn->GetName() );
 
     bAllInOne = FALSE;
 }

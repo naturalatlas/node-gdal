@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: FGdbDriver.cpp 28412 2015-02-04 14:32:09Z rouault $
+ * $Id: FGdbDriver.cpp 29180 2015-05-10 15:07:48Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements FileGDB OGR driver.
@@ -35,9 +35,8 @@
 #include "FGdbUtils.h"
 #include "cpl_multiproc.h"
 #include "ogrmutexeddatasource.h"
-#include "ogr_api.h"
 
-CPL_CVSID("$Id: FGdbDriver.cpp 28412 2015-02-04 14:32:09Z rouault $");
+CPL_CVSID("$Id: FGdbDriver.cpp 29180 2015-05-10 15:07:48Z rouault $");
 
 extern "C" void RegisterOGRFileGDB();
 
@@ -54,6 +53,9 @@ FGdbDriver::FGdbDriver(): OGRSFDriver(), hMutex(NULL)
 FGdbDriver::~FGdbDriver()
 
 {
+    if( oMapConnections.size() != 0 )
+        CPLDebug("FileGDB", "Remaining %d connections. Bug?",
+                 (int)oMapConnections.size());
     if( hMutex != NULL )
         CPLDestroyMutex(hMutex);
     hMutex = NULL;
@@ -114,7 +116,7 @@ OGRDataSource *FGdbDriver::Open( const char* pszFilename, int bUpdate )
         if (FAILED(hr) || pGeoDatabase == NULL)
         {
             delete pGeoDatabase;
-
+            
             if( OGRGetDriverByName("OpenFileGDB") != NULL && bUpdate == FALSE )
             {
                 std::wstring fgdb_error_desc_w;
@@ -133,24 +135,33 @@ OGRDataSource *FGdbDriver::Open( const char* pszFilename, int bUpdate )
             {
                 GDBErr(hr, "Failed to open Geodatabase");
             }
+            oMapConnections.erase(pszFilename);
             return NULL;
         }
 
         CPLDebug("FileGDB", "Really opening %s", pszFilename);
-        oMapConnections[pszFilename] = new FGdbDatabaseConnection(pGeoDatabase);
+        pConnection = new FGdbDatabaseConnection(pGeoDatabase);
+        oMapConnections[pszFilename] = pConnection;
     }
 
     FGdbDataSource* pDS;
 
-    pDS = new FGdbDataSource(this);
+    pDS = new FGdbDataSource(this, pConnection);
 
-    if(!pDS->Open( pGeoDatabase, pszFilename, bUpdate ) )
+    if(!pDS->Open( pszFilename, bUpdate ) )
     {
         delete pDS;
         return NULL;
     }
     else
-        return new OGRMutexedDataSource(pDS, TRUE, hMutex);
+    {
+        OGRMutexedDataSource* poMutexedDS =
+                new OGRMutexedDataSource(pDS, TRUE, hMutex, TRUE);
+        if( bUpdate )
+            return OGRCreateEmulatedTransactionDataSourceWrapper(poMutexedDS, this, TRUE, FALSE);
+        else
+            return poMutexedDS;
+    }
 }
 
 /***********************************************************************/
@@ -207,17 +218,275 @@ OGRDataSource* FGdbDriver::CreateDataSource( const char * conn,
         return NULL;
     }
 
-    oMapConnections[conn] = new FGdbDatabaseConnection(pGeodatabase);
+    FGdbDatabaseConnection* pConnection = new FGdbDatabaseConnection(pGeodatabase);
+    oMapConnections[conn] = pConnection;
 
     /* Ready to embed the Geodatabase in an OGR Datasource */
-    FGdbDataSource* pDS = new FGdbDataSource(this);
-    if ( ! pDS->Open(pGeodatabase, conn, bUpdate) )
+    FGdbDataSource* pDS = new FGdbDataSource(this, pConnection);
+    if ( ! pDS->Open(conn, bUpdate) )
     {
         delete pDS;
         return NULL;
     }
     else
-        return new OGRMutexedDataSource(pDS, TRUE, hMutex);
+        return OGRCreateEmulatedTransactionDataSourceWrapper(
+            new OGRMutexedDataSource(pDS, TRUE, hMutex, TRUE), this,
+            TRUE, FALSE);
+}
+
+/************************************************************************/
+/*                           StartTransaction()                         */
+/************************************************************************/
+
+OGRErr FGdbDriver::StartTransaction(OGRDataSource*& poDSInOut, int& bOutHasReopenedDS)
+{
+    CPLMutexHolderOptionalLockD(hMutex);
+
+    bOutHasReopenedDS = FALSE;
+
+    OGRMutexedDataSource* poMutexedDS = (OGRMutexedDataSource*)poDSInOut;
+    FGdbDataSource* poDS = (FGdbDataSource* )poMutexedDS->GetBaseDataSource();
+    if( !poDS->GetUpdate() )
+        return OGRERR_FAILURE;
+    FGdbDatabaseConnection* pConnection = poDS->GetConnection();
+    if( pConnection->GetRefCount() != 1 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot start transaction as database is opened in another connection");
+        return OGRERR_FAILURE;
+    }
+    if( pConnection->IsLocked() )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Transaction is already in progress");
+        return OGRERR_FAILURE;
+    }
+
+    bOutHasReopenedDS = TRUE;
+
+    CPLString osName(poMutexedDS->GetName());
+    if( osName[osName.size()-1] == '/' || osName[osName.size()-1] == '\\' )
+        osName.resize(osName.size()-1);
+
+    pConnection->m_nRefCount ++;
+    delete poDSInOut;
+    poDSInOut = NULL;
+    poMutexedDS = NULL;
+    poDS = NULL;
+
+    ::CloseGeodatabase(*(pConnection->m_pGeodatabase));
+    delete pConnection->m_pGeodatabase;
+    pConnection->m_pGeodatabase = NULL;
+
+    CPLString osEditedName(osName);
+    osEditedName += ".ogredited";
+
+    CPLPushErrorHandler(CPLQuietErrorHandler);
+    CPLUnlinkTree(osEditedName);
+    CPLPopErrorHandler();
+
+    OGRErr eErr = OGRERR_NONE;
+    CPLString osDatabaseToReopen;
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE1") ||
+        CPLCopyTree( osEditedName, osName ) != 0 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot backup geodatabase");
+        eErr = OGRERR_FAILURE;
+        osDatabaseToReopen = osName;
+    }
+    else
+        osDatabaseToReopen = osEditedName;
+
+    pConnection->m_pGeodatabase = new Geodatabase;
+    long hr = ::OpenGeodatabase(StringToWString(osDatabaseToReopen), *(pConnection->m_pGeodatabase));
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE2") || FAILED(hr))
+    {
+        delete pConnection->m_pGeodatabase;
+        pConnection->m_pGeodatabase = NULL;
+        Release(osName);
+        GDBErr(hr, CPLSPrintf("Failed to open %s. Dataset should be closed",
+                              osDatabaseToReopen.c_str()));
+
+        return OGRERR_FAILURE;
+    }
+
+    FGdbDataSource* pDS = new FGdbDataSource(this, pConnection);
+    pDS->Open(osName, TRUE);
+    poDSInOut = new OGRMutexedDataSource(pDS, TRUE, hMutex, TRUE);
+
+    if( eErr == OGRERR_NONE )
+        pConnection->SetLocked(TRUE);
+    return eErr;
+}
+
+/************************************************************************/
+/*                           CommitTransaction()                        */
+/************************************************************************/
+
+OGRErr FGdbDriver::CommitTransaction(OGRDataSource*& poDSInOut, int& bOutHasReopenedDS)
+{
+    CPLMutexHolderOptionalLockD(hMutex);
+
+    bOutHasReopenedDS = FALSE;
+
+
+    OGRMutexedDataSource* poMutexedDS = (OGRMutexedDataSource*)poDSInOut;
+    FGdbDataSource* poDS = (FGdbDataSource* )poMutexedDS->GetBaseDataSource();
+    FGdbDatabaseConnection* pConnection = poDS->GetConnection();
+    if( !pConnection->IsLocked() )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "No transaction in progress");
+        return OGRERR_FAILURE;
+    }
+
+    bOutHasReopenedDS = TRUE;
+
+    CPLString osName(poMutexedDS->GetName());
+    if( osName[osName.size()-1] == '/' || osName[osName.size()-1] == '\\' )
+        osName.resize(osName.size()-1);
+
+    pConnection->m_nRefCount ++;
+    delete poDSInOut;
+    poDSInOut = NULL;
+    poMutexedDS = NULL;
+    poDS = NULL;
+
+    ::CloseGeodatabase(*(pConnection->m_pGeodatabase));
+    delete pConnection->m_pGeodatabase;
+    pConnection->m_pGeodatabase = NULL;
+
+    CPLString osEditedName(osName);
+    osEditedName += ".ogredited";
+    CPLString osTmpName(osName);
+    osTmpName += ".ogrtmp";
+    
+    /* Install the backup copy as the main database in 3 steps : */
+    /* first rename the main directory  in .tmp */
+    /* then rename the edited copy under regular name */
+    /* and finally dispose the .tmp directory */
+    /* That way there's no risk definitely losing data */
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE1") || 
+        VSIRename(osName, osTmpName) != 0 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot rename %s to %s. Edited database during transaction is in %s"
+                 "Dataset should be closed",
+                 osName.c_str(), osTmpName.c_str(), osEditedName.c_str());
+        pConnection->SetLocked(FALSE);
+        Release(osName);
+        return OGRERR_FAILURE;
+    }
+    
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE2") || 
+        VSIRename(osEditedName, osName) != 0 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot rename %s to %s. The original geodatabase is in '%s'. "
+                 "Dataset should be closed",
+                 osEditedName.c_str(), osName.c_str(), osTmpName.c_str());
+        pConnection->SetLocked(FALSE);
+        Release(osName);
+        return OGRERR_FAILURE;
+    }
+
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE3") || 
+        CPLUnlinkTree(osTmpName) != 0 )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined,
+                 "Cannot remove %s. Manual cleanup required", osTmpName.c_str());
+    }
+
+    pConnection->m_pGeodatabase = new Geodatabase;
+    long hr = ::OpenGeodatabase(StringToWString(osName), *(pConnection->m_pGeodatabase));
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE4") || FAILED(hr))
+    {
+        delete pConnection->m_pGeodatabase;
+        pConnection->m_pGeodatabase = NULL;
+        pConnection->SetLocked(FALSE);
+        Release(osName);
+        GDBErr(hr, "Failed to re-open Geodatabase. Dataset should be closed");
+        return OGRERR_FAILURE;
+    }
+
+    FGdbDataSource* pDS = new FGdbDataSource(this, pConnection);
+    pDS->Open(osName, TRUE);
+    poDSInOut = new OGRMutexedDataSource(pDS, TRUE, hMutex, TRUE);
+
+    pConnection->SetLocked(FALSE);
+
+    return OGRERR_NONE;
+}
+
+/************************************************************************/
+/*                           RollbackTransaction()                      */
+/************************************************************************/
+
+OGRErr FGdbDriver::RollbackTransaction(OGRDataSource*& poDSInOut, int& bOutHasReopenedDS)
+{
+    CPLMutexHolderOptionalLockD(hMutex);
+
+    bOutHasReopenedDS = FALSE;
+
+    OGRMutexedDataSource* poMutexedDS = (OGRMutexedDataSource*)poDSInOut;
+    FGdbDataSource* poDS = (FGdbDataSource* )poMutexedDS->GetBaseDataSource();
+    FGdbDatabaseConnection* pConnection = poDS->GetConnection();
+    if( !pConnection->IsLocked() )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "No transaction in progress");
+        return OGRERR_FAILURE;
+    }
+
+    bOutHasReopenedDS = TRUE;
+
+    CPLString osName(poMutexedDS->GetName());
+    if( osName[osName.size()-1] == '/' || osName[osName.size()-1] == '\\' )
+        osName.resize(osName.size()-1);
+
+    pConnection->m_nRefCount ++;
+    delete poDSInOut;
+    poDSInOut = NULL;
+    poMutexedDS = NULL;
+    poDS = NULL;
+
+    ::CloseGeodatabase(*(pConnection->m_pGeodatabase));
+    delete pConnection->m_pGeodatabase;
+    pConnection->m_pGeodatabase = NULL;
+
+    CPLString osEditedName(osName);
+    osEditedName += ".ogredited";
+
+    OGRErr eErr = OGRERR_NONE;
+    if( EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE1") || 
+        CPLUnlinkTree(osEditedName) != 0 )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined,
+                 "Cannot remove %s. Manual cleanup required", osEditedName.c_str());
+        eErr = OGRERR_FAILURE;
+    }
+
+    pConnection->m_pGeodatabase = new Geodatabase;
+    long hr = ::OpenGeodatabase(StringToWString(osName), *(pConnection->m_pGeodatabase));
+    if (EQUAL(CPLGetConfigOption("FGDB_SIMUL_FAIL", ""), "CASE2") ||
+        FAILED(hr))
+    {
+        delete pConnection->m_pGeodatabase;
+        pConnection->m_pGeodatabase = NULL;
+        pConnection->SetLocked(FALSE);
+        Release(osName);
+        GDBErr(hr, "Failed to re-open Geodatabase. Dataset should be closed");
+        return OGRERR_FAILURE;
+    }
+
+    FGdbDataSource* pDS = new FGdbDataSource(this, pConnection);
+    pDS->Open(osName, TRUE);
+    poDSInOut = new OGRMutexedDataSource(pDS, TRUE, hMutex, TRUE);
+
+    pConnection->SetLocked(FALSE);
+
+    return eErr;
 }
 
 /***********************************************************************/
@@ -236,10 +505,13 @@ void FGdbDriver::Release(const char* pszName)
                  pConnection->m_nRefCount);
         if( pConnection->m_nRefCount == 0 )
         {
-            CPLDebug("FileGDB", "Really closing %s now", pszName);
-            ::CloseGeodatabase(*(pConnection->m_pGeodatabase));
-            delete pConnection->m_pGeodatabase;
-            pConnection->m_pGeodatabase = NULL;
+            if( pConnection->m_pGeodatabase != NULL )
+            {
+                CPLDebug("FileGDB", "Really closing %s now", pszName);
+                ::CloseGeodatabase(*(pConnection->m_pGeodatabase));
+                delete pConnection->m_pGeodatabase;
+                pConnection->m_pGeodatabase = NULL;
+            }
             delete pConnection;
             oMapConnections.erase(pszName);
         }
@@ -290,6 +562,47 @@ void RegisterOGRFileGDB()
 {
     if (! GDAL_CHECK_VERSION("OGR FGDB"))
         return;
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new FGdbDriver );
+    OGRSFDriver* poDriver = new FGdbDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                "ESRI FileGDB" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gdb" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_filegdb.html" );
+
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST, "<CreationOptionList/>" );
+
+    poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
+"<LayerCreationOptionList>"
+"  <Option name='FEATURE_DATASET' type='string' description='FeatureDataset folder into to put the new layer'/>"
+"  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column' default='SHAPE'/>"
+"  <Option name='GEOMETRY_NULLABLE' type='boolean' description='Whether the values of the geometry column can be NULL' default='YES'/>"
+"  <Option name='FID' type='string' description='Name of OID column' default='OBJECTID' deprecated_alias='OID_NAME'/>"
+"  <Option name='XYTOLERANCE' type='float' description='Snapping tolerance, used for advanced ArcGIS features like network and topology rules, on 2D coordinates, in the units of the CRS'/>"
+"  <Option name='ZTOLERANCE' type='float' description='Snapping tolerance, used for advanced ArcGIS features like network and topology rules, on Z coordinates, in the units of the CRS'/>"
+"  <Option name='XORIGIN' type='float' description='X origin of the coordinate precision grid'/>"
+"  <Option name='YORIGIN' type='float' description='Y origin of the coordinate precision grid'/>"
+"  <Option name='ZORIGIN' type='float' description='Z origin of the coordinate precision grid'/>"
+"  <Option name='XYSCALE' type='float' description='X,Y scale of the coordinate precision grid'/>"
+"  <Option name='ZSCALE' type='float' description='Z scale of the coordinate precision grid'/>"
+"  <Option name='XML_DEFINITION' type='string' description='XML definition to create the new table. The root node of such a XML definition must be a <esri:DataElement> element conformant to FileGDBAPI.xsd'/>"
+"  <Option name='CREATE_MULTIPATCH' type='boolean' description='Whether to write geometries of layers of type MultiPolygon as MultiPatch' default='NO'/>"
+"  <Option name='COLUMN_TYPES' type='string' description='A list of strings of format field_name=fgdb_filed_type (separated by comma) to force the FileGDB column type of fields to be created'/>"
+"  <Option name='CONFIGURATION_KEYWORD' type='string-select' description='Customize how data is stored. By default text in UTF-8 and data up to 1TB'>"
+"    <Value>DEFAULTS</Value>"
+"    <Value>TEXT_UTF16</Value>"
+"    <Value>MAX_FILE_SIZE_4GB</Value>"
+"    <Value>MAX_FILE_SIZE_256TB</Value>"
+"    <Value>GEOMETRY_OUTOFLINE</Value>"
+"    <Value>BLOB_OUTOFLINE</Value>"
+"    <Value>GEOMETRY_AND_BLOB_OUTOFLINE</Value>"
+"  </Option>"
+"</LayerCreationOptionList>");
+    
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Real String Date DateTime Binary" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
+
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }
 

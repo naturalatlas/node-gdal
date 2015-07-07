@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogropenairdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirDataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogropenairdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogropenairdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                        OGROpenAirDataSource()                        */
@@ -86,50 +86,30 @@ OGRLayer *OGROpenAirDataSource::GetLayer( int iLayer )
 /*                                Open()                                */
 /************************************************************************/
 
-int OGROpenAirDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGROpenAirDataSource::Open( const char * pszFilename )
 
 {
-    if (bUpdateIn)
-    {
-        return FALSE;
-    }
-
     pszName = CPLStrdup( pszFilename );
-
-// -------------------------------------------------------------------- 
-//      Does this appear to be an openair file?
-// --------------------------------------------------------------------
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
     if (fp == NULL)
         return FALSE;
 
-    char szBuffer[10000];
-    int nbRead = (int)VSIFReadL(szBuffer, 1, sizeof(szBuffer) - 1, fp);
-    szBuffer[nbRead] = '\0';
-
-    int bIsOpenAir = (strstr(szBuffer, "\nAC ") != NULL &&
-                  strstr(szBuffer, "\nAN ") != NULL &&
-                  strstr(szBuffer, "\nAL ") != NULL &&
-                  strstr(szBuffer, "\nAH") != NULL);
-
-    if (bIsOpenAir)
+    VSILFILE* fp2 = VSIFOpenL(pszFilename, "rb");
+    if (fp2)
     {
-        VSIFSeekL( fp, 0, SEEK_SET );
-
-        VSILFILE* fp2 = VSIFOpenL(pszFilename, "rb");
-        if (fp2)
-        {
-            nLayers = 2;
-            papoLayers = (OGRLayer**) CPLMalloc(2 * sizeof(OGRLayer*));
-            papoLayers[0] = new OGROpenAirLayer(fp);
-            papoLayers[1] = new OGROpenAirLabelLayer(fp2);
-        }
+        nLayers = 2;
+        papoLayers = (OGRLayer**) CPLMalloc(2 * sizeof(OGRLayer*));
+        papoLayers[0] = new OGROpenAirLayer(fp);
+        papoLayers[1] = new OGROpenAirLabelLayer(fp2);
     }
     else
+    {
         VSIFCloseL(fp);
+        return FALSE;
+    }
 
-    return bIsOpenAir;
+    return TRUE;
 }
 
 

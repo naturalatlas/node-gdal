@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograeronavfaalayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ograeronavfaalayer.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAALayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ograeronavfaalayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ograeronavfaalayer.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                        OGRAeronavFAALayer()                          */
@@ -53,6 +53,7 @@ OGRAeronavFAALayer::OGRAeronavFAALayer( VSILFILE* fp, const char* pszLayerName )
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
     poFeatureDefn->Reference();
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
+    SetDescription( poFeatureDefn->GetName() );
 }
 
 /************************************************************************/
@@ -189,7 +190,7 @@ static int GetLatLon(const char* pszLat,
     memcpy(szSec, pszLat + 6, MAX((int)sizeof(szSec) - 1, nSecLen));
     szSec[MAX((int)sizeof(szSec) - 1, nSecLen)] = 0;
 
-    dfLat = atoi(szDeg) + atoi(szMin) / 60. + atof(szSec) / 3600.;
+    dfLat = atoi(szDeg) + atoi(szMin) / 60. + CPLAtof(szSec) / 3600.;
     if (chLatHemisphere == 'S')
         dfLat = -dfLat;
 
@@ -203,7 +204,7 @@ static int GetLatLon(const char* pszLat,
     memcpy(szSec, pszLon + 7, MAX((int)sizeof(szSec) - 1, nSecLen));
     szSec[MAX((int)sizeof(szSec) - 1, nSecLen)] = 0;
 
-    dfLon = atoi(szDeg) + atoi(szMin) / 60. + atof(szSec) / 3600.;
+    dfLon = atoi(szDeg) + atoi(szMin) / 60. + CPLAtof(szSec) / 3600.;
     if (chLonHemisphere == ' ' || chLonHemisphere == 'W')
         dfLon = -dfLon;
 
@@ -750,4 +751,3 @@ void OGRAeronavFAAIAPLayer::ResetReading()
     osAPTName = "";
     osAPTId = "";
 }
-

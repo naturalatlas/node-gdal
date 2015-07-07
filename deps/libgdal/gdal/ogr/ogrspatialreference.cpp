@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrspatialreference.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrspatialreference.cpp 29104 2015-05-02 01:44:39Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRSpatialReference class.
@@ -33,8 +33,9 @@
 #include "cpl_csv.h"
 #include "cpl_http.h"
 #include "cpl_atomic_ops.h"
+#include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrspatialreference.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrspatialreference.cpp 29104 2015-05-02 01:44:39Z rouault $");
 
 // The current opinion is that WKT longitudes like central meridian
 // should be relative to greenwich, not the prime meridian in use. 
@@ -49,7 +50,7 @@ CPL_CVSID("$Id: ogrspatialreference.cpp 27044 2014-03-16 23:41:27Z rouault $");
 void OGRPrintDouble( char * pszStrBuf, double dfValue )
 
 {
-    sprintf( pszStrBuf, "%.16g", dfValue );
+    CPLsprintf( pszStrBuf, "%.16g", dfValue );
 
     int nLen = strlen(pszStrBuf);
 
@@ -59,7 +60,7 @@ void OGRPrintDouble( char * pszStrBuf, double dfValue )
         && (strcmp(pszStrBuf+nLen-6,"999999") == 0
             || strcmp(pszStrBuf+nLen-6,"000001") == 0) )
     {
-        sprintf( pszStrBuf, "%.15g", dfValue );
+        CPLsprintf( pszStrBuf, "%.15g", dfValue );
     }
 
     // force to user periods regardless of locale.
@@ -2279,6 +2280,8 @@ OGRErr OGRSpatialReference::importFromURNPart(const char* pszAuthority,
         return SetWellKnownGeogCS( pszCode );
     else if( EQUALN(pszCode,"CRS27",5) )
         return SetWellKnownGeogCS( pszCode );
+    else if( EQUALN(pszCode,"84",2) ) /* urn:ogc:def:crs:OGC:2:84 */
+        return SetWellKnownGeogCS( "CRS84" );
 
 /* -------------------------------------------------------------------- */
 /*      Handle auto codes.  We need to convert from format              */
@@ -2889,10 +2892,7 @@ double OGRSpatialReference::GetSemiMinor( OGRErr * pnErr ) const
     dfSemiMajor = GetSemiMajor( pnErr );
     dfInvFlattening = GetInvFlattening( pnErr );
 
-    if( ABS(dfInvFlattening) < 0.000000000001 )
-        return dfSemiMajor;
-    else
-        return dfSemiMajor * (1.0 - 1.0/dfInvFlattening);
+    return OSRCalcSemiMinorFromInvFlattening(dfSemiMajor, dfInvFlattening);
 }
 
 /************************************************************************/
@@ -5696,6 +5696,34 @@ OGRErr OSRSetWagner( OGRSpatialReferenceH hSRS,
 }
 
 /************************************************************************/
+/*                            SetQSC()                     */
+/************************************************************************/
+
+OGRErr OGRSpatialReference::SetQSC( double dfCenterLat, double dfCenterLong )
+
+{
+    SetProjection( SRS_PT_QSC );
+    SetNormProjParm( SRS_PP_LATITUDE_OF_ORIGIN, dfCenterLat );
+    SetNormProjParm( SRS_PP_CENTRAL_MERIDIAN, dfCenterLong );
+
+    return OGRERR_NONE;
+}
+
+/************************************************************************/
+/*                           OSRSetQSC()                   */
+/************************************************************************/
+
+OGRErr OSRSetQSC( OGRSpatialReferenceH hSRS,
+                       double dfCenterLat, double dfCenterLong )
+
+{
+    VALIDATE_POINTER1( hSRS, "OSRSetQSC", CE_Failure );
+
+    return ((OGRSpatialReference *) hSRS)->SetQSC(
+        dfCenterLat, dfCenterLong );
+}
+
+/************************************************************************/
 /*                            SetAuthority()                            */
 /************************************************************************/
 
@@ -7104,6 +7132,7 @@ OGRErr OGRSpatialReference::SetExtension( const char *pszTargetKey,
 CPL_C_START 
 void CleanupESRIDatumMappingTable();
 CPL_C_END
+static void CleanupSRSWGS84Thread();
 
 /**
  * \brief Cleanup cached SRS related memory.
@@ -7117,6 +7146,7 @@ void OSRCleanup( void )
     CleanupESRIDatumMappingTable();
     CSVDeaccess( NULL );
     OCTCleanupProjMutex();
+    CleanupSRSWGS84Thread();
 }
 
 /************************************************************************/
@@ -7477,4 +7507,99 @@ OGRErr OGRSpatialReference::importFromMICoordSys( const char *pszCoordSys )
 
     return OGRERR_UNSUPPORTED_OPERATION;
 #endif    
+}
+
+/************************************************************************/
+/*                        OSRCalcInvFlattening()                        */
+/************************************************************************/
+
+/**
+ * \brief Compute inverse flattening from semi-major and semi-minor axis
+ *
+ * @param dfSemiMajor Semi-major axis length.
+ * @param dfSemiMinor Semi-minor axis length.
+ *
+ * @return inverse flattening, or 0 if both axis are equal.
+ * @since GDAL 2.0
+ */
+
+double OSRCalcInvFlattening( double dfSemiMajor, double dfSemiMinor )
+{
+    if( fabs(dfSemiMajor-dfSemiMinor) < 1e-1 )
+        return 0;
+    else if( dfSemiMajor <= 0 || dfSemiMinor <= 0 || dfSemiMinor > dfSemiMajor )
+    {
+        CPLError(CE_Failure, CPLE_IllegalArg,
+                 "OSRCalcInvFlattening(): Wrong input values");
+        return 0;
+    }
+    else
+        return dfSemiMajor / (dfSemiMajor - dfSemiMinor);
+}
+
+/************************************************************************/
+/*                        OSRCalcInvFlattening()                        */
+/************************************************************************/
+
+/**
+ * \brief Compute semi-minor axis from semi-major axis and inverse flattening.
+ *
+ * @param dfSemiMajor Semi-major axis length.
+ * @param dfInvFlattening Inverse flattening or 0 for sphere.
+ *
+ * @return semi-minor axis
+ * @since GDAL 2.0
+ */
+
+double OSRCalcSemiMinorFromInvFlattening( double dfSemiMajor, double dfInvFlattening )
+{
+    if( fabs(dfInvFlattening) < 0.000000000001 )
+        return dfSemiMajor;
+    else if( dfSemiMajor <= 0.0 || dfInvFlattening <= 1.0 )
+    {
+        CPLError(CE_Failure, CPLE_IllegalArg,
+                 "OSRCalcSemiMinorFromInvFlattening(): Wrong input values");
+        return dfSemiMajor;
+    }
+    else
+        return dfSemiMajor * (1.0 - 1.0/dfInvFlattening);
+}
+
+/************************************************************************/
+/*                        GetWGS84SRS()                                 */
+/************************************************************************/
+
+static OGRSpatialReference* poSRSWGS84 = NULL;
+static CPLMutex* hMutex = NULL;
+
+/**
+ * \brief Returns an instance of a SRS object with WGS84 WKT.
+ *
+ * The reference counter of the returned object is not increased by this operation.
+ *
+ * @return instance.
+ * @since GDAL 2.0
+ */
+
+OGRSpatialReference* OGRSpatialReference::GetWGS84SRS()
+{
+    CPLMutexHolderD(&hMutex);
+    if( poSRSWGS84 == NULL )
+        poSRSWGS84 = new OGRSpatialReference(SRS_WKT_WGS84);
+    return poSRSWGS84;
+}
+
+/************************************************************************/
+/*                        CleanupSRSWGS84Thread()                       */
+/************************************************************************/
+
+static void CleanupSRSWGS84Thread()
+{
+    if( hMutex != NULL )
+    {
+        poSRSWGS84->Release();
+        poSRSWGS84 = NULL;
+        CPLDestroyMutex(hMutex);
+        hMutex = NULL;
+    }
 }

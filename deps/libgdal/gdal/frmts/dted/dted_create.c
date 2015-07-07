@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dted_create.c 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: dted_create.c 28433 2015-02-06 21:18:50Z rouault $
  *
  * Project:  DTED Translator
  * Purpose:  Implementation of DTEDCreate() portion of DTED API.
@@ -30,7 +30,7 @@
 #include "dted_api.h"
 #include <assert.h>
 
-CPL_CVSID("$Id: dted_create.c 20996 2010-10-28 18:38:15Z rouault $");
+CPL_CVSID("$Id: dted_create.c 28433 2015-02-06 21:18:50Z rouault $");
 
 #define DTED_ABS_VERT_ACC "NA  "
 #define DTED_SECURITY     "U"
@@ -86,6 +86,8 @@ static void DTEDFormatDMS( unsigned char *achField, double dfAngle,
 /************************************************************************/
 /*                             DTEDFormat()                             */
 /************************************************************************/
+
+static void DTEDFormat( unsigned char *pszTarget, const char *pszFormat, ... ) CPL_PRINT_FUNC_FORMAT (2, 3);
 
 static void DTEDFormat( unsigned char *pszTarget, const char *pszFormat, ... )
 

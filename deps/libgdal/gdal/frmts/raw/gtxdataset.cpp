@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtxdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gtxdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  Vertical Datum Transformation
  * Purpose:  Implementation of NOAA .gtx vertical datum shift file format.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gtxdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gtxdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /**
 
@@ -314,10 +314,11 @@ const char *GTXDataset::GetProjectionRef()
 /************************************************************************/
 
 GDALDataset *GTXDataset::Create( const char * pszFilename,
-                                 int nXSize, int nYSize, CPL_UNUSED int nBands,
+                                 int nXSize,
+                                 int nYSize,
+                                 CPL_UNUSED int nBands,
                                  GDALDataType eType,
                                  CPL_UNUSED char ** papszOptions )
-
 {
     if( eType != GDT_Float32 )
     {
@@ -394,6 +395,7 @@ void GDALRegister_GTX()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GTX" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "NOAA Vertical Datum .GTX" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gtx" );

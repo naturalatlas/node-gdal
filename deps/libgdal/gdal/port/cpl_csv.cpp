@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_csv.cpp 27958 2014-11-13 21:58:48Z goatbar $
+ * $Id: cpl_csv.cpp 29330 2015-06-14 12:11:11Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  CSV (comma separated value) file access.
@@ -33,7 +33,7 @@
 #include "cpl_multiproc.h"
 #include "gdal_csv.h"
 
-CPL_CVSID("$Id: cpl_csv.cpp 27958 2014-11-13 21:58:48Z goatbar $");
+CPL_CVSID("$Id: cpl_csv.cpp 29330 2015-06-14 12:11:11Z rouault $");
 
 /* ==================================================================== */
 /*      The CSVTable is a persistant set of info about an open CSV      */
@@ -445,15 +445,16 @@ static void CSVIngest( const char *pszFilename )
 
 /** Detect which field separator is used.
  *
- * Currently, it can detect comma, semicolon or tabulation. In case of
+ * Currently, it can detect comma, semicolon, space or tabulation. In case of
  * ambiguity or no separator found, comma will be considered as the separator.
  *
- * @return ',', ';' or '\t'
+ * @return ',', ';', ' ' or '\t'
  */
 char CSVDetectSeperator (const char* pszLine)
 {
     int     bInString = FALSE;
     char    chDelimiter = '\0';
+    int     nCountSpace = 0;
 
     for( ; *pszLine != '\0'; pszLine++ )
     {
@@ -463,13 +464,15 @@ char CSVDetectSeperator (const char* pszLine)
                 chDelimiter = *pszLine;
             else if (chDelimiter != *pszLine)
             {
-                /* The separator is not consistant on the line. */
-                CPLDebug("CSV", "Inconsistant separator. '%c' and '%c' found. Using ',' as default",
+                /* The separator is not consistent on the line. */
+                CPLDebug("CSV", "Inconsistent separator. '%c' and '%c' found. Using ',' as default",
                          chDelimiter, *pszLine);
                 chDelimiter = ',';
                 break;
             }
         }
+        else if( !bInString && *pszLine == ' ' )
+            nCountSpace ++;
         else if( *pszLine == '"' )
         {
             if( !bInString || pszLine[1] != '"' )
@@ -485,7 +488,12 @@ char CSVDetectSeperator (const char* pszLine)
     }
 
     if (chDelimiter == '\0')
-        chDelimiter = ',';
+    {
+        if( nCountSpace > 0 )
+            chDelimiter = ' ';
+        else
+            chDelimiter = ',';
+    }
 
     return chDelimiter;
 }

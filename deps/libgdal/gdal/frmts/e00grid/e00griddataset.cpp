@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: e00griddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: e00griddataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  E00 grid driver
  * Purpose:  GDALDataset driver for E00 grid dataset.
@@ -46,7 +46,7 @@
 #define E00_DOUBLE_SIZE 21
 #define VALS_PER_LINE   5
 
-CPL_CVSID("$Id: e00griddataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: e00griddataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void    GDALRegister_E00GRID(void);
@@ -164,9 +164,9 @@ E00GRIDRasterBand::E00GRIDRasterBand( E00GRIDDataset *poDS, int nBand,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr E00GRIDRasterBand::IReadBlock( int CPL_UNUSED nBlockXOff, int nBlockYOff,
+CPLErr E00GRIDRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                      int nBlockYOff,
                                       void * pImage )
-
 {
     E00GRIDDataset *poGDS = (E00GRIDDataset *) poDS;
 
@@ -229,7 +229,7 @@ CPLErr E00GRIDRasterBand::IReadBlock( int CPL_UNUSED nBlockXOff, int nBlockYOff,
             }
             if (eDataType == GDT_Float32)
             {
-                pafImage[i] = (float) atof(pszLine + (i%VALS_PER_LINE) * E00_FLOAT_SIZE);
+                pafImage[i] = (float) CPLAtof(pszLine + (i%VALS_PER_LINE) * E00_FLOAT_SIZE);
                 /* Workaround single vs double precision problems */
                 if (fNoData != 0 && fabs((pafImage[i] - fNoData)/fNoData) < 1e-6)
                     pafImage[i] = fNoData;
@@ -258,7 +258,7 @@ CPLErr E00GRIDRasterBand::IReadBlock( int CPL_UNUSED nBlockXOff, int nBlockYOff,
 
         if (eDataType == GDT_Float32)
         {
-            pafImage[i] = (float) atof(szVal);
+            pafImage[i] = (float) CPLAtof(szVal);
             /* Workaround single vs double precision problems */
             if (fNoData != 0 && fabs((pafImage[i] - fNoData)/fNoData) < 1e-6)
                 pafImage[i] = fNoData;
@@ -601,7 +601,7 @@ GDALDataset *E00GRIDDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLDebug("E00GRID", "Unknown data type : %s", pszLine);
     }
 
-    double dfNoData = atof(pszLine + E00_INT_SIZE + E00_INT_SIZE + 2);
+    double dfNoData = CPLAtof(pszLine + E00_INT_SIZE + E00_INT_SIZE + 2);
 
     /* read pixel size */
     if (e00ReadPtr)
@@ -615,8 +615,8 @@ GDALDataset *E00GRIDDataset::Open( GDALOpenInfo * poOpenInfo )
         return NULL;
     }
 /*
-    double dfPixelX = atof(pszLine);
-    double dfPixelY = atof(pszLine + E00_DOUBLE_SIZE);
+    double dfPixelX = CPLAtof(pszLine);
+    double dfPixelY = CPLAtof(pszLine + E00_DOUBLE_SIZE);
 */
 
     /* read xmin, ymin */
@@ -630,8 +630,8 @@ GDALDataset *E00GRIDDataset::Open( GDALOpenInfo * poOpenInfo )
         delete poDS;
         return NULL;
     }
-    double dfMinX = atof(pszLine);
-    double dfMinY = atof(pszLine + E00_DOUBLE_SIZE);
+    double dfMinX = CPLAtof(pszLine);
+    double dfMinY = CPLAtof(pszLine + E00_DOUBLE_SIZE);
 
     /* read xmax, ymax */
     if (e00ReadPtr)
@@ -644,8 +644,8 @@ GDALDataset *E00GRIDDataset::Open( GDALOpenInfo * poOpenInfo )
         delete poDS;
         return NULL;
     }
-    double dfMaxX = atof(pszLine);
-    double dfMaxY = atof(pszLine + E00_DOUBLE_SIZE);
+    double dfMaxX = CPLAtof(pszLine);
+    double dfMaxY = CPLAtof(pszLine + E00_DOUBLE_SIZE);
 
     poDS->nRasterXSize = nRasterXSize;
     poDS->nRasterYSize = nRasterYSize;
@@ -877,10 +877,10 @@ void E00GRIDDataset::ReadMetadata()
                     char** papszTokens = CSLTokenizeString(osStats);
                     if (CSLCount(papszTokens) == 4)
                     {
-                        dfMin = atof(papszTokens[0]);
-                        dfMax = atof(papszTokens[1]);
-                        dfMean = atof(papszTokens[2]);
-                        dfStddev = atof(papszTokens[3]);
+                        dfMin = CPLAtof(papszTokens[0]);
+                        dfMax = CPLAtof(papszTokens[1]);
+                        dfMean = CPLAtof(papszTokens[2]);
+                        dfStddev = CPLAtof(papszTokens[3]);
                         bHasStats = TRUE;
                     }
                     CSLDestroy(papszTokens);
@@ -906,6 +906,7 @@ void GDALRegister_E00GRID()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "E00GRID" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Arc/Info Export E00 GRID" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
@@ -921,4 +922,3 @@ void GDALRegister_E00GRID()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

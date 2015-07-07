@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrfeaturedefn.cpp 27110 2014-03-28 21:29:20Z rouault $
+ * $Id: ogrfeaturedefn.cpp 28807 2015-03-28 14:46:31Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRFeatureDefn class implementation.
@@ -31,8 +31,9 @@
 #include "ogr_feature.h"
 #include "ogr_api.h"
 #include "ogr_p.h"
+#include "ograpispy.h"
 
-CPL_CVSID("$Id: ogrfeaturedefn.cpp 27110 2014-03-28 21:29:20Z rouault $");
+CPL_CVSID("$Id: ogrfeaturedefn.cpp 28807 2015-03-28 14:46:31Z rouault $");
 
 /************************************************************************/
 /*                           OGRFeatureDefn()                           */
@@ -281,6 +282,11 @@ int OGRFeatureDefn::GetFieldCount()
 int OGR_FD_GetFieldCount( OGRFeatureDefnH hDefn )
 
 {
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetFieldCount(hDefn);
+#endif
+
     return ((OGRFeatureDefn *) hDefn)->GetFieldCount();
 }
 
@@ -338,7 +344,13 @@ OGRFieldDefn *OGRFeatureDefn::GetFieldDefn( int iField )
 OGRFieldDefnH OGR_FD_GetFieldDefn( OGRFeatureDefnH hDefn, int iField )
 
 {
-    return (OGRFieldDefnH) ((OGRFeatureDefn *) hDefn)->GetFieldDefn( iField );
+    OGRFieldDefnH hFieldDefnH = (OGRFieldDefnH) ((OGRFeatureDefn *) hDefn)->GetFieldDefn( iField );
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetFieldDefn(hDefn, iField, hFieldDefnH);
+#endif
+
+    return hFieldDefnH;
 }
 
 /************************************************************************/
@@ -581,6 +593,11 @@ int OGRFeatureDefn::GetGeomFieldCount()
 int OGR_FD_GetGeomFieldCount( OGRFeatureDefnH hDefn )
 
 {
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetGeomFieldCount(hDefn);
+#endif
+
     return ((OGRFeatureDefn *) hDefn)->GetGeomFieldCount();
 }
 
@@ -636,7 +653,15 @@ OGRGeomFieldDefn *OGRFeatureDefn::GetGeomFieldDefn( int iGeomField )
 OGRGeomFieldDefnH OGR_FD_GetGeomFieldDefn( OGRFeatureDefnH hDefn, int iGeomField )
 
 {
-    return (OGRGeomFieldDefnH) ((OGRFeatureDefn *) hDefn)->GetGeomFieldDefn( iGeomField );
+    OGRGeomFieldDefnH hGeomField =
+        (OGRGeomFieldDefnH) ((OGRFeatureDefn *) hDefn)->GetGeomFieldDefn( iGeomField );
+
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetGeomFieldDefn(hDefn, iGeomField, hGeomField);
+#endif
+
+    return hGeomField;
 }
 
 /************************************************************************/
@@ -829,6 +854,11 @@ int OGR_FD_GetGeomFieldIndex( OGRFeatureDefnH hDefn,
                               const char *pszGeomFieldName )
 
 {
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetGeomFieldIndex(hDefn, pszGeomFieldName);
+#endif
+
     return ((OGRFeatureDefn *)hDefn)->GetGeomFieldIndex( pszGeomFieldName );
 }
 
@@ -859,7 +889,10 @@ OGRwkbGeometryType OGRFeatureDefn::GetGeomType()
 {
     if( GetGeomFieldCount() == 0 )
         return wkbNone;
-    return GetGeomFieldDefn(0)->GetType();
+    OGRwkbGeometryType eType = GetGeomFieldDefn(0)->GetType();
+    if( eType == (wkbUnknown | wkb25DBitInternalUse) && CSLTestBoolean(CPLGetConfigOption("QGIS_HACK", "NO")) )
+        eType = wkbUnknown;
+    return eType;
 }
 
 /************************************************************************/
@@ -879,7 +912,17 @@ OGRwkbGeometryType OGRFeatureDefn::GetGeomType()
 OGRwkbGeometryType OGR_FD_GetGeomType( OGRFeatureDefnH hDefn )
 
 {
-    return ((OGRFeatureDefn *) hDefn)->GetGeomType();
+    OGRwkbGeometryType eType = ((OGRFeatureDefn *) hDefn)->GetGeomType();
+    if( OGR_GT_IsNonLinear(eType) && !OGRGetNonLinearGeometriesEnabledFlag() )
+    {
+        eType = OGR_GT_GetLinear(eType);
+    }
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetGeomType(hDefn);
+#endif
+
+    return eType;
 }
 
 /************************************************************************/
@@ -1104,6 +1147,11 @@ int OGRFeatureDefn::GetFieldIndex( const char * pszFieldName )
 int OGR_FD_GetFieldIndex( OGRFeatureDefnH hDefn, const char *pszFieldName )
 
 {
+#ifdef OGRAPISPY_ENABLED
+    if( bOGRAPISpyEnabled )
+        OGRAPISpy_FD_GetFieldIndex(hDefn, pszFieldName);
+#endif
+
     return ((OGRFeatureDefn *)hDefn)->GetFieldIndex( pszFieldName );
 }
 

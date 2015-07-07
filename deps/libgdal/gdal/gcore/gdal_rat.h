@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_rat.h 26117 2013-06-29 20:22:34Z rouault $
+ * $Id: gdal_rat.h 29243 2015-05-24 15:53:26Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  GDALRasterAttributeTable class declarations.
@@ -254,6 +254,7 @@ public:
      * (GetRowCount() * GetColCount() > RAT_MAX_ELEM_FOR_CLONE)
      */
     virtual CPLXMLNode   *Serialize() const;
+    virtual void   *SerializeJSON() const;
     virtual CPLErr        XMLInit( CPLXMLNode *, const char * );
 
     virtual CPLErr        InitializeFromColorTable( const GDALColorTable * );

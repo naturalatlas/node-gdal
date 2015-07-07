@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_elastic.h 26464 2013-09-13 21:06:03Z rouault $
+ * $Id: ogr_elastic.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -59,14 +59,14 @@ public:
     void ResetReading();
     OGRFeature * GetNextFeature();
 
-    OGRErr CreateFeature(OGRFeature *poFeature);
+    OGRErr ICreateFeature(OGRFeature *poFeature);
     OGRErr CreateField(OGRFieldDefn *poField, int bApproxOK);
 
     OGRFeatureDefn * GetLayerDefn();
 
     int TestCapability(const char *);
 
-    int GetFeatureCount(int bForce);
+    GIntBig GetFeatureCount(int bForce);
 
     void PushIndex();
     CPLString BuildMap();
@@ -101,7 +101,7 @@ public:
     }
     OGRLayer* GetLayer(int);
 
-    OGRLayer * CreateLayer(const char * pszLayerName,
+    OGRLayer * ICreateLayer(const char * pszLayerName,
             OGRSpatialReference *poSRS,
             OGRwkbGeometryType eType,
             char ** papszOptions);
@@ -115,21 +115,6 @@ public:
     int nBulkUpload;
     char* pszWriteMap;
     char* pszMapping;
-};
-
-/************************************************************************/
-/*                            OGRElasticDriver                          */
-/************************************************************************/
-
-class OGRElasticDriver : public OGRSFDriver {
-public:
-    ~OGRElasticDriver();
-
-    const char* GetName();
-    OGRDataSource* Open(const char *, int);
-    OGRDataSource* CreateDataSource(const char * pszName, char **papszOptions);
-    int TestCapability(const char *);
-
 };
 
 

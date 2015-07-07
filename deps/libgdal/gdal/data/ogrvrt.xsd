@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /******************************************************************************
- * $Id: ogrvrt.xsd 27000 2014-03-01 14:41:36Z rouault $
+ * $Id: ogrvrt.xsd 28950 2015-04-18 23:24:49Z rouault $
  *
  * Project:  GDAL/OGR
  * Purpose:  XML Schema for OGR VRT files.
@@ -34,6 +34,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="Metadata" type="MetadataType"/> <!-- may be repeated -->
                     <xs:element name="OGRVRTLayer" type="OGRVRTLayerType"/>
                     <xs:element name="OGRVRTWarpedLayer" type="OGRVRTWarpedLayerType"/>
                     <xs:element name="OGRVRTUnionLayer" type="OGRVRTUnionLayerType"/>
@@ -42,12 +43,29 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:complexType name="MetadataType">
+        <xs:sequence>
+            <!--<xs:choice>-->
+                <!--<xs:element name="MDI" type="MDIType" minOccurs="0" maxOccurs="unbounded"/>-->
+                <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+            <!--</xs:choice>-->
+        </xs:sequence>
+        <xs:attribute name="domain" type="xs:string"/>
+        <xs:attribute name="format" type="xs:string"/>
+    </xs:complexType>
+
     <xs:complexType name="OGRVRTLayerType">
         <xs:sequence>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="Metadata" type="MetadataType"/> <!-- may be repeated -->
                 <xs:element name="SrcDataSource" type="SrcDataSourceType">
                     <xs:annotation>
                         <xs:documentation>Required element</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="OpenOptions" type="OpenOptionsType">
+                    <xs:annotation>
+                        <xs:documentation>Optional element</xs:documentation>
                     </xs:annotation>
                 </xs:element>
                 <xs:element name="SrcLayer" type="nonEmptyStringType">
@@ -64,7 +82,7 @@
                         </xs:simpleContent>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="FID" type="nonEmptyStringType"/>
+                <xs:element name="FID" type="FIDType"/>
                 <xs:element name="Style" type="nonEmptyStringType"/>
                 <xs:element name="GeometryType" type="GeometryTypeType">
                     <xs:annotation>
@@ -105,6 +123,32 @@
             </xs:choice>
         </xs:sequence>
         <xs:attribute name="name" type="nonEmptyStringType" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="OpenOptionsType">
+        <xs:sequence>
+            <xs:element name="OOI" type="OOIType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="OOIType">
+        <xs:simpleContent>
+            <xs:extension base="nonEmptyStringType">
+                <xs:attribute name="key" type="xs:string"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="FIDType">
+        <xs:simpleContent>
+            <xs:extension base="nonEmptyStringType">
+                <xs:attribute name="name" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>A user-facing name can be specified here so that a FID column name is reported even if it is not reported as a regular field.</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
     </xs:complexType>
 
     <xs:group name="ExtentType">
@@ -152,6 +196,11 @@
             <xs:enumeration value="wkbMultiLineString"/>
             <xs:enumeration value="wkbMultiPolygon"/>
             <xs:enumeration value="wkbGeometryCollection"/>
+            <xs:enumeration value="wkbCircularString"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCompoundCurve"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCurvePolygon"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbMultiCurve"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbMultiSurface"/> <!-- new in GDAL 2.0 -->
             <xs:enumeration value="wkbPoint25D"/>
             <xs:enumeration value="wkbLineString25D"/>
             <xs:enumeration value="wkbPolygon25D"/>
@@ -159,14 +208,22 @@
             <xs:enumeration value="wkbMultiLineString25D"/>
             <xs:enumeration value="wkbMultiPolygon25D"/>
             <xs:enumeration value="wkbGeometryCollection25D"/>
+            <xs:enumeration value="wkbCircularStringZ"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCompoundCurveZ"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCurvePolygonZ"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbMultiCurveZ"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbMultiSurfaceZ"/> <!-- new in GDAL 2.0 -->
         </xs:restriction>
     </xs:simpleType>
 
     <xs:complexType name="FieldTypeWithoutSrc">
         <xs:attribute name="name" type="nonEmptyStringType" use="required"/>
         <xs:attribute name="type" type="OGRFieldTypeType" default="String"/>
+        <xs:attribute name="subtype" type="OGRFieldSubTypeType" default="None"/>  <!-- new in GDAL 2.0 -->
         <xs:attribute name="width" type="xs:nonNegativeInteger"/>
         <xs:attribute name="precision" type="xs:nonNegativeInteger"/>
+        <xs:attribute name="nullable" type="OGRBooleanType" default="true"/>  <!-- new in GDAL 2.0 -->
+        <xs:attribute name="default" type="xs:string"/>  <!-- new in GDAL 2.0 -->
     </xs:complexType>
 
     <xs:complexType name="FieldType">
@@ -185,12 +242,16 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="Integer"/>
             <xs:enumeration value="integer"/>
+            <xs:enumeration value="Integer64"/>
+            <xs:enumeration value="integer64"/>
             <xs:enumeration value="Real"/>
             <xs:enumeration value="real"/>
             <xs:enumeration value="String"/>
             <xs:enumeration value="string"/>
             <xs:enumeration value="IntegerList"/>
             <xs:enumeration value="integerlist"/>
+            <xs:enumeration value="Integer64List"/>
+            <xs:enumeration value="integer64list"/>
             <xs:enumeration value="RealList"/>
             <xs:enumeration value="reallist"/>
             <xs:enumeration value="StringList"/>
@@ -203,6 +264,15 @@
             <xs:enumeration value="time"/>
             <xs:enumeration value="DateTime"/>
             <xs:enumeration value="datetime"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="OGRFieldSubTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="None"/>
+            <xs:enumeration value="Boolean"/>
+            <xs:enumeration value="Int16"/>
+            <xs:enumeration value="Float32"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -254,6 +324,7 @@
                 <xs:documentation>Only used if no Field element is found at the OGRVRTLayer level</xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="nullable" type="OGRBooleanType" default="true"/>  <!-- new in GDAL 2.0 -->
     </xs:attributeGroup>
 
     <xs:complexType name="GeometryFieldTypeWithoutSrc">

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrtigerlayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_tiger.h"
 
-CPL_CVSID("$Id: ogrtigerlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrtigerlayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                           OGRTigerLayer()                            */
@@ -118,7 +118,7 @@ void OGRTigerLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRTigerLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRTigerLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( nFeatureId < 1 || nFeatureId > nFeatureCount )
@@ -149,7 +149,7 @@ OGRFeature *OGRTigerLayer::GetFeature( long nFeatureId )
     OGRFeature  *poFeature;
 
     poFeature =
-        poReader->GetFeature( nFeatureId-panModuleOffset[iLastModule]-1 );
+        poReader->GetFeature( (int)nFeatureId-panModuleOffset[iLastModule]-1 );
 
     if( poFeature != NULL )
     {
@@ -245,17 +245,19 @@ OGRFeatureDefn *OGRTigerLayer::GetLayerDefn()
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRTigerLayer::CreateField( CPL_UNUSED OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRTigerLayer::CreateField( CPL_UNUSED OGRFieldDefn *poField,
+                                   CPL_UNUSED int bApproxOK )
 {
     /* notdef/TODO: I should add some checking here eventually. */
+
     return OGRERR_NONE;
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                          ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRTigerLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRTigerLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     return poReader->CreateFeature( poFeature );
@@ -265,7 +267,7 @@ OGRErr OGRTigerLayer::CreateFeature( OGRFeature *poFeature )
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRTigerLayer::GetFeatureCount( int bForce )
+GIntBig OGRTigerLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom == NULL && m_poAttrQuery == NULL )

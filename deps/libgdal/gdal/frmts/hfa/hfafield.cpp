@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfafield.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: hfafield.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Implementation of the HFAField class for managing information
@@ -31,7 +31,7 @@
 
 #include "hfa_p.h"
 
-CPL_CVSID("$Id: hfafield.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: hfafield.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 #define MAX_ENTRY_REPORT   16
                            
@@ -493,7 +493,7 @@ HFAField::SetInstValue( const char * pszField, int nIndexValue,
     if( chReqType == 's' )
     {
         nIntValue = atoi((char *) pValue);
-        dfDoubleValue = atof((char *) pValue);
+        dfDoubleValue = CPLAtof((char *) pValue);
     }
     else if( chReqType == 'd' )
     {
@@ -1261,7 +1261,7 @@ HFAField::ExtractInstValue( const char * pszField, int nIndexValue,
             /* not go here, but that can happen if the file is corrupted */
             /* so reserve the first 8 bytes before the string to contain null bytes */
             memset(szNumberString, 0, 8);
-            sprintf( szNumberString + 8, "%.14g", dfDoubleRet );
+            CPLsprintf( szNumberString + 8, "%.14g", dfDoubleRet );
             pszStringRet = szNumberString + 8;
         }
         

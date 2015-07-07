@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfa_p.h 23495 2011-12-08 00:16:33Z rouault $
+ * $Id: hfa_p.h 28275 2015-01-02 18:45:58Z rouault $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Private class declarations for the HFA classes used to read
@@ -234,18 +234,23 @@ class HFAEntry
 
     int         bIsMIFObject;
 
+                HFAEntry();
                 HFAEntry( HFAEntry *poContainer,
                           const char *pszMIFObjectPath,
                           const char * pszDictionnary, 
                           const char * pszTypeName,
                           int nDataSizeIn,
                           GByte* pabyDataIn );
+    std::vector<HFAEntry*> FindChildren( const char *pszName, 
+                                         const char *pszType,
+                                         int nRecLevel,
+                                         int* pbErrorDetected);
 
 public:
-    		HFAEntry( HFAInfo_t * psHFA, GUInt32 nPos,
+    static HFAEntry* New( HFAInfo_t * psHFA, GUInt32 nPos,
                           HFAEntry * poParent, HFAEntry *poPrev);
 
-                HFAEntry( HFAInfo_t *psHFA, 
+                 HFAEntry( HFAInfo_t *psHFA, 
                           const char *pszNodeName,
                           const char *pszTypeName,
                           HFAEntry *poParent );
@@ -273,8 +278,7 @@ public:
     HFAEntry	*GetNext();
     HFAEntry    *GetNamedChild( const char * );
     std::vector<HFAEntry*> FindChildren( const char *pszName, 
-                                         const char *pszType,
-                                         int nRecLevel = 0);
+                                         const char *pszType);
 
     GInt32	GetIntField( const char *, CPLErr * = NULL );
     double	GetDoubleField( const char *, CPLErr * = NULL );

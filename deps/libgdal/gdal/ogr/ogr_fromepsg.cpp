@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_fromepsg.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogr_fromepsg.cpp 28565 2015-02-27 10:26:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Generate an OGRSpatialReference object based on an EPSG
@@ -32,8 +32,9 @@
 #include "ogr_spatialref.h"
 #include "ogr_p.h"
 #include "cpl_csv.h"
+#include <vector>
 
-CPL_CVSID("$Id: ogr_fromepsg.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogr_fromepsg.cpp 28565 2015-02-27 10:26:21Z rouault $");
 
 #ifndef PI
 #  define PI 3.14159265358979323846
@@ -402,6 +403,27 @@ EPSGGetUOMLengthInfo( int nUOMLengthCode,
 }
 
 /************************************************************************/
+/*                         EPSGNegateString()                           */
+/************************************************************************/
+
+static void EPSGNegateString(CPLString& osValue)
+{
+    if( osValue.compare("0") == 0 )
+        return;
+    if( osValue[0] == '-' )
+    {
+        osValue = osValue.substr(1);
+        return;
+    }
+    if( osValue[0] == '+' )
+    {
+        osValue[0] = '-';
+        return;
+    }
+    osValue = "-" + osValue;
+}
+
+/************************************************************************/
 /*                       EPSGGetWGS84Transform()                        */
 /*                                                                      */
 /*      The following code attempts to find a bursa-wolf                */
@@ -414,7 +436,7 @@ EPSGGetUOMLengthInfo( int nUOMLengthCode,
 /*         to limitations in the CSV API.                               */
 /************************************************************************/
 
-int EPSGGetWGS84Transform( int nGeogCS, double *padfTransform )
+int EPSGGetWGS84Transform( int nGeogCS, std::vector<CPLString>& asTransform )
 
 {
     int         nMethodCode, iDXField, iField;
@@ -459,8 +481,15 @@ int EPSGGetWGS84Transform( int nGeogCS, double *padfTransform )
     if (iDXField < 0 || CSLCount(papszLine) < iDXField + 7)
         return FALSE;
 
+    asTransform.resize(0);
     for( iField = 0; iField < 7; iField++ )
-        padfTransform[iField] = CPLAtof(papszLine[iDXField+iField]);
+    {
+        const char* pszValue = papszLine[iDXField+iField];
+        if( pszValue[0] )
+            asTransform.push_back(pszValue);
+        else
+            asTransform.push_back("0");
+    }
 
 /* -------------------------------------------------------------------- */
 /*      9607 - coordinate frame rotation has reverse signs on the       */
@@ -469,9 +498,9 @@ int EPSGGetWGS84Transform( int nGeogCS, double *padfTransform )
 /* -------------------------------------------------------------------- */
     if( nMethodCode == 9607 )
     {
-        padfTransform[3] *= -1;
-        padfTransform[4] *= -1;
-        padfTransform[5] *= -1;
+        EPSGNegateString(asTransform[3]);
+        EPSGNegateString(asTransform[4]);
+        EPSGNegateString(asTransform[5]);
     }
         
     return TRUE;
@@ -742,11 +771,10 @@ OSRGetEllipsoidInfo( int nCode, char ** ppszName,
                                   "ELLIPSOID_CODE", szSearchKey, CC_Integer,
                                   "SEMI_MINOR_AXIS" )) * dfToMeters;
 
-            if( dfSemiMajor != 0.0 && dfSemiMajor != dfSemiMinor )
-                *pdfInvFlattening = 
-                    -1.0 / (dfSemiMinor/dfSemiMajor - 1.0);
-            else
+            if( dfSemiMajor == 0.0 )
                 *pdfInvFlattening = 0.0;
+            else
+                *pdfInvFlattening = OSRCalcInvFlattening(dfSemiMajor, dfSemiMinor);
         }
     }
 
@@ -1232,7 +1260,7 @@ static OGRErr SetEPSGGeogCS( OGRSpatialReference * poSRS, int nGeogCS )
     int  nDatumCode, nPMCode, nUOMAngle, nEllipsoidCode, nCSC;
     char *pszGeogCSName = NULL, *pszDatumName = NULL, *pszEllipsoidName = NULL;
     char *pszPMName = NULL, *pszAngleName = NULL;
-    double dfPMOffset, dfSemiMajor, dfInvFlattening, adfBursaTransform[7];
+    double dfPMOffset, dfSemiMajor, dfInvFlattening;
     double dfAngleInDegrees, dfAngleInRadians;
 
     if( !EPSGGetGCSInfo( nGeogCS, &pszGeogCSName,
@@ -1275,17 +1303,16 @@ static OGRErr SetEPSGGeogCS( OGRSpatialReference * poSRS, int nGeogCS )
                       pszPMName, dfPMOffset,
                       pszAngleName, dfAngleInRadians );
 
-    if( EPSGGetWGS84Transform( nGeogCS, adfBursaTransform ) )
+    std::vector<CPLString> asBursaTransform;
+    if( EPSGGetWGS84Transform( nGeogCS, asBursaTransform ) )
     {
         OGR_SRSNode     *poWGS84;
-        char            szValue[100];
 
         poWGS84 = new OGR_SRSNode( "TOWGS84" );
 
         for( int iCoeff = 0; iCoeff < 7; iCoeff++ )
         {
-            sprintf( szValue, "%g", adfBursaTransform[iCoeff] );
-            poWGS84->AddChild( new OGR_SRSNode( szValue ) );
+            poWGS84->AddChild( new OGR_SRSNode( asBursaTransform[iCoeff].c_str() ) );
         }
 
         poSRS->GetAttrNode( "DATUM" )->AddChild( poWGS84 );
@@ -1324,9 +1351,10 @@ static OGRErr SetEPSGGeogCS( OGRSpatialReference * poSRS, int nGeogCS )
 /*      parameter code.                                                 */
 /************************************************************************/
 
-static double OGR_FetchParm( double *padfProjParms, int *panParmIds, 
-                             int nTargetId, CPL_UNUSED double dfFromGreenwich )
-
+static double OGR_FetchParm( double *padfProjParms,
+                             int *panParmIds,
+                             int nTargetId,
+                             CPL_UNUSED double dfFromGreenwich )
 {
     int i;
     double dfResult;
@@ -1341,7 +1369,7 @@ static double OGR_FetchParm( double *padfProjParms, int *panParmIds,
       case PseudoStdParallelScaleFactor:
         dfResult = 1.0;
         break;
-        
+
       case AngleRectifiedToSkewedGrid:
         dfResult = 90.0;
         break;
@@ -1615,6 +1643,7 @@ static OGRErr SetEPSGProjCS( OGRSpatialReference * poSRS, int nPCSCode )
         break;
 
       case 9823: /* Equidistant Cylindrical / Plate Carre / Equirectangular */
+      case 9842:
       case 1028:
       case 1029:
         poSRS->SetEquirectangular( OGR_FP( NatOriginLat ),
@@ -1697,13 +1726,6 @@ static OGRErr SetEPSGVertCS( OGRSpatialReference * poSRS, int nVertCSCode )
         CSLGetField( papszRecord,
                      CSVGetFileFieldId(pszFilename,
                                        "DATUM_NAME")) );
-/* -------------------------------------------------------------------- */
-/*      Setup the VERT_DATUM node.                                      */
-/* -------------------------------------------------------------------- */
-    poSRS->SetAuthority( "VERT_CS|VERT_DATUM", "EPSG",
-                         atoi(CSLGetField( papszRecord,
-                                           CSVGetFileFieldId(pszFilename,
-                                                             "DATUM_CODE"))) );
 
 /* -------------------------------------------------------------------- */
 /*      Should we add a geoidgrids extension node?                      */
@@ -1719,7 +1741,15 @@ static OGRErr SetEPSGVertCS( OGRSpatialReference * poSRS, int nVertCSCode )
 
         poSRS->SetExtension( "VERT_CS|VERT_DATUM", "PROJ4_GRIDS", pszParm11 );
     }
-    
+
+/* -------------------------------------------------------------------- */
+/*      Setup the VERT_DATUM node.                                      */
+/* -------------------------------------------------------------------- */
+    poSRS->SetAuthority( "VERT_CS|VERT_DATUM", "EPSG",
+                         atoi(CSLGetField( papszRecord,
+                                           CSVGetFileFieldId(pszFilename,
+                                                             "DATUM_CODE"))) );
+
 /* -------------------------------------------------------------------- */
 /*      Set linear units.                                               */
 /* -------------------------------------------------------------------- */
@@ -1988,7 +2018,7 @@ static OGRErr SetEPSGGeocCS( OGRSpatialReference * poSRS, int nGCSCode )
 
         for( int iCoeff = 0; iCoeff < 7; iCoeff++ )
         {
-            sprintf( szValue, "%g", adfBursaTransform[iCoeff] );
+            CPLsprintf( szValue, "%g", adfBursaTransform[iCoeff] );
             poWGS84->AddChild( new OGR_SRSNode( szValue ) );
         }
 
@@ -2156,7 +2186,6 @@ OGRErr OGRSpatialReference::importFromEPSGA( int nCode )
 
 {
     OGRErr  eErr;
-    CPLLocaleC  oLocaleForcer;
 
     bNormInfoSet = FALSE;
 
@@ -2768,4 +2797,3 @@ int OSREPSGTreatsAsNorthingEasting( OGRSpatialReferenceH hSRS )
 
     return ((OGRSpatialReference *) hSRS)->EPSGTreatsAsNorthingEasting();
 }
-

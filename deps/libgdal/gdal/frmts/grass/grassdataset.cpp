@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: grassdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: grassdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  GRASS Driver
  * Purpose:  Implement GRASS raster read/write support
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: grassdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: grassdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GRASS(void);
@@ -596,6 +596,7 @@ void GDALRegister_GRASS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GRASS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "GRASS Database Rasters" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

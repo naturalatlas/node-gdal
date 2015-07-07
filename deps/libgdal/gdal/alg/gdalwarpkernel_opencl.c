@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarpkernel_opencl.c 28301 2015-01-07 08:31:04Z rouault $
+ * $Id: gdalwarpkernel_opencl.c 28300 2015-01-07 08:30:07Z rouault $
  *
  * Project:  OpenCL Image Reprojector
  * Purpose:  Implementation of the GDALWarpKernel reprojector in OpenCL.
@@ -41,7 +41,7 @@
 #include "cpl_string.h"
 #include "gdalwarpkernel_opencl.h"
 
-CPL_CVSID("$Id: gdalwarpkernel_opencl.c 28301 2015-01-07 08:31:04Z rouault $");
+CPL_CVSID("$Id: gdalwarpkernel_opencl.c 28300 2015-01-07 08:30:07Z rouault $");
 
 #define handleErr(err) if((err) != CL_SUCCESS) { \
     CPLError(CE_Failure, CPLE_AppDefined, "Error at file %s line %d: %s", __FILE__, __LINE__, getCLErrorString(err)); \

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dipxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: dipxdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implementation for ELAS DIPEx format variant.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: dipxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: dipxdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void	GDALRegister_DIPEx(void);
@@ -304,7 +304,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return( poDS );
 }
@@ -345,6 +345,7 @@ void GDALRegister_DIPEx()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "DIPEx" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "DIPEx" );
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );

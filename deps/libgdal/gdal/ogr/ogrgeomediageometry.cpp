@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediageometry.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomediageometry.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements decoder of geomedia geometry blobs
@@ -30,7 +30,7 @@
 #include "ogrgeomediageometry.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrgeomediageometry.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgeomediageometry.cpp 27959 2014-11-14 18:29:21Z rouault $");
 
 #define GEOMEDIA_POINT          0xC0
 #define GEOMEDIA_ORIENTED_POINT 0xC8
@@ -353,7 +353,6 @@ OGRErr OGRCreateFromGeomedia( GByte *pabyGeom,
 
                 if (poColl->addGeometryDirectly(poSubGeom) != OGRERR_NONE)
                 {
-                    //printf("%d %d\n", poColl->getGeometryType() & ~wkb25DBit, poSubGeom->getGeometryType() & ~wkb25DBit);
                     delete poSubGeom;
                 }
             }

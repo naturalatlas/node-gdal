@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: s57.h 28348 2015-01-23 15:27:13Z rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Declarations for S-57 translator not including the
@@ -321,7 +321,7 @@ class CPL_DLL S57Reader
                        ~S57Reader();
 
     void                SetClassBased( S57ClassRegistrar *, S57ClassContentExplorer* );
-    void                SetOptions( char ** );
+    int                 SetOptions( char ** );
     int                 GetOptionFlags() { return nOptionFlags; }
 
     int                 Open( int bTestOpen );
@@ -371,12 +371,24 @@ public:
     int                 WriteATTF( DDFRecord *, OGRFeature * );
     int                 WritePrimitive( OGRFeature *poFeature );
     int                 WriteCompleteFeature( OGRFeature *poFeature );
-    int                 WriteDSID( const char *pszDSNM = NULL, 
-                                   const char *pszISDT = NULL, 
+    int                 WriteDSID( int nEXPP = 1,
+                                   int nINTU = 4,
+                                   const char *pszDSNM = NULL,
+                                   const char *pszEDTN = NULL,
+                                   const char *pszUPDN = NULL,
+                                   const char *pszUADT = NULL,
+                                   const char *pszISDT = NULL,
                                    const char *pszSTED = NULL,
                                    int nAGEN = 0,
-                                   const char *pszCOMT = NULL );
-    int                 WriteDSPM( int nScale = 0 );
+                                   const char *pszCOMT = NULL,
+                                   int nNOMR = 0, int nNOGR = 0,
+                                   int nNOLR = 0, int nNOIN = 0,
+                                   int nNOCN = 0, int nNOED = 0
+                                 );
+    int                 WriteDSPM( int nHDAT = 0,
+                                   int nVDAT = 0,
+                                   int nSDAT = 0,
+                                   int nCSCL = 0 );
 
 // semi-private - for sophisticated writers.
     DDFRecord           *MakeRecord();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpdsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrpdsdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  PDS Translator
  * Purpose:  Implements OGRPDSDataSource class
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrpdsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrpdsdatasource.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                           OGRPDSDataSource()                         */
@@ -273,14 +273,9 @@ int OGRPDSDataSource::LoadTable(const char* pszFilename,
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRPDSDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGRPDSDataSource::Open( const char * pszFilename )
 
 {
-    if (bUpdateIn)
-    {
-        return FALSE;
-    }
-
     pszName = CPLStrdup( pszFilename );
 
 // --------------------------------------------------------------------

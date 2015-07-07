@@ -1,12 +1,12 @@
 /******************************************************************************
- * $Id: pcrasterutil.cpp 15450 2008-10-03 10:59:32Z kdejong $
+ * $Id: pcrasterutil.cpp 28862 2015-04-07 10:10:25Z kdejong $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster driver support functions.
- * Author:   Kor de Jong, k.dejong at geog.uu.nl
+ * Author:   Kor de Jong, Oliver Schmitz
  *
  ******************************************************************************
- * Copyright (c) 2004, Kor de Jong
+ * Copyright (c) PCRaster owners
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -314,8 +314,8 @@ CSF_VS GDALType2ValueScale(
              complex.
 
   If exact is false, conversion to CSF2.0 types will take place. This is
-  usefull for in file cell representations. If exact is true, and exact match
-  is made. This is usefull for in app cell representations.
+  useful for in file cell representations. If exact is true, and exact match
+  is made. This is useful for in app cell representations.
 
   If exact is false, this function always returns one of CR_UINT1, CR_INT4
   or CR_REAL4.
@@ -712,3 +712,24 @@ void castValuesToBooleanRange(
   }
 }
 
+
+
+void castValuesToDirectionRange(
+         void* buffer,
+         size_t size)
+{
+  std::for_each(static_cast<REAL4*>(buffer),
+       static_cast<REAL4*>(buffer) + size,
+       CastToDirection());
+}
+
+
+
+void castValuesToLddRange(
+         void* buffer,
+         size_t size)
+{
+  std::for_each(static_cast<UINT1*>(buffer),
+       static_cast<UINT1*>(buffer) + size,
+       CastToLdd());
+}

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodsdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrodsdriver.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  ODS Translator
  * Purpose:  Implements OGRODSDriver.
@@ -30,7 +30,7 @@
 #include "ogr_ods.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrodsdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrodsdriver.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 extern "C" void RegisterOGRODS();
 
@@ -217,6 +217,14 @@ int OGRODSDriver::TestCapability( const char * pszCap )
 void RegisterOGRODS()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRODSDriver );
+    OGRSFDriver* poDriver = new OGRODSDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                "Open Document/ LibreOffice / OpenOffice Spreadsheet " );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "ods" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_ods.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime Time Binary" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrcsvdatasource.cpp 29237 2015-05-24 08:38:20Z rouault $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVDataSource class
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "cpl_vsi_virtual.h"
 
-CPL_CVSID("$Id: ogrcsvdatasource.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrcsvdatasource.cpp 29237 2015-05-24 08:38:20Z rouault $");
 
 /************************************************************************/
 /*                          OGRCSVDataSource()                          */
@@ -79,6 +79,8 @@ int OGRCSVDataSource::TestCapability( const char * pszCap )
         return bUpdate;
     else if( EQUAL(pszCap,ODsCCreateGeomFieldAfterCreateLayer) )
         return bUpdate && bEnableGeometryFields;
+    else if( EQUAL(pszCap,ODsCCurveGeometries) )
+        return TRUE;
     else
         return FALSE;
 }
@@ -118,7 +120,7 @@ CPLString OGRCSVDataSource::GetRealExtension(CPLString osFilename)
 /************************************************************************/
 
 int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
-                            int bForceOpen )
+                            int bForceOpen, char** papszOpenOptions )
 
 {
     pszName = CPLStrdup( pszFilename );
@@ -211,14 +213,14 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
     {
         if (EQUAL(CPLGetFilename(osFilename), "NfdcFacilities.xls"))
         {
-            return OpenTable( osFilename, "ARP");
+            return OpenTable( osFilename, papszOpenOptions, "ARP");
         }
         else if (EQUAL(CPLGetFilename(osFilename), "NfdcRunways.xls"))
         {
-            OpenTable( osFilename, "BaseEndPhysical");
-            OpenTable( osFilename, "BaseEndDisplaced");
-            OpenTable( osFilename, "ReciprocalEndPhysical");
-            OpenTable( osFilename, "ReciprocalEndDisplaced");
+            OpenTable( osFilename, papszOpenOptions, "BaseEndPhysical");
+            OpenTable( osFilename, papszOpenOptions, "BaseEndDisplaced");
+            OpenTable( osFilename, papszOpenOptions, "ReciprocalEndPhysical");
+            OpenTable( osFilename, papszOpenOptions, "ReciprocalEndDisplaced");
             return nLayers != 0;
         }
         else if (bUSGeonamesFile)
@@ -229,22 +231,22 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
                 EQUALN(osBaseFilename, "ANTARCTICA_", 11) ||
                 (strlen(osBaseFilename) > 2 && EQUALN(osBaseFilename+2, "_FedCodes_", 10)))
             {
-                OpenTable( osFilename, NULL, "PRIMARY");
+                OpenTable( osFilename, papszOpenOptions, NULL, "PRIMARY");
             }
             else if (EQUALN(osBaseFilename, "GOVT_UNITS_", 11) ||
                      EQUALN(osBaseFilename, "Feature_Description_History_", 28))
             {
-                OpenTable( osFilename, NULL, "");
+                OpenTable( osFilename, papszOpenOptions, NULL, "");
             }
             else
             {
-                OpenTable( osFilename, NULL, "PRIM");
-                OpenTable( osFilename, NULL, "SOURCE");
+                OpenTable( osFilename, papszOpenOptions, NULL, "PRIM");
+                OpenTable( osFilename, papszOpenOptions, NULL, "SOURCE");
             }
             return nLayers != 0;
         }
 
-        return OpenTable( osFilename );
+        return OpenTable( osFilename, papszOpenOptions );
     }
 
 /* -------------------------------------------------------------------- */
@@ -263,7 +265,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
         }
         osFilename = CPLFormFilename(osFilename, papszFiles[0], NULL);
         CSLDestroy(papszFiles);
-        return OpenTable( osFilename );
+        return OpenTable( osFilename, papszOpenOptions );
     }
 
 /* -------------------------------------------------------------------- */
@@ -298,7 +300,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
 
         if (EQUAL(CPLGetExtension(oSubFilename),"csv"))
         {
-            if( !OpenTable( oSubFilename ) )
+            if( !OpenTable( oSubFilename, papszOpenOptions ) )
             {
                 CPLDebug("CSV", "Cannot open %s", oSubFilename.c_str());
                 nNotCSVCount++;
@@ -311,8 +313,8 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
                   EQUALN(papszNames[i]+2, "_Features_", 10) &&
                   EQUAL(CPLGetExtension(papszNames[i]), "txt") )
         {
-            int bRet = OpenTable( oSubFilename, NULL, "PRIM");
-            bRet |= OpenTable( oSubFilename, NULL, "SOURCE");
+            int bRet = OpenTable( oSubFilename, papszOpenOptions, NULL, "PRIM");
+            bRet |= OpenTable( oSubFilename, papszOpenOptions, NULL, "SOURCE");
             if ( !bRet )
             {
                 CPLDebug("CSV", "Cannot open %s", oSubFilename.c_str());
@@ -325,7 +327,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
                   EQUALN(papszNames[i]+2, "_FedCodes_", 10) &&
                   EQUAL(CPLGetExtension(papszNames[i]), "txt") )
         {
-            if ( !OpenTable( oSubFilename, NULL, "PRIMARY") )
+            if ( !OpenTable( oSubFilename, papszOpenOptions, NULL, "PRIMARY") )
             {
                 CPLDebug("CSV", "Cannot open %s", oSubFilename.c_str());
                 nNotCSVCount++;
@@ -353,6 +355,7 @@ int OGRCSVDataSource::Open( const char * pszFilename, int bUpdateIn,
 /************************************************************************/
 
 int OGRCSVDataSource::OpenTable( const char * pszFilename,
+                                 char** papszOpenOptions,
                                  const char* pszNfdcRunwaysGeomField,
                                  const char* pszGeonamesGeomFieldPrefix)
 
@@ -405,6 +408,26 @@ int OGRCSVDataSource::OpenTable( const char * pszFilename,
         return FALSE;
     }
     char chDelimiter = CSVDetectSeperator(pszLine);
+#if 0
+    const char *pszDelimiter = CSLFetchNameValueDef( papszOpenOptions, "SEPARATOR", "AUTO");
+    if( !EQUAL(pszDelimiter, "AUTO") )
+    {
+        if (EQUAL(pszDelimiter, "COMMA"))
+            chDelimiter = ',';
+        else if (EQUAL(pszDelimiter, "SEMICOLON"))
+            chDelimiter = ';';
+        else if (EQUAL(pszDelimiter, "TAB"))
+            chDelimiter = '\t';
+        else if (EQUAL(pszDelimiter, "SPACE"))
+            chDelimiter = ' ';
+        else
+        {
+            CPLError( CE_Warning, CPLE_AppDefined, 
+                  "SEPARATOR=%s not understood, use one of COMMA, SEMICOLON, SPACE or TAB.",
+                  pszDelimiter );
+        }
+    }
+#endif
 
     /* Force the delimiter to be TAB for a .tsv file that has a tabulation */
     /* in its first line */
@@ -455,21 +478,22 @@ int OGRCSVDataSource::OpenTable( const char * pszFilename,
         osLayerName = "layer";
     papoLayers[nLayers-1] = 
         new OGRCSVLayer( osLayerName, fp, pszFilename, FALSE, bUpdate,
-                         chDelimiter, pszNfdcRunwaysGeomField, pszGeonamesGeomFieldPrefix );
-
+                         chDelimiter  );
+    papoLayers[nLayers-1]->BuildFeatureDefn( pszNfdcRunwaysGeomField,
+                                             pszGeonamesGeomFieldPrefix,
+                                             papszOpenOptions );
     return TRUE;
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRCSVDataSource::CreateLayer( const char *pszLayerName, 
-                               CPL_UNUSED OGRSpatialReference *poSpatialRef,
-                               OGRwkbGeometryType eGType,
-                               char ** papszOptions  )
-
+OGRCSVDataSource::ICreateLayer( const char *pszLayerName,
+                                CPL_UNUSED OGRSpatialReference *poSpatialRef,
+                                OGRwkbGeometryType eGType,
+                                char ** papszOptions  )
 {
 /* -------------------------------------------------------------------- */
 /*      Verify we are in update mode.                                   */
@@ -542,10 +566,12 @@ OGRCSVDataSource::CreateLayer( const char *pszLayerName,
             chDelimiter = ';';
         else if (EQUAL(pszDelimiter, "TAB"))
             chDelimiter = '\t';
+        else if (EQUAL(pszDelimiter, "SPACE"))
+            chDelimiter = ' ';
         else
         {
             CPLError( CE_Warning, CPLE_AppDefined, 
-                  "SEPARATOR=%s not understood, use one of COMMA, SEMICOLON or TAB.",
+                  "SEPARATOR=%s not understood, use one of COMMA, SEMICOLON, SPACE or TAB.",
                   pszDelimiter );
         }
     }
@@ -558,7 +584,8 @@ OGRCSVDataSource::CreateLayer( const char *pszLayerName,
                                              sizeof(void*) * nLayers);
     
     papoLayers[nLayers-1] = new OGRCSVLayer( pszLayerName, NULL, osFilename,
-                                             TRUE, TRUE, chDelimiter, NULL, NULL );
+                                             TRUE, TRUE, chDelimiter );
+    papoLayers[nLayers-1]->BuildFeatureDefn();
 
 /* -------------------------------------------------------------------- */
 /*      Was a partiuclar CRLF order requested?                          */

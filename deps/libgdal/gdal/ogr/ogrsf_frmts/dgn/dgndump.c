@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgndump.c 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: dgndump.c 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  Temporary low level DGN dumper application.
@@ -29,7 +29,7 @@
 
 #include "dgnlibp.h"
 
-CPL_CVSID("$Id: dgndump.c 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: dgndump.c 27942 2014-11-11 00:57:41Z rouault $");
 
 static void DGNDumpRawElement( DGNHandle hDGN, DGNElemCore *psCore,
                                FILE *fpOut );
@@ -74,10 +74,10 @@ int main( int argc, char ** argv )
         }
         else if( strcmp(argv[iArg],"-e") == 0 && iArg < argc-4 )
         {
-            dfSFXMin = atof(argv[iArg+1]);
-            dfSFYMin = atof(argv[iArg+2]);
-            dfSFXMax = atof(argv[iArg+3]);
-            dfSFYMax = atof(argv[iArg+4]);
+            dfSFXMin = CPLAtof(argv[iArg+1]);
+            dfSFYMin = CPLAtof(argv[iArg+2]);
+            dfSFXMax = CPLAtof(argv[iArg+3]);
+            dfSFYMax = CPLAtof(argv[iArg+4]);
             iArg += 4;
         }
         else if( strcmp(argv[iArg],"-r") == 0 && iArg < argc-1 )

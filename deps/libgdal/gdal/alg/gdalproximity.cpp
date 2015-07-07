@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproximity.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalproximity.cpp 28882 2015-04-09 15:59:38Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Compute each pixel's proximity to a set of target pixels.
@@ -32,12 +32,12 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdalproximity.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalproximity.cpp 28882 2015-04-09 15:59:38Z rouault $");
 
 static CPLErr
 ProcessProximityLine( GInt32 *panSrcScanline, int *panNearX, int *panNearY, 
                       int bForward, int iLine, int nXSize, double nMaxDist,
-                      float *pafProximity,
+                      float *pafProximity, double *pdfSrcNoDataValue,
                       int nTargetValues, int *panTargetValues );
 
 /************************************************************************/
@@ -84,6 +84,12 @@ set to a nodata value.
 The NODATA value to use on the output band for pixels that are
 beyond MAXDIST.  If not provided, the hProximityBand will be
 queried for a nodata value.  If one is not found, 65535 will be used.
+
+  USE_INPUT_NODATA=YES/NO
+
+If this option is set, the input data set no-data value will be
+respected. Leaving no data pixels in the input as no data pixels in
+the proximity output.
 
   FIXED_BUF_VAL=n
 
@@ -146,7 +152,7 @@ GDALComputeProximity( GDALRasterBandH hSrcBand,
 /* -------------------------------------------------------------------- */
     pszOpt = CSLFetchNameValue( papszOptions, "MAXDIST" );
     if( pszOpt )
-        dfMaxDist = atof(pszOpt) / dfDistMult;
+        dfMaxDist = CPLAtof(pszOpt) / dfDistMult;
     else
         dfMaxDist = GDALGetRasterBandXSize(hSrcBand) + GDALGetRasterBandYSize(hSrcBand);
 
@@ -166,12 +172,25 @@ GDALComputeProximity( GDALRasterBandH hSrcBand,
     }
 
 /* -------------------------------------------------------------------- */
+/*      Get input NODATA value.                                         */
+/* -------------------------------------------------------------------- */
+    double dfSrcNoDataValue = 0.0;
+    double *pdfSrcNoData = NULL;
+    if( CSLFetchBoolean( papszOptions, "USE_INPUT_NODATA", FALSE ) )
+    {
+        int bSrcHasNoData = 0;
+        dfSrcNoDataValue = GDALGetRasterNoDataValue( hSrcBand, &bSrcHasNoData );
+        if( bSrcHasNoData )
+            pdfSrcNoData = &dfSrcNoDataValue;
+    }
+
+/* -------------------------------------------------------------------- */
 /*      Get output NODATA value.                                        */
 /* -------------------------------------------------------------------- */
     float fNoDataValue;
     pszOpt = CSLFetchNameValue( papszOptions, "NODATA" );
     if( pszOpt != NULL )
-        fNoDataValue = (float) atof(pszOpt);
+        fNoDataValue = (float) CPLAtof(pszOpt);
     else
     {
         int bSuccess;
@@ -187,7 +206,7 @@ GDALComputeProximity( GDALRasterBandH hSrcBand,
     pszOpt = CSLFetchNameValue( papszOptions, "FIXED_BUF_VAL" );
     if( pszOpt )
     {
-        dfFixedBufVal = atof(pszOpt);
+        dfFixedBufVal = CPLAtof(pszOpt);
         bFixedBufVal = TRUE;
     }
 
@@ -300,13 +319,13 @@ GDALComputeProximity( GDALRasterBandH hSrcBand,
 
         // Left to right
         ProcessProximityLine( panSrcScanline, panNearX, panNearY, 
-                              TRUE, iLine, nXSize, dfMaxDist,
-                              pafProximity, nTargetValues, panTargetValues );
+                              TRUE, iLine, nXSize, dfMaxDist, pafProximity,
+                              pdfSrcNoData, nTargetValues, panTargetValues );
 
         // Right to Left
         ProcessProximityLine( panSrcScanline, panNearX, panNearY, 
-                              FALSE, iLine, nXSize, dfMaxDist,
-                              pafProximity, nTargetValues, panTargetValues );
+                              FALSE, iLine, nXSize, dfMaxDist, pafProximity,
+                              pdfSrcNoData, nTargetValues, panTargetValues );
 
         // Write out results.
         eErr = 
@@ -349,13 +368,13 @@ GDALComputeProximity( GDALRasterBandH hSrcBand,
 
         // Right to left
         ProcessProximityLine( panSrcScanline, panNearX, panNearY, 
-                              FALSE, iLine, nXSize, dfMaxDist,
-                              pafProximity, nTargetValues, panTargetValues );
+                              FALSE, iLine, nXSize, dfMaxDist, pafProximity,
+                              pdfSrcNoData, nTargetValues, panTargetValues );
 
         // Left to right
         ProcessProximityLine( panSrcScanline, panNearX, panNearY, 
-                              TRUE, iLine, nXSize, dfMaxDist,
-                              pafProximity, nTargetValues, panTargetValues );
+                              TRUE, iLine, nXSize, dfMaxDist, pafProximity,
+                              pdfSrcNoData, nTargetValues, panTargetValues );
 
         // Final post processing of distances. 
         for( i = 0; i < nXSize; i++ )
@@ -414,7 +433,7 @@ end:
 static CPLErr
 ProcessProximityLine( GInt32 *panSrcScanline, int *panNearX, int *panNearY, 
                       int bForward, int iLine, int nXSize, double dfMaxDist,
-                      float *pafProximity,
+                      float *pafProximity, double *pdfSrcNoDataValue,
                       int nTargetValues, int *panTargetValues )
 
 {
@@ -529,6 +548,8 @@ ProcessProximityLine( GInt32 *panSrcScanline, int *panNearX, int *panNearY,
 /*      Update our proximity value.                                     */
 /* -------------------------------------------------------------------- */
         if( panNearX[iPixel] != -1 
+            && (pdfSrcNoDataValue == NULL
+                || panSrcScanline[iPixel] != *pdfSrcNoDataValue)
             && fNearDistSq <= dfMaxDist * dfMaxDist
             && (pafProximity[iPixel] < 0 
                 || fNearDistSq < pafProximity[iPixel] * pafProximity[iPixel]) )

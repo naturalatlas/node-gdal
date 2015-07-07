@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: blxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: blxdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  BLX Driver
  * Purpose:  GDAL BLX support.
@@ -33,7 +33,7 @@
 #include "gdal_pam.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: blxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: blxdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 #include <blx.h>
@@ -83,7 +83,7 @@ GDALDataset *BLXDataset::Open( GDALOpenInfo * poOpenInfo )
     // -------------------------------------------------------------------- 
     //      First that the header looks like a BLX header
     // -------------------------------------------------------------------- 
-    if( poOpenInfo->fp == NULL || poOpenInfo->nHeaderBytes < 102 )
+    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 102 )
         return NULL;
 
     if(!blx_checkheader((char *)poOpenInfo->pabyHeader))
@@ -387,7 +387,7 @@ BLXCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 	    eErr = poBand->RasterIO( GF_Read, j*ctx->cell_xsize, i*ctx->cell_ysize, 
 				     ctx->cell_xsize, ctx->cell_ysize, 
 				     pabyTile, ctx->cell_xsize, ctx->cell_ysize, GDT_Int16,
-				     0, 0 );
+				     0, 0, NULL );
 	    if(eErr >= CE_Failure) 
 	       break;
 	    celldata = pabyTile;
@@ -437,6 +437,7 @@ void GDALRegister_BLX()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "BLX" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Magellan topo (.blx)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

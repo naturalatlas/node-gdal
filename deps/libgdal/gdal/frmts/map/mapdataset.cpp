@@ -32,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "ogr_geometry.h"
 
-CPL_CVSID("$Id: mapdataset.cpp 27560 2014-08-04 17:52:58Z rouault $");
+CPL_CVSID("$Id: mapdataset.cpp 27559 2014-08-04 17:52:19Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -493,6 +493,7 @@ void GDALRegister_MAP()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "MAP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "OziExplorer .MAP" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

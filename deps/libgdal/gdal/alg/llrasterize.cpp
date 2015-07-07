@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: llrasterize.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: llrasterize.cpp 29117 2015-05-02 20:50:05Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Vector polygon rasterization code.
@@ -249,12 +249,15 @@ No known bug
 /*                         GDALdllImagePoint()                          */
 /************************************************************************/
 
-void GDALdllImagePoint( int nRasterXSize, int nRasterYSize, 
-                        int nPartCount, CPL_UNUSED int *panPartSize,
+void GDALdllImagePoint( int nRasterXSize, int nRasterYSize,
+                        int nPartCount,
+                        CPL_UNUSED int *panPartSize,
                         double *padfX, double *padfY, double *padfVariant,
                         llPointFunc pfnPointFunc, void *pCBData )
 {
-    for ( int i = 0; i < nPartCount; i++ )
+    int i;
+
+    for ( i = 0; i < nPartCount; i++ )
     {
         int nX = (int)floor( padfX[i] );
         int nY = (int)floor( padfY[i] );
@@ -553,7 +556,7 @@ GDALdllImageLineAllTouched(int nRasterXSize, int nRasterYSize,
             }
 
             // step from pixel to pixel.
-            while( dfX < dfXEnd )
+            while( dfX >= 0 && dfX < dfXEnd )
             {
                 int iX = (int) floor(dfX);
                 int iY = (int) floor(dfY);

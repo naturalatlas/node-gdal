@@ -49,14 +49,13 @@ using namespace PCIDSK;
 /*                           CTiledChannel()                            */
 /************************************************************************/
 
-CTiledChannel::CTiledChannel( PCIDSKBuffer &image_header, 
+CTiledChannel::CTiledChannel( PCIDSKBuffer &image_header,
                               uint64 ih_offset,
                               CPL_UNUSED PCIDSKBuffer &file_header,
                               int channelnum,
                               CPCIDSKFile *file,
                               eChanType pixel_type )
         : CPCIDSKChannel( image_header, ih_offset, file, pixel_type, channelnum)
-
 {
 /* -------------------------------------------------------------------- */
 /*      Establish the virtual file we will be accessing.                */

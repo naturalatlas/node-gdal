@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreader.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gmlreader.cpp 29217 2015-05-21 09:08:48Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLReader class.
@@ -63,11 +63,10 @@ IGMLReader::~IGMLReader()
 /*                          CreateGMLReader()                           */
 /************************************************************************/
 
-IGMLReader *CreateGMLReader(int bUseExpatParserPreferably,
-                            int bInvertAxisOrderIfLatLong,
-                            int bConsiderEPSGAsURN,
-                            int bGetSecondaryGeometryOption)
-
+IGMLReader *CreateGMLReader(CPL_UNUSED int bUseExpatParserPreferably,
+                            CPL_UNUSED int bInvertAxisOrderIfLatLong,
+                            CPL_UNUSED int bConsiderEPSGAsURN,
+                            CPL_UNUSED int bGetSecondaryGeometryOption)
 {
     CPLError( CE_Failure, CPLE_AppDefined,
               "Unable to create Xerces C++ or Expat based GML reader, Xerces or Expat support\n"
@@ -102,30 +101,29 @@ IGMLReader *CreateGMLReader(int bUseExpatParserPreferably,
 
 OGRGMLXercesState GMLReader::m_eXercesInitState = OGRGML_XERCES_UNINITIALIZED;
 int GMLReader::m_nInstanceCount = 0;
-void *GMLReader::hMutex = NULL;
+CPLMutex *GMLReader::hMutex = NULL;
 
 /************************************************************************/
 /*                             GMLReader()                              */
 /************************************************************************/
 
 GMLReader::GMLReader(
-#ifndef HAVE_XERCES
+#ifndef HAVE_EXPAT
 CPL_UNUSED
 #endif
                      int bUseExpatParserPreferably,
                      int bInvertAxisOrderIfLatLong,
                      int bConsiderEPSGAsURN,
                      int bGetSecondaryGeometryOption)
-
 {
 #ifndef HAVE_XERCES
     bUseExpatReader = TRUE;
 #else
     bUseExpatReader = FALSE;
-#  ifdef HAVE_EXPAT
+#ifdef HAVE_EXPAT
     if(bUseExpatParserPreferably)
         bUseExpatReader = TRUE;
-#  endif
+#endif
 #endif
 
 #if defined(HAVE_EXPAT) && defined(HAVE_XERCES)
@@ -186,9 +184,10 @@ CPL_UNUSED
 
     m_bSetWidthFlag = TRUE;
 
-    m_bReportAllAttributes = CSLTestBoolean(
-                    CPLGetConfigOption("GML_ATTRIBUTES_TO_OGR_FIELDS", "NO"));
+    m_bReportAllAttributes = FALSE;
 
+    m_bIsWFSJointLayer = FALSE;
+    m_bEmptyAsNull = TRUE;
 }
 
 /************************************************************************/
@@ -623,6 +622,13 @@ GMLFeature *GMLReader::NextFeatureExpat()
         unsigned int nLen =
                 (unsigned int)VSIFReadL( pabyBuf, 1, PARSER_BUF_SIZE, fpGML );
         nDone = VSIFEofL(fpGML);
+
+        /* Some files, such as APT_AIXM.xml from https://nfdc.faa.gov/webContent/56DaySub/2015-03-05/aixm5.1.zip */
+        /* end with trailing nul characters. This test is not fully bullet-proof in case */
+        /* the nul characters would occur at a buffer boundary */
+        while( nDone && nLen > 0 && pabyBuf[nLen-1] == '\0' )
+            nLen --;
+
         if (XML_Parse(oParser, pabyBuf, nLen, nDone) == XML_STATUS_ERROR)
         {
             CPLError(CE_Failure, CPLE_AppDefined,
@@ -783,6 +789,28 @@ int GMLReader::GetFeatureElementIndex( const char *pszElement, int nElementLengt
         {
             /* GML answer of MapServer WMS GetFeatureInfo request */
         }
+
+        /* Begin of CSW SearchResults */
+        else if (nElementLength == strlen("BriefRecord") &&
+                 nLenLast == strlen("SearchResults") &&
+                 strcmp(pszElement, "BriefRecord") == 0 &&
+                 strcmp(pszLast, "SearchResults") == 0)
+        {
+        }
+        else if (nElementLength == strlen("SummaryRecord") &&
+                 nLenLast == strlen("SearchResults") &&
+                 strcmp(pszElement, "SummaryRecord") == 0 &&
+                 strcmp(pszLast, "SearchResults") == 0)
+        {
+        }
+        else if (nElementLength == strlen("Record") &&
+                 nLenLast == strlen("SearchResults") &&
+                 strcmp(pszElement, "Record") == 0 &&
+                 strcmp(pszLast, "SearchResults") == 0)
+        {
+        }
+        /* End of CSW SearchResults */
+
         else
         {
             if( m_bClassListLocked )
@@ -1079,7 +1107,28 @@ void GMLReader::SetFeaturePropertyDirectly( const char *pszElement,
 
             CPLString osFieldName;
 
-            if( strchr(pszElement,'|') == NULL )
+            if( IsWFSJointLayer() )
+            {
+                /* At that point the element path should be member|layer|property */
+
+                /* Strip member| prefix. Should always be true normally */
+                if( strncmp(pszElement, "member|", strlen("member|")) == 0 )
+                    osFieldName = pszElement + strlen("member|");
+
+                /* Replace layer|property by layer_property */
+                size_t iPos = osFieldName.find('|');
+                if( iPos != std::string::npos )
+                    osFieldName[iPos] = '.';
+
+                /* Special case for gml:id on layer */
+                iPos = osFieldName.find("@id");
+                if( iPos != std::string::npos )
+                {
+                    osFieldName.resize(iPos);
+                    osFieldName += ".gml_id";
+                }
+            }
+            else if( strchr(pszElement,'|') == NULL )
                 osFieldName = pszElement;
             else
             {
@@ -1313,7 +1362,9 @@ int GMLReader::SaveClasses( const char *pszFile )
 /*      looking for schema information.                                 */
 /************************************************************************/
 
-int GMLReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
+int GMLReader::PrescanForSchema( int bGetExtents,
+                                 int bAnalyzeSRSPerFeature,
+                                 int bOnlyDetectSRS )
 
 {
     GMLFeature  *poFeature;
@@ -1321,9 +1372,12 @@ int GMLReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
     if( m_pszFilename == NULL )
         return FALSE;
 
-    SetClassListLocked( FALSE );
+    if( !bOnlyDetectSRS )
+    {
+        SetClassListLocked( FALSE );
+        ClearClasses();
+    }
 
-    ClearClasses();
     if( !SetupParser() )
         return FALSE;
 
@@ -1352,21 +1406,21 @@ int GMLReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
             poClass->SetFeatureCount( poClass->GetFeatureCount() + 1 );
 
         const CPLXMLNode* const * papsGeometry = poFeature->GetGeometryList();
-        if( papsGeometry != NULL && papsGeometry[0] != NULL )
+        if( !bOnlyDetectSRS && papsGeometry != NULL && papsGeometry[0] != NULL )
         {
             if( poClass->GetGeometryPropertyCount() == 0 )
-                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown ) );
+                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown, -1, TRUE ) );
         }
 
 #ifdef SUPPORT_GEOMETRY
-        if( bGetExtents )
+        if( bGetExtents && papsGeometry != NULL )
         {
             OGRGeometry *poGeometry = GML_BuildOGRGeometryFromList(
                 papsGeometry, TRUE, m_bInvertAxisOrderIfLatLong,
                 NULL, m_bConsiderEPSGAsURN, m_bGetSecondaryGeometryOption, 
                 hCacheSRS, m_bFaceHoleNegative );
 
-            if( poGeometry != NULL )
+            if( poGeometry != NULL && poClass->GetGeometryPropertyCount() > 0 )
             {
                 double  dfXMin, dfXMax, dfYMin, dfYMax;
                 OGREnvelope sEnvelope;
@@ -1389,8 +1443,8 @@ int GMLReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
                     eGType = wkbNone;
 
                 poClass->GetGeometryProperty(0)->SetType( 
-                    (int) OGRMergeGeometryTypes(
-                        eGType, poGeometry->getGeometryType() ) );
+                    (int) OGRMergeGeometryTypesEx(
+                        eGType, poGeometry->getGeometryType(), TRUE ) );
 
                 // merge extents.
                 if (!poGeometry->IsEmpty())

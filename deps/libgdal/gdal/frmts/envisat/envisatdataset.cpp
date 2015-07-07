@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: envisatdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: envisatdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Reader for ENVISAT format image data.
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: envisatdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: envisatdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 #include "EnvisatFile.h"
@@ -105,7 +105,8 @@ MerisL2FlagBand::~MerisL2FlagBand()
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
-CPLErr MerisL2FlagBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr MerisL2FlagBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                    int nBlockYOff,
                                     void * pImage )
 {
     CPLAssert( nBlockXOff == 0 );
@@ -1181,6 +1182,7 @@ void GDALRegister_Envisat()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "ESAT" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "Envisat Image Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -1194,4 +1196,3 @@ void GDALRegister_Envisat()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

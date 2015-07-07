@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gribdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gribdataset.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  GRIB Driver
  * Purpose:  GDALDataset driver for GRIB translator for read support
@@ -41,13 +41,13 @@
 
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: gribdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gribdataset.cpp 28459 2015-02-12 13:48:21Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GRIB(void);
 CPL_C_END
 
-static void *hGRIBMutex = NULL;
+static CPLMutex *hGRIBMutex = NULL;
 
 /************************************************************************/
 /* ==================================================================== */
@@ -339,7 +339,8 @@ CPLErr GRIBRasterBand::LoadData()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GRIBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
+CPLErr GRIBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
                                    void * pImage )
 
 {
@@ -671,6 +672,7 @@ GDALDataset *GRIBDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Create band objects.                                            */
 /* -------------------------------------------------------------------- */
+    GRIBRasterBand *gribBand;
     for (uInt4 i = 0; i < LenInv; ++i)
     {
         uInt4 bandNr = i+1;
@@ -692,17 +694,24 @@ GDALDataset *GRIBDataset::Open( GDALOpenInfo * poOpenInfo )
             }
 
             poDS->SetGribMetaData(metaData); // set the DataSet's x,y size, georeference and projection from the first GRIB band
-            GRIBRasterBand* gribBand = new GRIBRasterBand( poDS, bandNr, Inv+i);
+            gribBand = new GRIBRasterBand( poDS, bandNr, Inv+i);
 
             if( Inv->GribVersion == 2 )
                 gribBand->FindPDSTemplate();
 
             gribBand->m_Grib_Data = data;
             gribBand->m_Grib_MetaData = metaData;
-            poDS->SetBand( bandNr, gribBand);
         }
         else
-            poDS->SetBand( bandNr, new GRIBRasterBand( poDS, bandNr, Inv+i ));
+        {
+            gribBand = new GRIBRasterBand( poDS, bandNr, Inv+i );
+            if( CSLTestBoolean( CPLGetConfigOption( "GRIB_PDS_ALL_BANDS", "ON" ) ) )
+            {
+                if( Inv->GribVersion == 2 )
+                    gribBand->FindPDSTemplate();
+            }
+        }
+        poDS->SetBand( bandNr, gribBand);
         GRIB2InventoryFree (Inv + i);
     }
     free (Inv);
@@ -718,7 +727,7 @@ GDALDataset *GRIBDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
     CPLAcquireMutex(hGRIBMutex, 1000.0);
 
     return( poDS );
@@ -923,6 +932,7 @@ void GDALRegister_GRIB()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GRIB" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "GRIdded Binary (.grb)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

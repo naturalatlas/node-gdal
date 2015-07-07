@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_string.cpp 28321 2015-01-16 10:33:52Z rouault $
+ * $Id: cpl_string.cpp 28689 2015-03-08 20:05:50Z rouault $
  *
  * Name:     cpl_string.cpp
  * Project:  CPL - Common Portability Library
@@ -46,6 +46,8 @@
  *
  **********************************************************************/
 
+#undef WARN_STANDARD_PRINTF
+
 #include "cpl_string.h"
 #include "cpl_vsi.h"
 #include "cpl_multiproc.h"
@@ -55,7 +57,7 @@
 #  include <wce_string.h>
 #endif
 
-CPL_CVSID("$Id: cpl_string.cpp 28321 2015-01-16 10:33:52Z rouault $");
+CPL_CVSID("$Id: cpl_string.cpp 28689 2015-03-08 20:05:50Z rouault $");
 
 /*=====================================================================
                     StringList manipulation functions.
@@ -636,7 +638,7 @@ char **CSLRemoveStrings(char **papszStrList, int nFirstLineToDelete,
 /************************************************************************/
 
 /**
- * Find a string within a string list.
+ * Find a string within a string list (case insensitive).
  *
  * Returns the index of the entry in the string list that contains the 
  * target string.  The string in the string list must be a full match for
@@ -659,6 +661,42 @@ int CSLFindString( char ** papszList, const char * pszTarget )
     for( i = 0; papszList[i] != NULL; i++ )
     {
         if( EQUAL(papszList[i],pszTarget) )
+            return i;
+    }
+
+    return -1;
+}
+
+/************************************************************************/
+/*                     CSLFindStringCaseSensitive()                     */
+/************************************************************************/
+
+/**
+ * Find a string within a string list(case sensitive)
+ *
+ * Returns the index of the entry in the string list that contains the 
+ * target string.  The string in the string list must be a full match for
+ * the target. 
+ * 
+ * @param papszList the string list to be searched.
+ * @param pszTarget the string to be searched for. 
+ * 
+ * @return the index of the string within the list or -1 on failure.
+ *
+ * @since GDAL 2.0
+ */
+
+int CSLFindStringCaseSensitive( char ** papszList, const char * pszTarget )
+
+{
+    int         i;
+
+    if( papszList == NULL )
+        return -1;
+
+    for( i = 0; papszList[i] != NULL; i++ )
+    {
+        if( strcmp(papszList[i],pszTarget) == 0 )
             return i;
     }
 
@@ -971,11 +1009,13 @@ const char *CPLSPrintf(const char *fmt, ...)
 /* -------------------------------------------------------------------- */
 
     va_start(args, fmt);
-#if defined(HAVE_VSNPRINTF)
-    vsnprintf(pachBuffer, CPLSPrintf_BUF_SIZE-1, fmt, args);
-#else
-    vsprintf(pachBuffer, fmt, args);
-#endif
+
+    int ret = CPLvsnprintf(pachBuffer, CPLSPrintf_BUF_SIZE-1, fmt, args);
+    if( ret < 0 || ret >= CPLSPrintf_BUF_SIZE-1 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "CPLSPrintf() called with too big string. Output will be truncated !");
+    }
+
     va_end(args);
     
     return pachBuffer;
@@ -1019,6 +1059,412 @@ int CPLVASPrintf( char **buf, const char *fmt, va_list ap )
         *buf = CPLStrdup(osWork.c_str());
 
     return strlen(osWork);
+}
+
+/************************************************************************/
+/*                  CPLvsnprintf_get_end_of_formatting()                */
+/************************************************************************/
+
+static const char* CPLvsnprintf_get_end_of_formatting(const char* fmt)
+{
+    char ch;
+    /*flag */
+    for( ; (ch = *fmt) != '\0'; fmt ++ )
+    {
+        if( ch == '\'' )
+            continue; /* bad idea as this is locale specific */
+        if( ch == '-' || ch == '+' || ch == ' ' || ch == '#' || ch == '0' )
+            continue;
+        break;
+    }
+    
+    /* field width */
+    for( ; (ch = *fmt) != '\0'; fmt ++ )
+    {
+        if( ch == '$' )
+            return NULL; /* we don't want to support this */
+        if( *fmt >= '0' && *fmt <= '9' )
+            continue;
+        break;
+    }
+
+    /* precision */
+    if( ch == '.' )
+    {
+        fmt ++;
+        for( ; (ch = *fmt) != '\0'; fmt ++ )
+        {
+            if( ch == '$' )
+                return NULL; /* we don't want to support this */
+            if( *fmt >= '0' && *fmt <= '9' )
+                continue;
+            break;
+        }
+    }
+
+    /* length modifier */
+    for( ; (ch = *fmt) != '\0'; fmt ++ )
+    {
+        if( ch == 'h' || ch == 'l' || ch == 'j' || ch == 'z' ||
+            ch == 't' || ch == 'L' )
+            continue;
+        else if( ch == 'I' && fmt[1] == '6' && fmt[2] == '4' )
+            fmt += 2;
+        else
+            return fmt;
+    }
+
+    return NULL;
+}
+
+/************************************************************************/
+/*                           CPLvsnprintf()                             */
+/************************************************************************/
+
+#define call_native_snprintf(type) \
+    local_ret = snprintf(str + offset_out, size - offset_out, localfmt, va_arg(wrk_args, type))
+
+/** vsnprintf() wrapper that is not sensitive to LC_NUMERIC settings.
+  *
+  * This function has the same contract as standard vsnprintf(), except that
+  * formatting of floating-point numbers will use decimal point, whatever the
+  * current locale is set.
+  *
+  * @param str output buffer
+  * @param size size of the output buffer (including space for terminating nul)
+  * @param fmt formatting string
+  * @param args arguments
+  * @return the number of characters (excluding terminating nul) that would be written if size is big enough
+  * @since GDAL 2.0
+  */
+int CPLvsnprintf(char *str, size_t size, const char* fmt, va_list args)
+{
+    const char* fmt_ori = fmt;
+    size_t offset_out = 0;
+    va_list wrk_args;
+    char ch;
+    int bFormatUnknown = FALSE;
+
+    if( size == 0 )
+        return vsnprintf(str, size, fmt, args);
+
+#ifdef va_copy
+    va_copy( wrk_args, args );
+#else
+    wrk_args = args;
+#endif
+
+    for( ; (ch = *fmt) != '\0'; fmt ++ )
+    {
+        if( ch == '%' )
+        {
+            const char* ptrend = CPLvsnprintf_get_end_of_formatting(fmt+1);
+            if( ptrend == NULL || ptrend - fmt >= 20 )
+            {
+                bFormatUnknown = TRUE;
+                break;
+            }
+            char end = *ptrend;
+            char end_m1 = ptrend[-1];
+
+            char localfmt[22];
+            memcpy(localfmt, fmt, ptrend - fmt + 1);
+            localfmt[ptrend-fmt+1] = '\0';
+
+            int local_ret;
+            if( end == '%' )
+            {
+                if( offset_out == size-1 )
+                    break;
+                local_ret = 1;
+                str[offset_out] = '%';
+            }
+            else if( end == 'd' ||  end == 'i' ||  end == 'c' )
+            {
+                if( end_m1 == 'h' )
+                    call_native_snprintf(int);
+                else if( end_m1 == 'l' && ptrend[-2] != 'l' )
+                    call_native_snprintf(long);
+                else if( end_m1 == 'l' && ptrend[-2] == 'l' )
+                    call_native_snprintf(GIntBig);
+                else if( end_m1 == '4' && ptrend[-2] == '6' && ptrend[-3] == 'I' ) /* Microsoft I64 modifier */
+                    call_native_snprintf(GIntBig);
+                else if( end_m1 == 'z')
+                    call_native_snprintf(size_t);
+                else if( (end_m1 >= 'a' && end_m1 <= 'z') ||
+                         (end_m1 >= 'A' && end_m1 <= 'Z') )
+                {
+                    bFormatUnknown = TRUE;
+                    break;
+                }
+                else
+                    call_native_snprintf(int);
+            }
+            else  if( end == 'o' || end == 'u' || end == 'x' || end == 'X' )
+            {
+                if( end_m1 == 'h' )
+                    call_native_snprintf(unsigned int);
+                else if( end_m1 == 'l' && ptrend[-2] != 'l' )
+                    call_native_snprintf(unsigned long);
+                else if( end_m1 == 'l' && ptrend[-2] == 'l' )
+                    call_native_snprintf(GUIntBig);
+                else if( end_m1 == '4' && ptrend[-2] == '6' && ptrend[-3] == 'I' ) /* Microsoft I64 modifier */
+                    call_native_snprintf(GUIntBig);
+                else if( end_m1 == 'z')
+                    call_native_snprintf(size_t);
+                else if( (end_m1 >= 'a' && end_m1 <= 'z') ||
+                         (end_m1 >= 'A' && end_m1 <= 'Z') )
+                {
+                    bFormatUnknown = TRUE;
+                    break;
+                }
+                else
+                    call_native_snprintf(unsigned int);
+            }
+            else if( end == 'e' || end == 'E' ||
+                     end == 'f' || end == 'F' ||
+                     end == 'g' || end == 'G' ||
+                     end == 'a' || end == 'A' )
+            {
+                if( end_m1 == 'L' )
+                    call_native_snprintf(long double);
+                else
+                    call_native_snprintf(double);
+                /* MSVC vsnprintf() returns -1... */
+                if( local_ret <  0 || offset_out + local_ret >= size )
+                    break;
+                for( int j = 0; j < local_ret; j ++ )
+                {
+                    if( str[offset_out + j] == ',' )
+                    {
+                        str[offset_out + j] = '.';
+                        break;
+                    }
+                }
+            }
+            else if( end == 's' )
+            {
+                call_native_snprintf(char*);
+            }
+            else if( end == 'p' )
+            {
+                call_native_snprintf(void*);
+            }
+            else
+            {
+                bFormatUnknown = TRUE;
+                break;
+            }
+            /* MSVC vsnprintf() returns -1... */
+            if( local_ret <  0 || offset_out + local_ret >= size )
+                break;
+            offset_out += local_ret;
+            fmt = ptrend;
+        }
+        else
+        {
+            if( offset_out == size-1 )
+                break;
+            str[offset_out++] = *fmt;
+        }
+    }
+    if( ch == '\0' && offset_out < size )
+        str[offset_out] = '\0';
+    else
+    {
+        if( bFormatUnknown )
+        {
+            CPLDebug("CPL", "CPLvsnprintf() called with unsupported formatting string: %s", fmt_ori);
+        }
+#ifdef va_copy
+        va_end( wrk_args );
+        va_copy( wrk_args, args );
+#else
+        wrk_args = args;
+#endif
+#if defined(HAVE_VSNPRINTF)
+        offset_out = vsnprintf(str, size, fmt_ori, wrk_args);
+#else
+        offset_out = vsprintf(str, fmt_ori, wrk_args);
+#endif
+    }
+
+#ifdef va_copy
+    va_end( wrk_args );
+#endif
+
+    return (int)offset_out;
+}
+
+/************************************************************************/
+/*                           CPLsnprintf()                              */
+/************************************************************************/
+
+/** snprintf() wrapper that is not sensitive to LC_NUMERIC settings.
+  *
+  * This function has the same contract as standard snprintf(), except that
+  * formatting of floating-point numbers will use decimal point, whatever the
+  * current locale is set.
+  *
+  * @param str output buffer
+  * @param size size of the output buffer (including space for terminating nul)
+  * @param fmt formatting string
+  * @param ... arguments
+  * @return the number of characters (excluding terminating nul) that would be written if size is big enough
+  * @since GDAL 2.0
+  */
+int CPLsnprintf(char *str, size_t size, const char* fmt, ...)
+{
+    int ret;
+    va_list args;
+
+    va_start( args, fmt );
+    ret = CPLvsnprintf( str, size, fmt, args );
+    va_end( args );
+    return ret;
+}
+
+/************************************************************************/
+/*                           CPLsprintf()                               */
+/************************************************************************/
+
+/** sprintf() wrapper that is not sensitive to LC_NUMERIC settings.
+  *
+  * This function has the same contract as standard sprintf(), except that
+  * formatting of floating-point numbers will use decimal point, whatever the
+  * current locale is set.
+  *
+  * @param str output buffer (must be large enough to hold the result)
+  * @param fmt formatting string
+  * @param ... arguments
+  * @return the number of characters (excluding terminating nul) written in output buffer.
+  * @since GDAL 2.0
+  */
+int CPLsprintf(char *str, const char* fmt, ...)
+{
+    int ret;
+    va_list args;
+
+    va_start( args, fmt );
+    ret = CPLvsnprintf( str, INT_MAX, fmt, args );
+    va_end( args );
+    return ret;
+}
+
+/************************************************************************/
+/*                           CPLprintf()                                */
+/************************************************************************/
+
+/** printf() wrapper that is not sensitive to LC_NUMERIC settings.
+  *
+  * This function has the same contract as standard printf(), except that
+  * formatting of floating-point numbers will use decimal point, whatever the
+  * current locale is set.
+  *
+  * @param fmt formatting string
+  * @param ... arguments
+  * @return the number of characters (excluding terminating nul) written in output buffer.
+  * @since GDAL 2.0
+  */
+int CPLprintf(const char* fmt, ...)
+{
+    char szBuffer[4096];
+    int ret;
+    va_list wrk_args, args;
+
+    va_start( args, fmt );
+
+#ifdef va_copy
+    va_copy( wrk_args, args );
+#else
+    wrk_args = args;
+#endif
+
+    ret = CPLvsnprintf( szBuffer, sizeof(szBuffer), fmt, wrk_args );
+
+    if( ret < (int)sizeof(szBuffer)-1 )
+        ret = printf("%s", szBuffer);
+    else
+    {
+#ifdef va_copy
+        va_end( wrk_args );
+        va_copy( wrk_args, args );
+#else
+        wrk_args = args;
+#endif
+        ret = vfprintf(stdout, fmt, wrk_args);
+    }
+
+    va_end( wrk_args );
+
+    return ret;
+}
+
+/************************************************************************/
+/*                           CPLsscanf()                                */
+/************************************************************************/
+
+/** sscanf() wrapper that is not sensitive to LC_NUMERIC settings.
+  *
+  * This function has the same contract as standard sscanf(), except that
+  * formatting of floating-point numbers will use decimal point, whatever the
+  * current locale is set.
+  *
+  * CAUTION: only works with a very limited number of formatting strings,
+  * consisting only of "%lf" and regular characters.
+  *
+  * param str input string
+  * @param fmt formatting string
+  * @param ... arguments
+  * @return the number of matched patterns;
+  * @since GDAL 2.0
+  */
+int CPL_DLL CPLsscanf(const char* str, const char* fmt, ...)
+{
+    int error = FALSE;
+    int ret = 0;
+    const char* fmt_ori = fmt;
+    va_list args;
+
+    va_start( args, fmt );
+    for( ; *fmt != '\0' && *str != '\0'; fmt++ )
+    {
+        if( *fmt == '%' )
+        {
+            if( fmt[1] == 'l' && fmt[2] == 'f' )
+            {
+                fmt += 2;
+                char* end;
+                *(va_arg(args, double*)) = CPLStrtod(str, &end);
+                if( end > str )
+                {
+                    ret ++;
+                    str = end;
+                }
+                else
+                    break;
+            }
+            else
+            {
+                error = TRUE;
+                break;
+            }
+        }
+        else if( *str != *fmt )
+            break;
+        else
+            str ++;
+    }
+    va_end( args );
+
+    if( error )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Format %s not supported by CPLsscanf()",
+                 fmt_ori);
+    }
+
+    return ret;
 }
 
 /************************************************************************/
@@ -1289,7 +1735,7 @@ char **CSLAddNameValue(char **papszStrList,
         return papszStrList;
 
     pszLine = (char *) CPLMalloc(strlen(pszName)+strlen(pszValue)+2);
-    sprintf( pszLine, "%s=%s", pszName, pszValue );
+    CPLsprintf( pszLine, "%s=%s", pszName, pszValue );
     papszStrList = CSLAddString(papszStrList, pszLine);
     CPLFree( pszLine );
 
@@ -1364,7 +1810,7 @@ char **CSLSetNameValue(char **papszList,
             else
             {
                 *papszPtr = (char *) CPLMalloc(strlen(pszName)+strlen(pszValue)+2);
-                sprintf( *papszPtr, "%s%c%s", pszName, cSep, pszValue );
+                CPLsprintf( *papszPtr, "%s%c%s", pszName, cSep, pszValue );
             }
             return papszList;
         }
@@ -1534,7 +1980,7 @@ char *CPLEscapeString( const char *pszInput, int nLength,
             }
             else
             {
-                sprintf( pszOutput+iOut, "%%%02X", ((unsigned char*)pszInput)[iIn] );
+                CPLsprintf( pszOutput+iOut, "%%%02X", ((unsigned char*)pszInput)[iIn] );
                 iOut += 3;
             }
         }
@@ -1576,6 +2022,22 @@ char *CPLEscapeString( const char *pszInput, int nLength,
                 pszOutput[iOut++] = 'o';
                 pszOutput[iOut++] = 't';
                 pszOutput[iOut++] = ';';
+            }
+            /* Python 2 doesn't like displaying the UTF-8 character corresponding */
+            /* to BOM, so escape it */
+            else if( ((GByte*)pszInput)[iIn] == 0xEF &&
+                     ((GByte*)pszInput)[iIn+1] == 0xBB &&
+                     ((GByte*)pszInput)[iIn+2] == 0xBF )
+            {
+                pszOutput[iOut++] = '&';
+                pszOutput[iOut++] = '#';
+                pszOutput[iOut++] = 'x';
+                pszOutput[iOut++] = 'F';
+                pszOutput[iOut++] = 'E';
+                pszOutput[iOut++] = 'F';
+                pszOutput[iOut++] = 'F';
+                pszOutput[iOut++] = ';';
+                iIn += 2;
             }
             else if( ((GByte*)pszInput)[iIn] < 0x20 
                      && pszInput[iIn] != 0x9
@@ -1725,7 +2187,7 @@ char *CPLUnescapeString( const char *pszInput, int *pnLength, int nScheme )
                     ch = pszInput[iIn ++];
                     if (ch >= 'a' && ch <= 'f')
                         anVal[0] = anVal[0] * 16 + ch - 'a' + 10;
-                    else if (ch >= 'A' && ch <= 'A')
+                    else if (ch >= 'A' && ch <= 'F')
                         anVal[0] = anVal[0] * 16 + ch - 'A' + 10;
                     else if (ch >= '0' && ch <= '9')
                         anVal[0] = anVal[0] * 16 + ch - '0';
@@ -1897,7 +2359,6 @@ char *CPLBinaryToHex( int nBytes, const GByte *pabyData )
 
     return pszHex;
 }
-
 
 /************************************************************************/
 /*                           CPLHexToBinary()                           */
@@ -2170,7 +2631,7 @@ size_t CPLStrlcat(char* pszDest, const char* pszSrc, size_t nDestSize)
  * the specified number of bytes.
  *
  * The CPLStrnlen() function returns MIN(strlen(pszStr), nMaxLen).
- * Only the first nMaxLen bytes of the string will be read. Usefull to
+ * Only the first nMaxLen bytes of the string will be read. Useful to
  * test if a string contains at least nMaxLen characters without reading
  * the full string up to the NUL terminating character.
  *

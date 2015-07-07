@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalsievefilter.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdalsievefilter.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Raster to Polygon Converter
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include <vector>
 
-CPL_CVSID("$Id: gdalsievefilter.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gdalsievefilter.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 #define GP_NODATA_MARKER -51502112
 #define MY_MAX_INT 2147483647
@@ -184,9 +184,8 @@ GDALSieveFilter( GDALRasterBandH hSrcBand, GDALRasterBandH hMaskBand,
                  GDALRasterBandH hDstBand,
                  int nSizeThreshold, int nConnectedness,
                  CPL_UNUSED char **papszOptions,
-                 GDALProgressFunc pfnProgress, 
+                 GDALProgressFunc pfnProgress,
                  void * pProgressArg )
-
 {
     VALIDATE_POINTER1( hSrcBand, "GDALSieveFilter", CE_Failure );
     VALIDATE_POINTER1( hDstBand, "GDALSieveFilter", CE_Failure );
@@ -577,4 +576,3 @@ GDALSieveFilter( GDALRasterBandH hSrcBand, GDALRasterBandH hMaskBand,
 
     return eErr;
 }
-

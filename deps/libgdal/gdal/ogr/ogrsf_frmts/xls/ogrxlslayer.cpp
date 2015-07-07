@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlslayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrxlslayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  XLS Translator
  * Purpose:  Implements OGRXLSLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrxlslayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrxlslayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRXLSLayer()                             */
@@ -54,6 +54,7 @@ OGRXLSLayer::OGRXLSLayer( OGRXLSDataSource* poDSIn,
     pszName = CPLStrdup(pszSheetname);
     nRows = nRowsIn;
     nCols = nColsIn;
+    SetDescription( pszName );
 }
 
 /************************************************************************/
@@ -209,7 +210,7 @@ OGRFeatureDefn * OGRXLSLayer::GetLayerDefn()
     if (xlshandle == NULL)
         return poFeatureDefn;
 
-    freexl_select_active_worksheet(xlshandle, iSheet);
+    freexl_select_active_worksheet(xlshandle, (unsigned short)iSheet);
 
     if (nRows > 0)
     {
@@ -263,7 +264,7 @@ OGRFeatureDefn * OGRXLSLayer::GetLayerDefn()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRXLSLayer::GetFeatureCount( int bForce )
+GIntBig OGRXLSLayer::GetFeatureCount( int bForce )
 {
     if  ( m_poAttrQuery == NULL /* && m_poFilterGeom == NULL */ )
     {
@@ -319,7 +320,7 @@ OGRFeature *OGRXLSLayer::GetNextRawFeature()
     if (xlshandle == NULL)
         return NULL;
 
-    freexl_select_active_worksheet(xlshandle, iSheet);
+    freexl_select_active_worksheet(xlshandle, (unsigned short)iSheet);
 
     OGRFeature* poFeature = new OGRFeature(poFeatureDefn);
 

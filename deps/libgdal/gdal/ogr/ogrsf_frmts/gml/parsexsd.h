@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: parsexsd.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: parsexsd.h 28909 2015-04-15 12:52:53Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLParseXSD()
@@ -35,6 +35,7 @@
 #include "gmlreader.h"
 
 int GMLParseXSD( const char *pszFile,
-                 std::vector<GMLFeatureClass*> & aosClasses);
+                 std::vector<GMLFeatureClass*> & aosClasses,
+                 int& bFullyUnderstood );
 
 #endif // _PARSEXSD_H_INCLUDED

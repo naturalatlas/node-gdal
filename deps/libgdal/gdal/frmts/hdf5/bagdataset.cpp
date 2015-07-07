@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bagdataset.cpp 27394 2014-05-24 16:37:41Z rouault $
+ * $Id: bagdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Hierarchical Data Format Release 5 (HDF5)
  * Purpose:  Read BAG datasets.
@@ -35,7 +35,7 @@
 #include "ogr_spatialref.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bagdataset.cpp 27394 2014-05-24 16:37:41Z rouault $");
+CPL_CVSID("$Id: bagdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void    GDALRegister_BAG(void);
@@ -224,7 +224,7 @@ bool BAGRasterBand::Initialize( hid_t hDatasetID, const char *pszName )
         && GH5_FetchAttribute( hDatasetID, "Minimum Elevation Value", 
                                dfMinimum ) )
         bMinMaxSet = true;
-    else if( EQUAL(pszName,"uncertainty") 
+    else if( EQUAL(pszName,"uncertainty")
              && GH5_FetchAttribute( hDatasetID, "Maximum Uncertainty Value", 
                                     dfMaximum ) 
              && GH5_FetchAttribute( hDatasetID, "Minimum Uncertainty Value", 
@@ -652,10 +652,10 @@ void BAGDataset::LoadMetadata()
 
         if( CSLCount(papszCornerTokens ) == 4 )
         {
-            double dfLLX = atof( papszCornerTokens[0] );
-            double dfLLY = atof( papszCornerTokens[1] );
-            double dfURX = atof( papszCornerTokens[2] );
-            double dfURY = atof( papszCornerTokens[3] );
+            double dfLLX = CPLAtof( papszCornerTokens[0] );
+            double dfLLY = CPLAtof( papszCornerTokens[1] );
+            double dfURX = CPLAtof( papszCornerTokens[2] );
+            double dfURY = CPLAtof( papszCornerTokens[3] );
 
             adfGeoTransform[0] = dfLLX;
             adfGeoTransform[1] = (dfURX - dfLLX) / (GetRasterXSize()-1);
@@ -872,6 +872,7 @@ void GDALRegister_BAG( )
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "BAG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Bathymetry Attributed Grid" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

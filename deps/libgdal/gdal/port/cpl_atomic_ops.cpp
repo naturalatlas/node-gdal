@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_atomic_ops.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_atomic_ops.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Name:     cpl_atomic_ops.cpp
  * Project:  CPL - Common Portability Library
@@ -99,7 +99,7 @@ int CPLAtomicAdd(volatile int* ptr, int increment)
 
 #include "cpl_multiproc.h"
 
-static void *hAtomicOpMutex = NULL;
+static CPLMutex *hAtomicOpMutex = NULL;
 
 /* Slow, but safe, implemenation using a mutex */
 int CPLAtomicAdd(volatile int* ptr, int increment)
@@ -107,20 +107,6 @@ int CPLAtomicAdd(volatile int* ptr, int increment)
     CPLMutexHolder oMutex(&hAtomicOpMutex);
     (*ptr) += increment;
     return *ptr;
-}
-
-#endif
-
-#ifndef HAS_CPL_INLINE
-
-int CPLAtomicInc(volatile int* ptr)
-{
-    return CPLAtomicAdd(ptr, 1);
-}
-
-int CPLAtomicDec(volatile int* ptr)
-{
-    return CPLAtomicAdd(ptr, -1);
 }
 
 #endif

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sdts.h 26466 2013-09-14 09:07:46Z rouault $
+ * $Id: ogr_sdts.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  STS Translator
  * Purpose:  Definition of classes finding SDTS support into OGRDriver
@@ -62,11 +62,11 @@ class OGRSDTSLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
 
-//    OGRFeature         *GetFeature( long nFeatureId );
+//    OGRFeature         *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
-//    int                 GetFeatureCount( int );
+//    GIntBig             GetFeatureCount( int );
     
     int                 TestCapability( const char * );
 };
@@ -98,20 +98,5 @@ class OGRSDTSDataSource : public OGRDataSource
 
     OGRSpatialReference *GetSpatialRef() { return poSRS; }
 };
-
-/************************************************************************/
-/*                            OGRSDTSDriver                             */
-/************************************************************************/
-
-class OGRSDTSDriver : public OGRSFDriver
-{
-  public:
-                ~OGRSDTSDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-    int         TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_SDTS_H_INCLUDED */

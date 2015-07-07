@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgfttablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgfttablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  GFT Translator
  * Purpose:  Implements OGRGFTTableLayer class.
@@ -29,7 +29,7 @@
 
 #include "ogr_gft.h"
 
-CPL_CVSID("$Id: ogrgfttablelayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgfttablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                         OGRGFTTableLayer()                           */
@@ -51,6 +51,16 @@ OGRGFTTableLayer::OGRGFTTableLayer(OGRGFTDataSource* poDS,
 
     bFirstTokenIsFID = TRUE;
     eGTypeForCreation = wkbUnknown;
+
+    SetDescription( osTableName );
+
+    if (osTableId.size() == 0)
+    {
+        poFeatureDefn = new OGRFeatureDefn( osTableName );
+        poFeatureDefn->Reference();
+        poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
+        poFeatureDefn->GetGeomFieldDefn(0)->SetName(GetDefaultGeometryColumnName());
+    }
 }
 
 /************************************************************************/
@@ -396,7 +406,7 @@ int OGRGFTTableLayer::FetchNextRows()
 /*                            GetFeature()                              */
 /************************************************************************/
 
-OGRFeature * OGRGFTTableLayer::GetFeature( long nFID )
+OGRFeature * OGRGFTTableLayer::GetFeature( GIntBig nFID )
 {
     GetLayerDefn();
 
@@ -416,7 +426,7 @@ OGRFeature * OGRGFTTableLayer::GetFeature( long nFID )
     }
     osSQL += " FROM ";
     osSQL += osTableId;
-    osSQL += CPLSPrintf(" WHERE ROWID='%ld'", nFID);
+    osSQL += CPLSPrintf(" WHERE ROWID='" CPL_FRMT_GIB "'", nFID);
 
     CPLPushErrorHandler(CPLQuietErrorHandler);
     CPLHTTPResult * psResult = poDS->RunSQL(osSQL);
@@ -471,7 +481,7 @@ OGRFeatureDefn * OGRGFTTableLayer::GetLayerDefn()
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRGFTTableLayer::GetFeatureCount(CPL_UNUSED int bForce)
+GIntBig OGRGFTTableLayer::GetFeatureCount(CPL_UNUSED int bForce)
 {
     GetLayerDefn();
 
@@ -524,7 +534,6 @@ int OGRGFTTableLayer::GetFeatureCount(CPL_UNUSED int bForce)
 OGRErr OGRGFTTableLayer::CreateField( OGRFieldDefn *poField,
                                       CPL_UNUSED int bApproxOK )
 {
-
     if (!poDS->IsReadWrite())
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -544,14 +553,6 @@ OGRErr OGRGFTTableLayer::CreateField( OGRFieldDefn *poField,
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in unauthenticated mode");
         return OGRERR_FAILURE;
-    }
-
-    if (poFeatureDefn == NULL)
-    {
-        poFeatureDefn = new OGRFeatureDefn( osTableName );
-        poFeatureDefn->Reference();
-        poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
-        poFeatureDefn->GetGeomFieldDefn(0)->SetName(GetDefaultGeometryColumnName());
     }
 
     poFeatureDefn->AddFieldDefn(poField);
@@ -575,15 +576,6 @@ void OGRGFTTableLayer::CreateTableIfNecessary()
     osSQL += "' (";
 
     int i;
-
-    if (poFeatureDefn == NULL)
-    {
-        /* In case CreateField() hasn't yet been called */
-        poFeatureDefn = new OGRFeatureDefn( osTableName );
-        poFeatureDefn->Reference();
-        poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
-        poFeatureDefn->GetGeomFieldDefn(0)->SetName(GetDefaultGeometryColumnName());
-    }
 
     /* If there are longitude and latitude fields, use the latitude */
     /* field as the LOCATION field */
@@ -699,10 +691,10 @@ void OGRGFTTableLayer::CreateTableIfNecessary()
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGFTTableLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRGFTTableLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     if (!poDS->IsReadWrite())
@@ -884,10 +876,10 @@ OGRErr OGRGFTTableLayer::CreateFeature( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
 
-OGRErr      OGRGFTTableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr      OGRGFTTableLayer::ISetFeature( OGRFeature *poFeature )
 {
     GetLayerDefn();
 
@@ -1015,7 +1007,7 @@ OGRErr      OGRGFTTableLayer::SetFeature( OGRFeature *poFeature )
     }
 
     osCommand += " WHERE ROWID = '";
-    osCommand += CPLSPrintf("%ld", poFeature->GetFID());
+    osCommand += CPLSPrintf(CPL_FRMT_GIB, poFeature->GetFID());
     osCommand += "'";
 
     CPLHTTPResult * psResult = poDS->RunSQL(osCommand);
@@ -1050,7 +1042,7 @@ OGRErr      OGRGFTTableLayer::SetFeature( OGRFeature *poFeature )
 /*                          DeleteFeature()                             */
 /************************************************************************/
 
-OGRErr OGRGFTTableLayer::DeleteFeature( long nFID )
+OGRErr OGRGFTTableLayer::DeleteFeature( GIntBig nFID )
 {
     GetLayerDefn();
 
@@ -1080,7 +1072,7 @@ OGRErr OGRGFTTableLayer::DeleteFeature( long nFID )
     osCommand += "DELETE FROM ";
     osCommand += osTableId;
     osCommand += " WHERE ROWID = '";
-    osCommand += CPLSPrintf("%ld", nFID);
+    osCommand += CPLSPrintf(CPL_FRMT_GIB, nFID);
     osCommand += "'";
 
     //CPLDebug("GFT", "%s",  osCommand.c_str());

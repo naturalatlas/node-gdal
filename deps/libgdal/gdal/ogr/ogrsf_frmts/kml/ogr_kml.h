@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_kml.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_kml.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  Declarations for OGR wrapper classes for KML, and OGR->KML
@@ -60,11 +60,11 @@ public:
     // OGRLayer Interface
     //
     OGRFeatureDefn* GetLayerDefn();
-    OGRErr CreateFeature( OGRFeature* poFeature );
+    OGRErr ICreateFeature( OGRFeature* poFeature );
     OGRErr CreateField( OGRFieldDefn* poField, int bApproxOK = TRUE );
     void ResetReading();
     OGRFeature* GetNextFeature();
-    int GetFeatureCount( int bForce = TRUE );
+    GIntBig GetFeatureCount( int bForce = TRUE );
     int TestCapability( const char* pszCap );
 
     //
@@ -115,7 +115,7 @@ public:
     const char* GetName() { return pszName_; }
     int GetLayerCount() { return nLayers_; }
     OGRLayer* GetLayer( int nLayer );
-    OGRLayer* CreateLayer( const char* pszName,
+    OGRLayer* ICreateLayer( const char* pszName,
                            OGRSpatialReference* poSRS = NULL,
                            OGRwkbGeometryType eGType = wkbUnknown,
                            char** papszOptions = NULL );
@@ -164,24 +164,6 @@ private:
 	
 	//Have we issued a coordinate transformation already for this datasource
 	bool bIssuedCTError_;		
-};
-
-/************************************************************************/
-/*                             OGRKMLDriver                             */
-/************************************************************************/
-
-class OGRKMLDriver : public OGRSFDriver
-{
-public:
-    ~OGRKMLDriver();
-
-    //
-    // OGRSFDriver Interface
-    //
-    const char* GetName();
-    OGRDataSource* Open( const char * pszName_, int bUpdate );
-    OGRDataSource* CreateDataSource( const char *pszName_, char** papszOptions );
-    int TestCapability( const char* pszCap );
 };
 
 #endif /* OGR_KML_H_INCLUDED */

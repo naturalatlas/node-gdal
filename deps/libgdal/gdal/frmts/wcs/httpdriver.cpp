@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: httpdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: httpdriver.cpp 29102 2015-05-01 22:26:04Z rouault $
  *
  * Project:  WCS Client Driver
  * Purpose:  Implementation of an HTTP fetching driver.
@@ -33,7 +33,7 @@
 #include "cpl_http.h"
 #include "cpl_atomic_ops.h"
 
-CPL_CVSID("$Id: httpdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: httpdriver.cpp 29102 2015-05-01 22:26:04Z rouault $");
 
 
 /************************************************************************/
@@ -143,7 +143,8 @@ static GDALDataset *HTTPOpen( GDALOpenInfo * poOpenInfo )
     /* suppress errors as not all drivers support /vsimem */
     CPLPushErrorHandler( CPLQuietErrorHandler );
     GDALDataset *poDS = (GDALDataset *) 
-        GDALOpen( osResultFilename, GA_ReadOnly );
+        GDALOpenEx( osResultFilename, poOpenInfo->nOpenFlags, NULL,
+                    poOpenInfo->papszOpenOptions, NULL);
     CPLPopErrorHandler();
 
 /* -------------------------------------------------------------------- */
@@ -153,8 +154,13 @@ static GDALDataset *HTTPOpen( GDALOpenInfo * poOpenInfo )
     if( poDS == NULL )
     {
         CPLString osTempFilename;
-        
-        osTempFilename.Printf( "/tmp/%s", CPLGetFilename(osResultFilename) );
+
+#ifdef WIN32
+        const char* pszPath = CPLGetPath(CPLGenerateTempFilename(NULL));
+#else
+        const char* pszPath = "/tmp";
+#endif
+        osTempFilename = CPLFormFilename(pszPath, CPLGetFilename(osResultFilename), NULL );
         if( CPLCopyFile( osTempFilename, osResultFilename ) != 0 )
         {
             CPLError( CE_Failure, CPLE_OpenFailed, 
@@ -164,10 +170,17 @@ static GDALDataset *HTTPOpen( GDALOpenInfo * poOpenInfo )
         else
         {
             poDS =  (GDALDataset *) 
-                GDALOpen( osTempFilename, GA_ReadOnly );
-            VSIUnlink( osTempFilename ); /* this may not work on windows */
+                GDALOpenEx( osTempFilename, poOpenInfo->nOpenFlags, NULL,
+                            poOpenInfo->papszOpenOptions, NULL );
+            if( VSIUnlink( osTempFilename ) != 0 && poDS != NULL )
+                poDS->MarkSuppressOnClose(); /* VSIUnlink() may not work on windows */
+            if( poDS && strcmp(poDS->GetDescription(), osTempFilename) == 0 )
+                poDS->SetDescription(poOpenInfo->pszFilename);
+
         }
     }
+    else if( strcmp(poDS->GetDescription(), osResultFilename) == 0 )
+        poDS->SetDescription(poOpenInfo->pszFilename);
 
 /* -------------------------------------------------------------------- */
 /*      Release our hold on the vsi memory file, though if it is        */
@@ -193,6 +206,8 @@ void GDALRegister_HTTP()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "HTTP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "HTTP Fetching Wrapper" );
         

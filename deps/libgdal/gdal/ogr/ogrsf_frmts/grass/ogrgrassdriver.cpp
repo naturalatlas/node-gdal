@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgrassdriver.cpp 12396 2007-10-13 10:02:17Z rouault $
+ * $Id: ogrgrassdriver.cpp 28290 2015-01-05 13:16:48Z martinl $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGRASSDriver class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrgrassdriver.cpp 12396 2007-10-13 10:02:17Z rouault $");
+CPL_CVSID("$Id: ogrgrassdriver.cpp 28290 2015-01-05 13:16:48Z martinl $");
 
 /************************************************************************/
 /*                          ~OGRGRASSDriver()                           */
@@ -45,7 +45,7 @@ OGRGRASSDriver::~OGRGRASSDriver()
 /************************************************************************/
 const char *OGRGRASSDriver::GetName()
 {
-    return "GRASS";
+    return "OGR_GRASS";
 }
 
 /************************************************************************/
@@ -105,8 +105,23 @@ int OGRGRASSDriver::TestCapability( const char * pszCap )
 /************************************************************************/
 void RegisterOGRGRASS()
 {
+    OGRGRASSDriver	*poDriver;
+
     if (! GDAL_CHECK_VERSION("OGR/GRASS driver"))
         return;
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRGRASSDriver );
+
+    if( GDALGetDriverByName( "OGR_GRASS" ) == NULL )
+    {
+        poDriver = new OGRGRASSDriver();
+        
+        poDriver->SetDescription( "GRASS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
+                                   "GRASS Vectors (5.7+)" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 
+                                   "drv_grass.html" );
+
+        OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
+    }
 }
 

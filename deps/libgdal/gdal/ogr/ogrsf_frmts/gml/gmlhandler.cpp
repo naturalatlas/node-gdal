@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: gmlhandler.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: gmlhandler.cpp 29217 2015-05-21 09:08:48Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLHandler class.
@@ -306,8 +306,8 @@ void XMLCALL GMLExpatHandler::startElementCbk(void *pUserData, const char *pszNa
 /************************************************************************/
 /*                            endElementCbk()                           */
 /************************************************************************/
-void XMLCALL GMLExpatHandler::endElementCbk(void *pUserData, CPL_UNUSED const char* pszName )
-
+void XMLCALL GMLExpatHandler::endElementCbk(void *pUserData,
+                                            CPL_UNUSED const char* pszName )
 {
     GMLExpatHandler* pThis = ((GMLExpatHandler*)pUserData);
     if (pThis->m_bStopParsing)
@@ -444,6 +444,7 @@ char* GMLExpatHandler::GetAttributeByIdx(void* attr, unsigned int idx, char** pp
 
 static const char* const apszGMLGeometryElements[] =
 {
+    "BoundingBox", /* ows:BoundingBox */
     "CompositeCurve",
     "CompositeSurface",
     "Curve",
@@ -638,7 +639,9 @@ OGRErr GMLHandler::dataHandler(const char *data, int nLen)
 /*                       startElementBoundedBy()                        */
 /************************************************************************/
 
-OGRErr GMLHandler::startElementBoundedBy(const char *pszName, CPL_UNUSED int nLenName, void* attr )
+OGRErr GMLHandler::startElementBoundedBy(const char *pszName,
+                                         CPL_UNUSED int nLenName,
+                                         void* attr )
 {
     if ( m_nDepth == 2 && strcmp(pszName, "Envelope") == 0 )
     {
@@ -788,25 +791,22 @@ void GMLHandler::DealWithAttributes(const char *pszName, int nLenName, void* att
         /* Hard-coded historic cases */
         else if( strcmp(pszAttrKey, "xlink:href") == 0 )
         {
-            if (m_bReportHref)
+            if( (m_bReportHref || m_poReader->ReportAllAttributes()) && m_bInCurField )
             {
-                if( m_bInCurField )
-                {
-                    CPLFree(m_pszHref);
-                    m_pszHref = pszAttrVal;
-                    pszAttrVal = NULL;
-                }
-                else if( !poClass->IsSchemaLocked() ||
-                         (nAttrIndex =
-                            m_poReader->GetAttributeElementIndex( CPLSPrintf("%s_href", pszName ),
-                                                      nLenName + 5 )) != -1 )
-                {
-                    poState->PushPath( pszName, nLenName );
-                    CPLString osPropNameHref = poState->osPath + "_href";
-                    poState->PopPath();
-                    m_poReader->SetFeaturePropertyDirectly( osPropNameHref, pszAttrVal, nAttrIndex );
-                    pszAttrVal = NULL;
-                }
+                CPLFree(m_pszHref);
+                m_pszHref = pszAttrVal;
+                pszAttrVal = NULL;
+            }
+            else if( (!poClass->IsSchemaLocked() && (m_bReportHref || m_poReader->ReportAllAttributes())) ||
+                        (poClass->IsSchemaLocked() && (nAttrIndex =
+                        m_poReader->GetAttributeElementIndex( CPLSPrintf("%s_href", pszName ),
+                                                    nLenName + 5 )) != -1) )
+            {
+                poState->PushPath( pszName, nLenName );
+                CPLString osPropNameHref = poState->osPath + "_href";
+                poState->PopPath();
+                m_poReader->SetFeaturePropertyDirectly( osPropNameHref, pszAttrVal, nAttrIndex );
+                pszAttrVal = NULL;
             }
         }
         else if( strcmp(pszAttrKey, "uom") == 0 )
@@ -834,8 +834,12 @@ void GMLHandler::DealWithAttributes(const char *pszName, int nLenName, void* att
         /* Should we report all attributes ? */
         else if( m_poReader->ReportAllAttributes() && !poClass->IsSchemaLocked() )
         {
+            poState->PushPath( pszName, nLenName );
+            CPLString osPropName = poState->osPath;
+            poState->PopPath();
+
             m_poReader->SetFeaturePropertyDirectly(
-                CPLSPrintf("%s@%s", pszName, pszAttrKeyNoNS ? pszAttrKeyNoNS : pszAttrKey),
+                CPLSPrintf("%s@%s", osPropName.c_str(), pszAttrKeyNoNS ? pszAttrKeyNoNS : pszAttrKey),
                 pszAttrVal, -1 );
             pszAttrVal = NULL;
         }
@@ -1064,6 +1068,28 @@ OGRErr GMLHandler::startElementFeatureAttribute(const char *pszName, int nLenNam
         {
             bReadGeometry = TRUE;
         }
+        else if( !poClass->IsSchemaLocked() && m_poReader->IsWFSJointLayer() )
+        {
+            m_nGeometryPropertyIndex = poClass->GetGeometryPropertyIndexBySrcElement( poState->osPath.c_str() );
+            if( m_nGeometryPropertyIndex < 0 )
+            {
+                const char* pszElement = poState->osPath.c_str();
+                CPLString osFieldName;
+                /* Strip member| prefix. Should always be true normally */
+                if( strncmp(pszElement, "member|", strlen("member|")) == 0 )
+                    osFieldName = pszElement + strlen("member|");
+
+                /* Replace layer|property by layer_property */
+                size_t iPos = osFieldName.find('|');
+                if( iPos != std::string::npos )
+                    osFieldName[iPos] = '.';
+
+                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn(
+                        osFieldName, poState->osPath.c_str(), wkbUnknown, -1, TRUE ) );
+                m_nGeometryPropertyIndex = poClass->GetGeometryPropertyCount();
+            }
+            bReadGeometry = TRUE;
+        }
         else
         {
             /* AIXM special case: for RouteSegment, we only want to read Curve geometries */
@@ -1124,6 +1150,22 @@ OGRErr GMLHandler::startElementFeatureAttribute(const char *pszName, int nLenNam
         PUSH_STATE(STATE_CITYGML_ATTRIBUTE);
 
         return OGRERR_NONE;
+    }
+    
+    else if( m_poReader->IsWFSJointLayer() && m_nDepth == m_nDepthFeature + 1 )
+    {
+    }
+
+    else if( m_poReader->IsWFSJointLayer() && m_nDepth == m_nDepthFeature + 2 )
+    {
+        const char* pszFID = GetFID(attr);
+        if( pszFID )
+        {
+            poState->PushPath( pszName, nLenName );
+            CPLString osPropPath= poState->osPath + "@id";
+            poState->PopPath();
+            m_poReader->SetFeaturePropertyDirectly( osPropPath, CPLStrdup(pszFID), -1 );
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -1188,7 +1230,9 @@ OGRErr GMLHandler::startElementFeatureAttribute(const char *pszName, int nLenNam
 /*                         startElementTop()                            */
 /************************************************************************/
 
-OGRErr GMLHandler::startElementTop(const char *pszName, CPL_UNUSED int nLenName, void* attr )
+OGRErr GMLHandler::startElementTop(const char *pszName,
+                                   CPL_UNUSED int nLenName,
+                                   void* attr )
 {
     if (strcmp(pszName, "CityModel") == 0 )
     {
@@ -1464,6 +1508,24 @@ OGRErr GMLHandler::endElementGeometry()
                 psInterestNode->pszValue = CPLStrdup("gml:Point");
             }
         }
+        else if( psInterestNode != NULL &&
+                 strcmp(psInterestNode->pszValue, "BoundingBox") == 0 )
+        {
+            CPLFree(psInterestNode->pszValue);
+            psInterestNode->pszValue = CPLStrdup("Envelope");
+            for( CPLXMLNode* psChild = psInterestNode->psChild;
+                 psChild;
+                 psChild = psChild->psNext )
+            {
+                if( psChild->eType == CXT_Attribute &&
+                    strcmp(psChild->pszValue, "crs") == 0 )
+                {
+                    CPLFree(psChild->pszValue);
+                    psChild->pszValue = CPLStrdup("srsName");
+                    break;
+                }
+            }
+        }
 
         GMLFeature* poGMLFeature = m_poReader->GetState()->m_poFeature;
         if (m_poReader->FetchAllGeometries())
@@ -1528,7 +1590,7 @@ OGRErr GMLHandler::endElementAttribute()
 
     if (m_bInCurField)
     {
-        if (m_pszCurField == NULL)
+        if (m_pszCurField == NULL && m_poReader->IsEmptyAsNull())
         {
             if (m_pszValue != NULL)
             {
@@ -1540,7 +1602,7 @@ OGRErr GMLHandler::endElementAttribute()
         else
         {
             m_poReader->SetFeaturePropertyDirectly( poState->osPath.c_str(),
-                                            m_pszCurField,
+                                            m_pszCurField ? m_pszCurField : CPLStrdup(""),
                                             m_nAttributeIndex );
             m_pszCurField = NULL;
         }
@@ -1774,7 +1836,8 @@ int GMLHandler::IsGeometryElement( const char *pszElement )
             nFirst = nMiddle + 1;
     } while(nFirst <= nLast);
 
-    if (eAppSchemaType == APPSCHEMA_AIXM && strcmp( pszElement, "ElevatedPoint") == 0)
+    if (eAppSchemaType == APPSCHEMA_AIXM &&
+        strcmp( pszElement, "ElevatedPoint") == 0)
         return TRUE;
 
     if( eAppSchemaType == APPSCHEMA_MTKGML &&

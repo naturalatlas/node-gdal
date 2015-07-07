@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogridbtablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $
+ * $Id: ogridbtablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBTableLayer class, access to an existing table
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_idb.h"
 
-CPL_CVSID("$Id: ogridbtablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $");
+CPL_CVSID("$Id: ogridbtablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 /************************************************************************/
 /*                          OGRIDBTableLayer()                         */
 /************************************************************************/
@@ -316,7 +316,7 @@ void OGRIDBTableLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRIDBTableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRIDBTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( pszFIDColumn == NULL )
@@ -421,7 +421,7 @@ int OGRIDBTableLayer::TestCapability( const char * pszCap )
 /*      way of counting features matching a spatial query.              */
 /************************************************************************/
 
-int OGRIDBTableLayer::GetFeatureCount( int bForce )
+GIntBig OGRIDBTableLayer::GetFeatureCount( int bForce )
 
 {
     return OGRIDBLayer::GetFeatureCount( bForce );
@@ -483,7 +483,7 @@ OGRSpatialReference *OGRIDBTableLayer::GetSpatialRef()
 }
 
 #if 0
-OGRErr OGRIDBTableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
 {
     OGRErr eErr(OGRERR_FAILURE);
 
@@ -697,7 +697,7 @@ OGRErr OGRIDBTableLayer::SetFeature( OGRFeature *poFeature )
 
 #endif
 
-OGRErr OGRIDBTableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
 {
     OGRErr eErr(OGRERR_FAILURE);
 
@@ -863,7 +863,7 @@ OGRErr OGRIDBTableLayer::SetFeature( OGRFeature *poFeature )
     return OGRERR_NONE;
 }
 
-OGRErr OGRIDBTableLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRIDBTableLayer::ICreateFeature( OGRFeature *poFeature )
 {
     OGRErr eErr(OGRERR_FAILURE);
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57classregistrar.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: s57classregistrar.cpp 27885 2014-10-19 22:56:48Z rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements S57ClassRegistrar class for keeping track of
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: s57classregistrar.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: s57classregistrar.cpp 27885 2014-10-19 22:56:48Z rouault $");
 
 
 #ifdef S57_BUILTIN_CLASSES
@@ -58,6 +58,10 @@ S57ClassRegistrar::~S57ClassRegistrar()
 
 {
     nClasses = 0;
+    for(size_t i=0;i<aoAttrInfos.size();i++)
+        delete aoAttrInfos[i];
+    aoAttrInfos.resize(0);
+    nAttrCount = 0;
 }
 
 /************************************************************************/

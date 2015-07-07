@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalexif.cpp 27255 2014-04-26 19:39:48Z rouault $
+ * $Id: gdalexif.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implements a EXIF directory reader
@@ -39,7 +39,7 @@
 
 #include "gdalexif.h"
 
-CPL_CVSID("$Id: gdalexif.cpp 27255 2014-04-26 19:39:48Z rouault $");
+CPL_CVSID("$Id: gdalexif.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                         EXIFPrintData()                              */
@@ -136,7 +136,7 @@ static void EXIFPrintData(char* pszData, GUInt16 type,
           sprintf(pszTemp,"%s(0)",sep);
       }
       else{
-          sprintf(pszTemp, "%s(%g)", sep,
+          CPLsprintf(pszTemp, "%s(%g)", sep,
               (double) lp[0]/ (double)lp[1]);
       }
       sep = " ";
@@ -151,7 +151,7 @@ static void EXIFPrintData(char* pszData, GUInt16 type,
   case TIFF_SRATIONAL: {
     register GInt32 *lp = (GInt32*)data;
     for(;count>0;count--) {
-      sprintf(pszTemp, "%s(%g)", sep,
+      CPLsprintf(pszTemp, "%s(%g)", sep,
           (float) lp[0]/ (float) lp[1]);
       sep = " ";
       lp += 2;
@@ -165,7 +165,7 @@ static void EXIFPrintData(char* pszData, GUInt16 type,
   case TIFF_FLOAT: {
     register float *fp = (float *)data;
     for(;count>0;count--) {
-      sprintf(pszTemp, "%s%g", sep, *fp++), sep = " ";
+      CPLsprintf(pszTemp, "%s%g", sep, *fp++), sep = " ";
       if (strlen(pszTemp) + pszDataEnd - pszData >= MAXSTRINGLENGTH)
           break;
       strcat(pszDataEnd,pszTemp);
@@ -176,7 +176,7 @@ static void EXIFPrintData(char* pszData, GUInt16 type,
   case TIFF_DOUBLE: {
     register double *dp = (double *)data;
     for(;count>0;count--) {
-      sprintf(pszTemp, "%s%g", sep, *dp++), sep = " ";
+      CPLsprintf(pszTemp, "%s%g", sep, *dp++), sep = " ";
       if (strlen(pszTemp) + pszDataEnd - pszData >= MAXSTRINGLENGTH)
           break;
       strcat(pszDataEnd,pszTemp);

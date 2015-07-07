@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_core.h 27792 2014-10-04 09:02:06Z rouault $
+ * $Id: ogr_core.h 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Define some core portability services for cross-platform OGR code.
@@ -158,7 +158,7 @@ typedef struct
  * Simple container for a bounding region in 3D.
  */
 
-#if defined(__cplusplus) && !defined(CPL_SUPRESS_CPLUSPLUS)
+#if defined(__cplusplus) && !defined(CPL_SURESS_CPLUSPLUS)
 class CPL_DLL OGREnvelope3D : public OGREnvelope
 {
   public:
@@ -293,6 +293,7 @@ typedef int OGRErr;
 #define OGRERR_FAILURE             6
 #define OGRERR_UNSUPPORTED_SRS     7
 #define OGRERR_INVALID_HANDLE      8
+#define OGRERR_NON_EXISTING_FEATURE 9   /* added in GDAL 2.0 */
 
 typedef int     OGRBoolean;
 
@@ -308,6 +309,7 @@ typedef int     OGRBoolean;
 typedef enum 
 {
     wkbUnknown = 0,         /**< unknown type, non-standard */
+
     wkbPoint = 1,           /**< 0-dimensional geometric object, standard WKB */
     wkbLineString = 2,      /**< 1-dimensional geometric object with linear
                              *   interpolation between Points, standard WKB */
@@ -319,8 +321,25 @@ typedef enum
     wkbMultiPolygon = 6,    /**< GeometryCollection of Polygons, standard WKB */
     wkbGeometryCollection = 7, /**< geometric object that is a collection of 1
                                     or more geometric objects, standard WKB */
+
+    wkbCircularString = 8,  /**< one or more circular arc segments connected end to end,
+                             *   ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbCompoundCurve = 9,   /**< sequence of contiguous curves, ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbCurvePolygon = 10,   /**< planar surface, defined by 1 exterior boundary
+                             *   and zero or more interior boundaries, that are curves.
+                             *    ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbMultiCurve = 11,     /**< GeometryCollection of Curves, ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbMultiSurface = 12,   /**< GeometryCollection of Surfaces, ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+
     wkbNone = 100,          /**< non-standard, for pure attribute records */
     wkbLinearRing = 101,    /**< non-standard, just for createGeometry() */
+
+    wkbCircularStringZ = 1008,  /**< wkbCircularString with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbCompoundCurveZ = 1009,   /**< wkbCompoundCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbCurvePolygonZ = 1010,    /**< wkbCurvePolygon with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbMultiCurveZ = 1011,      /**< wkbMultiCurve with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+    wkbMultiSurfaceZ = 1012,    /**< wkbMultiSurface with Z component. ISO SQL/MM Part 3. GDAL &gt;= 2.0 */
+
     wkbPoint25D = 0x80000001, /**< 2.5D extension as per 99-402 */
     wkbLineString25D = 0x80000002, /**< 2.5D extension as per 99-402 */
     wkbPolygon25D = 0x80000003, /**< 2.5D extension as per 99-402 */
@@ -328,29 +347,73 @@ typedef enum
     wkbMultiLineString25D = 0x80000005, /**< 2.5D extension as per 99-402 */
     wkbMultiPolygon25D = 0x80000006, /**< 2.5D extension as per 99-402 */
     wkbGeometryCollection25D = 0x80000007 /**< 2.5D extension as per 99-402 */
+
 } OGRwkbGeometryType;
+
+/* Outside of OGRwkbGeometryType since they are abstract types */
+#define wkbCurve            ((OGRwkbGeometryType)13)      /**< Curve (abstract type). SF-SQL 1.2 */
+#define wkbSurface          ((OGRwkbGeometryType)14)      /**< Surface (abstract type). SF-SQL 1.2 */
 
 /**
  * Output variants of WKB we support. 
+ *
  * 99-402 was a short-lived extension to SFSQL 1.1 that used a high-bit flag
  * to indicate the presence of Z coordiantes in a WKB geometry.
+ *
  * SQL/MM Part 3 and SFSQL 1.2 use offsets of 1000 (Z), 2000 (M) and 3000 (ZM)
  * to indicate the present of higher dimensional coordinates in a WKB geometry.
+ * Reference: <a href="https://portal.opengeospatial.org/files/?artifact_id=320243">
+ * 09-009_Committee_Draft_ISOIEC_CD_13249-3_SQLMM_Spatial.pdf</a>,
+ * ISO/IEC JTC 1/SC 32 N 1820, ISO/IEC CD 13249-3:201x(E), Date: 2009-01-16.
+ * The codes are also found in §8.2.3 of <a href="http://portal.opengeospatial.org/files/?artifact_id=25355">
+ * OGC 06-103r4 "OpenGIS® Implementation Standard for Geographic information - Simple feature access - Part 1: Common architecture", v1.2.1</a>
  */
 typedef enum 
 {
-    wkbVariantOgc, /**< Old-style 99-402 extended dimension (Z) WKB types */
-    wkbVariantIso  /**< SFSQL 1.2 and ISO SQL/MM Part 3 extended dimension (Z&M) WKB types */
+    wkbVariantOldOgc, /**< Old-style 99-402 extended dimension (Z) WKB types */
+    wkbVariantIso,  /**< SFSQL 1.2 and ISO SQL/MM Part 3 extended dimension (Z&M) WKB types */
+    wkbVariantPostGIS1 /**< PostGIS 1.X has different codes for CurvePolygon, MultiCurve and MultiSurface */
 } OGRwkbVariant;
 
+
+/** @deprecated in GDAL 2.0. Use wkbHasZ() or wkbSetZ() instead */
+#ifndef GDAL_COMPILATION
 #define wkb25DBit 0x80000000
-#define wkbFlatten(x)  ((OGRwkbGeometryType) ((x) & (~wkb25DBit)))
+#endif
+
+/** Return the 2D geometry type corresponding to the specified geometry type */
+#define wkbFlatten(x)  OGR_GT_Flatten((OGRwkbGeometryType)(x))
+
+/** Return if the geometry type is a 3D geometry type
+  * @since GDAL 2.0
+  */
+#define wkbHasZ(x)     OGR_GT_HasZ(x)
+
+/** Return the 3D geometry type corresponding to the specified geometry type.
+  * @since GDAL 2.0
+  */
+#define wkbSetZ(x)     OGR_GT_SetZ(x)
 
 #define ogrZMarker 0x21125711
 
 const char CPL_DLL * OGRGeometryTypeToName( OGRwkbGeometryType eType );
 OGRwkbGeometryType CPL_DLL OGRMergeGeometryTypes( OGRwkbGeometryType eMain,
                                                   OGRwkbGeometryType eExtra );
+OGRwkbGeometryType CPL_DLL OGRMergeGeometryTypesEx( OGRwkbGeometryType eMain,
+                                                    OGRwkbGeometryType eExtra,
+                                                    int bAllowPromotingToCurves );
+OGRwkbGeometryType CPL_DLL OGR_GT_Flatten( OGRwkbGeometryType eType );
+OGRwkbGeometryType CPL_DLL OGR_GT_SetZ( OGRwkbGeometryType eType );
+OGRwkbGeometryType CPL_DLL OGR_GT_SetModifier( OGRwkbGeometryType eType, int bSetZ, int bSetM );
+int                CPL_DLL OGR_GT_HasZ( OGRwkbGeometryType eType );
+int                CPL_DLL OGR_GT_IsSubClassOf( OGRwkbGeometryType eType,
+                                                OGRwkbGeometryType eSuperType );
+int                CPL_DLL OGR_GT_IsCurve( OGRwkbGeometryType );
+int                CPL_DLL OGR_GT_IsSurface( OGRwkbGeometryType );
+int                CPL_DLL OGR_GT_IsNonLinear( OGRwkbGeometryType );
+OGRwkbGeometryType CPL_DLL OGR_GT_GetCollection( OGRwkbGeometryType eType );
+OGRwkbGeometryType CPL_DLL OGR_GT_GetCurve( OGRwkbGeometryType eType );
+OGRwkbGeometryType CPL_DLL OGR_GT_GetLinear( OGRwkbGeometryType eType );
 
 typedef enum 
 {
@@ -370,10 +433,71 @@ typedef enum
 #  define DB2_V72_UNFIX_BYTE_ORDER(x) (x)
 #endif
 
+/** Alter field name.
+ * Used by OGR_L_AlterFieldDefn().
+ */
 #define ALTER_NAME_FLAG            0x1
+
+/** Alter field type.
+ * Used by OGR_L_AlterFieldDefn().
+ */
 #define ALTER_TYPE_FLAG            0x2
+
+/** Alter field width and precision.
+ * Used by OGR_L_AlterFieldDefn().
+ */
 #define ALTER_WIDTH_PRECISION_FLAG 0x4
-#define ALTER_ALL_FLAG             (ALTER_NAME_FLAG | ALTER_TYPE_FLAG | ALTER_WIDTH_PRECISION_FLAG)
+
+/** Alter field NOT NULL constraint.
+ * Used by OGR_L_AlterFieldDefn().
+ * @since GDAL 2.0
+ */
+#define ALTER_NULLABLE_FLAG        0x8
+
+/** Alter field DEFAULT value.
+ * Used by OGR_L_AlterFieldDefn().
+ * @since GDAL 2.0
+ */
+#define ALTER_DEFAULT_FLAG         0x10
+
+/** Alter all parameters of field definition.
+ * Used by OGR_L_AlterFieldDefn().
+ */
+#define ALTER_ALL_FLAG             (ALTER_NAME_FLAG | ALTER_TYPE_FLAG | ALTER_WIDTH_PRECISION_FLAG | ALTER_NULLABLE_FLAG | ALTER_DEFAULT_FLAG)
+
+
+/** Validate that fields respect not-null constraints.
+ * Used by OGR_F_Validate().
+ * @since GDAL 2.0
+ */
+#define OGR_F_VAL_NULL           0x00000001
+
+/** Validate that geometries respect geometry column type.
+ * Used by OGR_F_Validate().
+ * @since GDAL 2.0
+ */
+#define OGR_F_VAL_GEOM_TYPE      0x00000002
+
+/** Validate that (string) fields respect field width.
+ * Used by OGR_F_Validate().
+ * @since GDAL 2.0
+ */
+#define OGR_F_VAL_WIDTH          0x00000004
+
+/** Allow fields that are null when there's an associated default value.
+ * This can be used for drivers where the low-level layers will automatically set the
+ * field value to the associated default value.
+ * This flag only makes sense if OGR_F_VAL_NULL is set too.
+ * Used by OGR_F_Validate().
+ * @since GDAL 2.0
+ */
+#define OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT       0x00000008
+
+/** Enable all validation tests.
+ * Used by OGR_F_Validate().
+ * @since GDAL 2.0
+ */
+#define OGR_F_VAL_ALL            0xFFFFFFFF
 
 /************************************************************************/
 /*                  ogr_feature.h related definitions.                  */
@@ -399,8 +523,31 @@ typedef enum
   /** Date */                                   OFTDate = 9,
   /** Time */                                   OFTTime = 10,
   /** Date and Time */                          OFTDateTime = 11,
-                                                OFTMaxType = 11
+  /** Single 64bit integer */                   OFTInteger64 = 12,
+  /** List of 64bit integers */                 OFTInteger64List = 13,
+                                                OFTMaxType = 13
 } OGRFieldType;
+
+/**
+ * List of field subtypes. A subtype represents a hint, a restriction of the
+ * main type, that is not strictly necessary to consult.
+ * This list is likely to be extended in the
+ * future ... avoid coding applications based on the assumption that all
+ * field types can be known.
+ * Most subtypes only make sense for a restricted set of main types.
+ * @since GDAL 2.0
+ */
+typedef enum
+{
+    /** No subtype. This is the default value */        OFSTNone = 0,
+    /** Boolean integer. Only valid for OFTInteger and OFTIntegerList.*/
+                                                        OFSTBoolean = 1,
+    /** Signed 16-bit integer. Only valid for OFTInteger and OFTIntegerList. */
+                                                        OFSTInt16 = 2,
+    /** Single precision (32 bit) floatint point. Only valid for OFTReal and OFTRealList. */
+                                                        OFSTFloat32 = 3,
+                                                        OFSTMaxSubType = 3
+} OGRFieldSubType;
 
 /**
  * Display justification for field values.
@@ -426,6 +573,7 @@ typedef enum
 
 typedef union {
     int         Integer;
+    GIntBig     Integer64;
     double      Real;
     char       *String;
     
@@ -434,6 +582,11 @@ typedef union {
         int     *paList;
     } IntegerList;
     
+    struct {
+        int     nCount;
+        GIntBig *paList;
+    } Integer64List;
+
     struct {
         int     nCount;
         double  *paList;
@@ -460,11 +613,14 @@ typedef union {
         GByte   Day;
         GByte   Hour;
         GByte   Minute;
-        GByte   Second;
         GByte   TZFlag; /* 0=unknown, 1=localtime(ambiguous), 
                            100=GMT, 104=GMT+1, 80=GMT-5, etc */
+        GByte   Reserved; /* must be set to 0 */
+        float   Second; /* with millisecond accuracy. at the end of the structure, so as to keep it 12 bytes on 32 bit */
     } Date;
 } OGRField;
+
+#define OGR_GET_MS(floatingpoint_sec)   (int)(((floatingpoint_sec) - (int)(floatingpoint_sec)) * 1000 + 0.5)
 
 int CPL_DLL OGRParseDate( const char *pszInput, OGRField *psOutput, 
                           int nOptions );
@@ -488,14 +644,26 @@ int CPL_DLL OGRParseDate( const char *pszInput, OGRField *psOutput,
 #define OLCStringsAsUTF8       "StringsAsUTF8"
 #define OLCIgnoreFields        "IgnoreFields"
 #define OLCCreateGeomField     "CreateGeomField"
+#define OLCCurveGeometries     "CurveGeometries"
 
 #define ODsCCreateLayer        "CreateLayer"
 #define ODsCDeleteLayer        "DeleteLayer"
 #define ODsCCreateGeomFieldAfterCreateLayer   "CreateGeomFieldAfterCreateLayer"
+#define ODsCCurveGeometries    "CurveGeometries"
+#define ODsCTransactions       "Transactions"
+#define ODsCEmulatedTransactions "EmulatedTransactions"
 
 #define ODrCCreateDataSource   "CreateDataSource"
 #define ODrCDeleteDataSource   "DeleteDataSource"
 
+/* -------------------------------------------------------------------- */
+/*      Layer metadata items.                                           */
+/* -------------------------------------------------------------------- */
+/** Capability set to YES as metadata on a layer that has features with
+  * 64 bit identifiers.
+  @since GDAL 2.0
+  */
+#define OLMD_FID64             "OLMD_FID64"
 
 /************************************************************************/
 /*                  ogr_featurestyle.h related definitions.             */

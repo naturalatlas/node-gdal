@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: records.c 27705 2014-09-21 14:13:36Z goatbar $
+ * $Id: records.c 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Low Level Envisat file access (read/write) API.
@@ -27,9 +27,10 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_string.h"
 #include "records.h"
 
-CPL_CVSID("$Id: records.c 27705 2014-09-21 14:13:36Z goatbar $");
+CPL_CVSID("$Id: records.c 27942 2014-11-11 00:57:41Z rouault $");
 
 /* --- ASAR record descriptors --------------------------------------------- */
 static const EnvisatFieldDescr ASAR_ANTENNA_ELEV_PATT_ADSR[] = {
@@ -1323,7 +1324,7 @@ CPLErr EnvisatFile_GetFieldAsString(const void *pRecord, int nRecLen,
 
                 if (i > 0)
                     szBuf[nOffset++] = ' ';
-                nOffset += sprintf(szBuf + nOffset, "%f", fValue);
+                nOffset += CPLsprintf(szBuf + nOffset, "%f", fValue);
             }
             break;
         case EDT_Float64:
@@ -1335,7 +1336,7 @@ CPLErr EnvisatFile_GetFieldAsString(const void *pRecord, int nRecLen,
 #endif
                 if (i > 0)
                     szBuf[nOffset++] = ' ';
-                nOffset += sprintf(szBuf + nOffset, "%f", dfValue);
+                nOffset += CPLsprintf(szBuf + nOffset, "%f", dfValue);
             }
             break;
 /*
@@ -1370,7 +1371,7 @@ CPLErr EnvisatFile_GetFieldAsString(const void *pRecord, int nRecLen,
 #endif
                 if (i > 0)
                     szBuf[nOffset++] = ' ';
-                nOffset += sprintf(szBuf + nOffset, "(%f, %f)", fReal, fImag);
+                nOffset += CPLsprintf(szBuf + nOffset, "(%f, %f)", fReal, fImag);
             }
             break;
         case EDT_CFloat64:
@@ -1384,7 +1385,7 @@ CPLErr EnvisatFile_GetFieldAsString(const void *pRecord, int nRecLen,
 #endif
                 if (i > 0)
                     szBuf[nOffset++] = ' ';
-                nOffset += sprintf(szBuf + nOffset, "(%f, %f)", dfReal, dfImag);
+                nOffset += CPLsprintf(szBuf + nOffset, "(%f, %f)", dfReal, dfImag);
             }
             break;
 */

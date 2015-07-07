@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gff_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gff_dataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  Ground-based SAR Applitcations Testbed File Format driver
  * Purpose:  Support in GDAL for Sandia National Laboratory's GFF format
@@ -36,7 +36,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gff_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gff_dataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /*******************************************************************
  * Declaration of the GFFDataset class                             *
@@ -137,8 +137,9 @@ GFFRasterBand::GFFRasterBand( GFFDataset *poDS, int nBand,
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GFFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                  void *pImage ) 
+CPLErr GFFRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
+                                  void *pImage )
 {
     GFFDataset *poGDS = (GFFDataset *)poDS;
     long nOffset = poGDS->nLength;
@@ -338,6 +339,7 @@ void GDALRegister_GFF(void)
     if ( GDALGetDriverByName("GFF") == NULL ) {
         poDriver = new GDALDriver();
         poDriver->SetDescription("GFF");
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem(GDAL_DMD_LONGNAME, 
                                   "Ground-based SAR Applications Testbed File Format (.gff)");
         poDriver->SetMetadataItem(GDAL_DMD_HELPTOPIC, "frmt_various.html#GFF");

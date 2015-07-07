@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.h 28350 2015-01-23 17:53:57Z rouault $
+ * $Id: ogrgeojsonreader.h 29111 2015-05-02 18:06:16Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines GeoJSON reader within OGR OGRGeoJSON Driver.
@@ -31,6 +31,7 @@
 #define OGR_GEOJSONREADER_H_INCLUDED
 
 #include <ogr_core.h>
+#include "ogrsf_frmts.h"
 #include <json.h> // JSON-C
 
 /************************************************************************/
@@ -93,6 +94,7 @@ public:
 
     void SetPreserveGeometryType( bool bPreserve );
     void SetSkipAttributes( bool bSkip );
+    void SetFlattenNestedAttributes( bool bFlatten, char chSeparator );
 
     OGRErr Parse( const char* pszText );
     void ReadLayers( OGRGeoJSONDataSource* poDS );
@@ -100,12 +102,16 @@ public:
                     const char* pszName,
                     json_object* poObj );
 
+    json_object* GetJSonObject() { return poGJObject_; }
+
 private:
 
     json_object* poGJObject_;
 
     bool bGeometryPreserve_;
     bool bAttributesSkip_;
+    bool bFlattenNestedAttributes_;
+    char chNestedAttributeSeparator_;
 
     int bFlattenGeocouchSpatiallistFormat;
     bool bFoundId, bFoundRev, bFoundTypeFeature, bIsGeocouchSpatiallistFormat;
@@ -128,6 +134,19 @@ private:
     OGRFeature* ReadFeature( OGRGeoJSONLayer* poLayer, json_object* poObj );
     void ReadFeatureCollection( OGRGeoJSONLayer* poLayer, json_object* poObj );
 };
+
+void OGRGeoJSONReaderSetField(OGRLayer* poLayer,
+                              OGRFeature* poFeature,
+                              int nField,
+                              const char* pszAttrPrefix,
+                              json_object* poVal,
+                              bool bFlattenNestedAttributes,
+                              char chNestedAttributeSeparator);
+void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
+                                      const char* pszKey,
+                                      json_object* poVal,
+                                      bool bFlattenNestedAttributes,
+                                      char chNestedAttributeSeparator);
 
 /************************************************************************/
 /*                 GeoJSON Parsing Utilities                            */
@@ -167,6 +186,8 @@ public:
 
     OGRErr Parse( const char* pszText );
     void ReadLayers( OGRGeoJSONDataSource* poDS );
+
+    json_object* GetJSonObject() { return poGJObject_; }
 
 private:
 

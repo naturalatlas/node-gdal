@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.h 27542 2014-07-22 21:25:37Z rouault $
+ * $Id: vrtdataset.h 29294 2015-06-05 08:52:15Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Declaration of virtual gdal dataset classes.
@@ -39,11 +39,13 @@
 int VRTApplyMetadata( CPLXMLNode *, GDALMajorObject * );
 CPLXMLNode *VRTSerializeMetadata( GDALMajorObject * );
 
+#if 0
 int VRTWarpedOverviewTransform( void *pTransformArg, int bDstToSrc,
                                 int nPointCount,
                                 double *padfX, double *padfY, double *padfZ,
                                 int *panSuccess );
 void* VRTDeserializeWarpedOverviewTransformer( CPLXMLNode *psTree );
+#endif
 
 /************************************************************************/
 /*                          VRTOverviewInfo()                           */
@@ -80,7 +82,8 @@ public:
     virtual CPLErr  RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace ) = 0;
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg ) = 0;
 
     virtual double GetMinimum( int nXSize, int nYSize, int *pbSuccess ) = 0;
     virtual double GetMaximum( int nXSize, int nYSize, int *pbSuccess ) = 0;
@@ -92,7 +95,7 @@ public:
                                       GDALProgressFunc pfnProgress, void *pProgressData ) = 0;
     virtual CPLErr  GetHistogram( int nXSize, int nYSize,
                                   double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData ) = 0;
 
@@ -179,13 +182,17 @@ class CPL_DLL VRTDataset : public GDALDataset
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType,
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace, int nLineSpace, int nBandSpace);
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg);
 
     virtual CPLXMLNode *SerializeToXML( const char *pszVRTPath);
     virtual CPLErr      XMLInit( CPLXMLNode *, const char * );
 
     /* Used by PDF driver for example */
     GDALDataset*        GetSingleSimpleSource();
+    
+    void                UnsetPreservedRelativeFilenames();
  
     static int          Identify( GDALOpenInfo * );
     static GDALDataset *Open( GDALOpenInfo * );
@@ -209,14 +216,16 @@ class CPL_DLL VRTWarpedDataset : public VRTDataset
     int               nBlockYSize;
     GDALWarpOperation *poWarper;
 
+    int               nOverviewCount;
+    VRTWarpedDataset **papoOverviews;
+    int               nSrcOvrLevel;
+    
+    void              CreateImplicitOverviews();
+
     friend class VRTWarpedRasterBand;
 
   protected:
     virtual int         CloseDependentDatasets();
-
-public:
-    int               nOverviewCount;
-    VRTWarpedDataset  **papoOverviews;
 
 public:
                       VRTWarpedDataset( int nXSize, int nYSize );
@@ -227,6 +236,9 @@ public:
     virtual CPLErr IBuildOverviews( const char *, int, int *,
                                     int, int *, GDALProgressFunc, void * );
     
+    virtual CPLErr SetMetadataItem( const char *pszName, const char *pszValue,
+                                    const char *pszDomain = "" );
+
     virtual CPLXMLNode *SerializeToXML( const char *pszVRTPath );
     virtual CPLErr    XMLInit( CPLXMLNode *, const char * );
 
@@ -310,17 +322,17 @@ class CPL_DLL VRTRasterBand : public GDALRasterBand
     virtual GDALRasterBand *GetOverview(int);
     
     virtual CPLErr  GetHistogram( double dfMin, double dfMax,
-                          int nBuckets, int * panHistogram,
+                          int nBuckets, GUIntBig * panHistogram,
                           int bIncludeOutOfRange, int bApproxOK,
                           GDALProgressFunc, void *pProgressData );
 
     virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                        int *pnBuckets, int ** ppanHistogram,
+                                        int *pnBuckets, GUIntBig ** ppanHistogram,
                                         int bForce,
                                         GDALProgressFunc, void *pProgressData);
 
     virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                        int nBuckets, int *panHistogram );
+                                        int nBuckets, GUIntBig *panHistogram );
 
     CPLErr         CopyCommonInfoFrom( GDALRasterBand * );
     
@@ -377,7 +389,8 @@ class CPL_DLL VRTSourcedRasterBand : public VRTRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     virtual char      **GetMetadataDomainList();
     virtual const char *GetMetadataItem( const char * pszName,
@@ -400,7 +413,7 @@ class CPL_DLL VRTSourcedRasterBand : public VRTRasterBand
                                       double *pdfMean, double *pdfStdDev,
                                       GDALProgressFunc pfnProgress, void *pProgressData );
     virtual CPLErr  GetHistogram( double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData );
 
@@ -488,7 +501,8 @@ class CPL_DLL VRTDerivedRasterBand : public VRTSourcedRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     static CPLErr AddPixelFunction
         (const char *pszFuncName, GDALDerivedPixelFunc pfnPixelFunc);
@@ -525,7 +539,8 @@ class CPL_DLL VRTRawRasterBand : public VRTRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     virtual CPLErr IReadBlock( int, int, void * );
     virtual CPLErr IWriteBlock( int, int, void * );
@@ -592,6 +607,10 @@ protected:
 
     int                 bNoDataSet;
     double              dfNoDataValue;
+    CPLString           osResampling;
+    
+    int                 bRelativeToVRTOri;
+    CPLString           osSourceFileNameOri;
 
 public:
             VRTSimpleSource();
@@ -605,15 +624,20 @@ public:
     void           SetSrcWindow( int, int, int, int );
     void           SetDstWindow( int, int, int, int );
     void           SetNoDataValue( double dfNoDataValue );
+    const CPLString& GetResampling() const { return osResampling; }
+    void           SetResampling( const char* pszResampling );
 
     int            GetSrcDstWindow( int, int, int, int, int, int, 
+                                    double *pdfReqXOff, double *pdfReqYOff,
+                                    double *pdfReqXSize, double *pdfReqYSize,
                                     int *, int *, int *, int *,
                                     int *, int *, int *, int * );
 
     virtual CPLErr  RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     virtual double GetMinimum( int nXSize, int nYSize, int *pbSuccess );
     virtual double GetMaximum( int nXSize, int nYSize, int *pbSuccess );
@@ -625,7 +649,7 @@ public:
                                       GDALProgressFunc pfnProgress, void *pProgressData );
     virtual CPLErr  GetHistogram( int nXSize, int nYSize,
                                   double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData );
 
@@ -647,7 +671,11 @@ public:
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType,
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace, int nLineSpace, int nBandSpace);
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg);
+
+    void             UnsetPreservedRelativeFilenames();
 };
 
 /************************************************************************/
@@ -661,7 +689,8 @@ public:
     virtual CPLErr  RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     virtual double GetMinimum( int nXSize, int nYSize, int *pbSuccess );
     virtual double GetMaximum( int nXSize, int nYSize, int *pbSuccess );
@@ -673,7 +702,7 @@ public:
                                       GDALProgressFunc pfnProgress, void *pProgressData );
     virtual CPLErr  GetHistogram( int nXSize, int nYSize,
                                   double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData );
 
@@ -713,7 +742,8 @@ protected:
                                       int nReqXSize, int nReqYSize,
                                       void *pData, int nOutXSize, int nOutYSize,
                                       GDALDataType eBufType,
-                                      int nPixelSpace, int nLineSpace );
+                                      GSpacing nPixelSpace, GSpacing nLineSpace,
+                                      GDALRasterIOExtraArg* psExtraArg );
 
 public:
                    VRTComplexSource();
@@ -722,7 +752,8 @@ public:
     virtual CPLErr RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                              void *pData, int nBufXSize, int nBufYSize, 
                              GDALDataType eBufType, 
-                             int nPixelSpace, int nLineSpace );
+                             GSpacing nPixelSpace, GSpacing nLineSpace,
+                             GDALRasterIOExtraArg* psExtraArg );
 
     virtual double GetMinimum( int nXSize, int nYSize, int *pbSuccess );
     virtual double GetMaximum( int nXSize, int nYSize, int *pbSuccess );
@@ -734,7 +765,7 @@ public:
                                       GDALProgressFunc pfnProgress, void *pProgressData );
     virtual CPLErr  GetHistogram( int nXSize, int nYSize,
                                   double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData );
 
@@ -786,7 +817,8 @@ public:
     virtual CPLErr  RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 };
 
 /************************************************************************/
@@ -845,7 +877,8 @@ public:
     virtual CPLErr  RasterIO( int nXOff, int nYOff, int nXSize, int nYSize, 
                               void *pData, int nBufXSize, int nBufYSize, 
                               GDALDataType eBufType, 
-                              int nPixelSpace, int nLineSpace );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 
     virtual double GetMinimum( int nXSize, int nYSize, int *pbSuccess );
     virtual double GetMaximum( int nXSize, int nYSize, int *pbSuccess );
@@ -857,7 +890,7 @@ public:
                                       GDALProgressFunc pfnProgress, void *pProgressData );
     virtual CPLErr  GetHistogram( int nXSize, int nYSize,
                                   double dfMin, double dfMax,
-                                  int nBuckets, int * panHistogram,
+                                  int nBuckets, GUIntBig * panHistogram,
                                   int bIncludeOutOfRange, int bApproxOK,
                                   GDALProgressFunc pfnProgress, void *pProgressData );
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cplstring.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cplstring.cpp 28204 2014-12-24 06:00:26Z goatbar $
  *
  * Project:  GDAL 
  * Purpose:  CPLString implementation.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include <string>
 
-CPL_CVSID("$Id: cplstring.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cplstring.cpp 28204 2014-12-24 06:00:26Z goatbar $");
 
 /*
  * The CPLString class is derived from std::string, so the vast majority 
@@ -69,9 +69,9 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
 
 #if !defined(HAVE_VSNPRINTF)
     char *pszBuffer = (char *) CPLMalloc(30000);
-    if( vsprintf( pszBuffer, pszFormat, args) > 29998 )
+    if( CPLvsnprintf( pszBuffer, 30000, pszFormat, args) > 29998 )
     {
-        CPLError( CE_Fatal, CPLE_AppDefined, 
+        CPLError( CE_Fatal, CPLE_AppDefined,
                   "CPLString::vPrintf() ... buffer overrun." );
     }
     *this = pszBuffer;
@@ -92,7 +92,7 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
     wrk_args = args;
 #endif
     
-    nPR = vsnprintf( szModestBuffer, sizeof(szModestBuffer), pszFormat, 
+    nPR = CPLvsnprintf( szModestBuffer, sizeof(szModestBuffer), pszFormat, 
                      wrk_args );
     if( nPR == -1 || nPR >= (int) sizeof(szModestBuffer)-1 )
     {
@@ -105,7 +105,7 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
 #else
         wrk_args = args;
 #endif
-        while( (nPR=vsnprintf( pszWorkBuffer, nWorkBufferSize, pszFormat,wrk_args))
+        while( (nPR=CPLvsnprintf( pszWorkBuffer, nWorkBufferSize, pszFormat,wrk_args))
                >= nWorkBufferSize-1 
                || nPR == -1 )
         {
@@ -126,8 +126,11 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
     {
         *this = szModestBuffer;
     }
+#ifdef va_copy
     va_end( wrk_args );
 #endif
+
+#endif /* !defined(HAVE_VSNPRINTF) */
 
     return *this;
 }
@@ -158,14 +161,8 @@ CPLString &CPLString::FormatC( double dfValue, const char *pszFormat )
 
     char szWork[512]; // presumably long enough for any number?
 
-    sprintf( szWork, pszFormat, dfValue );
+    CPLsprintf( szWork, pszFormat, dfValue );
     CPLAssert( strlen(szWork) < sizeof(szWork) );
-    
-    if( strchr( szWork, ',' ) != NULL )
-    {
-        char *pszDelim = strchr( szWork, ',' );
-        *pszDelim = '.';
-    }
 
     *this += szWork;
     

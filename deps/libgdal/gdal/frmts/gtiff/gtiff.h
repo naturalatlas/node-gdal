@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtiff.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gtiff.h 29049 2015-04-29 15:54:12Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -45,6 +45,9 @@ CPL_C_END
 void    GTIFFGetOverviewBlockSize(int* pnBlockXSize, int* pnBlockYSize);
 void    GTIFFSetJpegQuality(GDALDatasetH hGTIFFDS, int nJpegQuality);
 int     GTIFFGetCompressionMethod(const char* pszValue, const char* pszVariableName);
+
+void GTiffDatasetWriteRPCTag( TIFF *hTIFF, char **papszRPCMD );
+char** GTiffDatasetReadRPCTag( TIFF *hTIFF );
 
 #define TIFFTAG_GDAL_METADATA  42112
 #define TIFFTAG_GDAL_NODATA    42113

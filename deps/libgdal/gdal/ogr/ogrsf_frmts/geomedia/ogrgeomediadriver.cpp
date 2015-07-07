@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediadriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrgeomediadriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -31,7 +31,7 @@
 #include "ogr_geomedia.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrgeomediadriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrgeomediadriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRODBCDriver()                            */
@@ -153,5 +153,11 @@ int OGRGeomediaDriver::TestCapability( CPL_UNUSED const char * pszCap )
 void RegisterOGRGeomedia()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRGeomediaDriver );
+    OGRSFDriver* poDriver = new OGRGeomediaDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                "Geomedia .mdb" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "mdb" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_geomedia.html" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }

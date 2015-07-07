@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdxfwriterlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrdxfwriterlayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFWriterLayer - the OGRLayer class used for
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_featurestyle.h"
 
-CPL_CVSID("$Id: ogrdxfwriterlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrdxfwriterlayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 #ifndef PI
 #define PI  3.14159265358979323846
@@ -189,10 +189,7 @@ int OGRDXFWriterLayer::WriteValue( int nCode, double dfValue )
 {
     char szLinePair[64];
 
-    snprintf(szLinePair, sizeof(szLinePair), "%3d\n%.15g\n", nCode, dfValue );
-    char* pszComma = strchr(szLinePair, ',');
-    if (pszComma)
-        *pszComma = '.';
+    CPLsnprintf(szLinePair, sizeof(szLinePair), "%3d\n%.15g\n", nCode, dfValue );
     size_t nLen = strlen(szLinePair);
 
     return VSIFWriteL( szLinePair, 
@@ -215,7 +212,7 @@ OGRErr OGRDXFWriterLayer::WriteCore( OGRFeature *poFeature )
 /*      Also, for reasons I don't understand these ids seem to have     */
 /*      to start somewhere around 0x50 hex (80 decimal).                */
 /* -------------------------------------------------------------------- */
-    poFeature->SetFID( poDS->WriteEntityID(fp,poFeature->GetFID()) );
+    poFeature->SetFID( poDS->WriteEntityID(fp,(int)poFeature->GetFID()) );
 
 /* -------------------------------------------------------------------- */
 /*      For now we assign everything to the default layer - layer       */
@@ -518,7 +515,7 @@ OGRErr OGRDXFWriterLayer::WriteTEXT( OGRFeature *poFeature )
 /************************************************************************/
 /*                     PrepareLineTypeDefinition()                      */
 /************************************************************************/
-CPLString 
+CPLString
 OGRDXFWriterLayer::PrepareLineTypeDefinition( CPL_UNUSED OGRFeature *poFeature,
                                               OGRStyleTool *poTool )
 {
@@ -526,7 +523,7 @@ OGRDXFWriterLayer::PrepareLineTypeDefinition( CPL_UNUSED OGRFeature *poFeature,
     OGRStylePen *poPen = (OGRStylePen *) poTool;
     GBool  bDefault;
     const char *pszPattern;
-    
+
 /* -------------------------------------------------------------------- */
 /*      Fetch pattern.                                                  */
 /* -------------------------------------------------------------------- */
@@ -568,7 +565,7 @@ OGRDXFWriterLayer::PrepareLineTypeDefinition( CPL_UNUSED OGRFeature *poFeature,
         
         osDef += osDXFEntry;
 
-        dfTotalLength += atof(osAmount);
+        dfTotalLength += CPLAtof(osAmount);
     }
 
 /* -------------------------------------------------------------------- */
@@ -1093,10 +1090,10 @@ OGRErr OGRDXFWriterLayer::WriteHATCH( OGRFeature *poFeature,
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRDXFWriterLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRDXFWriterLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     OGRGeometry *poGeom = poFeature->GetGeometryRef();

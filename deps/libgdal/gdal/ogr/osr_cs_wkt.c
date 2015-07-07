@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osr_cs_wkt.c 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: osr_cs_wkt.c 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  CS WKT parser
@@ -101,7 +101,8 @@ static const osr_cs_wkt_tokens tokens[] =
 /*                         osr_cs_wkt_lex()                             */
 /************************************************************************/
 
-int osr_cs_wkt_lex(CPL_UNUSED YYSTYPE* pNode, osr_cs_wkt_parse_context *context)
+int osr_cs_wkt_lex(CPL_UNUSED YYSTYPE* pNode,
+                   osr_cs_wkt_parse_context *context)
 {
     size_t i;
     const char *pszInput = context->pszNext;

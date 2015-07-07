@@ -45,7 +45,8 @@ CPL_CVSID("$Id: gdal_misc.cpp 25494 2013-01-13 12:55:17Z etourigny $");
  * to use one of the other progress functions that actually do something.
  */
 
-int CPL_STDCALL GDALDummyProgress( CPL_UNUSED double dfComplete, CPL_UNUSED const char *pszMessage,
+int CPL_STDCALL GDALDummyProgress( CPL_UNUSED double dfComplete,
+                                   CPL_UNUSED const char *pszMessage,
                                    CPL_UNUSED void *pData )
 {
     return TRUE;
@@ -73,6 +74,10 @@ int CPL_STDCALL GDALScaledProgress( double dfComplete, const char *pszMessage,
 
 {
     GDALScaledProgressInfo *psInfo = (GDALScaledProgressInfo *) pData;
+    
+    /* optimization if GDALCreateScaledProgress() provided with GDALDummyProgress */
+    if( psInfo == NULL )
+        return TRUE;
 
     return psInfo->pfnProgress( dfComplete * (psInfo->dfMax - psInfo->dfMin)
                                 + psInfo->dfMin,
@@ -133,6 +138,9 @@ void * CPL_STDCALL GDALCreateScaledProgress( double dfMin, double dfMax,
 
 {
     GDALScaledProgressInfo *psInfo;
+    
+    if( pfnProgress == NULL || pfnProgress == GDALDummyProgress )
+        return NULL;
 
     psInfo = (GDALScaledProgressInfo *)
         CPLCalloc(sizeof(GDALScaledProgressInfo),1);
@@ -199,7 +207,8 @@ void CPL_STDCALL GDALDestroyScaledProgress( void * pData )
  * @return Always returns TRUE indicating the process should continue.
  */
 
-int CPL_STDCALL GDALTermProgress( double dfComplete, CPL_UNUSED const char *pszMessage,
+int CPL_STDCALL GDALTermProgress( CPL_UNUSED double dfComplete,
+                                  CPL_UNUSED const char *pszMessage,
                                   void * pProgressArg )
 {
     static int nLastTick = -1;

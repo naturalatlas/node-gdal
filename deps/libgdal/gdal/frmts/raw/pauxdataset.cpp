@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pauxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pauxdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  PCI .aux Driver
  * Purpose:  Implementation of PAuxDataset
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: pauxdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pauxdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_PAux(void);
@@ -209,7 +209,7 @@ double PAuxRasterBand::GetNoDataValue( int *pbSuccess )
     if( pszLine == NULL )
         return -1e8;
     else
-        return atof(pszLine);
+        return CPLAtof(pszLine);
 }
 
 /************************************************************************/
@@ -231,7 +231,7 @@ CPLErr PAuxRasterBand::SetNoDataValue( double dfNewValue )
     }
 
     sprintf( szTarget, "METADATA_IMG_%d_NO_DATA_VALUE", nBand );
-    sprintf( szValue, "%24.12f", dfNewValue );
+    CPLsprintf( szValue, "%24.12f", dfNewValue );
     poPDS->papszAuxLines = 
         CSLSetNameValue( poPDS->papszAuxLines, szTarget, szValue );
     
@@ -372,7 +372,7 @@ char *PAuxDataset::PCI2WKT( const char *pszGeosys,
         papszTokens = CSLTokenizeString( pszProjParms );
         
         for( i=0; papszTokens != NULL && papszTokens[i] != NULL && i < 16; i++)
-            adfProjParms[i] = atof(papszTokens[i]);
+            adfProjParms[i] = CPLAtof(papszTokens[i]);
 
         CSLDestroy( papszTokens );
     }
@@ -439,13 +439,13 @@ void PAuxDataset::ScanForGCPs()
         {
             GDALInitGCPs( 1, pasGCPList + nGCPCount );
 
-            pasGCPList[nGCPCount].dfGCPX = atof(papszTokens[2]);
-            pasGCPList[nGCPCount].dfGCPY = atof(papszTokens[3]);
-            pasGCPList[nGCPCount].dfGCPPixel = atof(papszTokens[0]);
-            pasGCPList[nGCPCount].dfGCPLine = atof(papszTokens[1]);
+            pasGCPList[nGCPCount].dfGCPX = CPLAtof(papszTokens[2]);
+            pasGCPList[nGCPCount].dfGCPY = CPLAtof(papszTokens[3]);
+            pasGCPList[nGCPCount].dfGCPPixel = CPLAtof(papszTokens[0]);
+            pasGCPList[nGCPCount].dfGCPLine = CPLAtof(papszTokens[1]);
 
             if( CSLCount(papszTokens) > 4 )
-                pasGCPList[nGCPCount].dfGCPZ = atof(papszTokens[4]);
+                pasGCPList[nGCPCount].dfGCPZ = CPLAtof(papszTokens[4]);
 
             CPLFree( pasGCPList[nGCPCount].pszId );
             if( CSLCount(papszTokens) > 5 )
@@ -531,10 +531,10 @@ CPLErr PAuxDataset::GetGeoTransform( double * padfGeoTransform )
     {
         double	dfUpLeftX, dfUpLeftY, dfLoRightX, dfLoRightY;
 
-        dfUpLeftX = atof(CSLFetchNameValue(papszAuxLines, "UpLeftX" ));
-        dfUpLeftY = atof(CSLFetchNameValue(papszAuxLines, "UpLeftY" ));
-        dfLoRightX = atof(CSLFetchNameValue(papszAuxLines, "LoRightX" ));
-        dfLoRightY = atof(CSLFetchNameValue(papszAuxLines, "LoRightY" ));
+        dfUpLeftX = CPLAtof(CSLFetchNameValue(papszAuxLines, "UpLeftX" ));
+        dfUpLeftY = CPLAtof(CSLFetchNameValue(papszAuxLines, "UpLeftY" ));
+        dfLoRightX = CPLAtof(CSLFetchNameValue(papszAuxLines, "LoRightX" ));
+        dfLoRightY = CPLAtof(CSLFetchNameValue(papszAuxLines, "LoRightY" ));
 
         padfGeoTransform[0] = dfUpLeftX;
         padfGeoTransform[1] = (dfLoRightX - dfUpLeftX) / GetRasterXSize();
@@ -573,20 +573,20 @@ CPLErr PAuxDataset::SetGeoTransform( double * padfGeoTransform )
     if( ABS(padfGeoTransform[0]) < 181 
         && ABS(padfGeoTransform[1]) < 1 )
     {
-        sprintf( szUpLeftX, "%.12f", padfGeoTransform[0] );
-        sprintf( szUpLeftY, "%.12f", padfGeoTransform[3] );
-        sprintf( szLoRightX, "%.12f", 
+        CPLsprintf( szUpLeftX, "%.12f", padfGeoTransform[0] );
+        CPLsprintf( szUpLeftY, "%.12f", padfGeoTransform[3] );
+        CPLsprintf( szLoRightX, "%.12f", 
                padfGeoTransform[0] + padfGeoTransform[1] * GetRasterXSize() );
-        sprintf( szLoRightY, "%.12f", 
+        CPLsprintf( szLoRightY, "%.12f", 
                padfGeoTransform[3] + padfGeoTransform[5] * GetRasterYSize() );
     }
     else
     {
-        sprintf( szUpLeftX, "%.3f", padfGeoTransform[0] );
-        sprintf( szUpLeftY, "%.3f", padfGeoTransform[3] );
-        sprintf( szLoRightX, "%.3f", 
+        CPLsprintf( szUpLeftX, "%.3f", padfGeoTransform[0] );
+        CPLsprintf( szUpLeftY, "%.3f", padfGeoTransform[3] );
+        CPLsprintf( szLoRightX, "%.3f", 
                padfGeoTransform[0] + padfGeoTransform[1] * GetRasterXSize() );
-        sprintf( szLoRightY, "%.3f", 
+        CPLsprintf( szLoRightY, "%.3f", 
                padfGeoTransform[3] + padfGeoTransform[5] * GetRasterYSize() );
     }
         
@@ -656,8 +656,9 @@ GDALDataset *PAuxDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Do we have a .aux file?                                         */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->papszSiblingFiles != NULL
-        && CSLFindString( poOpenInfo->papszSiblingFiles, 
+    char** papszSiblingFiles = poOpenInfo->GetSiblingFiles();
+    if( papszSiblingFiles != NULL
+        && CSLFindString( papszSiblingFiles, 
                           CPLGetFilename(osAuxFilename) ) == -1 )
     {
         return NULL;
@@ -1112,6 +1113,7 @@ void GDALRegister_PAux()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "PAux" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "PCI .aux Labelled" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

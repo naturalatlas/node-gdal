@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgmlcoverage.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: gdalgmlcoverage.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  GDAL 
  * Purpose:  Generic support for GML Coverage descriptions.
@@ -34,7 +34,7 @@
 #include "ogr_geometry.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: gdalgmlcoverage.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: gdalgmlcoverage.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                        ParseGMLCoverageDesc()                        */
@@ -157,11 +157,11 @@ CPLErr GDALParseGMLCoverage( CPLXMLNode *psXML,
         && poOriginGeometry != NULL )
     {
         padfGeoTransform[0] = poOriginGeometry->getX();
-        padfGeoTransform[1] = atof(papszOffset1Tokens[0]);
-        padfGeoTransform[2] = atof(papszOffset1Tokens[1]);
+        padfGeoTransform[1] = CPLAtof(papszOffset1Tokens[0]);
+        padfGeoTransform[2] = CPLAtof(papszOffset1Tokens[1]);
         padfGeoTransform[3] = poOriginGeometry->getY();
-        padfGeoTransform[4] = atof(papszOffset2Tokens[0]);
-        padfGeoTransform[5] = atof(papszOffset2Tokens[1]);
+        padfGeoTransform[4] = CPLAtof(papszOffset2Tokens[0]);
+        padfGeoTransform[5] = CPLAtof(papszOffset2Tokens[1]);
 
         // offset from center of pixel.
         padfGeoTransform[0] -= padfGeoTransform[1]*0.5;

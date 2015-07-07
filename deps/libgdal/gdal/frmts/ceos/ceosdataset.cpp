@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceosdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ceosdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CEOS Translator
  * Purpose:  GDALDataset driver for CEOS translator.
@@ -31,7 +31,7 @@
 #include "ceosopen.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: ceosdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ceosdataset.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 CPL_C_START
 void	GDALRegister_CEOS(void);
@@ -95,9 +95,9 @@ CEOSRasterBand::CEOSRasterBand( CEOSDataset *poDS, int nBand )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr CEOSRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
-
+CPLErr CEOSRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                   int nBlockYOff,
+                                   void * pImage )
 {
     CEOSDataset	*poCEOS_DS = (CEOSDataset *) poDS;
 
@@ -243,6 +243,7 @@ void GDALRegister_CEOS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "CEOS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "CEOS Image" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

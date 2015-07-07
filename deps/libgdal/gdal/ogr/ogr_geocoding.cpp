@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geocoding.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogr_geocoding.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Client of geocoding service.
@@ -77,7 +77,7 @@ int OGR_gettimeofday(struct timeval *tv, struct timezone *tzIgnored)
 #include "ogr_mem.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogr_geocoding.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogr_geocoding.cpp 28459 2015-02-12 13:48:21Z rouault $");
 
 struct _OGRGeocodingSessionHS
 {
@@ -96,7 +96,7 @@ struct _OGRGeocodingSessionHS
     OGRDataSource* poDS;
 };
 
-static void* hMutex = NULL;
+static CPLMutex* hMutex = NULL;
 static double dfLastQueryTimeStampOSMNominatim = 0.0;
 static double dfLastQueryTimeStampMapQuestNominatim = 0.0;
 
@@ -202,7 +202,7 @@ int OGRGeocodeHasStringValidFormat(const char* pszQueryTemplate)
  *      <a href="http://msdn.microsoft.com/en-us/library/ff701714.aspx">"BING"</a> or
  *       other value.
  *      Note: "YAHOO" is no longer available as a free service.
- * <li> "EMAIL": used by OSM_NOMINATIM. Optional, but recommanded.
+ * <li> "EMAIL": used by OSM_NOMINATIM. Optional, but recommended.
  * <li> "USERNAME": used by GEONAMES. Compulsory in that case.
  * <li> "KEY": used by BING. Compulsory in that case.
  * <li> "APPLICATION": used to set the User-Agent MIME header. Defaults

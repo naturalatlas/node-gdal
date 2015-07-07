@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_curl_streaming.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_curl_streaming.cpp 28459 2015-02-12 13:48:21Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for HTTP/FTP files in streaming mode
@@ -33,7 +33,7 @@
 #include "cpl_hash_set.h"
 #include "cpl_time.h"
 
-CPL_CVSID("$Id: cpl_vsil_curl_streaming.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_curl_streaming.cpp 28459 2015-02-12 13:48:21Z rouault $");
 
 #if !defined(HAVE_CURL) || defined(CPL_MULTIPROC_STUB)
 
@@ -154,7 +154,7 @@ typedef struct
 
 class VSICurlStreamingFSHandler : public VSIFilesystemHandler
 {
-    void           *hMutex;
+    CPLMutex           *hMutex;
 
     std::map<CPLString, CachedFileProp*>   cacheFileSize;
 
@@ -207,10 +207,10 @@ class VSICurlStreamingHandle : public VSIVirtualHandle
     volatile int    bDownloadStopped;
     volatile int    bAskDownloadEnd;
     vsi_l_offset    nRingBufferFileOffset;
-    void           *hThread;
-    void           *hRingBufferMutex;
-    void           *hCondProducer;
-    void           *hCondConsumer;
+    CPLJoinableThread *hThread;
+    CPLMutex       *hRingBufferMutex;
+    CPLCond        *hCondProducer;
+    CPLCond        *hCondConsumer;
     RingBuffer      oRingBuffer;
     void            StartDownload();
     void            StopDownload();
@@ -1265,7 +1265,9 @@ void  VSICurlStreamingHandle::AddRegion( vsi_l_offset    nFileOffsetStart,
 /*                               Write()                                */
 /************************************************************************/
 
-size_t VSICurlStreamingHandle::Write( CPL_UNUSED const void *pBuffer, CPL_UNUSED size_t nSize, CPL_UNUSED size_t nMemb )
+size_t VSICurlStreamingHandle::Write( CPL_UNUSED const void *pBuffer,
+                                      CPL_UNUSED size_t nSize,
+                                      CPL_UNUSED size_t nMemb )
 {
     return 0;
 }
@@ -1440,9 +1442,9 @@ int VSICurlStreamingFSHandler::Stat( const char *pszFilename,
  * be efficient. If you need efficient random access and that the server supports range
  * dowloading, you should use the /vsicurl/ file system handler instead.
  *
- * Recognized filenames are of the form /vsicurl_streaming/http://path/to/remote/ressource or
- * /vsicurl_streaming/ftp://path/to/remote/ressource where path/to/remote/ressource is the
- * URL of a remote ressource.
+ * Recognized filenames are of the form /vsicurl_streaming/http://path/to/remote/resource or
+ * /vsicurl_streaming/ftp://path/to/remote/resource where path/to/remote/resource is the
+ * URL of a remote resource.
  *
  * The GDAL_HTTP_PROXY, GDAL_HTTP_PROXYUSERPWD and GDAL_PROXY_AUTH configuration options can be
  * used to define a proxy server. The syntax to use is the one of Curl CURLOPT_PROXY,

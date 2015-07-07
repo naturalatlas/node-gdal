@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsbdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: bsbdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  BSB Reader
  * Purpose:  BSBDataset implementation for BSB format.
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: bsbdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: bsbdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 CPL_C_START
 void	GDALRegister_BSB(void);
@@ -135,9 +135,9 @@ BSBRasterBand::BSBRasterBand( BSBDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr BSBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
-                                      void * pImage )
-
+CPLErr BSBRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                  int nBlockYOff,
+                                  void * pImage )
 {
     BSBDataset *poGDS = (BSBDataset *) poDS;
     GByte *pabyScanline = (GByte*) pImage;
@@ -616,10 +616,10 @@ void BSBDataset::ScanForGCPsNos( const char *pszFilename )
             if (CSLCount(Tokens) >= 5)
             {
                 GDALInitGCPs( 1, pasGCPList + nGCPCount );
-                pasGCPList[nGCPCount].dfGCPX = atof(Tokens[1]);
-                pasGCPList[nGCPCount].dfGCPY = atof(Tokens[2]);
-                pasGCPList[nGCPCount].dfGCPPixel = atof(Tokens[4]);
-                pasGCPList[nGCPCount].dfGCPLine = atof(Tokens[3]);
+                pasGCPList[nGCPCount].dfGCPX = CPLAtof(Tokens[1]);
+                pasGCPList[nGCPCount].dfGCPY = CPLAtof(Tokens[2]);
+                pasGCPList[nGCPCount].dfGCPPixel = CPLAtof(Tokens[4]);
+                pasGCPList[nGCPCount].dfGCPLine = CPLAtof(Tokens[3]);
 
                 CPLFree( pasGCPList[nGCPCount].pszId );
                 char	szName[50];
@@ -676,10 +676,10 @@ void BSBDataset::ScanForGCPsBSB()
         {
             GDALInitGCPs( 1, pasGCPList + nGCPCount );
 
-            pasGCPList[nGCPCount].dfGCPX = atof(papszTokens[4]);
-            pasGCPList[nGCPCount].dfGCPY = atof(papszTokens[3]);
-            pasGCPList[nGCPCount].dfGCPPixel = atof(papszTokens[1]);
-            pasGCPList[nGCPCount].dfGCPLine = atof(papszTokens[2]);
+            pasGCPList[nGCPCount].dfGCPX = CPLAtof(papszTokens[4]);
+            pasGCPList[nGCPCount].dfGCPY = CPLAtof(papszTokens[3]);
+            pasGCPList[nGCPCount].dfGCPPixel = CPLAtof(papszTokens[1]);
+            pasGCPList[nGCPCount].dfGCPLine = CPLAtof(papszTokens[2]);
 
             CPLFree( pasGCPList[nGCPCount].pszId );
             if( CSLCount(papszTokens) > 5 )
@@ -1187,6 +1187,7 @@ void GDALRegister_BSB()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "BSB" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Maptech BSB Nautical Charts" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

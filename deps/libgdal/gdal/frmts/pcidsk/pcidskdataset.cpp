@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pcidskdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pcidskdataset.cpp 28373 2015-01-30 00:14:24Z rouault $
  *
  * Project:  PCIDSK Database File
  * Purpose:  Read/write PCIDSK Database File used by the PCI software
@@ -30,7 +30,7 @@
 
 #include "gdal_pcidsk.h"
 
-CPL_CVSID("$Id: pcidskdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: pcidskdataset.cpp 28373 2015-01-30 00:14:24Z rouault $");
 
 CPL_C_START
 void    GDALRegister_PCIDSK(void);
@@ -1446,16 +1446,17 @@ GDALDataset *PCIDSKDataset::Create( const char * pszFilename,
 }
 
 
-
 /************************************************************************/
 /*                             CreateCopy()                             */
 /************************************************************************/
 
 GDALDataset *
-PCIDSKDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                        int bStrict, char ** papszOptions, 
-                        GDALProgressFunc pfnProgress, void * pProgressData )
-
+PCIDSKDataset::CreateCopy( const char * pszFilename,
+                           GDALDataset *poSrcDS,
+                           CPL_UNUSED int bStrict,
+                           char ** papszOptions,
+                           GDALProgressFunc pfnProgress,
+                           void * pProgressData )
 {
     PCIDSKDataset	*poDS;
     GDALDataType eType;
@@ -1544,7 +1545,7 @@ PCIDSKDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                                             iXOffset, iYOffset, 
                                             nTBXSize, nTBYSize,
                                             pData, nTBXSize, nTBYSize,
-                                            eType, 0, 0 );
+                                            eType, 0, 0, NULL );
                 if( eErr != CE_None )
                 {
                     return NULL;
@@ -1554,7 +1555,7 @@ PCIDSKDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                                             iXOffset, iYOffset, 
                                             nTBXSize, nTBYSize,
                                             pData, nTBXSize, nTBYSize,
-                                            eType, 0, 0 );
+                                            eType, 0, 0, NULL );
 
                 if( eErr != CE_None )
                 {
@@ -1617,6 +1618,7 @@ void GDALRegister_PCIDSK()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "PCIDSK" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "PCIDSK Database File" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

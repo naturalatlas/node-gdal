@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_overview.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gt_overview.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Code to build overviews of external databases as a TIFF file. 
@@ -37,7 +37,7 @@
 #include "gt_overview.h"
 #include "gtiff.h"
 
-CPL_CVSID("$Id: gt_overview.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gt_overview.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /*                         GTIFFWriteDirectory()                        */
@@ -476,6 +476,7 @@ GTIFFBuildOverviews( const char * pszFilename,
 /*      Create the file, if it does not already exist.                  */
 /* -------------------------------------------------------------------- */
     VSIStatBufL  sStatBuf;
+    VSILFILE* fpL = NULL;
 
     if( VSIStatExL( pszFilename, &sStatBuf, VSI_STAT_EXISTS_FLAG ) != 0 )
     {
@@ -562,7 +563,11 @@ GTIFFBuildOverviews( const char * pszFilename,
         if( bCreateBigTIFF )
             CPLDebug( "GTiff", "File being created as a BigTIFF." );
 
-        hOTIFF = VSI_TIFFOpen( pszFilename, (bCreateBigTIFF) ? "w+8" : "w+" );
+        fpL = VSIFOpenL( pszFilename, "w+" );
+        if( fpL == NULL )
+            hOTIFF = NULL;
+        else
+            hOTIFF = VSI_TIFFOpen( pszFilename, (bCreateBigTIFF) ? "w+8" : "w+", fpL );
         if( hOTIFF == NULL )
         {
             if( CPLGetLastErrorNo() == 0 )
@@ -570,7 +575,8 @@ GTIFFBuildOverviews( const char * pszFilename,
                           "Attempt to create new tiff file `%s'\n"
                           "failed in VSI_TIFFOpen().\n",
                           pszFilename );
-
+            if( fpL != NULL )
+                VSIFCloseL(fpL);
             return CE_Failure;
         }
     }
@@ -579,7 +585,11 @@ GTIFFBuildOverviews( const char * pszFilename,
 /* -------------------------------------------------------------------- */
     else 
     {
-        hOTIFF = VSI_TIFFOpen( pszFilename, "r+" );
+        fpL = VSIFOpenL( pszFilename, "r+" );
+        if( fpL == NULL )
+            hOTIFF = NULL;
+        else
+            hOTIFF = VSI_TIFFOpen( pszFilename, "r+", fpL );
         if( hOTIFF == NULL )
         {
             if( CPLGetLastErrorNo() == 0 )
@@ -587,7 +597,8 @@ GTIFFBuildOverviews( const char * pszFilename,
                           "Attempt to create new tiff file `%s'\n"
                           "failed in VSI_TIFFOpen().\n",
                           pszFilename );
-
+            if( fpL != NULL )
+                VSIFCloseL(fpL);
             return CE_Failure;
         }
     }
@@ -668,6 +679,8 @@ GTIFFBuildOverviews( const char * pszFilename,
     }
 
     XTIFFClose( hOTIFF );
+    VSIFCloseL(fpL);
+    fpL = NULL;
 
 /* -------------------------------------------------------------------- */
 /*      Open the overview dataset so that we can get at the overview    */
@@ -702,7 +715,10 @@ GTIFFBuildOverviews( const char * pszFilename,
         nPlanarConfig == PLANARCONFIG_CONTIG &&
         GDALDataTypeIsComplex(papoBandList[0]->GetRasterDataType()) == FALSE &&
         papoBandList[0]->GetColorTable() == NULL &&
-        (EQUALN(pszResampling, "NEAR", 4) || EQUAL(pszResampling, "AVERAGE") || EQUAL(pszResampling, "GAUSS")))
+        (EQUALN(pszResampling, "NEAR", 4) || EQUAL(pszResampling, "AVERAGE") ||
+         EQUAL(pszResampling, "GAUSS") || EQUAL(pszResampling, "CUBIC") ||
+         EQUAL(pszResampling, "CUBICSPLINE") || EQUAL(pszResampling, "LANCZOS") ||
+         EQUAL(pszResampling, "BILINEAR")))
     {
         /* In the case of pixel interleaved compressed overviews, we want to generate */
         /* the overviews for all the bands block by block, and not band after band, */

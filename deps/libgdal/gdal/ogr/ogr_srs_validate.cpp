@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_validate.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_srs_validate.cpp 27975 2014-11-17 12:37:48Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of the OGRSpatialReference::Validate() method and
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "osr_cs_wkt.h"
 
-CPL_CVSID("$Id: ogr_srs_validate.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_srs_validate.cpp 27975 2014-11-17 12:37:48Z rouault $");
 
 /* why would fipszone and zone be paramers when they relate to a composite
    projection which renders done into a non-zoned projection? */
@@ -127,6 +127,7 @@ static const char *papszProjectionSupported[] =
     SRS_PT_WAGNER_V,
     SRS_PT_WAGNER_VI,
     SRS_PT_WAGNER_VII,
+    SRS_PT_QSC,
     SRS_PT_GAUSSSCHREIBERTMERCATOR,
     SRS_PT_KROVAK,
     SRS_PT_CYLINDRICAL_EQUAL_AREA,
@@ -504,6 +505,11 @@ static const char *papszProjWithParms[] = {
     SRS_PT_WAGNER_VII,
     SRS_PP_FALSE_EASTING, 
     SRS_PP_FALSE_NORTHING,
+    NULL,
+
+    SRS_PT_QSC,
+    SRS_PP_LATITUDE_OF_ORIGIN,
+    SRS_PP_CENTRAL_MERIDIAN,
     NULL,
 
     SRS_PT_GAUSSSCHREIBERTMERCATOR,
@@ -1004,6 +1010,11 @@ OGRErr OGRSpatialReference::Validate(OGR_SRSNode *poRoot)
                 OGRErr eErr = ValidateAxis(poNode);
                 if (eErr != OGRERR_NONE)
                     return eErr;
+            }
+            else if( EQUAL(poNode->GetValue(),"EXTENSION") )
+            {
+                // We do not try to control the sub-organization of 
+                // EXTENSION nodes.
             }
             else if( EQUAL(poNode->GetValue(),"AUTHORITY") )
             {

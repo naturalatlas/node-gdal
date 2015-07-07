@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_mdb.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_mdb.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for MDB driver.
@@ -269,11 +269,11 @@ class OGRMDBLayer : public OGRLayer
                                     OGRSpatialReference* poSRS );
 
     virtual void        ResetReading();
-    virtual int         GetFeatureCount( int bForce );
+    virtual GIntBig     GetFeatureCount( int bForce );
     virtual OGRFeature *GetNextRawFeature();
     virtual OGRFeature *GetNextFeature();
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
@@ -311,7 +311,7 @@ class OGRMDBDataSource : public OGRDataSource
                         OGRMDBDataSource();
                         ~OGRMDBDataSource();
 
-    int                 Open( const char *, int bUpdate, int bTestOpen );
+    int                 Open( const char * );
     int                 OpenTable( const char *pszTableName, 
                                    const char *pszGeomCol,
                                    int bUpdate );

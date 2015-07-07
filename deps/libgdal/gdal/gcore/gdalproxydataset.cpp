@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxydataset.cpp 27723 2014-09-22 18:21:08Z goatbar $
+ * $Id: gdalproxydataset.cpp 28899 2015-04-14 09:27:00Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that act as proxy for underlying
@@ -30,7 +30,7 @@
 
 #include "gdal_proxy.h"
 
-CPL_CVSID("$Id: gdalproxydataset.cpp 27723 2014-09-22 18:21:08Z goatbar $");
+CPL_CVSID("$Id: gdalproxydataset.cpp 28899 2015-04-14 09:27:00Z rouault $");
 
 /* ******************************************************************** */
 /*                        GDALProxyDataset                              */
@@ -60,11 +60,12 @@ D_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, IRasterIO,
                         void * pData, int nBufXSize, int nBufYSize,
                         GDALDataType eBufType, 
                         int nBandCount, int *panBandMap,
-                        int nPixelSpace, int nLineSpace, int nBandSpace),
+                        GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
+                        GDALRasterIOExtraArg* psExtraArg),
                         ( eRWFlag, nXOff, nYOff, nXSize, nYSize, 
                         pData, nBufXSize, nBufYSize,
                         eBufType, nBandCount, panBandMap,
-                        nPixelSpace, nLineSpace, nBandSpace ))
+                        nPixelSpace, nLineSpace, nBandSpace, psExtraArg ))
 
 
 D_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, IBuildOverviews,
@@ -184,11 +185,12 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, IRasterIO,
                                 int nXOff, int nYOff, int nXSize, int nYSize,
                                 void * pData, int nBufXSize, int nBufYSize,
                                 GDALDataType eBufType,
-                                int nPixelSpace,
-                                int nLineSpace ), 
+                                GSpacing nPixelSpace,
+                                GSpacing nLineSpace,
+                                GDALRasterIOExtraArg* psExtraArg ), 
                         (eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                 pData, nBufXSize, nBufYSize, eBufType,
-                                nPixelSpace, nLineSpace ) )
+                                nPixelSpace, nLineSpace, psExtraArg ) )
 
 RB_PROXY_METHOD_WITH_RET(char**, NULL, GetMetadataDomainList, (), ())
 RB_PROXY_METHOD_WITH_RET(char**, NULL, GetMetadata, (const char * pszDomain), (pszDomain))
@@ -247,7 +249,7 @@ RB_PROXY_METHOD_WITH_RET(int, 0, HasArbitraryOverviews, (), ())
 RB_PROXY_METHOD_WITH_RET(int, 0,  GetOverviewCount, (), ())
 RB_PROXY_METHOD_WITH_RET(GDALRasterBand*, NULL,  GetOverview, (int arg1), (arg1))
 RB_PROXY_METHOD_WITH_RET(GDALRasterBand*, NULL,  GetRasterSampleOverview,
-                        (int arg1), (arg1))
+                        (GUIntBig arg1), (arg1))
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, BuildOverviews,
                         (const char * arg1, int arg2, int *arg3,
@@ -262,7 +264,7 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, AdviseRead,
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, GetHistogram,
                         ( double dfMin, double dfMax,
-                        int nBuckets, int * panHistogram,
+                        int nBuckets, GUIntBig * panHistogram,
                         int bIncludeOutOfRange, int bApproxOK,
                         GDALProgressFunc pfn, void *pProgressData ),
                         (dfMin, dfMax, nBuckets, panHistogram, bIncludeOutOfRange,
@@ -270,7 +272,7 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, GetHistogram,
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, GetDefaultHistogram,
                         (double *pdfMin, double *pdfMax,
-                        int *pnBuckets, int ** ppanHistogram,
+                        int *pnBuckets, GUIntBig ** ppanHistogram,
                         int bForce,
                         GDALProgressFunc pfn, void *pProgressData ),
                         (pdfMin, pdfMax, pnBuckets, ppanHistogram, bForce,
@@ -278,7 +280,7 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, GetDefaultHistogram,
 
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, SetDefaultHistogram,
                         ( double dfMin, double dfMax,
-                        int nBuckets, int * panHistogram ),
+                        int nBuckets, GUIntBig * panHistogram ),
                         (dfMin, dfMax, nBuckets, panHistogram))
 
 RB_PROXY_METHOD_WITH_RET(GDALRasterAttributeTable *, NULL,

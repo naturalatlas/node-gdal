@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrntflayer.cpp 26467 2013-09-14 09:16:12Z rouault $
+ * $Id: ogrntflayer.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  UK NTF Reader
  * Purpose:  Implements OGRNTFLayer class.
@@ -30,7 +30,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrntflayer.cpp 26467 2013-09-14 09:16:12Z rouault $");
+CPL_CVSID("$Id: ogrntflayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                            OGRNTFLayer()                             */
@@ -46,6 +46,7 @@ OGRNTFLayer::OGRNTFLayer( OGRNTFDataSource *poDSIn,
 {
     poDS = poDSIn;
     poFeatureDefn = poFeatureDefine;
+    SetDescription( poFeatureDefn->GetName() );
     pfnTranslator = pfnTranslatorIn;
 
     iCurrentReader = -1;

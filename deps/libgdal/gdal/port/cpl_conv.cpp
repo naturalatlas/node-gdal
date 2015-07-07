@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_conv.cpp 27550 2014-07-25 20:43:52Z rouault $
+ * $Id: cpl_conv.cpp 28601 2015-03-03 11:06:40Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Convenience functions.
@@ -34,23 +34,24 @@
 #include "cpl_string.h"
 #include "cpl_vsi.h"
 #include "cpl_multiproc.h"
+#include <errno.h>
 
-CPL_CVSID("$Id: cpl_conv.cpp 27550 2014-07-25 20:43:52Z rouault $");
+CPL_CVSID("$Id: cpl_conv.cpp 28601 2015-03-03 11:06:40Z rouault $");
 
 #if defined(WIN32CE)
 #  include "cpl_wince.h"
 #endif
 
-static void *hConfigMutex = NULL;
+static CPLMutex *hConfigMutex = NULL;
 static volatile char **papszConfigOptions = NULL;
 
 /* Used by CPLOpenShared() and friends */
-static void *hSharedFileMutex = NULL;
+static CPLMutex *hSharedFileMutex = NULL;
 static volatile int nSharedFileCount = 0;
 static volatile CPLSharedFileInfo *pasSharedFileList = NULL;
 
 /* Used by CPLsetlocale() */
-static void *hSetLocaleMutex = NULL;
+static CPLMutex *hSetLocaleMutex = NULL;
 
 /* Note: ideally this should be added in CPLSharedFileInfo* */
 /* but CPLSharedFileInfo is exposed in the API, hence that trick */
@@ -928,6 +929,93 @@ GUIntBig CPLScanUIntBig( const char *pszString, int nMaxLength )
 }
 
 /************************************************************************/
+/*                           CPLAtoGIntBig()                            */
+/************************************************************************/
+
+/**
+ * Convert a string to a 64 bit signed integer.
+ * 
+ * @param pszString String containing 64 bit signed integer.
+ * @return 64 bit signed integer.
+ * @since GDAL 2.0
+ */
+
+GIntBig CPLAtoGIntBig( const char* pszString )
+{
+#if defined(__MSVCRT__) || (defined(WIN32) && defined(_MSC_VER))
+    return _atoi64( pszString );
+# elif HAVE_ATOLL
+    return atoll( pszString );
+#else
+    return atol( pszString );
+#endif
+}
+
+#if defined(__MINGW32__)
+
+// mingw atoll() doesn't return ERANGE in case of overflow
+int CPLAtoGIntBigExHasOverflow(const char* pszString, GIntBig nVal)
+{
+    if( strlen(pszString) <= 18 )
+        return FALSE;
+    while( *pszString == ' ' )
+        pszString ++;
+    if( *pszString == '+' )
+        pszString ++;
+    char szBuffer[32];
+    sprintf(szBuffer, CPL_FRMT_GIB, nVal);
+    return strcmp(szBuffer, pszString) != 0;
+}
+
+#endif
+
+/************************************************************************/
+/*                          CPLAtoGIntBigEx()                           */
+/************************************************************************/
+
+/**
+ * Convert a string to a 64 bit signed integer.
+ * 
+ * @param pszString String containing 64 bit signed integer.
+ * @param bWarn Issue a warning if an overflow occurs during conversion
+ * @param pbOverflow Pointer to an integer to store if an overflow occured, or NULL
+ * @return 64 bit signed integer.
+ * @since GDAL 2.0
+ */
+
+GIntBig CPLAtoGIntBigEx( const char* pszString, int bWarn, int *pbOverflow )
+{
+    GIntBig nVal;
+    errno = 0;
+#if defined(__MSVCRT__) || (defined(WIN32) && defined(_MSC_VER))
+    nVal = _atoi64( pszString );
+# elif HAVE_ATOLL
+    nVal = atoll( pszString );
+#else
+    nVal = atol( pszString );
+#endif
+    if( errno == ERANGE
+#if defined(__MINGW32__)
+        || CPLAtoGIntBigExHasOverflow(pszString, nVal)
+#endif
+        )
+    {
+        if( pbOverflow ) *pbOverflow = TRUE;
+        if( bWarn )
+        {
+            CPLError(CE_Warning, CPLE_AppDefined,
+                     "64 bit integer overflow when converting %s",
+                     pszString);
+        }
+        while( *pszString == ' ' )
+            pszString ++;
+        return (*pszString == '-' ) ? GINTBIG_MIN : GINTBIG_MAX;
+    }
+    else if( pbOverflow ) *pbOverflow = FALSE;
+    return nVal;
+}
+
+/************************************************************************/
 /*                           CPLScanPointer()                           */
 /************************************************************************/
 
@@ -1282,54 +1370,28 @@ int CPLPrintPointer( char *pszBuffer, void *pValue, int nMaxLen )
  */
 
 int CPLPrintDouble( char *pszBuffer, const char *pszFormat,
-                    double dfValue, const char *pszLocale )
+                    double dfValue, CPL_UNUSED const char *pszLocale )
 {
-
-#define DOUBLE_BUFFER_SIZE 64
-
-    char    szTemp[DOUBLE_BUFFER_SIZE];
-    int     i;
-
     if ( !pszBuffer )
         return 0;
 
-#if defined(HAVE_LOCALE_H) && defined(HAVE_SETLOCALE)
-    char        *pszCurLocale = NULL;
-
-    if ( pszLocale || EQUAL( pszLocale, "" ) )
-    {
-        // Save the current locale
-        pszCurLocale = CPLsetlocale(LC_ALL, NULL );
-        // Set locale to the specified value
-        CPLsetlocale( LC_ALL, pszLocale );
-    }
-#else
-    (void) pszLocale;
-#endif
+    const int double_buffer_size = 64;
+    char szTemp[double_buffer_size];
 
 #if defined(HAVE_SNPRINTF)
-    snprintf( szTemp, DOUBLE_BUFFER_SIZE, pszFormat, dfValue );
+    CPLsnprintf( szTemp, double_buffer_size, pszFormat, dfValue );
 #else
-    sprintf( szTemp, pszFormat, dfValue );
+    CPLsprintf( szTemp, pszFormat, dfValue );
 #endif
-    szTemp[DOUBLE_BUFFER_SIZE - 1] = '\0';
+    szTemp[double_buffer_size - 1] = '\0';
 
-    for( i = 0; szTemp[i] != '\0'; i++ )
+    for( int i = 0; szTemp[i] != '\0'; i++ )
     {
         if( szTemp[i] == 'E' || szTemp[i] == 'e' )
             szTemp[i] = 'D';
     }
 
-#if defined(HAVE_LOCALE_H) && defined(HAVE_SETLOCALE)
-    // Restore stored locale back
-    if ( pszCurLocale )
-        CPLsetlocale( LC_ALL, pszCurLocale );
-#endif
-
     return CPLPrintString( pszBuffer, szTemp, 64 );
-
-#undef DOUBLE_BUFFER_SIZE
-
 }
 
 /************************************************************************/
@@ -1531,7 +1593,7 @@ static void CPLAccessConfigOption(const char* pszKey, int bGet)
   *     char* pszOldVal = pszOldValTmp ? CPLStrdup(pszOldValTmp) : NULL;
   *     // override with new value
   *     CPLSetConfigOption(pszKey, pszNewVal);
-  *     // do something usefull
+  *     // do something useful
   *     // restore old value
   *     CPLSetConfigOption(pszKey, pszOldVal);
   *     CPLFree(pszOldVal);
@@ -1736,7 +1798,7 @@ proj_strtod(char *nptr, char **endptr)
              * then restore it and return
              */
             *cp = '\0';
-            result = strtod(nptr, endptr);
+            result = CPLStrtod(nptr, endptr);
             *cp = c;
             return result;
         }
@@ -1745,7 +1807,7 @@ proj_strtod(char *nptr, char **endptr)
 
     /* no offending characters, just handle normally */
 
-    return strtod(nptr, endptr);
+    return CPLStrtod(nptr, endptr);
 }
 
 /************************************************************************/
@@ -1857,8 +1919,8 @@ const char *CPLDecToDMS( double dfAngle, const char * pszAxis,
     else
         pszHemisphere = "N";
 
-    sprintf( szFormat, "%%3dd%%2d\'%%%d.%df\"%s", nPrecision+3, nPrecision, pszHemisphere );
-    sprintf( szBuffer, szFormat, nDegrees, nMinutes, dfSeconds );
+    CPLsprintf( szFormat, "%%3dd%%2d\'%%%d.%df\"%s", nPrecision+3, nPrecision, pszHemisphere );
+    CPLsprintf( szBuffer, szFormat, nDegrees, nMinutes, dfSeconds );
 
     return( szBuffer );
 }
@@ -2244,7 +2306,7 @@ int CPLUnlinkTree( const char *pszPath )
 
 {
 /* -------------------------------------------------------------------- */
-/*      First, ensure there isn't any such file yet.                    */
+/*      First, ensure there is such a file.                             */
 /* -------------------------------------------------------------------- */
     VSIStatBufL sStatBuf;
 
@@ -2385,6 +2447,88 @@ int CPLCopyFile( const char *pszNewPath, const char *pszOldPath )
 }
 
 /************************************************************************/
+/*                            CPLCopyTree()                             */
+/************************************************************************/
+
+int CPLCopyTree( const char *pszNewPath, const char *pszOldPath )
+
+{
+    VSIStatBufL sStatBuf;
+
+    if( VSIStatL( pszOldPath, &sStatBuf ) != 0 )
+    {
+        CPLError( CE_Failure, CPLE_AppDefined, 
+                  "It seems no file system object called '%s' exists.",
+                  pszOldPath );
+
+        return -1;
+    }
+    if( VSIStatL( pszNewPath, &sStatBuf ) == 0 )
+    {
+        CPLError( CE_Failure, CPLE_AppDefined, 
+                  "It seems that a file system object called '%s' already exists.",
+                  pszNewPath );
+
+        return -1;
+    }
+
+    if( VSI_ISDIR( sStatBuf.st_mode ) )
+    {
+        if( VSIMkdir( pszNewPath, 0755 ) != 0 )
+        {
+            CPLError( CE_Failure, CPLE_AppDefined, 
+                    "Cannot create directory '%s'.",
+                    pszNewPath );
+
+            return -1;
+        }
+
+        char **papszItems = CPLReadDir( pszOldPath );
+        int  i;
+
+        for( i = 0; papszItems != NULL && papszItems[i] != NULL; i++ )
+        {
+            char *pszNewSubPath;
+            char *pszOldSubPath;
+            int nErr;
+
+            if( EQUAL(papszItems[i],".") || EQUAL(papszItems[i],"..") )
+                continue;
+
+            pszNewSubPath = CPLStrdup(
+                CPLFormFilename( pszNewPath, papszItems[i], NULL ) );
+            pszOldSubPath = CPLStrdup(
+                CPLFormFilename( pszOldPath, papszItems[i], NULL ) );
+
+            nErr = CPLCopyTree( pszNewSubPath, pszOldSubPath );
+
+            CPLFree( pszNewSubPath );
+            CPLFree( pszOldSubPath );
+
+            if( nErr != 0 )
+            {
+                CSLDestroy( papszItems );
+                return nErr;
+            }
+        }
+        CSLDestroy( papszItems );
+
+        return 0;
+    }
+    else if( VSI_ISREG( sStatBuf.st_mode ) )
+    {
+        return CPLCopyFile( pszNewPath, pszOldPath );
+    }
+    else
+    {
+        CPLError( CE_Failure, CPLE_AppDefined, 
+                  "Unrecognised filesystem object : '%s'.",
+                  pszOldPath );
+        return -1;
+    }
+}
+
+/************************************************************************/
 /*                            CPLMoveFile()                             */
 /************************************************************************/
 
@@ -2460,6 +2604,9 @@ CPLLocaleC::~CPLLocaleC()
  * potential data race. A mutex is used to provide a critical region so
  * that only one thread at a time can be executing setlocale().
  *
+ * The return should not be freed, and copied quickly as it may be invalidated
+ * by a following next call to CPLsetlocale().
+ *
  * @param category See your compiler's documentation on setlocale.
  * @param locale See your compiler's documentation on setlocale.
  *
@@ -2468,7 +2615,10 @@ CPLLocaleC::~CPLLocaleC()
 char* CPLsetlocale (int category, const char* locale)
 {
     CPLMutexHolder oHolder(&hSetLocaleMutex);
-    return setlocale(category, locale);
+    char* pszRet = setlocale(category, locale);
+    if( pszRet == NULL )
+        return pszRet;
+    return (char*)CPLSPrintf("%s", pszRet); /* to make it thread-locale storage */
 }
 
 

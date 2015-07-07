@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xlsx.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_xlsx.h 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  XLSX Translator
  * Purpose:  Definition of classes for OGR OpenOfficeSpreadsheet .xlsx driver.
@@ -75,20 +75,20 @@ class OGRXLSXLayer : public OGRMemLayer
 
     /* For external usage. Mess with FID */
     virtual OGRFeature *        GetNextFeature();
-    virtual OGRFeature         *GetFeature( long nFeatureId );
-    virtual OGRErr              SetFeature( OGRFeature *poFeature );
-    virtual OGRErr              DeleteFeature( long nFID );
+    virtual OGRFeature         *GetFeature( GIntBig nFeatureId );
+    virtual OGRErr              ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr              DeleteFeature( GIntBig nFID );
 
-    virtual OGRErr      SetNextByIndex( long nIndex )
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex )
     { Init(); return OGRMemLayer::SetNextByIndex(nIndex); }
 
-    OGRErr              CreateFeature( OGRFeature *poFeature )
-    { Init(); SetUpdated(); return OGRMemLayer::CreateFeature(poFeature); }
+    OGRErr              ICreateFeature( OGRFeature *poFeature )
+    { Init(); SetUpdated(); return OGRMemLayer::ICreateFeature(poFeature); }
 
     OGRFeatureDefn *    GetLayerDefn()
     { Init(); return OGRMemLayer::GetLayerDefn(); }
 
-    int                 GetFeatureCount( int bForce )
+    GIntBig                 GetFeatureCount( int bForce )
     { Init(); return OGRMemLayer::GetFeatureCount(bForce); }
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
@@ -135,6 +135,18 @@ typedef struct
     int               nBeginDepth;
 } HandlerState;
 
+class XLSXFieldTypeExtended
+{
+public:
+    OGRFieldType      eType;
+    int               bHasMS;
+
+                    XLSXFieldTypeExtended() : eType(OFTMaxType), bHasMS(FALSE) {}
+                    XLSXFieldTypeExtended(OGRFieldType eType,
+                                          int bHasMS = FALSE) :
+                                    eType(eType), bHasMS(bHasMS) {}
+};
+
 class OGRXLSXDataSource : public OGRDataSource
 {
     char*               pszName;
@@ -176,8 +188,8 @@ class OGRXLSXDataSource : public OGRDataSource
     std::vector<std::string>  apoCurLineTypes;
 
     int                        bInCellXFS;
-    std::map<int,OGRFieldType> apoMapStyleFormats;
-    std::vector<OGRFieldType>  apoStyles;
+    std::map<int,XLSXFieldTypeExtended> apoMapStyleFormats;
+    std::vector<XLSXFieldTypeExtended>  apoStyles;
 
     void                PushState(HandlerStateEnum eVal);
     void                startElementDefault(const char *pszName, const char **ppszAttr);
@@ -214,13 +226,13 @@ class OGRXLSXDataSource : public OGRDataSource
 
     virtual int                 TestCapability( const char * );
 
-    virtual OGRLayer* CreateLayer( const char * pszLayerName,
+    virtual OGRLayer* ICreateLayer( const char * pszLayerName,
                                 OGRSpatialReference *poSRS,
                                 OGRwkbGeometryType eType,
                                 char ** papszOptions );
     virtual OGRErr      DeleteLayer(int iLayer);
 
-    virtual OGRErr      SyncToDisk();
+    virtual void        FlushCache();
 
     void                startElementCbk(const char *pszName, const char **ppszAttr);
     void                endElementCbk(const char *pszName);

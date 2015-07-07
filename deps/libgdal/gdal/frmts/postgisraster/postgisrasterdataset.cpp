@@ -806,7 +806,7 @@ GBool PostGISRasterDataset::AddComplexSource(PostGISRasterTileDataset* poRTDS)
         "Tile bounding box from (%d, %d) of size (%d, %d) will "
         "cover raster bounding box from (%d, %d) of size "
         "(%d, %d)", 0, 0, 
-        poRTDS>GetRasterXSize(), 
+        poRTDS->GetRasterXSize(), 
         poRTDS->GetRasterYSize(),
         nDstXOff, nDstYOff, nDstXSize, nDstYSize);
 #endif
@@ -1007,7 +1007,6 @@ GBool PostGISRasterDataset::LoadSources(int nXOff, int nYOff, int nXSize, int nY
     }
     else
     {
-        CPLLocaleC oCLocale;
         double adfProjWin[8];
         PolygonFromCoords(nXOff, nYOff, nXOff + nXSize, nYOff + nYSize, adfProjWin); 
         osSpatialFilter.Printf("%s && "
@@ -1406,12 +1405,6 @@ PostGISRasterTileDataset* PostGISRasterDataset::BuildRasterTileDataset(const cha
 
         return NULL;
     }
-
-#ifdef DEBUG_VERBOSE
-    CPLDebug("PostGIS_Raster", "PostGISRasterDataset::"
-            "Tile pixel size = (%f, %f)", tilePixelSizeX, 
-            tilePixelSizeY);
-#endif
 
     int nTileWidth = atoi(papszParams[POS_WIDTH]);
     int nTileHeight = atoi(papszParams[POS_HEIGHT]);
@@ -1929,7 +1922,6 @@ const char * pszValidConnectionString)
             dfTileUpperLeftX = CPLAtof(papszParams[POS_UPPERLEFTX]);
             dfTileUpperLeftY = CPLAtof(papszParams[POS_UPPERLEFTY]);
         
-            CPLLocaleC oCLocale;
             papszSubdatasets[2 * i] = 
                 CPLStrdup(CPLSPrintf("SUBDATASET_%d_NAME=PG:%s schema=%s table=%s column=%s "
                     "where='abs(ST_UpperLeftX(%s) - %.8f) < 1e-8 AND "
@@ -2810,7 +2802,7 @@ GetConnection(const char * pszFilename, char ** ppszConnectionString,
 int PostGISRasterDataset::Identify(GDALOpenInfo* poOpenInfo)
 {
     if (poOpenInfo->pszFilename == NULL ||
-        poOpenInfo->fp != NULL ||
+        poOpenInfo->fpL != NULL ||
         !EQUALN(poOpenInfo->pszFilename, "PG:", 3))
     {
         return FALSE;
@@ -3522,7 +3514,7 @@ PostGISRasterDataset::Delete(const char* pszFilename)
     poConn = GetConnection(pszFilename, &pszConnectionString, 
         &pszSchema, &pszTable, &pszColumn, &pszWhere,
         &nMode, &bBrowseDatabase);
-    if (poConn == NULL) {
+    if (poConn == NULL || pszSchema == NULL || pszTable == NULL) {
         CPLFree(pszConnectionString);
         CPLFree(pszSchema);
         CPLFree(pszTable);
@@ -3682,6 +3674,7 @@ void GDALRegister_PostGISRaster() {
         poDriver = new PostGISRasterDriver();
 
         poDriver->SetDescription("PostGISRaster");
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem(GDAL_DMD_LONGNAME,
                 "PostGIS Raster driver");
         poDriver->SetMetadataItem( GDAL_DMD_SUBDATASETS, "YES" );

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrcouchdbdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBDriver.
@@ -31,7 +31,7 @@
 
 // g++ -g -Wall -fPIC -shared -o ogr_CouchDB.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/couchdb ogr/ogrsf_frmts/couchdb/*.c* -L. -lgdal -Iogr/ogrsf_frmts/geojson/jsonc
 
-CPL_CVSID("$Id: ogrcouchdbdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrcouchdbdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 extern "C" void RegisterOGRCouchDB();
 
@@ -61,6 +61,14 @@ const char *OGRCouchDBDriver::GetName()
 OGRDataSource *OGRCouchDBDriver::Open( const char * pszFilename, int bUpdate )
 
 {
+    if (strncmp(pszFilename, "http://", 7) == 0 ||
+        strncmp(pszFilename, "https://", 8) == 0)
+    {
+        /* ok */
+    }
+    else if (!EQUALN(pszFilename, "CouchDB:", 8))
+        return NULL;
+
     OGRCouchDBDataSource   *poDS = new OGRCouchDBDataSource();
 
     if( !poDS->Open( pszFilename, bUpdate ) )
@@ -111,6 +119,7 @@ int OGRCouchDBDriver::TestCapability( const char * pszCap )
 void RegisterOGRCouchDB()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRCouchDBDriver );
+    OGRSFDriver* poDriver = new OGRCouchDBDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "CouchDB / GeoCouch" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }
-

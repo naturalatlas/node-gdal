@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrodsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrodsdatasource.cpp 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  ODS Translator
  * Purpose:  Implements OGRODSDataSource class
@@ -34,7 +34,7 @@
 #include "ods_formula.h"
 #include <set>
 
-CPL_CVSID("$Id: ogrodsdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrodsdatasource.cpp 28900 2015-04-14 09:40:34Z rouault $");
 
 
 /************************************************************************/
@@ -93,7 +93,8 @@ void OGRODSLayer::SetUpdated(int bUpdatedIn)
 
 OGRErr OGRODSLayer::SyncToDisk()
 {
-    return poDS->SyncToDisk();
+    poDS->FlushCache();
+    return OGRERR_NONE;
 }
 
 /************************************************************************/
@@ -112,7 +113,7 @@ OGRFeature* OGRODSLayer::GetNextFeature()
 /*                           GetFeature()                               */
 /************************************************************************/
 
-OGRFeature* OGRODSLayer::GetFeature( long nFeatureId )
+OGRFeature* OGRODSLayer::GetFeature( GIntBig nFeatureId )
 {
     OGRFeature* poFeature = OGRMemLayer::GetFeature(nFeatureId - (1 + bHasHeaderLine));
     if (poFeature)
@@ -121,19 +122,19 @@ OGRFeature* OGRODSLayer::GetFeature( long nFeatureId )
 }
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
 
-OGRErr OGRODSLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRODSLayer::ISetFeature( OGRFeature *poFeature )
 {
     if (poFeature == NULL)
-        return OGRMemLayer::SetFeature(poFeature);
+        return OGRMemLayer::ISetFeature(poFeature);
 
-    long nFID = poFeature->GetFID();
+    GIntBig nFID = poFeature->GetFID();
     if (nFID != OGRNullFID)
         poFeature->SetFID(nFID - (1 + bHasHeaderLine));
     SetUpdated(); 
-    OGRErr eErr = OGRMemLayer::SetFeature(poFeature);
+    OGRErr eErr = OGRMemLayer::ISetFeature(poFeature);
     poFeature->SetFID(nFID);
     return eErr;
 }
@@ -142,7 +143,7 @@ OGRErr OGRODSLayer::SetFeature( OGRFeature *poFeature )
 /*                          DeleteFeature()                             */
 /************************************************************************/
 
-OGRErr OGRODSLayer::DeleteFeature( long nFID )
+OGRErr OGRODSLayer::DeleteFeature( GIntBig nFID )
 {
     SetUpdated();
     return OGRMemLayer::DeleteFeature(nFID - (1 + bHasHeaderLine));
@@ -196,7 +197,7 @@ OGRODSDataSource::OGRODSDataSource()
 OGRODSDataSource::~OGRODSDataSource()
 
 {
-    SyncToDisk();
+    FlushCache();
 
     CPLFree( pszName );
 
@@ -273,7 +274,8 @@ int OGRODSDataSource::Open( const char * pszFilename,
 /*                             Create()                                 */
 /************************************************************************/
 
-int OGRODSDataSource::Create( const char * pszFilename, CPL_UNUSED char **papszOptions )
+int OGRODSDataSource::Create( const char * pszFilename,
+                              CPL_UNUSED char **papszOptions )
 {
     bUpdated = TRUE;
     bUpdatable = TRUE;
@@ -426,7 +428,13 @@ OGRFieldType OGRODSDataSource::GetOGRFieldType(const char* pszValue,
              strcmp(pszValueType, "currency") == 0)
     {
         if (CPLGetValueType(pszValue) == CPL_VALUE_INTEGER)
-            return OFTInteger;
+        {
+            GIntBig nVal = CPLAtoGIntBig(pszValue);
+            if( (GIntBig)(int)nVal != nVal )
+                return OFTInteger64;
+            else
+                return OFTInteger;
+        }
         else
             return OFTReal;
     }
@@ -481,14 +489,10 @@ static void SetField(OGRFeature* poFeature,
     }
     else if (eType == OFTDate || eType == OFTDateTime)
     {
-        int nYear, nMonth, nDay, nHour, nMinute, nTZ;
-        float fCur;
-        if (OGRParseXMLDateTime( pszValue,
-                                 &nYear, &nMonth, &nDay,
-                                 &nHour, &nMinute, &fCur, &nTZ) )
+        OGRField sField;
+        if (OGRParseXMLDateTime( pszValue, &sField ))
         {
-            poFeature->SetField(i, nYear, nMonth, nDay,
-                                nHour, nMinute, (int)fCur, nTZ);
+            poFeature->SetField(i, &sField);
         }
     }
     else
@@ -885,9 +889,13 @@ void OGRODSDataSource::endElementRow(CPL_UNUSED const char *pszName)
                         {
                             /* ok */
                         }
-                        else if (eFieldType == OFTReal && eValType == OFTInteger)
+                        else if (eFieldType == OFTReal && (eValType == OFTInteger || eValType == OFTInteger64))
                         {
                            /* ok */;
+                        }
+                        else if (eFieldType == OFTInteger64 && eValType == OFTInteger )
+                        {
+                            /* ok */;
                         }
                         else if (eFieldType != OFTString && eValType != eFieldType)
                         {
@@ -896,9 +904,11 @@ void OGRODSDataSource::endElementRow(CPL_UNUSED const char *pszName)
                             if ((eFieldType == OFTDate || eFieldType == OFTTime) &&
                                    eValType == OFTDateTime)
                                 oNewFieldDefn.SetType(OFTDateTime);
-                            else if (eFieldType == OFTInteger &&
+                            else if ((eFieldType == OFTInteger || eFieldType == OFTInteger64) &&
                                      eValType == OFTReal)
                                 oNewFieldDefn.SetType(OFTReal);
+                            else if( eFieldType == OFTInteger && eValType == OFTInteger64 )
+                                oNewFieldDefn.SetType(OFTInteger64);
                             else
                                 oNewFieldDefn.SetType(OFTString);
                             poCurLayer->AlterFieldDefn(i, &oNewFieldDefn,
@@ -1203,15 +1213,14 @@ void OGRODSDataSource::AnalyseSettings()
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRODSDataSource::CreateLayer( const char * pszLayerName,
-                               CPL_UNUSED OGRSpatialReference *poSRS,
-                               CPL_UNUSED OGRwkbGeometryType eType,
-                               char ** papszOptions )
-
+OGRODSDataSource::ICreateLayer( const char * pszLayerName,
+                                CPL_UNUSED OGRSpatialReference *poSRS,
+                                CPL_UNUSED OGRwkbGeometryType eType,
+                                char ** papszOptions )
 {
 /* -------------------------------------------------------------------- */
 /*      Verify we are in update mode.                                   */
@@ -1427,27 +1436,46 @@ static void WriteLayer(VSILFILE* fp, OGRLayer* poLayer)
                                 "office:value=\"%d\"/>\n",
                                 poFeature->GetFieldAsInteger(j));
                 }
-                else if (eType == OFTDateTime)
+                else if (eType == OFTInteger64)
                 {
-                    int nYear, nMonth, nDay, nHour, nMinute, nSecond, nTZFlag;
-                    poFeature->GetFieldAsDateTime(j, &nYear, &nMonth, &nDay,
-                                                    &nHour, &nMinute, &nSecond, &nTZFlag);
-                    VSIFPrintfL(fp, "<table:table-cell table:style-name=\"stDateTime\" "
-                                "office:value-type=\"date\" "
-                                "office:date-value=\"%04d-%02d-%02dT%02d:%02d:%02d\">\n",
-                                nYear, nMonth, nDay, nHour, nMinute, nSecond);
-                    VSIFPrintfL(fp, "<text:p>%02d/%02d/%04d %02d:%02d:%02d</text:p>\n",
-                                nDay, nMonth, nYear, nHour, nMinute, nSecond);
-                    VSIFPrintfL(fp, "</table:table-cell>\n");
+                    VSIFPrintfL(fp, "<table:table-cell office:value-type=\"float\" "
+                                "office:value=\"" CPL_FRMT_GIB "\"/>\n",
+                                poFeature->GetFieldAsInteger64(j));
                 }
                 else if (eType == OFTDateTime)
+                {
+                    int nYear, nMonth, nDay, nHour, nMinute, nTZFlag;
+                    float fSecond;
+                    poFeature->GetFieldAsDateTime(j, &nYear, &nMonth, &nDay,
+                                                    &nHour, &nMinute, &fSecond, &nTZFlag );
+                    if( OGR_GET_MS(fSecond) )
+                    {
+                        VSIFPrintfL(fp, "<table:table-cell table:style-name=\"stDateTimeMilliseconds\" "
+                                    "office:value-type=\"date\" "
+                                    "office:date-value=\"%04d-%02d-%02dT%02d:%02d:%06.3f\">\n",
+                                    nYear, nMonth, nDay, nHour, nMinute, fSecond);
+                        VSIFPrintfL(fp, "<text:p>%02d/%02d/%04d %02d:%02d:%06.3f</text:p>\n",
+                                    nDay, nMonth, nYear, nHour, nMinute, fSecond);
+                    }
+                    else
+                    {
+                        VSIFPrintfL(fp, "<table:table-cell table:style-name=\"stDateTime\" "
+                                    "office:value-type=\"date\" "
+                                    "office:date-value=\"%04d-%02d-%02dT%02d:%02d:%02d\">\n",
+                                    nYear, nMonth, nDay, nHour, nMinute, (int)fSecond);
+                        VSIFPrintfL(fp, "<text:p>%02d/%02d/%04d %02d:%02d:%02d</text:p>\n",
+                                    nDay, nMonth, nYear, nHour, nMinute, (int)fSecond);
+                    }
+                    VSIFPrintfL(fp, "</table:table-cell>\n");
+                }
+                else if (eType == OFTDate)
                 {
                     int nYear, nMonth, nDay, nHour, nMinute, nSecond, nTZFlag;
                     poFeature->GetFieldAsDateTime(j, &nYear, &nMonth, &nDay,
                                                     &nHour, &nMinute, &nSecond, &nTZFlag);
                     VSIFPrintfL(fp, "<table:table-cell table:style-name=\"stDate\" "
                                 "office:value-type=\"date\" "
-                                "office:date-value=\"%04d-%02d-%02dT\">\n",
+                                "office:date-value=\"%04d-%02d-%02d\">\n",
                                 nYear, nMonth, nDay);
                     VSIFPrintfL(fp, "<text:p>%02d/%02d/%04d</text:p>\n",
                                 nDay, nMonth, nYear);
@@ -1498,13 +1526,13 @@ static void WriteLayer(VSILFILE* fp, OGRLayer* poLayer)
 }
 
 /************************************************************************/
-/*                            SyncToDisk()                              */
+/*                            FlushCache()                              */
 /************************************************************************/
 
-OGRErr OGRODSDataSource::SyncToDisk()
+void OGRODSDataSource::FlushCache()
 {
     if (!bUpdated)
-        return OGRERR_NONE;
+        return;
 
     CPLAssert(fpSettings == NULL);
     CPLAssert(fpContent == NULL);
@@ -1516,7 +1544,7 @@ OGRErr OGRODSDataSource::SyncToDisk()
         {
             CPLError(CE_Failure, CPLE_FileIO,
                     "Cannot delete %s", pszName);
-            return OGRERR_FAILURE;
+            return;
         }
     }
 
@@ -1526,16 +1554,25 @@ OGRErr OGRODSDataSource::SyncToDisk()
     {
         CPLError(CE_Failure, CPLE_FileIO,
                  "Cannot create %s", pszName);
-        return OGRERR_FAILURE;
+        return;
     }
 
     /* Write uncopressed mimetype */
     char** papszOptions = CSLAddString(NULL, "COMPRESSED=NO");
-    CPLCreateFileInZip(hZIP, "mimetype", papszOptions );
-    CPLWriteFileInZip(hZIP, "application/vnd.oasis.opendocument.spreadsheet",
-                      strlen("application/vnd.oasis.opendocument.spreadsheet"));
-    CPLCloseFileInZip(hZIP);
+    if( CPLCreateFileInZip(hZIP, "mimetype", papszOptions ) != CE_None )
+    {
+        CSLDestroy(papszOptions);
+        CPLCloseZip(hZIP);
+        return;
+    }
     CSLDestroy(papszOptions);
+    if( CPLWriteFileInZip(hZIP, "application/vnd.oasis.opendocument.spreadsheet",
+                      strlen("application/vnd.oasis.opendocument.spreadsheet")) != CE_None )
+    {
+        CPLCloseZip(hZIP);
+        return;
+    }
+    CPLCloseFileInZip(hZIP);
 
     /* Now close ZIP file */
     CPLCloseZip(hZIP);
@@ -1544,7 +1581,7 @@ OGRErr OGRODSDataSource::SyncToDisk()
     /* Re-open with VSILFILE */
     VSILFILE* fpZIP = VSIFOpenL(CPLSPrintf("/vsizip/%s", pszName), "ab");
     if (fpZIP == NULL)
-        return OGRERR_FAILURE;
+        return;
 
     VSILFILE* fp;
     int i;
@@ -1679,6 +1716,19 @@ OGRErr OGRODSDataSource::SyncToDisk()
     VSIFPrintfL(fp, "<number:text>:</number:text>\n");
     VSIFPrintfL(fp, "<number:seconds number:style=\"long\"/>\n");
     VSIFPrintfL(fp, "</number:date-style>\n");
+    VSIFPrintfL(fp, "<number:date-style style:name=\"nDateTimeMilliseconds\">\n");
+    VSIFPrintfL(fp, "<number:day number:style=\"long\"/>\n");
+    VSIFPrintfL(fp, "<number:text>/</number:text>\n");
+    VSIFPrintfL(fp, "<number:month number:style=\"long\"/>\n");
+    VSIFPrintfL(fp, "<number:text>/</number:text>\n");
+    VSIFPrintfL(fp, "<number:year number:style=\"long\"/>\n");
+    VSIFPrintfL(fp, "<number:text> </number:text>\n");
+    VSIFPrintfL(fp, "<number:hours number:style=\"long\"/>\n");
+    VSIFPrintfL(fp, "<number:text>:</number:text>\n");
+    VSIFPrintfL(fp, "<number:minutes number:style=\"long\"/>\n");
+    VSIFPrintfL(fp, "<number:text>:</number:text>\n");
+    VSIFPrintfL(fp, "<number:seconds number:style=\"long\" number:decimal-places=\"3\"/>\n");
+    VSIFPrintfL(fp, "</number:date-style>\n");
     VSIFPrintfL(fp, "<style:style style:name=\"stDate\" "
                     "style:family=\"table-cell\" "
                     "style:parent-style-name=\"Default\" "
@@ -1691,6 +1741,10 @@ OGRErr OGRODSDataSource::SyncToDisk()
                     "style:family=\"table-cell\" "
                     "style:parent-style-name=\"Default\" "
                     "style:data-style-name=\"nDateTime\"/>\n");
+    VSIFPrintfL(fp, "<style:style style:name=\"stDateTimeMilliseconds\" "
+                    "style:family=\"table-cell\" "
+                    "style:parent-style-name=\"Default\" "
+                    "style:data-style-name=\"nDateTimeMilliseconds\"/>\n");
     VSIFPrintfL(fp, "</office:automatic-styles>\n");
     VSIFPrintfL(fp, "<office:body>\n");
     VSIFPrintfL(fp, "<office:spreadsheet>\n");
@@ -1713,7 +1767,7 @@ OGRErr OGRODSDataSource::SyncToDisk()
         ((OGRODSLayer*)papoLayers[i])->SetUpdated(FALSE);
     }
 
-    return OGRERR_NONE;
+    return;
 }
 
 /************************************************************************/

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfwritejpeg.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfwritejpeg.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  NITF Read/Write Translator
  * Purpose:  GDALDataset/GDALRasterBand implementation on top of "nitflib".
@@ -204,7 +204,7 @@ NITFWriteJPEGBlock( GDALDataset *poSrcDS, VSILFILE *fp,
             eErr = poSrcDS->RasterIO( GF_Read, nBlockXSize * nBlockXOff, iLine + nBlockYSize * nBlockYOff, nBlockXSizeToRead, 1, 
                                     pabyScanline, nBlockXSizeToRead, 1, eWorkDT,
                                     nBands, anBandList, 
-                                    nBands*nWorkDTSize, nBands * nBlockXSize * nWorkDTSize, nWorkDTSize );
+                                    nBands*nWorkDTSize, nBands * nBlockXSize * nWorkDTSize, nWorkDTSize, NULL );
 
 #if !defined(JPEG_LIB_MK1_OR_12BIT)
             /* Repeat the last pixel till the end of the line */

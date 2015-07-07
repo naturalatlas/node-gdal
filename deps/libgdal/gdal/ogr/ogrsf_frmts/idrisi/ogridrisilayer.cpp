@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogridrisilayer.cpp 27500 2014-07-06 15:01:51Z rouault $
+ * $Id: ogridrisilayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  Idrisi Translator
  * Purpose:  Implements OGRIdrisiLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogridrisilayer.cpp 27500 2014-07-06 15:01:51Z rouault $");
+CPL_CVSID("$Id: ogridrisilayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                         OGRIdrisiLayer()                             */
@@ -62,6 +62,7 @@ OGRIdrisiLayer::OGRIdrisiLayer( const char* pszFilename,
         poSRS = NULL;
 
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
     poFeatureDefn->SetGeomType( eGeomType );
@@ -161,7 +162,7 @@ int OGRIdrisiLayer::Detect_AVL_ADC(const char* pszFilename)
     if( pszRecords == NULL || atoi(pszRecords) != (int)nTotalFeatures )
     {
         CPLDebug("IDRISI", ".adc file found, but 'records' not found or not "
-                 "consistant with feature number declared in .vdc");
+                 "consistent with feature number declared in .vdc");
         CSLDestroy( papszADC );
         return FALSE;
     }
@@ -608,7 +609,7 @@ OGRErr OGRIdrisiLayer::GetExtent(OGREnvelope *psExtent, int bForce)
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRIdrisiLayer::GetFeatureCount( int bForce )
+GIntBig OGRIdrisiLayer::GetFeatureCount( int bForce )
 {
     if (nTotalFeatures > 0 && m_poFilterGeom == NULL && m_poAttrQuery == NULL)
         return nTotalFeatures;

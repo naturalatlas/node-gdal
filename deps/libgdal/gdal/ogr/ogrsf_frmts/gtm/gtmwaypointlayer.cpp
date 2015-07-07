@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtmwaypointlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gtmwaypointlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of gtmwaypoint class.
@@ -37,7 +37,7 @@ GTMWaypointLayer::GTMWaypointLayer( const char* pszName,
                                     OGRGTMDataSource* poDSIn )
 {
     poCT = NULL;
-  
+
     /* We are implementing just WGS84, although GTM supports other datum
        formats. */
     if( poSRSIn != NULL )
@@ -80,6 +80,7 @@ GTMWaypointLayer::GTMWaypointLayer( const char* pszName,
     nTotalFCount = poDS->getNWpts();
 
     poFeatureDefn = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType ( wkbPoint );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -227,9 +228,9 @@ void GTMWaypointLayer::WriteFeatureAttributes( OGRFeature *poFeature, float alti
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
-OGRErr GTMWaypointLayer::CreateFeature (OGRFeature *poFeature)
+OGRErr GTMWaypointLayer::ICreateFeature (OGRFeature *poFeature)
 {
     VSILFILE* fp = poDS->getOutputFP();
     if (fp == NULL)
@@ -347,7 +348,7 @@ OGRFeature* GTMWaypointLayer::GetNextFeature()
     return NULL;
 }
 
-int GTMWaypointLayer::GetFeatureCount(int bForce)
+GIntBig GTMWaypointLayer::GetFeatureCount(int bForce)
 {
     if (m_poFilterGeom == NULL && m_poAttrQuery == NULL)
         return poDS->getNWpts();

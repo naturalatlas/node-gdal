@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rs2dataset.cpp 27739 2014-09-25 18:49:52Z goatbar $
+ * $Id: rs2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  Polarimetric Workstation
  * Purpose:  Radarsat 2 - XML Products (product.xml) driver
@@ -32,7 +32,7 @@
 #include "cpl_minixml.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: rs2dataset.cpp 27739 2014-09-25 18:49:52Z goatbar $");
+CPL_CVSID("$Id: rs2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void    GDALRegister_RS2(void);
@@ -223,7 +223,7 @@ CPLErr RS2RasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                   nRequestXSize, nRequestYSize,
                                   pImage, nRequestXSize, nRequestYSize, 
                                   GDT_Int16,
-                                  2, NULL, 4, nBlockXSize * 4, 2 );
+                                  2, NULL, 4, nBlockXSize * 4, 2, NULL );
 
 /* -------------------------------------------------------------------- */
 /*      File has one sample marked as sample format void, a 32bits.     */
@@ -239,7 +239,7 @@ CPLErr RS2RasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                   nRequestXSize, nRequestYSize, 
                                   pImage, nRequestXSize, nRequestYSize, 
                                   GDT_UInt32,
-                                  1, NULL, 4, nBlockXSize * 4, 0 );
+                                  1, NULL, 4, nBlockXSize * 4, 0, NULL );
 
 #ifdef CPL_LSB
         /* First, undo the 32bit swap. */
@@ -264,7 +264,7 @@ CPLErr RS2RasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                   nRequestXSize, nRequestYSize, 
                                   pImage, nRequestXSize, nRequestYSize,
                                   GDT_UInt16,
-                                  1, NULL, 2, nBlockXSize * 2, 0 );
+                                  1, NULL, 2, nBlockXSize * 2, 0, NULL );
     else if ( eDataType == GDT_Byte ) 
         /* Ticket #2104: Support for ScanSAR products */
         return
@@ -274,7 +274,7 @@ CPLErr RS2RasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                   nRequestXSize, nRequestYSize,
                                   pImage, nRequestXSize, nRequestYSize,
                                   GDT_Byte,
-                                  1, NULL, 1, nBlockXSize, 0 );
+                                  1, NULL, 1, nBlockXSize, 0, NULL );
     else
     {
         CPLAssert( FALSE );
@@ -428,7 +428,7 @@ CPLErr RS2CalibRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                   nBlockXSize, nRequestYSize,
                                   pnImageTmp, nBlockXSize, nRequestYSize, 
                                   GDT_Int16,
-                                  2, NULL, 4, nBlockXSize * 4, 2 );
+                                  2, NULL, 4, nBlockXSize * 4, 2, NULL );
 
         }
         else {
@@ -439,7 +439,7 @@ CPLErr RS2CalibRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                       nBlockXSize, nRequestYSize, 
                                       pnImageTmp, nBlockXSize, nRequestYSize, 
                                       GDT_UInt32,
-                                      1, NULL, 4, nBlockXSize * 4, 0 );
+                                      1, NULL, 4, nBlockXSize * 4, 0, NULL );
 
 #ifdef CPL_LSB
             /* First, undo the 32bit swap. */ 
@@ -475,7 +475,7 @@ CPLErr RS2CalibRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                               nBlockXSize, nRequestYSize, 
                               pnImageTmp, nBlockXSize, nRequestYSize,
                               GDT_UInt16,
-                              1, NULL, 2, nBlockXSize * 2, 0 );
+                              1, NULL, 2, nBlockXSize * 2, 0, NULL );
 
         /* iterate over detected values */
         for (int i = 0; i < nBlockYSize; i++) {
@@ -499,7 +499,7 @@ CPLErr RS2CalibRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                             nBlockXSize, nRequestYSize,
                             pnImageTmp, nBlockXSize, nRequestYSize,
                             GDT_Byte,
-                            1, NULL, 1, 1, 0);
+                            1, NULL, 1, 1, 0, NULL);
 
         /* iterate over detected values */
         for (int i = 0; i < nBlockYSize; i++) {
@@ -1135,17 +1135,17 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
             double testx, testy, br_x, br_y, tl_x, tl_y, tr_x, tr_y, 
                 bl_x, bl_y; 
 
-            tl_x = strtod(CPLGetXMLValue( psPos, 
+            tl_x = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "upperLeftCorner.mapCoordinate.easting", "0.0" ), NULL);
-            tl_y = strtod(CPLGetXMLValue( psPos, 
+            tl_y = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "upperLeftCorner.mapCoordinate.northing", "0.0" ), NULL);
-            bl_x = strtod(CPLGetXMLValue( psPos, 
+            bl_x = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "lowerLeftCorner.mapCoordinate.easting", "0.0" ), NULL);
-            bl_y = strtod(CPLGetXMLValue( psPos, 
+            bl_y = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "lowerLeftCorner.mapCoordinate.northing", "0.0" ), NULL);
-            tr_x = strtod(CPLGetXMLValue( psPos, 
+            tr_x = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "upperRightCorner.mapCoordinate.easting", "0.0" ), NULL);
-            tr_y = strtod(CPLGetXMLValue( psPos, 
+            tr_y = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "upperRightCorner.mapCoordinate.northing", "0.0" ), NULL);
             poDS->adfGeoTransform[1] = (tr_x - tl_x)/(poDS->nRasterXSize - 1);
             poDS->adfGeoTransform[4] = (tr_y - tl_y)/(poDS->nRasterXSize - 1);
@@ -1157,9 +1157,9 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
                                         - 0.5*poDS->adfGeoTransform[5]);
 
             /* Use bottom right pixel to test geotransform */
-            br_x = strtod(CPLGetXMLValue( psPos, 
+            br_x = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "lowerRightCorner.mapCoordinate.easting", "0.0"  ), NULL);
-            br_y = strtod(CPLGetXMLValue( psPos, 
+            br_y = CPLStrtod(CPLGetXMLValue( psPos, 
                                           "lowerRightCorner.mapCoordinate.northing", "0.0"  ), NULL);
             testx = poDS->adfGeoTransform[0] + poDS->adfGeoTransform[1] *
                 (poDS->nRasterXSize - 0.5) + poDS->adfGeoTransform[2] *
@@ -1200,9 +1200,9 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
         OGRSpatialReference oLL, oPrj;
 
         pszEllipsoidName = CPLGetXMLValue( psEllipsoid, "ellipsoidName", "" );
-        minor_axis = atof(CPLGetXMLValue( psEllipsoid, "semiMinorAxis", 
+        minor_axis = CPLAtof(CPLGetXMLValue( psEllipsoid, "semiMinorAxis", 
                                           "0.0" ));
-        major_axis = atof(CPLGetXMLValue( psEllipsoid, "semiMajorAxis", 
+        major_axis = CPLAtof(CPLGetXMLValue( psEllipsoid, "semiMajorAxis", 
                                           "0.0" ));
 
         if ( EQUAL(pszEllipsoidName, "") || ( minor_axis == 0.0 ) || 
@@ -1248,9 +1248,9 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
                 pszHemisphere = CPLGetXMLValue( psUtmParams,
                                                 "hemisphere", "" );
 #if 0
-                origEasting = strtod(CPLGetXMLValue( psUtmParams,
+                origEasting = CPLStrtod(CPLGetXMLValue( psUtmParams,
                                                      "mapOriginFalseEasting", "0.0" ), NULL);
-                origNorthing = strtod(CPLGetXMLValue( psUtmParams,
+                origNorthing = CPLStrtod(CPLGetXMLValue( psUtmParams,
                                                       "mapOriginFalseNorthing", "0.0" ), NULL);
 #endif
                 if ( EQUALN(pszHemisphere,"southern",8) )
@@ -1264,17 +1264,17 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
             else if ((psNspParams != NULL) && poDS->bHaveGeoTransform) {
                 double origEasting, origNorthing, copLong, copLat, sP1, sP2;
 
-                origEasting = strtod(CPLGetXMLValue( psNspParams, 
+                origEasting = CPLStrtod(CPLGetXMLValue( psNspParams, 
                                                      "mapOriginFalseEasting", "0.0" ), NULL);
-                origNorthing = strtod(CPLGetXMLValue( psNspParams, 
+                origNorthing = CPLStrtod(CPLGetXMLValue( psNspParams, 
                                                       "mapOriginFalseNorthing", "0.0" ), NULL);
-                copLong = strtod(CPLGetXMLValue( psNspParams,  
+                copLong = CPLStrtod(CPLGetXMLValue( psNspParams,  
                                                  "centerOfProjectionLongitude", "0.0" ), NULL);
-                copLat = strtod(CPLGetXMLValue( psNspParams, 
+                copLat = CPLStrtod(CPLGetXMLValue( psNspParams, 
                                                 "centerOfProjectionLatitude", "0.0" ), NULL);
-                sP1 = strtod(CPLGetXMLValue( psNspParams, 
+                sP1 = CPLStrtod(CPLGetXMLValue( psNspParams, 
                                              "standardParallels1", "0.0" ), NULL);
-                sP2 = strtod(CPLGetXMLValue( psNspParams, 
+                sP2 = CPLStrtod(CPLGetXMLValue( psNspParams, 
                                              "standardParallels2", "0.0" ), NULL);
 
                 if (EQUALN(pszProj,"ARC",3)) {
@@ -1359,15 +1359,15 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
             psGCP->pszId = CPLStrdup( szID );
             psGCP->pszInfo = CPLStrdup("");
             psGCP->dfGCPPixel = 
-                atof(CPLGetXMLValue(psNode,"imageCoordinate.pixel","0"));
+                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.pixel","0"));
             psGCP->dfGCPLine = 
-                atof(CPLGetXMLValue(psNode,"imageCoordinate.line","0"));
+                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.line","0"));
             psGCP->dfGCPX = 
-                atof(CPLGetXMLValue(psNode,"geodeticCoordinate.longitude",""));
+                CPLAtof(CPLGetXMLValue(psNode,"geodeticCoordinate.longitude",""));
             psGCP->dfGCPY = 
-                atof(CPLGetXMLValue(psNode,"geodeticCoordinate.latitude",""));
+                CPLAtof(CPLGetXMLValue(psNode,"geodeticCoordinate.latitude",""));
             psGCP->dfGCPZ = 
-                atof(CPLGetXMLValue(psNode,"geodeticCoordinate.height",""));
+                CPLAtof(CPLGetXMLValue(psNode,"geodeticCoordinate.height",""));
         }
     }
 
@@ -1520,6 +1520,7 @@ void GDALRegister_RS2()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "RS2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "RadarSat 2 XML Product" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_rs2.html" );

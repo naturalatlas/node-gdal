@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_error.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_error.cpp 29330 2015-06-14 12:11:11Z rouault $
  *
  * Name:     cpl_error.cpp
  * Project:  CPL - Common Portability Library
@@ -30,6 +30,7 @@
  ****************************************************************************/
 
 #include "cpl_error.h"
+#include "cpl_string.h"
 #include "cpl_vsi.h"
 #include "cpl_conv.h"
 #include "cpl_multiproc.h"
@@ -42,9 +43,9 @@
 #define TIMESTAMP_DEBUG
 //#define MEMORY_DEBUG
 
-CPL_CVSID("$Id: cpl_error.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_error.cpp 29330 2015-06-14 12:11:11Z rouault $");
 
-static void *hErrorMutex = NULL;
+static CPLMutex *hErrorMutex = NULL;
 static void *pErrorHandlerUserData = NULL; 
 static CPLErrorHandler pfnErrorHandler = CPLDefaultErrorHandler;
 
@@ -139,7 +140,7 @@ void* CPL_STDCALL CPLGetErrorHandlerUserData(void)
  *
  * The default behaviour of CPLError() is to report errors to stderr,
  * and to abort() after reporting a CE_Fatal error.  It is expected that
- * some applications will want to supress error reporting, and will want to
+ * some applications will want to suppress error reporting, and will want to
  * install a C++ exception, or longjmp() approach to no local fatal error
  * recovery.
  *
@@ -214,7 +215,7 @@ void    CPLErrorV(CPLErr eErrClass, int err_no, const char *fmt, va_list args )
             }
         }
 
-        while( ((nPR = vsnprintf( psCtx->szLastErrMsg+nPreviousSize, 
+        while( ((nPR = CPLvsnprintf( psCtx->szLastErrMsg+nPreviousSize, 
                                  psCtx->nLastErrMsgMax-nPreviousSize, fmt, wrk_args )) == -1
                 || nPR >= psCtx->nLastErrMsgMax-nPreviousSize-1)
                && psCtx->nLastErrMsgMax < 1000000 )
@@ -234,11 +235,27 @@ void    CPLErrorV(CPLErr eErrClass, int err_no, const char *fmt, va_list args )
         va_end( wrk_args );
     }
 #else
-    vsprintf( psCtx->szLastErrMsg, fmt, args);
+    // !HAVE_VSNPRINTF
+    CPLvsnprintf( psCtx->szLastErrMsg, psCtx->nLastErrMsgMax, fmt, args);
 #endif
 
 /* -------------------------------------------------------------------- */
-/*      If the user provided his own error handling function, then      */
+/*      Obfuscate any password in error message                         */
+/* -------------------------------------------------------------------- */
+
+    char* pszPassword = strstr(psCtx->szLastErrMsg, "password=");
+    if( pszPassword != NULL )
+    {
+        char* pszIter = pszPassword + strlen("password=");
+        while( *pszIter != ' ' && *pszIter != '\0' )
+        {
+            *pszIter = 'X';
+            pszIter ++;
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      If the user provided an handling function, then                 */
 /*      call it, otherwise print the error to stderr and return.        */
 /* -------------------------------------------------------------------- */
     psCtx->nLastErrNo = err_no;
@@ -439,7 +456,7 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /* -------------------------------------------------------------------- */
 #ifdef MEMORY_DEBUG
     char szVmSize[32];
-    sprintf( szVmSize, "[VmSize: %d] ", CPLGetProcessMemorySize());
+    CPLsprintf( szVmSize, "[VmSize: %d] ", CPLGetProcessMemorySize());
     strcat( pszMessage, szVmSize );
 #endif
 
@@ -455,13 +472,26 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /*      Format the application provided portion of the debug message.   */
 /* -------------------------------------------------------------------- */
     va_start(args, pszFormat);
-#if defined(HAVE_VSNPRINTF)
-    vsnprintf(pszMessage+strlen(pszMessage), ERROR_MAX - strlen(pszMessage), 
+
+    CPLvsnprintf(pszMessage+strlen(pszMessage), ERROR_MAX - strlen(pszMessage), 
               pszFormat, args);
-#else
-    vsprintf(pszMessage+strlen(pszMessage), pszFormat, args);
-#endif
+
     va_end(args);
+
+/* -------------------------------------------------------------------- */
+/*      Obfuscate any password in error message                         */
+/* -------------------------------------------------------------------- */
+
+    char* pszPassword = strstr(pszMessage, "password=");
+    if( pszPassword != NULL )
+    {
+        char* pszIter = pszPassword + strlen("password=");
+        while( *pszIter != ' ' && *pszIter != '\0' )
+        {
+            *pszIter = 'X';
+            pszIter ++;
+        }
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Invoke the current error handler.                               */
@@ -500,6 +530,28 @@ void CPL_STDCALL CPLErrorReset()
     psCtx->eLastErrType = CE_None;
 }
 
+/**********************************************************************
+ *                       CPLErrorSetState()
+ **********************************************************************/
+
+/**
+ * Restore an error state, without emitting an error.
+ *
+ * Can be useful if a routine might call CPLErrorReset() and one wants to
+ * preserve the previous error state.
+ *
+ * @since GDAL 2.0
+ */
+
+void CPL_DLL CPLErrorSetState( CPLErr eErrClass, int err_no, const char* pszMsg )
+{
+    CPLErrorContext *psCtx = CPLGetErrorContext();
+
+    psCtx->nLastErrNo = err_no;
+    strncpy(psCtx->szLastErrMsg, pszMsg, psCtx->nLastErrMsgMax);
+    psCtx->szLastErrMsg[MAX(psCtx->nLastErrMsgMax-1, (int)strlen(pszMsg))] = '\0';
+    psCtx->eLastErrType = eErrClass;
+}
 
 /**********************************************************************
  *                          CPLGetLastErrorNo()
@@ -598,7 +650,10 @@ void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, int nError,
         fpLog = stderr;
         if( CPLGetConfigOption( "CPL_LOG", NULL ) != NULL )
         {
-            fpLog = fopen( CPLGetConfigOption("CPL_LOG",""), "wt" );
+            const char* pszAccess = "wt";
+            if( CPLGetConfigOption( "CPL_LOG_APPEND", NULL ) != NULL )
+                pszAccess = "at";
+            fpLog = fopen( CPLGetConfigOption("CPL_LOG",""), pszAccess );
             if( fpLog == NULL )
                 fpLog = stderr;
         }
@@ -677,21 +732,21 @@ void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, int nError,
                 /* generate sequenced log file names, inserting # before ext.*/
                 if (strrchr(cpl_log, '.') == NULL)
                 {
-                    sprintf( pszPath, "%s_%d%s", cpl_log, i++,
+                    CPLsprintf( pszPath, "%s_%d%s", cpl_log, i++,
                              ".log" );
                 }
                 else
                 {
                     size_t pos = 0;
-                    char *cpl_log_base = strdup(cpl_log);
+                    char *cpl_log_base = CPLStrdup(cpl_log);
                     pos = strcspn(cpl_log_base, ".");
                     if (pos > 0)
                     {
                         cpl_log_base[pos] = '\0';
                     }
-                    sprintf( pszPath, "%s_%d%s", cpl_log_base,
+                    CPLsprintf( pszPath, "%s_%d%s", cpl_log_base,
                              i++, ".log" );
-                    free(cpl_log_base);
+                    CPLFree(cpl_log_base);
                 }
             }
 
@@ -781,7 +836,7 @@ CPLSetErrorHandlerEx( CPLErrorHandler pfnErrorHandlerNew,
 /**
  * Install custom error handler.
  *
- * Allow the library's user to specify his own error handler function.
+ * Allow the library's user to specify an error handler function.
  * A valid error handler is a C function with the following prototype:
  *
  * <pre>

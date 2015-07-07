@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jpeglsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: jpeglsdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
  *
  * Project:  JPEGLS driver based on CharLS library
  * Purpose:  JPEGLS driver based on CharLS library
@@ -37,7 +37,7 @@ extern "C" void GDALRegister_JPEGLS();
 
 /* g++ -Wall -g fmrts/jpegls/jpeglsdataset.cpp -shared -fPIC -o gdal_JPEGLS.so -Iport -Igcore -L. -lgdal -I/home/even/charls-1.0 -L/home/even/charls-1.0/build -lCharLS */
 
-CPL_CVSID("$Id: jpeglsdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: jpeglsdataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -553,10 +553,10 @@ JPEGLSDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     }
 
     CPLErr eErr;
-    eErr = poSrcDS->RasterIO(GF_Read, 0, 0, nXSize, nYSize,
+    eErr = poSrcDS->s(GF_Read, 0, 0, nXSize, nYSize,
                       pabyDataUncompressed, nXSize, nYSize,
                       eDT, nBands, NULL,
-                      nBands * nWordSize, nBands * nWordSize * nXSize, nWordSize);
+                      nBands * nWordSize, nBands * nWordSize * nXSize, nWordSize, NULL);
     if (eErr != CE_None)
     {
         VSIFree(pabyDataCompressed);
@@ -637,7 +637,7 @@ JPEGLSDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     VSIFCloseL(fp);
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
     JPEGLSDataset *poDS = (JPEGLSDataset *) GDALOpen( pszFilename, GA_ReadOnly );
 
@@ -664,6 +664,7 @@ void GDALRegister_JPEGLS()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "JPEGLS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "JPEGLS" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

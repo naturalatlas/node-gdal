@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rmfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rmfdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  Raster Matrix Format
  * Purpose:  Read/write raster files used in GIS "Integratsia"
@@ -33,7 +33,7 @@
 
 #include "rmfdataset.h"
 
-CPL_CVSID("$Id: rmfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rmfdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void    GDALRegister_RMF(void);
@@ -1810,6 +1810,7 @@ void GDALRegister_RMF()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "RMF" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "Raster Matrix Format" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

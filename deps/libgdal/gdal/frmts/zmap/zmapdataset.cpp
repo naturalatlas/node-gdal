@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: zmapdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: zmapdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  ZMap driver
  * Purpose:  GDALDataset driver for ZMap dataset.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: zmapdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: zmapdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void    GDALRegister_ZMap(void);
@@ -111,9 +111,9 @@ ZMapRasterBand::ZMapRasterBand( ZMapDataset *poDS )
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff, CPL_UNUSED int nBlockYOff,
-                                  void * pImage )
-
+CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff,
+                                   CPL_UNUSED int nBlockYOff,
+                                   void * pImage )
 {
     int i;
     ZMapDataset *poGDS = (ZMapDataset *) poDS;
@@ -519,10 +519,11 @@ static void WriteRightJustified(VSILFILE* fp, double dfValue, int nWidth,
 /************************************************************************/
 
 GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
-                                     GDALDataset *poSrcDS,
-                                     int bStrict, CPL_UNUSED char ** papszOptions,
-                                     GDALProgressFunc pfnProgress,
-                                     void * pProgressData )
+                                      GDALDataset *poSrcDS,
+                                      int bStrict,
+                                      CPL_UNUSED char ** papszOptions,
+                                      GDALProgressFunc pfnProgress,
+                                      void * pProgressData )
 {
 /* -------------------------------------------------------------------- */
 /*      Some some rudimentary checks                                    */
@@ -648,7 +649,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
         eErr = poSrcDS->GetRasterBand(1)->RasterIO(
                                             GF_Read, i, 0, 1, nYSize,
                                             padfLineBuffer, 1, nYSize,
-                                            GDT_Float64, 0, 0);
+                                            GDT_Float64, 0, 0, NULL);
         if (eErr != CE_None)
             break;
         int bEOLPrinted = FALSE;
@@ -707,6 +708,7 @@ void GDALRegister_ZMap()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "ZMap" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "ZMap Plus Grid" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
@@ -722,4 +724,3 @@ void GDALRegister_ZMap()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgeodriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrpgeodriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -31,7 +31,7 @@
 #include "ogr_pgeo.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgeodriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrpgeodriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                            ~OGRODBCDriver()                            */
@@ -294,5 +294,11 @@ bool OGRODBCMDBDriver::LibraryExists(const char* pszLibPath)
 void RegisterOGRPGeo()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRPGeoDriver );
+    OGRSFDriver* poDriver = new OGRPGeoDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                "ESRI Personal GeoDatabase" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "mdb" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_pgeo.html" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }

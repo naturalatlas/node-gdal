@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: jp2kakdataset.cpp 27182 2014-04-14 20:03:08Z rouault $
+ * $Id: jp2kakdataset.cpp 29075 2015-04-30 12:51:21Z rouault $
  *
  * Project:  JPEG-2000
  * Purpose:  Implementation of the ISO/IEC 15444-1 standard based on Kakadu.
@@ -65,16 +65,18 @@
 #  define kdu_client void
 #endif
 
-CPL_CVSID("$Id: jp2kakdataset.cpp 27182 2014-04-14 20:03:08Z rouault $");
+CPL_CVSID("$Id: jp2kakdataset.cpp 29075 2015-04-30 12:51:21Z rouault $");
 
-// Generally Kakadu does not advertise its version well, so we look for a
-// clue to V6 vs V7, the main difference in api.
-#ifndef KAKADU_VERSION
-#  ifdef KDU_TARGET_CAP_SEQUENTIAL
-#    define KAKADU_VERSION 700
-#  else
-#    define KAKADU_VERSION 600
-#  endif
+// Before v7.5 Kakadu does not advertise its version well
+// After v7.5 Kakadu has KDU_{MAJOR,MINOR,PATCH}_VERSION defines so it's easier
+// For older releases compile with them manually specified
+#ifndef KDU_MAJOR_VERSION
+#  error Compile with eg. -DKDU_MAJOR_VERSION=7 -DKDU_MINOR_VERSION=3 -DKDU_PATCH_VERSION=2 to specify Kakadu library version
+#endif
+
+#if KDU_MAJOR_VERSION > 7 || (KDU_MAJOR_VERSION == 7 && KDU_MINOR_VERSION >= 5)
+    using namespace kdu_core;
+    using namespace kdu_supp;
 #endif
 
 // #define KAKADU_JPX	1
@@ -117,16 +119,24 @@ class JP2KAKDataset : public GDALJP2AbstractDataset
     int            bResilient;
     int            bFussy;
     bool           bUseYCC;
+    
+    bool           bPromoteTo8Bit;
 
     int         TestUseBlockIO( int, int, int, int, int, int,
                                 GDALDataType, int, int * );
     CPLErr      DirectRasterIO( GDALRWFlag, int, int, int, int,
                                 void *, int, int, GDALDataType,
-                                int, int *, int, int, int );
+                                int, int *,
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GSpacing nBandSpace,
+                                GDALRasterIOExtraArg* psExtraArg);
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *,
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
 
   public:
@@ -172,7 +182,8 @@ class JP2KAKRasterBand : public GDALPamRasterBand
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     int            HasExternalOverviews() 
                    { return GDALPamRasterBand::GetOverviewCount() != 0; }
@@ -246,7 +257,7 @@ public: // Member classes
 
         if( end_of_message && m_eErrClass == CE_Failure )
         {
-            throw new JP2KAKException();
+            throw JP2KAKException();
         }
     }
 
@@ -302,9 +313,8 @@ JP2KAKRasterBand::JP2KAKRasterBand( int nBand, int nDiscardLevels,
 /* -------------------------------------------------------------------- */
 /*      Capture some useful metadata.                                   */
 /* -------------------------------------------------------------------- */
-    if( oCodeStream.get_bit_depth(nBand-1) % 8 != 0 )
+    if( oCodeStream.get_bit_depth(nBand-1) % 8 != 0 && !poBaseDSIn->bPromoteTo8Bit )
     {
-        
         SetMetadataItem( "NBITS", 
                          CPLString().Printf("%d",oCodeStream.get_bit_depth(nBand-1)), 
                          "IMAGE_STRUCTURE" );
@@ -538,12 +548,17 @@ CPLErr JP2KAKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 /*      By default we invoke just for the requested band, directly      */
 /*      into the target buffer.                                         */
 /* -------------------------------------------------------------------- */
+    GDALRasterIOExtraArg sExtraArg;
+    INIT_RASTERIO_EXTRA_ARG(sExtraArg);
+
     if( !poBaseDS->bUseYCC )
+    {
         return poBaseDS->DirectRasterIO( GF_Read, 
                                          nWXOff, nWYOff, nWXSize, nWYSize,
                                          pImage, nXSize, nYSize,
                                          eDataType, 1, &nBand, 
-                                         nWordSize, nWordSize*nBlockXSize, 0 );
+                                         nWordSize, nWordSize*nBlockXSize, 0, &sExtraArg );
+    }
 
 /* -------------------------------------------------------------------- */
 /*      But for YCC or possible other effectively pixel interleaved     */
@@ -572,7 +587,8 @@ CPLErr JP2KAKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                                      pabyWrkBuffer, nXSize, nYSize,
                                      eDataType, anBands.size(), &anBands[0],
                                      nWordSize, nWordSize*nBlockXSize, 
-                                     nWordSize*nBlockXSize*nBlockYSize );
+                                     nWordSize*nBlockXSize*nBlockYSize,
+                                     &sExtraArg );
 
     if( eErr == CE_None )
     {
@@ -641,7 +657,8 @@ JP2KAKRasterBand::IRasterIO( GDALRWFlag eRWFlag,
                              int nXOff, int nYOff, int nXSize, int nYSize,
                              void * pData, int nBufXSize, int nBufYSize,
                              GDALDataType eBufType, 
-                             int nPixelSpace,int nLineSpace )
+                             GSpacing nPixelSpace, GSpacing nLineSpace,
+                             GDALRasterIOExtraArg* psExtraArg)
 
 {
 /* -------------------------------------------------------------------- */
@@ -653,7 +670,7 @@ JP2KAKRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamRasterBand::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nPixelSpace, nLineSpace );
+            nPixelSpace, nLineSpace, psExtraArg );
     else
     {
         int nOverviewDiscard = nDiscardLevels;
@@ -671,7 +688,7 @@ JP2KAKRasterBand::IRasterIO( GDALRWFlag eRWFlag,
         return poBaseDS->DirectRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            1, &nBand, nPixelSpace, nLineSpace, 0 );
+            1, &nBand, nPixelSpace, nLineSpace, 0, psExtraArg );
     }
 }
 
@@ -714,7 +731,7 @@ void JP2KAKRasterBand::ApplyPalette( jp2_palette oJP2Palette )
 
     if( oJP2Palette.get_num_luts() == 4 )
     {
-        oJP2Palette.get_lut( 2, pafLUT + nCount*3 );
+        oJP2Palette.get_lut( 3, pafLUT + nCount*3 );
     }
     else
     {
@@ -788,6 +805,7 @@ JP2KAKDataset::JP2KAKDataset()
 
     bCached = 0;
     bPreferNPReads = false;
+    bPromoteTo8Bit = false;
 
     poDriver = (GDALDriver*) GDALGetDriverByName( "JP2KAK" );
 }
@@ -1026,9 +1044,10 @@ GDALDataset *JP2KAKDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      subfile_source.  We do this if it does not seem to open normally*/
 /*      or if we want to operate in resilient (sequential) mode.        */
 /* -------------------------------------------------------------------- */
+    VSIStatBuf sStat;
     if( poRawInput == NULL
         && !bIsJPIP
-        && (bBuffered || bResilient || poOpenInfo->fp == NULL) )
+        && (bBuffered || bResilient || VSIStat(poOpenInfo->pszFilename, &sStat) != 0) )
     {
         try
         {
@@ -1336,6 +1355,19 @@ GDALDataset *JP2KAKDataset::Open( GDALOpenInfo * poOpenInfo )
 
         CPLDebug( "JP2KAK", "nResCount=%d", poDS->nResCount );
 
+
+/* -------------------------------------------------------------------- */
+/*      Should we promote alpha channel to 8 bits ?                     */
+/* -------------------------------------------------------------------- */
+        poDS->bPromoteTo8Bit = (poDS->nBands == 4 &&
+                                poDS->oCodeStream.get_bit_depth(0) == 8 &&
+                                poDS->oCodeStream.get_bit_depth(1) == 8 &&
+                                poDS->oCodeStream.get_bit_depth(2) == 8 &&
+                                poDS->oCodeStream.get_bit_depth(3) == 1 &&
+                                CSLFetchBoolean(poOpenInfo->papszOpenOptions, "1BIT_ALPHA_PROMOTION", TRUE));
+        if( poDS->bPromoteTo8Bit )
+            CPLDebug( "JP2KAK",  "Fourth (alpha) band is promoted from 1 bit to 8 bit");
+
 /* -------------------------------------------------------------------- */
 /*      Create band information objects.                                */
 /* -------------------------------------------------------------------- */
@@ -1397,7 +1429,25 @@ GDALDataset *JP2KAKDataset::Open( GDALOpenInfo * poOpenInfo )
                       " datasets.\n" );
             return NULL;
         }
-    
+
+/* -------------------------------------------------------------------- */
+/*      Vector layers                                                   */
+/* -------------------------------------------------------------------- */
+        if( poOpenInfo->nOpenFlags & GDAL_OF_VECTOR )
+        {
+            poDS->LoadVectorLayers(
+                CSLFetchBoolean(poOpenInfo->papszOpenOptions, "OPEN_REMOTE_GML", FALSE));
+
+            // If file opened in vector-only mode and there's no vector,
+            // return
+            if( (poOpenInfo->nOpenFlags & GDAL_OF_RASTER) == 0 &&
+                poDS->GetLayerCount() == 0 )
+            {
+                delete poDS;
+                return NULL;
+            }
+        }
+
         return( poDS );
     }
 
@@ -1419,12 +1469,14 @@ GDALDataset *JP2KAKDataset::Open( GDALOpenInfo * poOpenInfo )
 /************************************************************************/
 
 CPLErr 
-JP2KAKDataset::DirectRasterIO( GDALRWFlag eRWFlag,
+JP2KAKDataset::DirectRasterIO( CPL_UNUSED GDALRWFlag eRWFlag,
                                int nXOff, int nYOff, int nXSize, int nYSize,
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType, 
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace,int nLineSpace,int nBandSpace)
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg)
     
 {
     kdu_codestream *poCodeStream = &oCodeStream;
@@ -1691,6 +1743,19 @@ JP2KAKDataset::DirectRasterIO( GDALRWFlag eRWFlag,
     }
 
 /* -------------------------------------------------------------------- */
+/*      1-bit alpha promotion.                                          */
+/* -------------------------------------------------------------------- */
+    if( nBandCount == 4 && bPromoteTo8Bit )
+    {
+        for(int j=0;j<nBufYSize;j++)
+        {
+            for(i=0;i<nBufXSize;i++)
+            {
+                ((GByte*)pData)[j*nLineSpace+i*nPixelSpace+3*nBandSpace] *= 255;
+            }
+        }
+    }
+/* -------------------------------------------------------------------- */
 /*      Cleanup                                                         */
 /* -------------------------------------------------------------------- */
     if( poCodeStream == &oWCodeStream )
@@ -1760,9 +1825,9 @@ JP2KAKDataset::TestUseBlockIO( int nXOff, int nYOff, int nXSize, int nYSize,
         int    nXOff2=nXOff, nYOff2=nYOff, nXSize2=nXSize, nYSize2=nYSize;
 
         nOverview =
-            GDALBandGetBestOverviewLevel( poWrkBand, 
+            GDALBandGetBestOverviewLevel2( poWrkBand, 
                                           nXOff2, nYOff2, nXSize2, nYSize2,
-                                          nBufXSize, nBufYSize);
+                                          nBufXSize, nBufYSize, NULL);
         if (nOverview >= 0 )
             return TRUE;
     }
@@ -1795,7 +1860,9 @@ CPLErr JP2KAKDataset::IRasterIO( GDALRWFlag eRWFlag,
                                  void * pData, int nBufXSize, int nBufYSize,
                                  GDALDataType eBufType, 
                                  int nBandCount, int *panBandMap,
-                                 int nPixelSpace,int nLineSpace,int nBandSpace)
+                                 GSpacing nPixelSpace, GSpacing nLineSpace,
+                                 GSpacing nBandSpace,
+                                 GDALRasterIOExtraArg* psExtraArg)
 
 {
 /* -------------------------------------------------------------------- */
@@ -1806,12 +1873,12 @@ CPLErr JP2KAKDataset::IRasterIO( GDALRWFlag eRWFlag,
         return GDALPamDataset::IRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     else
         return DirectRasterIO( 
             eRWFlag, nXOff, nYOff, nXSize, nYSize,
             pData, nBufXSize, nBufYSize, eBufType, 
-            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace );
+            nBandCount, panBandMap, nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 }
 
 /************************************************************************/
@@ -1886,7 +1953,7 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
             res.get_dims(dims);
             roi_node = poROIImage->acquire_node(c,dims);
         }
-#if KAKADU_VERSION >= 700
+#if KDU_MAJOR_VERSION >= 7
         lines[c].pre_create(&allocator,nXSize,bReversible,bUseShorts,0,0);
 #else
         lines[c].pre_create(&allocator,nXSize,bReversible,bUseShorts);
@@ -1896,7 +1963,11 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
 
     try
     {
+#if KDU_MAJOR_VERSION > 7 || (KDU_MAJOR_VERSION == 7 && (KDU_MINOR_VERSION > 3 || KDU_MINOR_VERSION == 3 && KDU_PATCH_VERSION >= 1))
+        allocator.finalize(oCodeStream);
+#else
         allocator.finalize();
+#endif
 
         for (c=0; c < num_components; c++)
             lines[c].create();
@@ -1920,9 +1991,10 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
 
     CPLAssert( !oTile.get_ycc() );
 
-    for( iLine = 0; iLine < nYSize; iLine += TILE_CHUNK_SIZE )
+    int bRet = TRUE;
+    for( iLine = 0; iLine < nYSize && bRet; iLine += TILE_CHUNK_SIZE )
     {
-        for (c=0; c < num_components; c++)
+        for (c=0; c < num_components && bRet; c++)
         {
             GDALRasterBand *poBand = poSrcDS->GetRasterBand( c+1 );
             int iSubline = 0;
@@ -1934,8 +2006,11 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
                 if( poBand->RasterIO( GF_Read, 
                                       nXOff, nYOff+iSubline, nXSize, 1, 
                                       (void *) pabyBuffer, nXSize, 1, eType,
-                                      0, 0 ) == CE_Failure )
-                    return FALSE;
+                                      0, 0, NULL ) == CE_Failure )
+                {
+                    bRet = FALSE;
+                    break;
+                }
 
                 if( bReversible && eType == GDT_Byte )
                 {
@@ -2003,7 +2078,7 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
                         dest->fval = *sp;  /* scale it? */
                 }
 
-#if KAKADU_VERSION >= 700
+#if KDU_MAJOR_VERSION >= 7
                 engines[c].push(lines[c]);
 #else
                 engines[c].push(lines[c],true);
@@ -2015,19 +2090,28 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
                                   / (double) (num_components * nYSize),
                                   NULL, pProgressData ) )
                 {
-                    return FALSE;
+                    bRet = FALSE;
+                    break;
                 }
             }
         }
+        if( !bRet )
+            break;
 
         if( oCodeStream.ready_for_flush() && bFlushEnabled )
         {
             CPLDebug( "JP2KAK", 
                       "Calling oCodeStream.flush() at line %d",
                       MIN(nYSize,iLine+TILE_CHUNK_SIZE) );
-            
-            oCodeStream.flush( layer_bytes, layer_count, NULL,
-                               true, bComseg );
+            try
+            {
+                oCodeStream.flush( layer_bytes, layer_count, NULL,
+                                   true, bComseg );
+            }
+            catch(...)
+            {
+                bRet = FALSE;
+            }
         }
         else if( bFlushEnabled )
             CPLDebug( "JP2KAK", 
@@ -2049,7 +2133,7 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
     if( poROIImage != NULL )
         delete poROIImage;
 
-    return TRUE;
+    return bRet;
 }
 
 /************************************************************************/
@@ -2146,7 +2230,7 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
     if( CSLFetchNameValue(papszOptions,"QUALITY") != NULL )
     {
-        dfQuality = atof(CSLFetchNameValue(papszOptions,"QUALITY"));
+        dfQuality = CPLAtof(CSLFetchNameValue(papszOptions,"QUALITY"));
     }
 
     if( dfQuality < 0.01 || dfQuality > 100.0 )
@@ -2154,6 +2238,7 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         CPLError( CE_Failure, CPLE_IllegalArg,
                   "QUALITY=%s is not a legal value in the range 0.01-100.",
                   CSLFetchNameValue(papszOptions,"QUALITY") );
+        CPLFree(layer_bytes);
         return NULL;
     }
 
@@ -2356,6 +2441,7 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
         poROIImage = new kdu_roi_rect(oCodeStream,region);
     }
+    CSLDestroy(papszROIDefs);
 
 /* -------------------------------------------------------------------- */
 /*      Set some particular parameters.                                 */
@@ -2403,7 +2489,24 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             CPLString osOpt;
 
             osOpt.Printf( "%s=%s", apszParms[iParm], pszValue );
-            oCodeStream.access_siz()->parse_string( osOpt );
+            try
+            {
+                oCodeStream.access_siz()->parse_string( osOpt );
+            }
+            catch( ... )
+            {
+                CPLFree(layer_bytes);
+                if( bIsJP2 )
+                {
+                    jp2_out.close();
+                    family.close();
+                }
+                else
+                {
+                    poOutputFile->close();
+                }
+                return NULL;
+            }
 
             CPLDebug( "JP2KAK", "parse_string(%s)", osOpt.c_str() );
         }
@@ -2539,7 +2642,8 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                  || adfGeoTransform[3] != 0.0 
                  || adfGeoTransform[4] != 0.0 
                  || ABS(adfGeoTransform[5]) != 1.0))
-            || poSrcDS->GetGCPCount() > 0) )
+            || poSrcDS->GetGCPCount() > 0
+            || poSrcDS->GetMetadata("RPC") != NULL) )
     {
         GDALJP2Metadata oJP2MD;
 
@@ -2554,11 +2658,19 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             oJP2MD.SetGeoTransform( adfGeoTransform );
         }
 
+        oJP2MD.SetRPCMD( poSrcDS->GetMetadata("RPC") );
+
         const char* pszAreaOrPoint = poSrcDS->GetMetadataItem(GDALMD_AREA_OR_POINT);
         oJP2MD.bPixelIsPoint = pszAreaOrPoint != NULL && EQUAL(pszAreaOrPoint, GDALMD_AOP_POINT);
 
         if( CSLFetchBoolean( papszOptions, "GMLJP2", TRUE ) )
-            JP2KAKWriteBox( &jp2_out, oJP2MD.CreateGMLJP2(nXSize,nYSize) );
+        {
+            const char* pszGMLJP2V2Def = CSLFetchNameValue( papszOptions, "GMLJP2V2_DEF" );
+            if( pszGMLJP2V2Def != NULL )
+                JP2KAKWriteBox( &jp2_out, oJP2MD.CreateGMLJP2V2(nXSize,nYSize,pszGMLJP2V2Def,poSrcDS) );
+            else
+                JP2KAKWriteBox( &jp2_out, oJP2MD.CreateGMLJP2(nXSize,nYSize) );
+        }
         if( CSLFetchBoolean( papszOptions, "GeoJP2", TRUE ) )
             JP2KAKWriteBox( &jp2_out, oJP2MD.CreateJP2GeoTIFF() );
     }
@@ -2680,7 +2792,7 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         return NULL;
 
 /* -------------------------------------------------------------------- */
-/*      Re-open dataset, and copy any auxilary pam information.         */
+/*      Re-open dataset, and copy any auxiliary pam information.         */
 /* -------------------------------------------------------------------- */
     GDALOpenInfo oOpenInfo(pszFilename, GA_ReadOnly);
     GDALPamDataset *poDS = (GDALPamDataset*) JP2KAKDataset::Open(&oOpenInfo);
@@ -2708,6 +2820,8 @@ void GDALRegister_JP2KAK()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "JP2KAK" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "JPEG-2000 (based on Kakadu " 
                                    KDU_CORE_VERSION ")" );
@@ -2719,6 +2833,12 @@ void GDALRegister_JP2KAK()
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "jp2" );
 
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+        
+        poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST, 
+"<OpenOptionList>"
+"   <Option name='1BIT_ALPHA_PROMOTION' type='boolean' description='Whether a 1-bit alpha channel should be promoted to 8-bit' default='YES'/>"
+"   <Option name='OPEN_REMOTE_GML' type='boolean' description='Whether to load remote vector layers referenced by a link in a GMLJP2 v2 box' default='NO'/>"
+"</OpenOptionList>" );
 
         poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST, 
 "<CreationOptionList>"
@@ -2727,9 +2847,11 @@ void GDALRegister_JP2KAK()
 "   <Option name='BLOCKYSIZE' type='int' description='Tile Height'/>"
 "   <Option name='GeoJP2' type='boolean' description='defaults to ON'/>"
 "   <Option name='GMLJP2' type='boolean' description='defaults to ON'/>"
+"   <Option name='GMLJP2V2_DEF' type='string' description='Definition file to describe how a GMLJP2 v2 box should be generated. If set to YES, a minimal instance will be created'/>"
 "   <Option name='LAYERS' type='integer'/>"
 "   <Option name='ROI' type='string'/>"
 "   <Option name='COMSEG' type='boolean' />"
+"   <Option name='FLUSH' type='boolean' />"
 "   <Option name='NBITS' type='int' description='BITS (precision) for sub-byte files (1-7), sub-uint16 (9-15)'/>"
 "   <Option name='Corder' type='string'/>"
 "   <Option name='Cprecincts' type='string'/>"
@@ -2738,7 +2860,7 @@ void GDALRegister_JP2KAK()
 "   <Option name='ORGgen_plt' type='string'/>"
 "   <Option name='ORGgen_tlm' type='string'/>"
 "   <Option name='Qguard' type='integer'/>"
-"   <Option name='Sprofile' type='integer'/>"
+"   <Option name='Sprofile' type='string'/>"
 "   <Option name='Rshift' type='string'/>"
 "   <Option name='Rlevels' type='string'/>"
 "   <Option name='Rweight' type='string'/>"

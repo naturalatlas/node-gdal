@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnopen.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: dgnopen.cpp 27272 2014-05-01 23:14:58Z rouault $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  DGN Access Library file open code.
@@ -29,7 +29,7 @@
 
 #include "dgnlibp.h"
 
-CPL_CVSID("$Id: dgnopen.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: dgnopen.cpp 27272 2014-05-01 23:14:58Z rouault $");
 
 /************************************************************************/
 /*                            DGNTestOpen()                             */
@@ -48,7 +48,7 @@ int DGNTestOpen( GByte *pabyHeader, int nByteCount )
 
 {
     if( nByteCount < 4 )
-        return TRUE;
+        return FALSE;
 
     // Is it a cell library?
     if( pabyHeader[0] == 0x08

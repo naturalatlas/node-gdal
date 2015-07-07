@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpsbabelwritedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgpsbabelwritedatasource.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGPSBabelWriteDataSource class.
@@ -34,7 +34,7 @@
 #include "cpl_error.h"
 #include "cpl_spawn.h"
 
-CPL_CVSID("$Id: ogrgpsbabelwritedatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrgpsbabelwritedatasource.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /*                    OGRGPSBabelWriteDataSource()                      */
@@ -57,7 +57,7 @@ OGRGPSBabelWriteDataSource::~OGRGPSBabelWriteDataSource()
 
 {
     if (poGPXDS)
-        OGRDataSource::DestroyDataSource(poGPXDS);
+        GDALClose( (GDALDatasetH) poGPXDS );
 
     Convert();
 
@@ -129,7 +129,7 @@ int OGRGPSBabelWriteDataSource::Convert()
 int OGRGPSBabelWriteDataSource::Create( const char * pszName,
                                         char **papszOptions )
 {
-    OGRSFDriver* poGPXDriver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName("GPX");
+    GDALDriver* poGPXDriver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName("GPX");
     if (poGPXDriver == NULL)
     {
         CPLError(CE_Failure, CPLE_AppDefined, "GPX driver is necessary for GPSBabel write support");
@@ -178,7 +178,7 @@ int OGRGPSBabelWriteDataSource::Create( const char * pszName,
     else
         osTmpFileName.Printf("/vsimem/ogrgpsbabeldatasource_%p", this);
 
-    poGPXDS = poGPXDriver->CreateDataSource(osTmpFileName.c_str(), papszOptions);
+    poGPXDS = poGPXDriver->Create(osTmpFileName.c_str(), 0, 0, 0, GDT_Unknown, papszOptions);
     if (poGPXDS == NULL)
         return FALSE;
 
@@ -188,10 +188,10 @@ int OGRGPSBabelWriteDataSource::Create( const char * pszName,
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRGPSBabelWriteDataSource::CreateLayer( const char * pszLayerName,
+OGRLayer * OGRGPSBabelWriteDataSource::ICreateLayer( const char * pszLayerName,
                                                     OGRSpatialReference *poSRS,
                                                     OGRwkbGeometryType eType,
                                                     char ** papszOptions )

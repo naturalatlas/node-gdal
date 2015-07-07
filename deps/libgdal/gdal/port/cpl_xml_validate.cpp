@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_xml_validate.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_xml_validate.cpp 27755 2014-09-28 16:51:08Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement XML validation against XSD schema
@@ -29,7 +29,7 @@
 
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: cpl_xml_validate.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_xml_validate.cpp 27755 2014-09-28 16:51:08Z goatbar $");
 
 #ifdef HAVE_LIBXML2
 #include <libxml/xmlversion.h>
@@ -1126,9 +1126,9 @@ int CPLValidateXML(const char* pszXMLFilename,
 /*                          CPLValidateXML()                            */
 /************************************************************************/
 
-int CPLValidateXML(const char* pszXMLFilename,
-                   const char* pszXSDFilename,
-                   char** papszOptions)
+int CPLValidateXML(CPL_UNUSED const char* pszXMLFilename,
+                   CPL_UNUSED const char* pszXSDFilename,
+                   CPL_UNUSED char** papszOptions)
 {
     CPLError(CE_Failure, CPLE_NotSupported,
              "%s not implemented due to missing libxml2 support",

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_htf.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_htf.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  HTF Translator
  * Purpose:  Definition of classes for OGR .htf driver.
@@ -113,7 +113,7 @@ protected:
 
     virtual int                 TestCapability( const char * );
 
-    virtual int                 GetFeatureCount(int bForce = TRUE);
+    virtual GIntBig             GetFeatureCount(int bForce = TRUE);
 };
 
 /************************************************************************/
@@ -158,8 +158,7 @@ class OGRHTFDataSource : public OGRDataSource
                         OGRHTFDataSource();
                         ~OGRHTFDataSource();
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     virtual const char*         GetName() { return pszName; }
 
@@ -169,20 +168,5 @@ class OGRHTFDataSource : public OGRDataSource
 
     virtual int                 TestCapability( const char * );
 };
-
-/************************************************************************/
-/*                             OGRHTFDriver                             */
-/************************************************************************/
-
-class OGRHTFDriver : public OGRSFDriver
-{
-  public:
-                ~OGRHTFDriver();
-
-    virtual const char*         GetName();
-    virtual OGRDataSource*      Open( const char *, int );
-    virtual int                 TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_HTF_H_INCLUDED */

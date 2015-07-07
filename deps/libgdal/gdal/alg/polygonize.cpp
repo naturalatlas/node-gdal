@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: polygonize.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: polygonize.cpp 28826 2015-03-30 17:51:14Z rouault $
  * Project:  GDAL
  * Purpose:  Raster to Polygon Converter
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -32,9 +32,7 @@
 #include "cpl_string.h"
 #include <vector>
 
-CPL_CVSID("$Id: polygonize.cpp 27044 2014-03-16 23:41:27Z rouault $");
-
-#define GP_NODATA_MARKER -51502112
+CPL_CVSID("$Id: polygonize.cpp 28826 2015-03-30 17:51:14Z rouault $");
 
 #ifdef OGR_ENABLED
 
@@ -697,13 +695,10 @@ GDALPolygonize( GDALRasterBandH hSrcBand,
             {
                 if( papoPoly[iX] && papoPoly[iX]->nLastLineUpdated < iY-1 )
                 {
-                    if( hMaskBand == NULL
-                        || papoPoly[iX]->nPolyValue != GP_NODATA_MARKER )
-                    {
-                        eErr = 
-                            EmitPolygonToLayer( hOutLayer, iPixValField, 
-                                                papoPoly[iX], adfGeoTransform );
-                    }
+                    eErr = 
+                        EmitPolygonToLayer( hOutLayer, iPixValField, 
+                                            papoPoly[iX], adfGeoTransform );
+
                     delete papoPoly[iX];
                     papoPoly[iX] = NULL;
                 }
@@ -741,13 +736,10 @@ GDALPolygonize( GDALRasterBandH hSrcBand,
     {
         if( papoPoly[iX] )
         {
-            if( hMaskBand == NULL
-                || papoPoly[iX]->nPolyValue != GP_NODATA_MARKER )
-            {
-                eErr = 
-                    EmitPolygonToLayer( hOutLayer, iPixValField, 
-                                        papoPoly[iX], adfGeoTransform );
-            }
+            eErr = 
+                EmitPolygonToLayer( hOutLayer, iPixValField, 
+                                    papoPoly[iX], adfGeoTransform );
+
             delete papoPoly[iX];
             papoPoly[iX] = NULL;
         }

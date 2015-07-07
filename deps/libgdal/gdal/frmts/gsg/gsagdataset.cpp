@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gsagdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gsagdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implements the Golden Software ASCII Grid Format.
@@ -50,7 +50,7 @@
 # define INT_MAX 2147483647
 #endif /* INT_MAX */
 
-CPL_CVSID("$Id: gsagdataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gsagdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 CPL_C_START
 void	GDALRegister_GSAG(void);
@@ -1067,7 +1067,7 @@ GDALDataset *GSAGDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->papszSiblingFiles );
+    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
 
     return( poDS );
 
@@ -1505,7 +1505,8 @@ CPLErr GSAGDataset::UpdateHeader()
 
 GDALDataset *GSAGDataset::CreateCopy( const char *pszFilename,
 				      GDALDataset *poSrcDS,
-				      int bStrict, CPL_UNUSED char **papszOptions,
+				      int bStrict,
+                                      CPL_UNUSED char **papszOptions,
 				      GDALProgressFunc pfnProgress,
 				      void *pProgressData )
 {
@@ -1615,7 +1616,7 @@ GDALDataset *GSAGDataset::CreateCopy( const char *pszFilename,
     {
 	CPLErr eErr = poSrcBand->RasterIO( GF_Read, 0, nYSize-iRow-1,
 					   nXSize, 1, pdfData,
-					   nXSize, 1, GDT_Float64, 0, 0 );
+					   nXSize, 1, GDT_Float64, 0, 0, NULL );
 
 	if( eErr != CE_None )
 	{
@@ -1753,6 +1754,7 @@ void GDALRegister_GSAG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "GSAG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Golden Software ASCII Grid (.grd)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

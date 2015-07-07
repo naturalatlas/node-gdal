@@ -73,12 +73,15 @@
 
 #if ECWSDK_VERSION < 40
 
-#if !defined(NO_COMPRESS)
+#if !defined(NO_COMPRESS) && !defined(HAVE_COMPRESS)
 #  define HAVE_COMPRESS
 #endif
 
 #else
     #if ECWSDK_VERSION>=50
+		#if ECWSDK_VERSION>=51
+			#define JPEG2000_DOMAIN_NAME "JPEG2000"
+		#endif
         #include <NCSECWHeaderEditor.h>
         #include "NCSEcw/SDK/Box.h"
     #else 
@@ -411,7 +414,7 @@ class ECWAsyncReader : public GDALAsyncReader
 {
 private:
     CNCSJP2FileView *poFileView;
-    void            *hMutex;
+    CPLMutex        *hMutex;
     int              bUsingCustomStream;
 
     int              bUpdateReady;
@@ -489,7 +492,10 @@ class CPL_DLL ECWDataset : public GDALJP2AbstractDataset
     void        CleanupWindow();
     int         TryWinRasterIO( GDALRWFlag, int, int, int, int,
                                 GByte *, int, int, GDALDataType,
-                                int, int *, int, int, int );
+                                int, int *,
+                                GSpacing nPixelSpace, GSpacing nLineSpace,
+                                GSpacing nBandSpace,
+                                GDALRasterIOExtraArg* psExtraArg );
     CPLErr      LoadNextLine();
 
 #if ECWSDK_VERSION>=50
@@ -533,11 +539,13 @@ class CPL_DLL ECWDataset : public GDALJP2AbstractDataset
     CPLErr ReadBands(void * pData, int nBufXSize, int nBufYSize,
                     GDALDataType eBufType, 
                     int nBandCount,
-                    int nPixelSpace, int nLineSpace, int nBandSpace);
+                    GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
+                    GDALRasterIOExtraArg* psExtraArg);
     CPLErr ReadBandsDirectly(void * pData, int nBufXSize, int nBufYSize,
                     GDALDataType eBufType, 
                     int nBandCount,
-                    int nPixelSpace, int nLineSpace, int nBandSpace);
+                    GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
+                    GDALRasterIOExtraArg* psExtraArg);
   public:
         ECWDataset(int bIsJPEG2000);
         ~ECWDataset();
@@ -552,7 +560,10 @@ class CPL_DLL ECWDataset : public GDALJP2AbstractDataset
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int *, int, int, int );
+                              int, int *,
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GSpacing nBandSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
     virtual char      **GetMetadataDomainList();
     virtual const char *GetMetadataItem( const char * pszName,
@@ -625,16 +636,18 @@ class ECWRasterBand : public GDALPamRasterBand
 //#if !defined(SDK_CAN_DO_SUPERSAMPLING)
     CPLErr OldIRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg );
 //#endif
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
-                              int, int );
+                              GSpacing nPixelSpace, GSpacing nLineSpace,
+                              GDALRasterIOExtraArg* psExtraArg);
 
   public:
 
-                   ECWRasterBand( ECWDataset *, int, int = -1 );
+                   ECWRasterBand( ECWDataset *, int, int iOverview, char** papszOpenOptions );
                    ~ECWRasterBand();
 
     virtual CPLErr IReadBlock( int, int, void * );
@@ -651,11 +664,11 @@ class ECWRasterBand : public GDALPamRasterBand
 #if ECWSDK_VERSION >= 50
     void GetBandIndexAndCountForStatistics(int &bandIndex, int &bandCount);
     virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                    int *pnBuckets, int ** ppanHistogram,
+                                    int *pnBuckets, GUIntBig ** ppanHistogram,
                                     int bForce,
                                     GDALProgressFunc, void *pProgressData);
     virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                        int nBuckets, int *panHistogram );
+                                        int nBuckets, GUIntBig *panHistogram );
     virtual double GetMinimum( int* pbSuccess );
     virtual double GetMaximum( int* pbSuccess );
     virtual CPLErr GetStatistics( int bApproxOK, int bForce,

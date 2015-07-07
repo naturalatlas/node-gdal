@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_usgs.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_srs_usgs.cpp 28565 2015-02-27 10:26:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference translation to/from USGS georeferencing
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogr_srs_usgs.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_srs_usgs.cpp 28565 2015-02-27 10:26:21Z rouault $");
 
 /************************************************************************/
 /*  GCTP projection codes.                                              */
@@ -675,13 +675,7 @@ OGRErr OGRSpatialReference::importFromUSGS( long iProjSys, long iZone,
             {
                 if ( padfPrjParams[1] > 1.0 )
                 {
-                    if( ABS(padfPrjParams[0] - padfPrjParams[1]) < 0.01 )
-                        dfInvFlattening = 0.0;
-                    else
-                    {
-                        dfInvFlattening = padfPrjParams[0]
-                            / ( padfPrjParams[0] - padfPrjParams[1] );
-                    }
+                    dfInvFlattening = OSRCalcInvFlattening(padfPrjParams[0], padfPrjParams[1] );
                 }
                 else if ( padfPrjParams[1] > 0.0 )
                 {

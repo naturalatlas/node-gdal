@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlsxdatasource.cpp 28181 2014-12-20 17:22:45Z rouault $
+ * $Id: ogrxlsxdatasource.cpp 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  XLSX Translator
  * Purpose:  Implements OGRXLSXDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_time.h"
 
-CPL_CVSID("$Id: ogrxlsxdatasource.cpp 28181 2014-12-20 17:22:45Z rouault $");
+CPL_CVSID("$Id: ogrxlsxdatasource.cpp 28900 2015-04-14 09:40:34Z rouault $");
 
 /************************************************************************/
 /*                            OGRXLSXLayer()                            */
@@ -88,7 +88,8 @@ void OGRXLSXLayer::SetUpdated(int bUpdatedIn)
 
 OGRErr OGRXLSXLayer::SyncToDisk()
 {
-    return poDS->SyncToDisk();
+    poDS->FlushCache();
+    return OGRERR_NONE;
 }
 
 /************************************************************************/
@@ -108,7 +109,7 @@ OGRFeature* OGRXLSXLayer::GetNextFeature()
 /*                           GetFeature()                               */
 /************************************************************************/
 
-OGRFeature* OGRXLSXLayer::GetFeature( long nFeatureId )
+OGRFeature* OGRXLSXLayer::GetFeature( GIntBig nFeatureId )
 {
     Init();
     OGRFeature* poFeature = OGRMemLayer::GetFeature(nFeatureId - (1 + bHasHeaderLine));
@@ -118,20 +119,20 @@ OGRFeature* OGRXLSXLayer::GetFeature( long nFeatureId )
 }
 
 /************************************************************************/
-/*                           SetFeature()                               */
+/*                           ISetFeature()                               */
 /************************************************************************/
 
-OGRErr OGRXLSXLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRXLSXLayer::ISetFeature( OGRFeature *poFeature )
 {
     Init();
     if (poFeature == NULL)
-        return OGRMemLayer::SetFeature(poFeature);
+        return OGRMemLayer::ISetFeature(poFeature);
 
-    long nFID = poFeature->GetFID();
+    GIntBig nFID = poFeature->GetFID();
     if (nFID != OGRNullFID)
         poFeature->SetFID(nFID - (1 + bHasHeaderLine));
     SetUpdated();
-    OGRErr eErr = OGRMemLayer::SetFeature(poFeature);
+    OGRErr eErr = OGRMemLayer::ISetFeature(poFeature);
     poFeature->SetFID(nFID);
     return eErr;
 }
@@ -140,7 +141,7 @@ OGRErr OGRXLSXLayer::SetFeature( OGRFeature *poFeature )
 /*                          DeleteFeature()                             */
 /************************************************************************/
 
-OGRErr OGRXLSXLayer::DeleteFeature( long nFID )
+OGRErr OGRXLSXLayer::DeleteFeature( GIntBig nFID )
 {
     Init();
     SetUpdated();
@@ -189,7 +190,7 @@ OGRXLSXDataSource::OGRXLSXDataSource()
 OGRXLSXDataSource::~OGRXLSXDataSource()
 
 {
-    SyncToDisk();
+    FlushCache();
 
     CPLFree( pszName );
 
@@ -273,7 +274,8 @@ int OGRXLSXDataSource::Open( const char * pszFilename,
 /*                             Create()                                 */
 /************************************************************************/
 
-int OGRXLSXDataSource::Create( const char * pszFilename, CPL_UNUSED char **papszOptions )
+int OGRXLSXDataSource::Create( const char * pszFilename,
+                               CPL_UNUSED char **papszOptions )
 {
     bUpdated = TRUE;
     bUpdatable = TRUE;
@@ -427,11 +429,18 @@ OGRFieldType OGRXLSXDataSource::GetOGRFieldType(const char* pszValue,
         if (eValueType == CPL_VALUE_STRING)
             return OFTString;
         else if (eValueType == CPL_VALUE_INTEGER)
-            return OFTInteger;
+        {
+            GIntBig nVal = CPLAtoGIntBig(pszValue);
+            if( (GIntBig)(int)nVal != nVal )
+                return OFTInteger64;
+            else
+                return OFTInteger;
+        }
         else
             return OFTReal;
     }
-    else if (strcmp(pszValueType, "datetime") == 0)
+    else if (strcmp(pszValueType, "datetime") == 0 ||
+             strcmp(pszValueType, "datetime_ms") == 0)
     {
         return OFTDateTime;
     }
@@ -463,10 +472,11 @@ static void SetField(OGRFeature* poFeature,
 
     if (strcmp(pszCellType, "time") == 0 ||
         strcmp(pszCellType, "date") == 0 ||
-        strcmp(pszCellType, "datetime") == 0)
+        strcmp(pszCellType, "datetime") == 0 ||
+        strcmp(pszCellType, "datetime_ms") == 0)
     {
         struct tm sTm;
-        double dfNumberOfDaysSince1900 = atof(pszValue);
+        double dfNumberOfDaysSince1900 = CPLAtof(pszValue);
 #define NUMBER_OF_DAYS_BETWEEN_1900_AND_1970        25569
 #define NUMBER_OF_SECONDS_PER_DAY                   86400
         GIntBig nUnixTime = (GIntBig)((dfNumberOfDaysSince1900 -
@@ -476,8 +486,9 @@ static void SetField(OGRFeature* poFeature,
 
         if (eType == OFTTime || eType == OFTDate || eType == OFTDateTime)
         {
+            double fFracSec = fmod(fmod(dfNumberOfDaysSince1900,1) * 3600 * 24, 1);
             poFeature->SetField(i, sTm.tm_year + 1900, sTm.tm_mon + 1, sTm.tm_mday,
-                                sTm.tm_hour, sTm.tm_min, sTm.tm_sec, 0);
+                                sTm.tm_hour, sTm.tm_min, sTm.tm_sec + fFracSec, 0 );
         }
         else if (strcmp(pszCellType, "time") == 0)
         {
@@ -491,9 +502,10 @@ static void SetField(OGRFeature* poFeature,
         }
         else /* if (strcmp(pszCellType, "datetime") == 0) */
         {
-            poFeature->SetField(i, CPLSPrintf("%04d/%02d/%02d %02d:%02d:%02d",
+            double fFracSec = fmod(fmod(dfNumberOfDaysSince1900,1) * 3600 * 24, 1);
+            poFeature->SetField(i,
                                 sTm.tm_year + 1900, sTm.tm_mon + 1, sTm.tm_mday,
-                                sTm.tm_hour, sTm.tm_min, sTm.tm_sec));
+                                sTm.tm_hour, sTm.tm_min, sTm.tm_sec + fFracSec, 0);
         }
     }
     else
@@ -681,12 +693,17 @@ void OGRXLSXDataSource::startElementRow(const char *pszName,
         int nS = atoi(pszS);
         if (nS >= 0 && nS < (int)apoStyles.size())
         {
-            OGRFieldType eType = apoStyles[nS];
-            if (eType == OFTDateTime)
-                osValueType = "datetime";
-            else if (eType == OFTDate)
+            XLSXFieldTypeExtended eType = apoStyles[nS];
+            if (eType.eType == OFTDateTime)
+            {
+                if( eType.bHasMS )
+                    osValueType = "datetime_ms";
+                else
+                    osValueType = "datetime";
+            }
+            else if (eType.eType == OFTDate)
                 osValueType = "date";
-            else if (eType == OFTTime)
+            else if (eType.eType == OFTTime)
                 osValueType = "time";
         }
         else if (nS != -1)
@@ -816,9 +833,13 @@ void OGRXLSXDataSource::endElementRow(CPL_UNUSED const char *pszName)
                         {
                             /* ok */
                         }
-                        else if (eFieldType == OFTReal && eValType == OFTInteger)
+                        else if (eFieldType == OFTReal && (eValType == OFTInteger || eValType == OFTInteger64))
                         {
                            /* ok */;
+                        }
+                        else if (eFieldType == OFTInteger64 && eValType == OFTInteger )
+                        {
+                            /* ok */;
                         }
                         else if (eFieldType != OFTString && eValType != eFieldType)
                         {
@@ -827,9 +848,11 @@ void OGRXLSXDataSource::endElementRow(CPL_UNUSED const char *pszName)
                             if ((eFieldType == OFTDate || eFieldType == OFTTime) &&
                                    eValType == OFTDateTime)
                                 oNewFieldDefn.SetType(OFTDateTime);
-                            else if (eFieldType == OFTInteger &&
+                            else if ((eFieldType == OFTInteger || eFieldType == OFTInteger64) &&
                                      eValType == OFTReal)
                                 oNewFieldDefn.SetType(OFTReal);
+                            else if( eFieldType == OFTInteger && eValType == OFTInteger64 )
+                                oNewFieldDefn.SetType(OFTInteger64);
                             else
                                 oNewFieldDefn.SetType(OFTString);
                             poCurLayer->AlterFieldDefn(i, &oNewFieldDefn,
@@ -1243,13 +1266,14 @@ void OGRXLSXDataSource::startElementStylesCbk(const char *pszName,
                            strstr(pszFormatCode, "YY") != NULL;
             int bHasTime = strstr(pszFormatCode, "HH") != NULL;
             if (bHasDate && bHasTime)
-                apoMapStyleFormats[nNumFmtId] = OFTDateTime;
+                apoMapStyleFormats[nNumFmtId] = XLSXFieldTypeExtended(OFTDateTime,
+                                        strstr(pszFormatCode, "SS.000") != NULL );
             else if (bHasDate)
-                apoMapStyleFormats[nNumFmtId] = OFTDate;
+                apoMapStyleFormats[nNumFmtId] = XLSXFieldTypeExtended(OFTDate);
             else if (bHasTime)
-                apoMapStyleFormats[nNumFmtId] = OFTTime;
+                apoMapStyleFormats[nNumFmtId] = XLSXFieldTypeExtended(OFTTime);
             else
-                apoMapStyleFormats[nNumFmtId] = OFTReal;
+                apoMapStyleFormats[nNumFmtId] = XLSXFieldTypeExtended(OFTReal);
         }
     }
     else if (strcmp(pszName,"cellXfs") == 0)
@@ -1260,22 +1284,22 @@ void OGRXLSXDataSource::startElementStylesCbk(const char *pszName,
     {
         const char* pszNumFmtId = GetAttributeValue(ppszAttr, "numFmtId", "-1");
         int nNumFmtId = atoi(pszNumFmtId);
-        OGRFieldType eType = OFTReal;
+        XLSXFieldTypeExtended eType(OFTReal);
         if (nNumFmtId >= 0)
         {
             if (nNumFmtId < 164)
             {
                 // From http://social.msdn.microsoft.com/Forums/en-US/oxmlsdk/thread/e27aaf16-b900-4654-8210-83c5774a179c/
                 if (nNumFmtId >= 14 && nNumFmtId <= 17)
-                    eType = OFTDate;
+                    eType = XLSXFieldTypeExtended(OFTDate);
                 else if (nNumFmtId >= 18 && nNumFmtId <= 21)
-                    eType = OFTTime;
+                    eType = XLSXFieldTypeExtended(OFTTime);
                 else if (nNumFmtId == 22)
-                    eType = OFTDateTime;
+                    eType = XLSXFieldTypeExtended(OFTDateTime);
             }
             else
             {
-                std::map<int, OGRFieldType>::iterator oIter = apoMapStyleFormats.find(nNumFmtId);
+                std::map<int, XLSXFieldTypeExtended>::iterator oIter = apoMapStyleFormats.find(nNumFmtId);
                 if (oIter != apoMapStyleFormats.end())
                     eType = oIter->second;
                 else
@@ -1363,14 +1387,14 @@ void OGRXLSXDataSource::AnalyseStyles(VSILFILE* fpStyles)
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRXLSXDataSource::CreateLayer( const char * pszLayerName,
-                                CPL_UNUSED OGRSpatialReference *poSRS,
-                                CPL_UNUSED OGRwkbGeometryType eType,
-                                char ** papszOptions )
+OGRXLSXDataSource::ICreateLayer( const char * pszLayerName,
+                                 CPL_UNUSED OGRSpatialReference *poSRS,
+                                 CPL_UNUSED OGRwkbGeometryType eType,
+                                 char ** papszOptions )
 
 {
 /* -------------------------------------------------------------------- */
@@ -1677,7 +1701,7 @@ static void WriteLayer(const char* pszName, OGRLayer* poLayer, int iLayer,
     {
         int nWidth = 15;
         if (poFDefn->GetFieldDefn(j)->GetType() == OFTDateTime)
-            nWidth = 25;
+            nWidth = 29;
         VSIFPrintfL(fp, "<col min=\"%d\" max=\"%d\" width=\"%d\"/>\n",
                     j+1, 1024, nWidth);
 
@@ -1742,13 +1766,18 @@ static void WriteLayer(const char* pszName, OGRLayer* poLayer, int iLayer,
                     VSIFPrintfL(fp, "<v>%d</v>\n", poFeature->GetFieldAsInteger(j));
                     VSIFPrintfL(fp, "</c>\n");
                 }
+                else if (eType == OFTInteger64)
+                {
+                    VSIFPrintfL(fp, "<c r=\"%s%d\">\n", szCol, iRow);
+                    VSIFPrintfL(fp, "<v>" CPL_FRMT_GIB "</v>\n", poFeature->GetFieldAsInteger64(j));
+                    VSIFPrintfL(fp, "</c>\n");
+                }
                 else if (eType == OFTDate || eType == OFTDateTime || eType == OFTTime)
                 {
-                    VSIFPrintfL(fp, "<c r=\"%s%d\" s=\"%d\">\n", szCol, iRow,
-                                (eType == OFTDate) ? 1 : (eType == OFTDateTime) ? 2 : 3);
-                    int nYear, nMonth, nDay, nHour, nMinute, nSecond, nTZFlag;
+                    int nYear, nMonth, nDay, nHour, nMinute, nTZFlag;
+                    float fSecond;
                     poFeature->GetFieldAsDateTime(j, &nYear, &nMonth, &nDay,
-                                                    &nHour, &nMinute, &nSecond, &nTZFlag);
+                                                    &nHour, &nMinute, &fSecond, &nTZFlag );
                     struct tm brokendowntime;
                     memset(&brokendowntime, 0, sizeof(brokendowntime));
                     brokendowntime.tm_year = (eType == OFTTime) ? 70 : nYear - 1900;
@@ -1756,9 +1785,14 @@ static void WriteLayer(const char* pszName, OGRLayer* poLayer, int iLayer,
                     brokendowntime.tm_mday = (eType == OFTTime) ? 1 : nDay;
                     brokendowntime.tm_hour = nHour;
                     brokendowntime.tm_min = nMinute;
-                    brokendowntime.tm_sec = nSecond;
+                    brokendowntime.tm_sec = (int)fSecond;
                     GIntBig nUnixTime = CPLYMDHMSToUnixTime(&brokendowntime);
                     double dfNumberOfDaysSince1900 = (1.0 * nUnixTime / NUMBER_OF_SECONDS_PER_DAY);
+                    dfNumberOfDaysSince1900 += fmod(fSecond,1) / NUMBER_OF_SECONDS_PER_DAY;
+                    int s = (eType == OFTDate) ? 1 : (eType == OFTDateTime) ? 2 : 3;
+                    if( eType == OFTDateTime && OGR_GET_MS(fSecond) )
+                        s = 4;
+                    VSIFPrintfL(fp, "<c r=\"%s%d\" s=\"%d\">\n", szCol, iRow, s);
                     if (eType != OFTTime)
                         dfNumberOfDaysSince1900 += NUMBER_OF_DAYS_BETWEEN_1900_AND_1970;
                     if (eType == OFTDate)
@@ -1840,6 +1874,7 @@ static void WriteStyles(const char* pszName)
     VSIFPrintfL(fp, "<numFmt formatCode=\"DD/MM/YY\" numFmtId=\"165\"/>\n");
     VSIFPrintfL(fp, "<numFmt formatCode=\"DD/MM/YYYY\\ HH:MM:SS\" numFmtId=\"166\"/>\n");
     VSIFPrintfL(fp, "<numFmt formatCode=\"HH:MM:SS\" numFmtId=\"167\"/>\n");
+    VSIFPrintfL(fp, "<numFmt formatCode=\"DD/MM/YYYY\\ HH:MM:SS.000\" numFmtId=\"168\"/>\n");
     VSIFPrintfL(fp, "</numFmts>\n");
     VSIFPrintfL(fp, "<fonts count=\"1\">\n");
     VSIFPrintfL(fp, "<font>\n");
@@ -1866,11 +1901,12 @@ static void WriteStyles(const char* pszName)
     VSIFPrintfL(fp, "<xf numFmtId=\"164\">\n");
     VSIFPrintfL(fp, "</xf>\n");
     VSIFPrintfL(fp, "</cellStyleXfs>\n");
-    VSIFPrintfL(fp, "<cellXfs count=\"4\">\n");
+    VSIFPrintfL(fp, "<cellXfs count=\"5\">\n");
     VSIFPrintfL(fp, "<xf numFmtId=\"164\" xfId=\"0\"/>\n");
     VSIFPrintfL(fp, "<xf numFmtId=\"165\" xfId=\"0\"/>\n");
     VSIFPrintfL(fp, "<xf numFmtId=\"166\" xfId=\"0\"/>\n");
     VSIFPrintfL(fp, "<xf numFmtId=\"167\" xfId=\"0\"/>\n");
+    VSIFPrintfL(fp, "<xf numFmtId=\"168\" xfId=\"0\"/>\n");
     VSIFPrintfL(fp, "</cellXfs>\n");
     VSIFPrintfL(fp, "<cellStyles count=\"1\">\n");
     VSIFPrintfL(fp, "<cellStyle builtinId=\"0\" customBuiltin=\"false\" name=\"Normal\" xfId=\"0\"/>\n");
@@ -1921,15 +1957,15 @@ static void WriteDotRels(const char* pszName)
 }
 
 /************************************************************************/
-/*                            SyncToDisk()                              */
+/*                            FlushCache()                              */
 /************************************************************************/
 
-OGRErr OGRXLSXDataSource::SyncToDisk()
+void OGRXLSXDataSource::FlushCache()
 {
     int i;
 
     if (!bUpdated)
-        return OGRERR_NONE;
+        return;
 
     VSIStatBufL sStat;
     if (VSIStatL(pszName, &sStat) == 0)
@@ -1938,7 +1974,7 @@ OGRErr OGRXLSXDataSource::SyncToDisk()
         {
             CPLError(CE_Failure, CPLE_FileIO,
                     "Cannot delete %s", pszName);
-            return OGRERR_FAILURE;
+            return;
         }
     }
 
@@ -1954,7 +1990,7 @@ OGRErr OGRXLSXDataSource::SyncToDisk()
     {
         CPLError(CE_Failure, CPLE_FileIO,
                  "Cannot create %s", pszName);
-        return OGRERR_FAILURE;
+        return;
     }
 
     WriteContentTypes(pszName, nLayers);
@@ -1994,5 +2030,5 @@ OGRErr OGRXLSXDataSource::SyncToDisk()
         ((OGRXLSXLayer*)papoLayers[i])->SetUpdated(FALSE);
     }
 
-    return OGRERR_NONE;
+    return;
 }

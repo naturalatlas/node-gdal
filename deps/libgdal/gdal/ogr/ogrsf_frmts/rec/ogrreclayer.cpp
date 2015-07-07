@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrreclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrreclayer.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  EPIInfo .REC Reader
  * Purpose:  Implements OGRRECLayer class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrreclayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrreclayer.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                            OGRRECLayer()                             */
@@ -51,6 +51,7 @@ OGRRECLayer::OGRRECLayer( const char *pszLayerNameIn,
     nNextFID = 1;
 
     poFeatureDefn = new OGRFeatureDefn( pszLayerNameIn );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     nFieldCount = 0;
@@ -305,4 +306,3 @@ int OGRRECLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
-

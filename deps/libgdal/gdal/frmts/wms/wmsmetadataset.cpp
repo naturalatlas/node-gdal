@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wmsmetadataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: wmsmetadataset.cpp 27892 2014-10-20 22:02:57Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Definition of GDALWMSMetaDataset class
@@ -244,14 +244,15 @@ void GDALWMSMetaDataset::AddSubDataset( const char* pszLayerName,
                                         const char* pszMaxY,
                                         CPLString osFormat,
                                         CPLString osTransparent)
-
 {
     CPLString osSubdatasetName = "WMS:";
     osSubdatasetName += osGetURL;
     osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "SERVICE", "WMS");
     osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "VERSION", osVersion);
     osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "REQUEST", "GetMap");
-    osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "LAYERS", pszLayerName);
+    char* pszEscapedLayerName = CPLEscapeString(pszLayerName, -1, CPLES_URL);
+    osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "LAYERS", pszEscapedLayerName);
+    CPLFree(pszEscapedLayerName);
     if(VersionStringToInt(osVersion.c_str())>= VersionStringToInt("1.3.0"))
     {
         osSubdatasetName = CPLURLAddKVP(osSubdatasetName, "CRS", pszSRS);
@@ -760,4 +761,3 @@ GDALDataset* GDALWMSMetaDataset::AnalyzeTileMapService(CPLXMLNode* psXML)
 
     return poDS;
 }
-

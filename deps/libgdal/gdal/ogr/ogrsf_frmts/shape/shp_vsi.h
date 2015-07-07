@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shp_vsi.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: shp_vsi.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  IO Redirection via VSI services for shp/dbf io.
@@ -39,6 +39,7 @@ CPL_C_START
 const SAHooks* VSI_SHP_GetHook(int b2GBLimit);
 
 VSILFILE* VSI_SHP_GetVSIL( SAFile file );
+const char* VSI_SHP_GetFilename( SAFile file );
 int VSI_SHP_WriteMoreDataOK( SAFile file, SAOffset nExtraBytes );
 
 CPL_C_END

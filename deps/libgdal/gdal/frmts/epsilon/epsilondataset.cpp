@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: epsilondataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: epsilondataset.cpp 28738 2015-03-16 17:20:21Z rouault $
  *
  * Project:  GDAL Epsilon driver
  * Purpose:  Implement GDAL Epsilon support using Epsilon library
@@ -30,7 +30,7 @@
 #include "epsilon.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: epsilondataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: epsilondataset.cpp 28738 2015-03-16 17:20:21Z rouault $");
 
 #define RASTERLITE_WAVELET_HEADER "StartWaveletsImage$$"
 #define RASTERLITE_WAVELET_FOOTER "$$EndWaveletsImage"
@@ -683,7 +683,7 @@ GDALDataset* EpsilonDataset::Open(GDALOpenInfo* poOpenInfo)
 
 GDALDataset *
 EpsilonDatasetCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                       int bStrict, char ** papszOptions, 
+                       CPL_UNUSED int bStrict, char ** papszOptions, 
                        GDALProgressFunc pfnProgress, void * pProgressData )
 {
     int nBands = poSrcDS->GetRasterCount();
@@ -777,7 +777,7 @@ EpsilonDatasetCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         eResample = EPS_RESAMPLE_444;
     
     const char* pszTarget = CSLFetchNameValueDef(papszOptions, "TARGET", "96");
-    double dfReductionFactor = 1 - atof(pszTarget) / 100;
+    double dfReductionFactor = 1 - CPLAtof(pszTarget) / 100;
     if (dfReductionFactor > 1)
         dfReductionFactor = 1;
     else if (dfReductionFactor < 0)
@@ -789,7 +789,10 @@ EpsilonDatasetCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "wb");
     if (fp == NULL)
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "Cannot create %s", pszFilename);
         return NULL;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Compute number of blocks, block size, etc...                    */
@@ -886,7 +889,7 @@ EpsilonDatasetCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                               GDT_Byte, nBands, NULL,
                               1,
                               nBlockXSize,
-                              nBlockXSize * nBlockYSize);
+                              nBlockXSize * nBlockYSize, NULL);
             
             int nOutBufSize = nTargetBlockSize;
             if (eErr == CE_None && nBands == 1)
@@ -992,6 +995,7 @@ void GDALRegister_EPSILON()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "EPSILON" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "Epsilon wavelets" );

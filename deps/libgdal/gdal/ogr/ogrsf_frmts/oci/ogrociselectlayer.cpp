@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrociselectlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrociselectlayer.cpp 28407 2015-02-03 10:47:59Z rouault $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCISelectLayer class.  This class 
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrociselectlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrociselectlayer.cpp 28407 2015-02-03 10:47:59Z rouault $");
 
 /************************************************************************/
 /*                          OGROCISelectLayer()                         */
@@ -48,6 +48,7 @@ OGROCISelectLayer::OGROCISelectLayer( OGROCIDataSource *poDSIn,
     iNextShapeId = 0;
 
     poFeatureDefn = ReadTableDefinition( poDescribedCommand );
+    SetDescription( poFeatureDefn->GetName() );
 
     pszQueryStatement = CPLStrdup(pszQuery);
     
@@ -114,6 +115,8 @@ OGROCISelectLayer::ReadTableDefinition( OGROCIStatement *poCommand )
     OGRFeatureDefn *poDefn;
 
     poDefn = poCommand->GetResultDefn();
+    if( iGeomColumn >= 0 )
+        poDefn->SetGeomType(wkbUnknown);
     poDefn->Reference();
 
 /* -------------------------------------------------------------------- */
@@ -125,6 +128,20 @@ OGROCISelectLayer::ReadTableDefinition( OGROCIStatement *poCommand )
     {
         iFIDColumn = poDefn->GetFieldIndex(pszExpectedFIDName);
         pszFIDName = CPLStrdup(poDefn->GetFieldDefn(iFIDColumn)->GetNameRef());
+    }
+
+    if( EQUAL(pszExpectedFIDName, "OGR_FID") && pszFIDName )
+    {
+        for(int i=0;i<poDefn->GetFieldCount();i++)
+        {
+            // This is presumably a Integer since we always create Integer64 with a
+            // defined precision
+            if( poDefn->GetFieldDefn(i)->GetType() == OFTInteger64 &&
+                poDefn->GetFieldDefn(i)->GetWidth() == 0 )
+            {
+                poDefn->GetFieldDefn(i)->SetType(OFTInteger);
+            }
+        }
     }
 
     return poDefn;

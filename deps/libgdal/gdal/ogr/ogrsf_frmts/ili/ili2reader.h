@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili2reader.h 27184 2014-04-14 22:21:56Z pka $
+ * $Id: ili2reader.h 29140 2015-05-03 20:09:32Z pka $
  *
  * Project:  Interlis 2 Reader
  * Purpose:  Public Declarations for Reader code.
@@ -52,7 +52,6 @@ public:
     
     virtual std::list<OGRLayer *> GetLayers() = 0;
     virtual int GetLayerCount() = 0;
-    virtual void SetArcDegrees(double newArcDegrees) = 0;
 };
 
 IILI2Reader *CreateILI2Reader();

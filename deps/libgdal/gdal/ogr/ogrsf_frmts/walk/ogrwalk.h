@@ -60,7 +60,7 @@ protected:
     // Layer spatial reference system
     OGRSpatialReference *poSRS;
 
-    int                 iNextShapeId;
+    GIntBig             iNextShapeId;
 
     OGRWalkDataSource    *poDS;
 
@@ -120,10 +120,10 @@ public:
                                     const char *pszMemo );
 
     virtual void        ResetReading();
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 
     virtual OGRErr      SetAttributeFilter( const char * );
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
     virtual int         TestCapability( const char * );
 

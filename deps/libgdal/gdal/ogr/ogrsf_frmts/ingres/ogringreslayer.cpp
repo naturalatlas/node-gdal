@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogringreslayer.cpp 19509 2010-04-23 16:49:33Z warmerdam $
+ * $Id: ogringreslayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIngresLayer class.
@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogringreslayer.cpp 19509 2010-04-23 16:49:33Z warmerdam $");
+CPL_CVSID("$Id: ogringreslayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                           OGRIngresLayer()                            */
@@ -139,8 +139,8 @@ static int ParseXY( const char **ppszNext, double *padfXY )
         }
     }
 
-    padfXY[0] = atof(pszNext);
-    padfXY[1] = atof(pszNext + iStartY);
+    padfXY[0] = CPLAtof(pszNext);
+    padfXY[1] = CPLAtof(pszNext + iStartY);
 
     int iEnd;
 
@@ -536,7 +536,7 @@ OGRFeature *OGRIngresLayer::GetNextRawFeature()
 /*      Note that we actually override this in OGRIngresTableLayer.      */
 /************************************************************************/
 
-OGRFeature *OGRIngresLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRIngresLayer::GetFeature( GIntBig nFeatureId )
 
 {
     return OGRLayer::GetFeature( nFeatureId );

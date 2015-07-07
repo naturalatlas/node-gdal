@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_recode_stub.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_recode_stub.cpp 29121 2015-05-02 22:53:48Z rouault $
  *
  * Name:     cpl_recode_stub.cpp
  * Project:  CPL - Common Portability Library
@@ -32,7 +32,7 @@
 
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: cpl_recode_stub.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_recode_stub.cpp 29121 2015-05-02 22:53:48Z rouault $");
 
 #ifdef CPL_RECODE_STUB 
 
@@ -323,7 +323,7 @@ char *CPLRecodeFromWCharStub( const wchar_t *pwszSource,
 /*      Convert, and confirm we had enough space.                       */
 /* -------------------------------------------------------------------- */
     nDstLen = utf8fromwc( pszResult, nDstBufSize, pwszSource, nSrcLen );
-    if( nDstLen >= nDstBufSize - 1 )
+    if( nDstLen >= nDstBufSize )
     {
         CPLAssert( FALSE ); // too small!
         return NULL;

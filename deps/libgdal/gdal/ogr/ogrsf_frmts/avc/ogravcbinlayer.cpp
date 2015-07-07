@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravcbinlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogravcbinlayer.cpp 28383 2015-01-30 15:47:59Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCBinLayer class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravcbinlayer.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogravcbinlayer.cpp 28383 2015-01-30 15:47:59Z rouault $");
 
 /************************************************************************/
 /*                           OGRAVCBinLayer()                           */
@@ -116,9 +116,12 @@ void OGRAVCBinLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRAVCBinLayer::GetFeature( long nFID )
+OGRFeature *OGRAVCBinLayer::GetFeature( GIntBig nFID )
 
 {
+    if( (GIntBig)(int)nFID != nFID )
+        return NULL;
+
 /* -------------------------------------------------------------------- */
 /*      If we haven't started yet, open the file now.                   */
 /* -------------------------------------------------------------------- */
@@ -150,7 +153,7 @@ OGRFeature *OGRAVCBinLayer::GetFeature( long nFID )
     else
     {
         bNeedReset = TRUE;
-        pFeature = AVCBinReadObject( hFile, nFID );
+        pFeature = AVCBinReadObject( hFile, (int)nFID );
     }
         
     if( pFeature == NULL )
@@ -424,7 +427,7 @@ int OGRAVCBinLayer::AppendTableFields( OGRFeature *poFeature )
     void *hRecord;
 
     if( nTableAttrIndex == -1 )
-        nRecordId = poFeature->GetFID();
+        nRecordId = (int) poFeature->GetFID();
     else
         nRecordId = poFeature->GetFieldAsInteger( nTableAttrIndex );
 

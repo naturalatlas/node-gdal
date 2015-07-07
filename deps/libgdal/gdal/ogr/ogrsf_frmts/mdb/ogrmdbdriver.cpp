@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmdbdriver.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrmdbdriver.cpp 27794 2014-10-04 10:13:46Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -30,7 +30,7 @@
 #include "ogr_mdb.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrmdbdriver.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrmdbdriver.cpp 27794 2014-10-04 10:13:46Z rouault $");
 
 // g++ -fPIC -g -Wall ogr/ogrsf_frmts/mdb/*.cpp -shared -o ogr_MDB.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/mdb -L. -lgdal -I/usr/lib/jvm/java-6-openjdk/include -I/usr/lib/jvm/java-6-openjdk/include/linux  -L/usr/lib/jvm/java-6-openjdk/jre/lib/amd64/server -ljvm
 
@@ -65,6 +65,9 @@ OGRDataSource *OGRMDBDriver::Open( const char * pszFilename,
 {
     OGRMDBDataSource     *poDS;
 
+    if( bUpdate )
+        return NULL;
+
     if( EQUALN(pszFilename, "PGEO:", strlen("PGEO:")) )
         return NULL;
 
@@ -84,7 +87,7 @@ OGRDataSource *OGRMDBDriver::Open( const char * pszFilename,
     // Open data source
     poDS = new OGRMDBDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate, TRUE ) )
+    if( !poDS->Open( pszFilename ) )
     {
         delete poDS;
         return NULL;
@@ -97,7 +100,7 @@ OGRDataSource *OGRMDBDriver::Open( const char * pszFilename,
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRMDBDriver::TestCapability( const char * pszCap )
+int OGRMDBDriver::TestCapability( CPL_UNUSED const char * pszCap )
 
 {
     return FALSE;
@@ -111,6 +114,12 @@ int OGRMDBDriver::TestCapability( const char * pszCap )
 void RegisterOGRMDB()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRMDBDriver );
+    OGRSFDriver* poDriver = new OGRMDBDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                "Access MDB (PGeo and Geomedia capable)" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "mdb" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_mdb.html" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }
 

@@ -84,6 +84,7 @@ swq_select::~swq_select()
 
     for( i = 0; i < result_columns; i++ )
     {
+        CPLFree( column_defs[i].table_name );
         CPLFree( column_defs[i].field_name );
         CPLFree( column_defs[i].field_alias );
 
@@ -107,6 +108,7 @@ swq_select::~swq_select()
 
     for( i = 0; i < order_specs; i++ )
     {
+        CPLFree( order_defs[i].table_name );
         CPLFree( order_defs[i].field_name );
     }
     
@@ -114,8 +116,7 @@ swq_select::~swq_select()
 
     for( i = 0; i < join_count; i++ )
     {
-        CPLFree( join_defs[i].primary_field_name );
-        CPLFree( join_defs[i].secondary_field_name );
+        delete join_defs[i].poExpr;
     }
     CPLFree( join_defs );
 
@@ -129,7 +130,8 @@ swq_select::~swq_select()
 /*      tables and fields.                                              */
 /************************************************************************/
 
-CPLErr swq_select::preparse( const char *select_statement )
+CPLErr swq_select::preparse( const char *select_statement,
+                             int bAcceptCustomFuncs )
 
 {
 /* -------------------------------------------------------------------- */
@@ -141,6 +143,7 @@ CPLErr swq_select::preparse( const char *select_statement )
     context.pszNext = select_statement;
     context.pszLastValid = select_statement;
     context.nStartToken = SWQT_SELECT_START;
+    context.bAcceptCustomFuncs = bAcceptCustomFuncs;
     context.poCurSelect = this;
 
 /* -------------------------------------------------------------------- */
@@ -216,7 +219,7 @@ void swq_select::Dump( FILE *fp )
     {
         swq_col_def *def = column_defs + i;
 
-        
+        fprintf( fp, "  Table name: %s\n", def->table_name );
         fprintf( fp, "  Name: %s\n", def->field_name );
 
         if( def->field_alias )
@@ -247,6 +250,7 @@ void swq_select::Dump( FILE *fp )
 
         fprintf( fp, "    Field Type: %d\n", def->field_type );
         fprintf( fp, "    Target Type: %d\n", def->target_type );
+        fprintf( fp, "    Target SubType: %d\n", def->target_subtype );
         fprintf( fp, "    Length: %d, Precision: %d\n",
                  def->field_length, def->field_precision );
 
@@ -278,16 +282,7 @@ void swq_select::Dump( FILE *fp )
     for( i = 0; i < join_count; i++ )
     {
         fprintf( fp, "  %d:\n", i );
-        fprintf( fp, "    Primary Field: %s/%d\n", 
-                 join_defs[i].primary_field_name,
-                 join_defs[i].primary_field );
-
-        fprintf( fp, "    Operation: %d\n", 
-                 join_defs[i].op );
-
-        fprintf( fp, "    Secondary Field: %s/%d\n", 
-                 join_defs[i].secondary_field_name,
-                 join_defs[i].secondary_field );
+        join_defs[i].poExpr->Dump( fp, 4 );
         fprintf( fp, "    Secondary Table: %d\n", 
                  join_defs[i].secondary_table );
     }
@@ -319,6 +314,123 @@ void swq_select::Dump( FILE *fp )
 }
 
 /************************************************************************/
+/*                               Unparse()                              */
+/************************************************************************/
+
+char* swq_select::Unparse()
+{
+    int i;
+    CPLString osSelect("SELECT ");
+    if( query_mode == SWQM_DISTINCT_LIST )
+        osSelect += "DISTINCT ";
+
+    for( i = 0; i < result_columns; i++ )
+    {
+        swq_col_def *def = column_defs + i;
+
+        if( i > 0 )
+            osSelect += ", ";
+
+        if( def->expr != NULL && def->col_func == SWQCF_NONE )
+        {
+            char* pszTmp = def->expr->Unparse(NULL, '"');
+            osSelect += pszTmp;
+            CPLFree(pszTmp);
+        }
+        else
+        {
+            if( def->col_func == SWQCF_AVG )
+                osSelect += "AVG(";
+            else if( def->col_func == SWQCF_MIN )
+                osSelect += "MIN(";
+            else if( def->col_func == SWQCF_MAX )
+                osSelect += "MAX(";
+            else if( def->col_func == SWQCF_COUNT )
+                osSelect += "COUNT(";
+            else if( def->col_func == SWQCF_SUM )
+                osSelect += "SUM(";
+
+            if( def->distinct_flag && def->col_func == SWQCF_COUNT )
+                osSelect += "DISTINCT ";
+
+            if( (def->field_alias == NULL || table_count > 1) &&
+                def->table_name != NULL && def->table_name[0] != '\0' )
+            {
+                osSelect += swq_expr_node::QuoteIfNecessary(def->table_name, '"');
+                osSelect += ".";
+            }
+            osSelect += swq_expr_node::QuoteIfNecessary(def->field_name, '"');
+        }
+
+        if( def->field_alias != NULL &&
+            strcmp(def->field_name, def->field_alias) != 0 )
+        {
+            osSelect += " AS ";
+            osSelect += swq_expr_node::QuoteIfNecessary(def->field_alias, '"');
+        }
+
+        if( def->col_func != SWQCF_NONE )
+            osSelect += ")";
+    }
+    
+    osSelect += " FROM ";
+    if( table_defs[0].data_source != NULL )
+    {
+        osSelect += "'";
+        osSelect += table_defs[0].data_source;
+        osSelect += "'.";
+    }
+    osSelect += swq_expr_node::QuoteIfNecessary(table_defs[0].table_name, '"');
+    if( table_defs[0].table_alias != NULL &&
+        strcmp(table_defs[0].table_name, table_defs[0].table_alias) != 0 )
+    {
+        osSelect += " AS ";
+        osSelect += swq_expr_node::QuoteIfNecessary(table_defs[0].table_alias, '"');
+    }
+
+    for( i = 0; i < join_count; i++ )
+    {
+        int iTable = join_defs[i].secondary_table;
+        osSelect += " JOIN ";
+        if( table_defs[iTable].data_source != NULL )
+        {
+            osSelect += "'";
+            osSelect += table_defs[iTable].data_source;
+            osSelect += "'.";
+        }
+        osSelect += swq_expr_node::QuoteIfNecessary(table_defs[iTable].table_name, '"');
+        if( table_defs[iTable].table_alias != NULL &&
+            strcmp(table_defs[iTable].table_name, table_defs[iTable].table_alias) != 0 )
+        {
+            osSelect += " AS ";
+            osSelect += swq_expr_node::QuoteIfNecessary(table_defs[iTable].table_alias, '"');
+        }
+        osSelect += " ON ";
+        char* pszTmp = join_defs[i].poExpr->Unparse(NULL, '"');
+        osSelect += pszTmp;
+        CPLFree(pszTmp);
+    }
+
+    if( where_expr != NULL )
+    {
+        osSelect += " WHERE ";
+        char* pszTmp = where_expr->Unparse(NULL, '"');
+        osSelect += pszTmp;
+        CPLFree(pszTmp);
+    }
+
+    for( i = 0; i < order_specs; i++ )
+    {
+        osSelect += " ORDER BY ";
+        osSelect += swq_expr_node::QuoteIfNecessary(order_defs[i].field_name, '"');
+        if( !order_defs[i].ascending_flag )
+            osSelect += " DESC";
+    }
+
+    return CPLStrdup(osSelect);
+}
+
+/************************************************************************/
 /*                             PushField()                              */
 /*                                                                      */
 /*      Create a new field definition by name and possibly alias.       */
@@ -328,6 +440,12 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
                            int distinct_flag )
 
 {
+    if( query_mode == SWQM_DISTINCT_LIST && distinct_flag )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported, "SELECT DISTINCT and COUNT(DISTINCT...) not supported together");
+        return FALSE;
+    }
+
 /* -------------------------------------------------------------------- */
 /*      Grow the array.                                                 */
 /* -------------------------------------------------------------------- */
@@ -344,18 +462,30 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
 /*      Try to capture a field name.                                    */
 /* -------------------------------------------------------------------- */
     if( poExpr->eNodeType == SNT_COLUMN )
+    {
+        col_def->table_name = 
+            CPLStrdup(poExpr->table_name ? poExpr->table_name : "");
         col_def->field_name = 
             CPLStrdup(poExpr->string_value);
+    }
     else if( poExpr->eNodeType == SNT_OPERATION
              && (poExpr->nOperation == SWQ_CAST ||
                  (poExpr->nOperation >= SWQ_AVG &&
                   poExpr->nOperation <= SWQ_SUM))
              && poExpr->nSubExprCount >= 1
              && poExpr->papoSubExpr[0]->eNodeType == SNT_COLUMN )
+    {
+        col_def->table_name = 
+            CPLStrdup(poExpr->papoSubExpr[0]->table_name ?
+                        poExpr->papoSubExpr[0]->table_name : "");
         col_def->field_name = 
             CPLStrdup(poExpr->papoSubExpr[0]->string_value);
+    }
     else
+    {
+        col_def->table_name = CPLStrdup("");
         col_def->field_name = CPLStrdup("");
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Initialize fields.                                              */
@@ -380,6 +510,7 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
     col_def->field_type = SWQ_OTHER;
     col_def->field_precision = -1;
     col_def->target_type = SWQ_OTHER;
+    col_def->target_subtype = OFSTNone;
     col_def->col_func = SWQCF_NONE;
     col_def->distinct_flag = distinct_flag;
 
@@ -397,9 +528,22 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
             col_def->target_type = SWQ_STRING;
             col_def->field_length = 1;
         }
+        else if( strcasecmp(pszTypeName,"boolean") == 0 )
+        {
+            col_def->target_type = SWQ_BOOLEAN;
+        }
         else if( strcasecmp(pszTypeName,"integer") == 0 )
         {
             col_def->target_type = SWQ_INTEGER;
+        }
+        else if( strcasecmp(pszTypeName,"bigint") == 0 )
+        {
+            col_def->target_type = SWQ_INTEGER64;
+        }
+        else if( strcasecmp(pszTypeName,"smallint") == 0 )
+        {
+            col_def->target_type = SWQ_INTEGER;
+            col_def->target_subtype = OFSTInt16;
         }
         else if( strcasecmp(pszTypeName,"float") == 0 )
         {
@@ -431,6 +575,8 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Unrecognized typename %s in CAST operator.", 
                       pszTypeName );
+            CPLFree(col_def->table_name);
+            col_def->table_name = NULL;
             CPLFree(col_def->field_name);
             col_def->field_name = NULL;
             CPLFree(col_def->field_alias);
@@ -447,6 +593,8 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
                 {
                     CPLError( CE_Failure, CPLE_AppDefined,
                       "First argument of CAST operator should be an geometry type identifier." );
+                    CPLFree(col_def->table_name);
+                    col_def->table_name = NULL;
                     CPLFree(col_def->field_name);
                     col_def->field_name = NULL;
                     CPLFree(col_def->field_alias);
@@ -461,7 +609,7 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
                 // SRID
                 if( poExpr->nSubExprCount > 3 )
                 {
-                    col_def->nSRID = poExpr->papoSubExpr[3]->int_value;
+                    col_def->nSRID = (int)poExpr->papoSubExpr[3]->int_value;
                 }
             }
         }
@@ -474,6 +622,8 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
                 {
                     CPLError( CE_Failure, CPLE_AppDefined,
                       "First argument of CAST operator should be of integer type." );
+                    CPLFree(col_def->table_name);
+                    col_def->table_name = NULL;
                     CPLFree(col_def->field_name);
                     col_def->field_name = NULL;
                     CPLFree(col_def->field_alias);
@@ -481,13 +631,20 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
                     result_columns--;
                     return FALSE;
                 }
-                col_def->field_length = poExpr->papoSubExpr[2]->int_value;
+                col_def->field_length = (int)poExpr->papoSubExpr[2]->int_value;
             }
 
             // field width.
             if( poExpr->nSubExprCount > 3 && parse_precision )
             {
-                col_def->field_precision = poExpr->papoSubExpr[3]->int_value;
+                col_def->field_precision = (int)poExpr->papoSubExpr[3]->int_value;
+                if( col_def->field_precision == 0 )
+                {
+                    if( col_def->field_length < 10 )
+                        col_def->target_type = SWQ_INTEGER;
+                    else if( col_def->field_length < 19 )
+                        col_def->target_type = SWQ_INTEGER64;
+                }
             }
         }
     }
@@ -506,6 +663,8 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Column Summary Function '%s' has wrong number of arguments.", 
                       poOp->pszName );
+            CPLFree(col_def->table_name);
+            col_def->table_name = NULL;
             CPLFree(col_def->field_name);
             col_def->field_name = NULL;
             CPLFree(col_def->field_alias);
@@ -520,6 +679,8 @@ int swq_select::PushField( swq_expr_node *poExpr, const char *pszAlias,
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Argument of column Summary Function '%s' should be a column.", 
                       poOp->pszName );
+            CPLFree(col_def->table_name);
+            col_def->table_name = NULL;
             CPLFree(col_def->field_name);
             col_def->field_name = NULL;
             CPLFree(col_def->field_alias);
@@ -580,13 +741,14 @@ int swq_select::PushTableDef( const char *pszDataSource,
 /*                            PushOrderBy()                             */
 /************************************************************************/
 
-void swq_select::PushOrderBy( const char *pszFieldName, int bAscending )
+void swq_select::PushOrderBy( const char* pszTableName, const char *pszFieldName, int bAscending )
 
 {
     order_specs++;
     order_defs = (swq_order_def *) 
         CPLRealloc( order_defs, sizeof(swq_order_def) * order_specs );
 
+    order_defs[order_specs-1].table_name = CPLStrdup(pszTableName ? pszTableName : "");
     order_defs[order_specs-1].field_name = CPLStrdup(pszFieldName);
     order_defs[order_specs-1].table_index = -1;
     order_defs[order_specs-1].field_index = -1;
@@ -597,9 +759,7 @@ void swq_select::PushOrderBy( const char *pszFieldName, int bAscending )
 /*                              PushJoin()                              */
 /************************************************************************/
 
-void swq_select::PushJoin( int iSecondaryTable,
-                           const char *pszPrimaryField,
-                           const char *pszSecondaryField )
+void swq_select::PushJoin( int iSecondaryTable, swq_expr_node* poExpr )
 
 {
     join_count++;
@@ -607,11 +767,7 @@ void swq_select::PushJoin( int iSecondaryTable,
         CPLRealloc( join_defs, sizeof(swq_join_def) * join_count );
 
     join_defs[join_count-1].secondary_table = iSecondaryTable;
-    join_defs[join_count-1].primary_field_name = CPLStrdup(pszPrimaryField);
-    join_defs[join_count-1].primary_field = -1;
-    join_defs[join_count-1].op = SWQ_EQ;
-    join_defs[join_count-1].secondary_field_name = CPLStrdup(pszSecondaryField);
-    join_defs[join_count-1].secondary_field = -1;
+    join_defs[join_count-1].poExpr = poExpr;
 }
 
 /************************************************************************/
@@ -634,7 +790,8 @@ void swq_select::PushUnionAll( swq_select* poOtherSelectIn )
 /*      fields.                                                         */
 /************************************************************************/
 
-CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
+CPLErr swq_select::expand_wildcard( swq_field_list *field_list,
+                                    int bAlwaysPrefixWithTableName )
 
 {
     int isrc;
@@ -644,6 +801,7 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
 /* ==================================================================== */
     for( isrc = 0; isrc < result_columns; isrc++ )
     {
+        const char *src_tablename = column_defs[isrc].table_name;
         const char *src_fieldname = column_defs[isrc].field_name;
         int itable, new_fields, i, iout;
 
@@ -659,27 +817,16 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
 /*      Parse out the table name, verify it, and establish the          */
 /*      number of fields to insert from it.                             */
 /* -------------------------------------------------------------------- */
-        if( strcmp(src_fieldname,"*") == 0 )
+        if( src_tablename[0] == 0 && strcmp(src_fieldname,"*") == 0 )
         {
             itable = -1;
             new_fields = field_list->count;
         }
-        else if( strlen(src_fieldname) < 3 
-                 || src_fieldname[strlen(src_fieldname)-2] != '.' )
-        {
-            CPLError( CE_Failure, CPLE_AppDefined, 
-                      "Ill formatted field definition '%s'.",
-                     src_fieldname );
-            return CE_Failure;
-        }
         else
         {
-            char *table_name = CPLStrdup( src_fieldname );
-            table_name[strlen(src_fieldname)-2] = '\0';
-
             for( itable = 0; itable < field_list->table_count; itable++ )
             {
-                if( strcasecmp(table_name,
+                if( strcasecmp(src_tablename,
                         field_list->table_defs[itable].table_alias ) == 0 )
                     break;
             }
@@ -687,13 +834,11 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
             if( itable == field_list->table_count )
             {
                 CPLError( CE_Failure, CPLE_AppDefined,
-                         "Table %s not recognised from %s definition.", 
-                         table_name, src_fieldname );
-                CPLFree( table_name );
+                         "Table %s not recognised from %s.%s definition.", 
+                         src_tablename, src_tablename, src_fieldname );
                 return CE_Failure;
             }
-            CPLFree( table_name );
-            
+
             /* count the number of fields in this table. */
             new_fields = 0;
             for( i = 0; i < field_list->count; i++ )
@@ -708,6 +853,7 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
 /* -------------------------------------------------------------------- */
 /*      Reallocate the column list larger.                              */
 /* -------------------------------------------------------------------- */
+            CPLFree( column_defs[isrc].table_name );
             CPLFree( column_defs[isrc].field_name );
             delete column_defs[isrc].expr;
 
@@ -743,6 +889,7 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
 /* -------------------------------------------------------------------- */
 /*      The wildcard expands to nothing                                 */
 /* -------------------------------------------------------------------- */
+            CPLFree( column_defs[isrc].table_name );
             CPLFree( column_defs[isrc].field_name );
             delete column_defs[isrc].expr;
 
@@ -761,7 +908,7 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
         for( i = 0; i < field_list->count; i++ )
         {
             swq_col_def *def;
-            int compose = itable != -1;
+            int compose = (itable != -1) || bAlwaysPrefixWithTableName;
 
             /* skip this field if it isn't in the target table.  */
             if( itable != -1 && itable != field_list->table_ids[i] )
@@ -771,6 +918,7 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
             def = column_defs + iout;
             def->field_precision = -1; 
             def->target_type = SWQ_OTHER;
+            def->target_subtype = OFSTNone;
 
             /* does this field duplicate an earlier one? */
             if( field_list->table_ids[i] != 0 
@@ -790,17 +938,12 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
             }
 
             int itable = field_list->table_ids[i];
-            char *composed_name;
             const char *field_name = field_list->names[i];
             const char *table_alias = 
                 field_list->table_defs[itable].table_alias;
 
-            composed_name = (char *) 
-                CPLMalloc(strlen(field_name)+strlen(table_alias)+2);
-
-            sprintf( composed_name, "%s.%s", table_alias, field_name );
-
-            def->field_name = composed_name;
+            def->table_name = CPLStrdup(table_alias);
+            def->field_name = CPLStrdup(field_name);
             if( !compose )
                 def->field_alias = CPLStrdup( field_list->names[i] );
 
@@ -821,22 +964,74 @@ CPLErr swq_select::expand_wildcard( swq_field_list *field_list )
 }
 
 /************************************************************************/
+/*                       CheckCompatibleJoinExpr()                      */
+/************************************************************************/
+
+static int CheckCompatibleJoinExpr( swq_expr_node* poExpr,
+                                    int secondary_table,
+                                    swq_field_list* field_list )
+{
+    if( poExpr->eNodeType == SNT_CONSTANT )
+        return TRUE;
+    
+    if( poExpr->eNodeType == SNT_COLUMN )
+    {
+        CPLAssert( poExpr->field_index != -1 );
+        CPLAssert( poExpr->table_index != -1 );
+        if( poExpr->table_index != 0 && poExpr->table_index != secondary_table )
+        {
+            if( poExpr->table_name )
+                CPLError( CE_Failure, CPLE_AppDefined, 
+                        "Field %s.%s in JOIN clause does not correspond to the primary table nor the joint (secondary) table.", 
+                        poExpr->table_name,
+                        poExpr->string_value );
+            else
+                CPLError( CE_Failure, CPLE_AppDefined, 
+                        "Field %s in JOIN clause does not correspond to the primary table nor the joint (secondary) table.", 
+                        poExpr->string_value );
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    if( poExpr->eNodeType == SNT_OPERATION )
+    {
+        for(int i=0;i<poExpr->nSubExprCount;i++)
+        {
+            if( !CheckCompatibleJoinExpr( poExpr->papoSubExpr[i],
+                                          secondary_table,
+                                          field_list ) )
+                return FALSE;
+        }
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
+/************************************************************************/
 /*                               parse()                                */
 /*                                                                      */
 /*      This method really does post-parse processing.                  */
 /************************************************************************/
 
 CPLErr swq_select::parse( swq_field_list *field_list,
-                          CPL_UNUSED int parse_flags )
+                          swq_select_parse_options* poParseOptions )
 {
     int  i;
     CPLErr eError;
 
-    eError = expand_wildcard( field_list );
+    int bAlwaysPrefixWithTableName = poParseOptions &&
+                                     poParseOptions->bAlwaysPrefixWithTableName;
+    eError = expand_wildcard( field_list, bAlwaysPrefixWithTableName );
     if( eError != CE_None )
         return eError;
 
-    
+    swq_custom_func_registrar* poCustomFuncRegistrar = NULL;
+    if( poParseOptions != NULL )
+        poCustomFuncRegistrar = poParseOptions->poCustomFuncRegistrar;
+
 /* -------------------------------------------------------------------- */
 /*      Identify field information.                                     */
 /* -------------------------------------------------------------------- */
@@ -849,28 +1044,18 @@ CPLErr swq_select::parse( swq_field_list *field_list,
             def->field_index = -1;
             def->table_index = -1;
 
-            if( def->expr->Check( field_list, TRUE ) == SWQ_ERROR )
+            if( def->expr->Check( field_list, TRUE, FALSE, poCustomFuncRegistrar ) == SWQ_ERROR )
                 return CE_Failure;
                 
             def->field_type = def->expr->field_type;
-
-            // If the field was changed from string constant to 
-            // column field then adopt the name. 
-            if( def->expr->eNodeType == SNT_COLUMN )
-            {
-                def->field_index = def->expr->field_index;
-                def->table_index = def->expr->table_index;
-
-                CPLFree( def->field_name );
-                def->field_name = CPLStrdup(def->expr->string_value);
-            }
         }
         else
         {
             swq_field_type  this_type;
 
             /* identify field */
-            def->field_index = swq_identify_field( def->field_name, field_list,
+            def->field_index = swq_identify_field( def->table_name,
+                                                   def->field_name, field_list,
                                                    &this_type, 
                                                    &(def->table_index) );
             
@@ -881,7 +1066,7 @@ CPLErr swq_select::parse( swq_field_list *field_list,
             {
                 CPLError( CE_Failure, CPLE_AppDefined, 
                           "Unrecognised field name %s.", 
-                          def->field_name );
+                          def->table_name[0] ? CPLSPrintf("%s.%s", def->table_name, def->field_name) : def->field_name );
                 return CE_Failure;
             }
         }
@@ -911,11 +1096,33 @@ CPLErr swq_select::parse( swq_field_list *field_list,
 /*      of records.  Generate an error if we get conflicting            */
 /*      indications.                                                    */
 /* -------------------------------------------------------------------- */
-    query_mode = -1;
+
+    int bAllowDistinctOnMultipleFields = (
+        poParseOptions && poParseOptions->bAllowDistinctOnMultipleFields );
+    if( query_mode == SWQM_DISTINCT_LIST && result_columns > 1 &&
+        !bAllowDistinctOnMultipleFields )
+    {
+            CPLError( CE_Failure, CPLE_NotSupported,
+                        "SELECT DISTINCT not supported on multiple columns." );
+            return CE_Failure;
+    }
+
     for( i = 0; i < result_columns; i++ )
     {
         swq_col_def *def = column_defs + i;
         int this_indicator = -1;
+
+        if( query_mode == SWQM_DISTINCT_LIST && def->field_type == SWQ_GEOMETRY )
+        {
+            int bAllowDistinctOnGeometryField = (
+                    poParseOptions && poParseOptions->bAllowDistinctOnGeometryField );
+            if( !bAllowDistinctOnGeometryField )
+            {
+                CPLError( CE_Failure, CPLE_NotSupported,
+                            "SELECT DISTINCT on a geometry not supported." );
+                return CE_Failure;
+            }
+        }
 
         if( def->col_func == SWQCF_MIN 
             || def->col_func == SWQCF_MAX
@@ -935,15 +1142,10 @@ CPLErr swq_select::parse( swq_field_list *field_list,
         }
         else if( def->col_func == SWQCF_NONE )
         {
-            if( def->distinct_flag )
+            if( query_mode == SWQM_DISTINCT_LIST )
             {
+                def->distinct_flag = TRUE;
                 this_indicator = SWQM_DISTINCT_LIST;
-                if( def->field_type == SWQ_GEOMETRY )
-                {
-                    CPLError( CE_Failure, CPLE_AppDefined,
-                              "SELECT DISTINCT on a geometry not supported." );
-                    return CE_Failure;
-                }
             }
             else
                 this_indicator = SWQM_RECORDSET;
@@ -951,7 +1153,7 @@ CPLErr swq_select::parse( swq_field_list *field_list,
 
         if( this_indicator != query_mode
              && this_indicator != -1
-            && query_mode != -1 )
+            && query_mode != 0 )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Field list implies mixture of regular recordset mode, summary mode or distinct field list mode." );
@@ -962,14 +1164,7 @@ CPLErr swq_select::parse( swq_field_list *field_list,
             query_mode = this_indicator;
     }
 
-    if( result_columns > 1 
-        && query_mode == SWQM_DISTINCT_LIST )
-    {
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "SELECTing more than one DISTINCT field is a query not supported." );
-        return CE_Failure;
-    }
-    else if (result_columns == 0)
+    if (result_columns == 0)
     {
         query_mode = SWQM_RECORDSET;
     }
@@ -980,48 +1175,10 @@ CPLErr swq_select::parse( swq_field_list *field_list,
     for( i = 0; i < join_count; i++ )
     {
         swq_join_def *def = join_defs + i;
-        int          table_id;
-
-        /* identify primary field */
-        def->primary_field = swq_identify_field( def->primary_field_name,
-                                                 field_list, NULL, &table_id );
-        if( def->primary_field == -1 )
-        {
-            CPLError( CE_Failure, CPLE_AppDefined, 
-                     "Unrecognised primary field %s in JOIN clause..", 
-                     def->primary_field_name );
+        if( def->poExpr->Check( field_list, TRUE, TRUE, poCustomFuncRegistrar ) == SWQ_ERROR )
             return CE_Failure;
-        }
-        
-        if( table_id != 0 )
-        {
-            CPLError( CE_Failure, CPLE_AppDefined,
-                     "Currently the primary key must come from the primary table in\n"
-                     "JOIN, %s is not from the primary table.",
-                     def->primary_field_name );
+        if( !CheckCompatibleJoinExpr( def->poExpr, def->secondary_table, field_list ) )
             return CE_Failure;
-        }
-        
-        /* identify secondary field */
-        def->secondary_field = swq_identify_field( def->secondary_field_name,
-                                                   field_list, NULL,&table_id);
-        if( def->secondary_field == -1 )
-        {
-            CPLError( CE_Failure, CPLE_AppDefined, 
-                     "Unrecognised secondary field %s in JOIN clause..", 
-                     def->secondary_field_name );
-            return CE_Failure;
-        }
-        
-        if( table_id != def->secondary_table )
-        {
-            CPLError( CE_Failure, CPLE_AppDefined, 
-                     "Currently the secondary key must come from the secondary table\n"
-                     "listed in the JOIN.  %s is not from table %s..",
-                     def->secondary_field_name,
-                     table_defs[def->secondary_table].table_name);
-            return CE_Failure;
-        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -1033,13 +1190,14 @@ CPLErr swq_select::parse( swq_field_list *field_list,
 
         /* identify field */
         swq_field_type field_type;
-        def->field_index = swq_identify_field( def->field_name, field_list,
+        def->field_index = swq_identify_field( def->table_name,
+                                               def->field_name, field_list,
                                                &field_type, &(def->table_index) );
         if( def->field_index == -1 )
         {
             CPLError( CE_Failure, CPLE_AppDefined, 
                       "Unrecognised field name %s in ORDER BY.", 
-                     def->field_name );
+                      def->table_name[0] ? CPLSPrintf("%s.%s", def->table_name, def->field_name) : def->field_name );
             return CE_Failure;
         }
 
@@ -1064,8 +1222,11 @@ CPLErr swq_select::parse( swq_field_list *field_list,
 /*      Post process the where clause, subbing in field indexes and     */
 /*      doing final validation.                                         */
 /* -------------------------------------------------------------------- */
+    int bAllowFieldsInSecondaryTablesInWhere = FALSE;
+    if( poParseOptions != NULL )
+        bAllowFieldsInSecondaryTablesInWhere = poParseOptions->bAllowFieldsInSecondaryTablesInWhere;
     if( where_expr != NULL 
-        && where_expr->Check( field_list, FALSE ) == SWQ_ERROR )
+        && where_expr->Check( field_list, bAllowFieldsInSecondaryTablesInWhere, FALSE, poCustomFuncRegistrar ) == SWQ_ERROR )
     {
         return CE_Failure;
     }

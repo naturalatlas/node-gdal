@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ods.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_ods.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  ODS Translator
  * Purpose:  Definition of classes for OGR OpenOfficeSpreadsheet .ods driver.
@@ -67,16 +67,16 @@ class OGRODSLayer : public OGRMemLayer
 
     /* For external usage. Mess with FID */
     virtual OGRFeature *        GetNextFeature();
-    virtual OGRFeature         *GetFeature( long nFeatureId );
-    virtual OGRErr              SetFeature( OGRFeature *poFeature );
-    virtual OGRErr              DeleteFeature( long nFID );
+    virtual OGRFeature         *GetFeature( GIntBig nFeatureId );
+    virtual OGRErr              ISetFeature( OGRFeature *poFeature );
+    virtual OGRErr              DeleteFeature( GIntBig nFID );
 
     /* For internal usage, for cell resolver */
     OGRFeature *        GetNextFeatureWithoutFIDHack() { return OGRMemLayer::GetNextFeature(); }
-    OGRErr              SetFeatureWithoutFIDHack( OGRFeature *poFeature ) { SetUpdated(); return OGRMemLayer::SetFeature(poFeature); }
+    OGRErr              SetFeatureWithoutFIDHack( OGRFeature *poFeature ) { SetUpdated(); return OGRMemLayer::ISetFeature(poFeature); }
 
-    OGRErr              CreateFeature( OGRFeature *poFeature )
-    { SetUpdated(); return OGRMemLayer::CreateFeature(poFeature); }
+    OGRErr              ICreateFeature( OGRFeature *poFeature )
+    { SetUpdated(); return OGRMemLayer::ICreateFeature(poFeature); }
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
                                      int bApproxOK = TRUE )
@@ -197,13 +197,13 @@ class OGRODSDataSource : public OGRDataSource
 
     virtual int                 TestCapability( const char * );
 
-    virtual OGRLayer* CreateLayer( const char * pszLayerName,
+    virtual OGRLayer* ICreateLayer( const char * pszLayerName,
                                 OGRSpatialReference *poSRS,
                                 OGRwkbGeometryType eType,
                                 char ** papszOptions );
     virtual OGRErr      DeleteLayer(int iLayer);
 
-    virtual OGRErr      SyncToDisk();
+    virtual void        FlushCache();
 
     void startElementCbk(const char *pszName, const char **ppszAttr);
     void endElementCbk(const char *pszName);

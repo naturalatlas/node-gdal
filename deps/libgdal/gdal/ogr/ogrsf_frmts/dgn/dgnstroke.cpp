@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnstroke.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: dgnstroke.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  Code to stroke Arcs/Ellipses into polylines.
@@ -30,7 +30,7 @@
 #include "dgnlibp.h"
 #include <math.h>
 
-CPL_CVSID("$Id: dgnstroke.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: dgnstroke.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 #define DEG_TO_RAD (PI/180.0)
 
@@ -72,9 +72,9 @@ static void ComputePointOnArc2D( double dfPrimary, double dfSecondary,
  * @return TRUE on success or FALSE on failure.
  */
 
-int DGNStrokeArc( CPL_UNUSED DGNHandle hFile, DGNElemArc *psArc, 
+int DGNStrokeArc( CPL_UNUSED DGNHandle hFile,
+                  DGNElemArc *psArc,
                   int nPoints, DGNPoint * pasPoints )
-
 {
     double      dfAngleStep, dfAngle;
     int         i;
@@ -127,9 +127,9 @@ int DGNStrokeArc( CPL_UNUSED DGNHandle hFile, DGNElemArc *psArc,
  * @return TRUE on success or FALSE on failure.
  */
 
-int DGNStrokeCurve( CPL_UNUSED DGNHandle hFile, DGNElemMultiPoint *psCurve, 
+int DGNStrokeCurve( CPL_UNUSED DGNHandle hFile,
+                    DGNElemMultiPoint *psCurve,
                     int nPoints, DGNPoint * pasPoints )
-
 {
     int         k, nDGNPoints, iOutPoint;
     double      *padfMx, *padfMy, *padfD, dfTotalD = 0, dfStepSize, dfD;
@@ -312,10 +312,10 @@ int main( int argc, char ** argv )
 
     double      dfX, dfY, dfPrimary, dfSecondary, dfAxisRotation, dfAngle;
 
-    dfPrimary = atof(argv[1]);
-    dfSecondary = atof(argv[2]);
-    dfAxisRotation = atof(argv[3]) / 180 * PI;
-    dfAngle = atof(argv[4]) / 180 * PI;
+    dfPrimary = CPLAtof(argv[1]);
+    dfSecondary = CPLAtof(argv[2]);
+    dfAxisRotation = CPLAtof(argv[3]) / 180 * PI;
+    dfAngle = CPLAtof(argv[4]) / 180 * PI;
 
     ComputePointOnArc2D( dfPrimary, dfSecondary, dfAxisRotation, dfAngle, 
                          &dfX, &dfY );
@@ -326,4 +326,3 @@ int main( int argc, char ** argv )
 }
 
 #endif
-

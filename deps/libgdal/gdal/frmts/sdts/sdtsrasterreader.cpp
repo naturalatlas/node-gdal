@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sdtsrasterreader.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: sdtsrasterreader.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTSRasterReader class.
@@ -30,7 +30,7 @@
 
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtsrasterreader.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: sdtsrasterreader.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                          SDTSRasterReader()                          */
@@ -363,12 +363,14 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 
   */
 
-int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset, int nYOffset, void * pData )
+int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset,
+                                int nYOffset,
+                                void * pData )
 {
     DDFRecord   *poRecord = NULL;
     int         nBytesPerValue;
     int         iTry;
-    
+
     CPLAssert( nXOffset == 0 );
 
 /* -------------------------------------------------------------------- */
@@ -601,5 +603,3 @@ int SDTSRasterReader::GetMinMax( double * pdfMin, double * pdfMax,
     
     return !bFirst;
 }
-
-

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: memdataset.h 21803 2011-02-22 22:12:22Z warmerdam $
+ * $Id: memdataset.h 28899 2015-04-14 09:27:00Z rouault $
  *
  * Project:  Memory Array Translator
  * Purpose:  Declaration of MEMDataset, and MEMRasterBand.
@@ -35,6 +35,8 @@
 
 CPL_C_START
 void	GDALRegister_MEM(void);
+/* Caution: if changing this prototype, also change in swig/include/gdal_python.i
+   where it is redefined */
 GDALRasterBandH CPL_DLL MEMCreateRasterBand( GDALDataset *, int, GByte *,
                                              GDALDataType, int, int, int );
 CPL_C_END
@@ -76,7 +78,16 @@ class CPL_DLL MEMDataset : public GDALDataset
 
     virtual CPLErr        AddBand( GDALDataType eType, 
                                    char **papszOptions=NULL );
-
+    virtual CPLErr  IRasterIO( GDALRWFlag eRWFlag,
+                               int nXOff, int nYOff, int nXSize, int nYSize,
+                               void * pData, int nBufXSize, int nBufYSize,
+                               GDALDataType eBufType, 
+                               int nBandCount, int *panBandMap,
+                               GSpacing nPixelSpaceBuf,
+                               GSpacing nLineSpaceBuf,
+                               GSpacing nBandSpaceBuf,
+                               GDALRasterIOExtraArg* psExtraArg);
+    
     static GDALDataset *Open( GDALOpenInfo * );
     static GDALDataset *Create( const char * pszFilename,
                                 int nXSize, int nYSize, int nBands,
@@ -90,10 +101,11 @@ class CPL_DLL MEMDataset : public GDALDataset
 class CPL_DLL MEMRasterBand : public GDALPamRasterBand
 {
   protected:
+    friend      class MEMDataset;
 
     GByte      *pabyData;
-    int         nPixelOffset;
-    int         nLineOffset;
+    GSpacing    nPixelOffset;
+    GSpacing    nLineOffset;
     int         bOwnData;
 
     int         bNoDataSet;
@@ -113,15 +125,19 @@ class CPL_DLL MEMRasterBand : public GDALPamRasterBand
 
                    MEMRasterBand( GDALDataset *poDS, int nBand,
                                   GByte *pabyData, GDALDataType eType,
-                                  int nPixelOffset, int nLineOffset,
+                                  GSpacing nPixelOffset, GSpacing nLineOffset,
                                   int bAssumeOwnership,  const char * pszPixelType = NULL);
     virtual        ~MEMRasterBand();
 
-    // should override RasterIO eventually.
-
     virtual CPLErr IReadBlock( int, int, void * );
     virtual CPLErr IWriteBlock( int, int, void * );
-
+    virtual CPLErr IRasterIO( GDALRWFlag eRWFlag,
+                                  int nXOff, int nYOff, int nXSize, int nYSize,
+                                  void * pData, int nBufXSize, int nBufYSize,
+                                  GDALDataType eBufType,
+                                  GSpacing nPixelSpaceBuf,
+                                  GSpacing nLineSpaceBuf,
+                                  GDALRasterIOExtraArg* psExtraArg );
     virtual double GetNoDataValue( int *pbSuccess = NULL );
     virtual CPLErr SetNoDataValue( double );
 
@@ -143,9 +159,9 @@ class CPL_DLL MEMRasterBand : public GDALPamRasterBand
     CPLErr SetScale( double );
 
     virtual CPLErr SetDefaultHistogram( double dfMin, double dfMax,
-                                        int nBuckets, int *panHistogram );
+                                        int nBuckets, GUIntBig *panHistogram );
     virtual CPLErr GetDefaultHistogram( double *pdfMin, double *pdfMax,
-                                        int *pnBuckets, int ** ppanHistogram,
+                                        int *pnBuckets, GUIntBig ** ppanHistogram,
                                         int bForce,
                                         GDALProgressFunc, void *pProgressData);
 

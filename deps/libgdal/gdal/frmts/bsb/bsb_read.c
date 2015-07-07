@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsb_read.c 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: bsb_read.c 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  BSB Reader
  * Purpose:  Low level BSB Access API Implementation (non-GDAL).
@@ -37,7 +37,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bsb_read.c 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: bsb_read.c 28039 2014-11-30 18:24:59Z rouault $");
 
 static int BSBReadHeaderLine( BSBInfo *psInfo, char* pszLine, int nLineMaxLen, int bNO1 );
 static int BSBSeekAndCheckScanlineNumber ( BSBInfo *psInfo, int nScanline,
@@ -359,7 +359,7 @@ BSBInfo *BSBOpen( const char *pszFilename )
         }
         else if( EQUALN(szLine,"VER/",4) && nCount >= 1 )
         {
-            psInfo->nVersion = (int) (100 * atof(papszTokens[0]) + 0.5);
+            psInfo->nVersion = (int) (100 * CPLAtof(papszTokens[0]) + 0.5);
         }
 
         CSLDestroy( papszTokens );
@@ -644,7 +644,7 @@ static int BSBReadHeaderLine( BSBInfo *psInfo, char* pszLine, int nLineMaxLen, i
 /*                  BSBSeekAndCheckScanlineNumber()                     */
 /*                                                                      */
 /*       Seek to the beginning of the scanline and check that the       */
-/*       scanline number in file is consistant with what we expect      */
+/*       scanline number in file is consistent with what we expect      */
 /*                                                                      */
 /* @param nScanline zero based line number                              */
 /************************************************************************/
@@ -769,7 +769,7 @@ int BSBReadScanline( BSBInfo *psInfo, int nScanline,
 
 /* -------------------------------------------------------------------- */
 /*       Seek to the beginning of the scanline and check that the       */
-/*       scanline number in file is consistant with what we expect      */
+/*       scanline number in file is consistent with what we expect      */
 /* -------------------------------------------------------------------- */
     if ( !BSBSeekAndCheckScanlineNumber(psInfo, nScanline, TRUE) )
     {
@@ -882,8 +882,7 @@ int BSBReadScanline( BSBInfo *psInfo, int nScanline,
     while ( iPixel < psInfo->nXSize &&
             (nScanline == psInfo->nYSize-1 ||
              psInfo->panLineOffset[nScanline+1] == -1 ||
-             /* TODO: Will this work for large files? */
-             (int)(VSIFTellL( fp ) - psInfo->nBufferSize + psInfo->nBufferOffset) < psInfo->panLineOffset[nScanline+1]) );
+             VSIFTellL( fp ) - psInfo->nBufferSize + psInfo->nBufferOffset < (vsi_l_offset)psInfo->panLineOffset[nScanline+1]) );
 
 /* -------------------------------------------------------------------- */
 /*      If the line buffer is not filled after reading the line in the  */
@@ -929,9 +928,10 @@ void BSBClose( BSBInfo *psInfo )
 /*                             BSBCreate()                              */
 /************************************************************************/
 
-BSBInfo *BSBCreate( const char *pszFilename, CPL_UNUSED int nCreationFlags, int nVersion, 
+BSBInfo *BSBCreate( const char *pszFilename,
+                    CPL_UNUSED int nCreationFlags,
+                    int nVersion,
                     int nXSize, int nYSize )
-
 {
     VSILFILE	*fp;
     BSBInfo     *psInfo;

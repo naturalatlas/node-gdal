@@ -67,6 +67,7 @@ OGRDWGLayer::OGRDWGLayer( OGRDWGDataSource *poDS )
     iNextFID = 0;
 
     poFeatureDefn = new OGRFeatureDefn( "entities" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
 
     poDS->AddStandardFields( poFeatureDefn );
@@ -396,7 +397,7 @@ void OGRDWGLayer::PrepareLineStyle( OGRFeature *poFeature )
     if( dfWeight > 0.0 )
     {
         char szBuffer[64];
-        snprintf(szBuffer, sizeof(szBuffer), "%.2g", dfWeight);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.2g", dfWeight);
         char* pszComma = strchr(szBuffer, ',');
         if (pszComma)
             *pszComma = '.';
@@ -496,7 +497,7 @@ OGRFeature *OGRDWGLayer::TranslateMTEXT( OdDbEntityPtr poEntity )
 
     if( dfAngle != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
         pszComma = strchr(szBuffer, ',');
         if (pszComma)
             *pszComma = '.';
@@ -505,7 +506,7 @@ OGRFeature *OGRDWGLayer::TranslateMTEXT( OdDbEntityPtr poEntity )
 
     if( dfHeight != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
         pszComma = strchr(szBuffer, ',');
         if (pszComma)
             *pszComma = '.';
@@ -628,7 +629,7 @@ OGRFeature *OGRDWGLayer::TranslateTEXT( OdDbEntityPtr poEntity )
 
     if( dfAngle != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfAngle);
         pszComma = strchr(szBuffer, ',');
         if (pszComma)
             *pszComma = '.';
@@ -637,7 +638,7 @@ OGRFeature *OGRDWGLayer::TranslateTEXT( OdDbEntityPtr poEntity )
 
     if( dfHeight != 0.0 )
     {
-        snprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
+        CPLsnprintf(szBuffer, sizeof(szBuffer), "%.3g", dfHeight);
         pszComma = strchr(szBuffer, ',');
         if (pszComma)
             *pszComma = '.';

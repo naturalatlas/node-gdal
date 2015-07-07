@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_abstract_archive.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_abstract_archive.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for archive files.
@@ -35,7 +35,7 @@
 
 #define ENABLE_DEBUG 0
 
-CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                    ~VSIArchiveEntryFileOffset()                      */
@@ -444,7 +444,9 @@ VSIArchiveReader* VSIArchiveFilesystemHandler::OpenArchiveFile(const char* archi
 /*                                 Stat()                               */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pStatBuf, CPL_UNUSED int nFlags )
+int VSIArchiveFilesystemHandler::Stat( const char *pszFilename,
+                                       VSIStatBufL *pStatBuf,
+                                       CPL_UNUSED int nFlags )
 {
     int ret = -1;
     CPLString osFileInArchive;
@@ -530,7 +532,8 @@ int VSIArchiveFilesystemHandler::Unlink( CPL_UNUSED const char *pszFilename )
 /*                             Rename()                                 */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Rename( CPL_UNUSED const char *oldpath, CPL_UNUSED const char *newpath )
+int VSIArchiveFilesystemHandler::Rename( CPL_UNUSED const char *oldpath,
+                                         CPL_UNUSED const char *newpath )
 {
     return -1;
 }
@@ -539,7 +542,8 @@ int VSIArchiveFilesystemHandler::Rename( CPL_UNUSED const char *oldpath, CPL_UNU
 /*                             Mkdir()                                  */
 /************************************************************************/
 
-int VSIArchiveFilesystemHandler::Mkdir( CPL_UNUSED const char *pszDirname, CPL_UNUSED long nMode )
+int VSIArchiveFilesystemHandler::Mkdir( CPL_UNUSED const char *pszDirname,
+                                        CPL_UNUSED long nMode )
 {
     return -1;
 }

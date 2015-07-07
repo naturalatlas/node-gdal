@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalnodatavaluesmaskband.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalnodatavaluesmaskband.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALNoDataValuesMaskBand, a class implementing 
@@ -32,7 +32,7 @@
 
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalnodatavaluesmaskband.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalnodatavaluesmaskband.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /*                   GDALNoDataValuesMaskBand()                         */
@@ -48,7 +48,7 @@ GDALNoDataValuesMaskBand::GDALNoDataValuesMaskBand( GDALDataset* poDS )
     padfNodataValues = (double*)CPLMalloc(sizeof(double) * poDS->GetRasterCount());
     for(i=0;i<poDS->GetRasterCount();i++)
     {
-        padfNodataValues[i] = atof(papszNoDataValues[i]);
+        padfNodataValues[i] = CPLAtof(papszNoDataValues[i]);
     }
 
     CSLDestroy(papszNoDataValues);
@@ -159,7 +159,8 @@ CPLErr GDALNoDataValuesMaskBand::IReadBlock( int nXBlockOff, int nYBlockOff,
                                    nXBlockOff * nBlockXSize, nYBlockOff * nBlockYSize,
                                    nXSizeRequest, nYSizeRequest,
                                    pabySrc + iBand * nBandOffsetByte, nXSizeRequest, nYSizeRequest,
-                                   eWrkDT, 0, nBlockXSize * (GDALGetDataTypeSize(eWrkDT)/8) );
+                                   eWrkDT, 0, nBlockXSize * (GDALGetDataTypeSize(eWrkDT)/8),
+                                   NULL);
         if( eErr != CE_None )
             return eErr;
     }

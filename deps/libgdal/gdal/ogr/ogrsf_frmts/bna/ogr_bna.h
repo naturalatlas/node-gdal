@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_bna.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_bna.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  BNA Translator
  * Purpose:  Definition of classes for OGR .bna driver.
@@ -87,12 +87,12 @@ class OGRBNALayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
     
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK );
 
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
     
-    OGRFeature *        GetFeature( long nFID );
+    OGRFeature *        GetFeature( GIntBig nFID );
 
     int                 TestCapability( const char * );
 
@@ -145,30 +145,12 @@ class OGRBNADataSource : public OGRDataSource
     int                 GetLayerCount() { return nLayers; }
     OGRLayer*           GetLayer( int );
     
-    OGRLayer *          CreateLayer( const char * pszLayerName,
+    OGRLayer *          ICreateLayer( const char * pszLayerName,
                                     OGRSpatialReference *poSRS,
                                     OGRwkbGeometryType eType,
                                     char ** papszOptions );
 
     int                 TestCapability( const char * );
 };
-
-/************************************************************************/
-/*                             OGRBNADriver                             */
-/************************************************************************/
-
-class OGRBNADriver : public OGRSFDriver
-{
-  public:
-                ~OGRBNADriver();
-
-    const char*         GetName();
-    OGRDataSource*      Open( const char *, int );
-    OGRDataSource*      CreateDataSource( const char * pszName, char **papszOptions );
-    int                 DeleteDataSource( const char *pszFilename );
-    int                 TestCapability( const char * );
-    
-};
-
 
 #endif /* ndef _OGR_BNA_H_INCLUDED */

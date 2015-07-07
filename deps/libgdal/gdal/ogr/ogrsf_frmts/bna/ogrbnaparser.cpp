@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrbnaparser.cpp 27710 2014-09-21 15:30:29Z goatbar $
+ * $Id: ogrbnaparser.cpp 27721 2014-09-22 12:42:28Z goatbar $
  *
  * Project:  BNA Parser
  * Purpose:  Parse a BNA record

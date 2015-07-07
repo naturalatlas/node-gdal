@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ozidataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ozidataset.cpp 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:   OZF2 and OZFx3 binary files driver
  * Purpose:  GDALDataset driver for OZF2 and OZFx3 binary files.
@@ -32,7 +32,7 @@
 
 /* g++ -fPIC -g -Wall frmts/ozi/ozidataset.cpp -shared -o gdal_OZI.so -Iport -Igcore -Iogr -L. -lgdal  */
 
-CPL_CVSID("$Id: ozidataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ozidataset.cpp 28039 2014-11-30 18:24:59Z rouault $");
 
 CPL_C_START
 void    GDALRegister_OZI(void);
@@ -378,10 +378,6 @@ int OZIDataset::Identify( GDALOpenInfo * poOpenInfo )
     if (poOpenInfo->nHeaderBytes < 14)
         return FALSE;
 
-    if (EQUALN((const char*)poOpenInfo->pabyHeader,
-        "OziExplorer Map Data File Version ", 34) )
-        return TRUE;
-
     if (poOpenInfo->pabyHeader[0] == 0x80 &&
         poOpenInfo->pabyHeader[1] == 0x77)
         return TRUE;
@@ -601,7 +597,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
         short nTileY = ReadShort(fp, bOzi3, nKeyInit);
         if (i == 0 && (nW != poDS->nRasterXSize || nH != poDS->nRasterYSize))
         {
-            CPLDebug("OZI", "zoom[%d] inconsistant dimensions for zoom level 0 : nW=%d, nH=%d, nTileX=%d, nTileY=%d, nRasterXSize=%d, nRasterYSize=%d",
+            CPLDebug("OZI", "zoom[%d] inconsistent dimensions for zoom level 0 : nW=%d, nH=%d, nTileX=%d, nTileY=%d, nRasterXSize=%d, nRasterYSize=%d",
                      i, nW, nH, nTileX, nTileY, poDS->nRasterXSize, poDS->nRasterYSize);
             delete poDS;
             return NULL;
@@ -683,6 +679,7 @@ void GDALRegister_OZI()
         poDriver = new GDALDriver();
 
         poDriver->SetDescription( "OZI" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                    "OziExplorer Image File" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

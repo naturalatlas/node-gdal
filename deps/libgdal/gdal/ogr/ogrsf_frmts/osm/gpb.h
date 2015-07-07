@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gpb.h 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: gpb.h 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
@@ -140,7 +140,7 @@ static unsigned int ReadVarUInt32(GByte** ppabyData)
 #define READ_SIZE(pabyData, pabyDataLimit, nSize) \
     { \
         READ_VARUINT32(pabyData, pabyDataLimit, nSize); \
-        if (CHECK_OOB && nSize > pabyDataLimit - pabyData) GOTO_END_ERROR; \
+        if (CHECK_OOB && nSize > (unsigned int)(pabyDataLimit - pabyData)) GOTO_END_ERROR; \
     }
 
 /************************************************************************/
@@ -226,7 +226,6 @@ static void SkipVarInt(GByte** ppabyData)
 /*                         SkipUnknownField()                           */
 /************************************************************************/
 
-/* TODO: Move static function into the cpp file where it is used. */
 #define SKIP_UNKNOWN_FIELD_INLINE(pabyData, pabyDataLimit, verbose) \
         int nWireType = GET_WIRETYPE(nKey); \
         if (verbose) \
@@ -267,8 +266,9 @@ static void SkipVarInt(GByte** ppabyData)
 static
 int SkipUnknownField(int nKey, GByte* pabyData, GByte* pabyDataLimit, int verbose) CPL_NO_INLINE;
 
+/* Putting statics in headers is trouble. */
 static
-/* CPL_UNUSED */
+CPL_UNUSED
 int SkipUnknownField(int nKey, GByte* pabyData, GByte* pabyDataLimit, int verbose)
 {
     GByte* pabyDataBefore = pabyData;

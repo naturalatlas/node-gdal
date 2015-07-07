@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdodssequencelayer.cpp 15172 2008-08-20 17:37:27Z rouault $
+ * $Id: ogrdodssequencelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OGR/DODS Interface
  * Purpose:  Implements OGRDODSSequenceLayer class, which implements the
@@ -32,7 +32,7 @@
 #include "ogr_dods.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdodssequencelayer.cpp 15172 2008-08-20 17:37:27Z rouault $");
+CPL_CVSID("$Id: ogrdodssequencelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                        OGRDODSSequenceLayer()                        */
@@ -395,7 +395,7 @@ double OGRDODSSequenceLayer::BaseTypeToDouble( BaseType *poBT )
           double dfResult;
 
           poBT->buf2val( (void **) &poStrVal );
-          dfResult = atof(poStrVal->c_str());
+          dfResult = CPLAtof(poStrVal->c_str());
           delete poStrVal;
           return dfResult;
       }
@@ -430,7 +430,7 @@ double OGRDODSSequenceLayer::GetFieldValueAsDouble( OGRDODSFieldDefn *poFDefn,
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRDODSSequenceLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRDODSSequenceLayer::GetFeature( GIntBig nFeatureId )
 
 {
 /* -------------------------------------------------------------------- */
@@ -849,7 +849,7 @@ OGRFeature *OGRDODSSequenceLayer::GetFeature( long nFeatureId )
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRDODSSequenceLayer::GetFeatureCount( int bForce )
+GIntBig OGRDODSSequenceLayer::GetFeatureCount( int bForce )
 
 {
     if( !bDataLoaded && !bForce )

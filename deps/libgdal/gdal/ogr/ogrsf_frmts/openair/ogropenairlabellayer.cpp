@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairlabellayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogropenairlabellayer.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirLabelLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogropenairlabellayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogropenairlabellayer.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                      OGROpenAirLabelLayer()                          */
@@ -48,6 +48,7 @@ OGROpenAirLabelLayer::OGROpenAirLabelLayer( VSILFILE* fp )
     poSRS = new OGRSpatialReference(SRS_WKT_WGS84);
 
     poFeatureDefn = new OGRFeatureDefn( "labels"  );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbPoint );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -188,4 +189,3 @@ int OGROpenAirLabelLayer::TestCapability( CPL_UNUSED const char * pszCap )
 {
     return FALSE;
 }
-

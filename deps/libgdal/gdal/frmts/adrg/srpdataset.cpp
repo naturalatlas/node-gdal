@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: srpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: srpdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  * Purpose:  ASRP/USRP Reader
  * Author:   Frank Warmerdam (warmerdam@pobox.com)
  *
@@ -36,7 +36,7 @@
 // Uncomment to recognize also .gen files in addition to .img files
 // #define OPEN_GEN
 
-CPL_CVSID("$Id: srpdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: srpdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 class SRPDataset : public GDALPamDataset
 {
@@ -1613,6 +1613,7 @@ void GDALRegister_SRP()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "SRP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Standard Raster Product (ASRP/USRP)" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

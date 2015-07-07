@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osm_parser.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: osm_parser.cpp 28435 2015-02-07 14:35:34Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
@@ -45,7 +45,7 @@
 
 #define XML_BUFSIZE 64*1024
 
-CPL_CVSID("$Id: osm_parser.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: osm_parser.cpp 28435 2015-02-07 14:35:34Z rouault $");
 
 /************************************************************************/
 /*                            INIT_INFO()                               */
@@ -338,14 +338,11 @@ int ReadOSMHeader(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(OSMHEADER_IDX_OSMOSIS_REPLICATION_TIMESTAMP, WT_VARINT))
         {
-            /* TODO: Do something with nVal or change this to a seek forward. */
-            GIntBig nVal;
-            READ_VARINT64(pabyData, pabyDataLimit, nVal);
+            SKIP_VARINT(pabyData, pabyDataLimit);
         }
         else if (nKey == MAKE_KEY(OSMHEADER_IDX_OSMOSIS_REPLICATION_SEQ_NUMBER, WT_VARINT))
         {
-            GIntBig nVal;
-            READ_VARINT64(pabyData, pabyDataLimit, nVal);
+            SKIP_VARINT(pabyData, pabyDataLimit);
         }
         else if (nKey == MAKE_KEY(OSMHEADER_IDX_OSMOSIS_REPLICATION_BASE_URL, WT_DATA))
         {
@@ -382,11 +379,11 @@ int ReadStringTable(GByte* pabyData, GByte* pabyDataLimit,
 
     psCtxt->pszStrBuf = pszStrBuf;
 
-    if (pabyDataLimit - pabyData > psCtxt->nStrAllocated)
+    if ((unsigned int)(pabyDataLimit - pabyData) > psCtxt->nStrAllocated)
     {
         int* panStrOffNew;
         psCtxt->nStrAllocated = MAX(psCtxt->nStrAllocated * 2,
-                                          pabyDataLimit - pabyData);
+                                          (unsigned int)(pabyDataLimit - pabyData));
         panStrOffNew = (int*) VSIRealloc(
             panStrOff, psCtxt->nStrAllocated * sizeof(int));
         if( panStrOffNew == NULL )
@@ -769,8 +766,9 @@ int ReadOSMInfo(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(INFO_IDX_VISIBLE, WT_VARINT))
         {
-            int nVisible;
-            READ_VARINT32(pabyData, pabyDataLimit, /*psInfo->*/nVisible);
+            SKIP_VARINT(pabyData, pabyDataLimit);
+            //int nVisible;
+            //READ_VARINT32(pabyData, pabyDataLimit, /*psInfo->*/nVisible);
         }
         else
         {
@@ -874,11 +872,12 @@ int ReadNode(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(NODE_IDX_VALS, WT_DATA))
         {
-            unsigned int nSize;
+            //unsigned int nSize;
             unsigned int nIter = 0;
             if (sNode.nTags == 0)
                 GOTO_END_ERROR;
-            READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            //READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            SKIP_VARINT(pabyData, pabyDataLimit);
 
             for(; nIter < sNode.nTags; nIter ++)
             {
@@ -999,11 +998,12 @@ int ReadWay(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(WAY_IDX_VALS, WT_DATA))
         {
-            unsigned int nSize;
+            //unsigned int nSize;
             unsigned int nIter = 0;
             if (sWay.nTags == 0)
                 GOTO_END_ERROR;
-            READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            //READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            SKIP_VARINT(pabyData, pabyDataLimit);
 
             for(; nIter < sWay.nTags; nIter ++)
             {
@@ -1162,11 +1162,12 @@ int ReadRelation(GByte* pabyData, GByte* pabyDataLimit,
         }
         else if (nKey == MAKE_KEY(RELATION_IDX_VALS, WT_DATA))
         {
-            unsigned int nSize;
+            //unsigned int nSize;
             unsigned int nIter = 0;
             if (sRelation.nTags == 0)
                 GOTO_END_ERROR;
-            READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            //READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            SKIP_VARINT(pabyData, pabyDataLimit);
 
             for(; nIter < sRelation.nTags; nIter ++)
             {
@@ -1233,10 +1234,11 @@ int ReadRelation(GByte* pabyData, GByte* pabyDataLimit,
         {
             unsigned int nIter = 0;
             GIntBig nMemID = 0;
-            unsigned int nSize;
+            //unsigned int nSize;
             if (sRelation.nMembers == 0)
                 GOTO_END_ERROR;
-            READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            //READ_VARUINT32(pabyData, pabyDataLimit, nSize);
+            SKIP_VARINT(pabyData, pabyDataLimit);
 
             for(; nIter < sRelation.nMembers; nIter++)
             {
@@ -1588,8 +1590,10 @@ end_error:
 /*                        EmptyNotifyNodesFunc()                        */
 /************************************************************************/
 
-static void EmptyNotifyNodesFunc(CPL_UNUSED unsigned int nNodes, CPL_UNUSED OSMNode* pasNodes,
-                                 CPL_UNUSED OSMContext* psCtxt, CPL_UNUSED void* user_data)
+static void EmptyNotifyNodesFunc(CPL_UNUSED unsigned int nNodes,
+                                 CPL_UNUSED OSMNode* pasNodes,
+                                 CPL_UNUSED OSMContext* psCtxt,
+                                 CPL_UNUSED void* user_data)
 {
 }
 
@@ -1599,7 +1603,8 @@ static void EmptyNotifyNodesFunc(CPL_UNUSED unsigned int nNodes, CPL_UNUSED OSMN
 /************************************************************************/
 
 static void EmptyNotifyWayFunc(CPL_UNUSED OSMWay* psWay,
-                               CPL_UNUSED OSMContext* psCtxt, CPL_UNUSED void* user_data)
+                               CPL_UNUSED OSMContext* psCtxt,
+                               CPL_UNUSED void* user_data)
 {
 }
 
@@ -1608,7 +1613,8 @@ static void EmptyNotifyWayFunc(CPL_UNUSED OSMWay* psWay,
 /************************************************************************/
 
 static void EmptyNotifyRelationFunc(CPL_UNUSED OSMRelation* psRelation,
-                                    CPL_UNUSED OSMContext* psCtxt, CPL_UNUSED void* user_data)
+                                    CPL_UNUSED OSMContext* psCtxt,
+                                    CPL_UNUSED void* user_data)
 {
 }
 
@@ -1616,9 +1622,12 @@ static void EmptyNotifyRelationFunc(CPL_UNUSED OSMRelation* psRelation,
 /*                         EmptyNotifyBoundsFunc()                      */
 /************************************************************************/
 
-static void EmptyNotifyBoundsFunc( CPL_UNUSED double dfXMin, CPL_UNUSED double dfYMin,
-                                   CPL_UNUSED double dfXMax, CPL_UNUSED double dfYMax,
-                                   CPL_UNUSED OSMContext* psCtxt, CPL_UNUSED void* user_data )
+static void EmptyNotifyBoundsFunc( CPL_UNUSED double dfXMin,
+                                   CPL_UNUSED double dfYMin,
+                                   CPL_UNUSED double dfXMax,
+                                   CPL_UNUSED double dfYMax,
+                                   CPL_UNUSED OSMContext* psCtxt,
+                                   CPL_UNUSED void* user_data )
 {
 }
 
@@ -1908,7 +1917,7 @@ static void XMLCALL OSM_XML_startElementCbk(void *pUserData, const char *pszName
     else if( psCtxt->bInRelation &&
              strcmp(pszName, "member") == 0 )
     {
-        /* 300 is the recommanded value, but there are files with more than 2000 so we should be able */
+        /* 300 is the recommended value, but there are files with more than 2000 so we should be able */
         /* to realloc over that value */
         if (psCtxt->sRelation.nMembers >= psCtxt->nMembersAllocated)
         {
@@ -2249,7 +2258,7 @@ OSMContext* OSM_Open( const char* pszFilename,
         psCtxt->nTagsAllocated = 256;
         psCtxt->pasTags = (OSMTag*) VSIMalloc(sizeof(OSMTag) * psCtxt->nTagsAllocated);
 
-        /* 300 is the recommanded value, but there are files with more than 2000 so we should be able */
+        /* 300 is the recommended value, but there are files with more than 2000 so we should be able */
         /* to realloc over that value */
         psCtxt->nMembersAllocated = 2000;
         psCtxt->pasMembers = (OSMMember*) VSIMalloc(sizeof(OSMMember) * psCtxt->nMembersAllocated);

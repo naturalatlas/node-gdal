@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sdtslinereader.cpp 25839 2013-04-02 18:54:20Z rouault $
+ * $Id: sdtslinereader.cpp 28039 2014-11-30 18:24:59Z rouault $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTSLineReader and SDTSRawLine classes.
@@ -29,7 +29,7 @@
 
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtslinereader.cpp 25839 2013-04-02 18:54:20Z rouault $");
+CPL_CVSID("$Id: sdtslinereader.cpp 28039 2014-11-30 18:24:59Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -73,7 +73,7 @@ SDTSRawLine::~SDTSRawLine()
 int SDTSRawLine::Read( SDTS_IREF * poIREF, DDFRecord * poRecord )
 
 {
-    // E.Rouault: Not sure if this test is really usefull
+    // E.Rouault: Not sure if this test is really useful
     if( poRecord->GetStringSubfield( "LINE", 0, "MODN", 0 ) == NULL )
         return FALSE;
     

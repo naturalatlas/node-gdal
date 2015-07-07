@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeorssdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgeorssdatasource.cpp 28636 2015-03-06 19:18:43Z rouault $
  *
  * Project:  GeoRSS Translator
  * Purpose:  Implements OGRGeoRSSDataSource class
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogrgeorssdatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgeorssdatasource.cpp 28636 2015-03-06 19:18:43Z rouault $");
 
 /************************************************************************/
 /*                          OGRGeoRSSDataSource()                          */
@@ -113,13 +113,13 @@ OGRLayer *OGRGeoRSSDataSource::GetLayer( int iLayer )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
-OGRLayer * OGRGeoRSSDataSource::CreateLayer( const char * pszLayerName,
-                                             OGRSpatialReference *poSRS,
-                                             CPL_UNUSED OGRwkbGeometryType eType,
-                                             CPL_UNUSED char ** papszOptions )
+OGRLayer * OGRGeoRSSDataSource::ICreateLayer( const char * pszLayerName,
+                                              OGRSpatialReference *poSRS,
+                                              CPL_UNUSED OGRwkbGeometryType eType,
+                                              CPL_UNUSED char ** papszOptions )
 {
     if (fpOutput == NULL)
         return NULL;
@@ -157,7 +157,8 @@ void OGRGeoRSSDataSource::startElementValidateCbk(const char *pszName, const cha
             validity = GEORSS_VALIDITY_VALID;
             eFormat = GEORSS_RSS;
         }
-        else if (strcmp(pszName, "feed") == 0)
+        else if (strcmp(pszName, "feed") == 0 ||
+                 strcmp(pszName, "atom:feed") == 0)
         {
             validity = GEORSS_VALIDITY_VALID;
             eFormat = GEORSS_ATOM;
@@ -188,7 +189,7 @@ void OGRGeoRSSDataSource::startElementValidateCbk(const char *pszName, const cha
 /************************************************************************/
 
 void OGRGeoRSSDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data,
-                                                 CPL_UNUSED int nLen)
+                                                 CPL_UNUSED  int nLen)
 {
     nDataHandlerCounter ++;
     if (nDataHandlerCounter >= BUFSIZ)
@@ -263,7 +264,7 @@ int OGRGeoRSSDataSource::Open( const char * pszFilename, int bUpdateIn)
                 aBuf[nLen] = 0;
             else
                 aBuf[BUFSIZ-1] = 0;
-            if (strstr(aBuf, "<?xml") && (strstr(aBuf, "<rss") || strstr(aBuf, "<feed")))
+            if (strstr(aBuf, "<?xml") && (strstr(aBuf, "<rss") || strstr(aBuf, "<feed") || strstr(aBuf, "<atom:feed")))
             {
                 CPLError(CE_Failure, CPLE_AppDefined,
                         "XML parsing of GeoRSS file failed : %s at line %d, column %d",
@@ -313,7 +314,7 @@ int OGRGeoRSSDataSource::Open( const char * pszFilename, int bUpdateIn)
     {
         unsigned int nLen = (unsigned int)VSIFReadL( aBuf, 1, 255, fp );
         aBuf[nLen] = 0;
-        if (strstr(aBuf, "<?xml") && (strstr(aBuf, "<rss") || strstr(aBuf, "<feed")))
+        if (strstr(aBuf, "<?xml") && (strstr(aBuf, "<rss") || strstr(aBuf, "<atom:feed") || strstr(aBuf, "<feed")))
         {
             CPLError(CE_Failure, CPLE_NotSupported,
                     "OGR/GeoRSS driver has not been built with read support. Expat library required");

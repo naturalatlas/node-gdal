@@ -86,7 +86,7 @@ json_object_iter_begin(struct json_object* obj)
  * ****************************************************************************
  */
 struct json_object_iterator
-json_object_iter_end(CPL_UNUSED const struct json_object* obj)
+json_object_iter_end( CPL_UNUSED const struct json_object* obj )
 {
     struct json_object_iterator iter;
 

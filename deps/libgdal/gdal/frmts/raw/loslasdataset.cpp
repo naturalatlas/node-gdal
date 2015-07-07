@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: loslasdataset.cpp 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: loslasdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  Horizontal Datum Formats
  * Purpose:  Implementation of NOAA/NADCON los/las datum shift format.
@@ -32,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: loslasdataset.cpp 20996 2010-10-28 18:38:15Z rouault $");
+CPL_CVSID("$Id: loslasdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /**
 
@@ -273,6 +273,7 @@ void GDALRegister_LOSLAS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "LOSLAS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "NADCON .los/.las Datum Grid Shift" );
         poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );

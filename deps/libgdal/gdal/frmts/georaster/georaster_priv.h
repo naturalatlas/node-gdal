@@ -177,7 +177,9 @@ public:
                             void *pData, int nBufXSize, int nBufYSize, 
                             GDALDataType eBufType,
                             int nBandCount, int *panBandMap, 
-                            int nPixelSpace, int nLineSpace, int nBandSpace );
+                            GSpacing nPixelSpace, GSpacing nLineSpace,
+                            GSpacing nBandSpace,
+                            GDALRasterIOExtraArg* psExtraArg );
     virtual int         GetGCPCount() { return nGCPCount; }
     virtual const char* GetGCPProjection();
     virtual const GDAL_GCP*
@@ -195,6 +197,10 @@ public:
                             GDALProgressFunc pfnProgress,
                             void* pProgresoversData );
     virtual CPLErr      CreateMaskBand( int nFlags );
+    virtual OGRErr      StartTransaction(int bForce=FALSE) {return CE_None;};
+    virtual OGRErr      CommitTransaction() {return CE_None;};
+    virtual OGRErr      RollbackTransaction() {return CE_None;};
+    
     void                AssignGeoRaster( GeoRasterWrapper* poGRW );
 };
 

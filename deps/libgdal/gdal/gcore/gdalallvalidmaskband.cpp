@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalallvalidmaskband.cpp 27723 2014-09-22 18:21:08Z goatbar $
+ * $Id: gdalallvalidmaskband.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALAllValidMaskBand, a class implementing all
@@ -30,7 +30,7 @@
 
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalallvalidmaskband.cpp 27723 2014-09-22 18:21:08Z goatbar $");
+CPL_CVSID("$Id: gdalallvalidmaskband.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                        GDALAllValidMaskBand()                        */
@@ -62,10 +62,10 @@ GDALAllValidMaskBand::~GDALAllValidMaskBand()
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GDALAllValidMaskBand::IReadBlock( CPL_UNUSED int nXBlockOff, CPL_UNUSED int nYBlockOff,
+CPLErr GDALAllValidMaskBand::IReadBlock( CPL_UNUSED int nXBlockOff,
+                                         CPL_UNUSED int nYBlockOff,
                                          void * pImage )
 {
-    // TODO: Suspicious that the offsets are not uses.
     memset( pImage, 255, nBlockXSize * nBlockYSize );
 
     return CE_None;

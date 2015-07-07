@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwarpedlayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrwarpedlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRWarpedLayer class
@@ -29,7 +29,7 @@
 
 #include "ogrwarpedlayer.h"
 
-CPL_CVSID("$Id: ogrwarpedlayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrwarpedlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                          OGRWarpedLayer()                            */
@@ -47,6 +47,7 @@ OGRWarpedLayer::OGRWarpedLayer( OGRLayer* poDecoratedLayer,
                                       m_poReversedCT(poReversedCT)
 {
     CPLAssert(poCT != NULL);
+    SetDescription( poDecoratedLayer->GetDescription() );
 
     m_poFeatureDefn = NULL;
 
@@ -244,7 +245,7 @@ OGRFeature *OGRWarpedLayer::GetNextFeature()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRWarpedLayer::GetFeature( long nFID )
+OGRFeature *OGRWarpedLayer::GetFeature( GIntBig nFID )
 {
     OGRFeature* poFeature = m_poDecoratedLayer->GetFeature(nFID);
     if( poFeature != NULL )
@@ -257,10 +258,10 @@ OGRFeature *OGRWarpedLayer::GetFeature( long nFID )
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /************************************************************************/
 
-OGRErr      OGRWarpedLayer::SetFeature( OGRFeature *poFeature )
+OGRErr      OGRWarpedLayer::ISetFeature( OGRFeature *poFeature )
 {
     OGRErr eErr;
 
@@ -276,10 +277,10 @@ OGRErr      OGRWarpedLayer::SetFeature( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                            CreateFeature()                           */
+/*                            ICreateFeature()                           */
 /************************************************************************/
 
-OGRErr      OGRWarpedLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr      OGRWarpedLayer::ICreateFeature( OGRFeature *poFeature )
 {
     OGRErr eErr;
 
@@ -328,7 +329,7 @@ OGRSpatialReference *OGRWarpedLayer::GetSpatialRef()
 /*                           GetFeatureCount()                          */
 /************************************************************************/
 
-int OGRWarpedLayer::GetFeatureCount( int bForce )
+GIntBig OGRWarpedLayer::GetFeatureCount( int bForce )
 {
     if( m_poFilterGeom == NULL )
         return m_poDecoratedLayer->GetFeatureCount(bForce);

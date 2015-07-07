@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrtigerdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerDriver
@@ -30,73 +30,66 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrtigerdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
-
-/************************************************************************/
-/*                           ~OGRNTFDriver()                            */
-/************************************************************************/
-
-OGRTigerDriver::~OGRTigerDriver()
-
-{
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRTigerDriver::GetName()
-
-{
-    return "TIGER";
-}
+CPL_CVSID("$Id: ogrtigerdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRTigerDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGRTigerDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
+    if( !poOpenInfo->bStatOK )
+        return NULL;
+    char** papszSiblingFiles = poOpenInfo->GetSiblingFiles();
+    if( papszSiblingFiles != NULL )
+    {
+        int i;
+        int bFoundCompatibleFile = FALSE;
+        for( i = 0; papszSiblingFiles[i] != NULL; i++ )
+        {
+            int nLen = (int)strlen(papszSiblingFiles[i]);
+            if( nLen > 4 &&
+                papszSiblingFiles[i][nLen-4] == '.' &&
+                papszSiblingFiles[i][nLen-1] == '1' )
+            {
+                bFoundCompatibleFile = TRUE;
+                break;
+            }
+        }
+        if( !bFoundCompatibleFile )
+            return FALSE;
+    }
+ 
     OGRTigerDataSource  *poDS = new OGRTigerDataSource;
 
-    if( !poDS->Open( pszFilename, TRUE ) )
+    if( !poDS->Open( poOpenInfo->pszFilename, TRUE ) )
     {
         delete poDS;
         poDS = NULL;
     }
 
-    if( poDS != NULL && bUpdate )
+    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Tiger Driver doesn't support update." );
         delete poDS;
         poDS = NULL;
     }
-    
+
     return poDS;
 }
 
 /************************************************************************/
-/*                           TestCapability()                           */
+/*                              Create()                                */
 /************************************************************************/
 
-int OGRTigerDriver::TestCapability( const char *pszCap )
-
-{
-    if( EQUAL(pszCap,ODrCCreateDataSource) )
-        return TRUE;
-    else
-        return FALSE;
-}
-
-/************************************************************************/
-/*                          CreateDataSource()                          */
-/************************************************************************/
-
-OGRDataSource *OGRTigerDriver::CreateDataSource( const char *pszName,
-                                                 char **papszOptions )
-
+static GDALDataset *OGRTigerDriverCreate( const char * pszName,
+                                          CPL_UNUSED int nBands,
+                                          CPL_UNUSED int nXSize,
+                                          CPL_UNUSED int nYSize,
+                                          CPL_UNUSED GDALDataType eDT,
+                                          char **papszOptions )
 {
     OGRTigerDataSource *poDS;
 
@@ -118,7 +111,24 @@ OGRDataSource *OGRTigerDriver::CreateDataSource( const char *pszName,
 void RegisterOGRTiger()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRTigerDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "TIGER" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "TIGER" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "U.S. Census TIGER/Line" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_tiger.html" );
+
+        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+
+        poDriver->pfnOpen = OGRTigerDriverOpen;
+        poDriver->pfnCreate = OGRTigerDriverCreate;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
-
-

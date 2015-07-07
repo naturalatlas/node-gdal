@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsurface.cpp 19399 2010-04-13 18:35:24Z rouault $
+ * $Id: ogrsurface.cpp 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRSurface class.
@@ -55,3 +55,43 @@
  *
  * @return OGRERR_NONE if it succeeds or OGRERR_FAILURE otherwise. 
  */
+
+/************************************************************************/
+/*                          CastToPolygon()                             */
+/************************************************************************/
+
+/**
+ * \brief Cast to polygon
+ *
+ * The passed in geometry is consumed and a new one returned (or NULL in case
+ * of failure)
+ * 
+ * @param poSurface the input geometry - ownership is passed to the method.
+ * @return new geometry.
+ */
+
+OGRPolygon* OGRSurface::CastToPolygon(OGRSurface* poSurface)
+{
+    OGRSurfaceCasterToPolygon pfn = poSurface->GetCasterToPolygon();
+    return pfn(poSurface);
+}
+
+/************************************************************************/
+/*                          CastToCurvePolygon()                        */
+/************************************************************************/
+
+/**
+ * \brief Cast to curve polygon
+ *
+ * The passed in geometry is consumed and a new one returned (or NULL in case
+ * of failure)
+ * 
+ * @param poSurface the input geometry - ownership is passed to the method.
+ * @return new geometry.
+ */
+
+OGRCurvePolygon* OGRSurface::CastToCurvePolygon(OGRSurface* poSurface)
+{
+    OGRSurfaceCasterToCurvePolygon pfn = poSurface->GetCasterToCurvePolygon();
+    return pfn(poSurface);
+}

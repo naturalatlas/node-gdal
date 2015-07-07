@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: nitfdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  NITF Read/Write Translator
  * Purpose:  NITFDataset and driver related implementations.
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: nitfdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: nitfdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 static void NITFPatchImageLength( const char *pszFilename,
                                   GUIntBig nImageOffset, 
@@ -494,7 +494,14 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
 /* -------------------------------------------------------------------- */
     NITFFile *psFile;
 
-    psFile = NITFOpen( pszFilename, poOpenInfo->eAccess == GA_Update );
+    if( poOpenInfo->fpL )
+    {
+        VSILFILE* fpL = poOpenInfo->fpL;
+        poOpenInfo->fpL = NULL;
+        psFile = NITFOpenEx( fpL, pszFilename );
+    }
+    else
+        psFile = NITFOpen( pszFilename, poOpenInfo->eAccess == GA_Update );
     if( psFile == NULL )
     {
         return NULL;
@@ -606,13 +613,13 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
         }
         else
         {
-            /* We explicitely list the allowed drivers to avoid hostile content */
+            /* We explicitly list the allowed drivers to avoid hostile content */
             /* to be opened by a random driver, and also to make sure that */
             /* a future new JPEG2000 compatible driver derives from GDALPamDataset */
             static const char * const apszDrivers[] = { "JP2KAK", "JP2ECW", "JP2MRSID",
                                                         "JPEG2000", "JP2OPENJPEG", NULL };
             poDS->poJ2KDataset = (GDALPamDataset *)
-                GDALOpenInternal( osDSName, GA_ReadOnly, apszDrivers);
+                GDALOpenEx( osDSName, GDAL_OF_RASTER, apszDrivers, NULL, NULL);
 
             if( poDS->poJ2KDataset == NULL )
             {
@@ -660,13 +667,13 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
                     bSetColorInterpretation = FALSE;
                 }
                 else if (poDS->poJ2KDataset->GetRasterCount() == 1 &&
-                         psImage->pasBandInfo[0].nSignificantLUTEntries > 0 &&
-                         poDS->poJ2KDataset->GetRasterBand(1)->GetColorTable() == NULL)
+                         psImage->pasBandInfo[0].nSignificantLUTEntries > 0)
                 {
 /* Test case : http://www.gwg.nga.mil/ntb/baseline/software/testfile/Jpeg2000/jp2_09/file9_j2c.ntf */
 /* 256-entry/LUT in Image Subheader, JP2 header completely removed */
 /* The JPEG2000 driver will decode it as a grey band */
 /* So we must set the color table on the wrapper band */
+/* or for file9_jp2_2places.ntf as well if the J2K driver does do RGB expension */
                     bSetColorTable = TRUE;
                 }
             }
@@ -896,8 +903,8 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
 /*      Try looking for a .nfw file.                                    */
 /* -------------------------------------------------------------------- */
     if( psImage
-        && GDALReadWorldFile( pszFilename, "nfw", 
-                              poDS->adfGeoTransform ) )
+        && GDALReadWorldFile2( pszFilename, "nfw", 
+                              poDS->adfGeoTransform, poOpenInfo->GetSiblingFiles(), NULL ) )
     {
         const char *pszHDR;
         VSILFILE *fpHDR;
@@ -1342,73 +1349,73 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
         char szValue[1280];
         int  i;
 
-        sprintf( szValue, "%.16g", sRPCInfo.LINE_OFF );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LINE_OFF );
         poDS->SetMetadataItem( "LINE_OFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.LINE_SCALE );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LINE_SCALE );
         poDS->SetMetadataItem( "LINE_SCALE", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.SAMP_OFF );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.SAMP_OFF );
         poDS->SetMetadataItem( "SAMP_OFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.SAMP_SCALE );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.SAMP_SCALE );
         poDS->SetMetadataItem( "SAMP_SCALE", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.LONG_OFF );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LONG_OFF );
         poDS->SetMetadataItem( "LONG_OFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.LONG_SCALE );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LONG_SCALE );
         poDS->SetMetadataItem( "LONG_SCALE", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.LAT_OFF );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LAT_OFF );
         poDS->SetMetadataItem( "LAT_OFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.LAT_SCALE );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.LAT_SCALE );
         poDS->SetMetadataItem( "LAT_SCALE", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.HEIGHT_OFF );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.HEIGHT_OFF );
         poDS->SetMetadataItem( "HEIGHT_OFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", sRPCInfo.HEIGHT_SCALE );
+        CPLsprintf( szValue, "%.16g", sRPCInfo.HEIGHT_SCALE );
         poDS->SetMetadataItem( "HEIGHT_SCALE", szValue, "RPC" );
 
         szValue[0] = '\0'; 
         for( i = 0; i < 20; i++ )
-            sprintf( szValue+strlen(szValue), "%.16g ",  
+            CPLsprintf( szValue+strlen(szValue), "%.16g ",  
                      sRPCInfo.LINE_NUM_COEFF[i] );
         poDS->SetMetadataItem( "LINE_NUM_COEFF", szValue, "RPC" );
 
         szValue[0] = '\0'; 
         for( i = 0; i < 20; i++ )
-            sprintf( szValue+strlen(szValue), "%.16g ",  
+            CPLsprintf( szValue+strlen(szValue), "%.16g ",  
                      sRPCInfo.LINE_DEN_COEFF[i] );
         poDS->SetMetadataItem( "LINE_DEN_COEFF", szValue, "RPC" );
         
         szValue[0] = '\0'; 
         for( i = 0; i < 20; i++ )
-            sprintf( szValue+strlen(szValue), "%.16g ",  
+            CPLsprintf( szValue+strlen(szValue), "%.16g ",  
                      sRPCInfo.SAMP_NUM_COEFF[i] );
         poDS->SetMetadataItem( "SAMP_NUM_COEFF", szValue, "RPC" );
         
         szValue[0] = '\0'; 
         for( i = 0; i < 20; i++ )
-            sprintf( szValue+strlen(szValue), "%.16g ",  
+            CPLsprintf( szValue+strlen(szValue), "%.16g ",  
                      sRPCInfo.SAMP_DEN_COEFF[i] );
         poDS->SetMetadataItem( "SAMP_DEN_COEFF", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", 
+        CPLsprintf( szValue, "%.16g", 
                  sRPCInfo.LONG_OFF - ( sRPCInfo.LONG_SCALE / 2.0 ) );
         poDS->SetMetadataItem( "MIN_LONG", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g",
+        CPLsprintf( szValue, "%.16g",
                  sRPCInfo.LONG_OFF + ( sRPCInfo.LONG_SCALE / 2.0 ) );
         poDS->SetMetadataItem( "MAX_LONG", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", 
+        CPLsprintf( szValue, "%.16g", 
                  sRPCInfo.LAT_OFF - ( sRPCInfo.LAT_SCALE / 2.0 ) );
         poDS->SetMetadataItem( "MIN_LAT", szValue, "RPC" );
 
-        sprintf( szValue, "%.16g", 
+        CPLsprintf( szValue, "%.16g", 
                  sRPCInfo.LAT_OFF + ( sRPCInfo.LAT_SCALE / 2.0 ) );
         poDS->SetMetadataItem( "MAX_LAT", szValue, "RPC" );
     }
@@ -1423,7 +1430,7 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
     {
         char szValue[1280];
 
-        sprintf( szValue, "%.16g", sChipInfo.SCALE_FACTOR );
+        CPLsprintf( szValue, "%.16g", sChipInfo.SCALE_FACTOR );
         poDS->SetMetadataItem( "ICHIP_SCALE_FACTOR", szValue );
 
         sprintf( szValue, "%d", sChipInfo.ANAMORPH_CORR );
@@ -1432,52 +1439,52 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
         sprintf( szValue, "%d", sChipInfo.SCANBLK_NUM );
         poDS->SetMetadataItem( "ICHIP_SCANBLK_NUM", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_ROW_11 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_ROW_11 );
         poDS->SetMetadataItem( "ICHIP_OP_ROW_11", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_COL_11 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_COL_11 );
         poDS->SetMetadataItem( "ICHIP_OP_COL_11", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_ROW_12 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_ROW_12 );
         poDS->SetMetadataItem( "ICHIP_OP_ROW_12", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_COL_12 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_COL_12 );
         poDS->SetMetadataItem( "ICHIP_OP_COL_12", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_ROW_21 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_ROW_21 );
         poDS->SetMetadataItem( "ICHIP_OP_ROW_21", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_COL_21 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_COL_21 );
         poDS->SetMetadataItem( "ICHIP_OP_COL_21", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_ROW_22 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_ROW_22 );
         poDS->SetMetadataItem( "ICHIP_OP_ROW_22", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.OP_COL_22 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.OP_COL_22 );
         poDS->SetMetadataItem( "ICHIP_OP_COL_22", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_ROW_11 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_ROW_11 );
         poDS->SetMetadataItem( "ICHIP_FI_ROW_11", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_COL_11 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_COL_11 );
         poDS->SetMetadataItem( "ICHIP_FI_COL_11", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_ROW_12 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_ROW_12 );
         poDS->SetMetadataItem( "ICHIP_FI_ROW_12", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_COL_12 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_COL_12 );
         poDS->SetMetadataItem( "ICHIP_FI_COL_12", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_ROW_21 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_ROW_21 );
         poDS->SetMetadataItem( "ICHIP_FI_ROW_21", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_COL_21 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_COL_21 );
         poDS->SetMetadataItem( "ICHIP_FI_COL_21", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_ROW_22 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_ROW_22 );
         poDS->SetMetadataItem( "ICHIP_FI_ROW_22", szValue );
 
-        sprintf( szValue, "%.16g", sChipInfo.FI_COL_22 );
+        CPLsprintf( szValue, "%.16g", sChipInfo.FI_COL_22 );
         poDS->SetMetadataItem( "ICHIP_FI_COL_22", szValue );
 
         sprintf( szValue, "%d", sChipInfo.FI_ROW );
@@ -1552,7 +1559,7 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
     }
 
     poDS->bInLoadXML = TRUE;
-    poDS->TryLoadXML();
+    poDS->TryLoadXML(poOpenInfo->GetSiblingFiles());
     poDS->bInLoadXML = FALSE;
 
 /* -------------------------------------------------------------------- */
@@ -1564,7 +1571,7 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
 
     if( pszOverviewFile == NULL )
     {
-        if( poDS->CheckForRSets(pszFilename) )
+        if( poDS->CheckForRSets(pszFilename, poOpenInfo->GetSiblingFiles()) )
             pszOverviewFile = poDS->osRSetVRT;
     }        
 
@@ -1600,7 +1607,7 @@ GDALDataset *NITFDataset::OpenInternal( GDALOpenInfo * poOpenInfo,
     if( !EQUAL(poOpenInfo->pszFilename,pszFilename) )
         poDS->oOvManager.Initialize( poDS, ":::VIRTUAL:::" );
     else
-        poDS->oOvManager.Initialize( poDS, pszFilename );
+        poDS->oOvManager.Initialize( poDS, pszFilename, poOpenInfo->GetSiblingFiles() );
 
     /* If there are PAM overviews, don't expose the underlying JPEG dataset */
     /* overviews (in case of monoblock C3) */
@@ -1750,10 +1757,10 @@ void NITFDataset::CheckGeoSDEInfo()
         return;
     }
     for( i = 0; i < nParmCount; i++ )
-        adfParm[i] = atof(NITFGetField(szParm,pszPRJPSB,83+15*i,15));
+        adfParm[i] = CPLAtof(NITFGetField(szParm,pszPRJPSB,83+15*i,15));
 
-    dfFE = atof(NITFGetField(szParm,pszPRJPSB,83+15*nParmCount,15));
-    dfFN = atof(NITFGetField(szParm,pszPRJPSB,83+15*nParmCount+15,15));
+    dfFE = CPLAtof(NITFGetField(szParm,pszPRJPSB,83+15*nParmCount,15));
+    dfFN = CPLAtof(NITFGetField(szParm,pszPRJPSB,83+15*nParmCount+15,15));
 
 /* -------------------------------------------------------------------- */
 /*      Try to handle the projection.                                   */
@@ -1882,12 +1889,12 @@ void NITFDataset::CheckGeoSDEInfo()
                   pszMAPLOB+0 );
     }
     
-    adfGT[0] = atof(NITFGetField(szParm,pszMAPLOB,13,15));
-    adfGT[1] = atof(NITFGetField(szParm,pszMAPLOB,3,5)) * dfMeterPerUnit;
+    adfGT[0] = CPLAtof(NITFGetField(szParm,pszMAPLOB,13,15));
+    adfGT[1] = CPLAtof(NITFGetField(szParm,pszMAPLOB,3,5)) * dfMeterPerUnit;
     adfGT[2] = 0.0;
-    adfGT[3] = atof(NITFGetField(szParm,pszMAPLOB,28,15));
+    adfGT[3] = CPLAtof(NITFGetField(szParm,pszMAPLOB,28,15));
     adfGT[4] = 0.0;
-    adfGT[5] = -atof(NITFGetField(szParm,pszMAPLOB,8,5)) * dfMeterPerUnit;
+    adfGT[5] = -CPLAtof(NITFGetField(szParm,pszMAPLOB,8,5)) * dfMeterPerUnit;
 
 /* -------------------------------------------------------------------- */
 /*      Apply back to dataset.                                          */
@@ -1938,24 +1945,26 @@ CPLErr NITFDataset::IRasterIO( GDALRWFlag eRWFlag,
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType, 
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace, int nLineSpace, int nBandSpace)
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg)
     
 {
     if( poJ2KDataset != NULL )
         return poJ2KDataset->RasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                        pData, nBufXSize, nBufYSize, eBufType,
                                        nBandCount, panBandMap, 
-                                       nPixelSpace, nLineSpace, nBandSpace );
+                                       nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     else if( poJPEGDataset != NULL )
         return poJPEGDataset->RasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                         pData, nBufXSize, nBufYSize, eBufType,
                                         nBandCount, panBandMap, 
-                                        nPixelSpace, nLineSpace, nBandSpace );
+                                        nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
     else 
         return GDALDataset::IRasterIO( eRWFlag, nXOff, nYOff, nXSize, nYSize,
                                        pData, nBufXSize, nBufYSize, eBufType,
                                        nBandCount, panBandMap, 
-                                       nPixelSpace, nLineSpace, nBandSpace );
+                                       nPixelSpace, nLineSpace, nBandSpace, psExtraArg );
 }
 
 
@@ -3145,7 +3154,8 @@ const GDAL_GCP *NITFDataset::GetGCPs()
 /*      overview file. (#3457)                                          */
 /************************************************************************/
 
-int NITFDataset::CheckForRSets( const char *pszNITFFilename )
+int NITFDataset::CheckForRSets( const char *pszNITFFilename,
+                                char** papszSiblingFiles )
 
 {
     bool isR0File = EQUAL(CPLGetExtension(pszNITFFilename),"r0");
@@ -3169,8 +3179,17 @@ int NITFDataset::CheckForRSets( const char *pszNITFFilename )
         else
           osTarget.Printf( "%s.r%d", pszNITFFilename, i );
 
-        if( VSIStatL( osTarget, &sStat ) != 0 )
-            break;
+        if( papszSiblingFiles == NULL )
+        {
+            if( VSIStatL( osTarget, &sStat ) != 0 )
+                break;
+        }
+        else
+        {
+            if( CSLFindStringCaseSensitive(papszSiblingFiles,
+                                           CPLGetFilename( osTarget )) < 0 )
+                break;
+        }
 
         aosRSetFilenames.push_back( osTarget );
     }
@@ -3577,7 +3596,7 @@ CPLErr NITFDataset::ReadJPEGBlock( int iBlockX, int iBlockY )
     if( poDS->GetRasterBand(1)->GetRasterDataType() != GetRasterBand(1)->GetRasterDataType())
     {
         CPLError( CE_Failure, CPLE_AppDefined,
-                  "JPEG block %d data type (%s) not consistant with band data type (%s).", 
+                  "JPEG block %d data type (%s) not consistent with band data type (%s).",
                   iBlock, GDALGetDataTypeName(poDS->GetRasterBand(1)->GetRasterDataType()),
                   GDALGetDataTypeName(GetRasterBand(1)->GetRasterDataType()) );
         delete poDS;
@@ -3589,7 +3608,8 @@ CPLErr NITFDataset::ReadJPEGBlock( int iBlockX, int iBlockY )
                            psImage->nBlockWidth, psImage->nBlockHeight,
                            pabyJPEGBlock, 
                            psImage->nBlockWidth, psImage->nBlockHeight,
-                           GetRasterBand(1)->GetRasterDataType(), psImage->nBands, anBands, 0, 0, 0 );
+                           GetRasterBand(1)->GetRasterDataType(), psImage->nBands, anBands,
+                           0, 0, 0, NULL );
 
     delete poDS;
 
@@ -3635,13 +3655,29 @@ char **NITFDataset::AddFile(char **papszFileList, const char* EXTENSION, const c
 {
     VSIStatBufL sStatBuf;
     CPLString osTarget = CPLResetExtension( osNITFFilename, EXTENSION );
-    if( VSIStatL( osTarget, &sStatBuf ) == 0 )
-        papszFileList = CSLAddString( papszFileList, osTarget );
+    if( oOvManager.GetSiblingFiles() != NULL )
+    {
+        if( CSLFindStringCaseSensitive( oOvManager.GetSiblingFiles(), 
+                           CPLGetFilename(osTarget) ) >= 0 )
+            papszFileList = CSLAddString( papszFileList, osTarget );
+        else
+        {
+            osTarget = CPLResetExtension( osNITFFilename, extension );
+            if( CSLFindStringCaseSensitive( oOvManager.GetSiblingFiles(), 
+                           CPLGetFilename(osTarget) ) >= 0 )
+                papszFileList = CSLAddString( papszFileList, osTarget );
+        }
+    }
     else
     {
-        osTarget = CPLResetExtension( osNITFFilename, extension );
         if( VSIStatL( osTarget, &sStatBuf ) == 0 )
             papszFileList = CSLAddString( papszFileList, osTarget );
+        else
+        {
+            osTarget = CPLResetExtension( osNITFFilename, extension );
+            if( VSIStatL( osTarget, &sStatBuf ) == 0 )
+                papszFileList = CSLAddString( papszFileList, osTarget );
+        }
     }
 
     return papszFileList;
@@ -4225,7 +4261,7 @@ NITFDataset::NITFCreateCopy(
 
                 if (CSLPartialFindString(papszFullOptions, "TRE=GEOLOB=") != - 1)
                 {
-                    CPLDebug("NITF", "GEOLOB TRE was explicitely defined before. "
+                    CPLDebug("NITF", "GEOLOB TRE was explicitly defined before. "
                              "Overriding it with current georefencing info.");
                 }
 
@@ -4252,7 +4288,7 @@ NITFDataset::NITFCreateCopy(
                 papszFullOptions = CSLAddString( papszFullOptions, osGEOLOB ) ;
 
 /* -------------------------------------------------------------------- */
-/*      Write GEOPSB TRE if not already explicitely provided            */
+/*      Write GEOPSB TRE if not already explicitly provided            */
 /* -------------------------------------------------------------------- */
                 if (CSLPartialFindString(papszFullOptions, "FILE_TRE=GEOPSB=") == -1 &&
                     CSLPartialFindString(papszFullOptions, "TRE=GEOPSB=") == -1)
@@ -4284,7 +4320,7 @@ NITFDataset::NITFCreateCopy(
                 }
                 else
                 {
-                    CPLDebug("NITF", "GEOPSB TRE was explicitely defined before. Keeping it.");
+                    CPLDebug("NITF", "GEOPSB TRE was explicitly defined before. Keeping it.");
                 }
 
             }
@@ -4317,7 +4353,7 @@ NITFDataset::NITFCreateCopy(
             else
             {
                 CPLError((bStrict) ? CE_Failure : CE_Warning, CPLE_NotSupported,
-                    "Inconsistant ICORDS value with SRS : %s%s.\n", pszICORDS,
+                    "Inconsistent ICORDS value with SRS : %s%s.\n", pszICORDS,
                     (!bStrict) ? ". Setting it to G instead" : "");
                 if (bStrict)
                 {
@@ -4565,12 +4601,12 @@ NITFDataset::NITFCreateCopy(
             for( int iLine = 0; iLine < nYSize; iLine++ )
             {
                 eErr = poSrcBand->RasterIO( GF_Read, 0, iLine, nXSize, 1, 
-                                            pData, nXSize, 1, eType, 0, 0 );
+                                            pData, nXSize, 1, eType, 0, 0, NULL );
                 if( eErr != CE_None )
                     break;   
                     
                 eErr = poDstBand->RasterIO( GF_Write, 0, iLine, nXSize, 1, 
-                                            pData, nXSize, 1, eType, 0, 0 );
+                                            pData, nXSize, 1, eType, 0, 0, NULL );
 
                 if( eErr != CE_None )
                     break;   
@@ -5699,6 +5735,7 @@ void GDALRegister_NITF()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "NITF" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "National Imagery Transmission Format" );
         

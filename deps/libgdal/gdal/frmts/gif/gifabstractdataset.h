@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gifabstractdataset.h 27459 2014-06-15 11:30:36Z rouault $
+ * $Id: gifabstractdataset.h 29222 2015-05-21 15:06:39Z rouault $
  *
  * Project:  GIF Driver
  * Purpose:  GIF Abstract Dataset
@@ -45,6 +45,8 @@ CPL_C_END
 class GIFAbstractDataset : public GDALPamDataset
 {
   protected:
+    friend class    GIFAbstractRasterBand;
+
     VSILFILE        *fp;
 
     GifFileType *hGifFile;
@@ -58,6 +60,8 @@ class GIFAbstractDataset : public GDALPamDataset
 
     int         bHasReadXMPMetadata;
     void        CollectXMPMetadata();
+
+    CPLString   osWldFilename;
 
     void        DetectGeoreferencing( GDALOpenInfo * poOpenInfo );
 
@@ -74,11 +78,44 @@ class GIFAbstractDataset : public GDALPamDataset
     virtual char      **GetMetadataDomainList();
     virtual char  **GetMetadata( const char * pszDomain = "" );
 
+    virtual char **GetFileList(void);
+
     static int          Identify( GDALOpenInfo * );
 
     static GifFileType* myDGifOpen( void *userPtr, InputFunc readFunc );
     static int          myDGifCloseFile( GifFileType *hGifFile );
     static int          myEGifCloseFile( GifFileType *hGifFile );
+    static int          ReadFunc( GifFileType *psGFile, GifByteType *pabyBuffer, 
+                                  int nBytesToRead );
+};
+
+/************************************************************************/
+/* ==================================================================== */
+/*                        GIFAbstractRasterBand                         */
+/* ==================================================================== */
+/************************************************************************/
+
+class GIFAbstractRasterBand : public GDALPamRasterBand
+{
+  protected:
+    SavedImage  *psImage;
+
+    int         *panInterlaceMap;
+    
+    GDALColorTable *poColorTable;
+
+    int         nTransparentColor;
+
+  public:
+
+                   GIFAbstractRasterBand(GIFAbstractDataset *poDS, int nBand, 
+                                         SavedImage *psSavedImage, int nBackground,
+                                         int bAdvertizeInterlacedMDI );
+    virtual       ~GIFAbstractRasterBand();
+
+    virtual double GetNoDataValue( int *pbSuccess = NULL );
+    virtual GDALColorInterp GetColorInterpretation();
+    virtual GDALColorTable *GetColorTable();
 };
 
 

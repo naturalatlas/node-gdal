@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_gpx.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_gpx.h 27959 2014-11-14 18:29:21Z rouault $
  *
  * Project:  GPX Translator
  * Purpose:  Definition of classes for OGR .gpx driver.
@@ -137,7 +137,7 @@ class OGRGPXLayer : public OGRLayer
     void                ResetReading();
     OGRFeature *        GetNextFeature();
     
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
     OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK );
 
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
@@ -214,7 +214,7 @@ class OGRGPXDataSource : public OGRDataSource
     int                 GetLayerCount() { return nLayers; }
     OGRLayer*           GetLayer( int );
     
-    OGRLayer *          CreateLayer( const char * pszLayerName,
+    OGRLayer *          ICreateLayer( const char * pszLayerName,
                                     OGRSpatialReference *poSRS,
                                     OGRwkbGeometryType eType,
                                     char ** papszOptions );
@@ -240,23 +240,5 @@ class OGRGPXDataSource : public OGRDataSource
     
     void                PrintLine(const char *fmt, ...) CPL_PRINT_FUNC_FORMAT (2, 3);
 };
-
-/************************************************************************/
-/*                             OGRGPXDriver                             */
-/************************************************************************/
-
-class OGRGPXDriver : public OGRSFDriver
-{
-  public:
-                ~OGRGPXDriver();
-
-    const char*         GetName();
-    OGRDataSource*      Open( const char *, int );
-    OGRDataSource*      CreateDataSource( const char * pszName, char **papszOptions );
-    int                 DeleteDataSource( const char *pszFilename );
-    int                 TestCapability( const char * );
-    
-};
-
 
 #endif /* ndef _OGR_GPX_H_INCLUDED */

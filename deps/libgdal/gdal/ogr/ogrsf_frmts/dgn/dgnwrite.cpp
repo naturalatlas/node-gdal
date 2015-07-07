@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnwrite.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: dgnwrite.cpp 28435 2015-02-07 14:35:34Z rouault $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  DGN Access functions related to writing DGN elements.
@@ -30,7 +30,7 @@
 
 #include "dgnlibp.h"
 
-CPL_CVSID("$Id: dgnwrite.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: dgnwrite.cpp 28435 2015-02-07 14:35:34Z rouault $");
 
 static void DGNPointToInt( DGNInfo *psDGN, DGNPoint *psPoint, 
                            unsigned char *pabyTarget );
@@ -451,8 +451,10 @@ DGNHandle
  * the source element suitable to write to hDGNDst. 
  */
 
-DGNElemCore *DGNCloneElement( CPL_UNUSED DGNHandle hDGNSrc, DGNHandle hDGNDst, 
+DGNElemCore *DGNCloneElement( CPL_UNUSED DGNHandle hDGNSrc,
+                              DGNHandle hDGNDst,
                               DGNElemCore *psSrcElement )
+
 {
     DGNElemCore *psClone = NULL;
 
@@ -759,12 +761,13 @@ int DGNUpdateElemCore( DGNHandle hDGN, DGNElemCore *psElement,
  */
 
 
-int DGNUpdateElemCoreExtended( CPL_UNUSED DGNHandle hDGN, DGNElemCore *psElement )
+int DGNUpdateElemCoreExtended( CPL_UNUSED DGNHandle hDGN,
+                               DGNElemCore *psElement )
 {
     GByte *rd = psElement->raw_data;
     int   nWords = (psElement->raw_bytes / 2) - 2;
 
-    if( psElement->raw_data == NULL 
+    if( psElement->raw_data == NULL
         || psElement->raw_bytes < 36 )
     {
         CPLAssert( FALSE );
@@ -816,7 +819,8 @@ int DGNUpdateElemCoreExtended( CPL_UNUSED DGNHandle hDGN, DGNElemCore *psElement
 /*                         DGNInitializeElemCore()                      */
 /************************************************************************/
 
-static void DGNInitializeElemCore( CPL_UNUSED DGNHandle hDGN, DGNElemCore *psElement )
+static void DGNInitializeElemCore( CPL_UNUSED DGNHandle hDGN,
+                                   DGNElemCore *psElement )
 {
     memset( psElement, 0, sizeof(DGNElemCore) );
 
@@ -2410,8 +2414,7 @@ int DGNAddRawAttrLink( DGNHandle hDGN, DGNElemCore *psElement,
 /* -------------------------------------------------------------------- */
 /*      Grow the raw data, if we have rawdata.                          */
 /* -------------------------------------------------------------------- */
-    /* TODO: operation on raw_bytes may be undefined. */
-    psElement->raw_bytes = psElement->raw_bytes += nLinkSize;
+    psElement->raw_bytes += nLinkSize;
     psElement->raw_data = (unsigned char *)
         CPLRealloc( psElement->raw_data, psElement->raw_bytes );
 

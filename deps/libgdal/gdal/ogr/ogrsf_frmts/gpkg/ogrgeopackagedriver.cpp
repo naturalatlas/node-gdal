@@ -32,65 +32,60 @@
 // g++ -g -Wall -fPIC -shared -o ogr_geopackage.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/gpkg ogr/ogrsf_frmts/gpkg/*.c* -L. -lgdal 
 
 
+/* "GP10" in ASCII bytes */
+static const char aGpkgId[4] = {0x47, 0x50, 0x31, 0x30};
+// static const size_t szGpkgIdPos = 68;
 
 /************************************************************************/
-/*                        ~OGRGeoPackageDriver()                         */
+/*                       OGRGeoPackageDriverIdentify()                  */
 /************************************************************************/
 
-OGRGeoPackageDriver::~OGRGeoPackageDriver()
+static int OGRGeoPackageDriverIdentify( GDALOpenInfo* poOpenInfo )
 {
-} 
+    if( EQUALN(poOpenInfo->pszFilename, "GPKG:", 5) )
+        return TRUE;
 
+    /* Requirement 3: File name has to end in "gpkg" */
+    /* http://opengis.github.io/geopackage/#_file_extension_name */
+    if( !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "GPKG") )
+        return FALSE;
 
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
+    /* Check that the filename exists and is a file */
+    if( poOpenInfo->fpL == NULL)
+        return FALSE;
 
-const char *OGRGeoPackageDriver::GetName()
-{
-    return "GPKG";
+    if ( poOpenInfo->nHeaderBytes < 16 ||
+        strncmp( (const char*)poOpenInfo->pabyHeader, "SQLite format 3", 15 ) != 0 )
+    {
+        return FALSE;
+    }
+
+    /* Requirement 2: A GeoPackage SHALL contain 0x47503130 ("GP10" in ASCII) */
+    /* in the application id */
+    /* http://opengis.github.io/geopackage/#_file_format */
+    /* Be tolerant since some datasets don't actually follow that requirement */
+    if( poOpenInfo->nHeaderBytes < 68 + 4 ||
+        memcmp(poOpenInfo->pabyHeader + 68, aGpkgId, 4) != 0 )
+    {
+        CPLError( CE_Warning, CPLE_AppDefined, "GPKG: bad application_id on '%s'",
+                  poOpenInfo->pszFilename);
+    }
+
+    return TRUE;
 }
-
 
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRGeoPackageDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGRGeoPackageDriverOpen( GDALOpenInfo* poOpenInfo )
 {
-    OGRGeoPackageDataSource   *poDS = new OGRGeoPackageDataSource();
-
-    if( !poDS->Open( pszFilename, bUpdate ) )
-    {
-        delete poDS;
-        poDS = NULL;
-    }
-
-    return poDS;
-}
-
-
-/************************************************************************/
-/*                                CreateDataSource()                    */
-/************************************************************************/
-
-OGRDataSource *OGRGeoPackageDriver::CreateDataSource( const char * pszFilename, char **papszOptions )
-{
-	/* First, ensure there isn't any such file yet. */
-    VSIStatBufL sStatBuf;
-
-    if( VSIStatL( pszFilename, &sStatBuf ) == 0 )
-    {
-        CPLError( CE_Failure, CPLE_AppDefined, 
-                  "A file system object called '%s' already exists.",
-                  pszFilename );
-
+    if( !OGRGeoPackageDriverIdentify(poOpenInfo) )
         return NULL;
-    }
-	
-    OGRGeoPackageDataSource   *poDS = new OGRGeoPackageDataSource();
 
-    if( !poDS->Create( pszFilename, papszOptions ) )
+    GDALGeoPackageDataset   *poDS = new GDALGeoPackageDataset();
+
+    if( !poDS->Open( poOpenInfo ) )
     {
         delete poDS;
         poDS = NULL;
@@ -100,32 +95,40 @@ OGRDataSource *OGRGeoPackageDriver::CreateDataSource( const char * pszFilename, 
 }
 
 /************************************************************************/
-/*                         DeleteDataSource()                           */
+/*                               Create()                               */
 /************************************************************************/
 
-OGRErr OGRGeoPackageDriver::DeleteDataSource( const char *pszFilename )
+static GDALDataset* OGRGeoPackageDriverCreate( const char * pszFilename,
+                                            int nXSize,
+                                            int nYSize,
+                                            int nBands,
+                                            GDALDataType eDT,
+                                            char **papszOptions )
 {
-    if (VSIUnlink( pszFilename ) == 0)
-        return OGRERR_NONE;
-    else
-        return OGRERR_FAILURE;
+    GDALGeoPackageDataset   *poDS = new GDALGeoPackageDataset();
+
+    if( !poDS->Create( pszFilename, nXSize, nYSize,
+                       nBands, eDT, papszOptions ) )
+    {
+        delete poDS;
+        poDS = NULL;
+    }
+
+    return poDS;
 }
 
 /************************************************************************/
-/*                         TestCapability()                             */
+/*                               Delete()                               */
 /************************************************************************/
 
-int OGRGeoPackageDriver::TestCapability( const char * pszCap )
+static CPLErr OGRGeoPackageDriverDelete( const char *pszFilename )
 
 {
-    if( EQUAL(pszCap,ODrCCreateDataSource) )
-        return TRUE;
-    else if( EQUAL(pszCap,ODrCDeleteDataSource) )
-        return TRUE;
+    if( VSIUnlink(pszFilename) == 0 )
+        return CE_None;
     else
-        return FALSE;
+        return CE_Failure;
 }
-
 
 /************************************************************************/
 /*                         RegisterOGRGeoPackage()                       */
@@ -133,7 +136,108 @@ int OGRGeoPackageDriver::TestCapability( const char * pszCap )
 
 void RegisterOGRGeoPackage()
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRGeoPackageDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "GPKG" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "GPKG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_SUBDATASETS, "YES" );
+
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "GeoPackage" );
+        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gpkg" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_geopackage.html" );
+        poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES, "Byte" );
+
+#define COMPRESSION_OPTIONS \
+"  <Option name='TILE_FORMAT' type='string-select' description='Format to use to create tiles' default='PNG_JPEG'>" \
+"    <Value>PNG_JPEG</Value>" \
+"    <Value>PNG</Value>" \
+"    <Value>PNG8</Value>" \
+"    <Value>JPEG</Value>" \
+"    <Value>WEBP</Value>" \
+"  </Option>" \
+"  <Option name='QUALITY' type='int' min='1' max='100' description='Quality for JPEG and WEBP tiles' default='75'/>" \
+"  <Option name='ZLEVEL' type='int' min='1' max='9' description='DEFLATE compression level for PNG tiles' default='6'/>" \
+"  <Option name='DITHER' type='boolean' description='Whether to apply Floyd-Steinberg dithering (for TILE_FORMAT=PNG8)' default='NO'/>"
+
+        poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST, "<OpenOptionList>"
+"  <Option name='TABLE' type='string' description='Name of tile user-table'/>"
+"  <Option name='ZOOM_LEVEL' type='integer' description='Zoom level of full resolution. If not specified, maximum non-empty zoom level'/>"
+"  <Option name='BAND_COUNT' type='int' min='1' max='4' description='Number of raster bands' default='4'/>"
+"  <Option name='MINX' type='float' description='Minimum X of area of interest'/>"
+"  <Option name='MINY' type='float' description='Minimum Y of area of interest'/>"
+"  <Option name='MAXX' type='float' description='Maximum X of area of interest'/>"
+"  <Option name='MAXY' type='float' description='Maximum Y of area of interest'/>"
+"  <Option name='USE_TILE_EXTENT' type='boolean' description='Use tile extent of content to determine area of interest' default='NO'/>"
+"  <Option name='WHERE' type='string' description='SQL WHERE clause to be appended to tile requests'/>"
+COMPRESSION_OPTIONS
+"</OpenOptionList>");
+
+        poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST, "<CreationOptionList>"
+"  <Option name='RASTER_TABLE' type='string' description='Name of tile user table'/>"
+"  <Option name='APPEND_SUBDATASET' type='boolean' description='Set to YES to add a new tile user table to an existing GeoPackage instead of replacing it' default='NO'/>"
+"  <Option name='RASTER_IDENTIFIER' type='string' description='Human-readable identifier (e.g. short name)'/>"
+"  <Option name='RASTER_DESCRIPTION' type='string' description='Human-readable description'/>"
+"  <Option name='BLOCKSIZE' type='int' description='Block size in pixels' default='256' max='4096'/>"
+"  <Option name='BLOCKXSIZE' type='int' description='Block width in pixels' default='256' max='4096'/>"
+"  <Option name='BLOCKYSIZE' type='int' description='Block height in pixels' default='256' max='4096'/>"
+COMPRESSION_OPTIONS
+"  <Option name='TILING_SCHEME' type='string-select' description='Which tiling scheme to use' default='CUSTOM'>"
+"    <Value>CUSTOM</Value>"
+"    <Value>GoogleCRS84Quad</Value>"
+"    <Value>GoogleMapsCompatible</Value>"
+"    <Value>InspireCRS84Quad</Value>"
+"    <Value>PseudoTMS_GlobalGeodetic</Value>"
+"    <Value>PseudoTMS_GlobalMercator</Value>"
+"  </Option>"
+"  <Option name='ZOOM_LEVEL_STRATEGY' type='string-select' description='Strategy to determine zoom level. Only used for TILING_SCHEME != CUSTOM' default='AUTO'>"
+"    <Value>AUTO</Value>"
+"    <Value>LOWER</Value>"
+"    <Value>UPPER</Value>"
+"  </Option>"
+"  <Option name='RESAMPLING' type='string-select' description='Resampling algorithm. Only used for TILING_SCHEME != CUSTOM' default='BILINEAR'>"
+"    <Value>NEAREST</Value>"
+"    <Value>BILINEAR</Value>"
+"    <Value>CUBIC</Value>"
+"    <Value>CUBICSPLINE</Value>"
+"    <Value>LANCZOS</Value>"
+"    <Value>MODE</Value>"
+"    <Value>AVERAGE</Value>"
+"  </Option>"
+"</CreationOptionList>");
+
+        poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
+"<LayerCreationOptionList>"
+"  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column.' default='geom' deprecated_alias='GEOMETRY_COLUMN'/>"
+"  <Option name='GEOMETRY_NULLABLE' type='boolean' description='Whether the values of the geometry column can be NULL' default='YES'/>"
+"  <Option name='FID' type='string' description='Name of the FID column to create' default='fid'/>"
+"  <Option name='OVERWRITE' type='boolean' description='Whether to overwrite an existing table with the layer name to be created' default='NO'/>"
+"  <Option name='PRECISION' type='boolean' description='Whether text fields created should keep the width' default='YES'/>"
+"  <Option name='TRUNCATE_FIELDS' type='boolean' description='Whether to truncate text content that exceeds maximum width' default='NO'/>"
+"  <Option name='SPATIAL_INDEX' type='boolean' description='Whether to create a spatial index' default='YES'/>"
+"  <Option name='IDENTIFIER' type='string' description='Identifier of the layer, as put in the contents table'/>"
+"  <Option name='DESCRIPTION' type='string' description='Description of the layer, as put in the contents table'/>"
+"</LayerCreationOptionList>");
+        
+        poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime Binary" );
+        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
+        poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
+        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
+
+        poDriver->pfnOpen = OGRGeoPackageDriverOpen;
+        poDriver->pfnIdentify = OGRGeoPackageDriverIdentify;
+        poDriver->pfnCreate = OGRGeoPackageDriverCreate;
+        poDriver->pfnCreateCopy = GDALGeoPackageDataset::CreateCopy;
+        poDriver->pfnDelete = OGRGeoPackageDriverDelete;
+
+        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
-
-

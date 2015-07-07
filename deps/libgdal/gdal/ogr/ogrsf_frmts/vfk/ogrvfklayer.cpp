@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrvfklayer.cpp 26596 2013-11-08 17:59:47Z martinl $
+ * $Id: ogrvfklayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVFKLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrvfklayer.cpp 26596 2013-11-08 17:59:47Z martinl $");
+CPL_CVSID("$Id: ogrvfklayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /*!
   \brief OGRVFKLayer constructor
@@ -50,30 +50,9 @@ OGRVFKLayer::OGRVFKLayer(const char *pszName,
 {
     /* set spatial reference */
     if( poSRSIn == NULL ) {
-        /* default is S-JTSK 
-        const char *wktString = "PROJCS[\"Krovak\","
-            "GEOGCS[\"GCS_Bessel 1841\","
-            "DATUM[\"D_unknown\","
-            "SPHEROID[\"bessel\","
-            "6377397.155,299.1528128]],"
-            "PRIMEM[\"Greenwich\",0],"
-            "UNIT[\"Degree\",0.017453292519943295]],"
-            "PROJECTION[\"Krovak\"],"
-            "PARAMETER[\"latitude_of_center\",49.5],"
-            "PARAMETER[\"longitude_of_center\",24.83333333333333],"
-            "PARAMETER[\"azimuth\",0],"
-            "PARAMETER[\"pseudo_standard_parallel_1\",0],"
-            "PARAMETER[\"scale_factor\",0.9999],"
-            "PARAMETER[\"false_easting\",0],"
-            "PARAMETER[\"false_northing\",0],"
-            "UNIT[\"Meter\",1]]";
-        */
-        
+        /* default is S-JTSK (EPSG: 5514) */
         poSRS = new OGRSpatialReference();
-        /*
-        if (poSRS->importFromWkt((char **)&wktString) != OGRERR_NONE) {
-        */
-        if (poSRS->importFromEPSG(2065) != OGRERR_NONE) {
+        if (poSRS->importFromEPSG(5514) != OGRERR_NONE) {
             delete poSRS;
             poSRS = NULL;
         }
@@ -87,6 +66,7 @@ OGRVFKLayer::OGRVFKLayer(const char *pszName,
 
     /* feature definition */
     poFeatureDefn = new OGRFeatureDefn(pszName);
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
 
     poFeatureDefn->Reference();
@@ -148,24 +128,26 @@ OGRGeometry *OGRVFKLayer::CreateGeometry(IVFKFeature * poVfkFeature)
 /*!
   \brief Get feature count
 
-  This method overwrites OGRLayer::GetFeatureCount(), 
+  This method overwrites OGRLayer::GetFeatureCount(),
 
   \param bForce skip (return -1)
 
   \return number of features
 */
-int OGRVFKLayer::GetFeatureCount(int bForce)
+GIntBig OGRVFKLayer::GetFeatureCount(CPL_UNUSED int bForce)
 {
     int nfeatures;
 
-    if (m_poFilterGeom || m_poAttrQuery || bForce)
-        nfeatures = OGRLayer::GetFeatureCount(bForce);
-    else
-        nfeatures = poDataBlock->GetFeatureCount();
-    
+    /* note that 'nfeatures' is 0 when data are not read from DB */
+    nfeatures = (int)poDataBlock->GetFeatureCount();
+    if (m_poFilterGeom || m_poAttrQuery || nfeatures < 1) {
+        /* force real feature count */
+        nfeatures = (int)OGRLayer::GetFeatureCount();
+    }
+
     CPLDebug("OGR-VFK", "OGRVFKLayer::GetFeatureCount(): name=%s -> n=%d",
              GetName(), nfeatures);
-    
+
     return nfeatures;
 }
 
@@ -215,7 +197,7 @@ OGRFeature *OGRVFKLayer::GetNextFeature()
 
   \return pointer to OGRFeature or NULL not found
 */
-OGRFeature *OGRVFKLayer::GetFeature(long nFID)
+OGRFeature *OGRVFKLayer::GetFeature(GIntBig nFID)
 {
     IVFKFeature *poVFKFeature;
 
@@ -225,7 +207,7 @@ OGRFeature *OGRVFKLayer::GetFeature(long nFID)
         return NULL;
 
     CPLAssert(nFID == poVFKFeature->GetFID());
-    CPLDebug("OGR-VFK", "OGRVFKLayer::GetFeature(): name=%s fid=%ld", GetName(), nFID);
+    CPLDebug("OGR-VFK", "OGRVFKLayer::GetFeature(): name=%s fid=" CPL_FRMT_GIB, GetName(), nFID);
     
     return GetFeature(poVFKFeature);
 }

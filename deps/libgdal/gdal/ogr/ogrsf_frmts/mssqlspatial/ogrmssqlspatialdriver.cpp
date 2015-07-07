@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogrmssqlspatialdriver.cpp 29025 2015-04-26 11:50:20Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -30,7 +30,7 @@
 #include "ogr_mssqlspatial.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp 29025 2015-04-26 11:50:20Z tamas $");
 
 /************************************************************************/
 /*                           ~OGRMSSQLSpatialDriver()                   */
@@ -121,5 +121,39 @@ void RegisterOGRMSSQLSpatial()
 {
     if (! GDAL_CHECK_VERSION("OGR/MSSQLSpatial driver"))
         return;
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRMSSQLSpatialDriver );
+    OGRSFDriver* poDriver = new OGRMSSQLSpatialDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "Microsoft SQL Server Spatial Database" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                "drv_mssqlspatial.html" );
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST, "<CreationOptionList/>");
+
+    poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
+"<LayerCreationOptionList>"
+"  <Option name='GEOM_TYPE' type='string-select' description='Format of geometry columns' default='geometry'>"
+"    <Value>geometry</Value>"
+"    <Value>geography</Value>"
+"  </Option>"
+"  <Option name='OVERWRITE' type='boolean' description='Whether to overwrite an existing table with the layer name to be created' default='NO'/>"
+"  <Option name='LAUNDER' type='boolean' description='Whether layer and field names will be laundered' default='YES'/>"
+"  <Option name='PRECISION' type='boolean' description='Whether fields created should keep the width and precision' default='YES'/>"
+"  <Option name='DIM' type='integer' description='Set to 2 to force the geometries to be 2D, or 3 to be 2.5D'/>"
+"  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column.' default='ogr_geometry' deprecated_alias='GEOM_NAME'/>"
+"  <Option name='SCHEMA' type='string' description='Name of schema into which to create the new table' default='dbo'/>"
+"  <Option name='SRID' type='int' description='Forced SRID of the layer'/>"
+"  <Option name='SPATIAL_INDEX' type='boolean' description='Whether to create a spatial index' default='YES'/>"
+"  <Option name='UPLOAD_GEOM_FORMAT' type='string-select' description='Geometry format when creating or modifying features' default='wkb'>"
+"    <Value>wkb</Value>"
+"    <Value>wkt</Value>"
+"  </Option>"
+"  <Option name='FID' type='string' description='Name of the FID column to create' default='ogr_fid'/>"
+"  <Option name='FID64' type='boolean' description='Whether to create the FID column with bigint type to handle 64bit wide ids' default='NO'/>"
+"  <Option name='GEOMETRY_NULLABLE' type='boolean' description='Whether the values of the geometry column can be NULL' default='YES'/>"
+"</LayerCreationOptionList>");
+
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date Time DateTime Binary" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
+ 	poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
+ 	poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
 }

@@ -12,6 +12,7 @@
  **********************************************************************
  * Copyright (c) 1999-2003, Stephane Villeneuve
  * Copyright (c) 2011-2013, Even Rouault <even dot rouault at mines-paris dot org>
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -263,7 +264,7 @@ MIFFile::~MIFFile()
  *
  * Returns 0 on success, -1 on error.
  **********************************************************************/
-int MIFFile::Open(const char *pszFname, const char *pszAccess,
+int MIFFile::Open(const char *pszFname, TABAccess eAccess,
                   GBool bTestOpenNoError /*=FALSE*/ )
 {
     char *pszTmpFname = NULL;
@@ -282,12 +283,13 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
     /*-----------------------------------------------------------------
      * Validate access mode
      *----------------------------------------------------------------*/
-    if (EQUALN(pszAccess, "r", 1))
+    const char* pszAccess = NULL;
+    if (eAccess == TABRead)
     {
         m_eAccessMode = TABRead;
         pszAccess = "rt";
     }
-    else if (EQUALN(pszAccess, "w", 1))
+    else if (eAccess == TABWrite)
     {
         m_eAccessMode = TABWrite;
         pszAccess = "wt";
@@ -300,7 +302,7 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
     {
         if (!bTestOpenNoError)
             CPLError(CE_Failure, CPLE_FileIO,
-                 "Open() failed: access mode \"%s\" not supported", pszAccess);
+                 "Open() failed: access mode \"%d\" not supported", eAccess);
         else
             CPLErrorReset();
 
@@ -364,7 +366,8 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
     /*-----------------------------------------------------------------
      * Read MIF File Header
      *----------------------------------------------------------------*/
-    if (m_eAccessMode == TABRead && ParseMIFHeader() != 0)
+    int bIsEmpty = FALSE;
+    if (m_eAccessMode == TABRead && ParseMIFHeader(&bIsEmpty) != 0)
     {
         Close();
 
@@ -397,16 +400,27 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
 
         if (m_poMIDFile->Open(pszTmpFname, pszAccess) !=0)
         {
-            if (!bTestOpenNoError)
-                CPLError(CE_Failure, CPLE_NotSupported,
-                        "Unable to open %s.", pszTmpFname);
+            if (m_eAccessMode == TABWrite)
+            {
+                if (!bTestOpenNoError)
+                    CPLError(CE_Failure, CPLE_NotSupported,
+                            "Unable to open %s.", pszTmpFname);
+                else
+                    CPLErrorReset();
+
+                CPLFree(pszTmpFname);
+                Close();
+
+                return -1;
+            }
             else
-                CPLErrorReset();
-
-            CPLFree(pszTmpFname);
-            Close();
-
-            return -1;
+            {
+                CPLDebug("MITAB",
+                         "%s is not found, although %d attributes are declared",
+                         pszTmpFname, m_nAttribut);
+                delete m_poMIDFile;
+                m_poMIDFile = NULL;
+            }
         }
     }
 
@@ -423,7 +437,7 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
     }
 
     /* Put the MID file at the correct location, on the first feature */
-    if (m_eAccessMode == TABRead && (m_poMIDFile != NULL && m_poMIDFile->GetLine() == NULL))
+    if (m_eAccessMode == TABRead && (m_poMIDFile != NULL && !bIsEmpty && m_poMIDFile->GetLine() == NULL))
     {
         Close();
 
@@ -485,7 +499,7 @@ int MIFFile::Open(const char *pszFname, const char *pszAccess,
  *
  * Returns 0 on success, -1 on error.
  **********************************************************************/
-int MIFFile::ParseMIFHeader()
+int MIFFile::ParseMIFHeader(int* pbIsEmpty)
 {  
     GBool  bColumns = FALSE, bAllColumnsRead =  FALSE;
     int    nColumns = 0;
@@ -495,6 +509,8 @@ int MIFFile::ParseMIFHeader()
     
     const char *pszLine;
     char **papszToken;
+    
+    *pbIsEmpty = FALSE;
 
     char *pszFeatureClassName = TABGetBasename(m_pszFname);
     m_poDefn = new OGRFeatureDefn(pszFeatureClassName);
@@ -593,10 +609,10 @@ int MIFFile::ParseMIFHeader()
             int iBounds = CSLFindString( papszFields, "Bounds" );
             if (iBounds >= 0 && iBounds + 4 < CSLCount(papszFields))
             {
-                m_dXMin = atof(papszFields[++iBounds]);
-                m_dYMin = atof(papszFields[++iBounds]);
-                m_dXMax = atof(papszFields[++iBounds]);
-                m_dYMax = atof(papszFields[++iBounds]);
+                m_dXMin = CPLAtof(papszFields[++iBounds]);
+                m_dYMin = CPLAtof(papszFields[++iBounds]);
+                m_dXMax = CPLAtof(papszFields[++iBounds]);
+                m_dYMax = CPLAtof(papszFields[++iBounds]);
                 m_bBoundsSet = TRUE;
             }
             CSLDestroy( papszFields );
@@ -608,10 +624,10 @@ int MIFFile::ParseMIFHeader()
           
             if (CSLCount(papszToken) == 5)
             {
-                m_dfXMultiplier   = atof(papszToken[1]);
-                m_dfYMultiplier   = atof(papszToken[2]);
-                m_dfXDisplacement = atof(papszToken[3]);
-                m_dfYDisplacement = atof(papszToken[4]);
+                m_dfXMultiplier   = CPLAtof(papszToken[1]);
+                m_dfYMultiplier   = CPLAtof(papszToken[2]);
+                m_dfXDisplacement = CPLAtof(papszToken[3]);
+                m_dfYDisplacement = CPLAtof(papszToken[4]);
                 
                 if (m_dfXMultiplier == 0.0)
                   m_dfXMultiplier = 1.0;
@@ -678,6 +694,8 @@ int MIFFile::ParseMIFHeader()
     while (((pszLine = m_poMIFFile->GetLine()) != NULL) && 
            m_poMIFFile->IsValidFeature(pszLine) == FALSE)
         ;
+    
+    *pbIsEmpty = (pszLine == NULL);
 
     /*-----------------------------------------------------------------
      * Check for Unique and Indexed flags
@@ -829,7 +847,7 @@ int  MIFFile::AddFields(const char *pszLine)
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int MIFFile::GetFeatureCount (int bForce)
+GIntBig MIFFile::GetFeatureCount (int bForce)
 {
     
     if( m_poFilterGeom != NULL || m_poAttrQuery != NULL )
@@ -924,8 +942,8 @@ void MIFFile::PreParseFile()
             m_nPoints++;
             if (CSLCount(papszToken) == 3)
             {
-                UpdateExtents(m_poMIFFile->GetXTrans(atof(papszToken[1])),
-                             m_poMIFFile->GetYTrans(atof(papszToken[2])));
+                UpdateExtents(m_poMIFFile->GetXTrans(CPLAtof(papszToken[1])),
+                             m_poMIFFile->GetYTrans(CPLAtof(papszToken[2])));
             }
               
         }
@@ -938,10 +956,10 @@ void MIFFile::PreParseFile()
             if (CSLCount(papszToken) == 5)
             {
                 m_nLines++;
-                UpdateExtents(m_poMIFFile->GetXTrans(atof(papszToken[1])), 
-                             m_poMIFFile->GetYTrans(atof(papszToken[2])));
-                UpdateExtents(m_poMIFFile->GetXTrans(atof(papszToken[3])), 
-                             m_poMIFFile->GetYTrans(atof(papszToken[4])));
+                UpdateExtents(m_poMIFFile->GetXTrans(CPLAtof(papszToken[1])), 
+                             m_poMIFFile->GetYTrans(CPLAtof(papszToken[2])));
+                UpdateExtents(m_poMIFFile->GetXTrans(CPLAtof(papszToken[3])), 
+                             m_poMIFFile->GetYTrans(CPLAtof(papszToken[4])));
             }
         }
         else if (EQUALN(pszLine,"REGION",6) )
@@ -964,8 +982,8 @@ void MIFFile::PreParseFile()
             if (CSLCount(papszToken) == 2 &&
                 strchr("-.0123456789", papszToken[0][0]) != NULL)
             {
-                UpdateExtents( m_poMIFFile->GetXTrans(atof(papszToken[0])),
-                              m_poMIFFile->GetYTrans(atof(papszToken[1])));
+                UpdateExtents( m_poMIFFile->GetXTrans(CPLAtof(papszToken[0])),
+                              m_poMIFFile->GetYTrans(CPLAtof(papszToken[1])));
             }
         }
         else if (bText == TRUE)
@@ -973,10 +991,10 @@ void MIFFile::PreParseFile()
            if (CSLCount(papszToken) == 4 &&
                 strchr("-.0123456789", papszToken[0][0]) != NULL)
             {
-                UpdateExtents(m_poMIFFile->GetXTrans(atof(papszToken[0])),
-                             m_poMIFFile->GetYTrans(atof(papszToken[1])));
-                UpdateExtents(m_poMIFFile->GetXTrans(atof(papszToken[2])),
-                             m_poMIFFile->GetYTrans(atof(papszToken[3])));
+                UpdateExtents(m_poMIFFile->GetXTrans(CPLAtof(papszToken[0])),
+                             m_poMIFFile->GetYTrans(CPLAtof(papszToken[1])));
+                UpdateExtents(m_poMIFFile->GetXTrans(CPLAtof(papszToken[2])),
+                             m_poMIFFile->GetYTrans(CPLAtof(papszToken[3])));
             } 
         }
         
@@ -1238,7 +1256,7 @@ int MIFFile::Close()
  * Returns feature id that follows nPrevId, or -1 if it is the
  * last feature id.  Pass nPrevId=-1 to fetch the first valid feature id.
  **********************************************************************/
-int MIFFile::GetNextFeatureId(int nPrevId)
+GIntBig MIFFile::GetNextFeatureId(GIntBig nPrevId)
 {
     if (m_eAccessMode != TABRead)
     {
@@ -1324,7 +1342,7 @@ GBool MIFFile::NextFeature()
  * error happened.  In any case, CPLError() will have been called to
  * report the reason of the failure.
  **********************************************************************/
-TABFeature *MIFFile::GetFeatureRef(int nFeatureId)
+TABFeature *MIFFile::GetFeatureRef(GIntBig nFeatureId)
 {
     const char *pszLine;
 
@@ -1346,10 +1364,10 @@ TABFeature *MIFFile::GetFeatureRef(int nFeatureId)
         return NULL;
     }
 
-    if (GotoFeature(nFeatureId)!= 0 )
+    if ( (GIntBig)(int)nFeatureId != nFeatureId || GotoFeature((int)nFeatureId)!= 0 )
     {
         CPLError(CE_Failure, CPLE_IllegalArg,
-                 "GetFeatureRef() failed: invalid feature id %d", 
+                 "GetFeatureRef() failed: invalid feature id " CPL_FRMT_GIB, 
                  nFeatureId);
         return NULL;
     }
@@ -2022,7 +2040,12 @@ int MIFFile::SetSpatialRef( OGRSpatialReference * poSpatialRef )
 {
     CPLFree( m_pszCoordSys );
 
-    m_pszCoordSys = MITABSpatialRef2CoordSys( poSpatialRef );
+    char* pszCoordSys = MITABSpatialRef2CoordSys( poSpatialRef );
+    if( pszCoordSys )
+    {
+        SetMIFCoordSys(pszCoordSys);
+        CPLFree(pszCoordSys);
+    }
 
     return( m_pszCoordSys != NULL );
 }
@@ -2054,13 +2077,16 @@ int MIFFile::SetMIFCoordSys(const char * pszMIFCoordSys)
     iBounds = CSLFindString( papszFields, "Bounds" );
     if (iBounds >= 0 && iBounds + 4 < CSLCount(papszFields))
     {
-        m_dXMin = atof(papszFields[++iBounds]);
-        m_dYMin = atof(papszFields[++iBounds]);
-        m_dXMax = atof(papszFields[++iBounds]);
-        m_dYMax = atof(papszFields[++iBounds]);
+        m_dXMin = CPLAtof(papszFields[++iBounds]);
+        m_dYMin = CPLAtof(papszFields[++iBounds]);
+        m_dXMax = CPLAtof(papszFields[++iBounds]);
+        m_dYMax = CPLAtof(papszFields[++iBounds]);
         m_bBoundsSet = TRUE;
 
-        pszCoordSys[strstr(pszCoordSys, "Bounds") - pszCoordSys] = '\0';
+        char* pszBounds = strstr(pszCoordSys, " Bounds");
+        if( pszBounds == NULL )
+            pszBounds = strstr(pszCoordSys, "Bounds");
+        pszCoordSys[pszBounds - pszCoordSys] = '\0';
     }
     CSLDestroy( papszFields );
 

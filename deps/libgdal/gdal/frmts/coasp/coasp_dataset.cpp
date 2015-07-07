@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: coasp_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: coasp_dataset.cpp 28831 2015-04-01 16:46:05Z rouault $
  *
  * Project:  DRDC Configurable Airborne SAR Processor (COASP) data reader
  * Purpose:  Support in GDAL for the DRDC COASP format data, both Metadata
@@ -39,7 +39,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: coasp_dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: coasp_dataset.cpp 28831 2015-04-01 16:46:05Z rouault $");
 
 CPL_C_START
 void    GDALRegister_COASP(void);
@@ -192,7 +192,7 @@ COASPMetadataItem *COASPMetadataReader::GetNextItem()
 	}
 	else {
 		int nCount = CSLCount(papszMDTokens);
-		pszItemValue = strdup(papszMDTokens[1]); 
+		pszItemValue = CPLStrdup(papszMDTokens[1]); 
 		for (int i = 2; i < nCount; i++) {
 			int nSize = strlen(papszMDTokens[i]);
 			pszItemValue = (char *)CPLRealloc(pszItemValue, 
@@ -204,9 +204,9 @@ COASPMetadataItem *COASPMetadataReader::GetNextItem()
 		poMetadata = new COASPMetadataItem(pszItemName,
 			pszItemValue);
 
-		free(pszItemValue);
+		CPLFree(pszItemValue);
 	}
-	free(pszItemName);
+	CSLDestroy(papszMDTokens);
 	nCurrentItem++;
 	return poMetadata;
 }
@@ -249,7 +249,7 @@ class COASPRasterBand;
 class COASPDataset : public GDALDataset
 {
 	friend class COASPRasterBand;
-	FILE *fpHdr; /* File pointer for the header file */
+	VSILFILE *fpHdr; /* File pointer for the header file */
 	VSILFILE *fpBinHH; /* File pointer for the binary matrix */
 	VSILFILE *fpBinHV;
 	VSILFILE *fpBinVH;
@@ -292,7 +292,8 @@ COASPRasterBand::COASPRasterBand( COASPDataset *poDS, GDALDataType eDataType,
 	this->nBlockYSize = 1;
 }
 
-CPLErr COASPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff, 
+CPLErr COASPRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
+                                    int nBlockYOff,
                                     void *pImage )
 {
 	if (this->fp == NULL) {
@@ -349,7 +350,7 @@ const GDAL_GCP *COASPDataset::GetGCPs()
 
 int COASPDataset::Identify( GDALOpenInfo *poOpenInfo ) 
 {
-	if(poOpenInfo->fp == NULL || poOpenInfo->nHeaderBytes < 256)
+	if(poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 256)
 		return 0;
 
 	/* With a COASP .hdr file, the first line or so is:
@@ -388,8 +389,8 @@ GDALDataset *COASPDataset::Open( GDALOpenInfo *poOpenInfo )
 		return NULL;
 
 	/* Steal the file pointer for the header */
-	poDS->fpHdr = poOpenInfo->fp;
-	poOpenInfo->fp = NULL;
+	poDS->fpHdr = poOpenInfo->fpL;
+	poOpenInfo->fpL = NULL;
 	
 	/* Set the binary matrix file pointers to NULL, for now */
 	poDS->fpBinHH = NULL;
@@ -539,6 +540,7 @@ void GDALRegister_COASP(void)
 	if ( GDALGetDriverByName( "COASP" ) == NULL ) {
 		poDriver = new GDALDriver();
 		poDriver->SetDescription( "COASP" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
 		poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
 			"DRDC COASP SAR Processor Raster" );
 		poDriver->SetMetadataItem( GDAL_DMD_EXTENSION,

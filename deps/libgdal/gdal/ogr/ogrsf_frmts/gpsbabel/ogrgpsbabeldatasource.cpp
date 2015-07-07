@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpsbabeldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrgpsbabeldatasource.cpp 29177 2015-05-09 19:29:02Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGPSBabelDataSource class.
@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-CPL_CVSID("$Id: ogrgpsbabeldatasource.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrgpsbabeldatasource.cpp 29177 2015-05-09 19:29:02Z rouault $");
 
 /************************************************************************/
 /*                      OGRGPSBabelDataSource()                         */
@@ -62,11 +62,26 @@ OGRGPSBabelDataSource::~OGRGPSBabelDataSource()
     CPLFree(pszGPSBabelDriverName);
     CPLFree(pszFilename);
     
-    if (poGPXDS)
-        OGRDataSource::DestroyDataSource(poGPXDS);
+    CloseDependentDatasets();
     
     if (osTmpFileName.size() > 0)
         VSIUnlink(osTmpFileName.c_str());
+}
+
+/************************************************************************/
+/*                     CloseDependentDatasets()                         */
+/************************************************************************/
+
+int OGRGPSBabelDataSource::CloseDependentDatasets()
+{
+    int bRet = FALSE;
+    if (poGPXDS)
+    {
+        bRet = TRUE;
+        GDALClose( (GDALDatasetH) poGPXDS );
+        poGPXDS = NULL;
+    }
+    return bRet;
 }
 
 /************************************************************************/
@@ -133,59 +148,41 @@ int OGRGPSBabelDataSource::IsValidDriverName(const char* pszGPSBabelDriverName)
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRGPSBabelDataSource::Open( const char * pszDatasourceName, int bUpdateIn)
+int OGRGPSBabelDataSource::Open( const char * pszDatasourceName,
+                                 const char* pszGPSBabelDriverNameIn,
+                                 char** papszOpenOptions )
 
 {
     int bExplicitFeatures = FALSE;
     int bWaypoints = TRUE, bTracks = TRUE, bRoutes = TRUE;
-    if (bUpdateIn)
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-                    "OGR/GPSBabel driver does not support opening a file in update mode");
-        return FALSE;
-    }
 
     if (!EQUALN(pszDatasourceName, "GPSBABEL:", 9))
     {
-        VSILFILE* fp = VSIFOpenL(pszDatasourceName, "rb");
-        if (fp == NULL)
-            return FALSE;
-
-        char szHeader[1024 + 1];
-        memset(szHeader, 0, 1024+1);
-        VSIFReadL(szHeader, 1, 1024, fp);
-        if (memcmp(szHeader, "MsRcd", 5) == 0)
-            pszGPSBabelDriverName = CPLStrdup("mapsource");
-        else if (memcmp(szHeader, "MsRcf", 5) == 0)
-            pszGPSBabelDriverName = CPLStrdup("gdb");
-        else if (strstr(szHeader, "<osm") != NULL)
-            pszGPSBabelDriverName = CPLStrdup("osm");
-        else if (strstr(szHeader, "$GPGSA") != NULL ||
-                 strstr(szHeader, "$GPGGA") != NULL)
-            pszGPSBabelDriverName = CPLStrdup("nmea");
-        else if (EQUALN(szHeader, "OziExplorer",11))
-            pszGPSBabelDriverName = CPLStrdup("ozi");
-        else if (strstr(szHeader, "Grid") && strstr(szHeader, "Datum") && strstr(szHeader, "Header"))
-            pszGPSBabelDriverName = CPLStrdup("garmin_txt");
-        else if (szHeader[0] == 13 && szHeader[10] == 'M' && szHeader[11] == 'S' &&
-                 (szHeader[12] >= '0' && szHeader[12] <= '9') &&
-                 (szHeader[13] >= '0' && szHeader[13] <= '9') &&
-                 szHeader[12] * 10 + szHeader[13] >= 30 &&
-                 (szHeader[14] == 1 || szHeader[14] == 2) && szHeader[15] == 0 &&
-                 szHeader[16] == 0 && szHeader[17] == 0)
-            pszGPSBabelDriverName = CPLStrdup("mapsend");
-        else if (strstr(szHeader, "$PMGNWPL") != NULL ||
-                 strstr(szHeader, "$PMGNRTE") != NULL)
-            pszGPSBabelDriverName = CPLStrdup("magellan");
-
-        VSIFCloseL(fp);
-
-        if (pszGPSBabelDriverName == NULL)
-        {
-            return FALSE;
-        }
-
+        CPLAssert(pszGPSBabelDriverNameIn);
+        pszGPSBabelDriverName = CPLStrdup(pszGPSBabelDriverNameIn);
         pszFilename = CPLStrdup(pszDatasourceName);
+    }
+    else
+    {
+        if( CSLFetchNameValue(papszOpenOptions, "FILENAME") )
+            pszFilename = CPLStrdup(CSLFetchNameValue(papszOpenOptions,
+                                                      "FILENAME"));
+
+        if( CSLFetchNameValue(papszOpenOptions, "GPSBABEL_DRIVER") )
+        {
+            if( pszFilename == NULL )
+            {
+                CPLError(CE_Failure, CPLE_AppDefined, "Missing FILENAME");
+                return FALSE;
+            }
+
+            pszGPSBabelDriverName = CPLStrdup(CSLFetchNameValue(papszOpenOptions,
+                                                            "DRIVER"));
+
+            /* A bit of validation to avoid command line injection */
+            if (!IsValidDriverName(pszGPSBabelDriverName))
+                return FALSE;
+        }
     }
 
     pszName = CPLStrdup( pszDatasourceName );
@@ -249,7 +246,8 @@ int OGRGPSBabelDataSource::Open( const char * pszDatasourceName, int bUpdateIn)
             pszSep = pszNextSep;
         }
 
-        pszFilename = CPLStrdup(pszSep+1);
+        if( pszFilename == NULL )
+            pszFilename = CPLStrdup(pszSep+1);
     }
 
     const char* pszOptionUseTempFile = CPLGetConfigOption("USE_TEMPFILE", NULL);
@@ -336,7 +334,8 @@ int OGRGPSBabelDataSource::Open( const char * pszDatasourceName, int bUpdateIn)
 
     if (bRet)
     {
-        poGPXDS = OGRSFDriverRegistrar::Open(osTmpFileName.c_str());
+        poGPXDS = (GDALDataset*) GDALOpenEx(osTmpFileName.c_str(),
+                                            GDAL_OF_VECTOR, NULL, NULL, NULL);
         if (poGPXDS)
         {
             OGRLayer* poLayer;

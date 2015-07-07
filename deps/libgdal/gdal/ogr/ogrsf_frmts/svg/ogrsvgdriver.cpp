@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvgdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrsvgdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGDriver.
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvgdriver.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrsvgdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void RegisterOGRSVG();
@@ -39,54 +39,27 @@ CPL_C_END
 // g++ -g -Wall -fPIC ogr/ogrsf_frmts/svg/*.c* -shared -o ogr_SVG.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/svg -L. -lgdal -DHAVE_EXPAT
 
 /************************************************************************/
-/*                           ~OGRSVGDriver()                            */
-/************************************************************************/
-
-OGRSVGDriver::~OGRSVGDriver()
-
-{
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRSVGDriver::GetName()
-
-{
-    return "SVG";
-}
-
-/************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRSVGDriver::Open( const char * pszFilename, int bUpdate )
+GDALDataset *OGRSVGDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    if (bUpdate)
-    {
+    if( poOpenInfo->eAccess == GA_Update || poOpenInfo->fpL == NULL )
         return NULL;
-    }
+
+    if( strstr((const char*)poOpenInfo->pabyHeader, "<svg") == NULL )
+        return NULL;
 
     OGRSVGDataSource   *poDS = new OGRSVGDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate ) )
+    if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
         poDS = NULL;
     }
 
     return poDS;
-}
-
-/************************************************************************/
-/*                            TestCapability()                          */
-/************************************************************************/
-
-int OGRSVGDriver::TestCapability( CPL_UNUSED const char *pszCap )
-{
-    return FALSE;
 }
 
 /************************************************************************/
@@ -98,6 +71,25 @@ void RegisterOGRSVG()
 {
     if (! GDAL_CHECK_VERSION("OGR/SVG driver"))
         return;
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRSVGDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "SVG" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "SVG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "Scalable Vector Graphics" );
+        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "svg" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_svg.html" );
+
+        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+
+        poDriver->pfnOpen = OGRSVGDriverOpen;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
 

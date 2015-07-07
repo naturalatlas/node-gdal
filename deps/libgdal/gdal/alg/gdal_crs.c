@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_crs.c 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdal_crs.c 29207 2015-05-18 17:23:45Z mloskot $
  *
  * Project:  Mapinfo Image Warper
  * Purpose:  Implemention of the GDALTransformer wrapper around CRS.C functions
@@ -57,8 +57,9 @@
 #include "cpl_conv.h"
 #include "cpl_minixml.h"
 #include "cpl_string.h"
+#include "cpl_atomic_ops.h"
 
-CPL_CVSID("$Id: gdal_crs.c 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gdal_crs.c 29207 2015-05-18 17:23:45Z mloskot $");
 
 /* Hum, we cannot include gdal_priv.h from a .c file... */
 CPL_C_START
@@ -105,6 +106,8 @@ typedef struct
     int    nMinimumGcps;
     double dfTolerance;
     
+    volatile int nRefCount;
+    
 } GCPTransformInfo;
 
 CPL_C_START
@@ -127,6 +130,42 @@ static char *CRS_error_message[] = {
     "Failed to compute GCP transform: Internal error"
 };
 
+/************************************************************************/
+/*                   GDALCreateSimilarGCPTransformer()                  */
+/************************************************************************/
+
+static
+void* GDALCreateSimilarGCPTransformer( void *hTransformArg, double dfRatioX, double dfRatioY )
+{
+    int i;
+    GDAL_GCP *pasGCPList;
+    GCPTransformInfo *psInfo = (GCPTransformInfo *) hTransformArg;
+
+    VALIDATE_POINTER1( hTransformArg, "GDALCreateSimilarGCPTransformer", NULL );
+    
+    if( dfRatioX == 1.0 && dfRatioY == 1.0 )
+    {
+        /* We can just use a ref count, since using the source transformation */
+        /* is thread-safe */
+        CPLAtomicInc(&(psInfo->nRefCount));
+    }
+    else
+    {
+        pasGCPList = GDALDuplicateGCPs( psInfo->nGCPCount, psInfo->pasGCPList );
+        for(i=0;i<psInfo->nGCPCount;i++)
+        {
+            pasGCPList[i].dfGCPPixel /= dfRatioX;
+            pasGCPList[i].dfGCPLine /= dfRatioY;
+        }
+        /* As remove_outliers modifies the provided GCPs we don't need to reapply it */
+        psInfo = (GCPTransformInfo *) GDALCreateGCPTransformer(
+            psInfo->nGCPCount, pasGCPList, psInfo->nOrder, psInfo->bReversed );
+        GDALDeinitGCPs( psInfo->nGCPCount, pasGCPList );
+        CPLFree( pasGCPList );
+    }
+
+    return psInfo;
+}
 
 /************************************************************************/
 /*                      GDALCreateGCPTransformer()                      */
@@ -185,15 +224,18 @@ void *GDALCreateGCPTransformerEx( int nGCPCount, const GDAL_GCP *pasGCPList,
     psInfo->bRefine = bRefine;
     psInfo->dfTolerance = dfTolerance;
     psInfo->nMinimumGcps = nMinimumGcps;
+    
+    psInfo->nRefCount = 1;
 
     psInfo->pasGCPList = GDALDuplicateGCPs( nGCPCount, pasGCPList );
     psInfo->nGCPCount = nGCPCount;
 
-    strcpy( psInfo->sTI.szSignature, "GTI" );
+    memcpy( psInfo->sTI.abySignature, GDAL_GTI2_SIGNATURE, strlen(GDAL_GTI2_SIGNATURE) );
     psInfo->sTI.pszClassName = "GDALGCPTransformer";
     psInfo->sTI.pfnTransform = GDALGCPTransform;
     psInfo->sTI.pfnCleanup = GDALDestroyGCPTransformer;
     psInfo->sTI.pfnSerialize = GDALSerializeGCPTransformer;
+    psInfo->sTI.pfnCreateSimilar = GDALCreateSimilarGCPTransformer;
     
 /* -------------------------------------------------------------------- */
 /*      Compute the forward and reverse polynomials.                    */
@@ -289,14 +331,20 @@ void *GDALCreateGCPRefineTransformer( int nGCPCount, const GDAL_GCP *pasGCPList,
 void GDALDestroyGCPTransformer( void *pTransformArg )
 
 {
-    GCPTransformInfo *psInfo = (GCPTransformInfo *) pTransformArg;
+    GCPTransformInfo *psInfo = NULL;
 
-    VALIDATE_POINTER0( pTransformArg, "GDALDestroyGCPTransformer" );
+    if( pTransformArg == NULL )
+        return;
 
-    GDALDeinitGCPs( psInfo->nGCPCount, psInfo->pasGCPList );
-    CPLFree( psInfo->pasGCPList );
+    psInfo = (GCPTransformInfo *) pTransformArg;
 
-    CPLFree( pTransformArg );
+    if( CPLAtomicDec(&(psInfo->nRefCount)) == 0 )
+    {
+        GDALDeinitGCPs( psInfo->nGCPCount, psInfo->pasGCPList );
+        CPLFree( psInfo->pasGCPList );
+
+        CPLFree( pTransformArg );
+    }
 }
 
 /************************************************************************/
@@ -324,9 +372,9 @@ void GDALDestroyGCPTransformer( void *pTransformArg )
  * @return TRUE.
  */
 
-int GDALGCPTransform( void *pTransformArg, int bDstToSrc, 
-                      int nPointCount, 
-                      double *x, double *y, CPL_UNUSED double *z, 
+int GDALGCPTransform( void *pTransformArg, int bDstToSrc,
+                      int nPointCount,
+                      double *x, double *y, CPL_UNUSED double *z,
                       int *panSuccess )
 
 {
@@ -457,7 +505,7 @@ void *GDALDeserializeGCPTransformer( CPLXMLNode *psTree )
     bReversed = atoi(CPLGetXMLValue(psTree,"Reversed","0"));
     bRefine = atoi(CPLGetXMLValue(psTree,"Refine","0"));
     nMinimumGcps = atoi(CPLGetXMLValue(psTree,"MinimumGcps","6"));
-    dfTolerance = atof(CPLGetXMLValue(psTree,"Tolerance","1.0"));
+    dfTolerance = CPLAtof(CPLGetXMLValue(psTree,"Tolerance","1.0"));
 
 /* -------------------------------------------------------------------- */
 /*      Generate transformation.                                        */

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: IngrTypes.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: IngrTypes.h 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  Intergraph Raster Format support
  * Purpose:  Types, constants and functions definition
@@ -505,7 +505,7 @@ INGR_DecodeRunLengthPaletted( GByte *pabySrcData, GByte *pabyDstData,
 //    GeoTiff in memory helper
 //  ------------------------------------------------------------------
 
-TIFF* VSI_TIFFOpen(const char* name, const char* mode);
+#include "tifvsi.h"
 
 INGR_VirtualFile CPL_STDCALL INGR_CreateVirtualFile( const char *pszFilename,
                                                      INGR_Format eFormat,

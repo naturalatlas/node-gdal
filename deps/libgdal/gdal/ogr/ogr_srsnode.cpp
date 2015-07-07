@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srsnode.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_srsnode.cpp 27975 2014-11-17 12:37:48Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGR_SRSNode class.
@@ -31,7 +31,7 @@
 #include "ogr_spatialref.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogr_srsnode.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_srsnode.cpp 27975 2014-11-17 12:37:48Z rouault $");
 
 /************************************************************************/
 /*                            OGR_SRSNode()                             */
@@ -854,16 +854,16 @@ static const char * const apszPROJCSRule[] =
   NULL };
 
 static const char * const apszDATUMRule[] = 
-{ "DATUM", "SPHEROID", "TOWGS84", "AUTHORITY", NULL };
+{ "DATUM", "SPHEROID", "TOWGS84", "EXTENSION", "AUTHORITY", NULL };
 
 static const char * const apszGEOGCSRule[] = 
-{ "GEOGCS", "DATUM", "PRIMEM", "UNIT", "AXIS", "AUTHORITY", NULL };
+{ "GEOGCS", "DATUM", "PRIMEM", "UNIT", "AXIS", "EXTENSION", "AUTHORITY", NULL };
 
 static const char * const apszGEOCCSRule[] = 
 { "GEOCCS", "DATUM", "PRIMEM", "UNIT", "AXIS", "AUTHORITY", NULL };
 
 static const char * const apszVERTCSRule[] = 
-{ "VERT_CS", "VERT_DATUM", "UNIT", "AXIS", "AUTHORITY", NULL };
+{ "VERT_CS", "VERT_DATUM", "UNIT", "AXIS", "EXTENSION", "AUTHORITY", NULL };
 
 static const char * const *apszOrderingRules[] = {
     apszPROJCSRule, apszGEOGCSRule, apszDATUMRule, apszGEOCCSRule, apszVERTCSRule, NULL };

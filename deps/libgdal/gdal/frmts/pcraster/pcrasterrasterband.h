@@ -1,12 +1,12 @@
 /******************************************************************************
- * $Id: pcrasterrasterband.h 13149 2007-11-29 15:08:00Z warmerdam $
+ * $Id: pcrasterrasterband.h 29187 2015-05-13 14:20:13Z kdejong $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster raster band declaration.
- * Author:   Kor de Jong, k.dejong at geog.uu.nl
+ * Author:   Kor de Jong, Oliver Schmitz
  *
  ******************************************************************************
- * Copyright (c) 2004, Kor de Jong
+ * Copyright (c) PCRaster owners
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,14 +31,14 @@
 #define INCLUDED_PCRASTERRASTERBAND
 
 // Library headers.
-
-// PCRaster library headers.
-
-// Module headers.
 #ifndef INCLUDED_GDAL_PAM
 #include "gdal_pam.h"
 #define INCLUDED_GDAL_PAM
 #endif
+
+// PCRaster library headers.
+
+// Module headers.
 
 
 
@@ -64,6 +64,18 @@ private:
   //! Dataset this band is part of. For use only.
   PCRasterDataset const* d_dataset;
 
+  double           d_noDataValue;
+
+  bool             d_defaultNoDataValueOverridden;
+
+  GDALDataType     d_create_in;
+
+  virtual CPLErr   IRasterIO           (GDALRWFlag, int, int, int, int,
+                                        void *, int, int, GDALDataType,
+                                        GSpacing nPixelSpace,
+                                        GSpacing nLineSpace,
+                                        GDALRasterIOExtraArg* psExtraArg);
+
   //! Assignment operator. NOT IMPLEMENTED.
   PCRasterRasterBand& operator=        (const PCRasterRasterBand&);
 
@@ -72,7 +84,7 @@ private:
 
 protected:
 
-  double           GetNoDataValue      (int* success);
+  double           GetNoDataValue      (int* success=NULL);
 
   double           GetMinimum          (int* success);
 
@@ -91,6 +103,12 @@ public:
   //----------------------------------------------------------------------------
   // MANIPULATORS
   //----------------------------------------------------------------------------
+
+  CPLErr           IWriteBlock         (CPL_UNUSED int nBlockXoff,
+                                        int nBlockYoff,
+                                        void* buffer);
+
+  CPLErr           SetNoDataValue      (double no_data);
 
   //----------------------------------------------------------------------------
   // ACCESSORS

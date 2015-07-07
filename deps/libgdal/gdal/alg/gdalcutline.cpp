@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalcutline.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: gdalcutline.cpp 28223 2014-12-26 11:28:03Z goatbar $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Implement cutline/blend mask generator.
@@ -35,20 +35,30 @@
 #include "ogr_geometry.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdalcutline.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: gdalcutline.cpp 28223 2014-12-26 11:28:03Z goatbar $");
 
 /************************************************************************/
 /*                         BlendMaskGenerator()                         */
 /************************************************************************/
 
 static CPLErr
-BlendMaskGenerator( int nXOff, int nYOff, int nXSize, int nYSize, 
+BlendMaskGenerator(
+#ifndef HAVE_GEOS
+                    CPL_UNUSED int nXOff, CPL_UNUSED int nYOff,
+                    CPL_UNUSED int nXSize, CPL_UNUSED int nYSize,
+                    CPL_UNUSED GByte *pabyPolyMask,
+                    CPL_UNUSED float *pafValidityMask,
+                    CPL_UNUSED OGRGeometryH hPolygon,
+                    CPL_UNUSED double dfBlendDist
+#else
+                    int nXOff, int nYOff, int nXSize, int nYSize,
                     GByte *pabyPolyMask, float *pafValidityMask,
-                    OGRGeometryH hPolygon, double dfBlendDist )
-
+                    OGRGeometryH hPolygon, double dfBlendDist
+#endif
+)
 {
-#ifndef HAVE_GEOS 
-    CPLError( CE_Failure, CPLE_AppDefined, 
+#ifndef HAVE_GEOS
+    CPLError( CE_Failure, CPLE_AppDefined,
               "Blend distance support not available without the GEOS library.");
     return CE_Failure;
 
@@ -59,7 +69,7 @@ BlendMaskGenerator( int nXOff, int nYOff, int nXSize, int nYSize,
 /*      measure distance from the edge even on the inside.              */
 /* -------------------------------------------------------------------- */
     OGRGeometry *poLines
-        = OGRGeometryFactory::forceToMultiLineString( 
+        = OGRGeometryFactory::forceToMultiLineString(
             ((OGRGeometry *) hPolygon)->clone() );
 
 /* -------------------------------------------------------------------- */
@@ -227,14 +237,17 @@ BlendMaskGenerator( int nXOff, int nYOff, int nXSize, int nYSize,
 /*      relative to the current chunk.                                  */
 /************************************************************************/
 
-static int CutlineTransformer( void *pTransformArg, int bDstToSrc, 
-                               int nPointCount, 
-                               double *x, double *y, CPL_UNUSED double *z, 
+static int CutlineTransformer( void *pTransformArg,
+                               int bDstToSrc,
+                               int nPointCount,
+                               double *x,
+                               double *y,
+                               CPL_UNUSED double *z,
                                CPL_UNUSED int *panSuccess )
-
 {
     int nXOff = ((int *) pTransformArg)[0];
-    int nYOff = ((int *) pTransformArg)[1];				
+    int nYOff = ((int *) pTransformArg)[1];
+    int i;
 
     if( bDstToSrc )
     {
@@ -242,12 +255,12 @@ static int CutlineTransformer( void *pTransformArg, int bDstToSrc,
         nYOff *= -1;
     }
 
-    for( int i = 0; i < nPointCount; i++ )
+    for( i = 0; i < nPointCount; i++ )
     {
         x[i] -= nXOff;
         y[i] -= nYOff;
     }
-    
+
     return TRUE;
 }
 
@@ -259,8 +272,10 @@ static int CutlineTransformer( void *pTransformArg, int bDstToSrc,
 /*      provided cutline, and optional blend distance.                  */
 /************************************************************************/
 
-CPLErr 
-GDALWarpCutlineMasker( void *pMaskFuncArg, CPL_UNUSED int nBandCount, CPL_UNUSED GDALDataType eType,
+CPLErr
+GDALWarpCutlineMasker( void *pMaskFuncArg,
+                       CPL_UNUSED int nBandCount,
+                       CPL_UNUSED GDALDataType eType,
                        int nXOff, int nYOff, int nXSize, int nYSize,
                        GByte ** /*ppImageData */,
                        int bMaskIsFloat, void *pValidityMask )
@@ -401,4 +416,3 @@ GDALWarpCutlineMasker( void *pMaskFuncArg, CPL_UNUSED int nBandCount, CPL_UNUSED
 
     return eErr;
 }
-

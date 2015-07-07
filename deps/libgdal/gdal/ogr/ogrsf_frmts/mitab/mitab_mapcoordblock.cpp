@@ -10,6 +10,7 @@
  *
  **********************************************************************
  * Copyright (c) 1999-2001, Daniel Morissette
+ * Copyright (c) 2014, Even Rouault <even.rouault at spatialys.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -147,11 +148,13 @@ TABMAPCoordBlock::~TABMAPCoordBlock()
 int     TABMAPCoordBlock::InitBlockFromData(GByte *pabyBuf,
                                             int nBlockSize, int nSizeUsed, 
                                             GBool bMakeCopy /* = TRUE */,
-                                            FILE *fpSrc /* = NULL */, 
+                                            VSILFILE *fpSrc /* = NULL */, 
                                             int nOffset /* = 0 */)
 {
     int nStatus;
-
+#ifdef DEBUG_VERBOSE
+    CPLDebug("MITAB", "Instanciating COORD block to/from offset %d", nOffset);
+#endif
     /*-----------------------------------------------------------------
      * First of all, we must call the base class' InitBlockFromData()
      *----------------------------------------------------------------*/
@@ -219,6 +222,12 @@ int     TABMAPCoordBlock::CommitToFile()
     }
 
     /*-----------------------------------------------------------------
+     * Nothing to do here if block has not been modified
+     *----------------------------------------------------------------*/
+    if (!m_bModified)
+        return 0;
+
+    /*-----------------------------------------------------------------
      * Make sure 8 bytes block header is up to date.
      *----------------------------------------------------------------*/
     GotoByteInBlock(0x000);
@@ -234,7 +243,12 @@ int     TABMAPCoordBlock::CommitToFile()
      * OK, call the base class to write the block to disk.
      *----------------------------------------------------------------*/
     if (nStatus == 0)
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("MITAB", "Commiting COORD block to offset %d", m_nFileOffset);
+#endif
         nStatus = TABRawBinBlock::CommitToFile();
+    }
 
     return nStatus;
 }
@@ -254,11 +268,13 @@ int     TABMAPCoordBlock::CommitToFile()
  * Returns 0 if succesful or -1 if an error happened, in which case 
  * CPLError() will have been called.
  **********************************************************************/
-int     TABMAPCoordBlock::InitNewBlock(FILE *fpSrc, int nBlockSize, 
+int     TABMAPCoordBlock::InitNewBlock(VSILFILE *fpSrc, int nBlockSize, 
                                         int nFileOffset /* = 0*/)
 {
     CPLErrorReset();
-
+#ifdef DEBUG_VERBOSE
+    CPLDebug("MITAB", "Instanciating new COORD block at offset %d", nFileOffset);
+#endif
     /*-----------------------------------------------------------------
      * Start with the default initialisation
      *----------------------------------------------------------------*/
@@ -283,7 +299,7 @@ int     TABMAPCoordBlock::InitNewBlock(FILE *fpSrc, int nBlockSize,
     m_nMaxX = -1000000000;
     m_nMaxY = -1000000000;
 
-    if (m_eAccess != TABRead)
+    if (m_eAccess != TABRead && nFileOffset != 0)
     {
         GotoByteInBlock(0x000);
 
@@ -307,6 +323,7 @@ int     TABMAPCoordBlock::InitNewBlock(FILE *fpSrc, int nBlockSize,
 void     TABMAPCoordBlock::SetNextCoordBlock(GInt32 nNextCoordBlockAddress)
 {
     m_nNextCoordBlock = nNextCoordBlockAddress;
+    m_bModified = TRUE;
 }
 
 
@@ -770,7 +787,7 @@ int  TABMAPCoordBlock::WriteBytes(int nBytesToWrite, GByte *pabySrcBuf)
             {
                 // Need to alloc a new block.
 
-                int nNewBlockOffset = m_poBlockManagerRef->AllocNewBlock();
+                int nNewBlockOffset = m_poBlockManagerRef->AllocNewBlock("COORD");
                 SetNextCoordBlock(nNewBlockOffset);
 
                 if (CommitToFile() != 0 ||

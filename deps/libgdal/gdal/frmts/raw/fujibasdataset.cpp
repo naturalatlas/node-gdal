@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fujibasdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: fujibasdataset.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  eCognition
  * Purpose:  Implementation of FUJI BAS Format
@@ -31,7 +31,7 @@
 #include "rawdataset.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: fujibasdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: fujibasdataset.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 CPL_C_START
 void	GDALRegister_FujiBAS(void);
@@ -90,7 +90,7 @@ GDALDataset *FujiBASDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      We assume the user is pointing to the header (.pcb) file.       */
 /*      Does this appear to be a pcb file?                              */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->nHeaderBytes < 80 || poOpenInfo->fp == NULL )
+    if( poOpenInfo->nHeaderBytes < 80 || poOpenInfo->fpL == NULL )
         return NULL;
 
     if( !EQUALN((const char *)poOpenInfo->pabyHeader,"[Raw data]",10)
@@ -239,6 +239,7 @@ void GDALRegister_FujiBAS()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "FujiBAS" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Fuji BAS Scanner Image" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

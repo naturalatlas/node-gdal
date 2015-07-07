@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_dods.h 20634 2010-09-16 22:02:29Z rouault $
+ * $Id: ogr_dods.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/DODS driver.
@@ -199,9 +199,9 @@ public:
                                               AttrTable *poAttrInfo );
     virtual             ~OGRDODSSequenceLayer();
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 };
 
 /************************************************************************/
@@ -287,9 +287,9 @@ public:
                                          AttrTable *poAttrInfo );
     virtual             ~OGRDODSGridLayer();
 
-    virtual OGRFeature *GetFeature( long nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
     
-    virtual int         GetFeatureCount( int );
+    virtual GIntBig     GetFeatureCount( int );
 
 };
 

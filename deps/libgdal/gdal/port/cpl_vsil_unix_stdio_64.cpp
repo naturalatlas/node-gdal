@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_vsil_unix_stdio_64.cpp 27722 2014-09-22 15:37:31Z goatbar $
+ * $Id: cpl_vsil_unix_stdio_64.cpp 29006 2015-04-25 11:03:10Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for Unix platforms with fseek64()
@@ -52,7 +52,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 27722 2014-09-22 15:37:31Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 29006 2015-04-25 11:03:10Z rouault $");
 
 #if defined(UNIX_STDIO_64)
 
@@ -108,7 +108,7 @@ class VSIUnixStdioFilesystemHandler : public VSIFilesystemHandler
 {
 #ifdef VSI_COUNT_BYTES_READ
     vsi_l_offset  nTotalBytesRead;
-    void         *hMutex;
+    CPLMutex     *hMutex;
 #endif
 
 public:
@@ -203,9 +203,8 @@ int VSIUnixStdioHandle::Close()
 /************************************************************************/
 
 int VSIUnixStdioHandle::Seek( vsi_l_offset nOffset, int nWhence )
-
 {
-    GByte abyTemp[4096];
+    bAtEOF = FALSE;
 
     // seeks that do nothing are still surprisingly expensive with MSVCRT.
     // try and short circuit if possible.
@@ -219,20 +218,20 @@ int VSIUnixStdioHandle::Seek( vsi_l_offset nOffset, int nWhence )
         GIntBig nDiff = (GIntBig)nOffset - (GIntBig)this->nOffset;
         if( nDiff > 0 && nDiff < 4096 )
         {
+            GByte abyTemp[4096];
             int nRead = (int)fread(abyTemp, 1, (int)nDiff, fp);
             if( nRead == (int)nDiff )
             {
                 this->nOffset = nOffset;
                 bLastOpWrite = FALSE;
                 bLastOpRead = FALSE;
-                bAtEOF = FALSE;
                 return 0;
             }
         }
     }
 
-    int     nResult = VSI_FSEEK64( fp, nOffset, nWhence );
-    int     nError = errno;
+    const int nResult = VSI_FSEEK64( fp, nOffset, nWhence );
+    int nError = errno;
 
 #ifdef VSI_DEBUG
 
@@ -257,7 +256,7 @@ int VSIUnixStdioHandle::Seek( vsi_l_offset nOffset, int nWhence )
                    fp, nOffset, nWhence, nResult );
     }
 
-#endif 
+#endif
 
     if( nResult != -1 )
     {
@@ -274,10 +273,9 @@ int VSIUnixStdioHandle::Seek( vsi_l_offset nOffset, int nWhence )
             this->nOffset += nOffset;
         }
     }
-        
+
     bLastOpWrite = FALSE;
     bLastOpRead = FALSE;
-    bAtEOF = FALSE;
 
     errno = nError;
     return nResult;
@@ -356,7 +354,12 @@ size_t VSIUnixStdioHandle::Read( void * pBuffer, size_t nSize, size_t nCount )
 
     if (nResult != nCount)
     {
-        nOffset = VSI_FTELL64( fp );
+        errno = 0;
+        vsi_l_offset nNewOffset = VSI_FTELL64( fp );
+        if( errno == 0 ) /* ftell() can fail if we are end of file with a pipe */
+            nOffset = nNewOffset;
+        else
+            CPLDebug("VSI", "%s", VSIStrerror(errno));
         bAtEOF = feof(fp);
     }
 
@@ -506,10 +509,9 @@ VSIUnixStdioFilesystemHandler::Open( const char *pszFilename,
 /*                                Stat()                                */
 /************************************************************************/
 
-int VSIUnixStdioFilesystemHandler::Stat( const char * pszFilename, 
+int VSIUnixStdioFilesystemHandler::Stat( const char * pszFilename,
                                          VSIStatBufL * pStatBuf,
                                          CPL_UNUSED int nFlags)
-
 {
     return( VSI_STAT64( pszFilename, pStatBuf ) );
 }

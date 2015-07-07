@@ -1,9 +1,9 @@
 /******************************************************************************
- * $Id: gdalpamdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalpamdataset.cpp 29038 2015-04-28 09:03:36Z rouault $
  *
  * Project:  GDAL Core
- * Purpose:  Implementation of GDALPamDataset, a dataset base class that 
- *           knows how to persist auxilary metadata into a support XML file.
+ * Purpose:  Implementation of GDALPamDataset, a dataset base class that
+ *           knows how to persist auxiliary metadata into a support XML file.
  * Author:   Frank Warmerdam, warmerdam@pobox.com
  *
  ******************************************************************************
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: gdalpamdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: gdalpamdataset.cpp 29038 2015-04-28 09:03:36Z rouault $");
 
 /************************************************************************/
 /*                           GDALPamDataset()                           */
@@ -43,8 +43,8 @@ CPL_CVSID("$Id: gdalpamdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
  * \class GDALPamDataset "gdal_pam.h"
  * 
  * A subclass of GDALDataset which introduces the ability to save and
- * restore auxilary information (coordinate system, gcps, metadata, 
- * etc) not supported by a file format via an "auxilary metadata" file
+ * restore auxiliary information (coordinate system, gcps, metadata, 
+ * etc) not supported by a file format via an "auxiliary metadata" file
  * with the .aux.xml extension.  
  * 
  * <h3>Enabling PAM</h3>
@@ -55,8 +55,8 @@ CPL_CVSID("$Id: gdalpamdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
  * to YES in Windows and Unix builds.
  *
  * <h3>PAM Proxy Files</h3>
- * 
- * In order to be able to record auxilary information about files on 
+ *
+ * In order to be able to record auxiliary information about files on
  * read-only media such as CDROMs or in directories where the user does not
  * have write permissions, it is possible to enable the "PAM Proxy Database".
  * When enabled the .aux.xml files are kept in a different directory, writable
@@ -69,8 +69,8 @@ CPL_CVSID("$Id: gdalpamdataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
  *
  * <h3>Adding PAM to Drivers</h3>
  *
- * Drivers for physical file formats that wish to support persistent auxilary 
- * metadata in addition to that for the format itself should derive their 
+ * Drivers for physical file formats that wish to support persistent auxiliary
+ * metadata in addition to that for the format itself should derive their
  * dataset class from GDALPamDataset instead of directly from GDALDataset.
  * The raster band classes should also be derived from GDALPamRasterBand.
  *
@@ -204,15 +204,15 @@ CPLXMLNode *GDALPamDataset::SerializeToXML( const char *pszUnused )
 /* -------------------------------------------------------------------- */
 /*      Metadata.                                                       */
 /* -------------------------------------------------------------------- */
-    CPLXMLNode *psMD;
-
-    psMD = oMDMD.Serialize();
-    if( psMD != NULL )
+    if( psPam->bHasMetadata )
     {
-        if( psMD->psChild == NULL && psMD->psNext == NULL )
-            CPLDestroyXMLNode( psMD );
-        else
+        CPLXMLNode *psMD;
+
+        psMD = oMDMD.Serialize();
+        if( psMD != NULL )
+        {
             CPLAddXMLChild( psDSTree, psMD );
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -294,6 +294,7 @@ void GDALPamDataset::PamInitialize()
     psPam->nGCPCount = 0;
     psPam->pasGCPList = NULL;
     psPam->pszGCPProjection = NULL;
+    psPam->bHasMetadata = FALSE;
 
     int iBand;
     
@@ -371,7 +372,7 @@ CPLErr GDALPamDataset::XMLInit( CPLXMLNode *psTree, const char *pszUnused )
         else
         {
             for( int iTA = 0; iTA < 6; iTA++ )
-                psPam->adfGeoTransform[iTA] = atof(papszTokens[iTA]);
+                psPam->adfGeoTransform[iTA] = CPLAtof(papszTokens[iTA]);
             psPam->bHaveGeoTransform = TRUE;
         }
 
@@ -566,6 +567,8 @@ const char *GDALPamDataset::BuildPamFilename()
         psPam->pszPamFilename = CPLStrdup(pszProxyPam);
     else
     {
+        if( !GDALCanFileAcceptSidecarFile(pszPhysicalFile) )
+            return NULL;
         psPam->pszPamFilename = (char*) CPLMalloc(strlen(pszPhysicalFile)+10);
         strcpy( psPam->pszPamFilename, pszPhysicalFile );
         strcat( psPam->pszPamFilename, ".aux.xml" );
@@ -733,7 +736,7 @@ CPLErr GDALPamDataset::TrySaveXML()
         return CE_None;
 
 /* -------------------------------------------------------------------- */
-/*      Build the XML representation of the auxilary metadata.          */
+/*      Build the XML representation of the auxiliary metadata.          */
 /* -------------------------------------------------------------------- */
     psTree = SerializeToXML( NULL );
 
@@ -799,7 +802,7 @@ CPLErr GDALPamDataset::TrySaveXML()
     }
 
 /* -------------------------------------------------------------------- */
-/*      Try saving the auxilary metadata.                               */
+/*      Try saving the auxiliary metadata.                               */
 /* -------------------------------------------------------------------- */
     int bSaved;
     
@@ -808,7 +811,7 @@ CPLErr GDALPamDataset::TrySaveXML()
     CPLPopErrorHandler();
 
 /* -------------------------------------------------------------------- */
-/*      If it fails, check if we have a proxy directory for auxilary    */
+/*      If it fails, check if we have a proxy directory for auxiliary    */
 /*      metadata to be stored in, and try to save there.                */
 /* -------------------------------------------------------------------- */
     if( bSaved )
@@ -829,10 +832,11 @@ CPLErr GDALPamDataset::TrySaveXML()
             psPam->pszPamFilename = CPLStrdup(pszNewPam);
             eErr = TrySaveXML();
         }
-        else
+        /* No way we can save into a /vsicurl resource */
+        else if( strncmp(psPam->pszPamFilename, "/vsicurl", strlen("/vsicurl")) != 0 )
         {
             CPLError( CE_Warning, CPLE_AppDefined, 
-                      "Unable to save auxilary information in %s.",
+                      "Unable to save auxiliary information in %s.",
                       psPam->pszPamFilename );
             eErr = CE_Warning;
         }
@@ -859,7 +863,7 @@ CPLErr GDALPamDataset::CloneInfo( GDALDataset *poSrcDS, int nCloneFlags )
     PamInitialize();
 
 /* -------------------------------------------------------------------- */
-/*      Supress NotImplemented error messages - mainly needed if PAM    */
+/*      Suppress NotImplemented error messages - mainly needed if PAM   */
 /*      disabled.                                                       */
 /* -------------------------------------------------------------------- */
     SetMOFlags( nSavedMOFlags | GMO_IGNORE_UNIMPLEMENTED );
@@ -1218,7 +1222,10 @@ CPLErr GDALPamDataset::SetMetadata( char **papszMetadata,
     PamInitialize();
 
     if( psPam )
+    {
+        psPam->bHasMetadata = TRUE;
         MarkPamDirty();
+    }
 
     return GDALDataset::SetMetadata( papszMetadata, pszDomain );
 }
@@ -1235,7 +1242,10 @@ CPLErr GDALPamDataset::SetMetadataItem( const char *pszName,
     PamInitialize();
 
     if( psPam )
+    {
+        psPam->bHasMetadata = TRUE;
         MarkPamDirty();
+    }
 
     return GDALDataset::SetMetadataItem( pszName, pszValue, pszDomain );
 }
@@ -1447,7 +1457,8 @@ CPLErr GDALPamDataset::TryLoadAux(char **papszSiblingFiles)
 
         // histograms?
         double dfMin, dfMax;
-        int nBuckets, *panHistogram=NULL;
+        int nBuckets;
+        GUIntBig *panHistogram=NULL;
 
         if( poAuxBand->GetDefaultHistogram( &dfMin, &dfMax, 
                                             &nBuckets, &panHistogram,

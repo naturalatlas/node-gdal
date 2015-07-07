@@ -45,7 +45,7 @@ CPL_CVSID("$Id: ogrsxflayer.cpp $");
 /*                        OGRSXFLayer()                                 */
 /************************************************************************/
 
-OGRSXFLayer::OGRSXFLayer(VSILFILE* fp, void** hIOMutex, GByte nID, const char* pszLayerName, int nVer, const SXFMapDescription&  sxfMapDesc) : OGRLayer()
+OGRSXFLayer::OGRSXFLayer(VSILFILE* fp, CPLMutex** hIOMutex, GByte nID, const char* pszLayerName, int nVer, const SXFMapDescription&  sxfMapDesc) : OGRLayer()
 {
     sFIDColumn_ = "ogc_fid";
     fpSXF = fp;
@@ -57,6 +57,7 @@ OGRSXFLayer::OGRSXFLayer(VSILFILE* fp, void** hIOMutex, GByte nID, const char* p
     m_hIOMutex = hIOMutex;
     m_dfCoeff = stSXFMapDescription.dfScale / stSXFMapDescription.nResolution;
     poFeatureDefn = new OGRFeatureDefn(pszLayerName);
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     
     poFeatureDefn->SetGeomType(wkbUnknown);
@@ -124,7 +125,7 @@ void OGRSXFLayer::AddClassifyCode(unsigned nClassCode, const char *szName)
 /*                         AddRecord()                               */
 /************************************************************************/
 
-int OGRSXFLayer::AddRecord(long nFID, unsigned nClassCode, vsi_l_offset nOffset, bool bHasSemantic, int nSemanticsSize)
+int OGRSXFLayer::AddRecord(long nFID, unsigned nClassCode, vsi_l_offset nOffset, bool bHasSemantic, size_t nSemanticsSize)
 {
     if (mnClassificators.empty() || mnClassificators.find(nClassCode) != mnClassificators.end())
     {
@@ -134,7 +135,7 @@ int OGRSXFLayer::AddRecord(long nFID, unsigned nClassCode, vsi_l_offset nOffset,
         {
             size_t offset = 0;
 
-            while (offset < (size_t)nSemanticsSize)
+            while (offset < nSemanticsSize)
             {
                 SXFRecordAttributeInfo stAttrInfo;
                 bool bAddField = false;
@@ -234,7 +235,7 @@ int OGRSXFLayer::AddRecord(long nFID, unsigned nClassCode, vsi_l_offset nOffset,
                             oField.SetWidth(255);
                             poFeatureDefn->AddFieldDefn(&oField);
                         }
-                        unsigned nLen = unsigned(stAttrInfo.nScale) + 1;
+                        unsigned nLen = (unsigned(stAttrInfo.nScale) + 1) * 2;
                         offset += nLen;
                         nCurrOff = nLen;
                         break;
@@ -274,9 +275,9 @@ int OGRSXFLayer::AddRecord(long nFID, unsigned nClassCode, vsi_l_offset nOffset,
 /*                           SetNextByIndex()                           */
 /************************************************************************/
 
-OGRErr OGRSXFLayer::SetNextByIndex(long nIndex)
+OGRErr OGRSXFLayer::SetNextByIndex(GIntBig nIndex)
 {
-  if (nIndex < 0 || (size_t)nIndex > mnRecordDesc.size())
+    if (nIndex < 0 || nIndex > (long)mnRecordDesc.size())
         return OGRERR_FAILURE;
 
     oNextIt = mnRecordDesc.begin();
@@ -289,7 +290,7 @@ OGRErr OGRSXFLayer::SetNextByIndex(long nIndex)
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRSXFLayer::GetFeature(long nFID)
+OGRFeature *OGRSXFLayer::GetFeature(GIntBig nFID)
 {
     std::map<long, vsi_l_offset>::const_iterator IT = mnRecordDesc.find(nFID);
     if (IT != mnRecordDesc.end())
@@ -340,7 +341,7 @@ OGRErr OGRSXFLayer::GetExtent(OGREnvelope *psExtent, int bForce)
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRSXFLayer::GetFeatureCount(int bForce)
+GIntBig OGRSXFLayer::GetFeatureCount(int bForce)
 {
     if (m_poFilterGeom == NULL && m_poAttrQuery == NULL)
         return static_cast<int>(mnRecordDesc.size());
@@ -369,7 +370,7 @@ OGRFeature *OGRSXFLayer::GetNextFeature()
     while (oNextIt != mnRecordDesc.end())
     {
         VSIFSeekL(fpSXF, oNextIt->second, SEEK_SET);
-        OGRFeature  *poFeature = GetNextRawFeature(oNextIt->first);	
+        OGRFeature  *poFeature = GetNextRawFeature(oNextIt->first);
 
         ++oNextIt;
 
@@ -385,7 +386,7 @@ OGRFeature *OGRSXFLayer::GetNextFeature()
             {
                 poFeature->GetGeometryRef()->assignSpatialReference(GetSpatialRef());
             }
-	    
+
             return poFeature;
         }
 
@@ -411,7 +412,7 @@ int OGRSXFLayer::TestCapability( const char * pszCap )
         return TRUE;
     else if (EQUAL(pszCap, OLCFastSetNextByIndex))
         return TRUE;
-        
+
     return FALSE;
 }
 
@@ -419,7 +420,7 @@ int OGRSXFLayer::TestCapability( const char * pszCap )
 /*                                TranslateXYH()                        */
 /************************************************************************/
 /****
- * TODO : Take into account informations given in the passport 
+ * TODO : Take into account informations given in the passport
  * like unit of mesurement, type and dimensions (integer, float, double) of coordinate,
  * the vector format ....
  */
@@ -430,7 +431,7 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 {
     //Xp, Yp(м) = Xo, Yo(м) + (Xd, Yd / R * S), (1)
 
-	int offset = 0;
+    int offset = 0;
     switch (certifInfo.eValType)
     {
     case SXF_VT_SHORT:
@@ -438,29 +439,28 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
         if( nBufLen < 4 )
             return 0;
         GInt16 x, y;
-        memcpy(&x, psBuff, 2);
-        CPL_LSBINT16PTR(&x);
-        memcpy(&y, psBuff + 2, 2);
+        memcpy(&y, psBuff, 2);
         CPL_LSBINT16PTR(&y);
-
+        memcpy(&x, psBuff + 2, 2);
+        CPL_LSBINT16PTR(&x);
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
             if (m_nSXFFormatVer == 3)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
             else if (m_nSXFFormatVer == 4)
             {
                 //TODO: check on real data
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
         }
 
@@ -481,9 +481,9 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
         break;
     case SXF_VT_FLOAT:
     {
-        float x, y;
         if( nBufLen < 8 )
             return 0;
+        float x, y;
         memcpy(&y, psBuff, 4);
         CPL_LSBPTR32(&y);
         memcpy(&x, psBuff + 4, 4);
@@ -491,8 +491,8 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
@@ -527,21 +527,21 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
             //TODO: check on real data
             if (m_nSXFFormatVer == 3)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
             else if (m_nSXFFormatVer == 4)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
         }
         offset += 8;
@@ -571,8 +571,8 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfY = y;
             *dfX = x;
+            *dfY = y;
         }
         else
         {
@@ -617,8 +617,9 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         return NULL;
     }
 
-    SXFGeometryType eGeomType;
-    GByte code;
+    SXFGeometryType eGeomType = SXF_GT_Unknown;
+    GByte code = 0;
+
     if (m_nSXFFormatVer == 3)
     {
         if (CHECK_BIT(stRecordHeader.nRef[2], 3))
@@ -630,7 +631,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
             }
             else
             {
-                code = 0x21; 
+                code = 0x21;
                 stRecordHeader.nSubObjectCount = 0;
             }
         }
@@ -688,10 +689,11 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
     }
     else if (code == 0x05) // xxxx0101
         eGeomType = SXF_GT_TextTemplate;
-    else if (code == 0x21) 
+    else if (code == 0x21)
         eGeomType = SXF_GT_VectorAngle;
-    else if (code == 0x22) 
+    else if (code == 0x22)
         eGeomType = SXF_GT_VectorScaled;
+
     bool bHasAttributes = CHECK_BIT(stRecordHeader.nRef[1], 1);
     bool bHasRefVector = CHECK_BIT(stRecordHeader.nRef[1], 3);
     if (bHasRefVector == true)
@@ -791,16 +793,18 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         poFeature = TranslateVetorAngle(stCertInfo, recordCertifBuf,
             stRecordHeader.nGeometryLength);
     }
-    else if (eGeomType == SXF_GT_Vector ) 
+    else if (eGeomType == SXF_GT_Vector )
     {
       CPLError( CE_Warning, CPLE_NotSupported,
       "SXF. Geometry type Vector do not support." );
+      CPLFree(recordCertifBuf);
       return NULL;
     }
     else if (eGeomType == SXF_GT_TextTemplate ) // TODO realise this
     {
       CPLError( CE_Warning, CPLE_NotSupported,
       "SXF. Geometry type Text Template do not support." );
+      CPLFree(recordCertifBuf);
       return NULL;
     }
     else
@@ -810,7 +814,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         CPLFree(recordCertifBuf);
         return NULL;
     }
-    
+
     if( poFeature == NULL )
     {
         CPLFree(recordCertifBuf);
@@ -920,7 +924,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                     }
                     memcpy(&nTmpVal, psSemanticsdBuf + offset, sizeof(GInt16));
                     nVal = double(CPL_LSBWORD16(nTmpVal)) * pow(10.0, (double)stAttInfo.nScale);
-   
+
                     poFeature->SetField(oFieldName, nVal);
                     offset += 2;
                     break;
@@ -978,16 +982,35 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                 }
                 case SXF_RAT_UNICODE:
                 {
-                    unsigned nLen = unsigned(stAttInfo.nScale) + 1;
-                    if( nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
+                    unsigned nLen = (unsigned(stAttInfo.nScale) + 1) * 2;
+                    if(nLen < 2 || nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
                     {
                         nSemanticsSize = 0;
                         break;
                     }
-                    char * value = (char*)CPLMalloc(nLen);
-                    memcpy(value, psSemanticsdBuf + offset, nLen);
+                    char* value = (char*)CPLMalloc(nLen);
+                    memcpy(value, psSemanticsdBuf + offset, nLen - 2);
                     value[nLen-1] = 0;
-                    poFeature->SetField(oFieldName, value);
+                    value[nLen-2] = 0;
+                    char* dst = (char*)CPLMalloc(nLen);
+                    int nCount = 0;
+                    for(int i = 0; (unsigned)i < nLen; i += 2)
+                    {
+                         unsigned char ucs = value[i];
+
+                         if (ucs < 0x80U)
+                         {
+                             dst[nCount++] = ucs;
+                         }
+                         else
+                         {
+                             dst[nCount++] = 0xc0 | (ucs >> 6);
+                             dst[nCount++] = 0x80 | (ucs & 0x3F);
+                         }
+                    }
+
+                    poFeature->SetField(oFieldName, dst);
+                    CPLFree(dst);
                     CPLFree(value);
 
                     offset += nLen;
@@ -1028,10 +1051,10 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                     return NULL;
                 }
             }
-            CPLFree(psSemanticsdBufOrig);
         }
-    }    
-   
+        CPLFree(psSemanticsdBufOrig);
+     }
+
     poFeature->SetFID(nFID);
 
     CPLFree(recordCertifBuf);
@@ -1048,27 +1071,30 @@ OGRFeature *OGRSXFLayer::TranslatePoint(const SXFRecordDescription& certifInfo,
 {
     double dfX = 1.0;
     double dfY = 1.0;
+    double dfZ = 0.0;
     GUInt32 nOffset = 0;
+    GUInt32 nDelta = 0;
 
-    GUInt32 nDelta = TranslateXYH( certifInfo, psRecordBuf , nBufLen, &dfX, &dfY );
+    if (certifInfo.bDim == 1)
+    {
+        nDelta = TranslateXYH( certifInfo, psRecordBuf , nBufLen, &dfX, &dfY, &dfZ );
+    }
+    else
+    {
+        nDelta = TranslateXYH( certifInfo, psRecordBuf , nBufLen, &dfX, &dfY );
+    }
+
     if( nDelta == 0 )
         return NULL;
     nOffset += nDelta;
 
-	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
-	//fd->SetGeomType( wkbMultiPoint );
+    //OGRFeatureDefn *fd = poFeatureDefn->Clone();
+    //fd->SetGeomType( wkbMultiPoint );
  //   OGRFeature *poFeature = new OGRFeature(fd);
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
     OGRMultiPoint* poMPt = new OGRMultiPoint();
 
-    if (certifInfo.bDim == 1) // TODO realise this
-	{
-		CPLError( CE_Failure, CPLE_NotSupported, 
-				"SXF. 3D metrics do not support." );
-	}
-
-
-    poMPt->addGeometryDirectly( new OGRPoint( dfX, dfY ) );
+    poMPt->addGeometryDirectly( new OGRPoint( dfX, dfY, dfZ ) );
 
 /*---------------------- Reading SubObjects --------------------------------*/
 
@@ -1091,18 +1117,27 @@ OGRFeature *OGRSXFLayer::TranslatePoint(const SXFRecordDescription& certifInfo,
         {
             const char * psCoords = psRecordBuf + nOffset ;
 
-            nDelta = TranslateXYH( certifInfo, psCoords , nBufLen - nOffset, &dfX, &dfY ) ;
+            if (certifInfo.bDim == 1)
+            {
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+            }
+            else
+            {
+                dfZ = 0.0;
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+            }
+
             if( nDelta == 0 )
                 break;
             nOffset +=  nDelta;
 
-            poMPt->addGeometryDirectly( new OGRPoint( dfX, dfY ) );
-        } 
+            poMPt->addGeometryDirectly( new OGRPoint( dfX, dfY, dfZ ) );
+        }
     }
 
 /*****
- * TODO : 
- *          - Translate graphics 
+ * TODO :
+ *          - Translate graphics
  *          - Translate 3D vector
  */
 
@@ -1120,11 +1155,13 @@ OGRFeature *OGRSXFLayer::TranslateLine(const SXFRecordDescription& certifInfo,
 {
     double dfX = 1.0;
     double dfY = 1.0;
-
+    double dfZ = 0.0;
     GUInt32 nOffset = 0;
+    GUInt32 count;
+    GUInt32 nDelta = 0;
 
-	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
-	//fd->SetGeomType( wkbMultiLineString );
+    //OGRFeatureDefn *fd = poFeatureDefn->Clone();
+    //fd->SetGeomType( wkbMultiLineString );
  //   OGRFeature *poFeature = new OGRFeature(fd);
 
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
@@ -1134,21 +1171,25 @@ OGRFeature *OGRSXFLayer::TranslateLine(const SXFRecordDescription& certifInfo,
 
     OGRLineString* poLS = new OGRLineString();
 
-    if (certifInfo.bDim == 1) // TODO realise this
-	{
-		 CPLError( CE_Failure, CPLE_NotSupported, 
-                  "SXF. 3D metrics do not support." );
-	}
-
-    for(int count=0 ; (GUInt32)count <  certifInfo.nPointCount ; count++)
+    for(count=0 ; count <  certifInfo.nPointCount ; count++)
     {
         const char * psCoords = psRecordBuf + nOffset ;
-        GUInt32 nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+
+        if (certifInfo.bDim == 1)
+        {
+            nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+        }
+        else
+        {
+            dfZ = 0.0;
+            nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+        }
+
         if( nDelta == 0 )
             break;
         nOffset += nDelta;
 
-        poLS->addPoint( dfX  , dfY );
+        poLS->addPoint( dfX, dfY, dfZ );
     }
 
     poMLS->addGeometry( poLS );
@@ -1175,13 +1216,21 @@ OGRFeature *OGRSXFLayer::TranslateLine(const SXFRecordDescription& certifInfo,
         for (int i=0; i < nCoords ; i++)
         {
             const char * psCoords = psRecordBuf + nOffset ;
+            if (certifInfo.bDim == 1)
+            {
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+            }
+            else
+            {
+                dfZ = 0.0;
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+            }
 
-            GUInt32 nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
             if( nDelta == 0 )
                 break;
             nOffset += nDelta;
 
-            poLS->addPoint( dfX  , dfY );
+            poLS->addPoint( dfX, dfY, dfZ );
         }
 
         poMLS->addGeometry( poLS );
@@ -1191,8 +1240,8 @@ OGRFeature *OGRSXFLayer::TranslateLine(const SXFRecordDescription& certifInfo,
     poFeature->SetGeometryDirectly( poMLS );
 
 /*****
- * TODO : 
- *          - Translate graphics 
+ * TODO :
+ *          - Translate graphics
  *          - Translate 3D vector
  */
 
@@ -1215,8 +1264,10 @@ OGRFeature *OGRSXFLayer::TranslateVetorAngle(const SXFRecordDescription& certifI
 
     double dfX = 1.0;
     double dfY = 1.0;
-
+    double dfZ = 0.0;
     GUInt32 nOffset = 0;
+    GUInt32 count;
+    GUInt32 nDelta = 0;
 
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
     OGRPoint *poPT = new OGRPoint();
@@ -1225,21 +1276,24 @@ OGRFeature *OGRSXFLayer::TranslateVetorAngle(const SXFRecordDescription& certifI
 
     OGRLineString* poLS = new OGRLineString();
 
-    if (certifInfo.bDim == 1) // TODO realise this
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-            "SXF. 3D metrics do not support.");
-    }
-
-    for (int count = 0; (GUInt32)count < certifInfo.nPointCount; count++)
+    for (count = 0; count < certifInfo.nPointCount; count++)
     {
         const char * psCoords = psRecordBuf + nOffset;
-        GUInt32 nDelta = TranslateXYH(certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY);
+
+        if (certifInfo.bDim == 1)
+        {
+            nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+        }
+        else
+        {
+            dfZ = 0.0;
+            nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+        }
         if (nDelta == 0)
             break;
         nOffset += nDelta;
 
-        poLS->addPoint(dfX, dfY);
+        poLS->addPoint(dfX, dfY, dfZ);
     }
 
     poLS->StartPoint(poPT);
@@ -1272,33 +1326,33 @@ OGRFeature *OGRSXFLayer::TranslatePolygon(const SXFRecordDescription& certifInfo
 {
     double dfX = 1.0;
     double dfY = 1.0;
+    double dfZ = 0.0;
     GUInt32 nOffset = 0;
-
-	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
-	//fd->SetGeomType( wkbMultiPolygon );
- //   OGRFeature *poFeature = new OGRFeature(fd);
+    GUInt32 count;
+    GUInt32 nDelta = 0;
 
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
     OGRPolygon *poPoly = new OGRPolygon();
     OGRLineString* poLS = new OGRLineString();
 
 /*---------------------- Reading Primary Polygon --------------------------------*/
-
-    if (certifInfo.bDim == 1) // TODO realise this
-	{
-			CPLError( CE_Failure, CPLE_NotSupported, 
-					"SXF. 3D metrics do not support." );
-	}
-
-    for(int count=0 ; (GUInt32)count <  certifInfo.nPointCount ; count++)
+    for(count=0 ; count <  certifInfo.nPointCount ; count++)
     {
-        const char * psBuf = psRecordBuf + nOffset ;
+        const char * psBuf = psRecordBuf + nOffset;
+        if (certifInfo.bDim == 1)
+        {
+            nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+        }
+        else
+        {
+            dfZ = 0.0;
+            nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY );
+        }
 
-        GUInt32 nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY );
         if( nDelta == 0 )
             break;
         nOffset += nDelta;
-        poLS->addPoint( dfX  , dfY );
+        poLS->addPoint( dfX, dfY, dfZ );
 
     }    // for
 
@@ -1330,13 +1384,21 @@ OGRFeature *OGRSXFLayer::TranslatePolygon(const SXFRecordDescription& certifInfo
         for (i=0; i < nCoords ; i++)
         {
             const char * psCoords = psRecordBuf + nOffset ;
+            if (certifInfo.bDim == 1)
+            {
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+            }
+            else
+            {
+                dfZ = 0.0;
+                nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
+            }
 
-            GUInt32 nDelta = TranslateXYH( certifInfo, psCoords, nBufLen - nOffset, &dfX, &dfY );
             if( nDelta == 0 )
                 break;
             nOffset += nDelta;
 
-            poLS->addPoint( dfX  , dfY );
+            poLS->addPoint( dfX, dfY, dfZ );
         }
 
         OGRLinearRing *poLR = new OGRLinearRing();
@@ -1364,8 +1426,10 @@ OGRFeature *OGRSXFLayer::TranslateText(const SXFRecordDescription& certifInfo,
 {
     double dfX = 1.0;
     double dfY = 1.0;
+    double dfZ = 0.0;
     GUInt32 nOffset = 0;
-
+    GUInt32 count;
+    GUInt32 nDelta = 0;
 	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
 	//fd->SetGeomType( wkbLineString );
  //   OGRFeature *poFeature = new OGRFeature(fd);
@@ -1373,20 +1437,23 @@ OGRFeature *OGRSXFLayer::TranslateText(const SXFRecordDescription& certifInfo,
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
     OGRLineString* poLS = new OGRLineString();
 
-    if (certifInfo.bDim == 1) // TODO realise this
-	{
-			CPLError( CE_Failure, CPLE_NotSupported, 
-					"SXF. 3D metrics do not support." );
-	}
-
-    for(int count=0 ; (GUInt32)count <  certifInfo.nPointCount ; count++)
+    for(count=0 ; count <  certifInfo.nPointCount ; count++)
     {
         const char * psBuf = psRecordBuf + nOffset;
-        GUInt32 nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY );
+        if (certifInfo.bDim == 1)
+        {
+            nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY, &dfZ );
+        }
+        else
+        {
+            dfZ = 0.0;
+            nDelta = TranslateXYH( certifInfo, psBuf, nBufLen - nOffset, &dfX, &dfY );
+        }
         if( nDelta == 0 )
             break;
+
         nOffset += nDelta;
-        poLS->addPoint( dfX  , dfY );
+        poLS->addPoint( dfX, dfY, dfZ );
     }
 
     poFeature->SetGeometryDirectly( poLS );
@@ -1409,7 +1476,7 @@ OGRFeature *OGRSXFLayer::TranslateText(const SXFRecordDescription& certifInfo,
 
         //TODO: Check encoding from sxf
         poFeature->SetField("TEXT", pszTextBuf);
- 
+
         CPLFree( pszTextBuf );
     }
 

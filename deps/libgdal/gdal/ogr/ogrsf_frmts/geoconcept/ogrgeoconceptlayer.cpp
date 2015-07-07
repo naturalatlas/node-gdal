@@ -88,6 +88,7 @@ OGRErr OGRGeoconceptLayer::Open( GCSubType* Subclass )
       pszln[511]='\0';
 
       _poFeatureDefn = new OGRFeatureDefn(pszln);
+      SetDescription( _poFeatureDefn->GetName() );
       _poFeatureDefn->Reference();
       _poFeatureDefn->SetGeomType(wkbUnknown);
 
@@ -178,7 +179,7 @@ OGRFeature *OGRGeoconceptLayer::GetNextFeature()
     }
 
     CPLDebug( "GEOCONCEPT",
-              "FID : %ld\n"
+              "FID : " CPL_FRMT_GIB "\n"
               "%s  : %s",
               poFeature? poFeature->GetFID():-1L,
               poFeature && poFeature->GetFieldCount()>0? poFeature->GetFieldDefnRef(0)->GetNameRef():"-",
@@ -204,10 +205,10 @@ static char* OGRGeoconceptLayer_GetCompatibleFieldName(const char* pszName)
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRGeoconceptLayer::CreateFeature( OGRFeature* poFeature )
+OGRErr OGRGeoconceptLayer::ICreateFeature( OGRFeature* poFeature )
 
 {
     OGRwkbGeometryType eGt;
@@ -351,7 +352,7 @@ OGRErr OGRGeoconceptLayer::CreateFeature( OGRFeature* poFeature )
       for( iGeom= 0; iGeom<nbGeom; iGeom++ )
       {
         nextField= StartWritingFeature_GCIO(_gcFeature,
-                                            isSingle? poFeature->GetFID():OGRNullFID);
+                                            isSingle? (int)poFeature->GetFID():OGRNullFID);
         while (nextField!=WRITECOMPLETED_GCIO)
         {
           if( nextField==WRITEERROR_GCIO )
@@ -432,7 +433,7 @@ OGRSpatialReference *OGRGeoconceptLayer::GetSpatialRef()
 /*      the generic counter.  Otherwise we return the total count.      */
 /************************************************************************/
 
-int OGRGeoconceptLayer::GetFeatureCount( int bForce )
+GIntBig OGRGeoconceptLayer::GetFeatureCount( int bForce )
 
 {
     if( m_poFilterGeom != NULL || m_poAttrQuery != NULL )
@@ -445,7 +446,8 @@ int OGRGeoconceptLayer::GetFeatureCount( int bForce )
 /*                             GetExtent()                              */
 /************************************************************************/
 
-OGRErr OGRGeoconceptLayer::GetExtent( OGREnvelope* psExtent, CPL_UNUSED int bForce )
+OGRErr OGRGeoconceptLayer::GetExtent( OGREnvelope* psExtent,
+                                      CPL_UNUSED int bForce )
 {
     GCExtent* theExtent;
 
@@ -500,7 +502,8 @@ int OGRGeoconceptLayer::TestCapability( const char* pszCap )
 /*                            CreateField()                             */
 /************************************************************************/
 
-OGRErr OGRGeoconceptLayer::CreateField( OGRFieldDefn *poField, CPL_UNUSED int bApproxOK )
+OGRErr OGRGeoconceptLayer::CreateField( OGRFieldDefn *poField,
+                                        CPL_UNUSED int bApproxOK )
 {
     if( GetGCMode_GCIO(GetSubTypeGCHandle_GCIO(_gcFeature))==vReadAccess_GCIO )
     {

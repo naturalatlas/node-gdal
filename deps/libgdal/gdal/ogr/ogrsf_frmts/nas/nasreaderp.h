@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreaderp.h 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: nasreaderp.h 29051 2015-04-29 17:18:37Z rouault $
  *
  * Project:  NAS Reader
  * Purpose:  Private Declarations for OGR NAS Reader code.
@@ -34,6 +34,7 @@
 #include "gmlreader.h"
 #include "gmlreaderp.h"
 #include "ogr_api.h"
+#include "ogr_geometry.h"
 #include "cpl_string.h"
 
 IGMLReader *CreateNASReader();
@@ -187,7 +188,9 @@ public:
     int              LoadClasses( const char *pszFile = NULL );
     int              SaveClasses( const char *pszFile = NULL );
 
-    int              PrescanForSchema(int bGetExtents = TRUE, int bAnalyzeSRSPerFeature = TRUE );
+    int              PrescanForSchema(int bGetExtents = TRUE,
+                                      int bAnalyzeSRSPerFeature = TRUE,
+                                      int bOnlyDetectSRS = FALSE);
     int              PrescanForTemplate( void );
     void             ResetReading();
 
@@ -231,7 +234,9 @@ public:
     int         SetFilteredClassName(const char* pszClassName);
     const char* GetFilteredClassName() { return m_pszFilteredClassName; }
 
-    static void* hMutex;
+    static CPLMutex* hMutex;
+    
+    static      OGRGeometry* ConvertGeometry(OGRGeometry*);
 };
 
 #endif /* _CPL_NASREADERP_H_INCLUDED */

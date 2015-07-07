@@ -1,5 +1,5 @@
 /******************************************************************************
-* $Id: ogr_openfilegdb.h 27771 2014-09-30 22:45:12Z rouault $
+* $Id: ogr_openfilegdb.h 28967 2015-04-21 11:01:15Z rouault $
 *
 * Project:  OpenGIS Simple Features Reference Implementation
 * Purpose:  Implements Open FileGDB OGR driver.
@@ -68,7 +68,6 @@ class OGROpenFileGDBLayer : public OGRLayer
     int               m_iCurFeat;
     std::string       m_osDefinition;
     std::string       m_osDocumentation;
-    std::string       m_osFIDName;
     OGRwkbGeometryType m_eGeomType;
     int               m_bValidLayerDefn;
     int               m_bEOF;
@@ -116,9 +115,10 @@ public:
   int                   HasIndexForField(const char* pszFieldName);
   FileGDBIterator*      BuildIndex(const char* pszFieldName,
                                    int bAscending,
-                                   swq_op op,
+                                   int op,
                                    swq_expr_node* poValue);
   SPIState              GetSpatialIndexState() const { return m_eSpatialIndexState; }
+  int                   IsValidLayerDefn() { return BuildLayerDefinition(); }
 
   virtual const char* GetName() { return m_osName.c_str(); }
   virtual OGRwkbGeometryType GetGeomType();
@@ -127,10 +127,10 @@ public:
 
   virtual void        ResetReading();
   virtual OGRFeature* GetNextFeature();
-  virtual OGRFeature* GetFeature( long nFeatureId );
-  virtual OGRErr      SetNextByIndex( long nIndex );
+  virtual OGRFeature* GetFeature( GIntBig nFeatureId );
+  virtual OGRErr      SetNextByIndex( GIntBig nIndex );
 
-  virtual int         GetFeatureCount( int bForce = TRUE );
+  virtual GIntBig     GetFeatureCount( int bForce = TRUE );
   virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
   virtual OGRFeatureDefn* GetLayerDefn();
@@ -192,20 +192,8 @@ public:
   virtual void        ReleaseResultSet( OGRLayer * poResultsSet );
 
   virtual int         TestCapability( const char * );
-};
-
-/************************************************************************/
-/*                        OGROpenFileGDBDriver                          */
-/************************************************************************/
-
-class OGROpenFileGDBDriver : public OGRSFDriver
-{
-public:
-  virtual ~OGROpenFileGDBDriver();
-
-  virtual const char *GetName();
-  virtual OGRDataSource *Open( const char *, int );
-  virtual int TestCapability( const char * );
+  
+  virtual char      **GetFileList();
 };
 
 int OGROpenFileGDBIsComparisonOp(int op);

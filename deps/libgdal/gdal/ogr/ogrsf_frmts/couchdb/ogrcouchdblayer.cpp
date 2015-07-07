@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdblayer.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrcouchdblayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBLayer class.
@@ -31,7 +31,7 @@
 #include "ogrgeojsonreader.h"
 #include "ogrgeojsonutils.h"
 
-CPL_CVSID("$Id: ogrcouchdblayer.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrcouchdblayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                            OGRCouchDBLayer()                             */
@@ -156,12 +156,12 @@ OGRFeature *OGRCouchDBLayer::GetNextRawFeature()
 /*                          SetNextByIndex()                            */
 /************************************************************************/
 
-OGRErr OGRCouchDBLayer::SetNextByIndex( long nIndex )
+OGRErr OGRCouchDBLayer::SetNextByIndex( GIntBig nIndex )
 {
-    if (nIndex < 0)
+    if (nIndex < 0 || nIndex >= INT_MAX )
         return OGRERR_FAILURE;
     bEOF = FALSE;
-    nNextInSeq = nIndex;
+    nNextInSeq = (int)nIndex;
     return OGRERR_NONE;
 }
 
@@ -366,8 +366,9 @@ void OGRCouchDBLayer::BuildFeatureDefnFromDoc(json_object* poDoc)
         {
             if( -1 == poFeatureDefn->GetFieldIndex( it.key ) )
             {
+                OGRFieldSubType eSubType;
                 OGRFieldDefn fldDefn( it.key,
-                    GeoJSONPropertyToFieldType( it.val ) );
+                    GeoJSONPropertyToFieldType( it.val, eSubType ) );
                 poFeatureDefn->AddFieldDefn( &fldDefn );
             }
         }
@@ -383,8 +384,9 @@ void OGRCouchDBLayer::BuildFeatureDefnFromDoc(json_object* poDoc)
                 strcmp(it.key, "geometry") != 0 &&
                 -1 == poFeatureDefn->GetFieldIndex( it.key ) )
             {
+                OGRFieldSubType eSubType;
                 OGRFieldDefn fldDefn( it.key,
-                    GeoJSONPropertyToFieldType( it.val ) );
+                    GeoJSONPropertyToFieldType( it.val, eSubType ) );
                 poFeatureDefn->AddFieldDefn( &fldDefn );
             }
         }
@@ -535,4 +537,14 @@ int OGRCouchDBLayer::FetchNextRowsAnalyseDocs(json_object* poAnswerObj)
     poFeatures = poAnswerObj;
 
     return TRUE;
+}
+
+/************************************************************************/
+/*              	     GetSpatialRef()                            */
+/************************************************************************/
+
+OGRSpatialReference* OGRCouchDBLayer::GetSpatialRef()
+{
+    GetLayerDefn();
+    return poSRS;
 }

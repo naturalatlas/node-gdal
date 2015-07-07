@@ -297,14 +297,14 @@ GDALDefaultAsyncReader::GetNextUpdatedRegion(CPL_UNUSED double dfTimeout,
                                              int* pnBufYOff,
                                              int* pnBufXSize,
                                              int* pnBufYSize )
-
 {
     CPLErr eErr;
 
-    eErr = poDS->RasterIO( GF_Read, nXOff, nYOff, nXSize, nYSize, 
-                           pBuf, nBufXSize, nBufYSize, eBufType, 
-                           nBandCount, panBandMap, 
-                           nPixelSpace, nLineSpace, nBandSpace );
+    eErr = poDS->RasterIO( GF_Read, nXOff, nYOff, nXSize, nYSize,
+                           pBuf, nBufXSize, nBufYSize, eBufType,
+                           nBandCount, panBandMap,
+                           nPixelSpace, nLineSpace, nBandSpace,
+                           NULL );
 
     *pnBufXOff = 0;
     *pnBufYOff = 0;
@@ -316,4 +316,3 @@ GDALDefaultAsyncReader::GetNextUpdatedRegion(CPL_UNUSED double dfTimeout,
     else
         return GARIO_ERROR;
 }
-

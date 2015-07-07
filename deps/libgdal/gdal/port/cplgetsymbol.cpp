@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cplgetsymbol.cpp 27461 2014-06-18 12:38:34Z rouault $
+ * $Id: cplgetsymbol.cpp 27460 2014-06-18 12:36:06Z rouault $
  *
  * Project:  Common Portability Library
  * Purpose:  Fetch a function pointer from a shared library / DLL.
@@ -30,7 +30,7 @@
 
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: cplgetsymbol.cpp 27461 2014-06-18 12:38:34Z rouault $");
+CPL_CVSID("$Id: cplgetsymbol.cpp 27460 2014-06-18 12:36:06Z rouault $");
 
 
 /* ==================================================================== */

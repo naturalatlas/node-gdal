@@ -87,6 +87,7 @@ CPLErr OGRWalkLayer::BuildFeatureDefn( const char *pszLayerName,
 
 {
     poFeatureDefn = new OGRFeatureDefn( pszLayerName );
+    SetDescription( poFeatureDefn->GetName() );
     int    nRawColumns = poStmt->GetColCount();
 
     poFeatureDefn->Reference();
@@ -111,6 +112,11 @@ CPLErr OGRWalkLayer::BuildFeatureDefn( const char *pszLayerName,
             case SQL_C_SLONG:
             case SQL_C_ULONG:
                 oField.SetType( OFTInteger );
+                break;
+
+            case SQL_C_SBIGINT:
+            case SQL_C_UBIGINT:
+                oField.SetType( OFTInteger64 );
                 break;
 
             case SQL_C_BINARY:

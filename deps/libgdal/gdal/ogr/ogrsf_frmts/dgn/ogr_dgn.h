@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_dgn.h 25311 2012-12-15 12:48:14Z rouault $
+ * $Id: ogr_dgn.h 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGR Driver for DGN Reader.
@@ -70,16 +70,16 @@ class OGRDGNLayer : public OGRLayer
 
     void                ResetReading();
     OGRFeature *        GetNextFeature();
-    OGRFeature *        GetFeature( long nFeatureId );
+    OGRFeature *        GetFeature( GIntBig nFeatureId );
 
-    virtual int         GetFeatureCount( int bForce = TRUE );
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
     virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
 
     OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
 
     int                 TestCapability( const char * );
 
-    OGRErr              CreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature );
 
 };
 
@@ -104,7 +104,7 @@ class OGRDGNDataSource : public OGRDataSource
     int                 Open( const char *, int bTestOpen, int bUpdate );
     int                 PreCreate( const char *, char ** );
 
-    OGRLayer           *CreateLayer( const char *, 
+    OGRLayer           *ICreateLayer( const char *, 
                                      OGRSpatialReference * = NULL,
                                      OGRwkbGeometryType = wkbUnknown,
                                      char ** = NULL );
@@ -115,22 +115,5 @@ class OGRDGNDataSource : public OGRDataSource
 
     int                 TestCapability( const char * );
 };
-
-/************************************************************************/
-/*                            OGRDGNDriver                              */
-/************************************************************************/
-
-class OGRDGNDriver : public OGRSFDriver
-{
-  public:
-                ~OGRDGNDriver();
-                
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
-    OGRDataSource *CreateDataSource( const char *, char ** );
-
-    int                 TestCapability( const char * );
-};
-
 
 #endif /* ndef _OGR_DGN_H_INCLUDED */

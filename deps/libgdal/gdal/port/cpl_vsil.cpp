@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil.cpp 27110 2014-03-28 21:29:20Z rouault $
+ * $Id: cpl_vsil.cpp 28849 2015-04-05 14:05:18Z goatbar $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Implementation VSI*L File API and other file system access
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include <string>
 
-CPL_CVSID("$Id: cpl_vsil.cpp 27110 2014-03-28 21:29:20Z rouault $");
+CPL_CVSID("$Id: cpl_vsil.cpp 28849 2015-04-05 14:05:18Z goatbar $");
 
 /************************************************************************/
 /*                             VSIReadDir()                             */
@@ -130,6 +130,10 @@ char **VSIReadDirRecursive( const char *pszPathIn )
 
         for ( ; i < nCount; i++ )
         {
+            // Do not recurse up the tree.
+            if (EQUAL(".", papszFiles[i]) || EQUAL("..", papszFiles[i]))
+              continue;
+
             // build complete file name for stat
             osTemp1.clear();
             osTemp1.append( pszPath );
@@ -365,7 +369,7 @@ int VSIRmdir( const char * pszDirname )
  * 
  * Fetches status information about a filesystem object (file, directory, etc).
  * The returned information is placed in the VSIStatBufL structure.   For
- * portability only the st_size (size in bytes), and st_mode (file type). 
+ * portability, only use the st_size (size in bytes) and st_mode (file type).
  * This method is similar to VSIStat(), but will work on large files on 
  * systems where this requires special calls. 
  * 
@@ -396,7 +400,7 @@ int VSIStatL( const char * pszFilename, VSIStatBufL *psStatBuf )
  *
  * Fetches status information about a filesystem object (file, directory, etc).
  * The returned information is placed in the VSIStatBufL structure.   For
- * portability only the st_size (size in bytes), and st_mode (file type).
+ * portability, only use the st_size (size in bytes) and st_mode (file type).
  * This method is similar to VSIStat(), but will work on large files on
  * systems where this requires special calls.
  *
@@ -751,7 +755,7 @@ size_t VSIFWriteL( const void *pBuffer, size_t nSize, size_t nCount, VSILFILE *f
  * \brief Test for end of file.
  *
  * Returns TRUE (non-zero) if an end-of-file condition occured during the
- * previous read operation. The end-of-file flag is cleared by a successfull
+ * previous read operation. The end-of-file flag is cleared by a successful
  * VSIFSeekL() call.
  *
  * This method goes through the VSIFileHandler virtualization and may
@@ -922,7 +926,7 @@ int VSIIngestFile( VSILFILE* fp,
                         VSIFCloseL( fp );
                     return FALSE;
                 }
-                GByte* pabyNew = (GByte*)VSIRealloc(*ppabyRet, nDataAlloc);
+                GByte* pabyNew = (GByte*)VSIRealloc(*ppabyRet, (size_t)nDataAlloc);
                 if( pabyNew == NULL )
                 {
                     CPLError( CE_Failure, CPLE_OutOfMemory,
@@ -1083,7 +1087,7 @@ VSIFileManager::~VSIFileManager()
 /************************************************************************/
 
 static VSIFileManager *poManager = NULL;
-static void* hVSIFileManagerMutex = NULL;
+static CPLMutex* hVSIFileManagerMutex = NULL;
 
 VSIFileManager *VSIFileManager::Get()
 

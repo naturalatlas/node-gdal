@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrntfdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ogrntfdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
  *
  * Project:  UK NTF Reader
  * Purpose:  Implements OGRNTFDriver
@@ -30,7 +30,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrntfdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrntfdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -39,50 +39,41 @@ CPL_CVSID("$Id: ogrntfdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
 /************************************************************************/
 
 /************************************************************************/
-/*                           ~OGRNTFDriver()                            */
-/************************************************************************/
-
-OGRNTFDriver::~OGRNTFDriver()
-
-{
-}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRNTFDriver::GetName()
-
-{
-    return "UK .NTF";
-}
-
-/************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGRNTFDriver::TestCapability( const char * )
-
-{
-    return FALSE;
-}
-
-/************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRNTFDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGRNTFDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    OGRNTFDataSource    *poDS = new OGRNTFDataSource;
+    if( !poOpenInfo->bStatOK )
+        return NULL;
+    if( poOpenInfo->fpL != NULL )
+    {
+        if( poOpenInfo->nHeaderBytes < 80 )
+            return NULL;
+        const char* pszHeader = (const char*)poOpenInfo->pabyHeader;
+        if( !EQUALN(pszHeader,"01",2) )
+            return NULL;
 
-    if( !poDS->Open( pszFilename, TRUE ) )
+        int j;
+        for( j = 0; j < 80; j++ )
+        {
+            if( pszHeader[j] == 10 || pszHeader[j] == 13 )
+                break;
+        }
+
+        if( j == 80 || pszHeader[j-1] != '%' )
+            return FALSE;
+    }
+
+    OGRNTFDataSource    *poDS = new OGRNTFDataSource;
+    if( !poDS->Open( poOpenInfo->pszFilename, TRUE ) )
     {
         delete poDS;
         poDS = NULL;
     }
 
-    if( poDS != NULL && bUpdate )
+    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "NTF Driver doesn't support update." );
@@ -100,6 +91,22 @@ OGRDataSource *OGRNTFDriver::Open( const char * pszFilename, int bUpdate )
 void RegisterOGRNTF()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRNTFDriver );
+    GDALDriver  *poDriver;
+
+    if( GDALGetDriverByName( "UK .NTF" ) == NULL )
+    {
+        poDriver = new GDALDriver();
+
+        poDriver->SetDescription( "UK .NTF" );
+        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                                   "UK .NTF" );
+        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                                   "drv_ntf.html" );
+
+        poDriver->pfnOpen = OGRNTFDriverOpen;
+
+        GetGDALDriverManager()->RegisterDriver( poDriver );
+    }
 }
 

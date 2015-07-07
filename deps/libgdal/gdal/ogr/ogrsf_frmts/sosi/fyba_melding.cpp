@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fyba_melding.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: fyba_melding.cpp 27897 2014-10-23 12:20:01Z jef $
  *
  * Project:  FYBA Callbacks
  * Purpose:  Needed by FYBA - however we do not want to display most messages
@@ -48,10 +48,6 @@ void LC_Error(short feil_nr, const char *logtx, const char *vartx)
       case 3:  sprintf(szErrMsg,"%s","Det er oppstått en feil! \n\n");break;
       case 4:  sprintf(szErrMsg,"%s","Alvorlig feil avslutt programmet! \n\n");break;
       default: szErrMsg[0]='\0';
-   }
-
-   if (strategi > 2) {
-      Beep(100,500);
    }
 }
 

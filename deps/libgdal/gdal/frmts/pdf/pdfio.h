@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfio.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: pdfio.h 28438 2015-02-07 21:47:35Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset.
@@ -93,6 +93,10 @@ class VSIPDFFileStream: public BaseStream
         virtual void       close();
 
     private:
+        /* Added in poppler 0.15.0 */
+        virtual GBool hasGetChars();
+        virtual int getChars(int nChars, Guchar *buffer);
+
         VSIPDFFileStream  *poParent;
         GooString         *poFilename;
         VSILFILE          *f;

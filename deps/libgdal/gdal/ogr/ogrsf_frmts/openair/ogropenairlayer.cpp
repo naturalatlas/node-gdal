@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenairlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $
+ * $Id: ogropenairlayer.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirLayer class.
@@ -34,7 +34,7 @@
 #include "ogr_xplane_geo_utils.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogropenairlayer.cpp 27741 2014-09-26 19:20:02Z goatbar $");
+CPL_CVSID("$Id: ogropenairlayer.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /************************************************************************/
 /*                         OGROpenAirLayer()                            */
@@ -51,6 +51,7 @@ OGROpenAirLayer::OGROpenAirLayer( VSILFILE* fp )
     poSRS = new OGRSpatialReference(SRS_WKT_WGS84);
 
     poFeatureDefn = new OGRFeatureDefn( "airspaces" );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbPolygon );
     poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
@@ -284,9 +285,9 @@ OGRFeature *OGROpenAirLayer::GetNextRawFeature()
             char** papszTokens = CSLTokenizeString2(pszLine, ",", 0);
             if (bHasCenter && CSLCount(papszTokens) == 3)
             {
-                double dfRadius = atof(papszTokens[0]) * 1852;
-                double dfStartAngle = atof(papszTokens[1]);
-                double dfEndAngle = atof(papszTokens[2]);
+                double dfRadius = CPLAtof(papszTokens[0]) * 1852;
+                double dfStartAngle = CPLAtof(papszTokens[1]);
+                double dfEndAngle = CPLAtof(papszTokens[2]);
 
                 if (bClockWise && dfEndAngle < dfStartAngle)
                     dfEndAngle += 360;
@@ -380,7 +381,7 @@ OGRFeature *OGROpenAirLayer::GetNextRawFeature()
             {
                 pszLine += 3;
 
-                double dfRADIUS = atof(pszLine) * 1852;
+                double dfRADIUS = CPLAtof(pszLine) * 1852;
 
                 double dfAngle;
                 double dfLat, dfLon;

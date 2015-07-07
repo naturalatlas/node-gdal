@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgdataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: msgdataset.cpp 27477 2014-06-28 15:23:40Z rouault $
  *
  * Project:  MSG Driver
  * Purpose:  GDALDataset driver for MSG translator for read support.
@@ -248,6 +248,7 @@ GDALDataset *MSGDataset::Open( GDALOpenInfo * poOpenInfo )
 
     poDS->oSRS.SetGEOS(  0, 35785831, 0, 0 );
     poDS->oSRS.SetWellKnownGeogCS( "WGS84" ); // Temporary line to satisfy ERDAS (otherwise the ellips is "unnamed"). Eventually this should become the custom a and b ellips (CGMS).
+    CPLFree( poDS->pszProjection );
     poDS->oSRS.exportToWkt( &(poDS->pszProjection) );
 
     // The following are 3 different try-outs for also setting the ellips a and b parameters.
@@ -276,8 +277,13 @@ GDALDataset *MSGDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 
     char *pszLLTemp;
+    char *pszLLTemp_bak;
+
     (poDS->oSRS.GetAttrNode("GEOGCS"))->exportToWkt(&pszLLTemp);
+    pszLLTemp_bak = pszLLTemp; // importFromWkt() changes the pointer
     poDS->oLL.importFromWkt(&pszLLTemp);
+    CPLFree( pszLLTemp_bak );
+
     poDS->poTransform = OGRCreateCoordinateTransformation( &(poDS->oSRS), &(poDS->oLL) );
 
 /* -------------------------------------------------------------------- */
@@ -744,6 +750,7 @@ void GDALRegister_MSG()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "MSG" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "MSG HRIT Data" );
 

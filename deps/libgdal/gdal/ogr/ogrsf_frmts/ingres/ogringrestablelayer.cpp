@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogringrestablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $
+ * $Id: ogringrestablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIngresTableLayer class.
@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "ogr_ingres.h"
 
-CPL_CVSID("$Id: ogringrestablelayer.cpp 26688 2013-12-02 19:07:41Z rouault $");
+CPL_CVSID("$Id: ogringrestablelayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
 
 /************************************************************************/
 /*                         OGRIngresTableLayer()                         */
@@ -119,6 +119,7 @@ OGRFeatureDefn *OGRIngresTableLayer::ReadTableDefinition( const char *pszTable )
 /*      Parse the returned table information.                           */
 /* -------------------------------------------------------------------- */
     OGRFeatureDefn *poDefn = new OGRFeatureDefn( pszTable );
+    SetDescription( poDefn->GetName() );
     char           **papszRow;
 
     poDefn->Reference();
@@ -461,14 +462,14 @@ int OGRIngresTableLayer::TestCapability( const char * pszCap )
 }
 
 /************************************************************************/
-/*                             SetFeature()                             */
+/*                             ISetFeature()                             */
 /*                                                                      */
 /*      SetFeature() is implemented by dropping the old copy of the     */
 /*      feature in question (if there is one) and then creating a       */
 /*      new one with the provided feature id.                           */
 /************************************************************************/
 
-OGRErr OGRIngresTableLayer::SetFeature( OGRFeature *poFeature )
+OGRErr OGRIngresTableLayer::ISetFeature( OGRFeature *poFeature )
 
 {
     OGRErr eErr;
@@ -491,7 +492,7 @@ OGRErr OGRIngresTableLayer::SetFeature( OGRFeature *poFeature )
 /*                           DeleteFeature()                            */
 /************************************************************************/
 
-OGRErr OGRIngresTableLayer::DeleteFeature( long nFID )
+OGRErr OGRIngresTableLayer::DeleteFeature( GIntBig nFID )
 
 {
     CPLString           osCommand;
@@ -809,10 +810,10 @@ OGRErr OGRIngresTableLayer::PrepareNewStyleGeometry(
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /************************************************************************/
 
-OGRErr OGRIngresTableLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRIngresTableLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     CPLString           osCommand;
@@ -1131,7 +1132,7 @@ OGRErr OGRIngresTableLayer::CreateField( OGRFieldDefn *poFieldIn,
 /*                             GetFeature()                             */
 /************************************************************************/
 #ifdef notdef
-OGRFeature *OGRIngresTableLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRIngresTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( pszFIDColumn == NULL )
@@ -1214,7 +1215,7 @@ OGRFeature *OGRIngresTableLayer::GetFeature( long nFeatureId )
 /************************************************************************/
 
 #ifdef notdef
-int OGRIngresTableLayer::GetFeatureCount( int bForce )
+GIntBig OGRIngresTableLayer::GetFeatureCount( int bForce )
 
 {
 /* -------------------------------------------------------------------- */

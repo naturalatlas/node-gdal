@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gfstemplate.cpp 27132 2014-04-05 21:48:58Z rouault $
+ * $Id: gfstemplate.cpp 28481 2015-02-13 17:11:15Z rouault $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GML GFS template management
@@ -36,7 +36,7 @@
 #include "gmlreaderp.h"
 #include "ogr_gml.h"
 
-CPL_CVSID("$Id: gfstemplate.cpp 27132 2014-04-05 21:48:58Z rouault $");
+CPL_CVSID("$Id: gfstemplate.cpp 28481 2015-02-13 17:11:15Z rouault $");
 
 /************************************************************************/
 /*                        GFSTemplateItem                               */
@@ -86,7 +86,7 @@ public:
         {
             poClass->SetFeatureCount( pItem->GetCount() );
             if ( pItem->GetGeomCount() != 0 && poClass->GetGeometryPropertyCount() == 0 )
-                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown ) );
+                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown, -1, TRUE ) );
             m_bValid = TRUE;
         }
         pItem = pItem->GetNext();

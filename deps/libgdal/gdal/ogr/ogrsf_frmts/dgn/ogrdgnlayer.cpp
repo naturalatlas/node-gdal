@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdgnlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ogrdgnlayer.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRDGNLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_api.h"
 #include <list>
 
-CPL_CVSID("$Id: ogrdgnlayer.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ogrdgnlayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                           OGRDGNLayer()                              */
@@ -72,6 +72,7 @@ OGRDGNLayer::OGRDGNLayer( const char * pszName, DGNHandle hDGN,
 /*      Create the feature definition.                                  */
 /* -------------------------------------------------------------------- */
     poFeatureDefn = new OGRFeatureDefn( pszName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     
     OGRFieldDefn        oField( "", OFTInteger );
@@ -233,13 +234,13 @@ void OGRDGNLayer::ResetReading()
 /*                             GetFeature()                             */
 /************************************************************************/
 
-OGRFeature *OGRDGNLayer::GetFeature( long nFeatureId )
+OGRFeature *OGRDGNLayer::GetFeature( GIntBig nFeatureId )
 
 {
     OGRFeature *poFeature;
     DGNElemCore *psElement;
 
-    if( !DGNGotoElement( hDGN, nFeatureId ) )
+    if( nFeatureId > INT_MAX || !DGNGotoElement( hDGN, (int)nFeatureId ) )
         return NULL;
 
     // We should likely clear the spatial search region as it affects 
@@ -551,13 +552,13 @@ OGRFeature *OGRDGNLayer::ElementToFeature( DGNElemCore *psElement )
 
           // Add the size info in ground units.
           if( ABS(psText->height_mult) >= 6.0 )
-              sprintf( pszOgrFS+strlen(pszOgrFS), ",s:%dg", 
+              CPLsprintf( pszOgrFS+strlen(pszOgrFS), ",s:%dg", 
                        (int) psText->height_mult );
           else if( ABS(psText->height_mult) > 0.1 )
-              sprintf( pszOgrFS+strlen(pszOgrFS), ",s:%.3fg", 
+              CPLsprintf( pszOgrFS+strlen(pszOgrFS), ",s:%.3fg", 
                        psText->height_mult );
           else
-              sprintf( pszOgrFS+strlen(pszOgrFS), ",s:%.12fg", 
+              CPLsprintf( pszOgrFS+strlen(pszOgrFS), ",s:%.12fg", 
                        psText->height_mult );
 
           // Add the font name. Name it MstnFont<FONTNUMBER> if not available
@@ -751,7 +752,7 @@ int OGRDGNLayer::TestCapability( const char * pszCap )
 /*                          GetFeatureCount()                           */
 /************************************************************************/
 
-int OGRDGNLayer::GetFeatureCount( int bForce )
+GIntBig OGRDGNLayer::GetFeatureCount( int bForce )
 
 {
 /* -------------------------------------------------------------------- */
@@ -808,12 +809,12 @@ OGRErr OGRDGNLayer::GetExtent( OGREnvelope *psExtent, CPL_UNUSED int bForce )
 
     if( !DGNGetExtents( hDGN, adfExtents ) )
         return OGRERR_FAILURE;
-    
+
     psExtent->MinX = adfExtents[0];
     psExtent->MinY = adfExtents[1];
     psExtent->MaxX = adfExtents[3];
     psExtent->MaxY = adfExtents[4];
-    
+
     return OGRERR_NONE;
 }
 
@@ -975,12 +976,12 @@ DGNElemCore **OGRDGNLayer::TranslateLabel( OGRFeature *poFeature )
 }
 
 /************************************************************************/
-/*                           CreateFeature()                            */
+/*                           ICreateFeature()                            */
 /*                                                                      */
 /*      Create a new feature and write to file.                         */
 /************************************************************************/
 
-OGRErr OGRDGNLayer::CreateFeature( OGRFeature *poFeature )
+OGRErr OGRDGNLayer::ICreateFeature( OGRFeature *poFeature )
 
 {
     if( !bUpdate )

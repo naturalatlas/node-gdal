@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrxlsdatasource.cpp 28382 2015-01-30 15:29:41Z rouault $
  *
  * Project:  XLS Translator
  * Purpose:  Implements OGRXLSDataSource class
@@ -37,7 +37,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrxlsdatasource.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogrxlsdatasource.cpp 28382 2015-01-30 15:29:41Z rouault $");
 
 /************************************************************************/
 /*                          OGRXLSDataSource()                          */
@@ -75,7 +75,7 @@ OGRXLSDataSource::~OGRXLSDataSource()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRXLSDataSource::TestCapability( const char * pszCap )
+int OGRXLSDataSource::TestCapability( CPL_UNUSED const char * pszCap )
 
 {
     return FALSE;
@@ -127,7 +127,7 @@ int OGRXLSDataSource::Open( const char * pszFilename, int bUpdateIn)
     if (freexl_get_info (xlshandle, FREEXL_BIFF_SHEET_COUNT, &nSheets) != FREEXL_OK)
         return FALSE;
 
-    for(int i=0; i<(int)nSheets; i++)
+    for(unsigned short i=0; i<(unsigned short)nSheets; i++)
     {
         freexl_select_active_worksheet(xlshandle, i);
 

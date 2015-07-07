@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasdamandataset.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: rasdamandataset.cpp 28053 2014-12-04 09:31:07Z rouault $
  * Project:  rasdaman Driver
  * Purpose:  Implement Rasdaman GDAL driver
  * Author:   Constantin Jucovschi, jucovschi@yahoo.com
@@ -44,7 +44,7 @@
 
 #include "rasodmg/database.hh"
 
-CPL_CVSID("$Id: rasdamandataset.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: rasdamandataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 
 CPL_C_START
@@ -122,7 +122,10 @@ protected:
 
   virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                             void *, int, int, GDALDataType,
-                            int, int *, int, int, int );
+                            int, int *,
+                            GSpacing nPixelSpace, GSpacing nLineSpace,
+                            GSpacing nBandSpace,
+                            GDALRasterIOExtraArg* psExtraArg);
 
 private:
 
@@ -186,7 +189,9 @@ CPLErr RasdamanDataset::IRasterIO( GDALRWFlag eRWFlag,
                                void * pData, int nBufXSize, int nBufYSize,
                                GDALDataType eBufType, 
                                int nBandCount, int *panBandMap,
-                               int nPixelSpace, int nLineSpace, int nBandSpace)
+                               GSpacing nPixelSpace, GSpacing nLineSpace,
+                               GSpacing nBandSpace,
+                               GDALRasterIOExtraArg* psExtraArg)
 {
   if (eRWFlag != GF_Read) {
     CPLError(CE_Failure, CPLE_NoWriteAccess, "Write support is not implemented.");
@@ -203,7 +208,8 @@ CPLErr RasdamanDataset::IRasterIO( GDALRWFlag eRWFlag,
 
   CPLErr ret = GDALDataset::IRasterIO(eRWFlag, nXOff, nYOff, nXSize, nYSize, pData,
                                       nBufXSize, nBufYSize, eBufType, nBandCount,
-                                      panBandMap, nPixelSpace, nLineSpace, nBandSpace);
+                                      panBandMap, nPixelSpace, nLineSpace, nBandSpace,
+                                      psExtraArg);
 
   transaction.commit();
   
@@ -567,7 +573,7 @@ GDALDataset *RasdamanDataset::Open( GDALOpenInfo * poOpenInfo )
 
   // fast checks if current module should handle the request
   // check 1: the request is not on a existing file in the file system
-  if (poOpenInfo->fp != NULL) {
+  if (poOpenInfo->fpL != NULL) {
     return NULL;
   }
   // check 2: the request contains --collection
@@ -714,6 +720,7 @@ extern void GDALRegister_RASDAMAN()
     poDriver = new GDALDriver();
 
     poDriver->SetDescription( "RASDAMAN" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                "RASDAMAN" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,

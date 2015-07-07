@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsisimple.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: cpl_vsisimple.cpp 28971 2015-04-21 20:40:44Z rouault $
  *
  * Project:  Common Portability Library 
  * Purpose:  Simple implementation of POSIX VSI functions.
@@ -61,7 +61,7 @@
 /* DEBUG_VSIMALLOC must also be defined */
 //#define DEBUG_VSIMALLOC_VERBOSE
 
-CPL_CVSID("$Id: cpl_vsisimple.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: cpl_vsisimple.cpp 28971 2015-04-21 20:40:44Z rouault $");
 
 /* for stat() */
 
@@ -325,7 +325,7 @@ int VSIFPutc( int nChar, FILE * fp )
 #ifdef DEBUG_VSIMALLOC_STATS
 #include "cpl_multiproc.h"
 
-static void* hMemStatMutex = 0;
+static CPLMutex* hMemStatMutex = 0;
 static size_t nCurrentTotalAllocs = 0;
 static size_t nMaxTotalAllocs = 0;
 static GUIntBig nVSIMallocs = 0;
@@ -512,7 +512,7 @@ void VSICheckMarkerBegin(char* ptr)
     if (memcmp(ptr, "VSIM", 4) != 0)
     {
         CPLError(CE_Fatal, CPLE_AppDefined,
-                 "Inconsistant use of VSI memory allocation primitives for %p : %c%c%c%c",
+                 "Inconsistent use of VSI memory allocation primitives for %p : %c%c%c%c",
                  ptr, ptr[0], ptr[1], ptr[2], ptr[3]);
     }
 }
@@ -681,16 +681,12 @@ void VSIFree( void * pData )
 char *VSIStrdup( const char * pszString )
 
 {
-#ifdef DEBUG_VSIMALLOC
     int nSize = strlen(pszString) + 1;
     char* ptr = (char*) VSIMalloc(nSize);
     if (ptr == NULL)
         return NULL;
     memcpy(ptr, pszString, nSize);
     return ptr;
-#else
-    return( strdup( pszString ) );
-#endif
 }
 
 /************************************************************************/
@@ -944,4 +940,94 @@ char *VSIStrerror( int nErrno )
 
 {
     return strerror( nErrno );
+}
+
+
+/************************************************************************/
+/*                        CPLGetPhysicalRAM()                           */
+/************************************************************************/
+
+#if HAVE_SC_PHYS_PAGES
+
+/** Return the total physical RAM in bytes.
+ *
+ * @return the total physical RAM in bytes (or 0 in case of failure).
+ * @since GDAL 2.0
+ */
+GIntBig CPLGetPhysicalRAM(void)
+{
+    return ((GIntBig)sysconf(_SC_PHYS_PAGES)) * sysconf(_SC_PAGESIZE);
+}
+
+#elif defined(__MACH__) && defined(__APPLE__)
+
+#include <sys/types.h>
+#include <sys/sysctl.h>
+
+GIntBig CPLGetPhysicalRAM(void)
+{
+    int mib[2];
+    GIntBig nPhysMem = 0;
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_MEMSIZE;
+    size_t nLengthRes = sizeof(nPhysMem);
+    sysctl(mib, 2, &nPhysMem, &nLengthRes, NULL, 0);
+
+    return nPhysMem;
+}
+
+#elif defined(WIN32)
+
+/* GlobalMemoryStatusEx requires _WIN32_WINNT >= 0x0500 */
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
+#include <windows.h>
+
+GIntBig CPLGetPhysicalRAM(void)
+{
+    MEMORYSTATUSEX statex;
+    statex.ullTotalPhys = 0;
+    statex.dwLength = sizeof (statex);
+    GlobalMemoryStatusEx (&statex);
+    return (GIntBig) statex.ullTotalPhys;
+}
+
+#else
+
+GIntBig CPLGetPhysicalRAM(void)
+{
+    static int bOnce = FALSE;
+    if( !bOnce )
+    {
+        bOnce = TRUE;
+        CPLDebug("PORT", "No implementation for CPLGetPhysicalRAM()");
+    }
+    return 0;
+}
+#endif
+
+/************************************************************************/
+/*                       CPLGetUsablePhysicalRAM()                      */
+/************************************************************************/
+
+/** Return the total physical RAM, usable by a process, in bytes.
+ *
+ * This is the same as CPLGetPhysicalRAM() except it will limit to 2 GB
+ * for 32 bit processes.
+ *
+ * Note: This memory may already be partly used by other processes.
+ *
+ * @return the total physical RAM, usable by a process, in bytes (or 0 in case of failure).
+ * @since GDAL 2.0
+ */
+GIntBig  CPLGetUsablePhysicalRAM(void)
+{
+    GIntBig nRAM = CPLGetPhysicalRAM();
+#if SIZEOF_VOIDP == 4
+    if( nRAM > INT_MAX )
+        nRAM = INT_MAX;
+#endif
+    return nRAM;
 }

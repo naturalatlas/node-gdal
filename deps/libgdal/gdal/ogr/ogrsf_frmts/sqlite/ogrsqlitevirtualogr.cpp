@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitevirtualogr.cpp 27950 2014-11-11 10:02:20Z rouault $
+ * $Id: ogrsqlitevirtualogr.cpp 28900 2015-04-14 09:40:34Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  SQLite Virtual Table module using OGR layers
@@ -30,6 +30,7 @@
 #include "ogrsqlitevirtualogr.h"
 #include "ogr_api.h"
 #include "swq.h"
+#include "ogr_p.h"
 #include <map>
 #include <vector>
 
@@ -89,7 +90,7 @@ class OGR2SQLITEModule
 #endif
     sqlite3* hDB; /* *NOT* to be freed */
 
-    OGRDataSource* poDS; /* *NOT* to be freed */
+    GDALDataset* poDS; /* *NOT* to be freed */
     std::vector<OGRDataSource*> apoExtraDS; /* each datasource to be freed */
 
     OGRSQLiteDataSource* poSQLiteDS;  /* *NOT* to be freed, might be NULL */
@@ -102,11 +103,11 @@ class OGR2SQLITEModule
                                  OGR2SQLITEModule();
                                 ~OGR2SQLITEModule();
 
-    int                          Setup(OGRDataSource* poDS,
+    int                          Setup(GDALDataset* poDS,
                                        OGRSQLiteDataSource* poSQLiteDS);
     int                          Setup(sqlite3* hDB);
 
-    OGRDataSource*               GetDS() { return poDS; }
+    GDALDataset*               GetDS() { return poDS; }
 
     int                          AddExtraDS(OGRDataSource* poDS);
     OGRDataSource               *GetExtraDS(int nIndex);
@@ -184,7 +185,7 @@ OGRDataSource* OGR2SQLITEModule::GetExtraDS(int nIndex)
 /*                                Setup()                               */
 /************************************************************************/
 
-int OGR2SQLITEModule::Setup(OGRDataSource* poDSIn,
+int OGR2SQLITEModule::Setup(GDALDataset* poDSIn,
                             OGRSQLiteDataSource* poSQLiteDSIn)
 {
     CPLAssert(poDS == NULL);
@@ -292,7 +293,7 @@ typedef struct
     /* Extension fields */
     char                 *pszVTableName;
     OGR2SQLITEModule     *poModule;
-    OGRDataSource        *poDS;
+    GDALDataset          *poDS;
     int                   bCloseDS;
     OGRLayer             *poLayer;
     int                   nMyRef;
@@ -316,9 +317,9 @@ typedef struct
     /* In which case nNextWishedIndex and nCurFeatureIndex */
     /* will be used to avoid useless GetNextFeature() */
     /* Helps in SELECT COUNT(*) FROM xxxx scenarios */
-    int            nFeatureCount;
-    int            nNextWishedIndex;
-    int            nCurFeatureIndex;
+    GIntBig        nFeatureCount;
+    GIntBig        nNextWishedIndex;
+    GIntBig        nCurFeatureIndex;
 
     GByte         *pabyGeomBLOB;
     int            nGeomBLOBLen;
@@ -438,7 +439,7 @@ int OGR2SQLITE_ConnectCreate(sqlite3* hDB, void *pAux,
 {
     OGR2SQLITEModule* poModule = (OGR2SQLITEModule*) pAux;
     OGRLayer* poLayer = NULL;
-    OGRDataSource* poDS = NULL;
+    GDALDataset* poDS = NULL;
     int bExposeOGR_STYLE = FALSE;
     int bCloseDS = FALSE;
     int bInternalUse = FALSE;
@@ -483,7 +484,7 @@ int OGR2SQLITE_ConnectCreate(sqlite3* hDB, void *pAux,
         if( poLayer == NULL )
         {
             *pzErr = sqlite3_mprintf( "Cannot find layer '%s' in '%s'",
-                                      osLayerName.c_str(), poDS->GetName() );
+                                      osLayerName.c_str(), poDS->GetDescription() );
             return SQLITE_ERROR;
         }
 
@@ -545,7 +546,7 @@ int OGR2SQLITE_ConnectCreate(sqlite3* hDB, void *pAux,
 
             if( poDS->GetLayerCount() > 1 )
             {
-                *pzErr = sqlite3_mprintf( "Datasource '%s' has more than one layers, and none was explicitely selected.",
+                *pzErr = sqlite3_mprintf( "Datasource '%s' has more than one layers, and none was explicitly selected.",
                                           osDSName.c_str() );
                 poDS->Release();
                 return SQLITE_ERROR;
@@ -605,7 +606,8 @@ int OGR2SQLITE_ConnectCreate(sqlite3* hDB, void *pAux,
         osSQL += OGRSQLiteEscapeName(poFieldDefn->GetNameRef());
         osSQL += "\"";
         osSQL += " ";
-        osSQL += OGRSQLiteFieldDefnToSQliteFieldDefn(poFieldDefn);
+        osSQL += OGRSQLiteFieldDefnToSQliteFieldDefn(poFieldDefn,
+                                                     bInternalUse);
     }
 
     if( bAddComma )
@@ -639,7 +641,7 @@ int OGR2SQLITE_ConnectCreate(sqlite3* hDB, void *pAux,
             osSQL += "_";
             osSQL += OGRToOGCGeomType(poFieldDefn->GetType());
             osSQL += "_";
-            osSQL += (poFieldDefn->GetType() & wkb25DBit) ? "25D" : "2D";
+            osSQL += wkbHasZ(poFieldDefn->GetType()) ? "25D" : "2D";
             OGRSpatialReference* poSRS = poFieldDefn->GetSpatialRef();
             if( poSRS == NULL && i == 0 )
                 poSRS = poLayer->GetSpatialRef();
@@ -829,7 +831,7 @@ int OGR2SQLITE_Open(sqlite3_vtab *pVTab, sqlite3_vtab_cursor **ppCursor)
     else
     {
         poDupDataSource =
-            (OGRDataSource*) OGROpen(pMyVTab->poDS->GetName(), FALSE, NULL);
+            (OGRDataSource*) OGROpen(pMyVTab->poDS->GetDescription(), FALSE, NULL);
         if( poDupDataSource == NULL )
             return SQLITE_ERROR;
         poLayer = poDupDataSource->GetLayerByName(
@@ -898,8 +900,10 @@ int OGR2SQLITE_Close(sqlite3_vtab_cursor* pCursor)
 
 static
 int OGR2SQLITE_Filter(sqlite3_vtab_cursor* pCursor,
-                      CPL_UNUSED int idxNum, const char *idxStr,
-                      int argc, sqlite3_value **argv)
+                      CPL_UNUSED int idxNum,
+                      const char *idxStr,
+                      int argc,
+                      sqlite3_value **argv)
 {
     OGR2SQLITE_vtab_cursor* pMyCursor = (OGR2SQLITE_vtab_cursor*) pCursor;
 #ifdef DEBUG_OGR2SQLITE
@@ -945,24 +949,9 @@ int OGR2SQLITE_Filter(sqlite3_vtab_cursor* pCursor,
 
             if( bNeedsQuoting )
             {
-                /* FIXME: we would need some virtual method */
-                OGRSFDriver* poDriver = pMyCursor->pVTab->poDS->GetDriver();
-                char chQuote;
-
-                if (poDriver && (
-                    EQUAL(poDriver->GetName(), "PostgreSQL") ||
-                    EQUAL(poDriver->GetName(), "SQLite") ||
-                    EQUAL(poDriver->GetName(), "FileGDB" )) )
-                    chQuote = '"';
-                else
-                    chQuote = '\'';
-
-                osAttributeFilter += chQuote;
-                if( chQuote == '"' )
-                    osAttributeFilter += OGRSQLiteEscapeName(pszFieldName);
-                else
-                    osAttributeFilter += OGRSQLiteEscape(pszFieldName);
-                osAttributeFilter += chQuote;
+                osAttributeFilter += '"';
+                osAttributeFilter += OGRSQLiteEscapeName(pszFieldName);
+                osAttributeFilter += '"';
             }
             else
             {
@@ -995,7 +984,7 @@ int OGR2SQLITE_Filter(sqlite3_vtab_cursor* pCursor,
                 CPLSPrintf(CPL_FRMT_GIB, sqlite3_value_int64 (argv[i]));
         }
         else if (sqlite3_value_type (argv[i]) == SQLITE_FLOAT)
-        {
+        { // Insure that only Decimal.Points are used, never local settings such as Decimal.Comma.
             osAttributeFilter +=
                 CPLSPrintf("%.18g", sqlite3_value_double (argv[i]));
         }
@@ -1042,8 +1031,8 @@ int OGR2SQLITE_Filter(sqlite3_vtab_cursor* pCursor,
     {
         pMyCursor->poFeature = pMyCursor->poLayer->GetNextFeature();
 #ifdef DEBUG_OGR2SQLITE
-        CPLDebug("OGR2SQLITE", "GetNextFeature() --> %d",
-            pMyCursor->poFeature ? (int)pMyCursor->poFeature->GetFID() : -1);
+        CPLDebug("OGR2SQLITE", "GetNextFeature() --> " CPL_FRMT_GIB,
+            pMyCursor->poFeature ? pMyCursor->poFeature->GetFID() : -1);
 #endif
     }
 
@@ -1076,8 +1065,8 @@ int OGR2SQLITE_Next(sqlite3_vtab_cursor* pCursor)
         pMyCursor->nGeomBLOBLen = -1;
 
 #ifdef DEBUG_OGR2SQLITE
-        CPLDebug("OGR2SQLITE", "GetNextFeature() --> %d",
-            pMyCursor->poFeature ? (int)pMyCursor->poFeature->GetFID() : -1);
+        CPLDebug("OGR2SQLITE", "GetNextFeature() --> " CPL_FRMT_GIB,
+            pMyCursor->poFeature ? pMyCursor->poFeature->GetFID() : -1);
 #endif
     }
     return SQLITE_OK;
@@ -1122,8 +1111,8 @@ static void OGR2SQLITE_GoToWishedIndex(OGR2SQLITE_vtab_cursor* pMyCursor)
                 delete pMyCursor->poFeature;
                 pMyCursor->poFeature = pMyCursor->poLayer->GetNextFeature();
 #ifdef DEBUG_OGR2SQLITE
-                CPLDebug("OGR2SQLITE", "GetNextFeature() --> %d",
-                    pMyCursor->poFeature ? (int)pMyCursor->poFeature->GetFID() : -1);
+                CPLDebug("OGR2SQLITE", "GetNextFeature() --> " CPL_FRMT_GIB,
+                    pMyCursor->poFeature ? pMyCursor->poFeature->GetFID() : -1);
 #endif
             }
             while( pMyCursor->nCurFeatureIndex < pMyCursor->nNextWishedIndex );
@@ -1132,6 +1121,36 @@ static void OGR2SQLITE_GoToWishedIndex(OGR2SQLITE_vtab_cursor* pMyCursor)
             pMyCursor->pabyGeomBLOB = NULL;
             pMyCursor->nGeomBLOBLen = -1;
         }
+    }
+}
+
+/************************************************************************/
+/*                    OGR2SQLITE_ExportGeometry()                       */
+/************************************************************************/
+
+static void OGR2SQLITE_ExportGeometry(OGRGeometry* poGeom, int nSRSId,
+                                      GByte*& pabyGeomBLOB,
+                                      int& nGeomBLOBLen)
+{
+    if( OGRSQLiteLayer::ExportSpatiaLiteGeometry(
+            poGeom, nSRSId, wkbNDR, FALSE, FALSE, FALSE,
+            &pabyGeomBLOB,
+            &nGeomBLOBLen ) != CE_None )
+    {
+        nGeomBLOBLen = 0;
+    }
+    /* This is a hack: we add the original curve geometry after */
+    /* the spatialite blob */
+    else if( poGeom->hasCurveGeometry() )
+    {
+        int nWkbSize = poGeom->WkbSize();
+
+        pabyGeomBLOB = (GByte*) CPLRealloc(pabyGeomBLOB,
+                                nGeomBLOBLen + nWkbSize + 1);
+        poGeom->exportToWkb(wkbNDR, pabyGeomBLOB + nGeomBLOBLen);
+        /* Sheat a bit and add a end-of-blob spatialite marker */
+        pabyGeomBLOB[nGeomBLOBLen + nWkbSize] = 0xFE;
+        nGeomBLOBLen += nWkbSize + 1;
     }
 }
 
@@ -1182,13 +1201,9 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
                 OGRSpatialReference* poSRS = poGeom->getSpatialReference();
                 int nSRSId = pMyCursor->pVTab->poModule->FetchSRSId(poSRS);
 
-                if( OGRSQLiteLayer::ExportSpatiaLiteGeometry(
-                        poGeom, nSRSId, wkbNDR, FALSE, FALSE, FALSE,
-                        &pMyCursor->pabyGeomBLOB,
-                        &pMyCursor->nGeomBLOBLen ) != CE_None )
-                {
-                    pMyCursor->nGeomBLOBLen = 0;
-                }
+                OGR2SQLITE_ExportGeometry(poGeom, nSRSId,
+                                          pMyCursor->pabyGeomBLOB,
+                                          pMyCursor->nGeomBLOBLen);
             }
         }
 
@@ -1223,12 +1238,7 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
 
             GByte* pabyGeomBLOB = NULL;
             int nGeomBLOBLen = 0;
-            if( OGRSQLiteLayer::ExportSpatiaLiteGeometry(
-                    poGeom, nSRSId, wkbNDR, FALSE, FALSE, FALSE,
-                    &pabyGeomBLOB, &nGeomBLOBLen ) != CE_None )
-            {
-                nGeomBLOBLen = 0;
-            }
+            OGR2SQLITE_ExportGeometry(poGeom, nSRSId, pabyGeomBLOB, nGeomBLOBLen);
 
             if( nGeomBLOBLen == 0 )
             {
@@ -1259,6 +1269,11 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
                                poFeature->GetFieldAsInteger(nCol));
             break;
 
+        case OFTInteger64:
+            sqlite3_result_int64(pContext,
+                               poFeature->GetFieldAsInteger64(nCol));
+            break;
+
         case OFTReal:
             sqlite3_result_double(pContext,
                                   poFeature->GetFieldAsDouble(nCol));
@@ -1274,15 +1289,9 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
 
         case OFTDateTime:
         {
-            int nYear, nMonth, nDay, nHour, nMinute, nSecond, nTZ;
-            poFeature->GetFieldAsDateTime(nCol, &nYear, &nMonth, &nDay,
-                                          &nHour, &nMinute, &nSecond, &nTZ);
-            char szBuffer[64];
-            sprintf(szBuffer, "%04d-%02d-%02dT%02d:%02d:%02d",
-                    nYear, nMonth, nDay, nHour, nMinute, nSecond);
-            sqlite3_result_text(pContext,
-                                szBuffer,
-                                -1, SQLITE_TRANSIENT);
+            char* pszStr = OGRGetXMLDateTime(poFeature->GetRawFieldRef(nCol));
+            sqlite3_result_text(pContext, pszStr, -1, SQLITE_TRANSIENT);
+            CPLFree(pszStr);
             break;
         }
 
@@ -1292,7 +1301,7 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
             poFeature->GetFieldAsDateTime(nCol, &nYear, &nMonth, &nDay,
                                           &nHour, &nMinute, &nSecond, &nTZ);
             char szBuffer[64];
-            sprintf(szBuffer, "%04d-%02d-%02dT", nYear, nMonth, nDay);
+            sprintf(szBuffer, "%04d-%02d-%02d", nYear, nMonth, nDay);
             sqlite3_result_text(pContext,
                                 szBuffer,
                                 -1, SQLITE_TRANSIENT);
@@ -1301,11 +1310,15 @@ int OGR2SQLITE_Column(sqlite3_vtab_cursor* pCursor,
 
         case OFTTime:
         {
-            int nYear, nMonth, nDay, nHour, nMinute, nSecond, nTZ;
+            int nYear, nMonth, nDay, nHour, nMinute, nTZ;
+            float fSecond;
             poFeature->GetFieldAsDateTime(nCol, &nYear, &nMonth, &nDay,
-                                          &nHour, &nMinute, &nSecond, &nTZ);
+                                        &nHour, &nMinute, &fSecond, &nTZ );
             char szBuffer[64];
-            sprintf(szBuffer, "%02d:%02d:%02d", nHour, nMinute, nSecond);
+            if( OGR_GET_MS(fSecond) != 0 )
+                sprintf(szBuffer, "%02d:%02d:%06.3f", nHour, nMinute, fSecond);
+            else
+                sprintf(szBuffer, "%02d:%02d:%02d", nHour, nMinute, (int)fSecond);
             sqlite3_result_text(pContext,
                                 szBuffer,
                                 -1, SQLITE_TRANSIENT);
@@ -1398,8 +1411,7 @@ static OGRFeature* OGR2SQLITE_FeatureFromArgs(OGRLayer* poLayer,
         switch( sqlite3_value_type(argv[2 + i]) )
         {
             case SQLITE_INTEGER:
-                //FIXME use int64 when OGR has 64bit integer support
-                poFeature->SetField(i, sqlite3_value_int(argv[2 + i]));
+                poFeature->SetField(i, sqlite3_value_int64(argv[2 + i]));
                 break;
             case SQLITE_FLOAT:
                 poFeature->SetField(i, sqlite3_value_double(argv[2 + i]));
@@ -1453,7 +1465,16 @@ static OGRFeature* OGR2SQLITE_FeatureFromArgs(OGRLayer* poLayer,
             if( OGRSQLiteLayer::ImportSpatiaLiteGeometry(
                             pabyBlob, nLen, &poGeom ) == CE_None )
             {
-                poFeature->SetGeomFieldDirectly(i, poGeom);
+/*                OGRwkbGeometryType eGeomFieldType =
+                    poFeature->GetDefnRef()->GetGeomFieldDefn(i)->GetType();
+                if( OGR_GT_IsCurve(eGeomFieldType) && !OGR_GT_IsCurve(poGeom->getGeometryType()) )
+                {
+                    OGRGeometry* poCurveGeom = poGeom->getCurveGeometry();
+                    poFeature->SetGeomFieldDirectly(i, poCurveGeom);
+                    delete poCurveGeom;
+                }
+                else*/
+                    poFeature->SetGeomFieldDirectly(i, poGeom);
             }
         }
     }
@@ -1710,7 +1731,7 @@ void OGR2SQLITE_ogr_layer_GeometryType(sqlite3_context* pContext,
     }
 
     const char* psz2DName = OGRToOGCGeomType(eType);
-    if( eType & wkb25DBit )
+    if( wkbHasZ(eType) )
         sqlite3_result_text( pContext, CPLSPrintf("%s Z", psz2DName), -1, SQLITE_TRANSIENT );
     else
         sqlite3_result_text( pContext, psz2DName, -1, SQLITE_TRANSIENT );
@@ -2209,7 +2230,7 @@ int OGR2SQLITESpatialIndex_Column(sqlite3_vtab_cursor* pCursor,
 
     if( nCol == 0 )
     {
-        CPLDebug("OGR2SQLITE", "--> FID = %ld", poFeature->GetFID());
+        CPLDebug("OGR2SQLITE", "--> FID = " CPL_FRMT_GIB, poFeature->GetFID());
         sqlite3_result_int64(pContext, poFeature->GetFID());
         return SQLITE_OK;
     }
@@ -2363,7 +2384,7 @@ int OGR2SQLITEModule::Setup(sqlite3* hDB)
 /*                        OGR2SQLITE_Setup()                            */
 /************************************************************************/
 
-OGR2SQLITEModule* OGR2SQLITE_Setup(OGRDataSource* poDS,
+OGR2SQLITEModule* OGR2SQLITE_Setup(GDALDataset* poDS,
                                    OGRSQLiteDataSource* poSQLiteDS)
 {
     OGR2SQLITEModule* poModule = new OGR2SQLITEModule();

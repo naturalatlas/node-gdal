@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntv2dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: ntv2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $
  *
  * Project:  Horizontal Datum Formats
  * Purpose:  Implementation of NTv2 datum shift format used in Canada, France, 
@@ -34,7 +34,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ntv2dataset.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: ntv2dataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 /** 
  * The header for the file, and each grid consists of 11 16byte records.
@@ -206,25 +206,25 @@ void NTv2Dataset::FlushCache()
         }
         else if( EQUAL(pszKey,"MAJOR_F") )
         {
-            double dfValue = atof(pszValue);
+            double dfValue = CPLAtof(pszValue);
             CPL_LSBPTR64( &dfValue );
             memcpy( achFileHeader + 7*16+8, &dfValue, 8 );
         }
         else if( EQUAL(pszKey,"MINOR_F") )
         {
-            double dfValue = atof(pszValue);
+            double dfValue = CPLAtof(pszValue);
             CPL_LSBPTR64( &dfValue );
             memcpy( achFileHeader + 8*16+8, &dfValue, 8 );
         }
         else if( EQUAL(pszKey,"MAJOR_T") )
         {
-            double dfValue = atof(pszValue);
+            double dfValue = CPLAtof(pszValue);
             CPL_LSBPTR64( &dfValue );
             memcpy( achFileHeader + 9*16+8, &dfValue, 8 );
         }
         else if( EQUAL(pszKey,"MINOR_T") )
         {
-            double dfValue = atof(pszValue);
+            double dfValue = CPLAtof(pszValue);
             CPL_LSBPTR64( &dfValue );
             memcpy( achFileHeader + 10*16+8, &dfValue, 8 );
         }
@@ -658,10 +658,10 @@ const char *NTv2Dataset::GetProjectionRef()
 /************************************************************************/
 
 GDALDataset *NTv2Dataset::Create( const char * pszFilename,
-                                  int nXSize, int nYSize, CPL_UNUSED int nBands,
+                                  int nXSize, int nYSize,
+                                  CPL_UNUSED int nBands,
                                   GDALDataType eType,
                                   char ** papszOptions )
-
 {
     if( eType != GDT_Float32 )
     {
@@ -867,6 +867,7 @@ void GDALRegister_NTv2()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "NTv2" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "NTv2 Datum Grid Shift" );
         poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gsb" );
@@ -882,4 +883,3 @@ void GDALRegister_NTv2()
         GetGDALDriverManager()->RegisterDriver( poDriver );
     }
 }
-

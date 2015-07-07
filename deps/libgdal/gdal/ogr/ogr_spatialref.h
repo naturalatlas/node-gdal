@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_spatialref.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_spatialref.h 28972 2015-04-22 10:39:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Classes for manipulating spatial reference systems in a
@@ -193,7 +193,6 @@ class CPL_DLL OGRSpatialReference
                                 double *padfPrjParams, long iDatum, 
                                 int nUSGSAngleFormat = USGS_ANGLE_PACKEDDMS );
     OGRErr      importFromPanorama( long, long, long, double* );
-    OGRErr      importFromOzi( const char *, const char *, const char * );
     OGRErr      importFromOzi( const char * const* papszLines );
     OGRErr      importFromWMSAUTO( const char *pszAutoDef );
     OGRErr      importFromXML( const char * );
@@ -537,6 +536,9 @@ class CPL_DLL OGRSpatialReference
     OGRErr      SetWagner( int nVariation, double dfCenterLat,
                            double dfFalseEasting, double dfFalseNorthing );
 
+    /** Quadrilateralized Spherical Cube */
+    OGRErr      SetQSC(double dfCenterLat, double dfCenterLong);
+
     /** State Plane */
     OGRErr      SetStatePlane( int nZone, int bNAD83 = TRUE,
                                const char *pszOverrideUnitName = NULL,
@@ -548,6 +550,8 @@ class CPL_DLL OGRSpatialReference
     OGRErr      ImportFromESRIWisconsinWKT( 
         const char* pszPrjName, double dfCentralMeridian, double dfLatOfOrigin, 
         const char* pszUnitsName, const char* pszCSName = 0 );
+
+    static OGRSpatialReference* GetWGS84SRS();
 };
 
 /************************************************************************/

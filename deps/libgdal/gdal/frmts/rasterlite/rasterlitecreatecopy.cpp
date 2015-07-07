@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterlitecreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $
+ * $Id: rasterlitecreatecopy.cpp 28053 2014-12-04 09:31:07Z rouault $
  *
  * Project:  GDAL Rasterlite driver
  * Purpose:  Implement GDAL Rasterlite support using OGR SQLite driver
@@ -33,7 +33,7 @@
 
 #include "rasterlitedataset.h"
 
-CPL_CVSID("$Id: rasterlitecreatecopy.cpp 27729 2014-09-24 00:40:16Z goatbar $");
+CPL_CVSID("$Id: rasterlitecreatecopy.cpp 28053 2014-12-04 09:31:07Z rouault $");
 
 /************************************************************************/
 /*                  RasterliteGetTileDriverOptions ()                   */
@@ -260,7 +260,7 @@ OGRDataSourceH RasterliteCreateTables(OGRDataSourceH hDS, const char* pszTableNa
         /* Re-open the DB to take into account the new tables*/
         OGRReleaseDataSource(hDS);
         
-        hDS = OGROpen(osDBName.c_str(), TRUE, NULL);
+        hDS = RasterliteOpenSQLiteDB(osDBName.c_str(), GA_Update);
     }
     else
     {
@@ -292,7 +292,7 @@ OGRDataSourceH RasterliteCreateTables(OGRDataSourceH hDS, const char* pszTableNa
                     /* Re-open the DB to take into account the change of SRS */
                     OGRReleaseDataSource(hDS);
                     
-                    hDS = OGROpen(osDBName.c_str(), TRUE, NULL);
+                    hDS = RasterliteOpenSQLiteDB(osDBName.c_str(), GA_Update);
                 }
                 else
                 {
@@ -322,9 +322,10 @@ OGRDataSourceH RasterliteCreateTables(OGRDataSourceH hDS, const char* pszTableNa
 /************************************************************************/
 
 GDALDataset *
-RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS, 
-                       CPL_UNUSED int bStrict, CPL_UNUSED char ** papszOptions, 
-                       GDALProgressFunc pfnProgress, void * pProgressData )
+RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
+                      CPL_UNUSED int bStrict,
+                      char ** papszOptions,
+                      GDALProgressFunc pfnProgress, void * pProgressData )
 {
     int nBands = poSrcDS->GetRasterCount();
     if (nBands == 0)
@@ -406,7 +407,7 @@ RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         pszFilenameWithoutPrefix += 11;
     
     char** papszTokens = CSLTokenizeStringComplex( 
-                pszFilenameWithoutPrefix, ", ", FALSE, FALSE );
+                pszFilenameWithoutPrefix, ",", FALSE, FALSE );
     int nTokens = CSLCount(papszTokens);
     if (nTokens == 0)
     {
@@ -477,7 +478,7 @@ RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     }
     else
     {
-        hDS = OGROpen(osDBName.c_str(), TRUE, NULL);
+        hDS = RasterliteOpenSQLiteDB(osDBName.c_str(), GA_Update);
     }
     
     if (hDS == NULL)
@@ -526,15 +527,11 @@ RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     osSQL.Printf("SELECT COUNT(geometry) FROM \"%s\" "
                  "WHERE rowid IN "
                  "(SELECT pkid FROM \"idx_%s_metadata_geometry\" "
-                  "WHERE xmin < %.15f AND xmax > %.15f "
-                  "AND ymin < %.15f  AND ymax > %.15f) "
-                 "AND pixel_x_size >= %.15f AND pixel_x_size <= %.15f AND "
-                 "pixel_y_size >= %.15f AND pixel_y_size <= %.15f",
+                  "WHERE %s) AND %s",
                   osMetatadataLayer.c_str(),
                   osTableName.c_str(),
-                  maxx, minx, maxy, miny,
-                  adfGeoTransform[1] - 1e-15, adfGeoTransform[1] + 1e-15,
-                  - adfGeoTransform[5] - 1e-15, - adfGeoTransform[5] + 1e-15);
+                  RasterliteGetSpatialFilterCond(minx, miny, maxx, maxy).c_str(),
+                  RasterliteGetPixelSizeCond(adfGeoTransform[1], -adfGeoTransform[5]).c_str());
     
     int nOverlappingGeoms = 0;
     OGRLayerH hCountLyr = OGR_DS_ExecuteSQL(hDS, osSQL.c_str(), NULL, NULL);
@@ -605,7 +602,7 @@ RasterliteCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                                      nReqXSize, nReqYSize,
                                      pabyMEMDSBuffer, nReqXSize, nReqYSize,
                                      eDataType, nBands, NULL,
-                                     0, 0, 0);
+                                     0, 0, 0, NULL);
             if (eErr != CE_None)
             {
                 break;
