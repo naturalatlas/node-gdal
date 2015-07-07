@@ -274,6 +274,7 @@
 				"./gdal/frmts",
 				"./gdal/frmts/zlib",
 				"./gdal/frmts/vrt",
+				"./gdal/frmts/mem",
 				"./gdal/ogr",
 				"./gdal/ogr/ogrsf_frmts",
 				"./gdal/ogr/ogrsf_frmts/mem",
