@@ -100,12 +100,12 @@ namespace node_gdal {
 		}
 
 		#ifdef ENABLE_LOGGING
-		static NAN_GC_CALLBACK(beforeGC) 
+		static NAN_GC_CALLBACK(beforeGC)
 		{
 			LOG("%s", "Starting garbage collection");
 		}
-		
-		static NAN_GC_CALLBACK(afterGC) 
+
+		static NAN_GC_CALLBACK(afterGC)
 		{
 			LOG("%s", "Finished garbage collection");
 		}
@@ -159,12 +159,12 @@ namespace node_gdal {
 			msg = msg + "\n";
 
 			#ifdef ENABLE_LOGGING
-			if (log_file) { 
-				fputs(msg.c_str(), log_file); 
-				fflush(log_file); 
+			if (log_file) {
+				fputs(msg.c_str(), log_file);
+				fflush(log_file);
 			}
 			#endif
-			
+
 			NanReturnUndefined();
 		}
 
@@ -659,12 +659,28 @@ namespace node_gdal {
 			 */
 
 			/**
+			 * Old-style 99-402 extended dimension (Z) WKB types.
+			 * Synonymous with 'wkbVariantOldOgc' (gdal >= 2.0)
+			 *
 			 * @final
 			 * @property gdal.wkbVariantOgc
 			 * @type {String}
 			 */
 			target->Set(NanNew("wkbVariantOgc"), NanNew("OGC"));
+
 			/**
+			 * Old-style 99-402 extended dimension (Z) WKB types.
+			 * Synonymous with 'wkbVariantOgc' (gdal < 2.0)
+			 *
+			 * @final
+			 * @property gdal.wkbVariantOldOgc
+			 * @type {String}
+			 */
+			target->Set(NanNew("wkbVariantOldOgc"), NanNew("OGC"));
+
+			/**
+			 * SFSQL 1.2 and ISO SQL/MM Part 3 extended dimension (Z&M) WKB types.
+			 *
 			 * @final
 			 * @property gdal.wkbVariantIso
 			 * @type {String}
@@ -701,10 +717,10 @@ namespace node_gdal {
 			 * ```
 			 * // 2 -> 2.5D
 			 * wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
-			 * 
+			 *
 			 * // 2.5D -> 2D (same as wkbFlatten())
-			 * wkbPoint = gdal.wkbPoint25D & (~gdal.wkb25DBit)``` 
-			 * 
+			 * wkbPoint = gdal.wkbPoint25D & (~gdal.wkb25DBit)```
+			 *
 			 * @property gdal.wkb25DBit
 			 * @type {integer}
 			 */

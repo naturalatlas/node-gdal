@@ -60,6 +60,7 @@
 			"./gyp-formats/zlib.gyp:libgdal_zlib_frmt",
 			"./gyp-formats/jpeg.gyp:libgdal_jpeg_frmt",
 			"./gyp-formats/png.gyp:libgdal_png_frmt",
+			"./gyp-formats/pcidsk.gyp:libgdal_pcidsk_frmt",
 			"./gyp-formats/ogr_shape.gyp:libgdal_ogr_shape_frmt",
 			"./gyp-formats/ogr_vrt.gyp:libgdal_ogr_vrt_frmt",
 			"./gyp-formats/ogr_avc.gyp:libgdal_ogr_avc_frmt",
@@ -84,7 +85,6 @@
 			"./gyp-formats/ogr_dgn.gyp:libgdal_ogr_dgn_frmt",
 			"./gyp-formats/ogr_openair.gyp:libgdal_ogr_openair_frmt",
 			"./gyp-formats/ogr_openfilegdb.gyp:libgdal_ogr_openfilegdb_frmt",
-			"./gyp-formats/ogr_pcidsk.gyp:libgdal_ogr_pcidsk_frmt",
 			"./gyp-formats/ogr_pds.gyp:libgdal_ogr_pds_frmt",
 			"./gyp-formats/ogr_pgdump.gyp:libgdal_ogr_pgdump_frmt",
 			"./gyp-formats/ogr_rec.gyp:libgdal_ogr_rec_frmt",
@@ -96,12 +96,11 @@
 			"./gyp-formats/ogr_svg.gyp:libgdal_ogr_svg_frmt",
 			"./gyp-formats/ogr_sxf.gyp:libgdal_ogr_sxf_frmt",
 			"./gyp-formats/ogr_ntf.gyp:libgdal_ogr_ntf_frmt",
-			"./gyp-formats/ogr_tiger.gyp:libgdal_ogr_tiger_frmt",
 			"./gyp-formats/ogr_xplane.gyp:libgdal_ogr_xplane_frmt",
 			"./gyp-formats/ogr_wasp.gyp:libgdal_ogr_wasp_frmt"
 		],
 		"gdal_format_defs": [
-			"GDAL_FORMATS=gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg coasp tsx terragen blx til r northwood saga xyz hf2 kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib jpeg png ",
+			"GDAL_FORMATS=gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg coasp tsx terragen blx til r northwood saga xyz hf2 kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib jpeg png pcidsk ",
 			"FRMT_gtiff=1",
 			"FRMT_hfa=1",
 			"FRMT_aigrid=1",
@@ -161,6 +160,7 @@
 			"FRMT_zlib=1",
 			"FRMT_jpeg=1",
 			"FRMT_png=1",
+			"FRMT_pcidsk=1",
 			"SHAPE_ENABLED=1",
 			"VRT_ENABLED=1",
 			"AVC_ENABLED=1",
@@ -185,7 +185,6 @@
 			"DGN_ENABLED=1",
 			"OPENAIR_ENABLED=1",
 			"OPENFILEGDB_ENABLED=1",
-			"PCIDSK_ENABLED=1",
 			"PDS_ENABLED=1",
 			"PGDUMP_ENABLED=1",
 			"REC_ENABLED=1",
@@ -197,7 +196,6 @@
 			"SVG_ENABLED=1",
 			"SXF_ENABLED=1",
 			"NTF_ENABLED=1",
-			"TIGER_ENABLED=1",
 			"XPLANE_ENABLED=1",
 			"WASP_ENABLED=1"
 		]

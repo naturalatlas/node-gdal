@@ -12,7 +12,6 @@
 			"./gdal/alg",
 			"./gdal/gcore",
 			"./gdal/port",
-			"./gdal/bridge",
 			"./gdal/frmts",
 			"./gdal/frmts/gtiff",
 			"./gdal/ogr",
@@ -27,6 +26,8 @@
 		"defines": [
 			"_LARGEFILE_SOURCE",
 			"_FILE_OFFSET_BITS=64",
+			"INTERNAL_LIBGEOTIFF=1",
+			"GDAL_COMPILATION=1",
 			"PAM_ENABLED=1",
 			"OGR_ENABLED=1",
 			"HAVE_EXPAT=1",

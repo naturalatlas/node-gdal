@@ -627,7 +627,11 @@ NAN_METHOD(Geometry::exportToWKB)
 	std::string variant = "OGC";
 	NODE_ARG_OPT_STR(1, "wkb variant", variant);
 	if (variant == "OGC") {
+		#if GDAL_VERSION_MAJOR > 1
+		wkb_variant = wkbVariantOldOgc;
+		#else
 		wkb_variant = wkbVariantOgc;
+		#endif
 	} else if (order == "ISO") {
 		wkb_variant = wkbVariantIso;
 	} else {

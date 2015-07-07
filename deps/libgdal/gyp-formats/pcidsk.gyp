@@ -10,6 +10,7 @@
 				"../gdal/frmts/pcidsk/gdal_edb.cpp",
 				"../gdal/frmts/pcidsk/pcidskdataset2.cpp",
 				"../gdal/frmts/pcidsk/pcidsktiledrasterband.cpp",
+				"../gdal/frmts/pcidsk/ogrpcidsklayer.cpp",
 				"../gdal/frmts/pcidsk/sdk/channel/cbandinterleavedchannel.cpp",
 				"../gdal/frmts/pcidsk/sdk/channel/cexternalchannel.cpp",
 				"../gdal/frmts/pcidsk/sdk/channel/cpcidskchannel.cpp",

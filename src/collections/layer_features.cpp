@@ -217,7 +217,7 @@ NAN_METHOD(LayerFeatures::count)
 	int force = 1;
 	NODE_ARG_BOOL_OPT(0, "force", force);
 
-	NanReturnValue(NanNew<Integer>(layer->get()->GetFeatureCount(force)));
+	NanReturnValue(NanNew<Number>(layer->get()->GetFeatureCount(force)));
 }
 
 /**

@@ -12,10 +12,10 @@ dir_gyp_templates=./gyp-templates
 
 rm -rf $dir_gdal
 if [[ ! -f gdal.tar.gz ]]; then
-	curl http://download.osgeo.org/gdal/1.11.2/gdal-1.11.2.tar.gz -o gdal.tar.gz
+	curl http://download.osgeo.org/gdal/2.0.0/gdal-2.0.0.tar.gz -o gdal.tar.gz
 fi
 tar -xzf gdal.tar.gz
-mv gdal-1.11.2 $dir_gdal
+mv gdal-2.0.0 $dir_gdal
 
 rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig
@@ -82,7 +82,7 @@ rm -f $dir_gdal/Vagrantfile
 #
 
 patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
-patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
+# patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
 patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
 patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
 patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
@@ -103,8 +103,8 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 
 OGR_FORMATS="shape vrt avc geojson mem mitab kml gpx aeronavfaa
 	bna dxf csv edigeo geoconcept georss gml gmt gpsbabel gtm htf
-	idrisi dgn openair openfilegdb pcidsk pds pgdump rec s57 sdts segukooa
-	segy sua svg sxf ntf tiger xplane wasp"
+	idrisi dgn openair openfilegdb pds pgdump rec s57 sdts segukooa
+	segy sua svg sxf ntf xplane wasp"
 
 mkdir -p $dir_formats_gyp
 
