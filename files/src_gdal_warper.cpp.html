@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.4</b>
+                    API Docs for Version: <b>0.6.0</b>
                 </p>
             </li>
         </div>
@@ -187,6 +187,187 @@ void Warper::Initialize(Handle&lt;Object&gt; target)
 }
 
 /**
+ * GDALReprojectImage() method with a ChunkAndWarpImage replaced with ChunkAndWarpMulti
+ */
+CPLErr GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
+                    GDALDatasetH hDstDS, const char *pszDstWKT,
+                    GDALResampleAlg eResampleAlg,
+                    double dfWarpMemoryLimit,
+                    double dfMaxError,
+                    GDALProgressFunc pfnProgress, void *pProgressArg,
+                    GDALWarpOptions *psOptions )
+
+{
+    GDALWarpOptions *psWOptions;
+
+/* -------------------------------------------------------------------- */
+/*      Setup a reprojection based transformer.                         */
+/* -------------------------------------------------------------------- */
+    void *hTransformArg;
+
+    hTransformArg = 
+        GDALCreateGenImgProjTransformer( hSrcDS, pszSrcWKT, hDstDS, pszDstWKT, 
+                                         TRUE, 1000.0, 0 );
+
+    if( hTransformArg == NULL )
+        return CE_Failure;
+
+/* -------------------------------------------------------------------- */
+/*      Create a copy of the user provided options, or a defaulted      */
+/*      options structure.                                              */
+/* -------------------------------------------------------------------- */
+    if( psOptions == NULL )
+        psWOptions = GDALCreateWarpOptions();
+    else
+        psWOptions = GDALCloneWarpOptions( psOptions );
+
+    psWOptions-&gt;eResampleAlg = eResampleAlg;
+
+/* -------------------------------------------------------------------- */
+/*      Set transform.                                                  */
+/* -------------------------------------------------------------------- */
+    if( dfMaxError &gt; 0.0 )
+    {
+        psWOptions-&gt;pTransformerArg = 
+            GDALCreateApproxTransformer( GDALGenImgProjTransform, 
+                                         hTransformArg, dfMaxError );
+
+        psWOptions-&gt;pfnTransformer = GDALApproxTransform;
+    }
+    else
+    {
+        psWOptions-&gt;pfnTransformer = GDALGenImgProjTransform;
+        psWOptions-&gt;pTransformerArg = hTransformArg;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set file and band mapping.                                      */
+/* -------------------------------------------------------------------- */
+    int  iBand;
+
+    psWOptions-&gt;hSrcDS = hSrcDS;
+    psWOptions-&gt;hDstDS = hDstDS;
+
+    if( psWOptions-&gt;nBandCount == 0 )
+    {
+        psWOptions-&gt;nBandCount = MIN(GDALGetRasterCount(hSrcDS),
+                                     GDALGetRasterCount(hDstDS));
+        
+        psWOptions-&gt;panSrcBands = (int *) 
+            CPLMalloc(sizeof(int) * psWOptions-&gt;nBandCount);
+        psWOptions-&gt;panDstBands = (int *) 
+            CPLMalloc(sizeof(int) * psWOptions-&gt;nBandCount);
+
+        for( iBand = 0; iBand &lt; psWOptions-&gt;nBandCount; iBand++ )
+        {
+            psWOptions-&gt;panSrcBands[iBand] = iBand+1;
+            psWOptions-&gt;panDstBands[iBand] = iBand+1;
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set source nodata values if the source dataset seems to have    */
+/*      any. Same for target nodata values                              */
+/* -------------------------------------------------------------------- */
+    for( iBand = 0; iBand &lt; psWOptions-&gt;nBandCount; iBand++ )
+    {
+        GDALRasterBandH hBand = GDALGetRasterBand( hSrcDS, iBand+1 );
+        int             bGotNoData = FALSE;
+        double          dfNoDataValue;
+
+        if (GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand)
+        {
+            psWOptions-&gt;nSrcAlphaBand = iBand + 1;
+        }
+
+        dfNoDataValue = GDALGetRasterNoDataValue( hBand, &amp;bGotNoData );
+        if( bGotNoData )
+        {
+            if( psWOptions-&gt;padfSrcNoDataReal == NULL )
+            {
+                int  ii;
+
+                psWOptions-&gt;padfSrcNoDataReal = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions-&gt;nBandCount);
+                psWOptions-&gt;padfSrcNoDataImag = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions-&gt;nBandCount);
+
+                for( ii = 0; ii &lt; psWOptions-&gt;nBandCount; ii++ )
+                {
+                    psWOptions-&gt;padfSrcNoDataReal[ii] = -1.1e20;
+                    psWOptions-&gt;padfSrcNoDataImag[ii] = 0.0;
+                }
+            }
+
+            psWOptions-&gt;padfSrcNoDataReal[iBand] = dfNoDataValue;
+        }
+
+        // Deal with target band
+        hBand = GDALGetRasterBand( hDstDS, iBand+1 );
+        if (hBand &amp;&amp; GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand)
+        {
+            psWOptions-&gt;nDstAlphaBand = iBand + 1;
+        }
+
+        dfNoDataValue = GDALGetRasterNoDataValue( hBand, &amp;bGotNoData );
+        if( bGotNoData )
+        {
+            if( psWOptions-&gt;padfDstNoDataReal == NULL )
+            {
+                int  ii;
+
+                psWOptions-&gt;padfDstNoDataReal = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions-&gt;nBandCount);
+                psWOptions-&gt;padfDstNoDataImag = (double *) 
+                    CPLMalloc(sizeof(double) * psWOptions-&gt;nBandCount);
+
+                for( ii = 0; ii &lt; psWOptions-&gt;nBandCount; ii++ )
+                {
+                    psWOptions-&gt;padfDstNoDataReal[ii] = -1.1e20;
+                    psWOptions-&gt;padfDstNoDataImag[ii] = 0.0;
+                }
+            }
+
+            psWOptions-&gt;padfDstNoDataReal[iBand] = dfNoDataValue;
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Set the progress function.                                      */
+/* -------------------------------------------------------------------- */
+    if( pfnProgress != NULL )
+    {
+        psWOptions-&gt;pfnProgress = pfnProgress;
+        psWOptions-&gt;pProgressArg = pProgressArg;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Create a warp options based on the options.                     */
+/* -------------------------------------------------------------------- */
+    GDALWarpOperation  oWarper;
+    CPLErr eErr;
+
+    eErr = oWarper.Initialize( psWOptions );
+
+    if( eErr == CE_None )
+        eErr = oWarper.ChunkAndWarpMulti( 0, 0, 
+                                          GDALGetRasterXSize(hDstDS),
+                                          GDALGetRasterYSize(hDstDS) );
+
+/* -------------------------------------------------------------------- */
+/*      Cleanup.                                                        */
+/* -------------------------------------------------------------------- */
+    GDALDestroyGenImgProjTransformer( hTransformArg );
+
+    if( dfMaxError &gt; 0.0 )
+        GDALDestroyApproxTransformer( psWOptions-&gt;pTransformerArg );
+        
+    GDALDestroyWarpOptions( psWOptions );
+
+    return eErr;
+}
+
+/**
  * Reprojects a dataset.
  *
  * @throws Error
@@ -208,6 +389,7 @@ void Warper::Initialize(Handle&lt;Object&gt; target)
  * @param {Number} [options.dstNodata]
  * @param {Integer} [options.memoryLimit]
  * @param {Number} [options.maxError]
+ * @param {Boolean} [options.multi]
  * @param {string[]|object} [options.options] Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))
  */
 NAN_METHOD(Warper::reprojectImage)
@@ -252,8 +434,14 @@ NAN_METHOD(Warper::reprojectImage)
 		NanReturnUndefined();
 	}
 
-	CPLErr err = GDALReprojectImage(opts-&gt;hSrcDS, s_srs_wkt, opts-&gt;hDstDS, t_srs_wkt, opts-&gt;eResampleAlg, opts-&gt;dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	CPLErr err;
 
+	if(options.useMultithreading()){
+		err = GDALReprojectImageMulti(opts-&gt;hSrcDS, s_srs_wkt, opts-&gt;hDstDS, t_srs_wkt, opts-&gt;eResampleAlg, opts-&gt;dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	} else {
+		err = GDALReprojectImage(opts-&gt;hSrcDS, s_srs_wkt, opts-&gt;hDstDS, t_srs_wkt, opts-&gt;eResampleAlg, opts-&gt;dfWarpMemoryLimit, maxError, NULL, NULL, opts);
+	}
+	
 	CPLFree(s_srs_wkt);
 	CPLFree(t_srs_wkt);
 

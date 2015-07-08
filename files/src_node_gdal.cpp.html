@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.4</b>
+                    API Docs for Version: <b>0.6.0</b>
                 </p>
             </li>
         </div>
@@ -273,12 +273,12 @@ namespace node_gdal {
 		}
 
 		#ifdef ENABLE_LOGGING
-		static NAN_GC_CALLBACK(beforeGC) 
+		static NAN_GC_CALLBACK(beforeGC)
 		{
 			LOG(&quot;%s&quot;, &quot;Starting garbage collection&quot;);
 		}
-		
-		static NAN_GC_CALLBACK(afterGC) 
+
+		static NAN_GC_CALLBACK(afterGC)
 		{
 			LOG(&quot;%s&quot;, &quot;Finished garbage collection&quot;);
 		}
@@ -332,12 +332,12 @@ namespace node_gdal {
 			msg = msg + &quot;\n&quot;;
 
 			#ifdef ENABLE_LOGGING
-			if (log_file) { 
-				fputs(msg.c_str(), log_file); 
-				fflush(log_file); 
+			if (log_file) {
+				fputs(msg.c_str(), log_file);
+				fflush(log_file);
 			}
 			#endif
-			
+
 			NanReturnUndefined();
 		}
 
@@ -832,12 +832,28 @@ namespace node_gdal {
 			 */
 
 			/**
+			 * Old-style 99-402 extended dimension (Z) WKB types.
+			 * Synonymous with &#x27;wkbVariantOldOgc&#x27; (gdal &gt;= 2.0)
+			 *
 			 * @final
 			 * @property gdal.wkbVariantOgc
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;wkbVariantOgc&quot;), NanNew(&quot;OGC&quot;));
+
 			/**
+			 * Old-style 99-402 extended dimension (Z) WKB types.
+			 * Synonymous with &#x27;wkbVariantOgc&#x27; (gdal &lt; 2.0)
+			 *
+			 * @final
+			 * @property gdal.wkbVariantOldOgc
+			 * @type {String}
+			 */
+			target-&gt;Set(NanNew(&quot;wkbVariantOldOgc&quot;), NanNew(&quot;OGC&quot;));
+
+			/**
+			 * SFSQL 1.2 and ISO SQL/MM Part 3 extended dimension (Z&amp;M) WKB types.
+			 *
 			 * @final
 			 * @property gdal.wkbVariantIso
 			 * @type {String}
@@ -874,10 +890,10 @@ namespace node_gdal {
 			 * &#x60;&#x60;&#x60;
 			 * // 2 -&gt; 2.5D
 			 * wkbPoint25D = gdal.wkbPoint | gdal.wkb25DBit
-			 * 
+			 *
 			 * // 2.5D -&gt; 2D (same as wkbFlatten())
-			 * wkbPoint = gdal.wkbPoint25D &amp; (~gdal.wkb25DBit)&#x60;&#x60;&#x60; 
-			 * 
+			 * wkbPoint = gdal.wkbPoint25D &amp; (~gdal.wkb25DBit)&#x60;&#x60;&#x60;
+			 *
 			 * @property gdal.wkb25DBit
 			 * @type {integer}
 			 */

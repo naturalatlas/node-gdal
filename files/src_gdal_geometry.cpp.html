@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.4</b>
+                    API Docs for Version: <b>0.6.0</b>
                 </p>
             </li>
         </div>
@@ -800,7 +800,11 @@ NAN_METHOD(Geometry::exportToWKB)
 	std::string variant = &quot;OGC&quot;;
 	NODE_ARG_OPT_STR(1, &quot;wkb variant&quot;, variant);
 	if (variant == &quot;OGC&quot;) {
+		#if GDAL_VERSION_MAJOR &gt; 1
+		wkb_variant = wkbVariantOldOgc;
+		#else
 		wkb_variant = wkbVariantOgc;
+		#endif
 	} else if (order == &quot;ISO&quot;) {
 		wkb_variant = wkbVariantIso;
 	} else {

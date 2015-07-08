@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.4.4</b>
+                    API Docs for Version: <b>0.6.0</b>
                 </p>
             </li>
         </div>
@@ -390,7 +390,7 @@ NAN_METHOD(LayerFeatures::count)
 	int force = 1;
 	NODE_ARG_BOOL_OPT(0, &quot;force&quot;, force);
 
-	NanReturnValue(NanNew&lt;Integer&gt;(layer-&gt;get()-&gt;GetFeatureCount(force)));
+	NanReturnValue(NanNew&lt;Number&gt;(layer-&gt;get()-&gt;GetFeatureCount(force)));
 }
 
 /**
