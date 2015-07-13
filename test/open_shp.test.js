@@ -54,9 +54,9 @@ describe('Open', function() {
 				});
 			});
 
-			describe('integer fields', function() {
+			describe('integer64 fields', function() {
 				it('should be readable', function() {
-					var integerDs = gdal.open(path.join(__dirname, "data/shp/sample_integer.shp"));
+					var integerDs = gdal.open(path.join(__dirname, "data/shp/sample_int64.shp"));
 					var integerLayer = integerDs.layers.get(0);
 
 					assert.equal(integerLayer.features.get(0).fields.get(3), 1);
