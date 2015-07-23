@@ -1,3 +1,5 @@
+os: Visual Studio 2015
+
 environment:
   AWS_ACCESS_KEY_ID:
     secure: ihP9C8AMdicFGeffdKqgNG1O4n68jDHQPAZCB/IfuZg=
@@ -33,12 +35,12 @@ install:
   # fix for https://github.com/npm/npm/issues/6246:
   - npm -g install npm@1.4.28
   - npm --version
-  # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2013
+  # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2015
   - npm install node-gyp
   - npm install https://github.com/naturalatlas/mocha/archive/fix/333.tar.gz
   # build with/without logging depending on if we're pushing a binary
-  - IF NOT "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2013)
-  - IF "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2013 --enable-logging=true)
+  - IF NOT "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2015)
+  - IF "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2015 --enable-logging=true)
   - npm test || SET HAD_ERROR=1
   - IF "%ENABLE_LOGGING%" == "1" (appveyor PushArtifact test/artifacts/log.txt)
   - IF DEFINED HAD_ERROR (EXIT /B 1)
