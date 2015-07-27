@@ -7,6 +7,37 @@ var fs = require('fs');
 describe('gdal', function() {
 	afterEach(gc);
 
+	describe('"lastError" property', function() {
+		describe('get()', function() {
+			it('should return null when no previous error', function() {
+				// note: this needs to be the first test run
+				assert.isNull(gdal.lastError);
+			});
+			it('should return an object normally', function() {
+				gdal._triggerCPLError();
+
+				assert.deepEqual(gdal.lastError, {
+					code: gdal.CPLE_AppDefined,
+					level: gdal.CE_Failure,
+					message: 'Mock error'
+ 				});
+			});
+		});
+		describe('set()', function() {
+			it('should allow reset by setting to null', function() {
+				gdal._triggerCPLError();
+
+				assert.equal(!!gdal.lastError, true);
+				gdal.lastError = null;
+				assert.isNull(gdal.lastError);
+			});
+			it('should throw when not null', function() {
+				assert.throws(function() {
+					gdal.lastError = {};
+				}, /null/);
+			});
+		});
+	});
 	describe('"version" property', function() {
 		it('should exist', function() {
 			assert.match(gdal.version, /^\d+\.\d+\.\d+[a-zA-Z]*$/);

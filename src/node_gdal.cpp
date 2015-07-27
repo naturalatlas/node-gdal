@@ -85,6 +85,38 @@ namespace node_gdal {
 
 	FILE *log_file = NULL;
 
+	/**
+	 * @attribute lastError
+	 * @type Object
+	 */
+	static NAN_GETTER(LastErrorGetter)
+	{
+		NanScope();
+
+		int errtype = CPLGetLastErrorType();
+	    if (errtype == CE_None) {
+	    	NanReturnNull();
+	    }
+
+		Local<Object> result = NanNew<Object>();
+		result->Set(NanNew("code"), NanNew(CPLGetLastErrorNo()));
+		result->Set(NanNew("message"), NanNew(CPLGetLastErrorMsg()));
+		result->Set(NanNew("level"), NanNew(errtype));
+		NanReturnValue(result);
+	}
+
+	static NAN_SETTER(LastErrorSetter)
+	{
+		NanScope();
+
+		if (value->IsNull()) {
+			CPLErrorReset();
+		} else {
+			NanThrowError("'lastError' only supports being set to null");
+			return;
+		}
+	}
+
 	extern "C" {
 
 		static NAN_METHOD(QuietOutput)
@@ -168,6 +200,12 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 
+		static NAN_METHOD(ThrowDummyCPLError)
+		{
+			CPLError(CE_Failure, CPLE_AppDefined, "Mock error");
+			NanReturnUndefined();
+		}
+
 		static void Init(Handle<Object> target)
 		{
 
@@ -175,6 +213,7 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, "setConfigOption", setConfigOption);
 			NODE_SET_METHOD(target, "getConfigOption", getConfigOption);
 			NODE_SET_METHOD(target, "decToDMS", decToDMS);
+			NODE_SET_METHOD(target, "_triggerCPLError", ThrowDummyCPLError); // for tests
 
 			Warper::Initialize(target);
 			Algorithms::Initialize(target);
@@ -263,6 +302,122 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target->Set(NanNew("DMD_CREATIONDATATYPES"), NanNew(GDAL_DMD_CREATIONDATATYPES));
+
+			/**
+			 * @class Constants (CPL Error Levels)
+			 */
+
+			/**
+			 * Error level: (no error)
+			 *
+			 * @final
+			 * @property gdal.CE_None
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CE_None"), NanNew(CE_None));
+			/**
+			 * Error level: Debug
+			 *
+			 * @final
+			 * @property gdal.CE_Debug
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CE_Debug"), NanNew(CE_Debug));
+			/**
+			 * Error level: Warning
+			 *
+			 * @final
+			 * @property gdal.CE_Warning
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CE_Warning"), NanNew(CE_Warning));
+			/**
+			 * Error level: Failure
+			 *
+			 * @final
+			 * @property gdal.CE_Failure
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CE_Failure"), NanNew(CE_Failure));
+			/**
+			 * Error level: Fatal
+			 *
+			 * @property gdal.CE_Fatal
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CE_Fatal"), NanNew(CE_Fatal));
+
+
+			/**
+			 * @class Constants (CPL Error Codes)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.CPLE_None
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_None"), NanNew(CPLE_None));
+			/**
+			 * @final
+			 * @property gdal.CPLE_AppDefined
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_AppDefined"), NanNew(CPLE_AppDefined));
+			/**
+			 * @final
+			 * @property gdal.CPLE_OutOfMemory
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_OutOfMemory"), NanNew(CPLE_OutOfMemory));
+			/**
+			 * @final
+			 * @property gdal.CPLE_FileIO
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_FileIO"), NanNew(CPLE_FileIO));
+			/**
+			 * @final
+			 * @property gdal.CPLE_OpenFailed
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_OpenFailed"), NanNew(CPLE_OpenFailed));
+			/**
+			 * @final
+			 * @property gdal.CPLE_IllegalArg
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_IllegalArg"), NanNew(CPLE_IllegalArg));
+			/**
+			 * @final
+			 * @property gdal.CPLE_NotSupported
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_NotSupported"), NanNew(CPLE_NotSupported));
+			/**
+			 * @final
+			 * @property gdal.CPLE_AssertionFailed
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_AssertionFailed"), NanNew(CPLE_AssertionFailed));
+			/**
+			 * @final
+			 * @property gdal.CPLE_NoWriteAccess
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_NoWriteAccess"), NanNew(CPLE_NoWriteAccess));
+			/**
+			 * @final
+			 * @property gdal.CPLE_UserInterrupt
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_UserInterrupt"), NanNew(CPLE_UserInterrupt));
+			/**
+			 * @final
+			 * @property gdal.CPLE_ObjectNull
+			 * @type {Number}
+			 */
+			target->Set(NanNew("CPLE_ObjectNull"), NanNew(CPLE_ObjectNull));
 
 			/**
 			 * @class Constants (DCAP)
@@ -973,6 +1128,18 @@ namespace node_gdal {
 			 */
 			target->Set(NanNew("version"), NanNew(GDAL_RELEASE_NAME));
 
+			/**
+			 * Details about the last error that occurred. The property
+			 * will be null or an object containing three properties: "number",
+			 * "message", and "type".
+			 *
+			 * @final
+			 * @for gdal
+			 * @property gdal.lastError
+			 * @type {Object}
+			 */
+			target->SetAccessor(NanNew<v8::String>("lastError"), LastErrorGetter, LastErrorSetter);
+
 			// Local<Object> versions = NanNew<Object>();
 			// versions->Set(NanNew("node"), NanNew(NODE_VERSION+1));
 			// versions->Set(NanNew("v8"), NanNew(V8::GetVersion()));
@@ -1011,7 +1178,6 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, CPLE_UserInterrupt);
 
 		}
-
 	}
 
 } // namespace node_gdal
