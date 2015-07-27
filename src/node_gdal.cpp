@@ -94,9 +94,9 @@ namespace node_gdal {
 		NanScope();
 
 		int errtype = CPLGetLastErrorType();
-	    if (errtype == CE_None) {
-	    	NanReturnNull();
-	    }
+		if (errtype == CE_None) {
+			NanReturnNull();
+		}
 
 		Local<Object> result = NanNew<Object>();
 		result->Set(NanNew("code"), NanNew(CPLGetLastErrorNo()));
