@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/collections/gdal_drivers.cpp - node-gdal</title>
+    <title>Constants (CPL Error Codes) - node-gdal</title>
     <link rel="stylesheet" href="">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -170,241 +170,591 @@
                 <div id="docs-main">
                     <div class="content">
                         <div class="page-header">
-    <h1>src/collections/gdal_drivers.cpp <small>File</small></h1>
+    <h1>Constants (CPL Error Codes)</h1>
 </div>
 
-<div class="file">
-    <pre class="prettyprint linenums">
-#include &quot;../gdal_common.hpp&quot;
-#include &quot;../gdal_driver.hpp&quot;
-#include &quot;gdal_drivers.hpp&quot;
+    
 
-namespace node_gdal {
+    
 
-Persistent&lt;FunctionTemplate&gt; GDALDrivers::constructor;
+    
 
-void GDALDrivers::Initialize(Handle&lt;Object&gt; target)
-{
-	NanScope();
-
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(GDALDrivers::New);
-	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;GDALDrivers&quot;));
-
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getNames&quot;, getNames);
-
-	GDALAllRegister();
-	#if GDAL_VERSION_MAJOR &lt; 2
-	OGRRegisterAll();
-	#endif
-
-	target-&gt;Set(NanNew(&quot;GDALDrivers&quot;), lcons-&gt;GetFunction());
-	
-	NanAssignPersistent(constructor, lcons);
-}
-
-GDALDrivers::GDALDrivers()
-	: ObjectWrap()
-{}
-
-GDALDrivers::~GDALDrivers()
-{}
-
-/**
- * An collection of all {{#crossLink &quot;gdal.Driver&quot;}}drivers{{/crossLink}} registered with GDAL.
- *
- * @class gdal.GDALDrivers
- */
-NAN_METHOD(GDALDrivers::New)
-{
-	NanScope();
-
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
-	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
-		void* ptr = ext-&gt;Value();
-		GDALDrivers *f =  static_cast&lt;GDALDrivers *&gt;(ptr);
-		f-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
-	} else {
-		NanThrowError(&quot;Cannot create GDALDrivers directly&quot;);
-		NanReturnUndefined();
-	}
-}
-
-Handle&lt;Value&gt; GDALDrivers::New()
-{
-	NanEscapableScope();
-
-	GDALDrivers *wrapped = new GDALDrivers();
-
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(GDALDrivers::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-
-	return NanEscapeScope(obj);
-}
-
-NAN_METHOD(GDALDrivers::toString)
-{
-	NanScope();
-	NanReturnValue(NanNew(&quot;GDALDrivers&quot;));
-}
-
-/**
- * Returns a driver with the specified name.
- *
- * Note: Prior to GDAL2.x there is a separate driver for vector VRTs and raster VRTs.
- *       Use &#x60;&quot;VRT:vector&quot;&#x60; to fetch the vector VRT driver and &#x60;&quot;VRT:raster&quot;&#x60; to fetch the raster VRT driver.
- * 
- * @method get
- * @param {Integer|string} index 0-based index or driver name
- * @return {gdal.Driver}
- */
-NAN_METHOD(GDALDrivers::get)
-{
-	NanScope();
-	
-	#if GDAL_VERSION_MAJOR &lt; 2
-	OGRSFDriver *ogr_driver;
-	#endif
-
-	GDALDriver *gdal_driver;
-
-	if (args.Length() == 0) {
-		NanThrowError(&quot;Either driver name or index must be provided&quot;);
-		NanReturnUndefined();
-	}
-
-	if(args[0]-&gt;IsString()){
-		//try getting OGR driver first, and then GDAL driver if it fails
-		//A driver named &quot;VRT&quot; exists for both GDAL and OGR, so if building
-		//with &lt;2.0 require user to specify which driver to pick
-		std::string name = *NanUtf8String(args[0]);
-
-		#if GDAL_VERSION_MAJOR &lt; 2
-		if(name == &quot;VRT&quot;) {
-			NanThrowError(&quot;Name \&quot;VRT\&quot; is ambiguous before GDAL 2.0. Use VRT:raster or VRT:vector instead&quot;);
-			NanReturnUndefined();
-		}
-		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverByName(name.c_str());
-		if(ogr_driver) {
-			NanReturnValue(Driver::New(ogr_driver));
-		}
-		#endif
-
-		if(name == &quot;VRT:vector&quot;) {
-			#if GDAL_VERSION_MAJOR &lt; 2
-			ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverByName(&quot;VRT&quot;);
-			if(ogr_driver) {
-				NanReturnValue(Driver::New(ogr_driver));
-			}
-			#else
-				name = &quot;VRT&quot;;
-			#endif
-		}
-
-		if (name == &quot;VRT:raster&quot;) {
-			name = &quot;VRT&quot;;
-		}
-		gdal_driver = GetGDALDriverManager()-&gt;GetDriverByName(name.c_str());
-		if(gdal_driver) {
-			NanReturnValue(Driver::New(gdal_driver));
-		}
-
-	} else if(args[0]-&gt;IsNumber()) {
-		int i = static_cast&lt;int&gt;(args[0]-&gt;IntegerValue());
-
-		gdal_driver = GetGDALDriverManager()-&gt;GetDriver(i);
-		if(gdal_driver) {
-			NanReturnValue(Driver::New(gdal_driver));
-		}
-
-		#if GDAL_VERSION_MAJOR &lt; 2
-		i -= GetGDALDriverManager()-&gt;GetDriverCount();
-		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriver(i);
-		if(ogr_driver) {
-			NanReturnValue(Driver::New(ogr_driver));
-		}
-		#endif
-	} else {
-		NanThrowError(&quot;Argument must be string or integer&quot;);
-		NanReturnUndefined();
-	}
-
-	NanReturnValue(NanNull());
-}
-
-/**
- * Returns an array with the names of all the drivers registered with GDAL.
- *
- * @method getNames
- * @return {string[]}
- */
-NAN_METHOD(GDALDrivers::getNames)
-{
-	NanScope();
-	int gdal_count = GetGDALDriverManager()-&gt;GetDriverCount();
-	int i, ogr_count = 0;
-	std::string name;
-
-	#if GDAL_VERSION_MAJOR &lt; 2
-		ogr_count = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverCount();
-	#endif
-
-	int n = gdal_count + ogr_count;
-
-	Local&lt;Array&gt; driver_names = NanNew&lt;Array&gt;(n);
-
-	for (i = 0; i &lt; gdal_count; ++i) {
-		GDALDriver *driver = GetGDALDriverManager()-&gt;GetDriver(i);
-		name = driver-&gt;GetDescription();
-		#if GDAL_VERSION_MAJOR &lt; 2
-		if(name == &quot;VRT&quot;) name = &quot;VRT:raster&quot;;
-		#endif
-		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
-	}
+    
 
 
-	#if GDAL_VERSION_MAJOR &lt; 2
-	for (; i &lt; n; ++i) {
-		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriver(i - gdal_count);
-		name = driver-&gt;GetName();
-		if(name == &quot;VRT&quot;) name = &quot;VRT:vector&quot;;
-		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
-	}
-	#endif
-	
-	NanReturnValue(driver_names);
-}
 
-/**
- * Returns the number of drivers registered with GDAL.
- *
- * @method count
- * @return {Integer}
- */
-NAN_METHOD(GDALDrivers::count)
-{
-	NanScope();
 
-	int count = GetGDALDriverManager()-&gt;GetDriverCount();
 
-	#if GDAL_VERSION_MAJOR &lt; 2
-	count += OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriverCount();
-	#endif
+<!-- table of contents -->
 
-	NanReturnValue(NanNew&lt;Integer&gt;(count));
-}
+<div id="class-toc" class="page-section">
+	<h2>Table of Contents</h2>
+    <ul>
+		
 
-} // namespace node_gdal
-    </pre>
+		
+		<li>
+			<strong>Properties</strong>
+			<ul>
+				
+				<li><a href="#prop-gdal.CPLE_AppDefined"><span class="ip">gdal.CPLE_AppDefined</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_AssertionFailed"><span class="ip">gdal.CPLE_AssertionFailed</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_FileIO"><span class="ip">gdal.CPLE_FileIO</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_IllegalArg"><span class="ip">gdal.CPLE_IllegalArg</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_None"><span class="ip">gdal.CPLE_None</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_NotSupported"><span class="ip">gdal.CPLE_NotSupported</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_NoWriteAccess"><span class="ip">gdal.CPLE_NoWriteAccess</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_ObjectNull"><span class="ip">gdal.CPLE_ObjectNull</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_OpenFailed"><span class="ip">gdal.CPLE_OpenFailed</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_OutOfMemory"><span class="ip">gdal.CPLE_OutOfMemory</span></a></li>
+				
+				<li><a href="#prop-gdal.CPLE_UserInterrupt"><span class="ip">gdal.CPLE_UserInterrupt</span></a></li>
+				
+			</ul>
+		</li>
+		
+
+		
+
+		
+	</ul>
 </div>
+
+<!-- details -->
+
+
+
+
+
+
+    <div id="properties" class="page-section">
+        <h2 class="off-left">Properties</h2>
+
+        <div class="item-list">
+        
+            <div id="prop-gdal.CPLE_AppDefined" class="property item">
+    <h3 class="name"><code>gdal.CPLE_AppDefined</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l361"><code>src&#x2F;node_gdal.cpp:361</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_AssertionFailed" class="property item">
+    <h3 class="name"><code>gdal.CPLE_AssertionFailed</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l397"><code>src&#x2F;node_gdal.cpp:397</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_FileIO" class="property item">
+    <h3 class="name"><code>gdal.CPLE_FileIO</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l373"><code>src&#x2F;node_gdal.cpp:373</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_IllegalArg" class="property item">
+    <h3 class="name"><code>gdal.CPLE_IllegalArg</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l385"><code>src&#x2F;node_gdal.cpp:385</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_None" class="property item">
+    <h3 class="name"><code>gdal.CPLE_None</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l355"><code>src&#x2F;node_gdal.cpp:355</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_NotSupported" class="property item">
+    <h3 class="name"><code>gdal.CPLE_NotSupported</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l391"><code>src&#x2F;node_gdal.cpp:391</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_NoWriteAccess" class="property item">
+    <h3 class="name"><code>gdal.CPLE_NoWriteAccess</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l403"><code>src&#x2F;node_gdal.cpp:403</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_ObjectNull" class="property item">
+    <h3 class="name"><code>gdal.CPLE_ObjectNull</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l415"><code>src&#x2F;node_gdal.cpp:415</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_OpenFailed" class="property item">
+    <h3 class="name"><code>gdal.CPLE_OpenFailed</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l379"><code>src&#x2F;node_gdal.cpp:379</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_OutOfMemory" class="property item">
+    <h3 class="name"><code>gdal.CPLE_OutOfMemory</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l367"><code>src&#x2F;node_gdal.cpp:367</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.CPLE_UserInterrupt" class="property item">
+    <h3 class="name"><code>gdal.CPLE_UserInterrupt</code></h3>
+    <span class="type">Number</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l409"><code>src&#x2F;node_gdal.cpp:409</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+        </div>
+    </div>
+
+
+
+
+
+
 
                     </div>
                 </div>

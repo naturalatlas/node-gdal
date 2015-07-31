@@ -1,6 +1,8 @@
 YUI.add("yuidoc-meta", function(Y) {
    Y.YUIDoc = { meta: {
     "classes": [
+        "Constants (CPL Error Codes)",
+        "Constants (CPL Error Levels)",
         "Constants (DCAP)",
         "Constants (DMD)",
         "Constants (GCI)",

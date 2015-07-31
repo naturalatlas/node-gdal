@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.6.0</b>
+                    API Docs for Version: <b>0.7.0</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (CPL Error Codes)", "classes/Constants (CPL Error Levels)", "classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -40,6 +40,10 @@
     <div id="sidebar">
     <div id="classes">
         <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (CPL Error Codes).html">Constants (CPL Error Codes)</a></li>
+            
+                <li><a href="../classes/Constants (CPL Error Levels).html">Constants (CPL Error Levels)</a></li>
             
                 <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
             
@@ -258,6 +262,38 @@ namespace node_gdal {
 
 	FILE *log_file = NULL;
 
+	/**
+	 * @attribute lastError
+	 * @type Object
+	 */
+	static NAN_GETTER(LastErrorGetter)
+	{
+		NanScope();
+
+		int errtype = CPLGetLastErrorType();
+		if (errtype == CE_None) {
+			NanReturnNull();
+		}
+
+		Local&lt;Object&gt; result = NanNew&lt;Object&gt;();
+		result-&gt;Set(NanNew(&quot;code&quot;), NanNew(CPLGetLastErrorNo()));
+		result-&gt;Set(NanNew(&quot;message&quot;), NanNew(CPLGetLastErrorMsg()));
+		result-&gt;Set(NanNew(&quot;level&quot;), NanNew(errtype));
+		NanReturnValue(result);
+	}
+
+	static NAN_SETTER(LastErrorSetter)
+	{
+		NanScope();
+
+		if (value-&gt;IsNull()) {
+			CPLErrorReset();
+		} else {
+			NanThrowError(&quot;&#x27;lastError&#x27; only supports being set to null&quot;);
+			return;
+		}
+	}
+
 	extern &quot;C&quot; {
 
 		static NAN_METHOD(QuietOutput)
@@ -341,6 +377,12 @@ namespace node_gdal {
 			NanReturnUndefined();
 		}
 
+		static NAN_METHOD(ThrowDummyCPLError)
+		{
+			CPLError(CE_Failure, CPLE_AppDefined, &quot;Mock error&quot;);
+			NanReturnUndefined();
+		}
+
 		static void Init(Handle&lt;Object&gt; target)
 		{
 
@@ -348,6 +390,7 @@ namespace node_gdal {
 			NODE_SET_METHOD(target, &quot;setConfigOption&quot;, setConfigOption);
 			NODE_SET_METHOD(target, &quot;getConfigOption&quot;, getConfigOption);
 			NODE_SET_METHOD(target, &quot;decToDMS&quot;, decToDMS);
+			NODE_SET_METHOD(target, &quot;_triggerCPLError&quot;, ThrowDummyCPLError); // for tests
 
 			Warper::Initialize(target);
 			Algorithms::Initialize(target);
@@ -436,6 +479,122 @@ namespace node_gdal {
 			 * @type {String}
 			 */
 			target-&gt;Set(NanNew(&quot;DMD_CREATIONDATATYPES&quot;), NanNew(GDAL_DMD_CREATIONDATATYPES));
+
+			/**
+			 * @class Constants (CPL Error Levels)
+			 */
+
+			/**
+			 * Error level: (no error)
+			 *
+			 * @final
+			 * @property gdal.CE_None
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CE_None&quot;), NanNew(CE_None));
+			/**
+			 * Error level: Debug
+			 *
+			 * @final
+			 * @property gdal.CE_Debug
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CE_Debug&quot;), NanNew(CE_Debug));
+			/**
+			 * Error level: Warning
+			 *
+			 * @final
+			 * @property gdal.CE_Warning
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CE_Warning&quot;), NanNew(CE_Warning));
+			/**
+			 * Error level: Failure
+			 *
+			 * @final
+			 * @property gdal.CE_Failure
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CE_Failure&quot;), NanNew(CE_Failure));
+			/**
+			 * Error level: Fatal
+			 *
+			 * @property gdal.CE_Fatal
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CE_Fatal&quot;), NanNew(CE_Fatal));
+
+
+			/**
+			 * @class Constants (CPL Error Codes)
+			 */
+
+			/**
+			 * @final
+			 * @property gdal.CPLE_None
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_None&quot;), NanNew(CPLE_None));
+			/**
+			 * @final
+			 * @property gdal.CPLE_AppDefined
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_AppDefined&quot;), NanNew(CPLE_AppDefined));
+			/**
+			 * @final
+			 * @property gdal.CPLE_OutOfMemory
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_OutOfMemory&quot;), NanNew(CPLE_OutOfMemory));
+			/**
+			 * @final
+			 * @property gdal.CPLE_FileIO
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_FileIO&quot;), NanNew(CPLE_FileIO));
+			/**
+			 * @final
+			 * @property gdal.CPLE_OpenFailed
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_OpenFailed&quot;), NanNew(CPLE_OpenFailed));
+			/**
+			 * @final
+			 * @property gdal.CPLE_IllegalArg
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_IllegalArg&quot;), NanNew(CPLE_IllegalArg));
+			/**
+			 * @final
+			 * @property gdal.CPLE_NotSupported
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_NotSupported&quot;), NanNew(CPLE_NotSupported));
+			/**
+			 * @final
+			 * @property gdal.CPLE_AssertionFailed
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_AssertionFailed&quot;), NanNew(CPLE_AssertionFailed));
+			/**
+			 * @final
+			 * @property gdal.CPLE_NoWriteAccess
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_NoWriteAccess&quot;), NanNew(CPLE_NoWriteAccess));
+			/**
+			 * @final
+			 * @property gdal.CPLE_UserInterrupt
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_UserInterrupt&quot;), NanNew(CPLE_UserInterrupt));
+			/**
+			 * @final
+			 * @property gdal.CPLE_ObjectNull
+			 * @type {Number}
+			 */
+			target-&gt;Set(NanNew(&quot;CPLE_ObjectNull&quot;), NanNew(CPLE_ObjectNull));
 
 			/**
 			 * @class Constants (DCAP)
@@ -1146,6 +1305,18 @@ namespace node_gdal {
 			 */
 			target-&gt;Set(NanNew(&quot;version&quot;), NanNew(GDAL_RELEASE_NAME));
 
+			/**
+			 * Details about the last error that occurred. The property
+			 * will be null or an object containing three properties: &quot;number&quot;,
+			 * &quot;message&quot;, and &quot;type&quot;.
+			 *
+			 * @final
+			 * @for gdal
+			 * @property gdal.lastError
+			 * @type {Object}
+			 */
+			target-&gt;SetAccessor(NanNew&lt;v8::String&gt;(&quot;lastError&quot;), LastErrorGetter, LastErrorSetter);
+
 			// Local&lt;Object&gt; versions = NanNew&lt;Object&gt;();
 			// versions-&gt;Set(NanNew(&quot;node&quot;), NanNew(NODE_VERSION+1));
 			// versions-&gt;Set(NanNew(&quot;v8&quot;), NanNew(V8::GetVersion()));
@@ -1184,7 +1355,6 @@ namespace node_gdal {
 			NODE_DEFINE_CONSTANT(target, CPLE_UserInterrupt);
 
 		}
-
 	}
 
 } // namespace node_gdal

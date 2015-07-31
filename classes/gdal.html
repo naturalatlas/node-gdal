@@ -24,12 +24,12 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.6.0</b>
+                    API Docs for Version: <b>0.7.0</b>
                 </p>
             </li>
         </div>
         <form class="navbar-form pull-right" style="line-height: 40px; height: 40px;">
-            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
+            <input style="margin-top: 0;" type="text" class="search-query" placeholder="Search for classes/modules..." data-obj='["classes/Constants (CPL Error Codes)", "classes/Constants (CPL Error Levels)", "classes/Constants (DCAP)", "classes/Constants (DMD)", "classes/Constants (GCI)", "classes/Constants (GDT)", "classes/Constants (GRA)", "classes/Constants (ODsC)", "classes/Constants (OFT)", "classes/Constants (OJ)", "classes/Constants (OLC)", "classes/Constants (wkbByteOrder)", "classes/Constants (wkbGeometryType)", "classes/Constants (wkbVariant)", "classes/gdal", "classes/gdal.CoordinateTransformation", "classes/gdal.Dataset", "classes/gdal.DatasetBands", "classes/gdal.DatasetLayers", "classes/gdal.Driver", "classes/gdal.Envelope", "classes/gdal.Envelope3D", "classes/gdal.Feature", "classes/gdal.FeatureDefn", "classes/gdal.FeatureDefnFields", "classes/gdal.FeatureFields", "classes/gdal.FieldDefn", "classes/gdal.GDALDrivers", "classes/gdal.Geometry", "classes/gdal.GeometryCollection", "classes/gdal.GeometryCollectionChildren", "classes/gdal.Layer", "classes/gdal.LayerFeatures", "classes/gdal.LayerFields", "classes/gdal.LinearRing", "classes/gdal.LineString", "classes/gdal.LineStringPoints", "classes/gdal.MultiLineString", "classes/gdal.MultiPoint", "classes/gdal.MultiPolygon", "classes/gdal.Point", "classes/gdal.Polygon", "classes/gdal.PolygonRings", "classes/gdal.RasterBand", "classes/gdal.RasterBandOverviews", "classes/gdal.RasterBandPixels", "classes/gdal.SpatialReference"]'>
         </form>
     </div>
 </div>
@@ -40,6 +40,10 @@
     <div id="sidebar">
     <div id="classes">
         <ul id="api-classes" class="nav nav-list">
+            
+                <li><a href="../classes/Constants (CPL Error Codes).html">Constants (CPL Error Codes)</a></li>
+            
+                <li><a href="../classes/Constants (CPL Error Levels).html">Constants (CPL Error Levels)</a></li>
             
                 <li><a href="../classes/Constants (DCAP).html">Constants (DCAP)</a></li>
             
@@ -209,12 +213,23 @@ dataset.layers.get(0).features.forEach(function(feature) {
 				
 				<li><a href="#prop-gdal.drivers"><span class="ip">gdal.drivers</span></a></li>
 				
+				<li><a href="#prop-gdal.lastError"><span class="ip">gdal.lastError</span></a></li>
+				
 				<li><a href="#prop-gdal.version"><span class="ip">gdal.version</span></a></li>
 				
 			</ul>
 		</li>
 		
 
+		
+		<li>
+			<strong>Attributes</strong>
+			<ul>
+				
+				<li><a href="#attr-lastError"><span class="iattr">lastError</span></a></li>
+				
+			</ul>
+		</li>
 		
 
 		
@@ -317,7 +332,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l215"><code>src&#x2F;node_gdal.cpp:215</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l254"><code>src&#x2F;node_gdal.cpp:254</code></a>
         
         </p>
 
@@ -328,6 +343,55 @@ dataset.layers.get(0).features.forEach(function(feature) {
 
     <div class="description">
         <p>The collection of all drivers registered with GDAL</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+            <div id="prop-gdal.lastError" class="property item">
+    <h3 class="name"><code>gdal.lastError</code></h3>
+    <span class="type">Object</span>
+
+    
+
+    
+
+    
+        <span class="flag final">const</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l1131"><code>src&#x2F;node_gdal.cpp:1131</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Details about the last error that occurred. The property
+will be null or an object containing three properties: "number",
+"message", and "type".</p>
 
     </div>
 
@@ -364,7 +428,7 @@ dataset.layers.get(0).features.forEach(function(feature) {
             
         
         
-        <a href="../files/src_node_gdal.cpp.html#l966"><code>src&#x2F;node_gdal.cpp:966</code></a>
+        <a href="../files/src_node_gdal.cpp.html#l1121"><code>src&#x2F;node_gdal.cpp:1121</code></a>
         
         </p>
 
@@ -390,6 +454,63 @@ dataset.layers.get(0).features.forEach(function(feature) {
     </div>
 
 
+
+    <div id="attrs" class="page-section">
+        <h2 class="off-left">Attributes</h2>
+
+        
+            <div id="attr-lastError" class="attr item">
+    <a name="config_lastError"></a> 
+    <h3 class="name"><code>lastError</code></h3>
+    <span class="type">Object</span>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_node_gdal.cpp.html#l88"><code>src&#x2F;node_gdal.cpp:88</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+        
+    </div>
 
 
 
@@ -1782,7 +1903,7 @@ provided to determine which pixels are eligible for processing.</p>
 			
 		
 		
-		<a href="../files/src_node_gdal.cpp.html#l981"><code>src&#x2F;node_gdal.cpp:981</code></a>
+		<a href="../files/src_node_gdal.cpp.html#l1148"><code>src&#x2F;node_gdal.cpp:1148</code></a>
 		
 		</p>
 
@@ -2430,7 +2551,7 @@ should be large enough to include all the input image.</p>
 			
 		
 		
-		<a href="../files/src_node_gdal.cpp.html#l990"><code>src&#x2F;node_gdal.cpp:990</code></a>
+		<a href="../files/src_node_gdal.cpp.html#l1157"><code>src&#x2F;node_gdal.cpp:1157</code></a>
 		
 		</p>
 
