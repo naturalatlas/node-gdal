@@ -405,7 +405,7 @@ Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
 	switch(field_def->GetType()) {
 		case OFTInteger:
 			return NanEscapeScope(NanNew<Integer>(f->GetFieldAsInteger(field_index)));
-		#ifdef OFTInteger64
+		#if defined(GDAL_VERSION_MAJOR) && (GDAL_VERSION_MAJOR >= 2)
 		case OFTInteger64:
 			return NanEscapeScope(NanNew<Number>(f->GetFieldAsInteger64(field_index)));
 		#endif

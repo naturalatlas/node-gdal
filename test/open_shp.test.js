@@ -34,7 +34,18 @@ describe('Open', function() {
 					'state_abbr'
 				]);
 			});
+			describe('field properties', function() {
+				var integerDs = gdal.open(path.join(__dirname, 'data/shp/sample_int64.shp'));
+				var integerLayer = integerDs.layers.get(0);
 
+				it('should evaluate datatypes', function() {
+					var version_major = Number(gdal.version.split('.')[0]);
+					assert.equal(integerLayer.fields.get(0).type, 'string');
+					assert.equal(integerLayer.fields.get(3).type, version_major >= 2 ? 'integer64' : 'integer');
+					assert.equal(integerLayer.fields.get(5).type, 'real');
+					assert.equal(integerLayer.fields.get(10).type, 'date');
+				})
+			});
 			describe('features', function() {
 				it('should be readable', function() {
 					assert.equal(layer.features.count(), 23);
@@ -51,6 +62,15 @@ describe('Open', function() {
 						'state_fips': '56',
 						'type': 'County'
 					});
+				});
+			});
+
+			describe('integer64 fields', function() {
+				it('should be readable', function() {
+					var integerDs = gdal.open(path.join(__dirname, "data/shp/sample_int64.shp"));
+					var integerLayer = integerDs.layers.get(0);
+
+					assert.equal(integerLayer.features.get(0).fields.get(3), 1);
 				});
 			});
 		});
