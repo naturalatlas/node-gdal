@@ -6,9 +6,16 @@ environment:
   AWS_SECRET_ACCESS_KEY:
     secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
-    - nodejs_version: "0.10.32"
-    - nodejs_version: "0.11.13"
-    - nodejs_version: "0.12.1"
+    - nodejs_version: "0.10.40"
+      msvs_toolset: 12
+    - nodejs_version: "0.12.7"
+      msvs_toolset: 12
+    - nodejs_version: "0.10.40"
+      msvs_toolset: 14
+      TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
+    - nodejs_version: "0.12.7"
+      msvs_toolset: 14
+      TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
 
 platform:
   - x86
@@ -19,37 +26,7 @@ artifacts:
     name: Test Logs
 
 install:
-  - SET PATH=C:\Program Files\7-Zip;%PATH%
-  - SET PATH=C:\Python27;%PATH%
-  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
-  - SET PATH=%APPDATA%\npm;%PATH%
-  - SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
-  - IF "%CM%" == "%CM:[publish binary]=%" (SET ENABLE_LOGGING=1)
-  - IF "%CM%" == "%CM:[skip ci]=%" (EXIT /B 0)
-  - ps: Write-Output '$env:Platform:' $env:Platform
-  - ps: Write-Output '$env:nodejs_version' $env:nodejs_version
-  - ps: Update-NodeJsInstallation $env:nodejs_version $env:Platform
-  - node --version
-  - npm --version
-  # npm install npm -g
-  # fix for https://github.com/npm/npm/issues/6246:
-  - npm -g install npm@1.4.28
-  - npm --version
-  # because node-gyp bundled with node 0.8 doesn't know about --msvs_version=2015
-  - npm install node-gyp
-  - npm install https://github.com/naturalatlas/mocha/archive/fix/333.tar.gz
-  # build with/without logging depending on if we're pushing a binary
-  - IF NOT "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2015)
-  - IF "%ENABLE_LOGGING%" == "1" (npm install --build-from-source --msvs_version=2015 --enable-logging=true)
-  - npm test || SET HAD_ERROR=1
-  - IF "%ENABLE_LOGGING%" == "1" (appveyor PushArtifact test/artifacts/log.txt)
-  - IF DEFINED HAD_ERROR (EXIT /B 1)
-  - node_modules\.bin\node-pre-gyp package
-  - ECHO commit message %CM%
-  - ECHO pull request %APPVEYOR_PULL_REQUEST_NUMBER%
-  - ECHO branch %APPVEYOR_REPO_BRANCH%
-  - SET "IS_PR="&FOR /f "delims=0123456789" %%i IN ("%APPVEYOR_PULL_REQUEST_NUMBER%") DO SET IS_PR=%%i
-  - IF NOT "%CM%" == "%CM:[publish binary]=%" (IF NOT DEFINED IS_PR (IF "%APPVEYOR_REPO_BRANCH%" == "master" node_modules\.bin\node-pre-gyp unpublish publish))
+  - scripts\build-appveyor.bat
 
 build: off
 test: off
