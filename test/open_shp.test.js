@@ -39,8 +39,9 @@ describe('Open', function() {
 				var integerLayer = integerDs.layers.get(0);
 
 				it('should evaluate datatypes', function() {
+					var version_major = Number(gdal.version.split('.')[0]);
 					assert.equal(integerLayer.fields.get(0).type, 'string');
-					assert.equal(integerLayer.fields.get(3).type, 'integer64');
+					assert.equal(integerLayer.fields.get(3).type, version_major >= 2 ? 'integer64' : 'integer');
 					assert.equal(integerLayer.fields.get(5).type, 'real');
 					assert.equal(integerLayer.fields.get(10).type, 'date');
 				})
