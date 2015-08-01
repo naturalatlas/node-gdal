@@ -119,7 +119,9 @@ dumpbin /DEPENDENTS "%MODULE%"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO calling npm test
-CALL npm test || SET HAD_ERROR=1
+CALL npm test
+ECHO after tests
+IF %ERRORLEVEL% NEQ 0 (ECHO ERRORLEVEL^: %ERRORLEVEL% && SET HAD_ERROR=1)
 
 IF DEFINED APPVEYOR IF %PUBLISH% EQU 1 (appveyor PushArtifact test/artifacts/log.txt)
 
