@@ -31,8 +31,6 @@ ECHO msvs_toolset^: %msvs_toolset%
 ECHO msvs_version^: %msvs_version%
 ECHO TOOLSET_ARGS^: %TOOLSET_ARGS%
 
-GOTO DONE
-
 ECHO activating VS command prompt
 IF /I "%platform%"=="x64" ECHO x64 && CALL "C:\Program Files (x86)\Microsoft Visual Studio %msvs_toolset%.0\VC\vcvarsall.bat" amd64
 IF /I "%platform%"=="x86" ECHO x86 && CALL "C:\Program Files (x86)\Microsoft Visual Studio %msvs_toolset%.0\VC\vcvarsall.bat" x86
