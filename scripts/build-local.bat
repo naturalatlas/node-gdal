@@ -6,7 +6,9 @@ ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SET PATH=C:\Python27;%PATH%
 
-SET APPVEYOR_REPO_COMMIT_MESSAGE=local build [publish binary] bla bla
+::SET APPVEYOR_REPO_COMMIT_MESSAGE=local build [publish binary] bla bla
+::SET APPVEYOR_REPO_COMMIT_MESSAGE=local build [NOOOOO publish binary] bla bla
+SET APPVEYOR_REPO_COMMIT_MESSAGE=hm? AppVeyor doesn't like "npm test || SET HAD_ERROR=1"? [publish binary]
 
 IF EXIST lib\binding ECHO deleting lib/binding && RD /Q /S lib\binding
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR

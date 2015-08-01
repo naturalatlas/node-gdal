@@ -10,12 +10,15 @@ IF "%msvs_toolset"=="14" SET msvs_version=2015
 
 
 ::make commit message env var shorter
-SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
-IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing && SET PUBLISH=1 && SET ENABLE_LOGGING=--enable-logging=true) ELSE (ECHO not publishing)
+::SET CM="%APPVEYOR_REPO_COMMIT_MESSAGE%"
+
+for /F "tokens=1 usebackq" %%i in (`powershell .\scripts\parse-commit-message.ps1`) DO ECHO %%i && set PUBLISH=%%i
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF %PUBLISH% EQU 1 SET ENABLE_LOGGING=--enable-logging=true
 SET "IS_PR="&FOR /f "delims=0123456789" %%i IN ("%APPVEYOR_PULL_REQUEST_NUMBER%") DO SET IS_PR=%%i
 
 ECHO APPVEYOR^: %APPVEYOR%
-ECHO commit message^: %CM%
+ECHO commit message^: %APPVEYOR_REPO_COMMIT_MESSAGE%
 ECHO pull request^: %APPVEYOR_PULL_REQUEST_NUMBER%
 ECHO branch^: %APPVEYOR_REPO_BRANCH%
 ECHO IS_PR^: %IS_PR%
@@ -28,6 +31,7 @@ ECHO msvs_toolset^: %msvs_toolset%
 ECHO msvs_version^: %msvs_version%
 ECHO TOOLSET_ARGS^: %TOOLSET_ARGS%
 
+GOTO DONE
 
 ECHO activating VS command prompt
 IF /I "%platform%"=="x64" ECHO x64 && CALL "C:\Program Files (x86)\Microsoft Visual Studio %msvs_toolset%.0\VC\vcvarsall.bat" amd64
@@ -130,7 +134,7 @@ IF DEFINED HAD_ERROR SET ERRORLEVEL=1 && GOTO ERROR
 CALL node_modules\.bin\node-pre-gyp package %TOOLSET_ARGS%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO commit message^: %CM%
+ECHO commit message^: %APPVEYOR_REPO_COMMIT_MESSAGE%
 ECHO pull request^: %APPVEYOR_PULL_REQUEST_NUMBER%
 ECHO branch^: %APPVEYOR_REPO_BRANCH%
 ECHO IS_PR^: %IS_PR%
