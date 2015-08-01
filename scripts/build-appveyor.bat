@@ -8,7 +8,20 @@ SET PATH=%CD%;%PATH%
 SET msvs_version=2013
 IF "%msvs_toolset"=="14" SET msvs_version=2015
 
+
+::make commit message env var shorter
+SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
+IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing && SET PUBLISH=1 && SET ENABLE_LOGGING=--enable-logging=true) ELSE (ECHO not publishing)
+SET "IS_PR="&FOR /f "delims=0123456789" %%i IN ("%APPVEYOR_PULL_REQUEST_NUMBER%") DO SET IS_PR=%%i
+
 ECHO APPVEYOR^: %APPVEYOR%
+ECHO commit message^: %CM%
+ECHO pull request^: %APPVEYOR_PULL_REQUEST_NUMBER%
+ECHO branch^: %APPVEYOR_REPO_BRANCH%
+ECHO IS_PR^: %IS_PR%
+ECHO PUBLISH^: %PUBLISH%
+ECHO ENABLE_LOGGING^: %ENABLE_LOGGING%
+
 ECHO nodejs_version^: %nodejs_version%
 ECHO platform^: %platform%
 ECHO msvs_toolset^: %msvs_toolset%
@@ -92,7 +105,7 @@ ECHO installing node-gyp
 CALL npm install -g node-gyp
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-CALL npm install --build-from-source --msvs_version=%msvs_version% %TOOLSET_ARGS% --loglevel=http
+CALL npm install --build-from-source --msvs_version=%msvs_version% %TOOLSET_ARGS% %ENABLE_LOGGING% --loglevel=http
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 FOR /F "tokens=*" %%i in ('CALL node_modules\.bin\node-pre-gyp reveal module --silent') DO SET MODULE=%%i
@@ -106,14 +119,23 @@ dumpbin /DEPENDENTS "%MODULE%"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO calling npm test
-CALL npm test
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+CALL npm test || SET HAD_ERROR=1
 
+IF DEFINED APPVEYOR IF %PUBLISH% EQU 1 (appveyor PushArtifact test/artifacts/log.txt)
+
+IF DEFINED HAD_ERROR SET ERRORLEVEL=1 && GOTO ERROR
 
 CALL node_modules\.bin\node-pre-gyp package %TOOLSET_ARGS%
-::make commit message env var shorter
-SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
-IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing && CALL node-pre-gyp --msvs_version=2015 unpublish publish %TOOLSET_ARGS%) ELSE (ECHO not publishing)
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO commit message^: %CM%
+ECHO pull request^: %APPVEYOR_PULL_REQUEST_NUMBER%
+ECHO branch^: %APPVEYOR_REPO_BRANCH%
+ECHO IS_PR^: %IS_PR%
+ECHO PUBLISH^: %PUBLISH%
+
+IF %PUBLISH% EQU 1 (IF NOT DEFINED IS_PR (IF "%APPVEYOR_REPO_BRANCH%"=="master" node_modules\.bin\node-pre-gyp unpublish publish))
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE
 
