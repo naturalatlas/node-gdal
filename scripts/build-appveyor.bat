@@ -107,6 +107,10 @@ ECHO installing node-gyp
 CALL npm install -g node-gyp
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+ECHO installing mocha fix
+CALL npm install https://github.com/naturalatlas/mocha/archive/fix/333.tar.gz
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 CALL npm install --build-from-source --msvs_version=%msvs_version% %TOOLSET_ARGS% %ENABLE_LOGGING% --loglevel=http
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
