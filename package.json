@@ -1,6 +1,6 @@
 {
   "name": "gdal",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
   "url": "http://github.com/naturalatlas/node-gdal",
   "main": "./lib/gdal.js",
@@ -48,7 +48,7 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "node-pre-gyp": "0.6.7",
+    "node-pre-gyp": "0.6.9",
     "nan": "1.8.4"
   },
   "devDependencies": {
