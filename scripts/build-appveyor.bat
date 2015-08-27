@@ -6,7 +6,7 @@ ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SET PATH=%CD%;%PATH%
 SET msvs_version=2013
-IF "%msvs_toolset"=="14" SET msvs_version=2015
+IF "%msvs_toolset%"=="14" SET msvs_version=2015
 
 
 ::make commit message env var shorter
