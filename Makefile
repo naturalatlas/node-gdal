@@ -76,7 +76,7 @@ else
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' yuidoc.json
 	rm *.bak
 	git add .
-	git commit -a -m "Released $(version). [publish binary]"
+	git commit --allow-empty -a -m "Released $(version). [publish binary]"
 	git tag v$(version)
 	git push origin master
 	git push origin --tags
