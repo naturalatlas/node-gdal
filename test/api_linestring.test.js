@@ -1,7 +1,7 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 
-describe('gdal.LineString', function() {
+describe.skip('gdal.LineString', function() {
 	afterEach(gc);
 
 	it('should be instantiable', function() {

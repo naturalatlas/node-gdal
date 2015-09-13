@@ -4,7 +4,7 @@ var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
 
-describe('Open', function() {
+describe.skip('Open', function() {
 	afterEach(gc);
 
 	describe('GPX', function() {

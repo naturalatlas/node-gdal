@@ -3,7 +3,7 @@
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
-describe('gdal.Polygon', function() {
+describe.skip('gdal.Polygon', function() {
 	afterEach(gc);
 
 	it('should be instantiable', function() {

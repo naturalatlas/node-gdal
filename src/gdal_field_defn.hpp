@@ -19,13 +19,13 @@ using namespace node;
 
 namespace node_gdal {
 
-class FieldDefn: public node::ObjectWrap {
+class FieldDefn: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRFieldDefn *def);
-	static Handle<Value> New(OGRFieldDefn *def, bool owned);
+	static Local<Value> New(OGRFieldDefn *def);
+	static Local<Value> New(OGRFieldDefn *def, bool owned);
 	static NAN_METHOD(toString);
 
 	static NAN_GETTER(nameGetter);

@@ -19,15 +19,15 @@ using namespace node;
 
 namespace node_gdal {
 
-class MultiLineString: public node::ObjectWrap {
+class MultiLineString: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRMultiLineString *geom);
-	static Handle<Value> New(OGRMultiLineString *geom, bool owned);
+	static Local<Value> New(OGRMultiLineString *geom);
+	static Local<Value> New(OGRMultiLineString *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(polygonize);
 

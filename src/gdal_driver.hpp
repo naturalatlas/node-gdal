@@ -27,12 +27,12 @@ using namespace node;
 // 
 namespace node_gdal {
 
-class Driver: public node::ObjectWrap {
+class Driver: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(GDALDriver *driver);
+	static Local<Value> New(GDALDriver *driver);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(open);
 	static NAN_METHOD(create);
@@ -54,7 +54,7 @@ public:
 	void dispose();
 
 	#if GDAL_VERSION_MAJOR < 2
-	static Handle<Value> New(OGRSFDriver *driver);
+	static Local<Value> New(OGRSFDriver *driver);
 
 	static ObjectCache<OGRSFDriver, Driver> cache_ogr;
 

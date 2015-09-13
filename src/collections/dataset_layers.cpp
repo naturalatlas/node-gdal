@@ -7,32 +7,32 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> DatasetLayers::constructor;
+Nan::Persistent<FunctionTemplate> DatasetLayers::constructor;
 
-void DatasetLayers::Initialize(Handle<Object> target)
+void DatasetLayers::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(DatasetLayers::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(DatasetLayers::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("DatasetLayers"));
+	lcons->SetClassName(Nan::New("DatasetLayers").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "create", create);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "copy", copy);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "create", create);
+	Nan::SetPrototypeMethod(lcons, "copy", copy);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "remove", remove);
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("DatasetLayers"), lcons->GetFunction());
+	target->Set(Nan::New("DatasetLayers").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 DatasetLayers::DatasetLayers()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 DatasetLayers::~DatasetLayers()
@@ -48,41 +48,41 @@ DatasetLayers::~DatasetLayers()
  */
 NAN_METHOD(DatasetLayers::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		DatasetLayers *f =  static_cast<DatasetLayers *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create DatasetLayers directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create DatasetLayers directly");
+		return;
 	}
 }
 
-Handle<Value> DatasetLayers::New(Handle<Value> ds_obj)
+Local<Value> DatasetLayers::New(Local<Value> ds_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	DatasetLayers *wrapped = new DatasetLayers();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(DatasetLayers::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), ds_obj);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(DatasetLayers::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), ds_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(DatasetLayers::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("DatasetLayers"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("DatasetLayers").ToLocalChecked());
 }
 
 /**
@@ -94,43 +94,43 @@ NAN_METHOD(DatasetLayers::toString)
  */
 NAN_METHOD(DatasetLayers::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && ds->getDataset()) {
-			NanReturnNull();
+			info.GetReturnValue().Set(Nan::Null());
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object already destroyed");
+		return;
 	}
 
-	if(args.Length() < 1) {
-		NanThrowError("method must be given integer or string");
-		NanReturnUndefined();
+	if(info.Length() < 1) {
+		Nan::ThrowError("method must be given integer or string");
+		return;
 	}
 
 	OGRLayer *lyr;
 
-	if(args[0]->IsString()) {
-		std::string layer_name = *NanUtf8String(args[0]);
+	if(info[0]->IsString()) {
+		std::string layer_name = *Nan::Utf8String(info[0]);
 		lyr = raw->GetLayerByName(layer_name.c_str());
-	} else if(args[0]->IsNumber()) {
-		lyr = raw->GetLayer(args[0]->IntegerValue());
+	} else if(info[0]->IsNumber()) {
+		lyr = raw->GetLayer(info[0]->IntegerValue());
 	} else {
-		NanThrowTypeError("method must be given integer or string");
-		NanReturnUndefined();
+		Nan::ThrowTypeError("method must be given integer or string");
+		return;
 	}
 
-	NanReturnValue(Layer::New(lyr, raw));
+	info.GetReturnValue().Set(Layer::New(lyr, raw));
 }
 
 /**
@@ -151,24 +151,24 @@ NAN_METHOD(DatasetLayers::get)
  */
 NAN_METHOD(DatasetLayers::create)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr) {
-			NanThrowError("Dataset does not support creating layers");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset does not support creating layers");
+			return;
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object already destroyed");
+		return;
 	}
 
 	std::string layer_name;
@@ -179,8 +179,8 @@ NAN_METHOD(DatasetLayers::create)
 	NODE_ARG_STR(0, "layer name", layer_name);
 	NODE_ARG_WRAPPED_OPT(1, "spatial reference", SpatialReference, spatial_ref);
 	NODE_ARG_ENUM_OPT(2, "geometry type", OGRwkbGeometryType, geom_type);
-	if(args.Length() > 3 && options.parse(args[3])){
-		NanReturnUndefined(); //error parsing string list
+	if(info.Length() > 3 && options.parse(info[3])){
+		return; //error parsing string list
 	}
 
 	OGRSpatialReference *srs = NULL;
@@ -192,10 +192,10 @@ NAN_METHOD(DatasetLayers::create)
 					  options.get());
 
 	if (layer) {
-		NanReturnValue(Layer::New(layer, raw, false));
+		info.GetReturnValue().Set(Layer::New(layer, raw, false));
 	} else {
-		NanThrowError("Error creating layer");
-		NanReturnUndefined();
+		Nan::ThrowError("Error creating layer");
+		return;
 	}
 }
 
@@ -207,26 +207,26 @@ NAN_METHOD(DatasetLayers::create)
  */
 NAN_METHOD(DatasetLayers::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && ds->getDataset()) {
-			NanReturnValue(NanNew<Integer>(0));
+			info.GetReturnValue().Set(Nan::New<Integer>(0));
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object already destroyed");
+		return;
 	}
 
-	NanReturnValue(NanNew<Integer>(raw->GetLayerCount()));
+	info.GetReturnValue().Set(Nan::New<Integer>(raw->GetLayerCount()));
 }
 
 /**
@@ -240,24 +240,24 @@ NAN_METHOD(DatasetLayers::count)
  */
 NAN_METHOD(DatasetLayers::copy)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr) {
-			NanThrowError("Dataset does not support copying layers");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset does not support copying layers");
+			return;
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object already destroyed");
+		return;
 	}
 
 	Layer *layer_to_copy;
@@ -266,8 +266,8 @@ NAN_METHOD(DatasetLayers::copy)
 
 	NODE_ARG_WRAPPED(0, "layer to copy", Layer, layer_to_copy);
 	NODE_ARG_STR(1, "new layer name", new_name);
-	if(args.Length() > 2 && options.parse(args[2])){
-		NanReturnUndefined(); //error parsing string list
+	if(info.Length() > 2 && options.parse(info[2])){
+		return; //error parsing string list
 	}
 
 	OGRLayer *layer = raw->CopyLayer(layer_to_copy->get(),
@@ -275,10 +275,10 @@ NAN_METHOD(DatasetLayers::copy)
 										   options.get());
 
 	if (layer) {
-		NanReturnValue(Layer::New(layer, raw));
+		info.GetReturnValue().Set(Layer::New(layer, raw));
 	} else {
-		NanThrowError("Error copying layer");
-		NanReturnUndefined();
+		Nan::ThrowError("Error copying layer");
+		return;
 	}
 }
 
@@ -291,24 +291,24 @@ NAN_METHOD(DatasetLayers::copy)
  */
 NAN_METHOD(DatasetLayers::remove)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr) {
-			NanThrowError("Dataset does not support removing layers");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset does not support removing layers");
+			return;
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object already destroyed");
+		return;
 	}
 
 
@@ -317,10 +317,10 @@ NAN_METHOD(DatasetLayers::remove)
 	OGRErr err = raw->DeleteLayer(i);
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -332,8 +332,8 @@ NAN_METHOD(DatasetLayers::remove)
  */
 NAN_GETTER(DatasetLayers::dsGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

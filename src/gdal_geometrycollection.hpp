@@ -19,15 +19,15 @@ using namespace node;
 
 namespace node_gdal {
 
-class GeometryCollection: public node::ObjectWrap {
+class GeometryCollection: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRGeometryCollection *geom);
-	static Handle<Value> New(OGRGeometryCollection *geom, bool owned);
+	static Local<Value> New(OGRGeometryCollection *geom);
+	static Local<Value> New(OGRGeometryCollection *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getArea);
 	static NAN_METHOD(getLength);

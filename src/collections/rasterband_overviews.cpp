@@ -4,28 +4,28 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> RasterBandOverviews::constructor;
+Nan::Persistent<FunctionTemplate> RasterBandOverviews::constructor;
 
-void RasterBandOverviews::Initialize(Handle<Object> target)
+void RasterBandOverviews::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(RasterBandOverviews::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(RasterBandOverviews::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("RasterBandOverviews"));
+	lcons->SetClassName(Nan::New("RasterBandOverviews").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getBySampleCount", getBySampleCount);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "getBySampleCount", getBySampleCount);
 
-	target->Set(NanNew("RasterBandOverviews"), lcons->GetFunction());
+	target->Set(Nan::New("RasterBandOverviews").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 RasterBandOverviews::RasterBandOverviews()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 RasterBandOverviews::~RasterBandOverviews()
@@ -39,41 +39,41 @@ RasterBandOverviews::~RasterBandOverviews()
  */
 NAN_METHOD(RasterBandOverviews::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		RasterBandOverviews *f =  static_cast<RasterBandOverviews *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create RasterBandOverviews directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create RasterBandOverviews directly");
+		return;
 	}
 }
 
-Handle<Value> RasterBandOverviews::New(Handle<Value> band_obj)
+Local<Value> RasterBandOverviews::New(Local<Value> band_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	RasterBandOverviews *wrapped = new RasterBandOverviews();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(RasterBandOverviews::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), band_obj);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(RasterBandOverviews::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), band_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(RasterBandOverviews::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("RasterBandOverviews"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("RasterBandOverviews").ToLocalChecked());
 }
 
 /**
@@ -86,13 +86,13 @@ NAN_METHOD(RasterBandOverviews::toString)
  */
 NAN_METHOD(RasterBandOverviews::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
 	if (!band->get()) {
-		NanThrowError("RasterBand object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("RasterBand object has already been destroyed");
+		return;
 	}
 
 	int id;
@@ -102,11 +102,11 @@ NAN_METHOD(RasterBandOverviews::get)
 
 	// TODO: return null instead?
 	if (result == NULL) {
-		NanThrowError("Specified overview not found");
-		NanReturnUndefined();
+		Nan::ThrowError("Specified overview not found");
+		return;
 	}
 
-	NanReturnValue(RasterBand::New(result, band->getParent()));
+	info.GetReturnValue().Set(RasterBand::New(result, band->getParent()));
 }
 
 /**
@@ -124,13 +124,13 @@ NAN_METHOD(RasterBandOverviews::get)
  */
 NAN_METHOD(RasterBandOverviews::getBySampleCount)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
 	if (!band->get()) {
-		NanThrowError("RasterBand object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("RasterBand object has already been destroyed");
+		return;
 	}
 
 	int n_samples;
@@ -138,7 +138,7 @@ NAN_METHOD(RasterBandOverviews::getBySampleCount)
 
 	GDALRasterBand *result = band->get()->GetRasterSampleOverview(n_samples);
 
-	NanReturnValue(RasterBand::New(result, band->getParent()));
+	info.GetReturnValue().Set(RasterBand::New(result, band->getParent()));
 }
 
 /**
@@ -149,16 +149,16 @@ NAN_METHOD(RasterBandOverviews::getBySampleCount)
  */
 NAN_METHOD(RasterBandOverviews::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	RasterBand *band = ObjectWrap::Unwrap<RasterBand>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
 	if (!band->get()) {
-		NanThrowError("RasterBand object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("RasterBand object has already been destroyed");
+		return;
 	}
 
-	NanReturnValue(NanNew<Integer>(band->get()->GetOverviewCount()));
+	info.GetReturnValue().Set(Nan::New<Integer>(band->get()->GetOverviewCount()));
 }
 
 } // namespace node_gdal

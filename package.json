@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "node-pre-gyp": "0.6.9",
-    "nan": "1.8.4"
+    "nan": "2.0.9"
   },
   "devDependencies": {
     "mocha": "~1.x",

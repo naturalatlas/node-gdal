@@ -19,13 +19,13 @@ using namespace node;
 
 namespace node_gdal {
 
-class Feature: public node::ObjectWrap {
+class Feature: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRFeature *feature);
-	static Handle<Value> New(OGRFeature *feature, bool owned);
+	static Local<Value> New(OGRFeature *feature);
+	static Local<Value> New(OGRFeature *feature, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getGeometry);
 //	static NAN_METHOD(setGeometryDirectly);

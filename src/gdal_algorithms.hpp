@@ -27,7 +27,7 @@ using namespace node;
 namespace node_gdal {
 namespace Algorithms {
 
-	void Initialize(Handle<Object> target);
+	void Initialize(Local<Object> target);
 
 	NAN_METHOD(fillNodata);
 	NAN_METHOD(contourGenerate);

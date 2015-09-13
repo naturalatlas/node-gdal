@@ -20,14 +20,14 @@ using namespace node;
 
 namespace node_gdal {
 
-class SpatialReference: public node::ObjectWrap {
+class SpatialReference: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRSpatialReference *srs);
-	static Handle<Value> New(OGRSpatialReference *srs, bool owned);
+	static Local<Value> New(OGRSpatialReference *srs);
+	static Local<Value> New(OGRSpatialReference *srs, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(clone);
 	static NAN_METHOD(cloneGeogCS);

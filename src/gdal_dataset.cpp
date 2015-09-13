@@ -11,31 +11,31 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> Dataset::constructor;
+Nan::Persistent<FunctionTemplate> Dataset::constructor;
 ObjectCache<GDALDataset, Dataset> Dataset::dataset_cache;
 #if GDAL_VERSION_MAJOR < 2
 ObjectCache<OGRDataSource, Dataset> Dataset::datasource_cache;
 #endif
 
-void Dataset::Initialize(Handle<Object> target)
+void Dataset::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Dataset::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(Dataset::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("Dataset"));
+	lcons->SetClassName(Nan::New("Dataset").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "setGCPs", setGCPs);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getGCPs", getGCPs);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getGCPProjection", getGCPProjection);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getFileList", getFileList);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "flush", flush);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "close", close);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getMetadata", getMetadata);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "testCapability", testCapability);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "executeSQL", executeSQL);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "buildOverviews", buildOverviews);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "setGCPs", setGCPs);
+	Nan::SetPrototypeMethod(lcons, "getGCPs", getGCPs);
+	Nan::SetPrototypeMethod(lcons, "getGCPProjection", getGCPProjection);
+	Nan::SetPrototypeMethod(lcons, "getFileList", getFileList);
+	Nan::SetPrototypeMethod(lcons, "flush", flush);
+	Nan::SetPrototypeMethod(lcons, "close", close);
+	Nan::SetPrototypeMethod(lcons, "getMetadata", getMetadata);
+	Nan::SetPrototypeMethod(lcons, "testCapability", testCapability);
+	Nan::SetPrototypeMethod(lcons, "executeSQL", executeSQL);
+	Nan::SetPrototypeMethod(lcons, "buildOverviews", buildOverviews);
 
 	ATTR(lcons, "description", descriptionGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "bands", bandsGetter, READ_ONLY_SETTER);
@@ -45,16 +45,16 @@ void Dataset::Initialize(Handle<Object> target)
 	ATTR(lcons, "srs", srsGetter, srsSetter);
 	ATTR(lcons, "geoTransform", geoTransformGetter, geoTransformSetter);
 
-	target->Set(NanNew("Dataset"), lcons->GetFunction());
+	target->Set(Nan::New("Dataset").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 
 
 #if GDAL_VERSION_MAJOR < 2
 Dataset::Dataset(GDALDataset *ds)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  uses_ogr(false),
 	  this_dataset(ds),
 	  this_datasource(0),
@@ -63,7 +63,7 @@ Dataset::Dataset(GDALDataset *ds)
 	LOG("Created Dataset [%p]", ds);
 }
 Dataset::Dataset(OGRDataSource *ds)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  uses_ogr(true),
 	  this_dataset(0),
 	  this_datasource(ds),
@@ -73,7 +73,7 @@ Dataset::Dataset(OGRDataSource *ds)
 }
 #else
 Dataset::Dataset(GDALDataset *ds)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_dataset(ds),
 	  result_sets()
 {
@@ -109,7 +109,7 @@ void Dataset::dispose()
 		for(int i = 0; i < n; i++) {
 			lyr = this_datasource->GetLayer(i);
 			if (Layer::cache.has(lyr)) {
-				lyr_wrapped = ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
+				lyr_wrapped = Nan::ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
 				lyr_wrapped->dispose();
 			}
 		}
@@ -119,7 +119,7 @@ void Dataset::dispose()
 		for(int i = 0; i < n; i++) {
 			lyr = result_sets[i];
 			if (Layer::cache.has(lyr)) {
-				lyr_wrapped = ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
+				lyr_wrapped = Nan::ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
 				lyr_wrapped->dispose();
 			}
 		}
@@ -144,7 +144,7 @@ void Dataset::dispose()
 		for(int i = 1; i <= n; i++) {
 			band = this_dataset->GetRasterBand(i);
 			if (RasterBand::cache.has(band)) {
-				RasterBand *band_wrapped = ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
+				RasterBand *band_wrapped = Nan::ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));	
 				band_wrapped->dispose();
 			}
 		}
@@ -173,79 +173,84 @@ void Dataset::dispose()
  */
 NAN_METHOD(Dataset::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		Dataset *f =  static_cast<Dataset *>(ptr);
-		f->Wrap(args.This());
+		f->Wrap(info.This());
 
-		Handle<Value> bands = DatasetBands::New(args.This());
-		args.This()->SetHiddenValue(NanNew("bands_"), bands);
+		Local<Value> bands = DatasetBands::New(info.This());
+		info.This()->SetHiddenValue(Nan::New("bands_").ToLocalChecked(), bands);
 
-		Handle<Value> layers = DatasetLayers::New(args.This());
-		args.This()->SetHiddenValue(NanNew("layers_"), layers);
+		Local<Value> layers = DatasetLayers::New(info.This());
+		info.This()->SetHiddenValue(Nan::New("layers_").ToLocalChecked(), layers);
 
-		NanReturnValue(args.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create dataset directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create dataset directly");
+		return;
 	}
 }
 
-Handle<Value> Dataset::New(GDALDataset *raw)
+Local<Value> Dataset::New(GDALDataset *raw)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!raw) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 	if (dataset_cache.has(raw)) {
-		return NanEscapeScope(NanNew(dataset_cache.get(raw)));
+		return scope.Escape(Nan::New(dataset_cache.get(raw)));
 	}
 
 	Dataset *wrapped = new Dataset(raw);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
+	LOG("NEW EXTERNAL[%p]", raw);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	LOG("NEW INSTANCE[%p]", raw);
+	Local<Object> obj = Nan::New(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
 
+
+	LOG("ADDING TO CACHE[%p]", raw);
 	dataset_cache.add(raw, obj);
+	LOG("DONE ADDING TO CACHE[%p]", raw);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 #if GDAL_VERSION_MAJOR < 2
-Handle<Value> Dataset::New(OGRDataSource *raw)
+Local<Value> Dataset::New(OGRDataSource *raw)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!raw) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 	if (datasource_cache.has(raw)) {
-		return NanEscapeScope(NanNew(datasource_cache.get(raw)));
+		return scope.Escape(Nan::New(datasource_cache.get(raw)));
 	}
 
 	Dataset *wrapped = new Dataset(raw);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
 
 	datasource_cache.add(raw, obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 #endif
 
 NAN_METHOD(Dataset::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("Dataset"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("Dataset").ToLocalChecked());
 }
 
 /**
@@ -257,29 +262,29 @@ NAN_METHOD(Dataset::toString)
  */
 NAN_METHOD(Dataset::getMetadata)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnValue(NanNew<Object>());
+		info.GetReturnValue().Set(Nan::New<Object>());
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
-	NanReturnValue(MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str()));
+	info.GetReturnValue().Set(MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str()));
 }
 
 /**
@@ -291,27 +296,27 @@ NAN_METHOD(Dataset::getMetadata)
  */
 NAN_METHOD(Dataset::testCapability)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && raw) {
-			NanReturnValue(NanFalse());
+			info.GetReturnValue().Set(Nan::False());
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	std::string capability("");
 	NODE_ARG_STR(0, "capability", capability);
 
-	NanReturnValue(NanNew<Boolean>(raw->TestCapability(capability.c_str())));
+	info.GetReturnValue().Set(Nan::New<Boolean>(raw->TestCapability(capability.c_str())));
 }
 
 /**
@@ -322,26 +327,26 @@ NAN_METHOD(Dataset::testCapability)
  */
 NAN_METHOD(Dataset::getGCPProjection)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SafeString::New(raw->GetGCPProjection()));
+	info.GetReturnValue().Set(SafeString::New(raw->GetGCPProjection()));
 }
 
 /**
@@ -351,23 +356,23 @@ NAN_METHOD(Dataset::getGCPProjection)
  */
 NAN_METHOD(Dataset::close)
 {
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (!ds->getDataset() && !ds->getDatasource()) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 	#else
 	if (!ds->getDataset()) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 	#endif
 
 	ds->dispose();
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -378,33 +383,33 @@ NAN_METHOD(Dataset::close)
  */
 NAN_METHOD(Dataset::flush)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
 		OGRErr err = raw->SyncToDisk();
 		if(err) {
 			NODE_THROW_OGRERR(err);
-			NanReturnUndefined();
+			return;
 		}
-		NanReturnUndefined();
+		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 	raw->FlushCache();
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -419,22 +424,22 @@ NAN_METHOD(Dataset::flush)
  */
 NAN_METHOD(Dataset::executeSQL)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset* raw = ds->getDataset();
 	#else
 		OGRDataSource* raw = ds->getDatasource();
 		if (!ds->uses_ogr){
-			NanThrowError("Dataset does not support executing a SQL query");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset does not support executing a SQL query");
+			return;
 		}
 	#endif
 
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	std::string sql;
@@ -451,10 +456,10 @@ NAN_METHOD(Dataset::executeSQL)
 
 	if (layer) {
 		ds->result_sets.push_back(layer);
-		NanReturnValue(Layer::New(layer, raw, true));
+		info.GetReturnValue().Set(Layer::New(layer, raw, true));
 	} else {
-		NanThrowError("Error executing SQL");
-		NanReturnUndefined();
+		Nan::ThrowError("Error executing SQL");
+		return;
 	}
 }
 
@@ -472,31 +477,31 @@ NAN_METHOD(Dataset::executeSQL)
  */
 NAN_METHOD(Dataset::getFileList)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
-	Handle<Array> results = NanNew<Array>(0);
+	Local<Array> results = Nan::New<Array>(0);
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnValue(results);
+		info.GetReturnValue().Set(results);
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	char **list = raw->GetFileList();
 	if (!list) {
-		NanReturnValue(results);
+		info.GetReturnValue().Set(results);
 	}
 
 	int i = 0;
@@ -507,7 +512,7 @@ NAN_METHOD(Dataset::getFileList)
 
 	CSLDestroy(list);
 
-	NanReturnValue(results);
+	info.GetReturnValue().Set(results);
 }
 
 /**
@@ -518,49 +523,49 @@ NAN_METHOD(Dataset::getFileList)
  */
 NAN_METHOD(Dataset::getGCPs)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
-	Handle<Array> results = NanNew<Array>(0);
+	Local<Array> results = Nan::New<Array>(0);
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnValue(results);
+		info.GetReturnValue().Set(results);
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	int n = raw->GetGCPCount();
 	const GDAL_GCP *gcps = raw->GetGCPs();
 
 	if (!gcps) {
-		NanReturnValue(results);
+		info.GetReturnValue().Set(results);
 	}
 
 	for (int i = 0; i < n; i++) {
 		GDAL_GCP gcp = gcps[i];
-		Local<Object> obj = NanNew<Object>();
-		obj->Set(NanNew("pszId"), NanNew(gcp.pszId));
-		obj->Set(NanNew("pszInfo"), NanNew(gcp.pszInfo));
-		obj->Set(NanNew("dfGCPPixel"), NanNew<Number>(gcp.dfGCPPixel));
-		obj->Set(NanNew("dfGCPLine"), NanNew<Number>(gcp.dfGCPLine));
-		obj->Set(NanNew("dfGCPX"), NanNew<Number>(gcp.dfGCPX));
-		obj->Set(NanNew("dfGCPY"), NanNew<Number>(gcp.dfGCPY));
-		obj->Set(NanNew("dfGCPZ"), NanNew<Number>(gcp.dfGCPZ));
+		Local<Object> obj = Nan::New<Object>();
+		obj->Set(Nan::New("pszId").ToLocalChecked(), Nan::New(gcp.pszId).ToLocalChecked());
+		obj->Set(Nan::New("pszInfo").ToLocalChecked(), Nan::New(gcp.pszInfo).ToLocalChecked());
+		obj->Set(Nan::New("dfGCPPixel").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPPixel));
+		obj->Set(Nan::New("dfGCPLine").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPLine));
+		obj->Set(Nan::New("dfGCPX").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPX));
+		obj->Set(Nan::New("dfGCPY").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPY));
+		obj->Set(Nan::New("dfGCPZ").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPZ));
 		results->Set(i, obj);
 	}
 
-	NanReturnValue(results);
+	info.GetReturnValue().Set(results);
 }
 
 /**
@@ -573,23 +578,23 @@ NAN_METHOD(Dataset::getGCPs)
  */
 NAN_METHOD(Dataset::setGCPs)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		NanThrowError("Dataset does not support setting GCPs");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset does not support setting GCPs");
+		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
-	Handle<Array> gcps;
+	Local<Array> gcps;
 	std::string projection("");
 	NODE_ARG_ARRAY(0, "gcps", gcps);
 	NODE_ARG_OPT_STR(1, "projection", projection);
@@ -606,8 +611,8 @@ NAN_METHOD(Dataset::setGCPs)
 				delete [] pszId_list;
 				delete [] pszInfo_list;
 			}
-			NanThrowError("GCP array must only include objects");
-			NanReturnUndefined();
+			Nan::ThrowError("GCP array must only include objects");
+			return;
 		}
 		Local<Object> obj = val.As<Object>();
 
@@ -634,10 +639,10 @@ NAN_METHOD(Dataset::setGCPs)
 	CPLErr err = raw->SetGCPs(gcps->Length(), list, projection.c_str());
 	if (err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -651,26 +656,26 @@ NAN_METHOD(Dataset::setGCPs)
  */
 NAN_METHOD(Dataset::buildOverviews)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		NanThrowError("Dataset does not support building overviews");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset does not support building overviews");
+		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 
 	std::string resampling = "";
-	Handle<Array> overviews;
-	Handle<Array> bands;
+	Local<Array> overviews;
+	Local<Array> bands;
 
 	NODE_ARG_STR(0, "resampling", resampling);
 	NODE_ARG_ARRAY(1, "overviews", overviews);
@@ -682,11 +687,11 @@ NAN_METHOD(Dataset::buildOverviews)
 
 	o = new int[n_overviews];
 	for(i = 0; i<n_overviews; i++){
-		Handle<Value> val = overviews->Get(i);
+		Local<Value> val = overviews->Get(i);
 		if(!val->IsNumber()) {
 			delete [] o;
-			NanThrowError("overviews array must only contain numbers");
-			NanReturnUndefined();
+			Nan::ThrowError("overviews array must only contain numbers");
+			return;
 		}
 		o[i] = val->Int32Value();
 	}
@@ -695,20 +700,20 @@ NAN_METHOD(Dataset::buildOverviews)
 		n_bands = bands->Length();
 		b = new int[n_bands];
 		for(i = 0; i<n_bands; i++){
-			Handle<Value> val = bands->Get(i);
+			Local<Value> val = bands->Get(i);
 			if(!val->IsNumber()) {
 				delete [] o;
 				delete [] b;
-				NanThrowError("band array must only contain numbers");
-				NanReturnUndefined();
+				Nan::ThrowError("band array must only contain numbers");
+				return;
 			}
 			b[i] = val->Int32Value();
 			if(b[i] > raw->GetRasterCount() || b[i] < 1) {
 				//BuildOverviews prints an error but segfaults before returning
 				delete [] o;
 				delete [] b;
-				NanThrowError("invalid band id");
-				NanReturnUndefined();
+				Nan::ThrowError("invalid band id");
+				return;
 			}
 		}
 	}
@@ -720,10 +725,10 @@ NAN_METHOD(Dataset::buildOverviews)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -733,26 +738,26 @@ NAN_METHOD(Dataset::buildOverviews)
  */
 NAN_GETTER(Dataset::descriptionGetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnValue(SafeString::New(raw->GetName()));
+		info.GetReturnValue().Set(SafeString::New(raw->GetName()));
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SafeString::New(raw->GetDescription()));
+	info.GetReturnValue().Set(SafeString::New(raw->GetDescription()));
 }
 
 /**
@@ -764,38 +769,38 @@ NAN_GETTER(Dataset::descriptionGetter)
  */
 NAN_GETTER(Dataset::rasterSizeGetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 
 	//GDAL 2.x will return 512x512 for vector datasets... which doesn't really make sense in JS where we can return null instead of a number
 	//https://github.com/OSGeo/gdal/blob/beef45c130cc2778dcc56d85aed1104a9b31f7e6/gdal/gcore/gdaldataset.cpp#L173-L174
 	#if GDAL_VERSION_MAJOR >= 2
 	if(!raw->GetDriver()->GetMetadataItem(GDAL_DCAP_RASTER)){
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	#endif
 
-	Local<Object> result = NanNew<Object>();
-	result->Set(NanNew("x"), NanNew<Integer>(raw->GetRasterXSize()));
-	result->Set(NanNew("y"), NanNew<Integer>(raw->GetRasterYSize()));
-	NanReturnValue(result);
+	Local<Object> result = Nan::New<Object>();
+	result->Set(Nan::New("x").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterXSize()));
+	result->Set(Nan::New("y").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterYSize()));
+	info.GetReturnValue().Set(result);
 }
 
 /**
@@ -807,30 +812,30 @@ NAN_GETTER(Dataset::rasterSizeGetter)
  */
 NAN_GETTER(Dataset::srsGetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 	//get projection wkt and return null if not set
 	char* wkt = (char*) raw->GetProjectionRef();
 	if (*wkt == '\0') {
 		//getProjectionRef returns string of length 0 if no srs set
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	//otherwise construct and return SpatialReference from wkt
 	OGRSpatialReference *srs = new OGRSpatialReference();
@@ -838,10 +843,10 @@ NAN_GETTER(Dataset::srsGetter)
 
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(SpatialReference::New(srs, true));
+	info.GetReturnValue().Set(SpatialReference::New(srs, true));
 }
 
 /**
@@ -858,43 +863,43 @@ NAN_GETTER(Dataset::srsGetter)
  */
 NAN_GETTER(Dataset::geoTransformGetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
 	double transform[6];
 	CPLErr err = raw->GetGeoTransform(transform);
 	if(err) {
 		// This is mostly (always?) a sign that it has not been set
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
 		//NODE_THROW_CPLERR(err);
-		//NanReturnUndefined();
+		//return;
 	}
 
-	Handle<Array> result = NanNew<Array>(6);
-	result->Set(0, NanNew<Number>(transform[0]));
-	result->Set(1, NanNew<Number>(transform[1]));
-	result->Set(2, NanNew<Number>(transform[2]));
-	result->Set(3, NanNew<Number>(transform[3]));
-	result->Set(4, NanNew<Number>(transform[4]));
-	result->Set(5, NanNew<Number>(transform[5]));
+	Local<Array> result = Nan::New<Array>(6);
+	result->Set(0, Nan::New<Number>(transform[0]));
+	result->Set(1, Nan::New<Number>(transform[1]));
+	result->Set(2, Nan::New<Number>(transform[2]));
+	result->Set(3, Nan::New<Number>(transform[3]));
+	result->Set(4, Nan::New<Number>(transform[4]));
+	result->Set(5, Nan::New<Number>(transform[5]));
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
 /**
@@ -904,62 +909,62 @@ NAN_GETTER(Dataset::geoTransformGetter)
  */
 NAN_GETTER(Dataset::driverGetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
 		OGRDataSource* raw = ds->getDatasource();
 		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
+			Nan::ThrowError("Dataset object has already been destroyed");
+			return;
 		}
-		NanReturnValue(Driver::New(raw->GetDriver()));
+		info.GetReturnValue().Set(Driver::New(raw->GetDriver()));
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
 	}
-	NanReturnValue(Driver::New(raw->GetDriver()));
+	info.GetReturnValue().Set(Driver::New(raw->GetDriver()));
 }
 
 NAN_SETTER(Dataset::srsSetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		NanThrowError("Dataset doesnt support setting a spatial reference");
+		Nan::ThrowError("Dataset doesnt support setting a spatial reference");
 		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
+		Nan::ThrowError("Dataset object has already been destroyed");
 		return;
 	}
 
 	std::string wkt("");
 	if (IS_WRAPPED(value, SpatialReference)) {
 
-		SpatialReference *srs_obj = ObjectWrap::Unwrap<SpatialReference>(value.As<Object>());
+		SpatialReference *srs_obj = Nan::ObjectWrap::Unwrap<SpatialReference>(value.As<Object>());
 		OGRSpatialReference *srs = srs_obj->get();
 		//Get wkt from OGRSpatialReference
 		char* str;
 		if (srs->exportToWkt(&str)) {
-			NanThrowError("Error exporting srs to wkt");
+			Nan::ThrowError("Error exporting srs to wkt");
 			return;
 		}
 		wkt = str; //copy string
 		CPLFree(str);
 
 	} else if (!value->IsNull() && !value->IsUndefined()) {
-		NanThrowError("srs must be SpatialReference object");
+		Nan::ThrowError("srs must be SpatialReference object");
 		return;
 	}
 
@@ -972,30 +977,30 @@ NAN_SETTER(Dataset::srsSetter)
 
 NAN_SETTER(Dataset::geoTransformSetter)
 {
-	NanScope();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(args.This());
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		NanThrowError("Dataset doesnt support setting a geotransform");
+		Nan::ThrowError("Dataset doesnt support setting a geotransform");
 		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
 	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
+		Nan::ThrowError("Dataset object has already been destroyed");
 		return;
 	}
 
 	if (!value->IsArray()) {
-		NanThrowError("Transform must be an array");
+		Nan::ThrowError("Transform must be an array");
 		return;
 	}
-	Handle<Array> transform = value.As<Array>();
+	Local<Array> transform = value.As<Array>();
 
 	if (transform->Length() != 6) {
-		NanThrowError("Transform array must have 6 elements");
+		Nan::ThrowError("Transform array must have 6 elements");
 		return;
 	}
 
@@ -1003,7 +1008,7 @@ NAN_SETTER(Dataset::geoTransformSetter)
 	for (int i = 0; i < 6; i++) {
 		Local<Value> val = transform->Get(i);
 		if (!val->IsNumber()) {
-			NanThrowError("Transform array must only contain numbers");
+			Nan::ThrowError("Transform array must only contain numbers");
 			return;
 		}
 		buffer[i] = val->NumberValue();
@@ -1022,8 +1027,8 @@ NAN_SETTER(Dataset::geoTransformSetter)
  */
 NAN_GETTER(Dataset::bandsGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("bands_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("bands_").ToLocalChecked()));
 }
 
 /**
@@ -1033,8 +1038,8 @@ NAN_GETTER(Dataset::bandsGetter)
  */
 NAN_GETTER(Dataset::layersGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("layers_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("layers_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

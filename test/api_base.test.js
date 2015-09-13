@@ -4,7 +4,7 @@ var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 var fs = require('fs');
 
-describe('gdal', function() {
+describe.skip('gdal', function() {
 	afterEach(gc);
 
 	describe('"lastError" property', function() {

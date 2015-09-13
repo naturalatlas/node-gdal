@@ -5,15 +5,15 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> FieldDefn::constructor;
+Nan::Persistent<FunctionTemplate> FieldDefn::constructor;
 
-void FieldDefn::Initialize(Handle<Object> target)
+void FieldDefn::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(FieldDefn::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(FieldDefn::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("FieldDefn"));
+	lcons->SetClassName(Nan::New("FieldDefn").ToLocalChecked());
 
 	ATTR(lcons, "name", nameGetter, nameSetter);
 	ATTR(lcons, "type", typeGetter, typeSetter);
@@ -22,13 +22,13 @@ void FieldDefn::Initialize(Handle<Object> target)
 	ATTR(lcons, "precision", precisionGetter, precisionSetter);
 	ATTR(lcons, "ignored", ignoredGetter, ignoredSetter);
 
-	target->Set(NanNew("FieldDefn"), lcons->GetFunction());
+	target->Set(Nan::New("FieldDefn").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 FieldDefn::FieldDefn(OGRFieldDefn *def)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(def),
 	  owned_(false)
 {
@@ -36,7 +36,7 @@ FieldDefn::FieldDefn(OGRFieldDefn *def)
 }
 
 FieldDefn::FieldDefn()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(0),
 	  owned_(false)
 {
@@ -61,19 +61,19 @@ FieldDefn::~FieldDefn()
  */
 NAN_METHOD(FieldDefn::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		FieldDefn *f = static_cast<FieldDefn *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
 		std::string field_name("");
 		std::string type_name("string");
@@ -83,30 +83,30 @@ NAN_METHOD(FieldDefn::New)
 
 		int field_type = getFieldTypeByName(type_name);
 		if (field_type < 0) {
-			NanThrowError("Unrecognized field type");
-			NanReturnUndefined();
+			Nan::ThrowError("Unrecognized field type");
+			return;
 		}
 
 		FieldDefn* def = new FieldDefn(new OGRFieldDefn(field_name.c_str(), static_cast<OGRFieldType>(field_type)));
 		def->owned_ = true;
-		def->Wrap(args.This());
+		def->Wrap(info.This());
 	}
 
-	NanReturnValue(args.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> FieldDefn::New(OGRFieldDefn *def)
+Local<Value> FieldDefn::New(OGRFieldDefn *def)
 {
-	NanEscapableScope();
-	return NanEscapeScope(FieldDefn::New(def, false));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(FieldDefn::New(def, false));
 }
 
-Handle<Value> FieldDefn::New(OGRFieldDefn *def, bool owned)
+Local<Value> FieldDefn::New(OGRFieldDefn *def, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!def) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of fielddefn owned by a featuredefn
@@ -121,16 +121,16 @@ Handle<Value> FieldDefn::New(OGRFieldDefn *def, bool owned)
 	FieldDefn *wrapped = new FieldDefn(def);
 	wrapped->owned_ = true;
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(FieldDefn::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(FieldDefn::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(FieldDefn::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("FieldDefn"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("FieldDefn").ToLocalChecked());
 }
 
 /**
@@ -139,9 +139,9 @@ NAN_METHOD(FieldDefn::toString)
  */
 NAN_GETTER(FieldDefn::nameGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	NanReturnValue(SafeString::New(def->this_->GetNameRef()));
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
+	info.GetReturnValue().Set(SafeString::New(def->this_->GetNameRef()));
 }
 
 /**
@@ -152,9 +152,9 @@ NAN_GETTER(FieldDefn::nameGetter)
  */
 NAN_GETTER(FieldDefn::typeGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	NanReturnValue(SafeString::New(getFieldTypeName(def->this_->GetType())));
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
+	info.GetReturnValue().Set(SafeString::New(getFieldTypeName(def->this_->GetType())));
 }
 
 /**
@@ -163,9 +163,9 @@ NAN_GETTER(FieldDefn::typeGetter)
  */
 NAN_GETTER(FieldDefn::ignoredGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	NanReturnValue(NanNew<Boolean>(def->this_->IsIgnored()));
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
+	info.GetReturnValue().Set(Nan::New<Boolean>(def->this_->IsIgnored()));
 }
 
 /**
@@ -176,12 +176,12 @@ NAN_GETTER(FieldDefn::ignoredGetter)
  */
 NAN_GETTER(FieldDefn::justificationGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	OGRJustification justification = def->this_->GetJustify();
-	if (justification == OJRight) NanReturnValue(NanNew("Right"));
-	if (justification == OJLeft)  NanReturnValue(NanNew("Left"));
-	NanReturnValue(NanUndefined());
+	if (justification == OJRight) info.GetReturnValue().Set(Nan::New("Right").ToLocalChecked());
+	if (justification == OJLeft)  info.GetReturnValue().Set(Nan::New("Left").ToLocalChecked());
+	info.GetReturnValue().Set(Nan::Undefined());
 }
 
 /**
@@ -190,9 +190,9 @@ NAN_GETTER(FieldDefn::justificationGetter)
  */
 NAN_GETTER(FieldDefn::widthGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	NanReturnValue(NanNew<Integer>(def->this_->GetWidth()));
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
+	info.GetReturnValue().Set(Nan::New<Integer>(def->this_->GetWidth()));
 }
 
 /**
@@ -201,35 +201,35 @@ NAN_GETTER(FieldDefn::widthGetter)
  */
 NAN_GETTER(FieldDefn::precisionGetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
-	NanReturnValue(NanNew<Integer>(def->this_->GetPrecision()));
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
+	info.GetReturnValue().Set(Nan::New<Integer>(def->this_->GetPrecision()));
 }
 
 NAN_SETTER(FieldDefn::nameSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	if(!value->IsString()){
-		NanThrowError("Name must be string");
+		Nan::ThrowError("Name must be string");
 		return;
 	}
-	std::string name = *NanUtf8String(value);
+	std::string name = *Nan::Utf8String(value);
 	def->this_->SetName(name.c_str());
 }
 
 NAN_SETTER(FieldDefn::typeSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	if(!value->IsString()){
-		NanThrowError("type must be a string");
+		Nan::ThrowError("type must be a string");
 		return;
 	}
-	std::string name = *NanUtf8String(value);
+	std::string name = *Nan::Utf8String(value);
 	int type = getFieldTypeByName(name.c_str());
 	if(type < 0){
-		NanThrowError("Unrecognized field type");
+		Nan::ThrowError("Unrecognized field type");
 	} else {
 		def->this_->SetType(OGRFieldType(type));
 	}
@@ -238,12 +238,12 @@ NAN_SETTER(FieldDefn::typeSetter)
 
 NAN_SETTER(FieldDefn::justificationSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 
 
 	OGRJustification justification;
-	std::string str = *NanUtf8String(value);
+	std::string str = *Nan::Utf8String(value);
 	if(value->IsString()){
 		if(str == "Left") {
 			justification = OJLeft;
@@ -252,13 +252,13 @@ NAN_SETTER(FieldDefn::justificationSetter)
 		} else if (str == "Undefined") {
 			justification = OJUndefined;
 		} else {
-			NanThrowError("Unrecognized justification");
+			Nan::ThrowError("Unrecognized justification");
 			return;
 		}
 	} else if (value->IsNull() || value->IsUndefined()){
 		justification = OJUndefined;
 	} else {
-		NanThrowError("justification must be a string or undefined");
+		Nan::ThrowError("justification must be a string or undefined");
 		return;
 	}
 
@@ -267,10 +267,10 @@ NAN_SETTER(FieldDefn::justificationSetter)
 
 NAN_SETTER(FieldDefn::widthSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	if(!value->IsInt32()){
-		NanThrowError("width must be an integer");
+		Nan::ThrowError("width must be an integer");
 		return;
 	}
 	def->this_->SetWidth(value->IntegerValue());
@@ -278,10 +278,10 @@ NAN_SETTER(FieldDefn::widthSetter)
 
 NAN_SETTER(FieldDefn::precisionSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	if(!value->IsInt32()){
-		NanThrowError("precision must be an integer");
+		Nan::ThrowError("precision must be an integer");
 		return;
 	}
 	def->this_->SetPrecision(value->IntegerValue());
@@ -289,10 +289,10 @@ NAN_SETTER(FieldDefn::precisionSetter)
 
 NAN_SETTER(FieldDefn::ignoredSetter)
 {
-	NanScope();
-	FieldDefn *def = ObjectWrap::Unwrap<FieldDefn>(args.This());
+	Nan::HandleScope scope;
+	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	if(!value->IsBoolean()){
-		NanThrowError("ignored must be a boolean");
+		Nan::ThrowError("ignored must be a boolean");
 		return;
 	}
 	def->this_->SetIgnored(value->IntegerValue());

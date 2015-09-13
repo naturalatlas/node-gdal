@@ -6,32 +6,32 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> MajorObject::constructor;
+Nan::Persistent<FunctionTemplate> MajorObject::constructor;
 
-void MajorObject::Initialize(Handle<Object> target)
+void MajorObject::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MajorObject::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(MajorObject::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("MajorObject"));
+	lcons->SetClassName(Nan::New("MajorObject").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getMetadata", getMetadata);
+	Nan::SetPrototypeMethod(lcons, "getMetadata", getMetadata);
 
 	ATTR(lcons, "description", descriptionGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("MajorObject"), lcons->GetFunction());
+	target->Set(Nan::New("MajorObject").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 MajorObject::MajorObject(GDALMajorObject *obj)
-	: ObjectWrap(), this_(obj)
+	: Nan::ObjectWrap(), this_(obj)
 {
 }
 
 MajorObject::MajorObject()
-	: ObjectWrap(), this_(0)
+	: Nan::ObjectWrap(), this_(0)
 {
 }
 
@@ -42,61 +42,61 @@ MajorObject::~MajorObject()
 
 NAN_METHOD(MajorObject::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		MajorObject *f = static_cast<MajorObject *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create MajorObject directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create MajorObject directly");
+		return;
 	}
 }
 
-Handle<Value> MajorObject::New(GDALMajorObject *raw)
+Local<Value> MajorObject::New(GDALMajorObject *raw)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 	if (!raw) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 	MajorObject *wrapped = new MajorObject(raw);
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(MajorObject::constructor)->GetFunction()->NewInstance(1, &ext);
-	return NanEscapeScope(obj);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(MajorObject::constructor)->GetFunction()->NewInstance(1, &ext);
+	return scope.Escape(obj);
 }
 
 
 NAN_METHOD(MajorObject::getMetadata)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	std::string domain("");
 	NODE_ARG_OPT_STR(0, "domain", domain);
 
-	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
+	MajorObject *obj = Nan::ObjectWrap::Unwrap<MajorObject>(info.This());
 	if (!obj->this_) {
-		NanThrowError("MajorObject object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("MajorObject object has already been destroyed");
+		return;
 	}
 
-	NanReturnValue(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
+	info.GetReturnValue().Set(getMetadata(obj->this_, domain.empty() ? NULL : domain.c_str()));
 }
 
-Handle<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
+Local<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	char **metadata = obj->GetMetadata(domain);
 
-	Local<Object> result = NanNew<Object>();
+	Local<Object> result = Nan::New<Object>();
 
 	if (metadata) {
 		int i = 0;
@@ -106,26 +106,26 @@ Handle<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain
 			if (i_equal != std::string::npos) {
 				std::string key = pair.substr(0, i_equal);
 				std::string val = pair.substr(i_equal+1);
-				result->Set(NanNew(key.c_str()), NanNew(val.c_str()));
+				result->Set(Nan::New(key.c_str()).ToLocalChecked(), Nan::New(val.c_str()).ToLocalChecked());
 			}
 			i++;
 		}
 	}
 
-	return NanEscapeScope(result);
+	return scope.Escape(result);
 }
 
 
 NAN_GETTER(MajorObject::descriptionGetter) {
-	NanScope();
+	Nan::HandleScope scope;
 
-	MajorObject *obj = ObjectWrap::Unwrap<MajorObject>(args.This());
+	MajorObject *obj = Nan::ObjectWrap::Unwrap<MajorObject>(info.This());
 	if (!obj->this_) {
-		NanThrowError("MajorObject object has already been destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("MajorObject object has already been destroyed");
+		return;
 	}
 
-	NanReturnValue(SafeString::New(obj->this_->GetDescription()));
+	info.GetReturnValue().Set(SafeString::New(obj->this_->GetDescription()));
 }
 
 } // namespace node_gdal

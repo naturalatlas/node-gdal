@@ -19,14 +19,14 @@ using namespace node;
 
 namespace node_gdal {
 
-class MajorObject: public node::ObjectWrap {
+class MajorObject: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(GDALMajorObject *obj);
+	static Local<Value> New(GDALMajorObject *obj);
 	static NAN_METHOD(getMetadata);
-	static Handle<Object> getMetadata(GDALMajorObject *obj, const char *domain);
+	static Local<Object> getMetadata(GDALMajorObject *obj, const char *domain);
 	
 	static NAN_GETTER(descriptionGetter);
 

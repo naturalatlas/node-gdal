@@ -25,7 +25,7 @@ namespace node_gdal {
 
 class StringList {
 public:
-	int parse(Handle<Value> value);
+	int parse(Local<Value> value);
 
 	StringList();
 	~StringList();

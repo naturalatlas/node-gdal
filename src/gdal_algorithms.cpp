@@ -7,13 +7,13 @@
 
 namespace node_gdal {
 
-void Algorithms::Initialize(Handle<Object> target)
+void Algorithms::Initialize(Local<Object> target)
 {
-	NODE_SET_METHOD(target, "fillNodata", fillNodata);
-	NODE_SET_METHOD(target, "contourGenerate", contourGenerate);
-	NODE_SET_METHOD(target, "sieveFilter", sieveFilter);
-	NODE_SET_METHOD(target, "checksumImage", checksumImage);
-	NODE_SET_METHOD(target, "polygonize", polygonize);
+	Nan::SetMethod(target, "fillNodata", fillNodata);
+	Nan::SetMethod(target, "contourGenerate", contourGenerate);
+	Nan::SetMethod(target, "sieveFilter", sieveFilter);
+	Nan::SetMethod(target, "checksumImage", checksumImage);
+	Nan::SetMethod(target, "polygonize", polygonize);
 }
 
 /**
@@ -31,9 +31,9 @@ void Algorithms::Initialize(Handle<Object> target)
  */
 NAN_METHOD(Algorithms::fillNodata)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> obj;
+	Local<Object> obj;
 	RasterBand* src;
 	RasterBand* mask = NULL;
 	double search_dist;
@@ -50,10 +50,10 @@ NAN_METHOD(Algorithms::fillNodata)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -80,10 +80,10 @@ NAN_METHOD(Algorithms::fillNodata)
  */
 NAN_METHOD(Algorithms::contourGenerate)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> obj;
-	Handle<Value> prop;
+	Local<Object> obj;
+	Local<Value> prop;
 	RasterBand* src;
 	Layer* dst;
 	double interval = 100, base = 0;
@@ -102,21 +102,21 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_INT_FROM_OBJ_OPT(obj, "elevField", elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "interval", interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "offset", base);
-	if(obj->HasOwnProperty(NanNew("fixedLevels"))){
-		if(fixed_level_array.parse(obj->Get(NanNew("fixedLevels")))){
-			NanReturnUndefined(); //error parsing double list
+	if(obj->HasOwnProperty(Nan::New("fixedLevels").ToLocalChecked())){
+		if(fixed_level_array.parse(obj->Get(Nan::New("fixedLevels").ToLocalChecked()))){
+			return; //error parsing double list
 		} else {
 			fixed_levels = fixed_level_array.get();
 			n_fixed_levels = fixed_level_array.length();
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("nodata"))){
-		prop = obj->Get(NanNew("nodata"));
+	if(obj->HasOwnProperty(Nan::New("nodata").ToLocalChecked())){
+		prop = obj->Get(Nan::New("nodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			use_nodata = 1;
 			nodata = prop->NumberValue();
 		} else if(!prop->IsNull() && !prop->IsUndefined()){
-			NanThrowTypeError("nodata property must be a number");
+			Nan::ThrowTypeError("nodata property must be a number");
 		}
 	}
 
@@ -124,10 +124,10 @@ NAN_METHOD(Algorithms::contourGenerate)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -146,9 +146,9 @@ NAN_METHOD(Algorithms::contourGenerate)
  */
 NAN_METHOD(Algorithms::sieveFilter)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> obj;
+	Local<Object> obj;
 	RasterBand* src;
 	RasterBand* dst;
 	RasterBand* mask = NULL;
@@ -164,18 +164,18 @@ NAN_METHOD(Algorithms::sieveFilter)
 	NODE_INT_FROM_OBJ_OPT(obj, "connectedness", connectedness);
 
 	if(connectedness != 4 && connectedness != 8){
-		NanThrowError("connectedness option must be 4 or 8");
-		NanReturnUndefined();
+		Nan::ThrowError("connectedness option must be 4 or 8");
+		return;
 	}
 
 	CPLErr err = GDALSieveFilter(src->get(), mask ? mask->get() : NULL, dst->get(), threshold, connectedness, NULL, NULL, NULL);
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -194,7 +194,7 @@ NAN_METHOD(Algorithms::sieveFilter)
  */
 NAN_METHOD(Algorithms::checksumImage)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	RasterBand* src;
 	int x = 0, y = 0, w, h, bandw, bandh;
@@ -210,21 +210,21 @@ NAN_METHOD(Algorithms::checksumImage)
 	NODE_ARG_INT_OPT(4, "ySize", h);
 
 	if(x < 0 || y < 0 || x >= bandw || y >= bandh){
-		NanThrowRangeError("offset invalid for given band");
-		NanReturnUndefined();
+		Nan::ThrowRangeError("offset invalid for given band");
+		return;
 	}
 	if(w < 0 || h < 0 || w > bandw || h > bandh){
-		NanThrowRangeError("x and y size must be smaller than band dimensions and greater than 0");
-		NanReturnUndefined();
+		Nan::ThrowRangeError("x and y size must be smaller than band dimensions and greater than 0");
+		return;
 	}
 	if(x+w-1 >= bandw || y+h-1 >= bandh){
-		NanThrowRangeError("given range is outside bounds of given band");
-		NanReturnUndefined();
+		Nan::ThrowRangeError("given range is outside bounds of given band");
+		return;
 	}
 
 	int checksum = GDALChecksumImage(src->get(), x, y, w, h);
 
-	NanReturnValue(NanNew<Integer>(checksum));
+	info.GetReturnValue().Set(Nan::New<Integer>(checksum));
 }
 
 /**
@@ -247,9 +247,9 @@ NAN_METHOD(Algorithms::checksumImage)
  */
 NAN_METHOD(Algorithms::polygonize)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> obj;
+	Local<Object> obj;
 	RasterBand* src;
 	RasterBand* mask = NULL;
 	Layer* dst;
@@ -268,12 +268,12 @@ NAN_METHOD(Algorithms::polygonize)
 	if(connectedness == 8) {
 		papszOptions = CSLSetNameValue(papszOptions, "8CONNECTED", "8");
 	} else if (connectedness != 4) {
-		NanThrowError("connectedness must be 4 or 8");
-		NanReturnUndefined();
+		Nan::ThrowError("connectedness must be 4 or 8");
+		return;
 	}
 
 	CPLErr err;
-	if(obj->HasOwnProperty(NanNew("useFloats")) && obj->Get(NanNew("useFloats"))->BooleanValue()){
+	if(obj->HasOwnProperty(Nan::New("useFloats").ToLocalChecked()) && obj->Get(Nan::New("useFloats").ToLocalChecked())->BooleanValue()){
 		err = GDALFPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
@@ -283,10 +283,10 @@ NAN_METHOD(Algorithms::polygonize)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 } //node_gdal namespace

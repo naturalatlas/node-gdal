@@ -9,27 +9,27 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> LinearRing::constructor;
+Nan::Persistent<FunctionTemplate> LinearRing::constructor;
 
-void LinearRing::Initialize(Handle<Object> target)
+void LinearRing::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LinearRing::New);
-	lcons->Inherit(NanNew(LineString::constructor));
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(LinearRing::New);
+	lcons->Inherit(Nan::New(LineString::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("LinearRing"));
+	lcons->SetClassName(Nan::New("LinearRing").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getArea", getArea);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "getArea", getArea);
 
-	target->Set(NanNew("LinearRing"), lcons->GetFunction());
+	target->Set(Nan::New("LinearRing").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 LinearRing::LinearRing(OGRLinearRing *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -38,7 +38,7 @@ LinearRing::LinearRing(OGRLinearRing *geom)
 }
 
 LinearRing::LinearRing()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -52,7 +52,7 @@ LinearRing::~LinearRing()
 		LOG("Disposing LinearRing [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG("Disposed LinearRing [%p]", this_);
 		this_ = NULL;
@@ -68,46 +68,46 @@ LinearRing::~LinearRing()
  */
 NAN_METHOD(LinearRing::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	LinearRing *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<LinearRing *>(ptr);
 
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError("LinearRing constructor doesn't take any arguments");
-			NanReturnUndefined();
+		if (info.Length() != 0) {
+			Nan::ThrowError("LinearRing constructor doesn't take any arguments");
+			return;
 		}
 		f = new LinearRing(new OGRLinearRing());
 	}
 
-	Handle<Value> points = LineStringPoints::New(args.This());
-	args.This()->SetHiddenValue(NanNew("points_"), points);
+	Local<Value> points = LineStringPoints::New(info.This());
+	info.This()->SetHiddenValue(Nan::New("points_").ToLocalChecked(), points);
 
-	f->Wrap(args.This());
-	NanReturnValue(args.This());
+	f->Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> LinearRing::New(OGRLinearRing *geom)
+Local<Value> LinearRing::New(OGRLinearRing *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(LinearRing::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(LinearRing::New(geom, true));
 }
 
-Handle<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
+Local<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -124,16 +124,16 @@ Handle<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(LinearRing::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(LinearRing::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(LinearRing::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("LinearRing"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("LinearRing").ToLocalChecked());
 }
 
 /**

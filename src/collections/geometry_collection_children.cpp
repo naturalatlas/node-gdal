@@ -5,29 +5,29 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> GeometryCollectionChildren::constructor;
+Nan::Persistent<FunctionTemplate> GeometryCollectionChildren::constructor;
 
-void GeometryCollectionChildren::Initialize(Handle<Object> target)
+void GeometryCollectionChildren::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(GeometryCollectionChildren::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(GeometryCollectionChildren::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("GeometryCollectionChildren"));
+	lcons->SetClassName(Nan::New("GeometryCollectionChildren").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "remove", remove);
+	Nan::SetPrototypeMethod(lcons, "add", add);
 
-	target->Set(NanNew("GeometryCollectionChildren"), lcons->GetFunction());
+	target->Set(Nan::New("GeometryCollectionChildren").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 GeometryCollectionChildren::GeometryCollectionChildren()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 GeometryCollectionChildren::~GeometryCollectionChildren()
@@ -40,41 +40,41 @@ GeometryCollectionChildren::~GeometryCollectionChildren()
  */
 NAN_METHOD(GeometryCollectionChildren::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		GeometryCollectionChildren *geom =  static_cast<GeometryCollectionChildren *>(ptr);
-		geom->Wrap(args.This());
-		NanReturnValue(args.This());
+		geom->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create GeometryCollectionChildren directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create GeometryCollectionChildren directly");
+		return;
 	}
 }
 
-Handle<Value> GeometryCollectionChildren::New(Handle<Value> geom)
+Local<Value> GeometryCollectionChildren::New(Local<Value> geom)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	GeometryCollectionChildren *wrapped = new GeometryCollectionChildren();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(GeometryCollectionChildren::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), geom);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(GeometryCollectionChildren::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), geom);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(GeometryCollectionChildren::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("GeometryCollectionChildren"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("GeometryCollectionChildren").ToLocalChecked());
 }
 
 /**
@@ -85,12 +85,12 @@ NAN_METHOD(GeometryCollectionChildren::toString)
  */
 NAN_METHOD(GeometryCollectionChildren::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
-	NanReturnValue(NanNew<Integer>(geom->get()->getNumGeometries()));
+	info.GetReturnValue().Set(Nan::New<Integer>(geom->get()->getNumGeometries()));
 }
 
 /**
@@ -102,15 +102,15 @@ NAN_METHOD(GeometryCollectionChildren::count)
  */
 NAN_METHOD(GeometryCollectionChildren::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
 
-	NanReturnValue(Geometry::New(geom->get()->getGeometryRef(i), false));
+	info.GetReturnValue().Set(Geometry::New(geom->get()->getGeometryRef(i), false));
 }
 
 /**
@@ -121,10 +121,10 @@ NAN_METHOD(GeometryCollectionChildren::get)
  */
 NAN_METHOD(GeometryCollectionChildren::remove)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	int i;
 	NODE_ARG_INT(0, "index", i);
@@ -132,10 +132,10 @@ NAN_METHOD(GeometryCollectionChildren::remove)
 	OGRErr err = geom->get()->removeGeometry(i);
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -157,48 +157,48 @@ NAN_METHOD(GeometryCollectionChildren::remove)
  */
 NAN_METHOD(GeometryCollectionChildren::add)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	GeometryCollection *geom = ObjectWrap::Unwrap<GeometryCollection>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	Geometry *child;
 
-	if (args.Length() < 1) {
-		NanThrowError("child(ren) must be given");
-		NanReturnUndefined();
+	if (info.Length() < 1) {
+		Nan::ThrowError("child(ren) must be given");
+		return;
 	}
-	if (args[0]->IsArray()){
+	if (info[0]->IsArray()){
 		//set from array of geometry objects
-		Handle<Array> array = args[0].As<Array>();
+		Local<Array> array = info[0].As<Array>();
 		int length = array->Length();
 		for (int i = 0; i < length; i++){
-			Handle<Value> element = array->Get(i);
+			Local<Value> element = array->Get(i);
 			if(IS_WRAPPED(element, Geometry)){
-				child = ObjectWrap::Unwrap<Geometry>(element.As<Object>());
+				child = Nan::ObjectWrap::Unwrap<Geometry>(element.As<Object>());
 				OGRErr err = geom->get()->addGeometry(child->get());
 				if(err) {
 					NODE_THROW_OGRERR(err);
-					NanReturnUndefined();
+					return;
 				}
 			} else {
-				NanThrowError("All array elements must be geometry objects");
-				NanReturnUndefined();
+				Nan::ThrowError("All array elements must be geometry objects");
+				return;
 			}
 		}
-	} else if (IS_WRAPPED(args[0], Geometry)){
-		child = ObjectWrap::Unwrap<Geometry>(args[0].As<Object>());
+	} else if (IS_WRAPPED(info[0], Geometry)){
+		child = Nan::ObjectWrap::Unwrap<Geometry>(info[0].As<Object>());
 		OGRErr err = geom->get()->addGeometry(child->get());
 		if(err) {
 			NODE_THROW_OGRERR(err);
-			NanReturnUndefined();
+			return;
 		}
 	} else {
-		NanThrowError("child must be a geometry object or array of geometry objects");
-		NanReturnUndefined();
+		Nan::ThrowError("child must be a geometry object or array of geometry objects");
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 } // namespace node_gdal

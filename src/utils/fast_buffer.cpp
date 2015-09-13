@@ -3,19 +3,19 @@
 #include <cstring>
 #include "fast_buffer.hpp"
 
-Handle<Value> FastBuffer::New(unsigned char *data, int length) 
+Local<Value> FastBuffer::New(unsigned char *data, int length) 
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
-	Local<Object> slowBuffer = NanNewBufferHandle(length);
+	Local<Object> slowBuffer = Nan::NewBuffer(length).ToLocalChecked();
 
 	memcpy(node::Buffer::Data(slowBuffer), data, length);
 
-	Local<Object> globalObj = NanGetCurrentContext()->Global();
-	Local<Function> bufferConstructor = globalObj->Get(NanNew("Buffer")).As<Function>();
-	Handle<Value> constructorArgs[3] = { slowBuffer, NanNew<Integer>(length), NanNew<Integer>(0) };
+	Local<Object> globalObj = Nan::GetCurrentContext()->Global();
+	Local<Function> bufferConstructor = globalObj->Get(Nan::New("Buffer").ToLocalChecked()).As<Function>();
+	Local<Value> constructorArgs[3] = { slowBuffer, Nan::New<Integer>(length), Nan::New<Integer>(0) };
 	
 	Local<Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
 
-	return NanEscapeScope(actualBuffer);
+	return scope.Escape(actualBuffer);
 }

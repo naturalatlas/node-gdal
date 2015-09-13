@@ -3,7 +3,7 @@
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
-describe('gdal.LinearRing', function() {
+describe.skip('gdal.LinearRing', function() {
 	afterEach(gc);
 
 	it('should be instantiable', function() {

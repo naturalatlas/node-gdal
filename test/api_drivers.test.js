@@ -3,7 +3,7 @@
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
-describe('gdal.drivers', function() {
+describe.skip('gdal.drivers', function() {
 	afterEach(gc);
 
 	describe('count()', function() {

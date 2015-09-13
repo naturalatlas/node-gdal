@@ -27,12 +27,12 @@ using namespace node;
 
 namespace node_gdal {
 
-class Dataset: public node::ObjectWrap {
+class Dataset: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(GDALDataset *ds);
+	static Local<Value> New(GDALDataset *ds);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(flush);
 	static NAN_METHOD(getMetadata);
@@ -66,7 +66,7 @@ public:
 	void dispose();
 
 	#if GDAL_VERSION_MAJOR < 2
-	static Handle<Value> New(OGRDataSource *ds);
+	static Local<Value> New(OGRDataSource *ds);
 	static ObjectCache<OGRDataSource, Dataset> datasource_cache;
 	Dataset(OGRDataSource *ds);
 	inline OGRDataSource *getDatasource() {

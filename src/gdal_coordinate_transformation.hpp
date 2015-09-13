@@ -22,12 +22,12 @@ using namespace node;
 
 namespace node_gdal {
 
-class CoordinateTransformation: public node::ObjectWrap {
+class CoordinateTransformation: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRCoordinateTransformation *transform);
+	static Local<Value> New(OGRCoordinateTransformation *transform);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(transformPoint);
 

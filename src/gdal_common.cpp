@@ -15,8 +15,8 @@ using namespace v8;
 
 NAN_SETTER(READ_ONLY_SETTER)
 {
-	NanScope();
-	std::string name = *NanUtf8String(property);
+	Nan::HandleScope scope;
+	std::string name = *Nan::Utf8String(property);
 	std::string err = name + " is a read-only property";
-	NanThrowError(err.c_str());
+	Nan::ThrowError(err.c_str());
 }

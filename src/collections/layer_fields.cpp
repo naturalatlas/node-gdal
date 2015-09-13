@@ -5,35 +5,35 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> LayerFields::constructor;
+Nan::Persistent<FunctionTemplate> LayerFields::constructor;
 
-void LayerFields::Initialize(Handle<Object> target)
+void LayerFields::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(LayerFields::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(LayerFields::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("LayerFields"));
+	lcons->SetClassName(Nan::New("LayerFields").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "remove", remove);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getNames", getNames);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "indexOf", indexOf);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "reorder", reorder);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "add", add);
-	//NODE_SET_PROTOTYPE_METHOD(lcons, "alter", alter);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "remove", remove);
+	Nan::SetPrototypeMethod(lcons, "getNames", getNames);
+	Nan::SetPrototypeMethod(lcons, "indexOf", indexOf);
+	Nan::SetPrototypeMethod(lcons, "reorder", reorder);
+	Nan::SetPrototypeMethod(lcons, "add", add);
+	//Nan::SetPrototypeMethod(lcons, "alter", alter);
 
 	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("LayerFields"), lcons->GetFunction());
+	target->Set(Nan::New("LayerFields").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 LayerFields::LayerFields()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 LayerFields::~LayerFields()
@@ -44,41 +44,41 @@ LayerFields::~LayerFields()
  */
 NAN_METHOD(LayerFields::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		LayerFields *layer =  static_cast<LayerFields *>(ptr);
-		layer->Wrap(args.This());
-		NanReturnValue(args.This());
+		layer->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
 	} else {
-		NanThrowError("Cannot create LayerFields directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create LayerFields directly");
+		return;
 	}
 }
 
-Handle<Value> LayerFields::New(Handle<Value> layer_obj)
+Local<Value> LayerFields::New(Local<Value> layer_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	LayerFields *wrapped = new LayerFields();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(LayerFields::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), layer_obj);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(LayerFields::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), layer_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(LayerFields::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("LayerFields"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("LayerFields").ToLocalChecked());
 }
 
 /**
@@ -89,22 +89,22 @@ NAN_METHOD(LayerFields::toString)
  */
 NAN_METHOD(LayerFields::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
-	NanReturnValue(NanNew<Integer>(def->GetFieldCount()));
+	info.GetReturnValue().Set(Nan::New<Integer>(def->GetFieldCount()));
 }
 
 /**
@@ -116,25 +116,25 @@ NAN_METHOD(LayerFields::count)
  */
 NAN_METHOD(LayerFields::indexOf)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
 	std::string name("");
 	NODE_ARG_STR(0, "field name", name);
 
-	NanReturnValue(NanNew<Integer>(def->GetFieldIndex(name.c_str())));
+	info.GetReturnValue().Set(Nan::New<Integer>(def->GetFieldIndex(name.c_str())));
 }
 
 /**
@@ -147,30 +147,30 @@ NAN_METHOD(LayerFields::indexOf)
  */
 NAN_METHOD(LayerFields::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
-	if (args.Length() < 1) {
-		NanThrowError("Field index or name must be given");
-		NanReturnUndefined();
+	if (info.Length() < 1) {
+		Nan::ThrowError("Field index or name must be given");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
 	int field_index;
 	ARG_FIELD_ID(0, def, field_index);
 
-	NanReturnValue(FieldDefn::New(def->GetFieldDefn(field_index)));
+	info.GetReturnValue().Set(FieldDefn::New(def->GetFieldDefn(field_index)));
 }
 
 /**
@@ -182,30 +182,30 @@ NAN_METHOD(LayerFields::get)
  */
 NAN_METHOD(LayerFields::getNames)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
 	int n = def->GetFieldCount();
-	Handle<Array> result = NanNew<Array>(n);
+	Local<Array> result = Nan::New<Array>(n);
 
 	for (int i = 0; i < n;  i++) {
 		OGRFieldDefn *field_def = def->GetFieldDefn(i);
 		result->Set(i, SafeString::New(field_def->GetNameRef()));
 	}
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
 /**
@@ -217,24 +217,24 @@ NAN_METHOD(LayerFields::getNames)
  */
 NAN_METHOD(LayerFields::remove)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
-	if (args.Length() < 1) {
-		NanThrowError("Field index or name must be given");
-		NanReturnUndefined();
+	if (info.Length() < 1) {
+		Nan::ThrowError("Field index or name must be given");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
 	int field_index;
@@ -243,10 +243,10 @@ NAN_METHOD(LayerFields::remove)
 	int err = layer->get()->DeleteField(field_index);
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -259,17 +259,17 @@ NAN_METHOD(LayerFields::remove)
  */
 NAN_METHOD(LayerFields::add)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
-	if (args.Length() < 1) {
-		NanThrowError("field definition(s) must be given");
-		NanReturnUndefined();
+	if (info.Length() < 1) {
+		Nan::ThrowError("field definition(s) must be given");
+		return;
 	}
 
 	FieldDefn *field_def;
@@ -277,36 +277,36 @@ NAN_METHOD(LayerFields::add)
 	int approx = 1;
 	NODE_ARG_BOOL_OPT(1, "approx", approx);
 
-	if (args[0]->IsArray()) {
-		Handle<Array> array = args[0].As<Array>();
+	if (info[0]->IsArray()) {
+		Local<Array> array = info[0].As<Array>();
 		int n = array->Length();
 		for (int i = 0; i < n; i++) {
-			Handle<Value> element = array->Get(i);
+			Local<Value> element = array->Get(i);
 			if (IS_WRAPPED(element, FieldDefn)) {
-				field_def = ObjectWrap::Unwrap<FieldDefn>(element.As<Object>());
+				field_def = Nan::ObjectWrap::Unwrap<FieldDefn>(element.As<Object>());
 				err = layer->get()->CreateField(field_def->get(), approx);
 				if(err) {
 					NODE_THROW_OGRERR(err);
-					NanReturnUndefined();
+					return;
 				}
 			} else {
-				NanThrowError("All array elements must be FieldDefn objects");
-				NanReturnUndefined();
+				Nan::ThrowError("All array elements must be FieldDefn objects");
+				return;
 			}
 		}
-	} else if (IS_WRAPPED(args[0], FieldDefn)) {
-		field_def = ObjectWrap::Unwrap<FieldDefn>(args[0].As<Object>());
+	} else if (IS_WRAPPED(info[0], FieldDefn)) {
+		field_def = Nan::ObjectWrap::Unwrap<FieldDefn>(info[0].As<Object>());
 		err = layer->get()->CreateField(field_def->get(), approx);
 		if(err) {
 			NODE_THROW_OGRERR(err);
-			NanReturnUndefined();
+			return;
 		}
 	} else {
-		NanThrowError("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
-		NanReturnUndefined();
+		Nan::ThrowError("field definition(s) must be a FieldDefn object or array of FieldDefn objects");
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -323,47 +323,47 @@ NAN_METHOD(LayerFields::add)
  */
 NAN_METHOD(LayerFields::reorder)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
 	if (!layer->get()) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
 	OGRFeatureDefn *def = layer->get()->GetLayerDefn();
 	if (!def) {
-		NanThrowError("Layer has no layer definition set");
-		NanReturnUndefined();
+		Nan::ThrowError("Layer has no layer definition set");
+		return;
 	}
 
-	Handle<Array> field_map = NanNew<Array>(0);
+	Local<Array> field_map = Nan::New<Array>(0);
 	NODE_ARG_ARRAY(0, "field map", field_map);
 
 	int n = def->GetFieldCount();
 	OGRErr err = 0;
 
 	if ((int)field_map->Length() != n) {
-		NanThrowError("Array length must match field count");
-		NanReturnUndefined();
+		Nan::ThrowError("Array length must match field count");
+		return;
 	}
 
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i < n; i++) {
-		Handle<Value> val = field_map->Get(i);
+		Local<Value> val = field_map->Get(i);
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
-			NanThrowError("Array must only contain integers");
-			NanReturnUndefined();
+			Nan::ThrowError("Array must only contain integers");
+			return;
 		}
 
 		int key = val->IntegerValue();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
-			NanThrowError("Values must be between 0 and field count - 1");
-			NanReturnUndefined();
+			Nan::ThrowError("Values must be between 0 and field count - 1");
+			return;
 		}
 
 		field_map_array[i] = key;
@@ -375,9 +375,9 @@ NAN_METHOD(LayerFields::reorder)
 
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -389,8 +389,8 @@ NAN_METHOD(LayerFields::reorder)
  */
 NAN_GETTER(LayerFields::layerGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

@@ -19,13 +19,13 @@ using namespace node;
 
 namespace node_gdal {
 
-class DatasetLayers: public node::ObjectWrap {
+class DatasetLayers: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(Handle<Value> ds_obj);
+	static Local<Value> New(Local<Value> ds_obj);
 	static NAN_METHOD(toString);
 
 	static NAN_METHOD(get);

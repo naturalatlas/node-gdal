@@ -10,26 +10,26 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> MultiPoint::constructor;
+Nan::Persistent<FunctionTemplate> MultiPoint::constructor;
 
-void MultiPoint::Initialize(Handle<Object> target)
+void MultiPoint::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiPoint::New);
-	lcons->Inherit(NanNew(GeometryCollection::constructor));
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(MultiPoint::New);
+	lcons->Inherit(Nan::New(GeometryCollection::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("MultiPoint"));
+	lcons->SetClassName(Nan::New("MultiPoint").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
 
-	target->Set(NanNew("MultiPoint"), lcons->GetFunction());
+	target->Set(Nan::New("MultiPoint").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 MultiPoint::MultiPoint(OGRMultiPoint *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -38,7 +38,7 @@ MultiPoint::MultiPoint(OGRMultiPoint *geom)
 }
 
 MultiPoint::MultiPoint()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -52,7 +52,7 @@ MultiPoint::~MultiPoint()
 		LOG("Disposing MultiPoint [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG("Disposed MultiPoint [%p]", this_);
 		this_ = NULL;
@@ -66,46 +66,46 @@ MultiPoint::~MultiPoint()
  */
 NAN_METHOD(MultiPoint::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	MultiPoint *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<MultiPoint *>(ptr);
 
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError("MultiPoint constructor doesn't take any arguments");
-			NanReturnUndefined();
+		if (info.Length() != 0) {
+			Nan::ThrowError("MultiPoint constructor doesn't take any arguments");
+			return;
 		}
 		f = new MultiPoint(new OGRMultiPoint());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This());
-	args.This()->SetHiddenValue(NanNew("children_"), children);
+	Local<Value> children = GeometryCollectionChildren::New(info.This());
+	info.This()->SetHiddenValue(Nan::New("children_").ToLocalChecked(), children);
 
-	f->Wrap(args.This());
-	NanReturnValue(args.This());
+	f->Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> MultiPoint::New(OGRMultiPoint *geom)
+Local<Value> MultiPoint::New(OGRMultiPoint *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(MultiPoint::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(MultiPoint::New(geom, true));
 }
 
-Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
+Local<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -122,16 +122,16 @@ Handle<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(MultiPoint::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(MultiPoint::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(MultiPoint::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("MultiPoint"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("MultiPoint").ToLocalChecked());
 }
 
 } // namespace node_gdal

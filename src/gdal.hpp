@@ -26,7 +26,7 @@ namespace node_gdal {
 
 	static NAN_METHOD(open)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string path;
 		std::string mode = "r";
@@ -39,18 +39,20 @@ namespace node_gdal {
 			if (mode == "r+") {
 				access = GA_Update;
 			} else if (mode != "r") {
-				NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
-				NanReturnUndefined();
+				Nan::ThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
+				return;
 			}
 
 			OGRDataSource *ogr_ds = OGRSFDriverRegistrar::Open(path.c_str(), static_cast<int>(access));
 			if(ogr_ds) {
-				NanReturnValue(Dataset::New(ogr_ds));
+				info.GetReturnValue().Set(NanNewDataset::New(ogr_ds));
+				return;
 			}
 
 			GDALDataset *gdal_ds = (GDALDataset*) GDALOpen(path.c_str(), access);
 			if(gdal_ds) {
-				NanReturnValue(Dataset::New(gdal_ds));
+				info.GetReturnValue().Set(Dataset::New(gdal_ds));
+				return;
 			}
 		#else
 			unsigned int flags = 0;
@@ -59,53 +61,54 @@ namespace node_gdal {
 			} else if (mode == "r") {
 				flags |= GDAL_OF_READONLY;
 			} else {
-				NanThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
-				NanReturnUndefined();
+				Nan::ThrowError("Invalid open mode. Must be \"r\" or \"r+\"");
+				return;
 			}
 
 			GDALDataset *ds = (GDALDataset*) GDALOpenEx(path.c_str(), flags, NULL, NULL, NULL);
 			if(ds) {
-				NanReturnValue(Dataset::New(ds));
+				info.GetReturnValue().Set(Dataset::New(ds));
+				return;
 			}
 		#endif
 
-		NanThrowError("Error opening dataset");
-		NanReturnUndefined();
+		Nan::ThrowError("Error opening dataset");
+		return;
 	}
 
 	static NAN_METHOD(setConfigOption)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string name;
 
 		NODE_ARG_STR(0, "name", name);
 
-		if (args.Length() < 2) {
-			NanThrowError("string or null value must be provided");
-			NanReturnUndefined();
+		if (info.Length() < 2) {
+			Nan::ThrowError("string or null value must be provided");
+			return;
 		}
-		if(args[1]->IsString()){
-			std::string val = *NanUtf8String(args[1]);
+		if(info[1]->IsString()){
+			std::string val = *Nan::Utf8String(info[1]);
 			CPLSetConfigOption(name.c_str(), val.c_str());
-		} else if(args[1]->IsNull() || args[1]->IsUndefined()) {
+		} else if(info[1]->IsNull() || info[1]->IsUndefined()) {
 			CPLSetConfigOption(name.c_str(), NULL);
 		} else {
-			NanThrowError("value must be a string or null");
-			NanReturnUndefined();
+			Nan::ThrowError("value must be a string or null");
+			return;
 		}
 
-		NanReturnUndefined();
+		return;
 	}
 
 	static NAN_METHOD(getConfigOption)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string name;
 		NODE_ARG_STR(0, "name", name);
 
-		NanReturnValue(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
+		info.GetReturnValue().Set(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
 	}
 
 	/**
@@ -120,7 +123,7 @@ namespace node_gdal {
 	 * @return {String} A string nndnn'nn.nn'"L where n is a number and L is either N or E
 	 */
 	static NAN_METHOD(decToDMS){
-		NanScope();
+		Nan::HandleScope scope;
 
 		double angle;
 		std::string axis;
@@ -133,11 +136,11 @@ namespace node_gdal {
 			axis[0] = toupper(axis[0]);
 		}
 		if (axis != "Lat" && axis != "Long") {
-			NanThrowError("Axis must be 'lat' or 'long'");
-			NanReturnUndefined();
+			Nan::ThrowError("Axis must be 'lat' or 'long'");
+			return;
 		}
 
-		NanReturnValue(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));
+		info.GetReturnValue().Set(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));
 	}
 }
 

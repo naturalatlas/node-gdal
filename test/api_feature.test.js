@@ -3,7 +3,7 @@ var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
-describe('gdal.Feature', function() {
+describe.skip('gdal.Feature', function() {
 	afterEach(gc);
 
 	var ds, lyr, defn, fields, feature;

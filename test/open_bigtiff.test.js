@@ -5,7 +5,7 @@ var path = require('path');
 var assert = require('chai').assert;
 
 if (process.env.TARGET !== 'SHARED') {
-	describe('Open', function() {
+	describe.skip('Open', function() {
 
 		describe('BIGTIFF', function() {
 			var filename, ds;

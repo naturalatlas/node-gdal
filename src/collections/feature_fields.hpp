@@ -19,13 +19,13 @@ using namespace node;
 
 namespace node_gdal {
 
-class FeatureFields: public node::ObjectWrap {
+class FeatureFields: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(Handle<Value> layer_obj);
+	static Local<Value> New(Local<Value> layer_obj);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(toArray);
 	static NAN_METHOD(toObject);
@@ -37,12 +37,12 @@ public:
 	static NAN_METHOD(count);
 	static NAN_METHOD(indexOf);
 
-	static Handle<Value> get(OGRFeature *f, int field_index);
-	static Handle<Value> getFieldAsIntegerList(OGRFeature* feature, int field_index);
-	static Handle<Value> getFieldAsDoubleList(OGRFeature* feature, int field_index);
-	static Handle<Value> getFieldAsStringList(OGRFeature* feature, int field_index);
-	static Handle<Value> getFieldAsBinary(OGRFeature* feature, int field_index);
-	static Handle<Value> getFieldAsDateTime(OGRFeature* feature, int field_index);
+	static Local<Value> get(OGRFeature *f, int field_index);
+	static Local<Value> getFieldAsIntegerList(OGRFeature* feature, int field_index);
+	static Local<Value> getFieldAsDoubleList(OGRFeature* feature, int field_index);
+	static Local<Value> getFieldAsStringList(OGRFeature* feature, int field_index);
+	static Local<Value> getFieldAsBinary(OGRFeature* feature, int field_index);
+	static Local<Value> getFieldAsDateTime(OGRFeature* feature, int field_index);
 
 	static NAN_GETTER(featureGetter);
 
