@@ -92,20 +92,27 @@ void RasterBand::dispose()
 
 		cache.erase(this_);
 
+		LOG("Overviews [%p]", this_);
 		//dispose of all wrapped overview bands
 		int n = this_->GetOverviewCount();
 		for(int i = 0; i < n; i++) {
+			LOG("Overview Get %d [%p]", i, this_);
 			band = this_->GetOverview(i);
+			LOG("Overview Cache check [%p]", band);
 			if (RasterBand::cache.has(band)) {
-				band_wrapped = Nan::ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
+				LOG("Overview unwrap[%p]", band);
+				band_wrapped = RasterBand::cache.getWrapped(band);
+				LOG("Overview unwrapped[%p]", band);
 				band_wrapped->dispose();
+				LOG("Overview disposedy[%p]", band);
 			}
 		}
 
+		LOG("Mask [%p]", this_);
 		//dispose of wrapped mask band
 		band = this_->GetMaskBand();
 		if (RasterBand::cache.has(band)) {
-			band_wrapped = Nan::ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));
+			band_wrapped = RasterBand::cache.getWrapped(band);
 			band_wrapped->dispose();
 		}
 
@@ -141,6 +148,7 @@ NAN_METHOD(RasterBand::New)
 		info.This()->SetHiddenValue(Nan::New("pixels_").ToLocalChecked(), pixels);
 
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create band directly create with dataset instead");
 		return;
@@ -162,6 +170,7 @@ Local<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	Local<Value> ext = Nan::New<External>(wrapped);
 	Local<Object> obj = Nan::New(RasterBand::constructor)->GetFunction()->NewInstance(1, &ext);
 
+	LOG("Adding band to cache[%p] (parent=%p)", raw, raw_parent); 
 	cache.add(raw, obj);
 
 	//add reference to dataset so dataset doesnt get GC'ed while band is alive
@@ -246,7 +255,10 @@ NAN_METHOD(RasterBand::getMaskBand)
 
 	GDALRasterBand *mask_band = band->this_->GetMaskBand();
 
-	if(!mask_band) info.GetReturnValue().Set(Nan::Null());
+	if(!mask_band) {
+		info.GetReturnValue().Set(Nan::Null());
+		return;
+	}
 
 	info.GetReturnValue().Set(RasterBand::New(mask_band, band->getParent()));
 }
@@ -485,8 +497,10 @@ NAN_GETTER(RasterBand::idGetter)
 
 	if(id == 0) {
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	} else {
 		info.GetReturnValue().Set(Nan::New<Integer>(id));
+		return;
 	}
 }
 
@@ -639,8 +653,10 @@ NAN_GETTER(RasterBand::noDataValueGetter)
 
 	if(success && !CPLIsNan(result)) {
 		info.GetReturnValue().Set(Nan::New<Number>(result));
+		return;
 	} else {
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 }
 

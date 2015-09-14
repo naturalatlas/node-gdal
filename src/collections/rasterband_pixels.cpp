@@ -64,6 +64,7 @@ NAN_METHOD(RasterBandPixels::New)
 		RasterBandPixels *f = static_cast<RasterBandPixels *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create RasterBandPixels directly");
 		return;

@@ -55,6 +55,7 @@ NAN_METHOD(GDALDrivers::New)
 		GDALDrivers *f =  static_cast<GDALDrivers *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create GDALDrivers directly");
 		return;

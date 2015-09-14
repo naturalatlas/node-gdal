@@ -1,7 +1,7 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 
-describe.skip('gdal.Point', function() {
+describe('gdal.Point', function() {
 	afterEach(gc);
 
 	var point2d;

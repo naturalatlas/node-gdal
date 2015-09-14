@@ -51,6 +51,7 @@ NAN_METHOD(RasterBandOverviews::New)
 		RasterBandOverviews *f =  static_cast<RasterBandOverviews *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create RasterBandOverviews directly");
 		return;

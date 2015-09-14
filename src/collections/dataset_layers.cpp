@@ -60,6 +60,7 @@ NAN_METHOD(DatasetLayers::New)
 		DatasetLayers *f =  static_cast<DatasetLayers *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create DatasetLayers directly");
 		return;
@@ -105,6 +106,7 @@ NAN_METHOD(DatasetLayers::get)
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && ds->getDataset()) {
 			info.GetReturnValue().Set(Nan::Null());
+			return;
 		}
 	#endif
 
@@ -193,6 +195,7 @@ NAN_METHOD(DatasetLayers::create)
 
 	if (layer) {
 		info.GetReturnValue().Set(Layer::New(layer, raw, false));
+		return;
 	} else {
 		Nan::ThrowError("Error creating layer");
 		return;
@@ -218,6 +221,7 @@ NAN_METHOD(DatasetLayers::count)
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && ds->getDataset()) {
 			info.GetReturnValue().Set(Nan::New<Integer>(0));
+			return;
 		}
 	#endif
 
@@ -276,6 +280,7 @@ NAN_METHOD(DatasetLayers::copy)
 
 	if (layer) {
 		info.GetReturnValue().Set(Layer::New(layer, raw));
+		return;
 	} else {
 		Nan::ThrowError("Error copying layer");
 		return;

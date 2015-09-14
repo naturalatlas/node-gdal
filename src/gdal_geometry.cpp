@@ -586,6 +586,7 @@ NAN_METHOD(Geometry::exportToWKT)
 	}
 	if (text) {
 		info.GetReturnValue().Set(SafeString::New(text));
+		return;
 	}
 
 	return;
@@ -676,6 +677,7 @@ NAN_METHOD(Geometry::exportToKML)
 		Local<Value> result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
 		info.GetReturnValue().Set(result);
+		return;
 	}
 
 	return;
@@ -698,6 +700,7 @@ NAN_METHOD(Geometry::exportToGML)
 		Local<Value> result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
 		info.GetReturnValue().Set(result);
+		return;
 	}
 
 	return;
@@ -720,6 +723,7 @@ NAN_METHOD(Geometry::exportToJSON)
 		Local<Value> result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
 		info.GetReturnValue().Set(result);
+		return;
 	}
 
 	return;

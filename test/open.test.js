@@ -4,7 +4,7 @@ var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('assert');
 
-describe.skip('Open', function() {
+describe('Open', function() {
 	afterEach(gc);
 
 	it('should throw when invalid file', function() {

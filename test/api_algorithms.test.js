@@ -6,7 +6,7 @@ var path = require('path');
 var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
 
-describe.skip('gdal', function() {
+describe('gdal', function() {
 	afterEach(gc);
 
 	describe('contourGenerate()', function() {

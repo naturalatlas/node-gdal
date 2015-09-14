@@ -195,6 +195,7 @@ NAN_METHOD(Feature::getGeometry)
 	OGRGeometry* geom = feature->this_->GetGeometryRef();
 	if (!geom) {
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 
 

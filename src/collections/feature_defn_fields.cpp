@@ -58,6 +58,7 @@ NAN_METHOD(FeatureDefnFields::New)
 		FeatureDefnFields *feature_def =  static_cast<FeatureDefnFields *>(ptr);
 		feature_def->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create FeatureDefnFields directly");
 		return;

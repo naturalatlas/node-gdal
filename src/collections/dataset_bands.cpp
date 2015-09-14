@@ -57,6 +57,7 @@ NAN_METHOD(DatasetBands::New)
 		DatasetBands *f =  static_cast<DatasetBands *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create DatasetBands directly");
 		return;
@@ -104,6 +105,7 @@ NAN_METHOD(DatasetBands::get)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	} else {
 	#else
 	{
@@ -119,6 +121,7 @@ NAN_METHOD(DatasetBands::get)
 		GDALRasterBand *band = raw->GetRasterBand(band_id);
 
 		info.GetReturnValue().Set(RasterBand::New(band, raw));
+		return;
 	}
 }
 
@@ -203,6 +206,7 @@ NAN_METHOD(DatasetBands::count)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::New<Integer>(0));
+		return;
 	}
 	#endif
 

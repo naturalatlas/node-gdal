@@ -55,6 +55,7 @@ NAN_METHOD(LineStringPoints::New)
 		LineStringPoints *geom =  static_cast<LineStringPoints *>(ptr);
 		geom->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create LineStringPoints directly");
 		return;
@@ -153,6 +154,7 @@ NAN_METHOD(LineStringPoints::get)
 	NODE_ARG_INT(0, "index", i);
 	if(i < 0 || i >= geom->get()->getNumPoints()) {
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 
 	geom->get()->getPoint(i, pt);

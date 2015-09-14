@@ -4,10 +4,10 @@ var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
 
-describe.skip('Open', function() {
+describe('Open', function() {
 	afterEach(gc);
 
-	describe.skip('SDTS (DDF)', function() {
+	describe('SDTS (DDF)', function() {
 		var filename, ds;
 
 		it('should not throw', function() {

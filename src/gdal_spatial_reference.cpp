@@ -929,12 +929,15 @@ NAN_METHOD(SpatialReference::validate)
 
 	if(err == OGRERR_NONE) {
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	if(err == OGRERR_CORRUPT_DATA) {
 		info.GetReturnValue().Set(Nan::New("corrupt").ToLocalChecked());
+		return;
 	}
 	if(err == OGRERR_UNSUPPORTED_SRS) {
 		info.GetReturnValue().Set(Nan::New("unsupported").ToLocalChecked());
+		return;
 	}
 
 	NODE_THROW_OGRERR(err);

@@ -114,6 +114,7 @@ NAN_METHOD(Layer::New)
 		info.This()->SetHiddenValue(Nan::New("fields_").ToLocalChecked(), fields);
 
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create layer directly. Create with dataset instead.");
 		return;
@@ -188,6 +189,7 @@ NAN_METHOD(Layer::toString)
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
 	if (!layer->this_) {
 		info.GetReturnValue().Set(Nan::New("Null layer").ToLocalChecked());
+		return;
 	}
 
 	std::ostringstream ss;

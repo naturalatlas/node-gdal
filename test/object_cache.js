@@ -10,11 +10,11 @@ describe('object cache', function() {
 			gdal.log("Object Cache test run #"+i);
 			var ds = gdal.open('temp', 'w', 'MEM', 4, 4, 1);
 			var band1 = ds.bands.get(1);
-			//var band2 = ds.bands.get(1);
-			//assert.instanceOf(band1, gdal.RasterBand);
-			//assert.equal(band1, band2);
-			//assert.equal(band1.size.x, 4);
-			//assert.equal(band2.size.x, 4);
+			var band2 = ds.bands.get(1);
+			assert.instanceOf(band1, gdal.RasterBand);
+			assert.equal(band1, band2);
+			assert.equal(band1.size.x, 4);
+			assert.equal(band2.size.x, 4);
 			gc();
 		}
 	});

@@ -52,6 +52,7 @@ NAN_METHOD(GeometryCollectionChildren::New)
 		GeometryCollectionChildren *geom =  static_cast<GeometryCollectionChildren *>(ptr);
 		geom->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create GeometryCollectionChildren directly");
 		return;

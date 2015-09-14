@@ -4,7 +4,7 @@ var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 var fileUtils = require('./utils/file.js')
 
-describe.skip('gdal.RasterBand', function() {
+describe('gdal.RasterBand', function() {
 	afterEach(gc);
 
 	it('should not be instantiable', function() {

@@ -58,6 +58,7 @@ NAN_METHOD(FeatureFields::New)
 		FeatureFields *f =  static_cast<FeatureFields *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create FeatureFields directly");
 		return;
@@ -150,6 +151,7 @@ NAN_METHOD(FeatureFields::set)
 			}
 
 			info.GetReturnValue().Set(Nan::New<Integer>(n));
+			return;
 		} else if (info[0]->IsObject()) {
 			//set({})
 			Local<Object> values = info[0].As<Object>();
@@ -183,6 +185,7 @@ NAN_METHOD(FeatureFields::set)
 			}
 
 			info.GetReturnValue().Set(Nan::New<Integer>(n_fields_set));
+			return;
 		} else {
 			Nan::ThrowError("Method expected an object or array");
 			return;
@@ -199,6 +202,7 @@ NAN_METHOD(FeatureFields::set)
 		}
 
 		info.GetReturnValue().Set(Nan::New<Integer>(1));
+		return;
 	} else {
 		Nan::ThrowError("Invalid number of arguments");
 		return;
@@ -237,6 +241,7 @@ NAN_METHOD(FeatureFields::reset)
 			f->get()->UnsetField(i);
 		}
 		info.GetReturnValue().Set(Nan::New<Integer>(n));
+		return;
 	}
 
 	if (!info[0]->IsObject()) {
@@ -468,6 +473,7 @@ NAN_METHOD(FeatureFields::get)
 		return;
 	} else {
 		info.GetReturnValue().Set(result);
+		return;
 	}
 }
 

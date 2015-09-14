@@ -119,8 +119,12 @@ void Dataset::dispose()
 		for(int i = 0; i < n; i++) {
 			lyr = result_sets[i];
 			if (Layer::cache.has(lyr)) {
-				lyr_wrapped = Nan::ObjectWrap::Unwrap<Layer>(Layer::cache.get(lyr));
+
+				LOG("Unwrapping layer [%p]", lyr);
+				Layer *lyr_wrapped = Layer::cache.getWrapped(lyr);
+				LOG("Disposing layer [%p]", lyr);
 				lyr_wrapped->dispose();
+				LOG("Disposed layer [%p]", lyr);
 			}
 		}
 		result_sets.clear();
@@ -144,8 +148,11 @@ void Dataset::dispose()
 		for(int i = 1; i <= n; i++) {
 			band = this_dataset->GetRasterBand(i);
 			if (RasterBand::cache.has(band)) {
-				RasterBand *band_wrapped = Nan::ObjectWrap::Unwrap<RasterBand>(RasterBand::cache.get(band));	
+				LOG("Unwrapping band [%p]", band);
+				RasterBand *band_wrapped = RasterBand::cache.getWrapped(band);
+				LOG("Disposing band [%p]", band);
 				band_wrapped->dispose();
+				LOG("Disposed band [%p]", band);
 			}
 		}
 
@@ -192,6 +199,7 @@ NAN_METHOD(Dataset::New)
 		info.This()->SetHiddenValue(Nan::New("layers_").ToLocalChecked(), layers);
 
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create dataset directly");
 		return;
@@ -211,15 +219,10 @@ Local<Value> Dataset::New(GDALDataset *raw)
 
 	Dataset *wrapped = new Dataset(raw);
 
-	LOG("NEW EXTERNAL[%p]", raw);
 	Local<Value> ext = Nan::New<External>(wrapped);
-	LOG("NEW INSTANCE[%p]", raw);
 	Local<Object> obj = Nan::New(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
 
-
-	LOG("ADDING TO CACHE[%p]", raw);
 	dataset_cache.add(raw, obj);
-	LOG("DONE ADDING TO CACHE[%p]", raw);
 
 	return scope.Escape(obj);
 }
@@ -273,6 +276,7 @@ NAN_METHOD(Dataset::getMetadata)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::New<Object>());
+		return;
 	}
 	#endif
 
@@ -305,6 +309,7 @@ NAN_METHOD(Dataset::testCapability)
 		OGRDataSource *raw = ds->getDatasource();
 		if(!ds->uses_ogr && raw) {
 			info.GetReturnValue().Set(Nan::False());
+			return;
 		}
 	#endif
 
@@ -338,6 +343,7 @@ NAN_METHOD(Dataset::getGCPProjection)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	#endif
 
@@ -457,6 +463,7 @@ NAN_METHOD(Dataset::executeSQL)
 	if (layer) {
 		ds->result_sets.push_back(layer);
 		info.GetReturnValue().Set(Layer::New(layer, raw, true));
+		return;
 	} else {
 		Nan::ThrowError("Error executing SQL");
 		return;
@@ -490,6 +497,7 @@ NAN_METHOD(Dataset::getFileList)
 			return;
 		}
 		info.GetReturnValue().Set(results);
+		return;
 	}
 	#endif
 
@@ -502,6 +510,7 @@ NAN_METHOD(Dataset::getFileList)
 	char **list = raw->GetFileList();
 	if (!list) {
 		info.GetReturnValue().Set(results);
+		return;
 	}
 
 	int i = 0;
@@ -536,6 +545,7 @@ NAN_METHOD(Dataset::getGCPs)
 			return;
 		}
 		info.GetReturnValue().Set(results);
+		return;
 	}
 	#endif
 
@@ -550,6 +560,7 @@ NAN_METHOD(Dataset::getGCPs)
 
 	if (!gcps) {
 		info.GetReturnValue().Set(results);
+		return;
 	}
 
 	for (int i = 0; i < n; i++) {
@@ -749,6 +760,7 @@ NAN_GETTER(Dataset::descriptionGetter)
 			return;
 		}
 		info.GetReturnValue().Set(SafeString::New(raw->GetName()));
+		return;
 	}
 	#endif
 
@@ -780,6 +792,7 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	#endif
 
@@ -794,6 +807,7 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 	#if GDAL_VERSION_MAJOR >= 2
 	if(!raw->GetDriver()->GetMetadataItem(GDAL_DCAP_RASTER)){
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	#endif
 
@@ -823,6 +837,7 @@ NAN_GETTER(Dataset::srsGetter)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	#endif
 
@@ -836,6 +851,7 @@ NAN_GETTER(Dataset::srsGetter)
 	if (*wkt == '\0') {
 		//getProjectionRef returns string of length 0 if no srs set
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	//otherwise construct and return SpatialReference from wkt
 	OGRSpatialReference *srs = new OGRSpatialReference();
@@ -874,6 +890,7 @@ NAN_GETTER(Dataset::geoTransformGetter)
 			return;
 		}
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 	}
 	#endif
 
@@ -887,8 +904,8 @@ NAN_GETTER(Dataset::geoTransformGetter)
 	if(err) {
 		// This is mostly (always?) a sign that it has not been set
 		info.GetReturnValue().Set(Nan::Null());
+		return;
 		//NODE_THROW_CPLERR(err);
-		//return;
 	}
 
 	Local<Array> result = Nan::New<Array>(6);
@@ -920,6 +937,7 @@ NAN_GETTER(Dataset::driverGetter)
 			return;
 		}
 		info.GetReturnValue().Set(Driver::New(raw->GetDriver()));
+		return;
 	}
 	#endif
 

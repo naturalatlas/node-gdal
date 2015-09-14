@@ -120,6 +120,7 @@ NAN_METHOD(Driver::New)
 		f->Wrap(info.This());
 
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create Driver directly");
 		return;
@@ -189,6 +190,7 @@ NAN_GETTER(Driver::descriptionGetter)
 	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr) {
 		info.GetReturnValue().Set(SafeString::New(driver->getOGRSFDriver()->GetName()));
+		return;
 	}
 	#endif
 
@@ -283,6 +285,7 @@ NAN_METHOD(Driver::create)
 		}
 
 		info.GetReturnValue().Set(Dataset::New(ds));
+		return;
 	}
 	#endif
 
@@ -358,6 +361,7 @@ NAN_METHOD(Driver::createCopy)
 		}
 
 		info.GetReturnValue().Set(Dataset::New(ds));
+		return;
 	}
 	#endif
 
@@ -468,6 +472,7 @@ NAN_METHOD(Driver::getMetadata)
 		result = Nan::New<Object>();
 		result->Set(Nan::New("DCAP_VECTOR").ToLocalChecked(), Nan::New("YES").ToLocalChecked());
 		info.GetReturnValue().Set(result);
+		return;
 	}
 	#endif
 
@@ -516,6 +521,7 @@ NAN_METHOD(Driver::open)
 			return;
 		}
 		info.GetReturnValue().Set(Dataset::New(ds));
+		return;
 	}
 	#endif
 

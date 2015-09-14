@@ -15,7 +15,7 @@ var NAD83_WKT = 'PROJCS["NAD_1983_UTM_Zone_10N",' +
 			    'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
 			    'UNIT["Meter",1.0]]';
 
-describe.skip('gdal.Dataset', function() {
+describe('gdal.Dataset', function() {
 	afterEach(gc);
 
 	var ds;

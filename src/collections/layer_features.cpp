@@ -57,6 +57,7 @@ NAN_METHOD(LayerFeatures::New)
 		LayerFeatures *f =  static_cast<LayerFeatures *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create LayerFeatures directly");
 		return;

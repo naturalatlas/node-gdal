@@ -74,6 +74,7 @@ NAN_METHOD(FieldDefn::New)
 		FieldDefn *f = static_cast<FieldDefn *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		std::string field_name("");
 		std::string type_name("string");
@@ -179,8 +180,14 @@ NAN_GETTER(FieldDefn::justificationGetter)
 	Nan::HandleScope scope;
 	FieldDefn *def = Nan::ObjectWrap::Unwrap<FieldDefn>(info.This());
 	OGRJustification justification = def->this_->GetJustify();
-	if (justification == OJRight) info.GetReturnValue().Set(Nan::New("Right").ToLocalChecked());
-	if (justification == OJLeft)  info.GetReturnValue().Set(Nan::New("Left").ToLocalChecked());
+	if (justification == OJRight) { 
+		info.GetReturnValue().Set(Nan::New("Right").ToLocalChecked());
+		return;
+	}
+	if (justification == OJLeft) {
+		info.GetReturnValue().Set(Nan::New("Left").ToLocalChecked());
+		return;
+	}
 	info.GetReturnValue().Set(Nan::Undefined());
 }
 

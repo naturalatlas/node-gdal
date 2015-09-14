@@ -56,6 +56,7 @@ NAN_METHOD(LayerFields::New)
 		LayerFields *layer =  static_cast<LayerFields *>(ptr);
 		layer->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create LayerFields directly");
 		return;

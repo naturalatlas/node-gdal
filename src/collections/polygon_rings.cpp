@@ -52,6 +52,7 @@ NAN_METHOD(PolygonRings::New)
 		PolygonRings *geom =  static_cast<PolygonRings *>(ptr);
 		geom->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create PolygonRings directly");
 		return;
@@ -120,8 +121,10 @@ NAN_METHOD(PolygonRings::get)
 
 	if(i == 0) {
 		info.GetReturnValue().Set(LinearRing::New(geom->get()->getExteriorRing(), false));
+		return;
 	} else {
 		info.GetReturnValue().Set(LinearRing::New(geom->get()->getInteriorRing(i-1), false));
+		return;
 	}
 }
 

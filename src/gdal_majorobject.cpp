@@ -55,6 +55,7 @@ NAN_METHOD(MajorObject::New)
 		MajorObject *f = static_cast<MajorObject *>(ptr);
 		f->Wrap(info.This());
 		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
 		Nan::ThrowError("Cannot create MajorObject directly");
 		return;
