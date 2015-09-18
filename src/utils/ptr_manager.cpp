@@ -90,7 +90,7 @@ void PtrManager::dispose(PtrManagerDatasetItem* item)
 	#if GDAL_VERSION_MAJOR < 2
 	if(item->ptr_datasource) {
 		Dataset::datasource_cache.erase(item->ptr_datasource);
-		OGRDataSource::DestroyDataSource(ptr_datasource);
+		OGRDataSource::DestroyDataSource(item->ptr_datasource);
 	}
 	#endif
 	if(item->ptr){
