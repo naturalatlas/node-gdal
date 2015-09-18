@@ -7,7 +7,7 @@ var assert = require('chai').assert;
 describe('Open', function() {
 	afterEach(gc);
 
-	describe('SDTS (DDF)', function() {
+	describe.skip('SDTS (DDF)', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
