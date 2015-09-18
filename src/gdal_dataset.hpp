@@ -75,7 +75,7 @@ public:
 		return this_datasource;
 	}
 	inline bool isAlive(){
-		return (uses_ogr ? this_datasource : this_dataset) && ptr_manager.isAlive(uid);
+		return (uses_ogr ? (this_datasource != NULL) : (this_dataset != NULL) ) && ptr_manager.isAlive(uid);
 	}
 	bool uses_ogr;
 	#else

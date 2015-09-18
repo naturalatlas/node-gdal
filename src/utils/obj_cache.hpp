@@ -55,7 +55,7 @@ public:
 
 private:
 	static void release(ObjectCacheItem<K> *item, ObjectCacheItemStatus status_change);
-	static void cacheWeakCallback(const Nan::WeakCallbackInfo<ObjectCacheItem<K>> &data);
+	static void cacheWeakCallback(const Nan::WeakCallbackInfo< ObjectCacheItem<K> > &data);
 	ObjectCacheItem<K>* getItem(K *key);
 	void erase(ObjectCacheItem<K> *key);
 	std::map<K*, ObjectCacheItem<K>* > cache;
@@ -74,7 +74,7 @@ ObjectCache<K, W>::~ObjectCache()
 }
 
 template <typename K, typename W>
-void ObjectCache<K, W>::cacheWeakCallback(const Nan::WeakCallbackInfo<ObjectCacheItem<K>> &data)
+void ObjectCache<K, W>::cacheWeakCallback(const Nan::WeakCallbackInfo< ObjectCacheItem<K> > &data)
 {
 	ObjectCacheItem<K>* item = (ObjectCacheItem<K>*) data.GetParameter();
 	LOG("ObjectCache Weak Callback [%p]", item->key);
