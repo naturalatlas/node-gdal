@@ -7,6 +7,13 @@ os:
   - linux
   - osx
 
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+
 env:
   matrix:
     - NODE_NVM_VERSION="4.0" TARGET=STATIC
@@ -29,6 +36,7 @@ matrix:
     - env: NODE_NVM_VERSION="0.10" TARGET=TRUNK
 
 before_install:
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - PUBLISH_BINARY=false
   - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then PUBLISH_BINARY=true; fi;
@@ -37,6 +45,7 @@ before_install:
   - nvm use $NODE_NVM_VERSION
   - node --version
   - npm --version
+  - $CXX --version
   - NPM_CACHE=$(npm config get cache)
   - echo $NPM_CACHE
   - if [ -d $NPM_CACHE ]; then sudo chown -R $USER $NPM_CACHE; fi;
