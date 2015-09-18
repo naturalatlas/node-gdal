@@ -45,7 +45,7 @@ namespace node_gdal {
 
 			OGRDataSource *ogr_ds = OGRSFDriverRegistrar::Open(path.c_str(), static_cast<int>(access));
 			if(ogr_ds) {
-				info.GetReturnValue().Set(NanNewDataset::New(ogr_ds));
+				info.GetReturnValue().Set(Dataset::New(ogr_ds));
 				return;
 			}
 
