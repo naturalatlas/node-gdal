@@ -99,21 +99,21 @@ NAN_METHOD(DatasetLayers::get)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+	
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
-		OGRDataSource *raw = ds->getDatasource();
-		if(!ds->uses_ogr && ds->getDataset()) {
+		OGRDataSource *raw = ds->getDatasource(); 
+		if(!ds->uses_ogr) {
 			info.GetReturnValue().Set(Nan::Null());
 			return;
 		}
 	#endif
-
-	if (!raw) {
-		Nan::ThrowError("Dataset object already destroyed");
-		return;
-	}
 
 	if(info.Length() < 1) {
 		Nan::ThrowError("method must be given integer or string");
@@ -157,6 +157,11 @@ NAN_METHOD(DatasetLayers::create)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+	
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
@@ -167,11 +172,6 @@ NAN_METHOD(DatasetLayers::create)
 			return;
 		}
 	#endif
-
-	if (!raw) {
-		Nan::ThrowError("Dataset object already destroyed");
-		return;
-	}
 
 	std::string layer_name;
 	SpatialReference *spatial_ref = NULL;
@@ -214,21 +214,21 @@ NAN_METHOD(DatasetLayers::count)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+	
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
 	#else
 		OGRDataSource *raw = ds->getDatasource();
-		if(!ds->uses_ogr && ds->getDataset()) {
+		if(!ds->uses_ogr) {
 			info.GetReturnValue().Set(Nan::New<Integer>(0));
 			return;
 		}
 	#endif
-
-	if (!raw) {
-		Nan::ThrowError("Dataset object already destroyed");
-		return;
-	}
 
 	info.GetReturnValue().Set(Nan::New<Integer>(raw->GetLayerCount()));
 }
@@ -248,6 +248,11 @@ NAN_METHOD(DatasetLayers::copy)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+	
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
@@ -258,11 +263,6 @@ NAN_METHOD(DatasetLayers::copy)
 			return;
 		}
 	#endif
-
-	if (!raw) {
-		Nan::ThrowError("Dataset object already destroyed");
-		return;
-	}
 
 	Layer *layer_to_copy;
 	std::string new_name = "";
@@ -300,6 +300,11 @@ NAN_METHOD(DatasetLayers::remove)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+	
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR >= 2
 		GDALDataset *raw = ds->getDataset();
@@ -310,12 +315,6 @@ NAN_METHOD(DatasetLayers::remove)
 			return;
 		}
 	#endif
-
-	if (!raw) {
-		Nan::ThrowError("Dataset object already destroyed");
-		return;
-	}
-
 
 	int i;
 	NODE_ARG_INT(0, "layer index", i);

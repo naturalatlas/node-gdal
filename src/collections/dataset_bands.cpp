@@ -97,13 +97,13 @@ NAN_METHOD(DatasetBands::get)
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
+	if (!ds->isAlive()){
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
-		OGRDataSource* raw = ds->getDatasource();
-		if (!raw) {
-			Nan::ThrowError("Dataset object has already been destroyed");
-			return;
-		}
 		info.GetReturnValue().Set(Nan::Null());
 		return;
 	} else {
@@ -111,10 +111,6 @@ NAN_METHOD(DatasetBands::get)
 	{
 	#endif
 		GDALDataset* raw = ds->getDataset();
-		if (!raw) {
-			Nan::ThrowError("Dataset object has already been destroyed");
-			return;
-		}
 		int band_id;
 		NODE_ARG_INT(0, "band id", band_id);
 
@@ -140,6 +136,11 @@ NAN_METHOD(DatasetBands::create)
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
 		Nan::ThrowError("Dataset does not support getting creating bands");
@@ -148,11 +149,6 @@ NAN_METHOD(DatasetBands::create)
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
-	if (!raw) {
-		Nan::ThrowError("Dataset object has already been destroyed");
-		return;
-	}
-
 	GDALDataType type;
 	StringList options;
 
@@ -198,23 +194,19 @@ NAN_METHOD(DatasetBands::count)
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
+
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
-		OGRDataSource* raw = ds->getDatasource();
-		if (!raw) {
-			Nan::ThrowError("Dataset object has already been destroyed");
-			return;
-		}
 		info.GetReturnValue().Set(Nan::New<Integer>(0));
 		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
-	if (!raw) {
-		Nan::ThrowError("Dataset object has already been destroyed");
-		return;
-	}
 	info.GetReturnValue().Set(Nan::New<Integer>(raw->GetRasterCount()));
 }
 

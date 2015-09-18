@@ -37,6 +37,7 @@ public:
 	static NAN_METHOD(getMaskBand);
 	static NAN_METHOD(getMaskFlags);
 	static NAN_METHOD(createMaskBand);
+	static NAN_METHOD(getMetadata);
 
 	// unimplemented methods
 	//static NAN_METHOD(getColorTable);
@@ -50,6 +51,7 @@ public:
 	static NAN_GETTER(dsGetter);
 	static NAN_GETTER(sizeGetter);
 	static NAN_GETTER(idGetter);
+	static NAN_GETTER(descriptionGetter);
 	static NAN_GETTER(overviewsGetter);
 	static NAN_GETTER(pixelsGetter);
 	static NAN_GETTER(blockSizeGetter);
@@ -64,6 +66,7 @@ public:
 	static NAN_GETTER(noDataValueGetter);
 	static NAN_GETTER(categoryNamesGetter);
 	static NAN_GETTER(colorInterpretationGetter);
+	static NAN_GETTER(uidGetter);
 
 	static NAN_SETTER(unitTypeSetter);
 	static NAN_SETTER(scaleSetter);
@@ -76,6 +79,9 @@ public:
 
 	RasterBand();
 	RasterBand(GDALRasterBand *band);
+	inline bool isAlive(){
+		return this_ && ptr_manager.isAlive(uid);
+	}
 	inline GDALRasterBand *get() {
 		return this_;
 	}	
@@ -83,7 +89,7 @@ public:
 		return parent_ds;
 	}
 	void dispose();
-
+	long uid;
 private:
 	~RasterBand();
 	GDALRasterBand *this_;

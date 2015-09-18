@@ -35,6 +35,7 @@ void Layer::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "flush", syncToDisk);
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, "_uid", uidGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "srs", srsGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "features", featuresGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "fields", fieldsGetter, READ_ONLY_SETTER);
@@ -50,18 +51,18 @@ void Layer::Initialize(Local<Object> target)
 
 Layer::Layer(OGRLayer *layer)
 	: Nan::ObjectWrap(),
+	  uid(0),
 	  this_(layer),
-	  parent_ds(0),
-	  is_result_set(false)
+	  parent_ds(0)
 {
 	LOG("Created layer [%p]", layer);
 }
 
 Layer::Layer()
 	: Nan::ObjectWrap(),
+	  uid(0),
 	  this_(0),
-	  parent_ds(0),
-	  is_result_set(false)
+	  parent_ds(0)
 {
 }
 
@@ -76,11 +77,7 @@ void Layer::dispose()
 
 		LOG("Disposing layer [%p]", this_);
 
-		cache.erase(this_);
-		if (is_result_set && parent_ds && this_) {
-			LOG("Releasing result set [%p] from datasource [%p]", this_, parent_ds);
-			parent_ds->ReleaseResultSet(this_);
-		}
+		ptr_manager.dispose(uid);
 
 		LOG("Disposed layer [%p]", this_);
 		this_ = NULL;
@@ -149,7 +146,6 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 	}
 
 	Layer *wrapped = new Layer(raw);
-	wrapped->is_result_set = result_set;
 
 	Local<Value> ext = Nan::New<External>(wrapped);
 	Local<Object> obj = Nan::New(Layer::constructor)->GetFunction()->NewInstance(1, &ext);
@@ -157,17 +153,16 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 	cache.add(raw, obj);
 
 	//add reference to datasource so datasource doesnt get GC'ed while layer is alive
-	if (raw_parent) {
-		Local<Value> ds;
-		#if GDAL_VERSION_MAJOR >= 2
-			if (Dataset::dataset_cache.has(raw_parent)) {
-				ds = Nan::New(Dataset::dataset_cache.get(raw_parent));
-			}
-		#else
-			if (Dataset::datasource_cache.has(raw_parent)) {
-				ds = Nan::New(Dataset::datasource_cache.get(raw_parent));
-			}
-		#endif
+	Local<Object> ds;
+	#if GDAL_VERSION_MAJOR >= 2
+		if (Dataset::dataset_cache.has(raw_parent)) {
+			ds = Nan::New(Dataset::dataset_cache.get(raw_parent));
+		}
+	#else
+		if (Dataset::datasource_cache.has(raw_parent)) {
+			ds = Nan::New(Dataset::datasource_cache.get(raw_parent));
+		}
+	#endif
 		else {
 			LOG("Layer's parent dataset disappeared from cache (layer = %p, dataset = %p)", raw, raw_parent);
 			Nan::ThrowError("Layer's parent dataset disappeared from cache");
@@ -175,9 +170,11 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 			//ds = Dataset::New(raw_parent); //should never happen
 		}
 
-		wrapped->parent_ds = raw_parent;
-		obj->SetHiddenValue(Nan::New("ds_").ToLocalChecked(), ds);
-	}
+	long parent_uid = Nan::ObjectWrap::Unwrap<Dataset>(ds)->uid;
+	
+	wrapped->uid = ptr_manager.add(raw, parent_uid, result_set);
+	wrapped->parent_ds = raw_parent;
+	obj->SetHiddenValue(Nan::New("ds_").ToLocalChecked(), ds);
 
 	return scope.Escape(obj);
 }
@@ -228,7 +225,7 @@ NAN_METHOD(Layer::getExtent)
 	Nan::HandleScope scope;
 
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -266,7 +263,7 @@ NAN_METHOD(Layer::getSpatialFilter)
 	Nan::HandleScope scope;
 
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -295,7 +292,7 @@ NAN_METHOD(Layer::setSpatialFilter)
 	Nan::HandleScope scope;
 
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -352,7 +349,7 @@ NAN_METHOD(Layer::setAttributeFilter)
 	Nan::HandleScope scope;
 
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -382,7 +379,7 @@ NAN_METHOD(Layer::getLayerDefn)
 
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
 
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -410,7 +407,7 @@ NAN_GETTER(Layer::srsGetter)
 {
 	Nan::HandleScope scope;
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -426,7 +423,7 @@ NAN_GETTER(Layer::nameGetter)
 {
 	Nan::HandleScope scope;
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -442,7 +439,7 @@ NAN_GETTER(Layer::geomColumnGetter)
 {
 	Nan::HandleScope scope;
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -458,7 +455,7 @@ NAN_GETTER(Layer::fidColumnGetter)
 {
 	Nan::HandleScope scope;
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -474,7 +471,7 @@ NAN_GETTER(Layer::geomTypeGetter)
 {
 	Nan::HandleScope scope;
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
-	if (!layer->this_) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object has already been destroyed");
 		return;
 	}
@@ -501,6 +498,13 @@ NAN_GETTER(Layer::fieldsGetter)
 {
 	Nan::HandleScope scope;
 	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("fields_").ToLocalChecked()));
+}
+
+NAN_GETTER(Layer::uidGetter)
+{
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	info.GetReturnValue().Set(Nan::New((int)layer->uid));
 }
 
 } // namespace node_gdal

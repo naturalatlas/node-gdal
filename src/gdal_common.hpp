@@ -12,8 +12,11 @@
 #include <nan.h>
 #pragma GCC diagnostic pop
 
+#include "utils/ptr_manager.hpp"
+
 namespace node_gdal {
-	extern FILE *log_file;
+  extern FILE *log_file;
+  extern PtrManager ptr_manager;
 }
 
 #ifdef ENABLE_LOGGING
@@ -136,7 +139,7 @@ NAN_SETTER(READ_ONLY_SETTER);
       return;                                                                               \
   }                                                                                                       \
   var = Nan::ObjectWrap::Unwrap<type>(val.As<Object>());                                                       \
-  if(!var->get()) {                                                                                       \
+  if(!var->isAlive()) {                                                                                       \
       Nan::ThrowError(key ": " #type " object has already been destroyed");                                 \
       return;                                                                               \
   }                                                                                                       \
@@ -149,7 +152,7 @@ NAN_SETTER(READ_ONLY_SETTER);
     Local<Value> val = obj->Get(sym);                                                                     \
     if(val->IsObject() && Nan::New(type::constructor)->HasInstance(val)){                                        \
       var = Nan::ObjectWrap::Unwrap<type>(val.As<Object>());                                                   \
-      if(!var->get()) {                                                                                   \
+      if(!var->isAlive()) {                                                                                   \
           Nan::ThrowError(key ": " #type " object has already been destroyed");                             \
           return;                                                                           \
       }                                                                                                   \
@@ -292,7 +295,7 @@ NAN_SETTER(READ_ONLY_SETTER);
     Nan::ThrowTypeError(name " must be an instance of " #type); return;                                                      \
   }                                                                                                                                      \
   var = Nan::ObjectWrap::Unwrap<type>(info[num].As<Object>());                                                                                \
-  if (!var->get()) {                                                                                                                     \
+  if (!var->isAlive()) {                                                                                                                     \
     Nan::ThrowError(#type" parameter already destroyed"); return;                                                            \
   }
 
@@ -363,7 +366,7 @@ NAN_SETTER(READ_ONLY_SETTER);
       Nan::ThrowTypeError(name " must be an instance of " #type); return;                                                      \
     }                                                                                                                                      \
     var = Nan::ObjectWrap::Unwrap<type>(info[num].As<Object>());                                                                                \
-    if (!var->get()) {                                                                                                                     \
+    if (!var->isAlive()) {                                                                                                                     \
       Nan::ThrowError(#type" parameter already destroyed");                                                                                  \
       return;                                                                                                                \
     }                                                                                                                                      \
@@ -386,7 +389,7 @@ NAN_METHOD(klass::method)                                                       
 {                                                                                                                 \
   Nan::HandleScope scope;                                                                                                     \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                            \
-  if (!obj->this_) {                                                                                              \
+  if (!obj->isAlive()) {                                                                                              \
     Nan::ThrowError(#klass" object has already been destroyed");                                                    \
     return;                                                                                         \
   }                                                                                                               \
@@ -401,7 +404,7 @@ NAN_METHOD(klass::method)                                                       
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                      \
-  if (!obj->this_)   return Nan::ThrowError(#klass" object has already been destroyed");                                      \
+  if (!obj->isAlive())   return Nan::ThrowError(#klass" object has already been destroyed");                                      \
   info.GetReturnValue().Set(Nan::New<result_type>(obj->this_->wrapped_method(param->get())));                                            \
 }
 
@@ -412,7 +415,7 @@ NAN_METHOD(klass::method)                                                       
   enum_type param;                                                                                                      \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                  \
-  if (!obj->this_) {                                                                                                    \
+  if (!obj->isAlive()) {                                                                                                    \
     Nan::ThrowError(#klass" object has already been destroyed");                                                          \
     return;                                                                                               \
   }                                                                                                                     \
@@ -427,7 +430,7 @@ NAN_METHOD(klass::method)                                                       
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                \
-  if (!obj->this_) {                                                                                                  \
+  if (!obj->isAlive()) {                                                                                                  \
     Nan::ThrowError(#klass" object has already been destroyed");                                                        \
     return;                                                                                             \
   }                                                                                                                   \
@@ -442,7 +445,7 @@ NAN_METHOD(klass::method)                                                       
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                          \
-  if (!obj->this_) {                                                                                            \
+  if (!obj->isAlive()) {                                                                                            \
     Nan::ThrowError(#klass" object has already been destroyed");                                                  \
     return;                                                                                       \
   }                                                                                                             \
@@ -457,7 +460,7 @@ NAN_METHOD(klass::method)                                                       
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                         \
-  if (!obj->this_) {                                                                                           \
+  if (!obj->isAlive()) {                                                                                           \
     Nan::ThrowError(#klass" object has already been destroyed");                                                 \
     return;                                                                                      \
   }                                                                                                            \
@@ -470,7 +473,7 @@ NAN_METHOD(klass::method)                                                       
 NAN_METHOD(klass::method)                                                                                           \
 {                                                                                                                   \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                              \
-  if (!obj->this_) {                                                                                                \
+  if (!obj->isAlive()) {                                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                                      \
     return;                                                                                           \
   }                                                                                                                 \
@@ -490,7 +493,7 @@ NAN_METHOD(klass::method)                                                       
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                      \
-  if (!obj->this_) {                                                                                                \
+  if (!obj->isAlive()) {                                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                                      \
     return;                                                                                           \
   }                                                                                                                 \
@@ -510,7 +513,7 @@ NAN_METHOD(klass::method)                                                       
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                \
-  if (!obj->this_) {                                                                                                \
+  if (!obj->isAlive()) {                                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                                      \
     return;                                                                                           \
   }                                                                                                                 \
@@ -530,7 +533,7 @@ NAN_METHOD(klass::method)                                                       
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                          \
-  if (!obj->this_) {                                                                                            \
+  if (!obj->isAlive()) {                                                                                            \
     Nan::ThrowError(#klass" object has already been destroyed");                                                  \
     return;                                                                                       \
   }                                                                                                             \
@@ -550,7 +553,7 @@ NAN_METHOD(klass::method)                                                       
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                         \
-  if (!obj->this_) {                                                                                           \
+  if (!obj->isAlive()) {                                                                                           \
     Nan::ThrowError(#klass" object has already been destroyed");                                                 \
     return;                                                                                      \
   }                                                                                                            \
@@ -568,7 +571,7 @@ NAN_METHOD(klass::method)                                                       
 NAN_METHOD(klass::method)                                                                                           \
 {                                                                                                                   \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                              \
-  if (!obj->this_) {                                                                                                \
+  if (!obj->isAlive()) {                                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                                      \
     return;                                                                                           \
   }                                                                                                                 \
@@ -588,7 +591,7 @@ NAN_METHOD(klass::method)                                                       
   param_type *param;                                                                                                        \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                      \
-  if (!obj->this_) {                                                                                                \
+  if (!obj->isAlive()) {                                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                                      \
     return;                                                                                           \
   }                                                                                                                 \
@@ -608,7 +611,7 @@ NAN_METHOD(klass::method)                                                       
   std::string param;                                                                                                  \
   NODE_ARG_STR(0, #param_name, param);                                                                                \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                                \
-  if (!obj->this_) {                                                                                                  \
+  if (!obj->isAlive()) {                                                                                                  \
     Nan::ThrowError(#klass" object has already been destroyed");                                                        \
     return;                                                                                             \
   }                                                                                                                   \
@@ -628,7 +631,7 @@ NAN_METHOD(klass::method)                                                       
   int param;                                                                                                    \
   NODE_ARG_INT(0, #param_name, param);                                                                          \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                          \
-  if (!obj->this_) {                                                                                            \
+  if (!obj->isAlive()) {                                                                                            \
     Nan::ThrowError(#klass" object has already been destroyed");                                                  \
     return;                                                                                       \
   }                                                                                                             \
@@ -648,7 +651,7 @@ NAN_METHOD(klass::method)                                                       
   double param;                                                                                                \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                         \
-  if (!obj->this_) {                                                                                           \
+  if (!obj->isAlive()) {                                                                                           \
     Nan::ThrowError(#klass" object has already been destroyed");                                                 \
     return;                                                                                      \
   }                                                                                                            \
@@ -667,7 +670,7 @@ NAN_METHOD(klass::method)                                            \
 {                                                                    \
   Nan::HandleScope scope;                                                        \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());               \
-  if (!obj->this_) {                                                 \
+  if (!obj->isAlive()) {                                                 \
     Nan::ThrowError(#klass" object has already been destroyed");       \
     return;                                            \
   }                                                                  \
@@ -683,7 +686,7 @@ NAN_METHOD(klass::method)                                                       
   param_type *param;                                                                                    \
   NODE_ARG_WRAPPED(0, #param_name, param_type, param);                                                  \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                                  \
-  if (!obj->this_) {                                                                                    \
+  if (!obj->isAlive()) {                                                                                    \
     Nan::ThrowError(#klass" object has already been destroyed");                                          \
     return;                                                                               \
   }                                                                                                     \
@@ -699,7 +702,7 @@ NAN_METHOD(klass::method)                                                       
   int param;                                                                                \
   NODE_ARG_INT(0, #param_name, param);                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                      \
-  if (!obj->this_) {                                                                        \
+  if (!obj->isAlive()) {                                                                        \
     Nan::ThrowError(#klass" object has already been destroyed");                              \
     return;                                                                   \
   }                                                                                         \
@@ -715,7 +718,7 @@ NAN_METHOD(klass::method)                                                       
   double param;                                                                             \
   NODE_ARG_DOUBLE(0, #param_name, param);                                                   \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                      \
-  if (!obj->this_) {                                                                        \
+  if (!obj->isAlive()) {                                                                        \
     Nan::ThrowError(#klass" object has already been destroyed");                              \
     return;                                                                   \
   }                                                                                         \
@@ -731,7 +734,7 @@ NAN_METHOD(klass::method)                                                       
   bool param;                                                                               \
   NODE_ARG_BOOL(0, #param_name, param);                                                     \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                      \
-  if (!obj->this_) {                                                                        \
+  if (!obj->isAlive()) {                                                                        \
     Nan::ThrowError(#klass" object has already been destroyed");                              \
     return;                                                                   \
   }                                                                                         \
@@ -747,7 +750,7 @@ NAN_METHOD(klass::method)                                                       
   enum_type param;                                                                                  \
   NODE_ARG_ENUM(0, #param_name, enum_type, param);                                                  \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                              \
-  if (!obj->this_) {                                                                                \
+  if (!obj->isAlive()) {                                                                                \
     Nan::ThrowError(#klass" object has already been destroyed");                                      \
     return;                                                                           \
   }                                                                                                 \
@@ -763,7 +766,7 @@ NAN_METHOD(klass::method)                                                       
   std::string param;                                                                        \
   NODE_ARG_STR(0, #param_name, param);                                                      \
   klass *obj = Nan::ObjectWrap::Unwrap<klass>(info.This());                                      \
-  if (!obj->this_) {                                                                        \
+  if (!obj->isAlive()) {                                                                        \
     Nan::ThrowError(#klass" object has already been destroyed");                              \
     return;                                                                   \
   }                                                                                         \

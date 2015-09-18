@@ -94,6 +94,9 @@ public:
 	inline OGRGeometry *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 protected:
 	~Geometry();

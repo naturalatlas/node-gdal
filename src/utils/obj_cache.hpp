@@ -16,18 +16,19 @@
 
 #include "../gdal_common.hpp"
 
-//TODO: This could use some serious cleaning
-
-#define ERASED_FROM_CACHE 1
-#define WEAK_CALLBACK_CALLED 2
+enum ObjectCacheItemStatus {
+	ITEM_ACTIVE = 0,
+	ITEM_RELEASED_FROM_CACHE = 1,
+	ITEM_RELEASED_FROM_WEAK_CALLBACK = 2,
+	ITEM_RELEASED_FROM_ALL = 3
+};
 
 template <typename K>
 struct ObjectCacheItem {
 	Nan::Persistent<v8::Object> obj;
 	K *key;
 	K *alias;
-	char status;
-	void *cache;
+	ObjectCacheItemStatus status;
 };
 
 // a class for maintaining a map of native pointers and persistent JS handles
@@ -53,6 +54,7 @@ public:
 	~ObjectCache();
 
 private:
+	static void release(ObjectCacheItem<K> *item, ObjectCacheItemStatus status_change);
 	static void cacheWeakCallback(const Nan::WeakCallbackInfo<ObjectCacheItem<K>> &data);
 	ObjectCacheItem<K>* getItem(K *key);
 	void erase(ObjectCacheItem<K> *key);
@@ -74,17 +76,18 @@ ObjectCache<K, W>::~ObjectCache()
 template <typename K, typename W>
 void ObjectCache<K, W>::cacheWeakCallback(const Nan::WeakCallbackInfo<ObjectCacheItem<K>> &data)
 {
-	//called when only reference to object is weak - after object destructor is called (... or before, who knows)
-	ObjectCacheItem<K> *item = (ObjectCacheItem<K>*) data.GetParameter();
-	K *key = (K*) item->key;
+	ObjectCacheItem<K>* item = (ObjectCacheItem<K>*) data.GetParameter();
+	LOG("ObjectCache Weak Callback [%p]", item->key);
+	release(item, ITEM_RELEASED_FROM_WEAK_CALLBACK);
+}
 
-	LOG("ObjectCache Weak Callback [%p]", key);
-	
-	item->status |= WEAK_CALLBACK_CALLED;
 
-	if(item->status == (WEAK_CALLBACK_CALLED | ERASED_FROM_CACHE)){
+template <typename K, typename W>
+void ObjectCache<K, W>::release(ObjectCacheItem<K> *item, ObjectCacheItemStatus status_change)
+{
+	item->status = (ObjectCacheItemStatus) (item->status | status_change);
+	if(item->status == ITEM_RELEASED_FROM_ALL){
 		delete item;
-		LOG("Deleted Object Cache Item in Weak Callback [%p]", key);
 	}
 }
 
@@ -94,7 +97,7 @@ void ObjectCache<K, W>::add(K *key, K *alias, v8::Local<v8::Object> obj)
 	ObjectCacheItem<K> *item = new ObjectCacheItem<K>();
 	item->key    = key;
 	item->alias  = alias;
-	item->cache  = this;
+	item->status = ITEM_ACTIVE;
 	item->obj.Reset(obj);
 	item->obj.SetWeak(item, cacheWeakCallback, Nan::WeakCallbackType::kParameter);
 
@@ -113,18 +116,7 @@ void ObjectCache<K, W>::add(K *key, v8::Local<v8::Object> obj)
 
 template <typename K, typename W>
 bool ObjectCache<K, W>::has(K *key){
-	bool in_cache = cache.count(key) > 0 || aliases.count(key) > 0;
-	if(!in_cache) return false;
-
-	ObjectCacheItem<K> *item = getItem(key);
-	
-	bool is_dead = item->obj.IsEmpty();
-	if(is_dead){
-		LOG("HANDLE IS DEAD [%p]", key);
-		erase(item);
-		return false;
-	}
-	return true;
+	return cache.count(key) > 0 || aliases.count(key) > 0;
 };
 
 template <typename K, typename W>
@@ -181,12 +173,9 @@ void ObjectCache<K, W>::erase(ObjectCacheItem<K> *item)
 	if(item->alias){
 		aliases.erase(item->alias);
 	}
-	item->status |= ERASED_FROM_CACHE;
 
-	if(item->status == (WEAK_CALLBACK_CALLED | ERASED_FROM_CACHE)){
-		delete item;
-		LOG("Deleted Object Cache Item outside Weak Callback [%p]", key);
-	}
+	LOG("Erased Object Cache Item [%p]", key);
+	release(item, ITEM_RELEASED_FROM_CACHE);
 }
 
 #endif

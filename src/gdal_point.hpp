@@ -42,7 +42,10 @@ public:
 	inline OGRPoint *get() {
 		return this_;
 	}
-
+	inline bool isAlive(){
+		return this_;
+	}
+	
 private:
 	~Point();
 	OGRPoint *this_;

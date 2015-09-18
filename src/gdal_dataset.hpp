@@ -52,6 +52,7 @@ public:
 	static NAN_GETTER(geoTransformGetter);
 	static NAN_GETTER(descriptionGetter);
 	static NAN_GETTER(layersGetter);
+	static NAN_GETTER(uidGetter);
 
 	static NAN_SETTER(srsSetter);
 	static NAN_SETTER(geoTransformSetter);
@@ -64,6 +65,7 @@ public:
 	}
 
 	void dispose();
+    long uid;
 
 	#if GDAL_VERSION_MAJOR < 2
 	static Local<Value> New(OGRDataSource *ds);
@@ -72,7 +74,14 @@ public:
 	inline OGRDataSource *getDatasource() {
 		return this_datasource;
 	}
+	inline bool isAlive(){
+		return (uses_ogr ? this_datasource : this_dataset) && ptr_manager.isAlive(uid);
+	}
 	bool uses_ogr;
+	#else
+	inline bool isAlive(){
+		return this_dataset && ptr_manager.isAlive(uid);
+	}
 	#endif
 
 private:
@@ -81,7 +90,6 @@ private:
 	#if GDAL_VERSION_MAJOR < 2
 	OGRDataSource *this_datasource;
 	#endif
-	std::vector<OGRLayer*> result_sets;
 };
 
 }

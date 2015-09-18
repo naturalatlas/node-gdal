@@ -36,6 +36,9 @@ public:
 	inline OGRLinearRing *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~LinearRing();

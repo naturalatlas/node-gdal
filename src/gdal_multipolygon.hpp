@@ -37,6 +37,9 @@ public:
 	inline OGRMultiPolygon *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~MultiPolygon();

@@ -44,6 +44,9 @@ public:
 	inline OGRFeatureDefn *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~FeatureDefn();

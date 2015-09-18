@@ -33,7 +33,6 @@
 
 // node-gdal
 #include "gdal_common.hpp"
-#include "gdal_majorobject.hpp"
 #include "gdal_driver.hpp"
 #include "gdal_dataset.hpp"
 #include "gdal_rasterband.hpp"
@@ -84,6 +83,7 @@ namespace node_gdal {
 	using namespace v8;
 
 	FILE *log_file = NULL;
+	PtrManager ptr_manager;
 
 	/**
 	 * @attribute lastError
@@ -207,6 +207,16 @@ namespace node_gdal {
 			return;
 		}
 
+		static NAN_METHOD(isAlive)
+		{
+			Nan::HandleScope scope;
+
+			long uid;
+			NODE_ARG_INT(0, "uid", uid);
+
+			info.GetReturnValue().Set(Nan::New(ptr_manager.isAlive(uid)));
+		}
+
 		static void Init(Local<Object> target)
 		{
 
@@ -215,11 +225,11 @@ namespace node_gdal {
 			Nan::SetMethod(target, "getConfigOption", getConfigOption);
 			Nan::SetMethod(target, "decToDMS", decToDMS);
 			Nan::SetMethod(target, "_triggerCPLError", ThrowDummyCPLError); // for tests
+			Nan::SetMethod(target, "_isAlive", isAlive); // for tests
 
 			Warper::Initialize(target);
 			Algorithms::Initialize(target);
 
-			MajorObject::Initialize(target);
 			Driver::Initialize(target);
 			Dataset::Initialize(target);
 			RasterBand::Initialize(target);

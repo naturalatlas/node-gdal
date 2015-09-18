@@ -316,6 +316,11 @@ NAN_METHOD(Driver::createCopy)
 	Nan::HandleScope scope;
 	Driver *driver = Nan::ObjectWrap::Unwrap<Driver>(info.This());
 
+	if(!driver->isAlive()){
+		Nan::ThrowError("Driver object has already been destroyed");
+		return;
+	}
+
 	std::string filename;
 	Dataset* src_dataset;
 	unsigned int strict = 0;
@@ -335,23 +340,23 @@ NAN_METHOD(Driver::createCopy)
 		return;
 	}
 
+	if(!src_dataset->isAlive()){
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	if(info.Length() > 2 && options.parse(info[2])){
 		return; //error parsing string list
 	}
 
 	#if GDAL_VERSION_MAJOR < 2
+	if (driver->uses_ogr != src_dataset->uses_ogr){
+		Nan::ThrowError("Driver unable to copy dataset");
+		return;
+	}
 	if (driver->uses_ogr) {
 		OGRSFDriver *raw = driver->getOGRSFDriver();
 		OGRDataSource *raw_ds = src_dataset->getDatasource();
-		if(!src_dataset->uses_ogr) {
-			Nan::ThrowError("Driver unable to copy dataset");
-			return;
-		}
-		if (!raw_ds) {
-			Nan::ThrowError("Dataset object has already been destroyed");
-			return;
-		}
 
 		OGRDataSource *ds = raw->CopyDataSource(raw_ds, filename.c_str(), options.get());
 
@@ -366,12 +371,8 @@ NAN_METHOD(Driver::createCopy)
 	#endif
 
 	GDALDriver *raw = driver->getGDALDriver();
-	GDALDataset* raw_ds = src_dataset->getDataset();
-	if(!raw_ds) {
-		Nan::ThrowError("Dataset object has already been destroyed");
-		return;
-	}
-	GDALDataset* ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
+	GDALDataset *raw_ds = src_dataset->getDataset();
+	GDALDataset *ds = raw->CreateCopy(filename.c_str(), raw_ds, strict, options.get(), NULL, NULL);
 
 	if (!ds) {
 		Nan::ThrowError("Error copying dataset");

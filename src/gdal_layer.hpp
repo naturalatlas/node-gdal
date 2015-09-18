@@ -51,6 +51,7 @@ public:
 	static NAN_GETTER(fidColumnGetter);
 	static NAN_GETTER(geomColumnGetter);
 	static NAN_GETTER(geomTypeGetter);
+	static NAN_GETTER(uidGetter);
 
 	static ObjectCache<OGRLayer, Layer> cache;
 
@@ -58,6 +59,9 @@ public:
 	Layer(OGRLayer *ds);
 	inline OGRLayer *get() {
 		return this_;
+	}
+	inline bool isAlive(){
+		return this_ && ptr_manager.isAlive(uid);
 	}
 	#if GDAL_VERSION_MAJOR >= 2
 	inline GDALDataset *getParent() {
@@ -69,6 +73,7 @@ public:
 	}
 	#endif
 	void dispose();
+	long uid;
 
 private:
 	~Layer();
@@ -77,8 +82,7 @@ private:
 	GDALDataset *parent_ds;
 	#else
 	OGRDataSource *parent_ds;
-	#endif 
-	bool is_result_set;
+	#endif
 };
 
 }

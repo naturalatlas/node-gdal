@@ -94,7 +94,7 @@ NAN_METHOD(LayerFields::count)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -121,7 +121,7 @@ NAN_METHOD(LayerFields::indexOf)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -152,7 +152,7 @@ NAN_METHOD(LayerFields::get)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -187,7 +187,7 @@ NAN_METHOD(LayerFields::getNames)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -222,7 +222,7 @@ NAN_METHOD(LayerFields::remove)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -264,7 +264,7 @@ NAN_METHOD(LayerFields::add)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -328,7 +328,7 @@ NAN_METHOD(LayerFields::reorder)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}

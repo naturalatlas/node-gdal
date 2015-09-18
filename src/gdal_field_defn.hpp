@@ -47,6 +47,9 @@ public:
 	inline OGRFieldDefn *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~FieldDefn();

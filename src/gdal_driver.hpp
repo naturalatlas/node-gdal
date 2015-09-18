@@ -63,7 +63,14 @@ public:
 	inline OGRSFDriver *getOGRSFDriver() {
 		return this_ogrdriver;
 	}
+	inline bool isAlive(){
+		return this_ogrdriver || this_gdaldriver;
+	}
 	bool uses_ogr;
+	#else
+	inline bool isAlive(){
+		return this_gdaldriver;
+	}
 	#endif
 
 private:

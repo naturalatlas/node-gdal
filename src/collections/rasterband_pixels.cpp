@@ -104,7 +104,7 @@ NAN_METHOD(RasterBandPixels::get)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}
@@ -138,7 +138,7 @@ NAN_METHOD(RasterBandPixels::set)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}
@@ -183,7 +183,7 @@ NAN_METHOD(RasterBandPixels::read)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}
@@ -290,7 +290,7 @@ NAN_METHOD(RasterBandPixels::write)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}
@@ -370,7 +370,7 @@ NAN_METHOD(RasterBandPixels::readBlock)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}
@@ -427,7 +427,7 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	RasterBand *band = Nan::ObjectWrap::Unwrap<RasterBand>(parent);
-	if (!band->get()) {
+	if (!band->isAlive()) {
 		Nan::ThrowError("RasterBand object has already been destroyed");
 		return;
 	}

@@ -35,6 +35,9 @@ public:
 	inline OGRMultiPoint *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~MultiPoint();

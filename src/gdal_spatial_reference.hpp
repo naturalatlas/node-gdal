@@ -76,6 +76,9 @@ public:
 	inline OGRSpatialReference *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 	void dispose();
 
 private:

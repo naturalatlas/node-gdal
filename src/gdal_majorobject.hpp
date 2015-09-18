@@ -19,26 +19,9 @@ using namespace node;
 
 namespace node_gdal {
 
-class MajorObject: public Nan::ObjectWrap {
+class MajorObject {
 public:
-	static Nan::Persistent<FunctionTemplate> constructor;
-	static void Initialize(Local<Object> target);
-	static NAN_METHOD(New);
-	static Local<Value> New(GDALMajorObject *obj);
-	static NAN_METHOD(getMetadata);
 	static Local<Object> getMetadata(GDALMajorObject *obj, const char *domain);
-	
-	static NAN_GETTER(descriptionGetter);
-
-	MajorObject();
-	MajorObject(GDALMajorObject *obj);
-	inline GDALMajorObject *get() {
-		return this_;
-	}
-
-private:
-	~MajorObject();
-	GDALMajorObject *this_;
 };
 
 }

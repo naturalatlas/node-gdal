@@ -121,14 +121,14 @@ NAN_METHOD(Feature::New)
 
 		if (IS_WRAPPED(info[0], Layer)) {
 			Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info[0].As<Object>());
-			if (!layer->get()) {
+			if (!layer->isAlive()) {
 				Nan::ThrowError("Layer object already destroyed");
 				return;
 			}
 			def = layer->get()->GetLayerDefn();
 		} else if(IS_WRAPPED(info[0], FeatureDefn)) {
 			FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(info[0].As<Object>());
-			if (!feature_def->get()) {
+			if (!feature_def->isAlive()) {
 				Nan::ThrowError("FeatureDefn object already destroyed");
 				return;
 			}
@@ -187,7 +187,7 @@ NAN_METHOD(Feature::getGeometry)
 	Nan::HandleScope scope;
 
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -216,7 +216,7 @@ NAN_METHOD(Feature::getFieldDefn)
 	NODE_ARG_INT(0, "field index", field_index);
 
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -246,7 +246,7 @@ NAN_METHOD(Feature::setGeometry)
 	NODE_ARG_WRAPPED_OPT(0, "geometry", Geometry, geom);
 
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -279,7 +279,7 @@ NAN_METHOD(Feature::clone)
 {
 	Nan::HandleScope scope;
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -295,7 +295,7 @@ NAN_METHOD(Feature::destroy)
 {
 	Nan::HandleScope scope;
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -332,7 +332,7 @@ NAN_METHOD(Feature::setFrom)
 	NODE_ARG_WRAPPED(0, "feature", Feature, other_feature);
 
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -397,7 +397,7 @@ NAN_GETTER(Feature::fidGetter)
 {
 	Nan::HandleScope scope;
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -413,7 +413,7 @@ NAN_GETTER(Feature::defnGetter)
 {
 	Nan::HandleScope scope;
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}
@@ -424,7 +424,7 @@ NAN_SETTER(Feature::fidSetter)
 {
 	Nan::HandleScope scope;
 	Feature *feature = Nan::ObjectWrap::Unwrap<Feature>(info.This());
-	if (!feature->this_) {
+	if (!feature->isAlive()) {
 		Nan::ThrowError("Feature object already destroyed");
 		return;
 	}

@@ -36,6 +36,9 @@ public:
 	inline OGRCoordinateTransformation *get() {
 		return this_;
 	}
+    inline bool isAlive(){
+        return this_;
+    }
 
 private:
 	~CoordinateTransformation();

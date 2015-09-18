@@ -99,7 +99,7 @@ NAN_METHOD(LayerFeatures::get)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -124,7 +124,7 @@ NAN_METHOD(LayerFeatures::first)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -151,7 +151,7 @@ NAN_METHOD(LayerFeatures::next)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -181,7 +181,7 @@ NAN_METHOD(LayerFeatures::add)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -210,7 +210,7 @@ NAN_METHOD(LayerFeatures::count)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -235,7 +235,7 @@ NAN_METHOD(LayerFeatures::set)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}
@@ -260,7 +260,7 @@ NAN_METHOD(LayerFeatures::set)
 		return;
 	}
 
-	if(!f->get()){
+	if(!f->isAlive()){
 		Nan::ThrowError("Feature already destroyed");
 		return;
 	}
@@ -285,7 +285,7 @@ NAN_METHOD(LayerFeatures::remove)
 
 	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
 	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(parent);
-	if (!layer->get()) {
+	if (!layer->isAlive()) {
 		Nan::ThrowError("Layer object already destroyed");
 		return;
 	}

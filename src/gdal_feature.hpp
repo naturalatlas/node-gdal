@@ -48,6 +48,9 @@ public:
 	inline OGRFeature *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 	void dispose();
 
 private:

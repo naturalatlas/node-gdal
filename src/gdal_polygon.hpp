@@ -38,6 +38,9 @@ public:
 	inline OGRPolygon *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~Polygon();

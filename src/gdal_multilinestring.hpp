@@ -37,6 +37,9 @@ public:
 	inline OGRMultiLineString *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~MultiLineString();

@@ -40,6 +40,9 @@ public:
 	inline OGRLineString *get() {
 		return this_;
 	}
+	inline bool isAlive(){
+		return this_;
+	}
 
 private:
 	~LineString();
