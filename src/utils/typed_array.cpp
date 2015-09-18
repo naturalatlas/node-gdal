@@ -62,21 +62,20 @@ Local<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 		return scope.Escape(Nan::Undefined());
 	}
 
+	array->Set(Nan::New("_gdal_type").ToLocalChecked(), Nan::New(type));
+
 	return scope.Escape(array);
 }
 
-GDALDataType TypedArray::Identify(Local<Object> obj) {	
-	switch(obj->GetIndexedPropertiesExternalArrayDataType()){
-		case kExternalByteArray:          return GDT_Byte;
-		case kExternalUnsignedByteArray:  return GDT_Byte;
-		case kExternalShortArray:         return GDT_Int16;
-		case kExternalUnsignedShortArray: return GDT_UInt16;
-		case kExternalIntArray:           return GDT_Int32;
-		case kExternalUnsignedIntArray:   return GDT_UInt32;
-		case kExternalFloatArray:         return GDT_Float32;
-		case kExternalDoubleArray:        return GDT_Float64;
-		default:                          return GDT_Unknown;
-	}
+GDALDataType TypedArray::Identify(Local<Object> obj) {
+	Nan::HandleScope scope;
+
+	Local<String> sym = Nan::New("_gdal_type").ToLocalChecked();
+	if (!obj->HasOwnProperty(sym)) return GDT_Unknown;
+	Local<Value> val = obj->Get(sym);
+	if (!val->IsNumber()) return GDT_Unknown;
+
+	return (GDALDataType) val->Int32Value();
 }
 
 void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length){
@@ -88,15 +87,15 @@ void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length)
 		return NULL;
 	}
 	GDALDataType src_type = TypedArray::Identify(obj);
-	if(type == GDT_Unknown) {
+	if(src_type == GDT_Unknown) {
 		Nan::ThrowTypeError("Unable to identify GDAL datatype of passed array object");
 		return NULL;
 	}
 	if(src_type != type) {
 		std::ostringstream ss;
 		ss << "Array type does not match band data type (" 
-		   << "array: " << GDALGetDataTypeName(src_type)
-		   << " band: " << GDALGetDataTypeName(type) << ")";
+		   << "input: " << GDALGetDataTypeName(src_type)
+		   << ", target: " << GDALGetDataTypeName(type) << ")";
 
 		Nan::ThrowTypeError(ss.str().c_str());
 		return NULL;
