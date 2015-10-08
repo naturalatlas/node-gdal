@@ -80,7 +80,7 @@ GDALDataType TypedArray::Identify(Local<Object> obj) {
 
 void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length){
 	//validate array
-	Nan::EscapableHandleScope scope;
+	Nan::HandleScope scope;
 
 	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
 		Nan::ThrowError("Object has no external array data");
@@ -100,21 +100,56 @@ void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length)
 		Nan::ThrowTypeError(ss.str().c_str());
 		return NULL;
 	}
-	if(TypedArray::Length(obj) < min_length) {
+	switch(type) {
+		case GDT_Byte: {
+			Nan::TypedArrayContents<GByte> contents(obj);
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Int16: {
+			Nan::TypedArrayContents<GInt16> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_UInt16: {
+			Nan::TypedArrayContents<GUInt16> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Int32: {
+			Nan::TypedArrayContents<GInt32> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_UInt32: {
+			Nan::TypedArrayContents<GUInt32> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Float32: {
+			Nan::TypedArrayContents<float> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Float64: {
+			Nan::TypedArrayContents<double> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		default:
+			Nan::ThrowError("Unsupported array type"); 
+			return NULL;
+	}
+}
+bool TypedArray::ValidateLength(int length, int min_length){
+	if(length < min_length) {
 		std::ostringstream ss;
 		ss << "Array length must be greater than or equal to " << min_length; 
 
 		Nan::ThrowError(ss.str().c_str());
-		return NULL;
+		return true;
 	}
-	return TypedArray::Data(obj);
-}
-
-int TypedArray::Length(Local<Object> obj) {
-	return obj->GetIndexedPropertiesExternalArrayDataLength();
-}
-void* TypedArray::Data(Local<Object> obj) {
-	return obj->GetIndexedPropertiesExternalArrayData();
+	return false;
 }
 
 } //node_gdal namespace

@@ -49,10 +49,9 @@ namespace node_gdal {
 namespace TypedArray {
 
 	Local<Value> New(GDALDataType type, unsigned int length);
-	int Length(Local<Object> array);
-	void* Data(Local<Object> array);
 	GDALDataType Identify(Local<Object> array);
 	void* Validate(Local<Object> obj, GDALDataType type, int min_length);
+	bool ValidateLength(int length, int min_length);
 }
 
 }
