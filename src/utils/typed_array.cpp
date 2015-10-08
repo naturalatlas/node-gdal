@@ -82,10 +82,6 @@ void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length)
 	//validate array
 	Nan::HandleScope scope;
 
-	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
-		Nan::ThrowError("Object has no external array data");
-		return NULL;
-	}
 	GDALDataType src_type = TypedArray::Identify(obj);
 	if(src_type == GDT_Unknown) {
 		Nan::ThrowTypeError("Unable to identify GDAL datatype of passed array object");
