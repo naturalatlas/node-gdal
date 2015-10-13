@@ -137,7 +137,7 @@ Local<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 		return scope.Escape(Nan::Null());
 	}
 	if (cache.has(raw)) {
-		return scope.Escape(Nan::New(cache.get(raw)));
+		return scope.Escape(cache.get(raw));
 	}
 
 	RasterBand *wrapped = new RasterBand(raw);

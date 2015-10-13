@@ -142,7 +142,7 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 		return scope.Escape(Nan::Null());
 	}
 	if (cache.has(raw)) {
-		return scope.Escape(Nan::New(cache.get(raw)));
+		return scope.Escape(cache.get(raw));
 	}
 
 	Layer *wrapped = new Layer(raw);
@@ -156,11 +156,11 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 	Local<Object> ds;
 	#if GDAL_VERSION_MAJOR >= 2
 		if (Dataset::dataset_cache.has(raw_parent)) {
-			ds = Nan::New(Dataset::dataset_cache.get(raw_parent));
+			ds = Dataset::dataset_cache.get(raw_parent);
 		}
 	#else
 		if (Dataset::datasource_cache.has(raw_parent)) {
-			ds = Nan::New(Dataset::datasource_cache.get(raw_parent));
+			ds = Dataset::datasource_cache.get(raw_parent);
 		}
 	#endif
 		else {

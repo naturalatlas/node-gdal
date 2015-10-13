@@ -122,7 +122,8 @@ bool ObjectCache<K, W>::has(K *key){
 template <typename K, typename W>
 v8::Local<v8::Object> ObjectCache<K, W>::get(K *key)
 {	
-	return Nan::New(getItem(key)->obj);
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(Nan::New(getItem(key)->obj));
 }
 
 template <typename K, typename W>

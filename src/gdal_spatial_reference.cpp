@@ -159,7 +159,7 @@ Local<Value> SpatialReference::New(OGRSpatialReference *raw, bool owned)
 		return scope.Escape(Nan::Null());
 	}
 	if (cache.has(raw)) {
-		return scope.Escape(Nan::New(cache.get(raw)));
+		return scope.Escape(cache.get(raw));
 	}
 
 	//make a copy of spatialreference owned by a layer, feature, etc

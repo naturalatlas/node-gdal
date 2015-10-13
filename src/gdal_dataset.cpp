@@ -165,7 +165,7 @@ Local<Value> Dataset::New(GDALDataset *raw)
 		return scope.Escape(Nan::Null());
 	}
 	if (dataset_cache.has(raw)) {
-		return scope.Escape(Nan::New(dataset_cache.get(raw)));
+		return scope.Escape(dataset_cache.get(raw));
 	}
 
 	Dataset *wrapped = new Dataset(raw);
@@ -188,7 +188,7 @@ Local<Value> Dataset::New(OGRDataSource *raw)
 		return scope.Escape(Nan::Null());
 	}
 	if (datasource_cache.has(raw)) {
-		return scope.Escape(Nan::New(datasource_cache.get(raw)));
+		return scope.Escape(datasource_cache.get(raw));
 	}
 
 	Dataset *wrapped = new Dataset(raw);

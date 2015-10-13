@@ -135,7 +135,7 @@ Local<Value> Driver::New(GDALDriver *driver)
 		return scope.Escape(Nan::Null());
 	}
 	if (cache.has(driver)) {
-		return scope.Escape(Nan::New(cache.get(driver)));
+		return scope.Escape(cache.get(driver));
 	}
 
 	Driver *wrapped = new Driver(driver);
