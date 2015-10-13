@@ -9,7 +9,8 @@
 		"cflags_cc!": ["-fno-exceptions"],
 		"cflags!": ["-fno-exceptions"],
 		"defines": [
-			"NOGDI=1"
+			"NOGDI=1",
+			"HAVE_LIBZ"
 		],
 		"xcode_settings": {
 			"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
