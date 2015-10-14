@@ -433,7 +433,6 @@ NAN_METHOD(Dataset::getFileList)
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		OGRDataSource* raw = ds->getDatasource();
 		info.GetReturnValue().Set(results);
 		return;
 	}
@@ -482,7 +481,6 @@ NAN_METHOD(Dataset::getGCPs)
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr) {
-		OGRDataSource* raw = ds->getDatasource();
 		info.GetReturnValue().Set(results);
 		return;
 	}

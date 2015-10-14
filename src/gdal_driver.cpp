@@ -158,7 +158,7 @@ Local<Value> Driver::New(OGRSFDriver *driver)
 		return scope.Escape(Nan::Null());
 	}
 	if (cache_ogr.has(driver)) {
-		return scope.Escape(Nan::New(cache_ogr.get(driver)));
+		return scope.Escape(cache_ogr.get(driver));
 	}
 
 	Driver *wrapped = new Driver(driver);
