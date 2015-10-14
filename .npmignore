@@ -11,5 +11,7 @@ Makefile
 appveyor.yml
 examples
 docs
-*tgz
+*.tgz
+*.bz2
+*.log
 yuidocs
