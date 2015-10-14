@@ -29,7 +29,7 @@
 
 #include "ogr_xplane_nav_reader.h"
 
-CPL_CVSID("$Id: ogr_xplane_nav_reader.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: ogr_xplane_nav_reader.cpp 29366 2015-06-16 17:17:49Z rouault $");
 
 /************************************************************************/
 /*                   OGRXPlaneCreateNavFileReader                       */
@@ -417,7 +417,7 @@ OGRXPlaneILSLayer::OGRXPlaneILSLayer() : OGRXPlaneLayer("ILS")
     poFeatureDefn->AddFieldDefn( &oFieldID );
 
     OGRFieldDefn oFieldAptICAO("apt_icao", OFTString );
-    oFieldAptICAO.SetWidth( 4 );
+    oFieldAptICAO.SetWidth( 5 );
     poFeatureDefn->AddFieldDefn( &oFieldAptICAO );
 
     OGRFieldDefn oFieldRwyNum("rwy_num", OFTString );
@@ -631,7 +631,7 @@ OGRXPlaneGSLayer::OGRXPlaneGSLayer() : OGRXPlaneLayer("GS")
     poFeatureDefn->AddFieldDefn( &oFieldID );
 
     OGRFieldDefn oFieldAptICAO("apt_icao", OFTString );
-    oFieldAptICAO.SetWidth( 4 );
+    oFieldAptICAO.SetWidth( 5 );
     poFeatureDefn->AddFieldDefn( &oFieldAptICAO );
 
     OGRFieldDefn oFieldRwyNum("rwy_num", OFTString );
@@ -707,7 +707,7 @@ OGRXPlaneMarkerLayer::OGRXPlaneMarkerLayer() : OGRXPlaneLayer("Marker")
     poFeatureDefn->SetGeomType( wkbPoint );
 
     OGRFieldDefn oFieldAptICAO("apt_icao", OFTString );
-    oFieldAptICAO.SetWidth( 4 );
+    oFieldAptICAO.SetWidth( 5 );
     poFeatureDefn->AddFieldDefn( &oFieldAptICAO );
 
     OGRFieldDefn oFieldRwyNum("rwy_num", OFTString );
@@ -769,7 +769,7 @@ OGRXPlaneDMEILSLayer::OGRXPlaneDMEILSLayer() : OGRXPlaneLayer("DMEILS")
     poFeatureDefn->AddFieldDefn( &oFieldID );
 
     OGRFieldDefn oFieldAptICAO("apt_icao", OFTString );
-    oFieldAptICAO.SetWidth( 4 );
+    oFieldAptICAO.SetWidth( 5 );
     poFeatureDefn->AddFieldDefn( &oFieldAptICAO );
 
     OGRFieldDefn oFieldRwyNum("rwy_num", OFTString );

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsil_abstract_archive.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: cpl_vsil_abstract_archive.cpp 29388 2015-06-17 18:28:29Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for archive files.
@@ -35,7 +35,7 @@
 
 #define ENABLE_DEBUG 0
 
-CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: cpl_vsil_abstract_archive.cpp 29388 2015-06-17 18:28:29Z rouault $");
 
 /************************************************************************/
 /*                    ~VSIArchiveEntryFileOffset()                      */
@@ -98,9 +98,24 @@ const VSIArchiveContent* VSIArchiveFilesystemHandler::GetContentOfArchive
 {
     CPLMutexHolder oHolder( &hMutex );
 
+    VSIStatBufL sStat;
+    if( VSIStatL(archiveFilename, &sStat) != 0 )
+        return NULL;
     if (oFileList.find(archiveFilename) != oFileList.end() )
     {
-        return oFileList[archiveFilename];
+        VSIArchiveContent* content = oFileList[archiveFilename];
+        if( sStat.st_mtime > content->mTime ||
+            (vsi_l_offset)sStat.st_size != content->nFileSize)
+        {
+            CPLDebug("VSIArchive", "The content of %s has changed since it was cached",
+                    archiveFilename);
+            delete content;
+            oFileList.erase(archiveFilename);
+        }
+        else
+        {
+            return content;
+        }
     }
 
     int bMustClose = (poReader == NULL);
@@ -119,6 +134,8 @@ const VSIArchiveContent* VSIArchiveFilesystemHandler::GetContentOfArchive
     }
 
     VSIArchiveContent* content = new VSIArchiveContent;
+    content->mTime = sStat.st_mtime;
+    content->nFileSize = (vsi_l_offset)sStat.st_size;
     content->nEntries = 0;
     content->entries = NULL;
     oFileList[archiveFilename] = content;

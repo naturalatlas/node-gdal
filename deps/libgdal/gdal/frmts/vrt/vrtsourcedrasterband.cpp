@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtsourcedrasterband.cpp 29161 2015-05-06 10:18:19Z rouault $
+ * $Id: vrtsourcedrasterband.cpp 29907 2015-08-29 19:39:38Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTSourcedRasterBand
@@ -32,7 +32,7 @@
 #include "cpl_minixml.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: vrtsourcedrasterband.cpp 29161 2015-05-06 10:18:19Z rouault $");
+CPL_CVSID("$Id: vrtsourcedrasterband.cpp 29907 2015-08-29 19:39:38Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -602,7 +602,7 @@ CPLErr VRTSourcedRasterBand::GetHistogram( double dfMin, double dfMax,
 
 {
     if( nSources != 1 )
-        return GDALRasterBand::GetHistogram( dfMin, dfMax,
+        return VRTRasterBand::GetHistogram( dfMin, dfMax,
                                              nBuckets, panHistogram,
                                              bIncludeOutOfRange, bApproxOK,
                                              pfnProgress, pProgressData );
@@ -656,6 +656,8 @@ CPLErr VRTSourcedRasterBand::GetHistogram( double dfMin, double dfMax,
     }
 
     nRecursionCounter --;
+    
+    SetDefaultHistogram( dfMin, dfMax, nBuckets, panHistogram );
 
     return CE_None;
 }

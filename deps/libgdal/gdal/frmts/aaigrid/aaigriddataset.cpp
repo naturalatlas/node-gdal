@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: aaigriddataset.cpp 28785 2015-03-26 20:46:45Z goatbar $
+ * $Id: aaigriddataset.cpp 29614 2015-08-06 09:37:29Z rouault $
  *
  * Project:  GDAL
  * Purpose:  Implements Arc/Info ASCII Grid Format.
@@ -35,7 +35,7 @@
 #include "cpl_string.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: aaigriddataset.cpp 28785 2015-03-26 20:46:45Z goatbar $");
+CPL_CVSID("$Id: aaigriddataset.cpp 29614 2015-08-06 09:37:29Z rouault $");
 
 CPL_C_START
 void    GDALRegister_AAIGrid(void);
@@ -1111,6 +1111,7 @@ GDALDataset * AAIGDataset::CreateCopy(
         padfScanline = (double *) CPLMalloc( nXSize *
                                     GDALGetDataTypeSize(GDT_Float64) / 8 );
 
+    int bHasOuputDecimalDot = FALSE;
     for( iLine = 0; eErr == CE_None && iLine < nYSize; iLine++ )
     {
         CPLString osBuf;
@@ -1143,6 +1144,19 @@ GDALDataset * AAIGDataset::CreateCopy(
             for ( iPixel = 0; iPixel < nXSize; iPixel++ )
             {
                 CPLsprintf( szHeader, szFormatFloat, padfScanline[iPixel] );
+
+                // Make sure that as least one value has a decimal point (#6060)
+                if( !bHasOuputDecimalDot )
+                {
+                    if( strchr(szHeader, '.') || strchr(szHeader, 'e') || strchr(szHeader, 'E') )
+                        bHasOuputDecimalDot = TRUE;
+                    else if( !CPLIsInf(padfScanline[iPixel]) && !CPLIsNan(padfScanline[iPixel]) )
+                    {
+                        strcat(szHeader, ".0");
+                        bHasOuputDecimalDot = TRUE;
+                    }
+                }
+
                 osBuf += szHeader;
                 if( (iPixel & 1023) == 0 || iPixel == nXSize - 1 )
                 {

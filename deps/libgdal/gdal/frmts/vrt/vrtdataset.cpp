@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.cpp 29294 2015-06-05 08:52:15Z rouault $
+ * $Id: vrtdataset.cpp 29616 2015-08-06 10:07:50Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTDataset
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: vrtdataset.cpp 29294 2015-06-05 08:52:15Z rouault $");
+CPL_CVSID("$Id: vrtdataset.cpp 29616 2015-08-06 10:07:50Z rouault $");
 
 /************************************************************************/
 /*                            VRTDataset()                             */
@@ -635,34 +635,56 @@ GDALDataset *VRTDataset::Open( GDALOpenInfo * poOpenInfo )
         unsigned int nLength;
 
         poOpenInfo->fpL = NULL;
-
-        VSIFSeekL( fp, 0, SEEK_END );
-        nLength = (int) VSIFTellL( fp );
-        VSIFSeekL( fp, 0, SEEK_SET );
-
-        pszXML = (char *) VSIMalloc(nLength+1);
-
-        if( pszXML == NULL )
-        {
-            VSIFCloseL(fp);
-            CPLError( CE_Failure, CPLE_OutOfMemory,
-                      "Failed to allocate %d byte buffer to hold VRT xml file.",
-                      nLength );
-            return NULL;
-        }
         
-        if( VSIFReadL( pszXML, 1, nLength, fp ) != nLength )
+        if( strcmp(poOpenInfo->pszFilename, "/vsistdin/") == 0 )
         {
-            VSIFCloseL(fp);
-            CPLFree( pszXML );
-            CPLError( CE_Failure, CPLE_FileIO,
-                      "Failed to read %d bytes from VRT xml file.",
-                      nLength );
-            return NULL;
+            nLength = 0;
+            pszXML = (char *) VSIMalloc(1024+1);
+            while( TRUE )
+            {
+                int nRead = (int) VSIFReadL( pszXML + nLength, 1, 1024, fp);
+                nLength += nRead;
+                if( nRead < 1024 )
+                    break;
+                char* pszXMLNew = (char*) VSIRealloc( pszXML, nLength + 1024 + 1);
+                if( pszXMLNew == NULL )
+                {
+                    VSIFree(pszXML);
+                    return NULL;
+                }
+                pszXML = pszXMLNew;
+            }
+        }
+        else
+        {
+            VSIFSeekL( fp, 0, SEEK_END );
+            nLength = (int) VSIFTellL( fp );
+            VSIFSeekL( fp, 0, SEEK_SET );
+
+            pszXML = (char *) VSIMalloc(nLength+1);
+
+            if( pszXML == NULL )
+            {
+                VSIFCloseL(fp);
+                CPLError( CE_Failure, CPLE_OutOfMemory,
+                          "Failed to allocate %d byte buffer to hold VRT xml file.",
+                          nLength );
+                return NULL;
+            }
+            
+            if( VSIFReadL( pszXML, 1, nLength, fp ) != nLength )
+            {
+                VSIFCloseL(fp);
+                CPLFree( pszXML );
+                CPLError( CE_Failure, CPLE_FileIO,
+                          "Failed to read %d bytes from VRT xml file.",
+                          nLength );
+                return NULL;
+            }
         }
 
         pszXML[nLength] = '\0';
-
+        
         char* pszCurDir = CPLGetCurrentDir();
         const char *currentVrtFilename = CPLProjectRelativeFilename(pszCurDir, poOpenInfo->pszFilename);
         CPLFree(pszCurDir);
@@ -1260,6 +1282,8 @@ GDALDataset* VRTDataset::GetSingleSimpleSource()
         return NULL;
 
     VRTSourcedRasterBand* poVRTBand = (VRTSourcedRasterBand* )papoBands[0];
+    if( poVRTBand->nSources != 1 )
+        return NULL;
     VRTSimpleSource* poSource = (VRTSimpleSource* )poVRTBand->papoSources[0];
     GDALRasterBand* poBand = poSource->GetBand();
     if (poBand == NULL)

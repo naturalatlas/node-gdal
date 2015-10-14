@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcartodbtablelayer.cpp 29004 2015-04-25 08:38:29Z rouault $
+ * $Id: ogrcartodbtablelayer.cpp 30281 2015-09-11 15:17:03Z rouault $
  *
  * Project:  CartoDB Translator
  * Purpose:  Implements OGRCARTODBTableLayer class.
@@ -31,7 +31,7 @@
 #include "ogr_p.h"
 #include "ogr_pgdump.h"
 
-CPL_CVSID("$Id: ogrcartodbtablelayer.cpp 29004 2015-04-25 08:38:29Z rouault $");
+CPL_CVSID("$Id: ogrcartodbtablelayer.cpp 30281 2015-09-11 15:17:03Z rouault $");
 
 /************************************************************************/
 /*                    OGRCARTODBEscapeIdentifier( )                     */
@@ -173,21 +173,29 @@ OGRFeatureDefn * OGRCARTODBTableLayer::GetLayerDefnInternal(CPL_UNUSED json_obje
         }
         if( poLyr )
         {
-            poFeatureDefn = new OGRFeatureDefn(osName);
-            poFeatureDefn->Reference();
-            poFeatureDefn->SetGeomType(wkbNone);
-
             OGRFeature* poFeat;
             while( (poFeat = poLyr->GetNextFeature()) != NULL )
             {
+                if( poFeatureDefn == NULL )
+                {
+                    // We could do that outside of the while() loop, but
+                    // by doing that here, we are somewhat robust to
+                    // ogr_table_metadata() returning suddenly an empty result set
+                    // for example if CDB_UserTables() no longer works
+                    poFeatureDefn = new OGRFeatureDefn(osName);
+                    poFeatureDefn->Reference();
+                    poFeatureDefn->SetGeomType(wkbNone);
+                }
+
                 const char* pszAttname = poFeat->GetFieldAsString("attname");
                 const char* pszType = poFeat->GetFieldAsString("typname");
                 int nWidth = poFeat->GetFieldAsInteger("attlen");
                 const char* pszFormatType = poFeat->GetFieldAsString("format_type");
                 int bNotNull = poFeat->GetFieldAsInteger("attnotnull");
                 int bIsPrimary = poFeat->GetFieldAsInteger("indisprimary");
-                const char* pszDefault = (poFeat->IsFieldSet(poLyr->GetLayerDefn()->GetFieldIndex("defaultexpr"))) ?
-                            poFeat->GetFieldAsString("defaultexpr") : NULL;
+                int iDefaultExpr = poLyr->GetLayerDefn()->GetFieldIndex("defaultexpr");
+                const char* pszDefault = (iDefaultExpr >= 0 && poFeat->IsFieldSet(iDefaultExpr)) ?
+                            poFeat->GetFieldAsString(iDefaultExpr) : NULL;
 
                 if( bIsPrimary &&
                     (EQUAL(pszType, "int2") ||
@@ -1234,6 +1242,7 @@ void OGRCARTODBTableLayer::SetDeferedCreation (OGRwkbGeometryType eGType,
     osFIDColName = "cartodb_id";
     osBaseSQL.Printf("SELECT * FROM %s",
                      OGRCARTODBEscapeIdentifier(osName).c_str());
+    osSELECTWithoutWHERE = osBaseSQL;
 }
 
 /************************************************************************/

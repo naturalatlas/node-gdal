@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hf2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $
+ * $Id: hf2dataset.cpp 29772 2015-08-24 09:48:26Z rouault $
  *
  * Project:  HF2 driver
  * Purpose:  GDALDataset driver for HF2/HFZ dataset.
@@ -31,7 +31,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: hf2dataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
+CPL_CVSID("$Id: hf2dataset.cpp 29772 2015-08-24 09:48:26Z rouault $");
 
 CPL_C_START
 void    GDALRegister_HF2(void);
@@ -198,7 +198,7 @@ CPLErr HF2RasterBand::IReadBlock( int nBlockXOff, int nLineYOff,
                 for(i=1;i<nTileWidth;i++)
                 {
                     if (nWordSize == 1)
-                        nVal += ((char*)pabyData)[i-1];
+                        nVal += ((signed char*)pabyData)[i-1];
                     else if (nWordSize == 2)
                         nVal += ((GInt16*)pabyData)[i-1];
                     else
@@ -960,7 +960,7 @@ GDALDataset* HF2Dataset::CreateCopy( const char * pszFilename,
                         if (nWordSize == 1)
                         {
                             CPLAssert(nDiff >= -128 && nDiff <= 127);
-                            char chDiff = (char)nDiff;
+                            signed char chDiff = (signed char)nDiff;
                             VSIFWriteL(&chDiff, 1, 1, fp);
                         }
                         else if (nWordSize == 2)
@@ -1032,7 +1032,7 @@ GDALDataset* HF2Dataset::CreateCopy( const char * pszFilename,
                         if (nWordSize == 1)
                         {
                             CPLAssert(nDiff >= -128 && nDiff <= 127);
-                            char chDiff = (char)nDiff;
+                            signed char chDiff = (signed char)nDiff;
                             VSIFWriteL(&chDiff, 1, 1, fp);
                         }
                         else if (nWordSize == 2)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsi_virtual.h 28493 2015-02-16 09:49:16Z rouault $
+ * $Id: cpl_vsi_virtual.h 29388 2015-06-17 18:28:29Z rouault $
  *
  * Project:  VSI Virtual File System
  * Purpose:  Declarations for classes related to the virtual filesystem.
@@ -142,6 +142,8 @@ typedef struct
 
 typedef struct
 {
+    time_t       mTime;
+    vsi_l_offset nFileSize;
     int nEntries;
     VSIArchiveEntry* entries;
 } VSIArchiveContent;

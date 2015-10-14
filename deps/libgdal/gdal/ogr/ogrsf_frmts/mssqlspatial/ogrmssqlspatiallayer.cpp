@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatiallayer.cpp 29185 2015-05-12 10:45:44Z tamas $
+ * $Id: ogrmssqlspatiallayer.cpp 29469 2015-07-04 11:42:30Z rouault $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -29,7 +29,7 @@
 
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 29185 2015-05-12 10:45:44Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 29469 2015-07-04 11:42:30Z rouault $");
 /************************************************************************/
 /*                        OGRMSSQLSpatialLayer()                        */
 /************************************************************************/

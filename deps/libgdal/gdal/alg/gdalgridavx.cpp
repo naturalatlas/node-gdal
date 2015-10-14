@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgridavx.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: gdalgridavx.cpp 29914 2015-08-29 21:21:33Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -33,47 +33,7 @@
 #ifdef HAVE_AVX_AT_COMPILE_TIME
 #include <immintrin.h>
 
-CPL_CVSID("$Id: gdalgridavx.cpp 27745 2014-09-27 16:38:57Z goatbar $");
-
-/************************************************************************/
-/*                          CPLHaveRuntimeAVX()                         */
-/************************************************************************/
-
-#define CPUID_OSXSAVE_ECX_BIT   27
-#define CPUID_AVX_ECX_BIT       28
-
-#define BIT_XMM_STATE           (1 << 1)
-#define BIT_YMM_STATE           (2 << 1)
-
-int CPLHaveRuntimeAVX()
-{
-    int cpuinfo[4] = {0,0,0,0};
-    GCC_CPUID(1, cpuinfo[0], cpuinfo[1], cpuinfo[2], cpuinfo[3]);
-
-    /* Check OSXSAVE feature */
-    if( (cpuinfo[2] & (1 << CPUID_OSXSAVE_ECX_BIT)) == 0 )
-    {
-        return FALSE;
-    }
-
-    /* Check AVX feature */
-    if( (cpuinfo[2] & (1 << CPUID_AVX_ECX_BIT)) == 0 )
-    {
-        return FALSE;
-    }
-
-    /* Issue XGETBV and check the XMM and YMM state bit */
-    unsigned int nXCRLow;
-    unsigned int nXCRHigh;
-    __asm__ ("xgetbv" : "=a" (nXCRLow), "=d" (nXCRHigh) : "c" (0));
-    if( (nXCRLow & ( BIT_XMM_STATE | BIT_YMM_STATE )) !=
-                   ( BIT_XMM_STATE | BIT_YMM_STATE ) )
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
+CPL_CVSID("$Id: gdalgridavx.cpp 29914 2015-08-29 21:21:33Z rouault $");
 
 /************************************************************************/
 /*         GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX()     */

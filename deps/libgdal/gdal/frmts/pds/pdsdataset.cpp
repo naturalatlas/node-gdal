@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdsdataset.cpp 28053 2014-12-04 09:31:07Z rouault $
+ * $Id: pdsdataset.cpp 29625 2015-08-07 20:38:54Z rouault $
  *
  * Project:  PDS Driver; Planetary Data System Format
  * Purpose:  Implementation of PDSDataset
@@ -47,7 +47,7 @@
 #include "cpl_string.h" 
 #include "nasakeywordhandler.h"
 
-CPL_CVSID("$Id: pdsdataset.cpp 28053 2014-12-04 09:31:07Z rouault $");
+CPL_CVSID("$Id: pdsdataset.cpp 29625 2015-08-07 20:38:54Z rouault $");
 
 CPL_C_START
 void	GDALRegister_PDS(void);
@@ -857,10 +857,15 @@ int PDSDataset::ParseImage( CPLString osPrefix, CPLString osFilenamePrefix )
             break;
           case 16 :
             if( strstr(osST,"UNSIGNED") != NULL )
+            {
+                dfNoData = NULL1;
                 eDataType = GDT_UInt16;
+            }
             else
+            {
                 eDataType = GDT_Int16;
-            dfNoData = NULL2;
+                dfNoData = NULL2;
+            }
             break;
           case 32 :
             eDataType = GDT_Float32;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitetablelayer.cpp 29330 2015-06-14 12:11:11Z rouault $
+ * $Id: ogrsqlitetablelayer.cpp 30254 2015-09-10 15:40:33Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteTableLayer class, access to an existing table.
@@ -37,7 +37,7 @@
 
 #define UNSUPPORTED_OP_READ_ONLY "%s : unsupported operation on a read-only datasource."
 
-CPL_CVSID("$Id: ogrsqlitetablelayer.cpp 29330 2015-06-14 12:11:11Z rouault $");
+CPL_CVSID("$Id: ogrsqlitetablelayer.cpp 30254 2015-09-10 15:40:33Z rouault $");
 
 /************************************************************************/
 /*                        OGRSQLiteTableLayer()                         */
@@ -197,7 +197,7 @@ CPLErr OGRSQLiteTableLayer::Initialize( const char *pszTableName,
             pszEscapedTableName = CPLStrdup(OGRSQLiteEscape(pszTableName));
             EstablishFeatureDefn(pszGeomCol);
             CPLFree(pszGeomCol);
-            if( poFeatureDefn->GetGeomFieldCount() == 0 )
+            if( poFeatureDefn == NULL || poFeatureDefn->GetGeomFieldCount() == 0 )
                 return CE_Failure;
         }
     }

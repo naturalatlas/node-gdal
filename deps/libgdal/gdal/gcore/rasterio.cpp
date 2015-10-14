@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rasterio.cpp 29161 2015-05-06 10:18:19Z rouault $
+ * $Id: rasterio.cpp 29496 2015-07-07 22:29:46Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Contains default implementation of GDALRasterBand::IRasterIO()
@@ -52,7 +52,7 @@
 #endif
 
 
-CPL_CVSID("$Id: rasterio.cpp 29161 2015-05-06 10:18:19Z rouault $");
+CPL_CVSID("$Id: rasterio.cpp 29496 2015-07-07 22:29:46Z rouault $");
 
 /************************************************************************/
 /*                             IRasterIO()                              */
@@ -459,7 +459,7 @@ CPLErr GDALRasterBand::IRasterIO( GDALRWFlag eRWFlag,
 
                 // FIXME: this code likely doesn't work if the dirty block gets flushed
                 // to disk before being completely written.
-                // In the meantime, bJustInitalize should probably be set to FALSE
+                // In the meantime, bJustInitialize should probably be set to FALSE
                 // even if it is not ideal performance wise, and for lossy compression
 
     /* -------------------------------------------------------------------- */
@@ -799,6 +799,10 @@ CPLErr GDALRasterBand::RasterIOResampled( CPL_UNUSED GDALRWFlag eRWFlag,
     poMEMDS->AddBand(eBufType, papszOptions);
     CSLDestroy(papszOptions);
     GDALRasterBandH hMEMBand = (GDALRasterBandH)poMEMDS->GetRasterBand(1);
+    
+    const char* pszNBITS = GetMetadataItem("NBITS", "IMAGE_STRUCTURE");
+    if( pszNBITS )
+        ((GDALRasterBand*)hMEMBand)->SetMetadataItem("NBITS", pszNBITS, "IMAGE_STRUCTURE");
 
     /* Do the resampling */
     if( bUseWarp )
@@ -3165,7 +3169,7 @@ GDALDataset::BlockBasedRasterIO( GDALRWFlag eRWFlag,
 
             // FIXME: this code likely doesn't work if the dirty block gets flushed
             // to disk before being completely written.
-            // In the meantime, bJustInitalize should probably be set to FALSE
+            // In the meantime, bJustInitialize should probably be set to FALSE
             // even if it is not ideal performance wise, and for lossy compression
 
 /* -------------------------------------------------------------------- */

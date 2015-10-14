@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_pleiades.cpp 29245 2015-05-24 16:46:56Z rouault $
+ * $Id: reader_pleiades.cpp 29417 2015-06-22 08:30:54Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Pleiades imagery.
@@ -30,7 +30,7 @@
 
 #include "reader_pleiades.h"
 
-CPL_CVSID("$Id: reader_pleiades.cpp 29245 2015-05-24 16:46:56Z rouault $");
+CPL_CVSID("$Id: reader_pleiades.cpp 29417 2015-06-22 08:30:54Z rouault $");
 
 /**
  * GDALMDReaderPleiades()
@@ -305,8 +305,23 @@ char** GDALMDReaderPleiades::LoadRPCXmlFile()
     int i, j;
     for( i = 0; apszRPBMap[i] != NULL; i += 2 )
     {
-        papszRPB = CSLAddNameValue(papszRPB, apszRPBMap[i],
-                        CSLFetchNameValue(papszRawRPCList, apszRPBMap[i + 1]));
+        // Pleiades RPCs use "center of upper left pixel is 1,1" convention, convert to
+        // Digital globe convention of "center of upper left pixel is 0,0".
+        if (i == 0 || i == 2)
+        {
+            CPLString osField;
+            const char *pszOffset = CSLFetchNameValue(papszRawRPCList,
+                                                    apszRPBMap[i + 1]);
+            osField.Printf( "%.15g", CPLAtofM( pszOffset ) -1.0 );
+            papszRPB = CSLAddNameValue( papszRPB, apszRPBMap[i], osField );
+        }
+        else
+        {
+            papszRPB = CSLAddNameValue(papszRPB, apszRPBMap[i],
+                                    CSLFetchNameValue(papszRawRPCList,
+                                                        apszRPBMap[i + 1]));
+        }
+	
     }
 
     // merge coefficients

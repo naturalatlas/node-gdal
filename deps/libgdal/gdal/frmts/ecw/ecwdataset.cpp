@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ecwdataset.cpp 29330 2015-06-14 12:11:11Z rouault $
+ * $Id: ecwdataset.cpp 29507 2015-07-08 21:59:03Z rouault $
  *
  * Project:  GDAL 
  * Purpose:  ECW (ERDAS Wavelet Compression Format) Driver
@@ -34,7 +34,9 @@
 #include "ogr_api.h"
 #include "ogr_geometry.h"
 
-CPL_CVSID("$Id: ecwdataset.cpp 29330 2015-06-14 12:11:11Z rouault $");
+#include "../mem/memdataset.h"
+
+CPL_CVSID("$Id: ecwdataset.cpp 29507 2015-07-08 21:59:03Z rouault $");
 
 #undef NOISY_DEBUG
 
@@ -1817,6 +1819,76 @@ CPLErr ECWDataset::IRasterIO( GDALRWFlag eRWFlag,
     if ( nBandSpace == 0 ){
         nBandSpace = nDataTypeSize*nBufXSize*nBufYSize;
     }
+    
+    // Use GDAL upsampling if non nearest
+    if( (nBufXSize > nXSize || nBufYSize > nYSize) &&
+        psExtraArg->eResampleAlg != GRIORA_NearestNeighbour )
+    {
+        int nBufDataTypeSize = (GDALGetDataTypeSize(eBufType) / 8);
+        GByte* pabyTemp = (GByte*)VSIMalloc3(nXSize, nYSize, nBufDataTypeSize * nBandCount);
+        if( pabyTemp == NULL )
+        {
+            CPLError( CE_Failure, CPLE_OutOfMemory, 
+                          "Failed to allocate %d byte intermediate decompression buffer for jpeg2000.", 
+                          nXSize * nYSize * nBufDataTypeSize * nBandCount );
+            return CE_Failure;
+        }
+        
+        CPLErr eErr = IRasterIO(eRWFlag, nXOff, nYOff, nXSize, nYSize,
+                                pabyTemp, nXSize, nYSize,
+                                eBufType, nBandCount, panBandMap,
+                                nBufDataTypeSize,
+                                (GIntBig)nBufDataTypeSize* nXSize,
+                                (GIntBig)nBufDataTypeSize*nXSize*nYSize,
+                                psExtraArg);
+        
+        if( eErr == CE_None )
+        {
+            /* Create a MEM dataset that wraps the input buffer */
+            GDALDataset* poMEMDS = MEMDataset::Create("", nXSize, nYSize, 0,
+                                                      eBufType, NULL);
+            char szBuffer[64];
+            int nRet;
+
+            for( int i = 0; i < nBandCount; i++ )
+            {
+                nRet = CPLPrintPointer(szBuffer, pabyTemp + i * nBufDataTypeSize, sizeof(szBuffer));
+                szBuffer[nRet] = 0;
+                char** papszOptions = CSLSetNameValue(NULL, "DATAPOINTER", szBuffer);
+
+                papszOptions = CSLSetNameValue(papszOptions, "PIXELOFFSET",
+                    CPLSPrintf(CPL_FRMT_GIB, (GIntBig)nBufDataTypeSize * nBandCount));
+
+                papszOptions = CSLSetNameValue(papszOptions, "LINEOFFSET",
+                    CPLSPrintf(CPL_FRMT_GIB, (GIntBig)nBufDataTypeSize * nBandCount * nXSize));
+
+                poMEMDS->AddBand(eBufType, papszOptions);
+                CSLDestroy(papszOptions);
+
+                const char* pszNBITS = GetRasterBand(i+1)->GetMetadataItem("NBITS", "IMAGE_STRUCTURE");
+                if( pszNBITS )
+                    poMEMDS->GetRasterBand(i+1)->SetMetadataItem("NBITS", pszNBITS, "IMAGE_STRUCTURE");
+            }
+
+            GDALRasterIOExtraArg sExtraArgTmp;
+            INIT_RASTERIO_EXTRA_ARG(sExtraArgTmp);
+            sExtraArgTmp.eResampleAlg = psExtraArg->eResampleAlg;
+
+            poMEMDS->RasterIO(GF_Read, 0, 0, nXSize, nYSize,
+                                pData, nBufXSize, nBufYSize,
+                                eBufType,
+                                nBandCount, NULL,
+                                nPixelSpace, nLineSpace, nBandSpace,
+                                &sExtraArgTmp);
+
+            GDALClose(poMEMDS);
+        }
+
+        VSIFree(pabyTemp);
+        
+        return eErr;
+    }
+    
 /* -------------------------------------------------------------------- */
 /*      ECW SDK 3.3 has a bug with the ECW format when we query the     */
 /*      number of bands of the dataset, but not in the "natural order". */

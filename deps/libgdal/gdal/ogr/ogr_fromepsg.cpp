@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_fromepsg.cpp 28565 2015-02-27 10:26:21Z rouault $
+ * $Id: ogr_fromepsg.cpp 29504 2015-07-08 19:18:55Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Generate an OGRSpatialReference object based on an EPSG
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogr_fromepsg.cpp 28565 2015-02-27 10:26:21Z rouault $");
+CPL_CVSID("$Id: ogr_fromepsg.cpp 29504 2015-07-08 19:18:55Z rouault $");
 
 #ifndef PI
 #  define PI 3.14159265358979323846
@@ -953,14 +953,14 @@ EPSGGetPCSInfo( int nPCSCode, char **ppszEPSGName,
 /*      Search the units database for this unit.  If we don't find      */
 /*      it return failure.                                              */
 /* -------------------------------------------------------------------- */
-    pszFilename = CSVFilename( "pcs.csv" );
+    pszFilename = CSVFilename( "pcs.override.csv" );
     sprintf( szSearchKey, "%d", nPCSCode );
     papszRecord = CSVScanFileByName( pszFilename, "COORD_REF_SYS_CODE",
                                      szSearchKey, CC_Integer );
 
     if( papszRecord == NULL )
     {
-        pszFilename = CSVFilename( "pcs.override.csv" );
+        pszFilename = CSVFilename( "pcs.csv" );
         sprintf( szSearchKey, "%d", nPCSCode );
         papszRecord = CSVScanFileByName( pszFilename, "COORD_REF_SYS_CODE",
                                          szSearchKey, CC_Integer );

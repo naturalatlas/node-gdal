@@ -12,10 +12,10 @@ dir_gyp_templates=./gyp-templates
 
 rm -rf $dir_gdal
 if [[ ! -f gdal.tar.gz ]]; then
-	curl http://download.osgeo.org/gdal/2.0.0/gdal-2.0.0.tar.gz -o gdal.tar.gz
+	curl http://download.osgeo.org/gdal/2.0.1/gdal-2.0.1.tar.gz -o gdal.tar.gz
 fi
 tar -xzf gdal.tar.gz
-mv gdal-2.0.0 $dir_gdal
+mv gdal-2.0.1 $dir_gdal
 
 rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig

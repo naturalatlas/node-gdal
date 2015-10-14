@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fyba_melding.cpp 27897 2014-10-23 12:20:01Z jef $
+ * $Id: fyba_melding.cpp 29469 2015-07-04 11:42:30Z rouault $
  *
  * Project:  FYBA Callbacks
  * Purpose:  Needed by FYBA - however we do not want to display most messages

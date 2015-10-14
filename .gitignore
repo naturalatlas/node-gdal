@@ -13,6 +13,7 @@ msys-1.0.dll
 *.orig
 test/data/**/*.aux*
 test/data/**/*.tmp*
+test/data/**/*.gfs
 node_modules
 /.project
 .DS_Store

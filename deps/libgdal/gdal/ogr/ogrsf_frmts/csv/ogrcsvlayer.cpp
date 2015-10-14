@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvlayer.cpp 29237 2015-05-24 08:38:20Z rouault $
+ * $Id: ogrcsvlayer.cpp 29897 2015-08-29 12:36:40Z rouault $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcsvlayer.cpp 29237 2015-05-24 08:38:20Z rouault $");
+CPL_CVSID("$Id: ogrcsvlayer.cpp 29897 2015-08-29 12:36:40Z rouault $");
 
 
 
@@ -384,7 +384,6 @@ void OGRCSVLayer::BuildFeatureDefn( const char* pszNfdcGeomField,
             CPLAtof(papszTokens[4]) >= -90 && CPLAtof(papszTokens[4]) <= 90 &&
             CPLAtof(papszTokens[5]) >= -180 && CPLAtof(papszTokens[4]) <= 180)
         {
-            bHasFieldNames = TRUE;
             CSLDestroy(papszTokens);
             papszTokens = NULL;
 
@@ -425,6 +424,8 @@ void OGRCSVLayer::BuildFeatureDefn( const char* pszNfdcGeomField,
             iLongitudeField = 5;
 
             nFieldCount = 0;
+
+            bDontHonourStrings = TRUE;
         }
     }
 

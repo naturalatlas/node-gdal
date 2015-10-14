@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfreadvectors.cpp 27942 2014-11-11 00:57:41Z rouault $
+ * $Id: pdfreadvectors.cpp 29846 2015-08-27 15:29:32Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset (read vector features)
@@ -32,7 +32,7 @@
 #define SQUARE(x) ((x)*(x))
 #define EPSILON 1e-5
 
-CPL_CVSID("$Id: pdfreadvectors.cpp 27942 2014-11-11 00:57:41Z rouault $");
+CPL_CVSID("$Id: pdfreadvectors.cpp 29846 2015-08-27 15:29:32Z rouault $");
 
 #if defined(HAVE_POPPLER) || defined(HAVE_PODOFO)
 
@@ -42,6 +42,17 @@ CPL_CVSID("$Id: pdfreadvectors.cpp 27942 2014-11-11 00:57:41Z rouault $");
 
 int PDFDataset::OpenVectorLayers(GDALPDFDictionary* poPageDict)
 {
+    if( bHasLoadedLayers )
+        return TRUE;
+    bHasLoadedLayers = TRUE;
+
+    if( poPageDict == NULL )
+    {
+        poPageDict = poPageObj->GetDictionary();
+        if ( poPageDict == NULL )
+            return FALSE;
+    }
+
     GetCatalog();
     if( poCatalogObject == NULL )
         return FALSE;
@@ -206,6 +217,7 @@ int PDFDataset::TestCapability( CPL_UNUSED const char * pszCap )
 OGRLayer *PDFDataset::GetLayer( int iLayer )
 
 {
+    OpenVectorLayers(NULL);
     if (iLayer < 0 || iLayer >= nLayers)
         return NULL;
 
@@ -218,6 +230,7 @@ OGRLayer *PDFDataset::GetLayer( int iLayer )
 
 int PDFDataset::GetLayerCount()
 {
+    OpenVectorLayers(NULL);
     return nLayers;
 }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: EnvisatFile.c 28843 2015-04-02 21:13:08Z kyle $
+ * $Id: EnvisatFile.c 29670 2015-08-19 17:00:51Z kyle $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Low Level Envisat file access (read/write) API.
@@ -35,7 +35,7 @@
 #  include "cpl_conv.h"
 #  include "EnvisatFile.h"
 
-CPL_CVSID("$Id: EnvisatFile.c 28843 2015-04-02 21:13:08Z kyle $");
+CPL_CVSID("$Id: EnvisatFile.c 29670 2015-08-19 17:00:51Z kyle $");
 
 #else
 #  include "APP/app.h"
@@ -1387,7 +1387,7 @@ int EnvisatFile_ReadDatasetChunk( EnvisatFile *self,
 {
     if( ds_index < 0 || ds_index >= self->ds_count )
     {
-        SendError( "Attempt to read non-existant dataset in "
+        SendError( "Attempt to read non-existent dataset in "
                    "EnvisatFile_ReadDatasetChunk()" );
         return FAILURE;
     }
@@ -1452,7 +1452,7 @@ int EnvisatFile_WriteDatasetRecord( EnvisatFile *self,
 
     if( ds_index < 0 || ds_index >= self->ds_count )
     {
-        SendError( "Attempt to write non-existant dataset in "
+        SendError( "Attempt to write non-existent dataset in "
                    "EnvisatFile_WriteDatasetRecord()" );
         return FAILURE;
     }
@@ -1569,7 +1569,7 @@ int EnvisatFile_ReadDatasetRecordChunk( EnvisatFile *self,
 
     if( ds_index < 0 || ds_index >= self->ds_count )
     {
-        SendError( "Attempt to read non-existant dataset in "
+        SendError( "Attempt to read non-existent dataset in "
                    "EnvisatFile_ReadDatasetRecordChunk()" );
         return FAILURE;
     }

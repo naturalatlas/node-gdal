@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxypool.cpp 29326 2015-06-10 20:36:31Z rouault $
+ * $Id: gdalproxypool.cpp 29450 2015-07-02 08:44:48Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that differ the opening of the
@@ -31,7 +31,7 @@
 #include "gdal_proxy.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalproxypool.cpp 29326 2015-06-10 20:36:31Z rouault $");
+CPL_CVSID("$Id: gdalproxypool.cpp 29450 2015-07-02 08:44:48Z rouault $");
 
 /* We *must* share the same mutex as the gdaldataset.cpp file, as we are */
 /* doing GDALOpen() calls that can indirectly call GDALOpenShared() on */
@@ -247,8 +247,7 @@ GDALProxyPoolCacheEntry* GDALDatasetPool::_RefDataset(const char* pszFileName,
             return NULL;
         }
 
-        CPLFree(lastEntryWithZeroRefCount->pszFileName);
-        lastEntryWithZeroRefCount->pszFileName = NULL;
+        lastEntryWithZeroRefCount->pszFileName[0] = '\0';
         if (lastEntryWithZeroRefCount->poDS)
         {
             /* Close by pretending we are the thread that GDALOpen'ed this */
@@ -262,6 +261,7 @@ GDALProxyPoolCacheEntry* GDALDatasetPool::_RefDataset(const char* pszFileName,
             lastEntryWithZeroRefCount->poDS = NULL;
             GDALSetResponsiblePIDForCurrentThread(responsiblePID);
         }
+        CPLFree(lastEntryWithZeroRefCount->pszFileName);
 
         /* Recycle this entry for the to-be-openeded dataset and */
         /* moves it to the top of the list */
@@ -329,6 +329,7 @@ void GDALDatasetPool::_CloseDataset(const char* pszFileName, GDALAccess eAccess)
     {
         GDALProxyPoolCacheEntry* next = cur->next;
 
+        CPLAssert(cur->pszFileName);
         if (strcmp(cur->pszFileName, pszFileName) == 0 && cur->refCount == 0 &&
             cur->poDS != NULL )
         {

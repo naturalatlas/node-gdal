@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdatasource.cpp 29019 2015-04-25 20:34:19Z rouault $
+ * $Id: ogrpgdatasource.cpp 29465 2015-07-03 08:51:45Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDataSource class.
@@ -37,7 +37,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgdatasource.cpp 29019 2015-04-25 20:34:19Z rouault $");
+CPL_CVSID("$Id: ogrpgdatasource.cpp 29465 2015-07-03 08:51:45Z rouault $");
 
 static void OGRPGNoticeProcessor( void *arg, const char * pszMessage );
 
@@ -1297,6 +1297,8 @@ int OGRPGDataSource::DeleteLayer( int iLayer )
     GetLayerCount();
     if( iLayer < 0 || iLayer >= nLayers )
         return OGRERR_FAILURE;
+
+    EndCopy();
 
 /* -------------------------------------------------------------------- */
 /*      Blow away our OGR structures related to the layer.  This is     */

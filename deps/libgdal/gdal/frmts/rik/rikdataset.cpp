@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: rikdataset.cpp 27942 2014-11-11 00:57:41Z rouault $
+ * $Id: rikdataset.cpp 29720 2015-08-21 20:57:27Z rouault $
  *
  * Project:  RIK Reader
  * Purpose:  All code for RIK Reader
@@ -32,7 +32,7 @@
 #include <zlib.h>
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: rikdataset.cpp 27942 2014-11-11 00:57:41Z rouault $");
+CPL_CVSID("$Id: rikdataset.cpp 29720 2015-08-21 20:57:27Z rouault $");
 
 CPL_C_START
 void	GDALRegister_RIK(void);
@@ -686,11 +686,18 @@ int RIKDataset::Identify( GDALOpenInfo * poOpenInfo )
         }
         if( actLength == 0 )
             return -1;
-        if( strlen( (const char*)poOpenInfo->pabyHeader + 2 ) != actLength )
+        
+        for( int i=0;i<actLength;i++ )
         {
-            return FALSE;
+            if( poOpenInfo->pabyHeader[2+i] == 0 )
+                return FALSE;
         }
-        return TRUE;
+
+        if( EQUAL( CPLGetExtension(poOpenInfo->pszFilename), "rik") )
+            return TRUE;
+
+        // We really need Open to be able to conclude
+        return -1;
     }
 }
 
