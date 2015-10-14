@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -183,28 +183,28 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; PolygonRings::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; PolygonRings::constructor;
 
-void PolygonRings::Initialize(Handle&lt;Object&gt; target)
+void PolygonRings::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(PolygonRings::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(PolygonRings::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;PolygonRings&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;PolygonRings&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;count&quot;, count);
+	Nan::SetPrototypeMethod(lcons, &quot;get&quot;, get);
+	Nan::SetPrototypeMethod(lcons, &quot;add&quot;, add);
 
-	target-&gt;Set(NanNew(&quot;PolygonRings&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;PolygonRings&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 PolygonRings::PolygonRings()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 PolygonRings::~PolygonRings()
@@ -217,41 +217,42 @@ PolygonRings::~PolygonRings()
  */
 NAN_METHOD(PolygonRings::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		PolygonRings *geom =  static_cast&lt;PolygonRings *&gt;(ptr);
-		geom-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
+		geom-&gt;Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError(&quot;Cannot create PolygonRings directly&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Cannot create PolygonRings directly&quot;);
+		return;
 	}
 }
 
-Handle&lt;Value&gt; PolygonRings::New(Handle&lt;Value&gt; geom)
+Local&lt;Value&gt; PolygonRings::New(Local&lt;Value&gt; geom)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	PolygonRings *wrapped = new PolygonRings();
 
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(PolygonRings::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), geom);
+	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	v8::Local&lt;v8::Object&gt; obj = Nan::New(PolygonRings::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(PolygonRings::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;PolygonRings&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;PolygonRings&quot;).ToLocalChecked());
 }
 
 /**
@@ -262,15 +263,15 @@ NAN_METHOD(PolygonRings::toString)
  */
 NAN_METHOD(PolygonRings::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	int i = geom-&gt;get()-&gt;getExteriorRing() ? 1 : 0;
 	i += geom-&gt;get()-&gt;getNumInteriorRings();
 
-	NanReturnValue(NanNew&lt;Integer&gt;(i));
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(i));
 }
 
 /**
@@ -287,18 +288,20 @@ NAN_METHOD(PolygonRings::count)
  */
 NAN_METHOD(PolygonRings::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	int i;
 	NODE_ARG_INT(0, &quot;index&quot;, i);
 
 	if(i == 0) {
-		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getExteriorRing(), false));
+		info.GetReturnValue().Set(LinearRing::New(geom-&gt;get()-&gt;getExteriorRing(), false));
+		return;
 	} else {
-		NanReturnValue(LinearRing::New(geom-&gt;get()-&gt;getInteriorRing(i-1), false));
+		info.GetReturnValue().Set(LinearRing::New(geom-&gt;get()-&gt;getInteriorRing(i-1), false));
+		return;
 	}
 }
 
@@ -325,40 +328,40 @@ NAN_METHOD(PolygonRings::get)
  */
 NAN_METHOD(PolygonRings::add)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Polygon *geom = ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	LinearRing *ring;
 
-	if (args.Length() &lt; 1) {
-		NanThrowError(&quot;ring(s) must be given&quot;);
-		NanReturnUndefined();
+	if (info.Length() &lt; 1) {
+		Nan::ThrowError(&quot;ring(s) must be given&quot;);
+		return;
 	}
-	if (args[0]-&gt;IsArray()){
+	if (info[0]-&gt;IsArray()){
 		//set from array of geometry objects
-		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+		Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 		int length = array-&gt;Length();
 		for (int i = 0; i &lt; length; i++){
-			Handle&lt;Value&gt; element = array-&gt;Get(i);
+			Local&lt;Value&gt; element = array-&gt;Get(i);
 			if (IS_WRAPPED(element, LinearRing)){
-				ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(element.As&lt;Object&gt;());
+				ring = Nan::ObjectWrap::Unwrap&lt;LinearRing&gt;(element.As&lt;Object&gt;());
 				geom-&gt;get()-&gt;addRing(ring-&gt;get());
 			} else {
-				NanThrowError(&quot;All array elements must be LinearRings&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;All array elements must be LinearRings&quot;);
+				return;
 			}
 		}
-	} else if (IS_WRAPPED(args[0], LinearRing)){
-		ring = ObjectWrap::Unwrap&lt;LinearRing&gt;(args[0].As&lt;Object&gt;());
+	} else if (IS_WRAPPED(info[0], LinearRing)){
+		ring = Nan::ObjectWrap::Unwrap&lt;LinearRing&gt;(info[0].As&lt;Object&gt;());
 		geom-&gt;get()-&gt;addRing(ring-&gt;get());
 	} else {
-		NanThrowError(&quot;ring(s) must be a LinearRing or array of LinearRings&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;ring(s) must be a LinearRing or array of LinearRings&quot;);
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 } // namespace node_gdal

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -203,7 +203,7 @@ namespace node_gdal {
 
 	static NAN_METHOD(open)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string path;
 		std::string mode = &quot;r&quot;;
@@ -216,18 +216,20 @@ namespace node_gdal {
 			if (mode == &quot;r+&quot;) {
 				access = GA_Update;
 			} else if (mode != &quot;r&quot;) {
-				NanThrowError(&quot;Invalid open mode. Must be \&quot;r\&quot; or \&quot;r+\&quot;&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;Invalid open mode. Must be \&quot;r\&quot; or \&quot;r+\&quot;&quot;);
+				return;
 			}
 
 			OGRDataSource *ogr_ds = OGRSFDriverRegistrar::Open(path.c_str(), static_cast&lt;int&gt;(access));
 			if(ogr_ds) {
-				NanReturnValue(Dataset::New(ogr_ds));
+				info.GetReturnValue().Set(Dataset::New(ogr_ds));
+				return;
 			}
 
 			GDALDataset *gdal_ds = (GDALDataset*) GDALOpen(path.c_str(), access);
 			if(gdal_ds) {
-				NanReturnValue(Dataset::New(gdal_ds));
+				info.GetReturnValue().Set(Dataset::New(gdal_ds));
+				return;
 			}
 		#else
 			unsigned int flags = 0;
@@ -236,53 +238,54 @@ namespace node_gdal {
 			} else if (mode == &quot;r&quot;) {
 				flags |= GDAL_OF_READONLY;
 			} else {
-				NanThrowError(&quot;Invalid open mode. Must be \&quot;r\&quot; or \&quot;r+\&quot;&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;Invalid open mode. Must be \&quot;r\&quot; or \&quot;r+\&quot;&quot;);
+				return;
 			}
 
 			GDALDataset *ds = (GDALDataset*) GDALOpenEx(path.c_str(), flags, NULL, NULL, NULL);
 			if(ds) {
-				NanReturnValue(Dataset::New(ds));
+				info.GetReturnValue().Set(Dataset::New(ds));
+				return;
 			}
 		#endif
 
-		NanThrowError(&quot;Error opening dataset&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error opening dataset&quot;);
+		return;
 	}
 
 	static NAN_METHOD(setConfigOption)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string name;
 
 		NODE_ARG_STR(0, &quot;name&quot;, name);
 
-		if (args.Length() &lt; 2) {
-			NanThrowError(&quot;string or null value must be provided&quot;);
-			NanReturnUndefined();
+		if (info.Length() &lt; 2) {
+			Nan::ThrowError(&quot;string or null value must be provided&quot;);
+			return;
 		}
-		if(args[1]-&gt;IsString()){
-			std::string val = *NanUtf8String(args[1]);
+		if(info[1]-&gt;IsString()){
+			std::string val = *Nan::Utf8String(info[1]);
 			CPLSetConfigOption(name.c_str(), val.c_str());
-		} else if(args[1]-&gt;IsNull() || args[1]-&gt;IsUndefined()) {
+		} else if(info[1]-&gt;IsNull() || info[1]-&gt;IsUndefined()) {
 			CPLSetConfigOption(name.c_str(), NULL);
 		} else {
-			NanThrowError(&quot;value must be a string or null&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;value must be a string or null&quot;);
+			return;
 		}
 
-		NanReturnUndefined();
+		return;
 	}
 
 	static NAN_METHOD(getConfigOption)
 	{
-		NanScope();
+		Nan::HandleScope scope;
 
 		std::string name;
 		NODE_ARG_STR(0, &quot;name&quot;, name);
 
-		NanReturnValue(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
+		info.GetReturnValue().Set(SafeString::New(CPLGetConfigOption(name.c_str(), NULL)));
 	}
 
 	/**
@@ -297,7 +300,7 @@ namespace node_gdal {
 	 * @return {String} A string nndnn&#x27;nn.nn&#x27;&quot;L where n is a number and L is either N or E
 	 */
 	static NAN_METHOD(decToDMS){
-		NanScope();
+		Nan::HandleScope scope;
 
 		double angle;
 		std::string axis;
@@ -310,11 +313,11 @@ namespace node_gdal {
 			axis[0] = toupper(axis[0]);
 		}
 		if (axis != &quot;Lat&quot; &amp;&amp; axis != &quot;Long&quot;) {
-			NanThrowError(&quot;Axis must be &#x27;lat&#x27; or &#x27;long&#x27;&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;Axis must be &#x27;lat&#x27; or &#x27;long&#x27;&quot;);
+			return;
 		}
 
-		NanReturnValue(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));
+		info.GetReturnValue().Set(SafeString::New(GDALDecToDMS(angle, axis.c_str(), precision)));
 	}
 }
 

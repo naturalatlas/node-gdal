@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -198,60 +198,60 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; Geometry::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; Geometry::constructor;
 
-void Geometry::Initialize(Handle&lt;Object&gt; target)
+void Geometry::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(Geometry::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(Geometry::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;Geometry&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;Geometry&quot;).ToLocalChecked());
 
-	//NODE_SET_METHOD(constructor, &quot;fromWKBType&quot;, Geometry::create);
-	NODE_SET_METHOD(lcons, &quot;fromWKT&quot;, Geometry::createFromWkt);
-	NODE_SET_METHOD(lcons, &quot;fromWKB&quot;, Geometry::createFromWkb);
-	NODE_SET_METHOD(lcons, &quot;getName&quot;, Geometry::getName);
-	NODE_SET_METHOD(lcons, &quot;getConstructor&quot;, Geometry::getConstructor);
+	//Nan::SetMethod(constructor, &quot;fromWKBType&quot;, Geometry::create);
+	Nan::SetMethod(lcons, &quot;fromWKT&quot;, Geometry::createFromWkt);
+	Nan::SetMethod(lcons, &quot;fromWKB&quot;, Geometry::createFromWkb);
+	Nan::SetMethod(lcons, &quot;getName&quot;, Geometry::getName);
+	Nan::SetMethod(lcons, &quot;getConstructor&quot;, Geometry::getConstructor);
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toKML&quot;, exportToKML);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toGML&quot;, exportToGML);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toJSON&quot;, exportToJSON);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toWKT&quot;, exportToWKT);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toWKB&quot;, exportToWKB);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isEmpty&quot;, isEmpty);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isValid&quot;, isValid);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isSimple&quot;, isSimple);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;isRing&quot;, isRing);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;clone&quot;, clone);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;empty&quot;, empty);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;closeRings&quot;, closeRings);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;intersects&quot;, intersects);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;equals&quot;, equals);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;disjoint&quot;, disjoint);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;touches&quot;, touches);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;crosses&quot;, crosses);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;within&quot;, within);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;contains&quot;, contains);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;overlaps&quot;, overlaps);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;boundary&quot;, boundary);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;distance&quot;, distance);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;convexHull&quot;, convexHull);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;buffer&quot;, buffer);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;intersection&quot;, intersection);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;union&quot;, unionGeometry);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;difference&quot;, difference);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;symDifference&quot;, symDifference);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;centroid&quot;, centroid);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;simplify&quot;, simplify);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;simplifyPreserveTopology&quot;, simplifyPreserveTopology);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;segmentize&quot;, segmentize);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;swapXY&quot;, swapXY);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getEnvelope&quot;, getEnvelope);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getEnvelope3D&quot;, getEnvelope3D);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;transform&quot;, transform);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;transformTo&quot;, transformTo);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;toKML&quot;, exportToKML);
+	Nan::SetPrototypeMethod(lcons, &quot;toGML&quot;, exportToGML);
+	Nan::SetPrototypeMethod(lcons, &quot;toJSON&quot;, exportToJSON);
+	Nan::SetPrototypeMethod(lcons, &quot;toWKT&quot;, exportToWKT);
+	Nan::SetPrototypeMethod(lcons, &quot;toWKB&quot;, exportToWKB);
+	Nan::SetPrototypeMethod(lcons, &quot;isEmpty&quot;, isEmpty);
+	Nan::SetPrototypeMethod(lcons, &quot;isValid&quot;, isValid);
+	Nan::SetPrototypeMethod(lcons, &quot;isSimple&quot;, isSimple);
+	Nan::SetPrototypeMethod(lcons, &quot;isRing&quot;, isRing);
+	Nan::SetPrototypeMethod(lcons, &quot;clone&quot;, clone);
+	Nan::SetPrototypeMethod(lcons, &quot;empty&quot;, empty);
+	Nan::SetPrototypeMethod(lcons, &quot;closeRings&quot;, closeRings);
+	Nan::SetPrototypeMethod(lcons, &quot;intersects&quot;, intersects);
+	Nan::SetPrototypeMethod(lcons, &quot;equals&quot;, equals);
+	Nan::SetPrototypeMethod(lcons, &quot;disjoint&quot;, disjoint);
+	Nan::SetPrototypeMethod(lcons, &quot;touches&quot;, touches);
+	Nan::SetPrototypeMethod(lcons, &quot;crosses&quot;, crosses);
+	Nan::SetPrototypeMethod(lcons, &quot;within&quot;, within);
+	Nan::SetPrototypeMethod(lcons, &quot;contains&quot;, contains);
+	Nan::SetPrototypeMethod(lcons, &quot;overlaps&quot;, overlaps);
+	Nan::SetPrototypeMethod(lcons, &quot;boundary&quot;, boundary);
+	Nan::SetPrototypeMethod(lcons, &quot;distance&quot;, distance);
+	Nan::SetPrototypeMethod(lcons, &quot;convexHull&quot;, convexHull);
+	Nan::SetPrototypeMethod(lcons, &quot;buffer&quot;, buffer);
+	Nan::SetPrototypeMethod(lcons, &quot;intersection&quot;, intersection);
+	Nan::SetPrototypeMethod(lcons, &quot;union&quot;, unionGeometry);
+	Nan::SetPrototypeMethod(lcons, &quot;difference&quot;, difference);
+	Nan::SetPrototypeMethod(lcons, &quot;symDifference&quot;, symDifference);
+	Nan::SetPrototypeMethod(lcons, &quot;centroid&quot;, centroid);
+	Nan::SetPrototypeMethod(lcons, &quot;simplify&quot;, simplify);
+	Nan::SetPrototypeMethod(lcons, &quot;simplifyPreserveTopology&quot;, simplifyPreserveTopology);
+	Nan::SetPrototypeMethod(lcons, &quot;segmentize&quot;, segmentize);
+	Nan::SetPrototypeMethod(lcons, &quot;swapXY&quot;, swapXY);
+	Nan::SetPrototypeMethod(lcons, &quot;getEnvelope&quot;, getEnvelope);
+	Nan::SetPrototypeMethod(lcons, &quot;getEnvelope3D&quot;, getEnvelope3D);
+	Nan::SetPrototypeMethod(lcons, &quot;transform&quot;, transform);
+	Nan::SetPrototypeMethod(lcons, &quot;transformTo&quot;, transformTo);
 
 	ATTR(lcons, &quot;srs&quot;, srsGetter, srsSetter);
 	ATTR(lcons, &quot;wkbSize&quot;, wkbSizeGetter, READ_ONLY_SETTER);
@@ -260,13 +260,13 @@ void Geometry::Initialize(Handle&lt;Object&gt; target)
 	ATTR(lcons, &quot;wkbType&quot;, typeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, &quot;name&quot;, nameGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(NanNew(&quot;Geometry&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;Geometry&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 Geometry::Geometry(OGRGeometry *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -275,7 +275,7 @@ Geometry::Geometry(OGRGeometry *geom)
 }
 
 Geometry::Geometry()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -288,7 +288,7 @@ Geometry::~Geometry()
 		LOG(&quot;Disposing Geometry [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG(&quot;Disposed Geometry [%p]&quot;, this_)
 		this_ = NULL;
@@ -302,44 +302,44 @@ Geometry::~Geometry()
  */
 NAN_METHOD(Geometry::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	Geometry *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
 
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		f = static_cast&lt;Geometry *&gt;(ptr);
 
 	} else {
-		NanThrowError(&quot;Geometry doesnt have a constructor, use Geometry.fromWKT(), Geometry.fromWKB() or type-specific constructor. ie. new ogr.Point()&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Geometry doesnt have a constructor, use Geometry.fromWKT(), Geometry.fromWKB() or type-specific constructor. ie. new ogr.Point()&quot;);
+		return;
 		//OGRwkbGeometryType geometry_type;
 		//NODE_ARG_ENUM(0, &quot;geometry type&quot;, OGRwkbGeometryType, geometry_type);
 		//OGRGeometry *geom = OGRGeometryFactory::createGeometry(geometry_type);
 		//f = new Geometry(geom);
 	}
 
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
+	f-&gt;Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle&lt;Value&gt; Geometry::New(OGRGeometry *geom)
+Local&lt;Value&gt; Geometry::New(OGRGeometry *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(Geometry::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(Geometry::New(geom, true));
 }
 
-Handle&lt;Value&gt; Geometry::New(OGRGeometry *geom, bool owned)
+Local&lt;Value&gt; Geometry::New(OGRGeometry *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	OGRwkbGeometryType type = getGeometryType_fixed(geom);
@@ -347,24 +347,24 @@ Handle&lt;Value&gt; Geometry::New(OGRGeometry *geom, bool owned)
 
 	switch (type) {
 		case wkbPoint:
-			return NanEscapeScope(Point::New(static_cast&lt;OGRPoint*&gt;(geom), owned));
+			return scope.Escape(Point::New(static_cast&lt;OGRPoint*&gt;(geom), owned));
 		case wkbLineString:
-			return NanEscapeScope(LineString::New(static_cast&lt;OGRLineString*&gt;(geom), owned));
+			return scope.Escape(LineString::New(static_cast&lt;OGRLineString*&gt;(geom), owned));
 		case wkbLinearRing:
-			return NanEscapeScope(LinearRing::New(static_cast&lt;OGRLinearRing*&gt;(geom), owned));
+			return scope.Escape(LinearRing::New(static_cast&lt;OGRLinearRing*&gt;(geom), owned));
 		case wkbPolygon:
-			return NanEscapeScope(Polygon::New(static_cast&lt;OGRPolygon*&gt;(geom), owned));
+			return scope.Escape(Polygon::New(static_cast&lt;OGRPolygon*&gt;(geom), owned));
 		case wkbGeometryCollection:
-			return NanEscapeScope(GeometryCollection::New(static_cast&lt;OGRGeometryCollection*&gt;(geom), owned));
+			return scope.Escape(GeometryCollection::New(static_cast&lt;OGRGeometryCollection*&gt;(geom), owned));
 		case wkbMultiPoint:
-			return NanEscapeScope(MultiPoint::New(static_cast&lt;OGRMultiPoint*&gt;(geom), owned));
+			return scope.Escape(MultiPoint::New(static_cast&lt;OGRMultiPoint*&gt;(geom), owned));
 		case wkbMultiLineString:
-			return NanEscapeScope(MultiLineString::New(static_cast&lt;OGRMultiLineString*&gt;(geom), owned));
+			return scope.Escape(MultiLineString::New(static_cast&lt;OGRMultiLineString*&gt;(geom), owned));
 		case wkbMultiPolygon:
-			return NanEscapeScope(MultiPolygon::New(static_cast&lt;OGRMultiPolygon*&gt;(geom), owned));
+			return scope.Escape(MultiPolygon::New(static_cast&lt;OGRMultiPolygon*&gt;(geom), owned));
 		default:
-			NanThrowError(&quot;Tried to create unsupported geometry type&quot;);
-			return NanEscapeScope(NanUndefined());
+			Nan::ThrowError(&quot;Tried to create unsupported geometry type&quot;);
+			return scope.Escape(Nan::Undefined());
 	}
 }
 
@@ -386,11 +386,11 @@ OGRwkbGeometryType Geometry::getGeometryType_fixed(OGRGeometry* geom)
 
 NAN_METHOD(Geometry::toString)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 	std::ostringstream ss;
 	ss &lt;&lt; &quot;Geometry (&quot; &lt;&lt; geom-&gt;this_-&gt;getGeometryName() &lt;&lt; &quot;)&quot;;
-	NanReturnValue(NanNew(ss.str().c_str()));
+	info.GetReturnValue().Set(Nan::New(ss.str().c_str()).ToLocalChecked());
 }
 
 /**
@@ -572,9 +572,9 @@ NODE_WRAPPED_METHOD_WITH_OGRERR_RESULT_1_WRAPPED_PARAM(Geometry, transformTo, tr
  */
 NAN_METHOD(Geometry::clone)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;clone()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;clone()));
 }
 
 /**
@@ -585,9 +585,9 @@ NAN_METHOD(Geometry::clone)
  */
 NAN_METHOD(Geometry::convexHull)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;ConvexHull()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;ConvexHull()));
 }
 
 /**
@@ -598,9 +598,9 @@ NAN_METHOD(Geometry::convexHull)
  */
 NAN_METHOD(Geometry::boundary)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Boundary()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Boundary()));
 }
 
 /**
@@ -612,14 +612,14 @@ NAN_METHOD(Geometry::boundary)
  */
 NAN_METHOD(Geometry::intersection)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, &quot;geometry to use for intersection&quot;, Geometry, x);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Intersection(x-&gt;this_)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Intersection(x-&gt;this_)));
 }
 
 /**
@@ -631,14 +631,14 @@ NAN_METHOD(Geometry::intersection)
  */
 NAN_METHOD(Geometry::unionGeometry)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, &quot;geometry to use for union&quot;, Geometry, x);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Union(x-&gt;this_)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Union(x-&gt;this_)));
 }
 
 /**
@@ -650,14 +650,14 @@ NAN_METHOD(Geometry::unionGeometry)
  */
 NAN_METHOD(Geometry::difference)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, &quot;geometry to use for difference&quot;, Geometry, x);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Difference(x-&gt;this_)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Difference(x-&gt;this_)));
 }
 
 /**
@@ -669,14 +669,14 @@ NAN_METHOD(Geometry::difference)
  */
 NAN_METHOD(Geometry::symDifference)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 	Geometry *x = NULL;
 
 	NODE_ARG_WRAPPED(0, &quot;geometry to use for symDifference&quot;, Geometry, x);
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;SymDifference(x-&gt;this_)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;SymDifference(x-&gt;this_)));
 }
 
 /**
@@ -688,15 +688,15 @@ NAN_METHOD(Geometry::symDifference)
  */
 NAN_METHOD(Geometry::simplify)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	double tolerance;
 
 	NODE_ARG_DOUBLE(0, &quot;tolerance&quot;, tolerance);
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Simplify(tolerance)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Simplify(tolerance)));
 }
 
 /**
@@ -708,15 +708,15 @@ NAN_METHOD(Geometry::simplify)
  */
 NAN_METHOD(Geometry::simplifyPreserveTopology)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	double tolerance;
 
 	NODE_ARG_DOUBLE(0, &quot;tolerance&quot;, tolerance);
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;SimplifyPreserveTopology(tolerance)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;SimplifyPreserveTopology(tolerance)));
 }
 
 /**
@@ -729,7 +729,7 @@ NAN_METHOD(Geometry::simplifyPreserveTopology)
  */
 NAN_METHOD(Geometry::buffer)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	double distance;
 	int number_of_segments = 30;
@@ -737,9 +737,9 @@ NAN_METHOD(Geometry::buffer)
 	NODE_ARG_DOUBLE(0, &quot;distance&quot;, distance);
 	NODE_ARG_INT_OPT(1, &quot;number of segments&quot;, number_of_segments);
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;Buffer(distance, number_of_segments)));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;Buffer(distance, number_of_segments)));
 }
 
 /**
@@ -750,22 +750,23 @@ NAN_METHOD(Geometry::buffer)
  */
 NAN_METHOD(Geometry::exportToWKT)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	char *text = NULL;
 	OGRErr err = geom-&gt;this_-&gt;exportToWkt(&amp;text);
 
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 	if (text) {
-		NanReturnValue(SafeString::New(text));
+		info.GetReturnValue().Set(SafeString::New(text));
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -778,9 +779,9 @@ NAN_METHOD(Geometry::exportToWKT)
  */
 NAN_METHOD(Geometry::exportToWKB)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	int size = geom-&gt;this_-&gt;WkbSize();
 	unsigned char *data = (unsigned char*) malloc(size);
@@ -794,8 +795,8 @@ NAN_METHOD(Geometry::exportToWKB)
 	} else if (order == &quot;LSB&quot;) {
 		byte_order = wkbNDR;
 	} else {
-		NanThrowError(&quot;byte order must be &#x27;MSB&#x27; or &#x27;LSB&#x27;&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;byte order must be &#x27;MSB&#x27; or &#x27;LSB&#x27;&quot;);
+		return;
 	}
 
 	#if GDAL_VERSION_MAJOR &gt; 1 || (GDAL_VERSION_MINOR &gt; 10)
@@ -812,8 +813,8 @@ NAN_METHOD(Geometry::exportToWKB)
 	} else if (order == &quot;ISO&quot;) {
 		wkb_variant = wkbVariantIso;
 	} else {
-		NanThrowError(&quot;byte order must be &#x27;OGC&#x27; or &#x27;ISO&#x27;&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;byte order must be &#x27;OGC&#x27; or &#x27;ISO&#x27;&quot;);
+		return;
 	}
 	OGRErr err = geom-&gt;this_-&gt;exportToWkb(byte_order, data, wkb_variant);
 	#else
@@ -826,13 +827,13 @@ NAN_METHOD(Geometry::exportToWKB)
 	if(err) {
 		free(data);
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	Handle&lt;Value&gt; result = FastBuffer::New(data, size);
+	Local&lt;Value&gt; result = FastBuffer::New(data, size);
 	free(data);
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 
 }
 
@@ -844,18 +845,19 @@ NAN_METHOD(Geometry::exportToWKB)
  */
 NAN_METHOD(Geometry::exportToKML)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	char *text = geom-&gt;this_-&gt;exportToKML();
 	if (text) {
-		Handle&lt;Value&gt; result = NanNew(text);
+		Local&lt;Value&gt; result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
-		NanReturnValue(result);
+		info.GetReturnValue().Set(result);
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -866,18 +868,19 @@ NAN_METHOD(Geometry::exportToKML)
  */
 NAN_METHOD(Geometry::exportToGML)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	char *text = geom-&gt;this_-&gt;exportToGML();
 	if (text) {
-		Handle&lt;Value&gt; result = NanNew(text);
+		Local&lt;Value&gt; result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
-		NanReturnValue(result);
+		info.GetReturnValue().Set(result);
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -888,18 +891,19 @@ NAN_METHOD(Geometry::exportToGML)
  */
 NAN_METHOD(Geometry::exportToJSON)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	char *text = geom-&gt;this_-&gt;exportToJson();
 	if (text) {
-		Handle&lt;Value&gt; result = NanNew(text);
+		Local&lt;Value&gt; result = Nan::New(text).ToLocalChecked();
 		CPLFree(text);
-		NanReturnValue(result);
+		info.GetReturnValue().Set(result);
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -913,12 +917,12 @@ NAN_METHOD(Geometry::centroid)
 	// The Centroid method wants the caller to create the point to fill in. Instead
 	// of requiring the caller to create the point geometry to fill in, we new up an
 	// OGRPoint and put the result into it and return that.
-	NanScope();
+	Nan::HandleScope scope;
 	OGRPoint *point = new OGRPoint();
 
-	ObjectWrap::Unwrap&lt;Geometry&gt;(args.This())-&gt;this_-&gt;Centroid(point);
+	Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This())-&gt;this_-&gt;Centroid(point);
 
-	NanReturnValue(Point::New(point));
+	info.GetReturnValue().Set(Point::New(point));
 }
 
 /**
@@ -931,22 +935,22 @@ NAN_METHOD(Geometry::getEnvelope)
 {
 	//returns object containing boundaries until complete OGREnvelope binding is built
 
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	OGREnvelope *envelope = new OGREnvelope();
 	geom-&gt;this_-&gt;getEnvelope(envelope);
 
-	Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
-	obj-&gt;Set(NanNew(&quot;minX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinX));
-	obj-&gt;Set(NanNew(&quot;maxX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxX));
-	obj-&gt;Set(NanNew(&quot;minY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinY));
-	obj-&gt;Set(NanNew(&quot;maxY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxY));
+	Local&lt;Object&gt; obj = Nan::New&lt;Object&gt;();
+	obj-&gt;Set(Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
+	obj-&gt;Set(Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
+	obj-&gt;Set(Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
+	obj-&gt;Set(Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
 
 	delete envelope;
 
-	NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }
 
 /**
@@ -959,24 +963,24 @@ NAN_METHOD(Geometry::getEnvelope3D)
 {
 	//returns object containing boundaries until complete OGREnvelope binding is built
 
-	NanScope();
+	Nan::HandleScope scope;
 
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	OGREnvelope3D *envelope = new OGREnvelope3D();
 	geom-&gt;this_-&gt;getEnvelope(envelope);
 
-	Local&lt;Object&gt; obj = NanNew&lt;Object&gt;();
-	obj-&gt;Set(NanNew(&quot;minX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinX));
-	obj-&gt;Set(NanNew(&quot;maxX&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxX));
-	obj-&gt;Set(NanNew(&quot;minY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinY));
-	obj-&gt;Set(NanNew(&quot;maxY&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxY));
-	obj-&gt;Set(NanNew(&quot;minZ&quot;), NanNew&lt;Number&gt;(envelope-&gt;MinZ));
-	obj-&gt;Set(NanNew(&quot;maxZ&quot;), NanNew&lt;Number&gt;(envelope-&gt;MaxZ));
+	Local&lt;Object&gt; obj = Nan::New&lt;Object&gt;();
+	obj-&gt;Set(Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
+	obj-&gt;Set(Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
+	obj-&gt;Set(Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
+	obj-&gt;Set(Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
+	obj-&gt;Set(Nan::New(&quot;minZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinZ));
+	obj-&gt;Set(Nan::New(&quot;maxZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxZ));
 
 	delete envelope;
 
-	NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }
 
 // --- JS static methods (OGRGeometryFactory) ---
@@ -992,7 +996,7 @@ NAN_METHOD(Geometry::getEnvelope3D)
  */
 NAN_METHOD(Geometry::createFromWkt)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	std::string wkt_string;
 	SpatialReference *srs = NULL;
@@ -1010,10 +1014,10 @@ NAN_METHOD(Geometry::createFromWkt)
 	OGRErr err = OGRGeometryFactory::createFromWkt(&amp;wkt, ogr_srs, &amp;geom);
 	if (err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(Geometry::New(geom, true));
+	info.GetReturnValue().Set(Geometry::New(geom, true));
 }
 
 /**
@@ -1027,20 +1031,20 @@ NAN_METHOD(Geometry::createFromWkt)
  */
 NAN_METHOD(Geometry::createFromWkb)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	std::string wkb_string;
 	SpatialReference *srs = NULL;
 
-	Handle&lt;Object&gt; wkb_obj;
+	Local&lt;Object&gt; wkb_obj;
 	NODE_ARG_OBJECT(0, &quot;wkb&quot;, wkb_obj);
 	NODE_ARG_WRAPPED_OPT(1, &quot;srs&quot;, SpatialReference, srs);
 
-	std::string obj_type = *NanUtf8String(wkb_obj-&gt;GetConstructorName());
+	std::string obj_type = *Nan::Utf8String(wkb_obj-&gt;GetConstructorName());
 
 	if(obj_type != &quot;Buffer&quot;){
-		NanThrowError(&quot;Argument must be a buffer object&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Argument must be a buffer object&quot;);
+		return;
 	}
 
 	unsigned char* data = (unsigned char *) Buffer::Data(wkb_obj);
@@ -1055,10 +1059,10 @@ NAN_METHOD(Geometry::createFromWkb)
 	OGRErr err = OGRGeometryFactory::createFromWkb(data, ogr_srs, &amp;geom, length);
 	if (err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(Geometry::New(geom, true));
+	info.GetReturnValue().Set(Geometry::New(geom, true));
 }
 
 /**
@@ -1071,12 +1075,12 @@ NAN_METHOD(Geometry::createFromWkb)
  */
 NAN_METHOD(Geometry::create)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	OGRwkbGeometryType type = wkbUnknown;
 	NODE_ARG_ENUM(0, &quot;type&quot;, OGRwkbGeometryType, type);
 
-	NanReturnValue(Geometry::New(OGRGeometryFactory::createGeometry(type), true));
+	info.GetReturnValue().Set(Geometry::New(OGRGeometryFactory::createGeometry(type), true));
 }
 
 /**
@@ -1085,22 +1089,22 @@ NAN_METHOD(Geometry::create)
  */
 NAN_GETTER(Geometry::srsGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(SpatialReference::New(geom-&gt;this_-&gt;getSpatialReference(), false));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(SpatialReference::New(geom-&gt;this_-&gt;getSpatialReference(), false));
 }
 
 NAN_SETTER(Geometry::srsSetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
 
 	OGRSpatialReference *srs = NULL;
 	if (IS_WRAPPED(value, SpatialReference)) {
-		SpatialReference *srs_obj = ObjectWrap::Unwrap&lt;SpatialReference&gt;(value.As&lt;Object&gt;());
+		SpatialReference *srs_obj = Nan::ObjectWrap::Unwrap&lt;SpatialReference&gt;(value.As&lt;Object&gt;());
 		srs = srs_obj-&gt;get();
 	} else if (!value-&gt;IsNull() &amp;&amp; !value-&gt;IsUndefined()) {
-		NanThrowError(&quot;srs must be SpatialReference object&quot;);
+		Nan::ThrowError(&quot;srs must be SpatialReference object&quot;);
 		return;
 	}
 
@@ -1114,9 +1118,9 @@ NAN_SETTER(Geometry::srsSetter)
  */
 NAN_GETTER(Geometry::nameGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(SafeString::New(geom-&gt;this_-&gt;getGeometryName()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(SafeString::New(geom-&gt;this_-&gt;getGeometryName()));
 }
 
 /**
@@ -1127,9 +1131,9 @@ NAN_GETTER(Geometry::nameGetter)
  */
 NAN_GETTER(Geometry::typeGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(getGeometryType_fixed(geom-&gt;this_)));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(getGeometryType_fixed(geom-&gt;this_)));
 }
 
 /**
@@ -1139,9 +1143,9 @@ NAN_GETTER(Geometry::typeGetter)
  */
 NAN_GETTER(Geometry::wkbSizeGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;WkbSize()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(geom-&gt;this_-&gt;WkbSize()));
 }
 
 /**
@@ -1151,9 +1155,9 @@ NAN_GETTER(Geometry::wkbSizeGetter)
  */
 NAN_GETTER(Geometry::dimensionGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;getDimension()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(geom-&gt;this_-&gt;getDimension()));
 }
 
 /**
@@ -1163,25 +1167,25 @@ NAN_GETTER(Geometry::dimensionGetter)
  */
 NAN_GETTER(Geometry::coordinateDimensionGetter)
 {
-	NanScope();
-	Geometry *geom = ObjectWrap::Unwrap&lt;Geometry&gt;(args.This());
-	NanReturnValue(NanNew&lt;Integer&gt;(geom-&gt;this_-&gt;getCoordinateDimension()));
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(geom-&gt;this_-&gt;getCoordinateDimension()));
 }
 
-Handle&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
-	NanEscapableScope();
+Local&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
+	Nan::EscapableHandleScope scope;
 
 	type = wkbFlatten(type);
 	switch (type) {
-		case wkbPoint:              return NanEscapeScope(NanNew(Point::constructor)-&gt;GetFunction());
-		case wkbLineString:         return NanEscapeScope(NanNew(LineString::constructor)-&gt;GetFunction());
-		case wkbLinearRing:         return NanEscapeScope(NanNew(LinearRing::constructor)-&gt;GetFunction());
-		case wkbPolygon:            return NanEscapeScope(NanNew(Polygon::constructor)-&gt;GetFunction());
-		case wkbGeometryCollection: return NanEscapeScope(NanNew(GeometryCollection::constructor)-&gt;GetFunction());
-		case wkbMultiPoint:         return NanEscapeScope(NanNew(MultiPoint::constructor)-&gt;GetFunction());
-		case wkbMultiLineString:    return NanEscapeScope(NanNew(MultiLineString::constructor)-&gt;GetFunction());
-		case wkbMultiPolygon:       return NanEscapeScope(NanNew(MultiPolygon::constructor)-&gt;GetFunction());
-		default:                    return NanEscapeScope(NanNull());
+		case wkbPoint:              return scope.Escape(Nan::New(Point::constructor)-&gt;GetFunction());
+		case wkbLineString:         return scope.Escape(Nan::New(LineString::constructor)-&gt;GetFunction());
+		case wkbLinearRing:         return scope.Escape(Nan::New(LinearRing::constructor)-&gt;GetFunction());
+		case wkbPolygon:            return scope.Escape(Nan::New(Polygon::constructor)-&gt;GetFunction());
+		case wkbGeometryCollection: return scope.Escape(Nan::New(GeometryCollection::constructor)-&gt;GetFunction());
+		case wkbMultiPoint:         return scope.Escape(Nan::New(MultiPoint::constructor)-&gt;GetFunction());
+		case wkbMultiLineString:    return scope.Escape(Nan::New(MultiLineString::constructor)-&gt;GetFunction());
+		case wkbMultiPolygon:       return scope.Escape(Nan::New(MultiPolygon::constructor)-&gt;GetFunction());
+		default:                    return scope.Escape(Nan::Null());
 	}
 }
 
@@ -1196,10 +1200,10 @@ Handle&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
  */
 NAN_METHOD(Geometry::getConstructor)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, &quot;wkbType&quot;, OGRwkbGeometryType, type);
-	NanReturnValue(getConstructor(type));
+	info.GetReturnValue().Set(getConstructor(type));
 }
 
 /**
@@ -1213,10 +1217,10 @@ NAN_METHOD(Geometry::getConstructor)
  */
 NAN_METHOD(Geometry::getName)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	OGRwkbGeometryType type;
 	NODE_ARG_ENUM(0, &quot;wkbType&quot;, OGRwkbGeometryType, type);
-	NanReturnValue(SafeString::New(OGRGeometryTypeToName(type)));
+	info.GetReturnValue().Set(SafeString::New(OGRGeometryTypeToName(type)));
 }
 
 } // namespace node_gdal

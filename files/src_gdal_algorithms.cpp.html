@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -184,13 +184,13 @@
 
 namespace node_gdal {
 
-void Algorithms::Initialize(Handle&lt;Object&gt; target)
+void Algorithms::Initialize(Local&lt;Object&gt; target)
 {
-	NODE_SET_METHOD(target, &quot;fillNodata&quot;, fillNodata);
-	NODE_SET_METHOD(target, &quot;contourGenerate&quot;, contourGenerate);
-	NODE_SET_METHOD(target, &quot;sieveFilter&quot;, sieveFilter);
-	NODE_SET_METHOD(target, &quot;checksumImage&quot;, checksumImage);
-	NODE_SET_METHOD(target, &quot;polygonize&quot;, polygonize);
+	Nan::SetMethod(target, &quot;fillNodata&quot;, fillNodata);
+	Nan::SetMethod(target, &quot;contourGenerate&quot;, contourGenerate);
+	Nan::SetMethod(target, &quot;sieveFilter&quot;, sieveFilter);
+	Nan::SetMethod(target, &quot;checksumImage&quot;, checksumImage);
+	Nan::SetMethod(target, &quot;polygonize&quot;, polygonize);
 }
 
 /**
@@ -208,9 +208,9 @@ void Algorithms::Initialize(Handle&lt;Object&gt; target)
  */
 NAN_METHOD(Algorithms::fillNodata)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
+	Local&lt;Object&gt; obj;
 	RasterBand* src;
 	RasterBand* mask = NULL;
 	double search_dist;
@@ -227,10 +227,10 @@ NAN_METHOD(Algorithms::fillNodata)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -257,10 +257,10 @@ NAN_METHOD(Algorithms::fillNodata)
  */
 NAN_METHOD(Algorithms::contourGenerate)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
-	Handle&lt;Value&gt; prop;
+	Local&lt;Object&gt; obj;
+	Local&lt;Value&gt; prop;
 	RasterBand* src;
 	Layer* dst;
 	double interval = 100, base = 0;
@@ -279,21 +279,21 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_INT_FROM_OBJ_OPT(obj, &quot;elevField&quot;, elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;interval&quot;, interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;offset&quot;, base);
-	if(obj-&gt;HasOwnProperty(NanNew(&quot;fixedLevels&quot;))){
-		if(fixed_level_array.parse(obj-&gt;Get(NanNew(&quot;fixedLevels&quot;)))){
-			NanReturnUndefined(); //error parsing double list
+	if(obj-&gt;HasOwnProperty(Nan::New(&quot;fixedLevels&quot;).ToLocalChecked())){
+		if(fixed_level_array.parse(obj-&gt;Get(Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()))){
+			return; //error parsing double list
 		} else {
 			fixed_levels = fixed_level_array.get();
 			n_fixed_levels = fixed_level_array.length();
 		}
 	}
-	if(obj-&gt;HasOwnProperty(NanNew(&quot;nodata&quot;))){
-		prop = obj-&gt;Get(NanNew(&quot;nodata&quot;));
+	if(obj-&gt;HasOwnProperty(Nan::New(&quot;nodata&quot;).ToLocalChecked())){
+		prop = obj-&gt;Get(Nan::New(&quot;nodata&quot;).ToLocalChecked());
 		if(prop-&gt;IsNumber()){
 			use_nodata = 1;
 			nodata = prop-&gt;NumberValue();
 		} else if(!prop-&gt;IsNull() &amp;&amp; !prop-&gt;IsUndefined()){
-			NanThrowTypeError(&quot;nodata property must be a number&quot;);
+			Nan::ThrowTypeError(&quot;nodata property must be a number&quot;);
 		}
 	}
 
@@ -301,10 +301,10 @@ NAN_METHOD(Algorithms::contourGenerate)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -323,9 +323,9 @@ NAN_METHOD(Algorithms::contourGenerate)
  */
 NAN_METHOD(Algorithms::sieveFilter)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
+	Local&lt;Object&gt; obj;
 	RasterBand* src;
 	RasterBand* dst;
 	RasterBand* mask = NULL;
@@ -341,18 +341,18 @@ NAN_METHOD(Algorithms::sieveFilter)
 	NODE_INT_FROM_OBJ_OPT(obj, &quot;connectedness&quot;, connectedness);
 
 	if(connectedness != 4 &amp;&amp; connectedness != 8){
-		NanThrowError(&quot;connectedness option must be 4 or 8&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;connectedness option must be 4 or 8&quot;);
+		return;
 	}
 
 	CPLErr err = GDALSieveFilter(src-&gt;get(), mask ? mask-&gt;get() : NULL, dst-&gt;get(), threshold, connectedness, NULL, NULL, NULL);
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -371,7 +371,7 @@ NAN_METHOD(Algorithms::sieveFilter)
  */
 NAN_METHOD(Algorithms::checksumImage)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	RasterBand* src;
 	int x = 0, y = 0, w, h, bandw, bandh;
@@ -387,21 +387,21 @@ NAN_METHOD(Algorithms::checksumImage)
 	NODE_ARG_INT_OPT(4, &quot;ySize&quot;, h);
 
 	if(x &lt; 0 || y &lt; 0 || x &gt;= bandw || y &gt;= bandh){
-		NanThrowRangeError(&quot;offset invalid for given band&quot;);
-		NanReturnUndefined();
+		Nan::ThrowRangeError(&quot;offset invalid for given band&quot;);
+		return;
 	}
 	if(w &lt; 0 || h &lt; 0 || w &gt; bandw || h &gt; bandh){
-		NanThrowRangeError(&quot;x and y size must be smaller than band dimensions and greater than 0&quot;);
-		NanReturnUndefined();
+		Nan::ThrowRangeError(&quot;x and y size must be smaller than band dimensions and greater than 0&quot;);
+		return;
 	}
 	if(x+w-1 &gt;= bandw || y+h-1 &gt;= bandh){
-		NanThrowRangeError(&quot;given range is outside bounds of given band&quot;);
-		NanReturnUndefined();
+		Nan::ThrowRangeError(&quot;given range is outside bounds of given band&quot;);
+		return;
 	}
 
 	int checksum = GDALChecksumImage(src-&gt;get(), x, y, w, h);
 
-	NanReturnValue(NanNew&lt;Integer&gt;(checksum));
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(checksum));
 }
 
 /**
@@ -424,9 +424,9 @@ NAN_METHOD(Algorithms::checksumImage)
  */
 NAN_METHOD(Algorithms::polygonize)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
+	Local&lt;Object&gt; obj;
 	RasterBand* src;
 	RasterBand* mask = NULL;
 	Layer* dst;
@@ -445,12 +445,12 @@ NAN_METHOD(Algorithms::polygonize)
 	if(connectedness == 8) {
 		papszOptions = CSLSetNameValue(papszOptions, &quot;8CONNECTED&quot;, &quot;8&quot;);
 	} else if (connectedness != 4) {
-		NanThrowError(&quot;connectedness must be 4 or 8&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;connectedness must be 4 or 8&quot;);
+		return;
 	}
 
 	CPLErr err;
-	if(obj-&gt;HasOwnProperty(NanNew(&quot;useFloats&quot;)) &amp;&amp; obj-&gt;Get(NanNew(&quot;useFloats&quot;))-&gt;BooleanValue()){
+	if(obj-&gt;HasOwnProperty(Nan::New(&quot;useFloats&quot;).ToLocalChecked()) &amp;&amp; obj-&gt;Get(Nan::New(&quot;useFloats&quot;).ToLocalChecked())-&gt;BooleanValue()){
 		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
@@ -460,10 +460,10 @@ NAN_METHOD(Algorithms::polygonize)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 } //node_gdal namespace

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -184,31 +184,31 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; RasterBandPixels::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; RasterBandPixels::constructor;
 
-void RasterBandPixels::Initialize(Handle&lt;Object&gt; target)
+void RasterBandPixels::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(RasterBandPixels::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(RasterBandPixels::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;RasterBandPixels&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;RasterBandPixels&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;set&quot;, set);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;read&quot;, read);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;write&quot;, write);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;readBlock&quot;, readBlock);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;writeBlock&quot;, writeBlock);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;get&quot;, get);
+	Nan::SetPrototypeMethod(lcons, &quot;set&quot;, set);
+	Nan::SetPrototypeMethod(lcons, &quot;read&quot;, read);
+	Nan::SetPrototypeMethod(lcons, &quot;write&quot;, write);
+	Nan::SetPrototypeMethod(lcons, &quot;readBlock&quot;, readBlock);
+	Nan::SetPrototypeMethod(lcons, &quot;writeBlock&quot;, writeBlock);
 
-	target-&gt;Set(NanNew(&quot;RasterBandPixels&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;RasterBandPixels&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 RasterBandPixels::RasterBandPixels()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 RasterBandPixels::~RasterBandPixels()
@@ -229,41 +229,42 @@ RasterBandPixels::~RasterBandPixels()
  */
 NAN_METHOD(RasterBandPixels::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		RasterBandPixels *f = static_cast&lt;RasterBandPixels *&gt;(ptr);
-		f-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
+		f-&gt;Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError(&quot;Cannot create RasterBandPixels directly&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Cannot create RasterBandPixels directly&quot;);
+		return;
 	}
 }
 
-Handle&lt;Value&gt; RasterBandPixels::New(Handle&lt;Value&gt; band_obj)
+Local&lt;Value&gt; RasterBandPixels::New(Local&lt;Value&gt; band_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	RasterBandPixels *wrapped = new RasterBandPixels();
 
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(RasterBandPixels::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), band_obj);
+	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	v8::Local&lt;v8::Object&gt; obj = Nan::New(RasterBandPixels::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), band_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(RasterBandPixels::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;RasterBandPixels&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;RasterBandPixels&quot;).ToLocalChecked());
 }
 
 /**
@@ -276,13 +277,13 @@ NAN_METHOD(RasterBandPixels::toString)
  */
 NAN_METHOD(RasterBandPixels::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y;
@@ -294,10 +295,10 @@ NAN_METHOD(RasterBandPixels::get)
 	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Read, x, y, 1, 1, &amp;val, 1, 1, GDT_Float64, 0, 0);
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(NanNew&lt;Number&gt;(val));
+	info.GetReturnValue().Set(Nan::New&lt;Number&gt;(val));
 }
 
 /**
@@ -310,13 +311,13 @@ NAN_METHOD(RasterBandPixels::get)
  */
 NAN_METHOD(RasterBandPixels::set)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y;
@@ -329,10 +330,10 @@ NAN_METHOD(RasterBandPixels::set)
 	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Write, x, y, 1, 1, &amp;val, 1, 1, GDT_Float64, 0, 0);
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -355,13 +356,13 @@ NAN_METHOD(RasterBandPixels::set)
  */
 NAN_METHOD(RasterBandPixels::read)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y, w, h;
@@ -370,8 +371,8 @@ NAN_METHOD(RasterBandPixels::read)
 	int pixel_space, line_space;
 	int size, length, min_size, min_length;
 	void *data;
-	Handle&lt;Value&gt;  array;
-	Handle&lt;Object&gt; obj;
+	Local&lt;Value&gt;  array;
+	Local&lt;Object&gt; obj;
 	GDALDataType type;
 
 
@@ -392,12 +393,12 @@ NAN_METHOD(RasterBandPixels::read)
 		type = GDALGetDataTypeByName(type_name.c_str());
 	}
 
-	if(args.Length() &gt;= 5 &amp;&amp; !args[4]-&gt;IsUndefined() &amp;&amp; !args[4]-&gt;IsNull()) {
+	if(info.Length() &gt;= 5 &amp;&amp; !info[4]-&gt;IsUndefined() &amp;&amp; !info[4]-&gt;IsNull()) {
 		NODE_ARG_OBJECT(4, &quot;data&quot;, obj);
 		type = TypedArray::Identify(obj);
 		if(type == GDT_Unknown) {
-			NanThrowError(&quot;Invalid array&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;Invalid array&quot;);
+			return;
 		}
 	}
 
@@ -408,12 +409,12 @@ NAN_METHOD(RasterBandPixels::read)
 	NODE_ARG_INT_OPT(9, &quot;line_space&quot;, line_space);
 
 	if(pixel_space &lt; bytes_per_pixel) {
-		NanThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
+		return;
 	}
 	if(line_space &lt; pixel_space * buffer_w) {
-		NanThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
+		return;
 	}
 
 	size       = line_space * buffer_h; //bytes
@@ -425,23 +426,23 @@ NAN_METHOD(RasterBandPixels::read)
 	if(obj.IsEmpty()){
 		array = TypedArray::New(type, length);
 		if(array.IsEmpty() || !array-&gt;IsObject()) {
-			NanReturnUndefined(); //TypedArray::New threw an error
+			return; //TypedArray::New threw an error
 		}
 		obj = array.As&lt;Object&gt;();
 	}
 
 	data = TypedArray::Validate(obj, type, min_length);
 	if(!data) {
-		NanReturnUndefined(); //TypedArray::Validate threw an error
+		return; //TypedArray::Validate threw an error
 	}
 
 	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Read, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }
 
 /**
@@ -462,13 +463,13 @@ NAN_METHOD(RasterBandPixels::read)
  */
 NAN_METHOD(RasterBandPixels::write)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y, w, h;
@@ -477,7 +478,7 @@ NAN_METHOD(RasterBandPixels::write)
 	int pixel_space, line_space;
 	int size, min_size, min_length;
 	void *data;
-	Handle&lt;Object&gt; passed_array;
+	Local&lt;Object&gt; passed_array;
 	GDALDataType type;
 
 	NODE_ARG_INT(0, &quot;x_offset&quot;, x);
@@ -493,8 +494,8 @@ NAN_METHOD(RasterBandPixels::write)
 
 	type = TypedArray::Identify(passed_array);
 	if(type == GDT_Unknown) {
-		NanThrowError(&quot;Invalid array&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Invalid array&quot;);
+		return;
 	}
 
 	bytes_per_pixel = GDALGetDataTypeSize(type) / 8;
@@ -508,26 +509,26 @@ NAN_METHOD(RasterBandPixels::write)
 	min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
 
 	if(pixel_space &lt; bytes_per_pixel) {
-		NanThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;pixel_space must be greater than or equal to size of data_type&quot;);
+		return;
 	}
 	if(line_space &lt; pixel_space * buffer_w) {
-		NanThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;line_space must be greater than or equal to pixel_space * buffer_w&quot;);
+		return;
 	}
 
 	data = TypedArray::Validate(passed_array, type, min_length);
 	if(!data){
-		NanReturnUndefined(); //TypedArray::Validate threw an error
+		return; //TypedArray::Validate threw an error
 	}
 
 	CPLErr err = band-&gt;get()-&gt;RasterIO(GF_Write, x, y, w, h, data, buffer_w, buffer_h, type, pixel_space, line_space);
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -542,13 +543,13 @@ NAN_METHOD(RasterBandPixels::write)
  */
 NAN_METHOD(RasterBandPixels::readBlock)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y, w = 0, h = 0;
@@ -559,16 +560,16 @@ NAN_METHOD(RasterBandPixels::readBlock)
 
 	GDALDataType type = band-&gt;get()-&gt;GetRasterDataType();
 
-	Handle&lt;Value&gt; array;
-	Handle&lt;Object&gt; obj;
+	Local&lt;Value&gt; array;
+	Local&lt;Object&gt; obj;
 
-	if(args.Length() == 3 &amp;&amp; !args[2]-&gt;IsUndefined() &amp;&amp; !args[2]-&gt;IsNull()) {
+	if(info.Length() == 3 &amp;&amp; !info[2]-&gt;IsUndefined() &amp;&amp; !info[2]-&gt;IsNull()) {
 		NODE_ARG_OBJECT(2, &quot;data&quot;, obj);
  		array = obj;
 	} else {
 		array = TypedArray::New(type, w * h);
 		if(array.IsEmpty() || !array-&gt;IsObject()) {
-			NanReturnUndefined(); //TypedArray::New threw an error
+			return; //TypedArray::New threw an error
 		}
 		obj = array.As&lt;Object&gt;();
 	}
@@ -576,16 +577,16 @@ NAN_METHOD(RasterBandPixels::readBlock)
 
 	void* data = TypedArray::Validate(obj, type, w*h);
 	if(!data){
-		NanReturnUndefined(); //TypedArray::Validate threw an error
+		return; //TypedArray::Validate threw an error
 	}
 
 	CPLErr err = band-&gt;get()-&gt;ReadBlock(x, y, data);
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(array);
+	info.GetReturnValue().Set(array);
 }
 
 /**
@@ -599,13 +600,13 @@ NAN_METHOD(RasterBandPixels::readBlock)
  */
 NAN_METHOD(RasterBandPixels::writeBlock)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	RasterBand *band = ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
-	if (!band-&gt;get()) {
-		NanThrowError(&quot;RasterBand object has already been destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
+	if (!band-&gt;isAlive()) {
+		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
+		return;
 	}
 
 	int x, y, w = 0, h = 0;
@@ -615,23 +616,23 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 	NODE_ARG_INT(0, &quot;block_x_offset&quot;, x);
 	NODE_ARG_INT(1, &quot;block_y_offset&quot;, y);
 
-	Handle&lt;Object&gt; obj;
+	Local&lt;Object&gt; obj;
 	NODE_ARG_OBJECT(2, &quot;data&quot;, obj);
 
 	// validate array
 	void* data = TypedArray::Validate(obj, band-&gt;get()-&gt;GetRasterDataType(), w*h);
 	if(!data){
-		NanReturnUndefined(); //TypedArray::Validate threw an error
+		return; //TypedArray::Validate threw an error
 	}
 
 	CPLErr err = band-&gt;get()-&gt;WriteBlock(x, y, data);
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 

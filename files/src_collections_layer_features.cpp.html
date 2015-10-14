@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -182,34 +182,34 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; LayerFeatures::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; LayerFeatures::constructor;
 
-void LayerFeatures::Initialize(Handle&lt;Object&gt; target)
+void LayerFeatures::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(LayerFeatures::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(LayerFeatures::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;LayerFeatures&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;LayerFeatures&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;set&quot;, set);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;first&quot;, first);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;next&quot;, next);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;remove&quot;, remove);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;count&quot;, count);
+	Nan::SetPrototypeMethod(lcons, &quot;add&quot;, add);
+	Nan::SetPrototypeMethod(lcons, &quot;get&quot;, get);
+	Nan::SetPrototypeMethod(lcons, &quot;set&quot;, set);
+	Nan::SetPrototypeMethod(lcons, &quot;first&quot;, first);
+	Nan::SetPrototypeMethod(lcons, &quot;next&quot;, next);
+	Nan::SetPrototypeMethod(lcons, &quot;remove&quot;, remove);
 
 	ATTR_DONT_ENUM(lcons, &quot;layer&quot;, layerGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(NanNew(&quot;LayerFeatures&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;LayerFeatures&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 LayerFeatures::LayerFeatures()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 LayerFeatures::~LayerFeatures()
@@ -222,41 +222,42 @@ LayerFeatures::~LayerFeatures()
  */
 NAN_METHOD(LayerFeatures::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		LayerFeatures *f =  static_cast&lt;LayerFeatures *&gt;(ptr);
-		f-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
+		f-&gt;Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError(&quot;Cannot create LayerFeatures directly&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Cannot create LayerFeatures directly&quot;);
+		return;
 	}
 }
 
-Handle&lt;Value&gt; LayerFeatures::New(Handle&lt;Value&gt; layer_obj)
+Local&lt;Value&gt; LayerFeatures::New(Local&lt;Value&gt; layer_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	LayerFeatures *wrapped = new LayerFeatures();
 
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(LayerFeatures::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), layer_obj);
+	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	v8::Local&lt;v8::Object&gt; obj = Nan::New(LayerFeatures::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(LayerFeatures::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;LayerFeatures&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;LayerFeatures&quot;).ToLocalChecked());
 }
 
 /**
@@ -271,20 +272,20 @@ NAN_METHOD(LayerFeatures::toString)
  */
 NAN_METHOD(LayerFeatures::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	int feature_id;
 	NODE_ARG_INT(0, &quot;feature id&quot;, feature_id);
 	OGRFeature *feature = layer-&gt;get()-&gt;GetFeature(feature_id);
 
-	NanReturnValue(Feature::New(feature));
+	info.GetReturnValue().Set(Feature::New(feature));
 }
 
 /**
@@ -296,19 +297,19 @@ NAN_METHOD(LayerFeatures::get)
  */
 NAN_METHOD(LayerFeatures::first)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	layer-&gt;get()-&gt;ResetReading();
 	OGRFeature *feature = layer-&gt;get()-&gt;GetNextFeature();
 
-	NanReturnValue(Feature::New(feature));
+	info.GetReturnValue().Set(Feature::New(feature));
 }
 
 /**
@@ -323,18 +324,18 @@ NAN_METHOD(LayerFeatures::first)
  */
 NAN_METHOD(LayerFeatures::next)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	OGRFeature *feature = layer-&gt;get()-&gt;GetNextFeature();
 
-	NanReturnValue(Feature::New(feature));
+	info.GetReturnValue().Set(Feature::New(feature));
 }
 
 /**
@@ -353,13 +354,13 @@ NAN_METHOD(LayerFeatures::next)
  */
 NAN_METHOD(LayerFeatures::add)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	Feature *f;
@@ -368,9 +369,9 @@ NAN_METHOD(LayerFeatures::add)
 	int err = layer-&gt;get()-&gt;CreateFeature(f-&gt;get());
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -382,19 +383,19 @@ NAN_METHOD(LayerFeatures::add)
  */
 NAN_METHOD(LayerFeatures::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	int force = 1;
 	NODE_ARG_BOOL_OPT(0, &quot;force&quot;, force);
 
-	NanReturnValue(NanNew&lt;Number&gt;(layer-&gt;get()-&gt;GetFeatureCount(force)));
+	info.GetReturnValue().Set(Nan::New&lt;Number&gt;(layer-&gt;get()-&gt;GetFeatureCount(force)));
 }
 
 /**
@@ -407,18 +408,18 @@ NAN_METHOD(LayerFeatures::count)
  */
 NAN_METHOD(LayerFeatures::set)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	int err;
 	Feature *f;
-	int argc = args.Length();
+	int argc = info.Length();
 
 	if(argc == 1) {
 		NODE_ARG_WRAPPED(0, &quot;feature&quot;, Feature, f);
@@ -428,24 +429,24 @@ NAN_METHOD(LayerFeatures::set)
 		NODE_ARG_WRAPPED(1, &quot;feature&quot;, Feature, f);
 		err = f-&gt;get()-&gt;SetFID(i);
 		if(err) {
-			NanThrowError(&quot;Error setting feature id&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;Error setting feature id&quot;);
+			return;
 		}
 	} else {
-		NanThrowError(&quot;Invalid number of arguments&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Invalid number of arguments&quot;);
+		return;
 	}
 
-	if(!f-&gt;get()){
-		NanThrowError(&quot;Feature already destroyed&quot;);
-		NanReturnUndefined();
+	if(!f-&gt;isAlive()){
+		Nan::ThrowError(&quot;Feature already destroyed&quot;);
+		return;
 	}
 	err = layer-&gt;get()-&gt;SetFeature(f-&gt;get());
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -457,13 +458,13 @@ NAN_METHOD(LayerFeatures::set)
  */
 NAN_METHOD(LayerFeatures::remove)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	Layer *layer = ObjectWrap::Unwrap&lt;Layer&gt;(parent);
-	if (!layer-&gt;get()) {
-		NanThrowError(&quot;Layer object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
+	if (!layer-&gt;isAlive()) {
+		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
+		return;
 	}
 
 	int i;
@@ -471,10 +472,10 @@ NAN_METHOD(LayerFeatures::remove)
 	int err = layer-&gt;get()-&gt;DeleteFeature(i);
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -485,8 +486,8 @@ NAN_METHOD(LayerFeatures::remove)
  */
 NAN_GETTER(LayerFeatures::layerGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()));
 }
 
 } // namespace node_gdal

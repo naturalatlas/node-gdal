@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -184,10 +184,10 @@
 namespace node_gdal {
 
 
-void Warper::Initialize(Handle&lt;Object&gt; target)
+void Warper::Initialize(Local&lt;Object&gt; target)
 {
-	NODE_SET_METHOD(target, &quot;reprojectImage&quot;, reprojectImage);
-	NODE_SET_METHOD(target, &quot;suggestedWarpOutput&quot;, suggestedWarpOutput);
+	Nan::SetMethod(target, &quot;reprojectImage&quot;, reprojectImage);
+	Nan::SetMethod(target, &quot;suggestedWarpOutput&quot;, suggestedWarpOutput);
 }
 
 /**
@@ -398,10 +398,10 @@ CPLErr GDALReprojectImageMulti( GDALDatasetH hSrcDS, const char *pszSrcWKT,
  */
 NAN_METHOD(Warper::reprojectImage)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
-	Handle&lt;Value&gt; prop;
+	Local&lt;Object&gt; obj;
+	Local&lt;Value&gt; prop;
 
 	WarpOptions options;
 	GDALWarpOptions* opts;
@@ -414,13 +414,13 @@ NAN_METHOD(Warper::reprojectImage)
 	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
 
 	if(options.parse(obj)){
-		NanReturnUndefined(); // error parsing options object
+		return; // error parsing options object
 	} else {
 		opts = options.get();
 	}
 	if(!opts-&gt;hDstDS){
-		NanThrowTypeError(&quot;dst Dataset must be provided&quot;);
-		NanReturnUndefined();
+		Nan::ThrowTypeError(&quot;dst Dataset must be provided&quot;);
+		return;
 	}
 
 	NODE_WRAPPED_FROM_OBJ(obj, &quot;s_srs&quot;, SpatialReference, s_srs);
@@ -429,13 +429,13 @@ NAN_METHOD(Warper::reprojectImage)
 
 	char *s_srs_wkt, *t_srs_wkt;
 	if(s_srs-&gt;get()-&gt;exportToWkt(&amp;s_srs_wkt)){
-		NanThrowError(&quot;Error converting s_srs to WKT&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error converting s_srs to WKT&quot;);
+		return;
 	}
 	if(t_srs-&gt;get()-&gt;exportToWkt(&amp;t_srs_wkt)){
 		CPLFree(s_srs_wkt);
-		NanThrowError(&quot;Error converting t_srs to WKT&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error converting t_srs to WKT&quot;);
+		return;
 	}
 
 	CPLErr err;
@@ -451,10 +451,10 @@ NAN_METHOD(Warper::reprojectImage)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -474,10 +474,10 @@ NAN_METHOD(Warper::reprojectImage)
  */
 NAN_METHOD(Warper::suggestedWarpOutput)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; obj;
-	Handle&lt;Value&gt; prop;
+	Local&lt;Object&gt; obj;
+	Local&lt;Value&gt; prop;
 
 	Dataset* ds;
 	SpatialReference* s_srs;
@@ -488,27 +488,27 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
 
-	if(obj-&gt;HasOwnProperty(NanNew(&quot;src&quot;))){
-		prop = obj-&gt;Get(NanNew(&quot;src&quot;));
-		if(prop-&gt;IsObject() &amp;&amp; !prop-&gt;IsNull() &amp;&amp; NanHasInstance(Dataset::constructor, prop)){
-			ds = ObjectWrap::Unwrap&lt;Dataset&gt;(prop.As&lt;Object&gt;());
+	if(obj-&gt;HasOwnProperty(Nan::New(&quot;src&quot;).ToLocalChecked())){
+		prop = obj-&gt;Get(Nan::New(&quot;src&quot;).ToLocalChecked());
+		if(prop-&gt;IsObject() &amp;&amp; !prop-&gt;IsNull() &amp;&amp; Nan::New(Dataset::constructor)-&gt;HasInstance(prop)){
+			ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(prop.As&lt;Object&gt;());
 			if(!ds-&gt;getDataset()){
 				#if GDAL_VERSION_MAJOR &lt; 2
 				if(ds-&gt;getDatasource()) {
-					NanThrowError(&quot;src dataset must be a raster dataset&quot;);
-					NanReturnUndefined();
+					Nan::ThrowError(&quot;src dataset must be a raster dataset&quot;);
+					return;
 				}
 				#endif
-				NanThrowError(&quot;src dataset already closed&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;src dataset already closed&quot;);
+				return;
 			}
 		} else {
-			NanThrowTypeError(&quot;src property must be a Dataset object&quot;);
-			NanReturnUndefined();
+			Nan::ThrowTypeError(&quot;src property must be a Dataset object&quot;);
+			return;
 		}
 	} else {
-		NanThrowError(&quot;src dataset must be provided&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;src dataset must be provided&quot;);
+		return;
 	}
 
 	NODE_WRAPPED_FROM_OBJ(obj, &quot;s_srs&quot;, SpatialReference, s_srs);
@@ -517,13 +517,13 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	char *s_srs_wkt, *t_srs_wkt;
 	if(s_srs-&gt;get()-&gt;exportToWkt(&amp;s_srs_wkt)){
-		NanThrowError(&quot;Error converting s_srs to WKT&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error converting s_srs to WKT&quot;);
+		return;
 	}
 	if(t_srs-&gt;get()-&gt;exportToWkt(&amp;t_srs_wkt)){
 		CPLFree(s_srs_wkt);
-		NanThrowError(&quot;Error converting t_srs to WKT&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error converting t_srs to WKT&quot;);
+		return;
 	}
 
 
@@ -552,26 +552,26 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	Handle&lt;Array&gt; result_geotransform = NanNew&lt;Array&gt;();
-	result_geotransform-&gt;Set(0, NanNew&lt;Number&gt;(geotransform[0]));
-	result_geotransform-&gt;Set(1, NanNew&lt;Number&gt;(geotransform[1]));
-	result_geotransform-&gt;Set(2, NanNew&lt;Number&gt;(geotransform[2]));
-	result_geotransform-&gt;Set(3, NanNew&lt;Number&gt;(geotransform[3]));
-	result_geotransform-&gt;Set(4, NanNew&lt;Number&gt;(geotransform[4]));
-	result_geotransform-&gt;Set(5, NanNew&lt;Number&gt;(geotransform[5]));
+	Local&lt;Array&gt; result_geotransform = Nan::New&lt;Array&gt;();
+	result_geotransform-&gt;Set(0, Nan::New&lt;Number&gt;(geotransform[0]));
+	result_geotransform-&gt;Set(1, Nan::New&lt;Number&gt;(geotransform[1]));
+	result_geotransform-&gt;Set(2, Nan::New&lt;Number&gt;(geotransform[2]));
+	result_geotransform-&gt;Set(3, Nan::New&lt;Number&gt;(geotransform[3]));
+	result_geotransform-&gt;Set(4, Nan::New&lt;Number&gt;(geotransform[4]));
+	result_geotransform-&gt;Set(5, Nan::New&lt;Number&gt;(geotransform[5]));
 
-	Handle&lt;Object&gt; result_size = NanNew&lt;Object&gt;();
-	result_size-&gt;Set(NanNew(&quot;x&quot;), NanNew&lt;Integer&gt;(w));
-	result_size-&gt;Set(NanNew(&quot;y&quot;), NanNew&lt;Integer&gt;(h));
+	Local&lt;Object&gt; result_size = Nan::New&lt;Object&gt;();
+	result_size-&gt;Set(Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(w));
+	result_size-&gt;Set(Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(h));
 
-	Handle&lt;Object&gt; result = NanNew&lt;Object&gt;();
-	result-&gt;Set(NanNew(&quot;rasterSize&quot;), result_size);
-	result-&gt;Set(NanNew(&quot;geoTransform&quot;), result_geotransform);
+	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
+	result-&gt;Set(Nan::New(&quot;rasterSize&quot;).ToLocalChecked(), result_size);
+	result-&gt;Set(Nan::New(&quot;geoTransform&quot;).ToLocalChecked(), result_geotransform);
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
 

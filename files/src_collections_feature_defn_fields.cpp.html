@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -182,35 +182,35 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; FeatureDefnFields::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; FeatureDefnFields::constructor;
 
-void FeatureDefnFields::Initialize(Handle&lt;Object&gt; target)
+void FeatureDefnFields::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(FeatureDefnFields::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(FeatureDefnFields::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;FeatureDefnFields&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;FeatureDefnFields&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;count&quot;, count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;get&quot;, get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;remove&quot;, remove);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getNames&quot;, getNames);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;indexOf&quot;, indexOf);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;reorder&quot;, reorder);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;add&quot;, add);
-	//NODE_SET_PROTOTYPE_METHOD(lcons, &quot;alter&quot;, alter);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;count&quot;, count);
+	Nan::SetPrototypeMethod(lcons, &quot;get&quot;, get);
+	Nan::SetPrototypeMethod(lcons, &quot;remove&quot;, remove);
+	Nan::SetPrototypeMethod(lcons, &quot;getNames&quot;, getNames);
+	Nan::SetPrototypeMethod(lcons, &quot;indexOf&quot;, indexOf);
+	Nan::SetPrototypeMethod(lcons, &quot;reorder&quot;, reorder);
+	Nan::SetPrototypeMethod(lcons, &quot;add&quot;, add);
+	//Nan::SetPrototypeMethod(lcons, &quot;alter&quot;, alter);
 
 	ATTR_DONT_ENUM(lcons, &quot;featureDefn&quot;, featureDefnGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(NanNew(&quot;FeatureDefnFields&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;FeatureDefnFields&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 FeatureDefnFields::FeatureDefnFields()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 FeatureDefnFields::~FeatureDefnFields()
@@ -223,41 +223,42 @@ FeatureDefnFields::~FeatureDefnFields()
  */
 NAN_METHOD(FeatureDefnFields::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		FeatureDefnFields *feature_def =  static_cast&lt;FeatureDefnFields *&gt;(ptr);
-		feature_def-&gt;Wrap(args.This());
-		NanReturnValue(args.This());
+		feature_def-&gt;Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError(&quot;Cannot create FeatureDefnFields directly&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Cannot create FeatureDefnFields directly&quot;);
+		return;
 	}
 }
 
-Handle&lt;Value&gt; FeatureDefnFields::New(Handle&lt;Value&gt; feature_defn)
+Local&lt;Value&gt; FeatureDefnFields::New(Local&lt;Value&gt; feature_defn)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
-	v8::Handle&lt;v8::Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	v8::Handle&lt;v8::Object&gt; obj = NanNew(FeatureDefnFields::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(NanNew(&quot;parent_&quot;), feature_defn);
+	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	v8::Local&lt;v8::Object&gt; obj = Nan::New(FeatureDefnFields::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), feature_defn);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(FeatureDefnFields::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;FeatureDefnFields&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;FeatureDefnFields&quot;).ToLocalChecked());
 }
 
 /**
@@ -268,16 +269,16 @@ NAN_METHOD(FeatureDefnFields::toString)
  */
 NAN_METHOD(FeatureDefnFields::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
-	NanReturnValue(NanNew&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldCount()));
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldCount()));
 }
 
 /**
@@ -289,19 +290,19 @@ NAN_METHOD(FeatureDefnFields::count)
  */
 NAN_METHOD(FeatureDefnFields::indexOf)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
 	std::string name(&quot;&quot;);
 	NODE_ARG_STR(0, &quot;field name&quot;, name);
 
-	NanReturnValue(NanNew&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldIndex(name.c_str())));
+	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(feature_def-&gt;get()-&gt;GetFieldIndex(name.c_str())));
 }
 
 /**
@@ -313,24 +314,24 @@ NAN_METHOD(FeatureDefnFields::indexOf)
  */
 NAN_METHOD(FeatureDefnFields::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
-	if (args.Length() &lt; 1) {
-		NanThrowError(&quot;Field index or name must be given&quot;);
-		NanReturnUndefined();
+	if (info.Length() &lt; 1) {
+		Nan::ThrowError(&quot;Field index or name must be given&quot;);
+		return;
 	}
 
 	int field_index;
 	ARG_FIELD_ID(0, feature_def-&gt;get(), field_index);
 
-	NanReturnValue(FieldDefn::New(feature_def-&gt;get()-&gt;GetFieldDefn(field_index)));
+	info.GetReturnValue().Set(FieldDefn::New(feature_def-&gt;get()-&gt;GetFieldDefn(field_index)));
 }
 
 /**
@@ -341,24 +342,24 @@ NAN_METHOD(FeatureDefnFields::get)
  */
 NAN_METHOD(FeatureDefnFields::getNames)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
 	int n = feature_def-&gt;get()-&gt;GetFieldCount();
-	Handle&lt;Array&gt; result = NanNew&lt;Array&gt;(n);
+	Local&lt;Array&gt; result = Nan::New&lt;Array&gt;(n);
 
 	for (int i = 0; i &lt; n;  i++) {
 		OGRFieldDefn *field_def = feature_def-&gt;get()-&gt;GetFieldDefn(i);
 		result-&gt;Set(i, SafeString::New(field_def-&gt;GetNameRef()));
 	}
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
 /**
@@ -370,18 +371,18 @@ NAN_METHOD(FeatureDefnFields::getNames)
  */
 NAN_METHOD(FeatureDefnFields::remove)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
-	if (args.Length() &lt; 1) {
-		NanThrowError(&quot;Field index or name must be given&quot;);
-		NanReturnUndefined();
+	if (info.Length() &lt; 1) {
+		Nan::ThrowError(&quot;Field index or name must be given&quot;);
+		return;
 	}
 
 	int field_index;
@@ -390,10 +391,10 @@ NAN_METHOD(FeatureDefnFields::remove)
 	int err = feature_def-&gt;get()-&gt;DeleteFieldDefn(field_index);
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -405,43 +406,43 @@ NAN_METHOD(FeatureDefnFields::remove)
  */
 NAN_METHOD(FeatureDefnFields::add)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
-	if (args.Length() &lt; 1) {
-		NanThrowError(&quot;field definition(s) must be given&quot;);
-		NanReturnUndefined();
+	if (info.Length() &lt; 1) {
+		Nan::ThrowError(&quot;field definition(s) must be given&quot;);
+		return;
 	}
 
 	FieldDefn *field_def;
 
-	if (args[0]-&gt;IsArray()) {
-		Handle&lt;Array&gt; array = args[0].As&lt;Array&gt;();
+	if (info[0]-&gt;IsArray()) {
+		Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 		int n = array-&gt;Length();
 		for (int i = 0; i &lt; n; i++) {
-			Handle&lt;Value&gt; element = array-&gt;Get(i);
+			Local&lt;Value&gt; element = array-&gt;Get(i);
 			if (IS_WRAPPED(element, FieldDefn)) {
-				field_def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(element.As&lt;Object&gt;());
+				field_def = Nan::ObjectWrap::Unwrap&lt;FieldDefn&gt;(element.As&lt;Object&gt;());
 				feature_def-&gt;get()-&gt;AddFieldDefn(field_def-&gt;get());
 			} else {
-				NanThrowError(&quot;All array elements must be FieldDefn objects&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;All array elements must be FieldDefn objects&quot;);
+				return;
 			}
 		}
-	} else if (IS_WRAPPED(args[0], FieldDefn)) {
-		field_def = ObjectWrap::Unwrap&lt;FieldDefn&gt;(args[0].As&lt;Object&gt;());
+	} else if (IS_WRAPPED(info[0], FieldDefn)) {
+		field_def = Nan::ObjectWrap::Unwrap&lt;FieldDefn&gt;(info[0].As&lt;Object&gt;());
 		feature_def-&gt;get()-&gt;AddFieldDefn(field_def-&gt;get());
 	} else {
-		NanThrowError(&quot;field definition(s) must be a FieldDefn object or array of FieldDefn objects&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;field definition(s) must be a FieldDefn object or array of FieldDefn objects&quot;);
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -458,41 +459,41 @@ NAN_METHOD(FeatureDefnFields::add)
  */
 NAN_METHOD(FeatureDefnFields::reorder)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle&lt;Object&gt; parent = args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)).As&lt;Object&gt;();
-	FeatureDefn *feature_def = ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
-	if (!feature_def-&gt;get()) {
-		NanThrowError(&quot;FeatureDefn object already destroyed&quot;);
-		NanReturnUndefined();
+	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap&lt;FeatureDefn&gt;(parent);
+	if (!feature_def-&gt;isAlive()) {
+		Nan::ThrowError(&quot;FeatureDefn object already destroyed&quot;);
+		return;
 	}
 
-	Handle&lt;Array&gt; field_map = NanNew&lt;Array&gt;(0);
+	Local&lt;Array&gt; field_map = Nan::New&lt;Array&gt;(0);
 	NODE_ARG_ARRAY(0, &quot;field map&quot;, field_map);
 
 	int n = feature_def-&gt;get()-&gt;GetFieldCount();
 	OGRErr err = 0;
 
 	if ((int)field_map-&gt;Length() != n) {
-		NanThrowError(&quot;Array length must match field count&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Array length must match field count&quot;);
+		return;
 	}
 
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i &lt; n; i++) {
-		Handle&lt;Value&gt; val = field_map-&gt;Get(i);
+		Local&lt;Value&gt; val = field_map-&gt;Get(i);
 		if (!val-&gt;IsNumber()) {
 			delete [] field_map_array;
-			NanThrowError(&quot;Array must only contain integers&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;Array must only contain integers&quot;);
+			return;
 		}
 
 		int key = val-&gt;IntegerValue();
 		if (key &lt; 0 || key &gt;= n) {
 			delete [] field_map_array;
-			NanThrowError(&quot;Values must be between 0 and field count - 1&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;Values must be between 0 and field count - 1&quot;);
+			return;
 		}
 
 		field_map_array[i] = key;
@@ -504,9 +505,9 @@ NAN_METHOD(FeatureDefnFields::reorder)
 
 	if(err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -518,8 +519,8 @@ NAN_METHOD(FeatureDefnFields::reorder)
  */
 NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()-&gt;GetHiddenValue(NanNew(&quot;parent_&quot;)));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()));
 }
 
 } // namespace node_gdal

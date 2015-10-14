@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -183,33 +183,33 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; CoordinateTransformation::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; CoordinateTransformation::constructor;
 
-void CoordinateTransformation::Initialize(Handle&lt;Object&gt; target)
+void CoordinateTransformation::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(CoordinateTransformation::New);
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(CoordinateTransformation::New);
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;CoordinateTransformation&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;CoordinateTransformation&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;transformPoint&quot;, transformPoint);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;transformPoint&quot;, transformPoint);
 
-	target-&gt;Set(NanNew(&quot;CoordinateTransformation&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;CoordinateTransformation&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 CoordinateTransformation::CoordinateTransformation(OGRCoordinateTransformation *transform)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(transform)
 {
 	LOG(&quot;Created CoordinateTransformation [%p]&quot;, transform);
 }
 
 CoordinateTransformation::CoordinateTransformation()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(0)
 {
 }
@@ -235,42 +235,42 @@ CoordinateTransformation::~CoordinateTransformation()
  */
 NAN_METHOD(CoordinateTransformation::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	CoordinateTransformation *f;
 	SpatialReference *source, *target;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
 
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		f =  static_cast&lt;CoordinateTransformation *&gt;(ptr);
 	} else {
-		if(args.Length() &lt; 2) {
-			NanThrowError(&quot;Invalid number of arguments&quot;);
-			NanReturnUndefined();
+		if(info.Length() &lt; 2) {
+			Nan::ThrowError(&quot;Invalid number of arguments&quot;);
+			return;
 		}
 
 		NODE_ARG_WRAPPED(0, &quot;source&quot;, SpatialReference, source);
 
-		if(!args[1]-&gt;IsObject() || args[1]-&gt;IsNull()){
-			NanThrowTypeError(&quot;target must be a SpatialReference or Dataset object&quot;);
-			NanReturnUndefined();
+		if(!info[1]-&gt;IsObject() || info[1]-&gt;IsNull()){
+			Nan::ThrowTypeError(&quot;target must be a SpatialReference or Dataset object&quot;);
+			return;
 		}
-		if(NanHasInstance(SpatialReference::constructor, args[1])) {
+		if(Nan::New(SpatialReference::constructor)-&gt;HasInstance(info[1])) {
 			// srs -&gt; srs
 			NODE_ARG_WRAPPED(1, &quot;target&quot;, SpatialReference, target);
 
 			OGRCoordinateTransformation * transform = OGRCreateCoordinateTransformation(source-&gt;get(), target-&gt;get());
 			if (!transform) {
 				NODE_THROW_LAST_CPLERR();
-				NanReturnUndefined();
+				return;
 			}
 			f = new CoordinateTransformation(transform);
-		} else if(NanHasInstance(Dataset::constructor, args[1])) {
+		} else if(Nan::New(Dataset::constructor)-&gt;HasInstance(info[1])) {
 			// srs -&gt; px/line
 			// todo: allow additional options using StringList
 
@@ -278,23 +278,23 @@ NAN_METHOD(CoordinateTransformation::New)
 			char** papszTO = NULL;
 			char* src_wkt;
 
-			ds = ObjectWrap::Unwrap&lt;Dataset&gt;(args[1].As&lt;Object&gt;());
+			ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(info[1].As&lt;Object&gt;());
 
 			if(!ds-&gt;getDataset()){
 				#if GDAL_VERSION_MAJOR &lt; 2
 				if(ds-&gt;getDatasource()){
-					NanThrowError(&quot;Only raster datasets can be used to create geotransform coordinate transformations&quot;);
-					NanReturnUndefined();
+					Nan::ThrowError(&quot;Only raster datasets can be used to create geotransform coordinate transformations&quot;);
+					return;
 				}
 				#endif
-				NanThrowError(&quot;Dataset already closed&quot;);
-				NanReturnUndefined();
+				Nan::ThrowError(&quot;Dataset already closed&quot;);
+				return;
 			}
 
 			OGRErr err = source-&gt;get()-&gt;exportToWkt(&amp;src_wkt);
 			if(err) {
 				NODE_THROW_OGRERR(err);
-				NanReturnUndefined();
+				return;
 			}
 
 			papszTO = CSLSetNameValue( papszTO, &quot;DST_SRS&quot;, src_wkt );
@@ -304,7 +304,7 @@ NAN_METHOD(CoordinateTransformation::New)
 			transform-&gt;hSrcImageTransformer = GDALCreateGenImgProjTransformer2( ds-&gt;getDataset(), NULL, papszTO );
 			if(!transform-&gt;hSrcImageTransformer){
 				NODE_THROW_LAST_CPLERR();
-				NanReturnUndefined();
+				return;
 			}
 
 			f = new CoordinateTransformation(transform);
@@ -312,35 +312,35 @@ NAN_METHOD(CoordinateTransformation::New)
 			CPLFree(src_wkt);
 			CSLDestroy(papszTO);
 		} else {
-			NanThrowTypeError(&quot;target must be a SpatialReference or Dataset object&quot;);
-			NanReturnUndefined();
+			Nan::ThrowTypeError(&quot;target must be a SpatialReference or Dataset object&quot;);
+			return;
 		}
 	}
 
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
+	f-&gt;Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle&lt;Value&gt; CoordinateTransformation::New(OGRCoordinateTransformation *transform)
+Local&lt;Value&gt; CoordinateTransformation::New(OGRCoordinateTransformation *transform)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!transform) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);
 
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(CoordinateTransformation::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	Local&lt;Object&gt; obj = Nan::New(CoordinateTransformation::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(CoordinateTransformation::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;CoordinateTransformation&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;CoordinateTransformation&quot;).ToLocalChecked());
 }
 
 /**
@@ -359,20 +359,20 @@ NAN_METHOD(CoordinateTransformation::toString)
  */
 NAN_METHOD(CoordinateTransformation::transformPoint)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	CoordinateTransformation *transform = ObjectWrap::Unwrap&lt;CoordinateTransformation&gt;(args.This());
+	CoordinateTransformation *transform = Nan::ObjectWrap::Unwrap&lt;CoordinateTransformation&gt;(info.This());
 
 	double x, y, z = 0;
 
-	if (args.Length() == 1 &amp;&amp; args[0]-&gt;IsObject()) {
-		Local&lt;Object&gt; obj = args[0].As&lt;Object&gt;();
-		Local&lt;Value&gt; arg_x = obj-&gt;Get(NanNew(&quot;x&quot;));
-		Local&lt;Value&gt; arg_y = obj-&gt;Get(NanNew(&quot;y&quot;));
-		Local&lt;Value&gt; arg_z = obj-&gt;Get(NanNew(&quot;z&quot;));
+	if (info.Length() == 1 &amp;&amp; info[0]-&gt;IsObject()) {
+		Local&lt;Object&gt; obj = info[0].As&lt;Object&gt;();
+		Local&lt;Value&gt; arg_x = obj-&gt;Get(Nan::New(&quot;x&quot;).ToLocalChecked());
+		Local&lt;Value&gt; arg_y = obj-&gt;Get(Nan::New(&quot;y&quot;).ToLocalChecked());
+		Local&lt;Value&gt; arg_z = obj-&gt;Get(Nan::New(&quot;z&quot;).ToLocalChecked());
 		if (!arg_x-&gt;IsNumber() || !arg_y-&gt;IsNumber()) {
-			NanThrowError(&quot;point must contain numerical properties x and y&quot;);
-			NanReturnUndefined();
+			Nan::ThrowError(&quot;point must contain numerical properties x and y&quot;);
+			return;
 		}
 		x = static_cast&lt;double&gt;(arg_x-&gt;NumberValue());
 		y = static_cast&lt;double&gt;(arg_y-&gt;NumberValue());
@@ -386,16 +386,16 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 	}
 
 	if (!transform-&gt;this_-&gt;Transform(1, &amp;x, &amp;y, &amp;z)) {
-		NanThrowError(&quot;Error transforming point&quot;);
-		NanReturnUndefined();
+		Nan::ThrowError(&quot;Error transforming point&quot;);
+		return;
 	}
 
-	Local&lt;Object&gt; result = NanNew&lt;Object&gt;();
-	result-&gt;Set(NanNew(&quot;x&quot;), NanNew&lt;Number&gt;(x));
-	result-&gt;Set(NanNew(&quot;y&quot;), NanNew&lt;Number&gt;(y));
-	result-&gt;Set(NanNew(&quot;z&quot;), NanNew&lt;Number&gt;(z));
+	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
+	result-&gt;Set(Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(x));
+	result-&gt;Set(Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(y));
+	result-&gt;Set(Nan::New(&quot;z&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(z));
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
 } // namespace node_gdal

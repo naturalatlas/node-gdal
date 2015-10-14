@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.0</b>
+                    API Docs for Version: <b>0.7.2</b>
                 </p>
             </li>
         </div>
@@ -186,28 +186,28 @@
 
 namespace node_gdal {
 
-Persistent&lt;FunctionTemplate&gt; MultiPolygon::constructor;
+Nan::Persistent&lt;FunctionTemplate&gt; MultiPolygon::constructor;
 
-void MultiPolygon::Initialize(Handle&lt;Object&gt; target)
+void MultiPolygon::Initialize(Local&lt;Object&gt; target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local&lt;FunctionTemplate&gt; lcons = NanNew&lt;FunctionTemplate&gt;(MultiPolygon::New);
-	lcons-&gt;Inherit(NanNew(GeometryCollection::constructor));
+	Local&lt;FunctionTemplate&gt; lcons = Nan::New&lt;FunctionTemplate&gt;(MultiPolygon::New);
+	lcons-&gt;Inherit(Nan::New(GeometryCollection::constructor));
 	lcons-&gt;InstanceTemplate()-&gt;SetInternalFieldCount(1);
-	lcons-&gt;SetClassName(NanNew(&quot;MultiPolygon&quot;));
+	lcons-&gt;SetClassName(Nan::New(&quot;MultiPolygon&quot;).ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;toString&quot;, toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;unionCascaded&quot;, unionCascaded);
-	NODE_SET_PROTOTYPE_METHOD(lcons, &quot;getArea&quot;, getArea);
+	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
+	Nan::SetPrototypeMethod(lcons, &quot;unionCascaded&quot;, unionCascaded);
+	Nan::SetPrototypeMethod(lcons, &quot;getArea&quot;, getArea);
 
-	target-&gt;Set(NanNew(&quot;MultiPolygon&quot;), lcons-&gt;GetFunction());
+	target-&gt;Set(Nan::New(&quot;MultiPolygon&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 MultiPolygon::MultiPolygon(OGRMultiPolygon *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -216,7 +216,7 @@ MultiPolygon::MultiPolygon(OGRMultiPolygon *geom)
 }
 
 MultiPolygon::MultiPolygon()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -229,7 +229,7 @@ MultiPolygon::~MultiPolygon()
 		LOG(&quot;Disposing MultiPolygon [%p] (%s)&quot;, this_, owned_ ? &quot;owned&quot; : &quot;unowned&quot;);
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG(&quot;Disposed MultiPolygon [%p]&quot;, this_);
 		this_ = NULL;
@@ -243,46 +243,46 @@ MultiPolygon::~MultiPolygon()
  */
 NAN_METHOD(MultiPolygon::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	MultiPolygon *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError(&quot;Cannot call constructor as function, you need to use &#x27;new&#x27; keyword&quot;);
+		return;
 	}
 
-	if (args[0]-&gt;IsExternal()) {
-		Local&lt;External&gt; ext = args[0].As&lt;External&gt;();
+	if (info[0]-&gt;IsExternal()) {
+		Local&lt;External&gt; ext = info[0].As&lt;External&gt;();
 		void* ptr = ext-&gt;Value();
 		f = static_cast&lt;MultiPolygon *&gt;(ptr);
 
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError(&quot;MultiPolygon constructor doesn&#x27;t take any arguments&quot;);
-			NanReturnUndefined();
+		if (info.Length() != 0) {
+			Nan::ThrowError(&quot;MultiPolygon constructor doesn&#x27;t take any arguments&quot;);
+			return;
 		}
 		f = new MultiPolygon(new OGRMultiPolygon());
 	}
 
-	Handle&lt;Value&gt; children = GeometryCollectionChildren::New(args.This());
-	args.This()-&gt;SetHiddenValue(NanNew(&quot;children_&quot;), children);
+	Local&lt;Value&gt; children = GeometryCollectionChildren::New(info.This());
+	info.This()-&gt;SetHiddenValue(Nan::New(&quot;children_&quot;).ToLocalChecked(), children);
 
-	f-&gt;Wrap(args.This());
-	NanReturnValue(args.This());
+	f-&gt;Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle&lt;Value&gt; MultiPolygon::New(OGRMultiPolygon *geom)
+Local&lt;Value&gt; MultiPolygon::New(OGRMultiPolygon *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(MultiPolygon::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(MultiPolygon::New(geom, true));
 }
 
-Handle&lt;Value&gt; MultiPolygon::New(OGRMultiPolygon *geom, bool owned)
+Local&lt;Value&gt; MultiPolygon::New(OGRMultiPolygon *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -299,16 +299,16 @@ Handle&lt;Value&gt; MultiPolygon::New(OGRMultiPolygon *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	Handle&lt;Value&gt; ext = NanNew&lt;External&gt;(wrapped);
-	Handle&lt;Object&gt; obj = NanNew(MultiPolygon::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
+	Local&lt;Object&gt; obj = Nan::New(MultiPolygon::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(MultiPolygon::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew(&quot;MultiPolygon&quot;));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New(&quot;MultiPolygon&quot;).ToLocalChecked());
 }
 
 /**
@@ -319,11 +319,11 @@ NAN_METHOD(MultiPolygon::toString)
  */
 NAN_METHOD(MultiPolygon::unionCascaded)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	MultiPolygon *geom = ObjectWrap::Unwrap&lt;MultiPolygon&gt;(args.This());
+	MultiPolygon *geom = Nan::ObjectWrap::Unwrap&lt;MultiPolygon&gt;(info.This());
 
-	NanReturnValue(Geometry::New(geom-&gt;this_-&gt;UnionCascaded()));
+	info.GetReturnValue().Set(Geometry::New(geom-&gt;this_-&gt;UnionCascaded()));
 }
 
 /**
