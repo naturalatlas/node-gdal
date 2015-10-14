@@ -19,21 +19,24 @@ using namespace node;
 
 namespace node_gdal {
 
-class LinearRing: public node::ObjectWrap {
+class LinearRing: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRLinearRing *geom);
-	static Handle<Value> New(OGRLinearRing *geom, bool owned);
+	static Local<Value> New(OGRLinearRing *geom);
+	static Local<Value> New(OGRLinearRing *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getArea);
 
 	LinearRing();
 	LinearRing(OGRLinearRing *geom);
 	inline OGRLinearRing *get() {
+		return this_;
+	}
+	inline bool isAlive(){
 		return this_;
 	}
 

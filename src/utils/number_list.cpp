@@ -20,11 +20,11 @@ IntegerList::~IntegerList()
 	if(list) delete [] list;
 }
 
-int IntegerList::parse(Handle<Value> value)
+int IntegerList::parse(Local<Value> value)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	unsigned int i;
-	Handle<Array> arr;
+	Local<Array> arr;
 
 	if(value->IsNull() || value->IsUndefined()) 
 		return 0;
@@ -37,12 +37,12 @@ int IntegerList::parse(Handle<Value> value)
 
 		list = new int [len];
 		for (i = 0; i < len; ++i) {
-			Handle<Value> element = arr->Get(i);
+			Local<Value> element = arr->Get(i);
 			if(element->IsNumber()){
 				list[i] = element->Int32Value();
 			} else {
 				std::string err = std::string("Every element in the")+name+" array must be a number";
-				NanThrowTypeError(err.c_str());
+				Nan::ThrowTypeError(err.c_str());
 				return 1;
 			}
 		}
@@ -52,7 +52,7 @@ int IntegerList::parse(Handle<Value> value)
 		len = 1;
 	} else {
 		std::string err = std::string(name)+"integer list must be an array or single integer";
-		NanThrowTypeError(err.c_str());
+		Nan::ThrowTypeError(err.c_str());
 		return 1;
 	}
 	return 0;
@@ -74,11 +74,11 @@ DoubleList::~DoubleList()
 	if(list) delete [] list;
 }
 
-int DoubleList::parse(Handle<Value> value)
+int DoubleList::parse(Local<Value> value)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	unsigned int i;
-	Handle<Array> arr;
+	Local<Array> arr;
 
 	if(value->IsNull() || value->IsUndefined()) 
 		return 0;
@@ -91,12 +91,12 @@ int DoubleList::parse(Handle<Value> value)
 
 		list = new double [len];
 		for (i = 0; i < len; ++i) {
-			Handle<Value> element = arr->Get(i);
+			Local<Value> element = arr->Get(i);
 			if(element->IsNumber()){
 				list[i] = element->NumberValue();
 			} else {
 				std::string err = std::string("Every element in the")+name+" array must be a number";
-				NanThrowTypeError(err.c_str());
+				Nan::ThrowTypeError(err.c_str());
 				return 1;
 			}
 		}
@@ -106,7 +106,7 @@ int DoubleList::parse(Handle<Value> value)
 		len = 1;
 	} else {
 		std::string err = std::string(name)+"double list must be an array or single number";
-		NanThrowTypeError(err.c_str());
+		Nan::ThrowTypeError(err.c_str());
 		return 1;
 	}
 	return 0;

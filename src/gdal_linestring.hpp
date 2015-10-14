@@ -19,15 +19,15 @@ using namespace node;
 
 namespace node_gdal {
 
-class LineString: public node::ObjectWrap {
+class LineString: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRLineString *geom);
-	static Handle<Value> New(OGRLineString *geom, bool owned);
+	static Local<Value> New(OGRLineString *geom);
+	static Local<Value> New(OGRLineString *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getLength);
 	static NAN_METHOD(value);
@@ -38,6 +38,9 @@ public:
 	LineString();
 	LineString(OGRLineString *geom);
 	inline OGRLineString *get() {
+		return this_;
+	}
+	inline bool isAlive(){
 		return this_;
 	}
 

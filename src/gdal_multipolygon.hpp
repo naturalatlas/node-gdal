@@ -19,15 +19,15 @@ using namespace node;
 
 namespace node_gdal {
 
-class MultiPolygon: public node::ObjectWrap {
+class MultiPolygon: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRMultiPolygon *geom);
-	static Handle<Value> New(OGRMultiPolygon *geom, bool owned);
+	static Local<Value> New(OGRMultiPolygon *geom);
+	static Local<Value> New(OGRMultiPolygon *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(unionCascaded);
 	static NAN_METHOD(getArea);
@@ -35,6 +35,9 @@ public:
 	MultiPolygon();
 	MultiPolygon(OGRMultiPolygon *geom);
 	inline OGRMultiPolygon *get() {
+		return this_;
+	}
+	inline bool isAlive(){
 		return this_;
 	}
 

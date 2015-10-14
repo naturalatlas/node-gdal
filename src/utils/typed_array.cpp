@@ -6,12 +6,12 @@ namespace node_gdal {
 
 //https://github.com/joyent/node/issues/4201#issuecomment-9837340
 
-Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
-	NanEscapableScope();
+Local<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
+	Nan::EscapableHandleScope scope;
 
-	Handle<Value> val;
-	Handle<Function> constructor;
-	Local<Object> global = NanGetCurrentContext()->Global();
+	Local<Value> val;
+	Local<Function> constructor;
+	Local<Object> global = Nan::GetCurrentContext()->Global();
 
 	const char *name;
 	switch(type) {
@@ -23,99 +23,129 @@ Handle<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 		case GDT_Float32: name = "Float32Array"; break;
 		case GDT_Float64: name = "Float64Array"; break;
 		default: 
-			NanThrowError("Unsupported array type"); 
-			return NanEscapeScope(NanUndefined());
+			Nan::ThrowError("Unsupported array type"); 
+			return scope.Escape(Nan::Undefined());
 	}
 
 
 	// make ArrayBuffer
-	val = global->Get(NanNew("ArrayBuffer"));
+	val = global->Get(Nan::New("ArrayBuffer").ToLocalChecked());
 
 	if(val.IsEmpty() || !val->IsFunction()) {
-		NanThrowError("Error getting ArrayBuffer constructor");
-		return NanEscapeScope(NanUndefined());
+		Nan::ThrowError("Error getting ArrayBuffer constructor");
+		return scope.Escape(Nan::Undefined());
 	}
 
 	constructor = val.As<Function>();
-	Local<Value> size = NanNew<Integer>(length * GDALGetDataTypeSize(type) / 8);
+	Local<Value> size = Nan::New<Integer>(length * GDALGetDataTypeSize(type) / 8);
 	Local<Value> array_buffer = constructor->NewInstance(1, &size);
 
 	if(array_buffer.IsEmpty() || !array_buffer->IsObject()) {
-		NanThrowError("Error allocating ArrayBuffer");
-		return NanEscapeScope(NanUndefined());
+		Nan::ThrowError("Error allocating ArrayBuffer");
+		return scope.Escape(Nan::Undefined());
 	}
 
 
 	// make TypedArray
-	val = global->Get(NanNew(name));
+	val = global->Get(Nan::New(name).ToLocalChecked());
 
 	if(val.IsEmpty() || !val->IsFunction()) {
-		NanThrowError("Error getting typed array constructor");
-		return NanEscapeScope(NanUndefined());
+		Nan::ThrowError("Error getting typed array constructor");
+		return scope.Escape(Nan::Undefined());
 	}
 
 	constructor = val.As<Function>();
 	Local<Object> array = constructor->NewInstance(1, &array_buffer);
 
 	if(array.IsEmpty() || !array->IsObject()) {
-		NanThrowError("Error creating TypedArray");
-		return NanEscapeScope(NanUndefined());
+		Nan::ThrowError("Error creating TypedArray");
+		return scope.Escape(Nan::Undefined());
 	}
 
-	return NanEscapeScope(array);
+	array->Set(Nan::New("_gdal_type").ToLocalChecked(), Nan::New(type));
+
+	return scope.Escape(array);
 }
 
-GDALDataType TypedArray::Identify(Handle<Object> obj) {	
-	switch(obj->GetIndexedPropertiesExternalArrayDataType()){
-		case kExternalByteArray:          return GDT_Byte;
-		case kExternalUnsignedByteArray:  return GDT_Byte;
-		case kExternalShortArray:         return GDT_Int16;
-		case kExternalUnsignedShortArray: return GDT_UInt16;
-		case kExternalIntArray:           return GDT_Int32;
-		case kExternalUnsignedIntArray:   return GDT_UInt32;
-		case kExternalFloatArray:         return GDT_Float32;
-		case kExternalDoubleArray:        return GDT_Float64;
-		default:                          return GDT_Unknown;
-	}
+GDALDataType TypedArray::Identify(Local<Object> obj) {
+	Nan::HandleScope scope;
+
+	Local<String> sym = Nan::New("_gdal_type").ToLocalChecked();
+	if (!obj->HasOwnProperty(sym)) return GDT_Unknown;
+	Local<Value> val = obj->Get(sym);
+	if (!val->IsNumber()) return GDT_Unknown;
+
+	return (GDALDataType) val->Int32Value();
 }
 
-void* TypedArray::Validate(Handle<Object> obj, GDALDataType type, int min_length){
+void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length){
 	//validate array
-	NanEscapableScope();
+	Nan::HandleScope scope;
 
-	if(!obj->HasIndexedPropertiesInExternalArrayData()) {
-		NanThrowError("Object has no external array data");
-		return NULL;
-	}
 	GDALDataType src_type = TypedArray::Identify(obj);
-	if(type == GDT_Unknown) {
-		NanThrowTypeError("Unable to identify GDAL datatype of passed array object");
+	if(src_type == GDT_Unknown) {
+		Nan::ThrowTypeError("Unable to identify GDAL datatype of passed array object");
 		return NULL;
 	}
 	if(src_type != type) {
 		std::ostringstream ss;
 		ss << "Array type does not match band data type (" 
-		   << "array: " << GDALGetDataTypeName(src_type)
-		   << " band: " << GDALGetDataTypeName(type) << ")";
+		   << "input: " << GDALGetDataTypeName(src_type)
+		   << ", target: " << GDALGetDataTypeName(type) << ")";
 
-		NanThrowTypeError(ss.str().c_str());
+		Nan::ThrowTypeError(ss.str().c_str());
 		return NULL;
 	}
-	if(TypedArray::Length(obj) < min_length) {
+	switch(type) {
+		case GDT_Byte: {
+			Nan::TypedArrayContents<GByte> contents(obj);
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Int16: {
+			Nan::TypedArrayContents<GInt16> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_UInt16: {
+			Nan::TypedArrayContents<GUInt16> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Int32: {
+			Nan::TypedArrayContents<GInt32> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_UInt32: {
+			Nan::TypedArrayContents<GUInt32> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Float32: {
+			Nan::TypedArrayContents<float> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		case GDT_Float64: {
+			Nan::TypedArrayContents<double> contents(obj); 
+			if(ValidateLength(contents.length(), min_length)) return NULL;
+			return *contents;
+		}
+		default:
+			Nan::ThrowError("Unsupported array type"); 
+			return NULL;
+	}
+}
+bool TypedArray::ValidateLength(int length, int min_length){
+	if(length < min_length) {
 		std::ostringstream ss;
 		ss << "Array length must be greater than or equal to " << min_length; 
 
-		NanThrowError(ss.str().c_str());
-		return NULL;
+		Nan::ThrowError(ss.str().c_str());
+		return true;
 	}
-	return TypedArray::Data(obj);
-}
-
-int TypedArray::Length(Handle<Object> obj) {
-	return obj->GetIndexedPropertiesExternalArrayDataLength();
-}
-void* TypedArray::Data(Handle<Object> obj) {
-	return obj->GetIndexedPropertiesExternalArrayData();
+	return false;
 }
 
 } //node_gdal namespace

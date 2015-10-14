@@ -19,15 +19,15 @@ using namespace node;
 
 namespace node_gdal {
 
-class Point: public node::ObjectWrap {
+class Point: public Nan::ObjectWrap {
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRPoint *geom);
-	static Handle<Value> New(OGRPoint *geom, bool owned);
+	static Local<Value> New(OGRPoint *geom);
+	static Local<Value> New(OGRPoint *geom, bool owned);
 	static NAN_METHOD(toString);
 
 	static NAN_GETTER(xGetter);
@@ -42,7 +42,10 @@ public:
 	inline OGRPoint *get() {
 		return this_;
 	}
-
+	inline bool isAlive(){
+		return this_;
+	}
+	
 private:
 	~Point();
 	OGRPoint *this_;

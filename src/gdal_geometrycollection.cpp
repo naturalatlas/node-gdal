@@ -8,30 +8,30 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> GeometryCollection::constructor;
+Nan::Persistent<FunctionTemplate> GeometryCollection::constructor;
 
-void GeometryCollection::Initialize(Handle<Object> target)
+void GeometryCollection::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(GeometryCollection::New);
-	lcons->Inherit(NanNew(Geometry::constructor));
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(GeometryCollection::New);
+	lcons->Inherit(Nan::New(Geometry::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("GeometryCollection"));
+	lcons->SetClassName(Nan::New("GeometryCollection").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getArea", getArea);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getLength", getLength);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "getArea", getArea);
+	Nan::SetPrototypeMethod(lcons, "getLength", getLength);
 
 	ATTR(lcons, "children", childrenGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("GeometryCollection"), lcons->GetFunction());
+	target->Set(Nan::New("GeometryCollection").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 GeometryCollection::GeometryCollection(OGRGeometryCollection *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -40,7 +40,7 @@ GeometryCollection::GeometryCollection(OGRGeometryCollection *geom)
 }
 
 GeometryCollection::GeometryCollection()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -54,7 +54,7 @@ GeometryCollection::~GeometryCollection()
 		LOG("Disposing GeometryCollection [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG("Disposed GeometryCollection [%p]", this_);
 		this_ = NULL;
@@ -70,46 +70,46 @@ GeometryCollection::~GeometryCollection()
  */
 NAN_METHOD(GeometryCollection::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	GeometryCollection *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<GeometryCollection *>(ptr);
 
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError("GeometryCollection constructor doesn't take any arguments");
-			NanReturnUndefined();
+		if (info.Length() != 0) {
+			Nan::ThrowError("GeometryCollection constructor doesn't take any arguments");
+			return;
 		}
 		f = new GeometryCollection(new OGRGeometryCollection());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This());
-	args.This()->SetHiddenValue(NanNew("children_"), children);
+	Local<Value> children = GeometryCollectionChildren::New(info.This());
+	info.This()->SetHiddenValue(Nan::New("children_").ToLocalChecked(), children);
 
-	f->Wrap(args.This());
-	NanReturnValue(args.This());
+	f->Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> GeometryCollection::New(OGRGeometryCollection *geom)
+Local<Value> GeometryCollection::New(OGRGeometryCollection *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(GeometryCollection::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(GeometryCollection::New(geom, true));
 }
 
-Handle<Value> GeometryCollection::New(OGRGeometryCollection *geom, bool owned)
+Local<Value> GeometryCollection::New(OGRGeometryCollection *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -126,17 +126,17 @@ Handle<Value> GeometryCollection::New(OGRGeometryCollection *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(GeometryCollection::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(GeometryCollection::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 
 NAN_METHOD(GeometryCollection::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("GeometryCollection"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("GeometryCollection").ToLocalChecked());
 }
 
 /**
@@ -163,8 +163,8 @@ NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getLength, Number, get_Lengt
  */
 NAN_GETTER(GeometryCollection::childrenGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("children_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("children_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

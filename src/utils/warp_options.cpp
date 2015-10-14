@@ -26,16 +26,16 @@ WarpOptions::~WarpOptions()
 	if(dst_nodata) delete dst_nodata;
 }
 
-int WarpOptions::parseResamplingAlg(Handle<Value> value){	
+int WarpOptions::parseResamplingAlg(Local<Value> value){	
 	if(value->IsUndefined() || value->IsNull()){
 		options->eResampleAlg = GRA_NearestNeighbour;
 		return 0;
 	}
 	if(!value->IsString()){
-		NanThrowTypeError("resampling property must be a string");
+		Nan::ThrowTypeError("resampling property must be a string");
 		return 1;
 	}
-	std::string name = *NanUtf8String(value);
+	std::string name = *Nan::Utf8String(value);
 
 	if(name == "NearestNeighbor") {  options->eResampleAlg = GRA_NearestNeighbour; return 0; }
 	if(name == "NearestNeighbour") { options->eResampleAlg = GRA_NearestNeighbour; return 0; }
@@ -46,7 +46,7 @@ int WarpOptions::parseResamplingAlg(Handle<Value> value){
 	if(name == "Average") {          options->eResampleAlg = GRA_Average; return 0; }
 	if(name == "Mode") {             options->eResampleAlg = GRA_Mode; return 0; }
 
-	NanThrowError("Invalid resampling algorithm");
+	Nan::ThrowError("Invalid resampling algorithm");
 	return 1;
 }
 
@@ -69,157 +69,157 @@ int WarpOptions::parseResamplingAlg(Handle<Value> value){
  *   blend: double
  * }
  */
-int WarpOptions::parse(Handle<Value> value)
+int WarpOptions::parse(Local<Value> value)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	if(!value->IsObject() || value->IsNull())
-		NanThrowTypeError("Warp options must be an object");
+		Nan::ThrowTypeError("Warp options must be an object");
 
-	Handle<Object> obj = value.As<Object>();
-	Handle<Value> prop;
+	Local<Object> obj = value.As<Object>();
+	Local<Value> prop;
 
-	if(obj->HasOwnProperty(NanNew("options")) && additional_options.parse(obj->Get(NanNew("options")))){
+	if(obj->HasOwnProperty(Nan::New("options").ToLocalChecked()) && additional_options.parse(obj->Get(Nan::New("options").ToLocalChecked()))){
 		return 1; // error parsing string list
 	}
 
 	options->papszWarpOptions = additional_options.get();
 
-	if(obj->HasOwnProperty(NanNew("memoryLimit"))){
-		prop = obj->Get(NanNew("memoryLimit"));
+	if(obj->HasOwnProperty(Nan::New("memoryLimit").ToLocalChecked())){
+		prop = obj->Get(Nan::New("memoryLimit").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->dfWarpMemoryLimit = prop->Int32Value();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("memoryLimit property must be an integer"); return 1;
+			Nan::ThrowTypeError("memoryLimit property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("resampling"))){
-		prop = obj->Get(NanNew("resampling"));
+	if(obj->HasOwnProperty(Nan::New("resampling").ToLocalChecked())){
+		prop = obj->Get(Nan::New("resampling").ToLocalChecked());
 		if(parseResamplingAlg(prop)){
 			return 1; //error parsing resampling algorithm
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("src"))){
-		prop = obj->Get(NanNew("src"));
-		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
-			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
+	if(obj->HasOwnProperty(Nan::New("src").ToLocalChecked())){
+		prop = obj->Get(Nan::New("src").ToLocalChecked());
+		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
+			Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			options->hSrcDS = ds->getDataset();
 			if(!options->hSrcDS){
 				#if GDAL_VERSION_MAJOR < 2
 				if(ds->getDatasource()) {
-					NanThrowError("src dataset must be a raster dataset");
+					Nan::ThrowError("src dataset must be a raster dataset");
 					return 1;
 				}
 				#endif
-				NanThrowError("src dataset already closed");
+				Nan::ThrowError("src dataset already closed");
 				return 1;
 			}
 		} else {
-			NanThrowTypeError("src property must be a Dataset object"); return 1;
+			Nan::ThrowTypeError("src property must be a Dataset object"); return 1;
 		}
 	} else {
-		NanThrowError("Warp options must include a source dataset");
+		Nan::ThrowError("Warp options must include a source dataset");
 		return 1;
 	}
-	if(obj->HasOwnProperty(NanNew("dst"))){
-		prop = obj->Get(NanNew("dst"));
-		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Dataset::constructor, prop)){
-			Dataset *ds = ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
+	if(obj->HasOwnProperty(Nan::New("dst").ToLocalChecked())){
+		prop = obj->Get(Nan::New("dst").ToLocalChecked());
+		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
+			Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			options->hDstDS = ds->getDataset();
 			if(!options->hDstDS){
 				#if GDAL_VERSION_MAJOR < 2
 				if(ds->getDatasource()) {
-					NanThrowError("dst dataset must be a raster dataset");
+					Nan::ThrowError("dst dataset must be a raster dataset");
 					return 1;
 				}
 				#endif
-				NanThrowError("dst dataset already closed");
+				Nan::ThrowError("dst dataset already closed");
 				return 1;
 			}
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("dst property must be a Dataset object"); return 1;
+			Nan::ThrowTypeError("dst property must be a Dataset object"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("srcBands"))){
-		prop = obj->Get(NanNew("srcBands"));
+	if(obj->HasOwnProperty(Nan::New("srcBands").ToLocalChecked())){
+		prop = obj->Get(Nan::New("srcBands").ToLocalChecked());
 		if(src_bands.parse(prop)){
 			return 1; //error parsing number list
 		}
 		options->panSrcBands = src_bands.get();
 		options->nBandCount = src_bands.length();
 	}
-	if(obj->HasOwnProperty(NanNew("dstBands"))){
-		prop = obj->Get(NanNew("dstBands"));
+	if(obj->HasOwnProperty(Nan::New("dstBands").ToLocalChecked())){
+		prop = obj->Get(Nan::New("dstBands").ToLocalChecked());
 		if(dst_bands.parse(prop)){
 			return 1; //error parsing number list
 		}
 		options->panDstBands = dst_bands.get();
 
 		if (!options->panSrcBands) {
-			NanThrowError("srcBands must be provided if dstBands option is used");
+			Nan::ThrowError("srcBands must be provided if dstBands option is used");
 			return 1;
 		}
 		if(dst_bands.length() != options->nBandCount){
-			NanThrowError("Number of dst bands must equal number of src bands");
+			Nan::ThrowError("Number of dst bands must equal number of src bands");
 			return 1; 
 		}
 	} 
 	if (options->panSrcBands && !options->panDstBands) {
-		NanThrowError("dstBands must be provided if srcBands option is used"); 
+		Nan::ThrowError("dstBands must be provided if srcBands option is used"); 
 		return 1;
 	}
-	if(obj->HasOwnProperty(NanNew("srcNodata"))){
-		prop = obj->Get(NanNew("srcNodata"));
+	if(obj->HasOwnProperty(Nan::New("srcNodata").ToLocalChecked())){
+		prop = obj->Get(Nan::New("srcNodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			src_nodata = new double(prop->NumberValue());
 			options->padfSrcNoDataReal = src_nodata;
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("srcNodata property must be a number"); return 1;
+			Nan::ThrowTypeError("srcNodata property must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("dstNodata"))){
-		prop = obj->Get(NanNew("dstNodata"));
+	if(obj->HasOwnProperty(Nan::New("dstNodata").ToLocalChecked())){
+		prop = obj->Get(Nan::New("dstNodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			dst_nodata = new double(prop->NumberValue());
 			options->padfDstNoDataReal = dst_nodata;
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("dstNodata property must be a number"); return 1;
+			Nan::ThrowTypeError("dstNodata property must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("srcAlphaBand"))){
-		prop = obj->Get(NanNew("srcAlphaBand"));
+	if(obj->HasOwnProperty(Nan::New("srcAlphaBand").ToLocalChecked())){
+		prop = obj->Get(Nan::New("srcAlphaBand").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->nSrcAlphaBand = prop->Int32Value();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("srcAlphaBand property must be an integer"); return 1;
+			Nan::ThrowTypeError("srcAlphaBand property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("dstAlphaBand"))){
-		prop = obj->Get(NanNew("dstAlphaBand"));
+	if(obj->HasOwnProperty(Nan::New("dstAlphaBand").ToLocalChecked())){
+		prop = obj->Get(Nan::New("dstAlphaBand").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->nDstAlphaBand = prop->Int32Value();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("dstAlphaBand property must be an integer"); return 1;
+			Nan::ThrowTypeError("dstAlphaBand property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("blend"))){
-		prop = obj->Get(NanNew("blend"));
+	if(obj->HasOwnProperty(Nan::New("blend").ToLocalChecked())){
+		prop = obj->Get(Nan::New("blend").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->dfCutlineBlendDist = prop->NumberValue();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("cutline blend distance must be a number"); return 1;
+			Nan::ThrowTypeError("cutline blend distance must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("cutline"))){
-		prop = obj->Get(NanNew("cutline"));
-		if(prop->IsObject() && !prop->IsNull() && NanHasInstance(Geometry::constructor, prop)){
-			options->hCutline = ObjectWrap::Unwrap<Geometry>(prop.As<Object>())->get();
+	if(obj->HasOwnProperty(Nan::New("cutline").ToLocalChecked())){
+		prop = obj->Get(Nan::New("cutline").ToLocalChecked());
+		if(prop->IsObject() && !prop->IsNull() && Nan::New(Geometry::constructor)->HasInstance(prop)){
+			options->hCutline = Nan::ObjectWrap::Unwrap<Geometry>(prop.As<Object>())->get();
 		} else if (!prop->IsUndefined() && !prop->IsNull()) {
-			NanThrowTypeError("cutline property must be a Geometry object"); return 1;
+			Nan::ThrowTypeError("cutline property must be a Geometry object"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(NanNew("multi"))){
-		prop = obj->Get(NanNew("multi"));
+	if(obj->HasOwnProperty(Nan::New("multi").ToLocalChecked())){
+		prop = obj->Get(Nan::New("multi").ToLocalChecked());
 		if(prop->IsTrue()){
 			multi = true;
 		}

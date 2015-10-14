@@ -21,13 +21,13 @@ using namespace node;
 
 namespace node_gdal {
 
-class GeometryCollectionChildren: public node::ObjectWrap {
+class GeometryCollectionChildren: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(Handle<Value> geom);
+	static Local<Value> New(Local<Value> geom);
 	static NAN_METHOD(toString);
 
 	static NAN_METHOD(get);

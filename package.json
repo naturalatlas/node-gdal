@@ -2,6 +2,7 @@
   "name": "gdal",
   "version": "0.7.1",
   "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
+  "license": "Apache-2.0",
   "url": "http://github.com/naturalatlas/node-gdal",
   "main": "./lib/gdal.js",
   "keywords": [
@@ -34,12 +35,6 @@
     "url": "https://github.com/brandonreavis",
     "email": "brandon@naturalatlas.com"
   },
-  "licenses": [
-    {
-      "type": "Apache License, Version 2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0"
-    }
-  ],
   "scripts": {
     "test": "mocha test -R tap --timeout 600000 --no-colors -gc --require ./test/_common.js",
     "install": "node-pre-gyp install --fallback-to-build",
@@ -48,8 +43,8 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "node-pre-gyp": "0.6.9",
-    "nan": "1.8.4"
+    "node-pre-gyp": "0.6.10",
+    "nan": "2.1.0"
   },
   "devDependencies": {
     "mocha": "~1.x",

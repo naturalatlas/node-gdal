@@ -45,8 +45,8 @@ namespace node_gdal {
 
 class WarpOptions {
 public:
-	int parse(Handle<Value> value);
-	int parseResamplingAlg(Handle<Value> value);
+	int parse(Local<Value> value);
+	int parseResamplingAlg(Local<Value> value);
 
 	WarpOptions();
 	~WarpOptions();

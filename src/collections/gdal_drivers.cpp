@@ -4,33 +4,33 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> GDALDrivers::constructor;
+Nan::Persistent<FunctionTemplate> GDALDrivers::constructor;
 
-void GDALDrivers::Initialize(Handle<Object> target)
+void GDALDrivers::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(GDALDrivers::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(GDALDrivers::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("GDALDrivers"));
+	lcons->SetClassName(Nan::New("GDALDrivers").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getNames", getNames);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "getNames", getNames);
 
 	GDALAllRegister();
 	#if GDAL_VERSION_MAJOR < 2
 	OGRRegisterAll();
 	#endif
 
-	target->Set(NanNew("GDALDrivers"), lcons->GetFunction());
+	target->Set(Nan::New("GDALDrivers").ToLocalChecked(), lcons->GetFunction());
 	
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 GDALDrivers::GDALDrivers()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 GDALDrivers::~GDALDrivers()
@@ -43,40 +43,41 @@ GDALDrivers::~GDALDrivers()
  */
 NAN_METHOD(GDALDrivers::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		GDALDrivers *f =  static_cast<GDALDrivers *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError("Cannot create GDALDrivers directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create GDALDrivers directly");
+		return;
 	}
 }
 
-Handle<Value> GDALDrivers::New()
+Local<Value> GDALDrivers::New()
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	GDALDrivers *wrapped = new GDALDrivers();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(GDALDrivers::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(GDALDrivers::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(GDALDrivers::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("GDALDrivers"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("GDALDrivers").ToLocalChecked());
 }
 
 /**
@@ -91,7 +92,7 @@ NAN_METHOD(GDALDrivers::toString)
  */
 NAN_METHOD(GDALDrivers::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	
 	#if GDAL_VERSION_MAJOR < 2
 	OGRSFDriver *ogr_driver;
@@ -99,25 +100,26 @@ NAN_METHOD(GDALDrivers::get)
 
 	GDALDriver *gdal_driver;
 
-	if (args.Length() == 0) {
-		NanThrowError("Either driver name or index must be provided");
-		NanReturnUndefined();
+	if (info.Length() == 0) {
+		Nan::ThrowError("Either driver name or index must be provided");
+		return;
 	}
 
-	if(args[0]->IsString()){
+	if(info[0]->IsString()){
 		//try getting OGR driver first, and then GDAL driver if it fails
 		//A driver named "VRT" exists for both GDAL and OGR, so if building
 		//with <2.0 require user to specify which driver to pick
-		std::string name = *NanUtf8String(args[0]);
+		std::string name = *Nan::Utf8String(info[0]);
 
 		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") {
-			NanThrowError("Name \"VRT\" is ambiguous before GDAL 2.0. Use VRT:raster or VRT:vector instead");
-			NanReturnUndefined();
+			Nan::ThrowError("Name \"VRT\" is ambiguous before GDAL 2.0. Use VRT:raster or VRT:vector instead");
+			return;
 		}
 		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(name.c_str());
 		if(ogr_driver) {
-			NanReturnValue(Driver::New(ogr_driver));
+			info.GetReturnValue().Set(Driver::New(ogr_driver));
+			return;
 		}
 		#endif
 
@@ -125,7 +127,8 @@ NAN_METHOD(GDALDrivers::get)
 			#if GDAL_VERSION_MAJOR < 2
 			ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName("VRT");
 			if(ogr_driver) {
-				NanReturnValue(Driver::New(ogr_driver));
+				info.GetReturnValue().Set(Driver::New(ogr_driver));
+				return;
 			}
 			#else
 				name = "VRT";
@@ -137,30 +140,33 @@ NAN_METHOD(GDALDrivers::get)
 		}
 		gdal_driver = GetGDALDriverManager()->GetDriverByName(name.c_str());
 		if(gdal_driver) {
-			NanReturnValue(Driver::New(gdal_driver));
+			info.GetReturnValue().Set(Driver::New(gdal_driver));
+			return;
 		}
 
-	} else if(args[0]->IsNumber()) {
-		int i = static_cast<int>(args[0]->IntegerValue());
+	} else if(info[0]->IsNumber()) {
+		int i = static_cast<int>(info[0]->IntegerValue());
 
 		gdal_driver = GetGDALDriverManager()->GetDriver(i);
 		if(gdal_driver) {
-			NanReturnValue(Driver::New(gdal_driver));
+			info.GetReturnValue().Set(Driver::New(gdal_driver));
+			return;
 		}
 
 		#if GDAL_VERSION_MAJOR < 2
 		i -= GetGDALDriverManager()->GetDriverCount();
 		ogr_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(i);
 		if(ogr_driver) {
-			NanReturnValue(Driver::New(ogr_driver));
+			info.GetReturnValue().Set(Driver::New(ogr_driver));
+			return;
 		}
 		#endif
 	} else {
-		NanThrowError("Argument must be string or integer");
-		NanReturnUndefined();
+		Nan::ThrowError("Argument must be string or integer");
+		return;
 	}
 
-	NanReturnValue(NanNull());
+	info.GetReturnValue().Set(Nan::Null());
 }
 
 /**
@@ -171,7 +177,7 @@ NAN_METHOD(GDALDrivers::get)
  */
 NAN_METHOD(GDALDrivers::getNames)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	int gdal_count = GetGDALDriverManager()->GetDriverCount();
 	int i, ogr_count = 0;
 	std::string name;
@@ -182,7 +188,7 @@ NAN_METHOD(GDALDrivers::getNames)
 
 	int n = gdal_count + ogr_count;
 
-	Local<Array> driver_names = NanNew<Array>(n);
+	Local<Array> driver_names = Nan::New<Array>(n);
 
 	for (i = 0; i < gdal_count; ++i) {
 		GDALDriver *driver = GetGDALDriverManager()->GetDriver(i);
@@ -203,7 +209,7 @@ NAN_METHOD(GDALDrivers::getNames)
 	}
 	#endif
 	
-	NanReturnValue(driver_names);
+	info.GetReturnValue().Set(driver_names);
 }
 
 /**
@@ -214,7 +220,7 @@ NAN_METHOD(GDALDrivers::getNames)
  */
 NAN_METHOD(GDALDrivers::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
 	int count = GetGDALDriverManager()->GetDriverCount();
 
@@ -222,7 +228,7 @@ NAN_METHOD(GDALDrivers::count)
 	count += OGRSFDriverRegistrar::GetRegistrar()->GetDriverCount();
 	#endif
 
-	NanReturnValue(NanNew<Integer>(count));
+	info.GetReturnValue().Set(Nan::New<Integer>(count));
 }
 
 } // namespace node_gdal

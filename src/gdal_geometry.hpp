@@ -19,16 +19,16 @@ using namespace node;
 
 namespace node_gdal {
 
-class Geometry: public node::ObjectWrap {
+class Geometry: public Nan::ObjectWrap {
 	friend class Feature;
 
 public:
-	static Persistent<FunctionTemplate> constructor;
+	static Nan::Persistent<FunctionTemplate> constructor;
 
-	static void Initialize(Handle<Object> target);
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
-	static Handle<Value> New(OGRGeometry *geom);
-	static Handle<Value> New(OGRGeometry *geom, bool owned);
+	static Local<Value> New(OGRGeometry *geom);
+	static Local<Value> New(OGRGeometry *geom, bool owned);
 	static NAN_METHOD(toString);
 	static NAN_METHOD(isEmpty);
 	static NAN_METHOD(isValid);
@@ -87,11 +87,14 @@ public:
 	static NAN_SETTER(srsSetter);
 
 	static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
-	static Handle<Value> getConstructor(OGRwkbGeometryType type);
+	static Local<Value> getConstructor(OGRwkbGeometryType type);
 
 	Geometry();
 	Geometry(OGRGeometry *geom);
 	inline OGRGeometry *get() {
+		return this_;
+	}
+	inline bool isAlive(){
 		return this_;
 	}
 
@@ -104,7 +107,7 @@ protected:
 
 #define UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(geom) {                                        \
     int new_size = geom->this_->WkbSize();                                              \
-    if (geom->owned_) NanAdjustExternalMemory(new_size - geom->size_); \
+    if (geom->owned_) Nan::AdjustExternalMemory(new_size - geom->size_); \
     geom->size_ = new_size;                                                             \
 }
 

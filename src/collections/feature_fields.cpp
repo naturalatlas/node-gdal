@@ -5,35 +5,35 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> FeatureFields::constructor;
+Nan::Persistent<FunctionTemplate> FeatureFields::constructor;
 
-void FeatureFields::Initialize(Handle<Object> target)
+void FeatureFields::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(FeatureFields::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(FeatureFields::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("FeatureFields"));
+	lcons->SetClassName(Nan::New("FeatureFields").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toObject", toObject);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toArray", toArray);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getNames", getNames);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "set", set);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "reset", reset);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "indexOf", indexOf);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "toObject", toObject);
+	Nan::SetPrototypeMethod(lcons, "toArray", toArray);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "getNames", getNames);
+	Nan::SetPrototypeMethod(lcons, "set", set);
+	Nan::SetPrototypeMethod(lcons, "reset", reset);
+	Nan::SetPrototypeMethod(lcons, "indexOf", indexOf);
 
 	ATTR_DONT_ENUM(lcons, "feature", featureGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("FeatureFields"), lcons->GetFunction());
+	target->Set(Nan::New("FeatureFields").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 FeatureFields::FeatureFields()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 FeatureFields::~FeatureFields()
@@ -46,50 +46,51 @@ FeatureFields::~FeatureFields()
  */
 NAN_METHOD(FeatureFields::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		FeatureFields *f =  static_cast<FeatureFields *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError("Cannot create FeatureFields directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create FeatureFields directly");
+		return;
 	}
 }
 
-Handle<Value> FeatureFields::New(Handle<Value> layer_obj)
+Local<Value> FeatureFields::New(Local<Value> layer_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	FeatureFields *wrapped = new FeatureFields();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(FeatureFields::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), layer_obj);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(FeatureFields::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), layer_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(FeatureFields::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("FeatureFields"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("FeatureFields").ToLocalChecked());
 }
 
-inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
+inline bool setField(OGRFeature* f, int field_index, Local<Value> val){
 	if (val->IsInt32()) {
 		f->SetField(field_index, val->Int32Value());
 	} else if (val->IsNumber()) {
 		f->SetField(field_index, val->NumberValue());
 	} else if (val->IsString()) {
-		std::string str = *NanUtf8String(val);
+		std::string str = *Nan::Utf8String(val);
 		f->SetField(field_index, str.c_str());
 	} else if(val->IsNull() || val->IsUndefined()) {
 		f->UnsetField(field_index);
@@ -120,21 +121,21 @@ inline bool setField(OGRFeature* f, int field_index, Handle<Value> val){
  */
 NAN_METHOD(FeatureFields::set)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	int field_index;
 	unsigned int i, n, n_fields_set;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
-	if(args.Length() == 1) {
-		if(args[0]->IsArray()) {
+	if(info.Length() == 1) {
+		if(info[0]->IsArray()) {
 			//set([])
-			Handle<Array> values = args[0].As<Array>();
+			Local<Array> values = info[0].As<Array>();
 
 			n = f->get()->GetFieldCount();
 			if(values->Length() < n) {
@@ -142,17 +143,18 @@ NAN_METHOD(FeatureFields::set)
 			}
 
 			for (i = 0; i < n; i++) {
-				Handle<Value> val = values->Get(i);
+				Local<Value> val = values->Get(i);
 				if(setField(f->get(), i, val)){
-					NanThrowError("Unsupported type of field value");
-					NanReturnUndefined();
+					Nan::ThrowError("Unsupported type of field value");
+					return;
 				}
 			}
 
-			NanReturnValue(NanNew<Integer>(n));
-		} else if (args[0]->IsObject()) {
+			info.GetReturnValue().Set(Nan::New<Integer>(n));
+			return;
+		} else if (info[0]->IsObject()) {
 			//set({})
-			Handle<Object> values = args[0].As<Object>();
+			Local<Object> values = info[0].As<Object>();
 
 			n = f->get()->GetFieldCount();
 			n_fields_set = 0;
@@ -169,39 +171,41 @@ NAN_METHOD(FeatureFields::set)
 
 				//skip value if field name doesnt exist
 				//both in the feature definition and the passed object
-				if (field_index == -1 || !values->HasOwnProperty(NanNew(field_name))) {
+				if (field_index == -1 || !values->HasOwnProperty(Nan::New(field_name).ToLocalChecked())) {
 					continue;
 				}
 
-				Handle<Value> val = values->Get(NanNew(field_name));
+				Local<Value> val = values->Get(Nan::New(field_name).ToLocalChecked());
 				if (setField(f->get(), field_index, val)) {
-					NanThrowError("Unsupported type of field value");
-					NanReturnUndefined();
+					Nan::ThrowError("Unsupported type of field value");
+					return;
 				}
 
 				n_fields_set++;
 			}
 
-			NanReturnValue(NanNew<Integer>(n_fields_set));
+			info.GetReturnValue().Set(Nan::New<Integer>(n_fields_set));
+			return;
 		} else {
-			NanThrowError("Method expected an object or array");
-			NanReturnUndefined();
+			Nan::ThrowError("Method expected an object or array");
+			return;
 		}
 
-	} else if(args.Length() == 2) {
+	} else if(info.Length() == 2) {
 		//set(name|index, value)
 		ARG_FIELD_ID(0, f->get(), field_index);
 
 		//set field value
-		if (setField(f->get(), field_index, args[1])) {
-			NanThrowError("Unsupported type of field value");
-			NanReturnUndefined();
+		if (setField(f->get(), field_index, info[1])) {
+			Nan::ThrowError("Unsupported type of field value");
+			return;
 		}
 
-		NanReturnValue(NanNew<Integer>(1));
+		info.GetReturnValue().Set(Nan::New<Integer>(1));
+		return;
 	} else {
-		NanThrowError("Invalid number of arguments");
-		NanReturnUndefined();
+		Nan::ThrowError("Invalid number of arguments");
+		return;
 	}
 }
 
@@ -219,32 +223,33 @@ NAN_METHOD(FeatureFields::set)
  */
 NAN_METHOD(FeatureFields::reset)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	int field_index;
 	unsigned int i, n;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
 	n = f->get()->GetFieldCount();
 
-	if (args.Length() == 0) {
+	if (info.Length() == 0) {
 		for (i = 0; i < n; i++) {
 			f->get()->UnsetField(i);
 		}
-		NanReturnValue(NanNew<Integer>(n));
+		info.GetReturnValue().Set(Nan::New<Integer>(n));
+		return;
 	}
 
-	if (!args[0]->IsObject()) {
-		NanThrowError("fields must be an object");
-		NanReturnUndefined();
+	if (!info[0]->IsObject()) {
+		Nan::ThrowError("fields must be an object");
+		return;
 	}
 
-	Handle<Object> values = args[0].As<Object>();
+	Local<Object> values = info[0].As<Object>();
 
 	for (i = 0; i < n; i++) {
 		//iterate through field names from field defn,
@@ -257,14 +262,14 @@ NAN_METHOD(FeatureFields::reset)
 		field_index = f->get()->GetFieldIndex(field_name);
 		if(field_index == -1) continue;
 
-		Handle<Value> val = values->Get(NanNew(field_name));
+		Local<Value> val = values->Get(Nan::New(field_name).ToLocalChecked());
 		if(setField(f->get(), field_index, val)){
-			NanThrowError("Unsupported type of field value");
-			NanReturnUndefined();
+			Nan::ThrowError("Unsupported type of field value");
+			return;
 		}
 	}
 
-	NanReturnValue(NanNew<Integer>(n));
+	info.GetReturnValue().Set(Nan::New<Integer>(n));
 }
 
 /**
@@ -279,16 +284,16 @@ NAN_METHOD(FeatureFields::reset)
  */
 NAN_METHOD(FeatureFields::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
-	NanReturnValue(NanNew<Integer>(f->get()->GetFieldCount()));
+	info.GetReturnValue().Set(Nan::New<Integer>(f->get()->GetFieldCount()));
 }
 
 /**
@@ -304,19 +309,19 @@ NAN_METHOD(FeatureFields::count)
  */
 NAN_METHOD(FeatureFields::indexOf)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
 	std::string name("");
 	NODE_ARG_STR(0, "field name", name);
 
-	NanReturnValue(NanNew<Integer>(f->get()->GetFieldIndex(name.c_str())));
+	info.GetReturnValue().Set(Nan::New<Integer>(f->get()->GetFieldIndex(name.c_str())));
 }
 
 /**
@@ -328,16 +333,16 @@ NAN_METHOD(FeatureFields::indexOf)
  */
 NAN_METHOD(FeatureFields::toObject)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
-	Local<Object> obj = NanNew<Object>();
+	Local<Object> obj = Nan::New<Object>();
 
 	int n = f->get()->GetFieldCount();
 	for(int i = 0; i < n; i++) {
@@ -346,19 +351,19 @@ NAN_METHOD(FeatureFields::toObject)
 		OGRFieldDefn *field_def = f->get()->GetFieldDefnRef(i);
 		const char *key = field_def->GetNameRef();
 		if (!key) {
-			NanThrowError("Error getting field name");
-			NanReturnUndefined();
+			Nan::ThrowError("Error getting field name");
+			return;
 		}
 
 		//get field value
-		Handle<Value> val = FeatureFields::get(f->get(), i);
+		Local<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			NanReturnUndefined(); //get method threw an exception
+			return; //get method threw an exception
 		}
 
-		obj->Set(NanNew(key), val);
+		obj->Set(Nan::New(key).ToLocalChecked(), val);
 	}
-	NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }
 
 /**
@@ -370,64 +375,64 @@ NAN_METHOD(FeatureFields::toObject)
  */
 NAN_METHOD(FeatureFields::toArray)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
 	int n = f->get()->GetFieldCount();
-	Handle<Array> array = NanNew<Array>(n);
+	Local<Array> array = Nan::New<Array>(n);
 
 	for(int i = 0; i < n; i++) {
 		//get field value
-		Handle<Value> val = FeatureFields::get(f->get(), i);
+		Local<Value> val = FeatureFields::get(f->get(), i);
 		if (val.IsEmpty()) {
-			NanReturnUndefined(); //get method threw an exception
+			return; //get method threw an exception
 		}
 
 		array->Set(i, val);
 	}
-	NanReturnValue(array);
+	info.GetReturnValue().Set(array);
 }
 
-Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
+Local<Value> FeatureFields::get(OGRFeature *f, int field_index)
 {
 	//#throws : caller must check if return_val.IsEmpty() and bail out if true
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
-	if(!f->IsFieldSet(field_index)) return NanEscapeScope(NanNull());
+	if(!f->IsFieldSet(field_index)) return scope.Escape(Nan::Null());
 
 	OGRFieldDefn *field_def = f->GetFieldDefnRef(field_index);
 	switch(field_def->GetType()) {
 		case OFTInteger:
-			return NanEscapeScope(NanNew<Integer>(f->GetFieldAsInteger(field_index)));
+			return scope.Escape(Nan::New<Integer>(f->GetFieldAsInteger(field_index)));
 		#if defined(GDAL_VERSION_MAJOR) && (GDAL_VERSION_MAJOR >= 2)
 		case OFTInteger64:
-			return NanEscapeScope(NanNew<Number>(f->GetFieldAsInteger64(field_index)));
+			return scope.Escape(Nan::New<Number>(f->GetFieldAsInteger64(field_index)));
 		#endif
 		case OFTReal:
-			return NanEscapeScope(NanNew<Number>(f->GetFieldAsDouble(field_index)));
+			return scope.Escape(Nan::New<Number>(f->GetFieldAsDouble(field_index)));
 		case OFTString:
-			return NanEscapeScope(SafeString::New(f->GetFieldAsString(field_index)));
+			return scope.Escape(SafeString::New(f->GetFieldAsString(field_index)));
 		case OFTIntegerList:
-			return NanEscapeScope(getFieldAsIntegerList(f, field_index));
+			return scope.Escape(getFieldAsIntegerList(f, field_index));
 		case OFTRealList:
-			return NanEscapeScope(getFieldAsDoubleList(f, field_index));
+			return scope.Escape(getFieldAsDoubleList(f, field_index));
 		case OFTStringList:
-			return NanEscapeScope(getFieldAsStringList(f, field_index));
+			return scope.Escape(getFieldAsStringList(f, field_index));
 		case OFTBinary:
-			return NanEscapeScope(getFieldAsBinary(f, field_index));
+			return scope.Escape(getFieldAsBinary(f, field_index));
 		case OFTDate:
 		case OFTTime:
 		case OFTDateTime:
-			return NanEscapeScope(getFieldAsDateTime(f, field_index));
+			return scope.Escape(getFieldAsDateTime(f, field_index));
 		default:
-			NanThrowError("Unsupported field type");
-			return NanEscapeScope(NanUndefined());
+			Nan::ThrowError("Unsupported field type");
+			return scope.Escape(Nan::Undefined());
 	}
 }
 
@@ -445,29 +450,30 @@ Handle<Value> FeatureFields::get(OGRFeature *f, int field_index)
  */
 NAN_METHOD(FeatureFields::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
-	if (args.Length() < 1) {
-		NanThrowError("Field index or name must be given");
-		NanReturnUndefined();
+	if (info.Length() < 1) {
+		Nan::ThrowError("Field index or name must be given");
+		return;
 	}
 
 	int field_index;
 	ARG_FIELD_ID(0, f->get(), field_index);
 
-	Handle<Value> result = FeatureFields::get(f->get(), field_index);
+	Local<Value> result = FeatureFields::get(f->get(), field_index);
 
 	if(result.IsEmpty()) {
-		NanReturnUndefined();
+		return;
 	} else {
-		NanReturnValue(result);
+		info.GetReturnValue().Set(result);
+		return;
 	}
 }
 
@@ -480,17 +486,17 @@ NAN_METHOD(FeatureFields::get)
  */
 NAN_METHOD(FeatureFields::getNames)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Feature *f = ObjectWrap::Unwrap<Feature>(parent);
-	if (!f->get()) {
-		NanThrowError("Feature object already destroyed");
-		NanReturnUndefined();
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Feature *f = Nan::ObjectWrap::Unwrap<Feature>(parent);
+	if (!f->isAlive()) {
+		Nan::ThrowError("Feature object already destroyed");
+		return;
 	}
 
 	int n = f->get()->GetFieldCount();
-	Handle<Array> result = NanNew<Array>(n);
+	Local<Array> result = Nan::New<Array>(n);
 
 	for(int i = 0; i < n; i++) {
 
@@ -498,87 +504,87 @@ NAN_METHOD(FeatureFields::getNames)
 		OGRFieldDefn *field_def = f->get()->GetFieldDefnRef(i);
 		const char *field_name = field_def->GetNameRef();
 		if (!field_name) {
-			NanThrowError("Error getting field name");
-			NanReturnUndefined();
+			Nan::ThrowError("Error getting field name");
+			return;
 		}
-		result->Set(i, NanNew(field_name));
+		result->Set(i, Nan::New(field_name).ToLocalChecked());
 	}
 
-	NanReturnValue(result);
+	info.GetReturnValue().Set(result);
 }
 
-Handle<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int field_index)
+Local<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int field_index)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	int count_of_values = 0;
 
 	const int *values = feature->GetFieldAsIntegerList(field_index, &count_of_values);
 
-	Local<Array> return_array = NanNew<Array>(count_of_values);
+	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
-		return_array->Set(index, NanNew<Integer>(values[index]));
+		return_array->Set(index, Nan::New<Integer>(values[index]));
 	}
 
-	return NanEscapeScope(return_array);
+	return scope.Escape(return_array);
 }
 
 
-Handle<Value> FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int field_index)
+Local<Value> FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int field_index)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	int count_of_values = 0;
 
 	const double *values = feature->GetFieldAsDoubleList(field_index, &count_of_values);
 
-	Local<Array> return_array = NanNew<Array>(count_of_values);
+	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
-		return_array->Set(index, NanNew<Number>(values[index]));
+		return_array->Set(index, Nan::New<Number>(values[index]));
 	}
 
-	return NanEscapeScope(return_array);
+	return scope.Escape(return_array);
 }
 
 
-Handle<Value> FeatureFields::getFieldAsStringList(OGRFeature* feature, int field_index)
+Local<Value> FeatureFields::getFieldAsStringList(OGRFeature* feature, int field_index)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 	char **values = feature->GetFieldAsStringList(field_index);
 
 	int count_of_values = CSLCount(values);
 
-	Local<Array> return_array = NanNew<Array>(count_of_values);
+	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
 		return_array->Set(index, SafeString::New(values[index]));
 	}
 
-	return NanEscapeScope(return_array);
+	return scope.Escape(return_array);
 }
 
 
-Handle<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_index)
+Local<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_index)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	int count_of_bytes = 0;
 
 	unsigned char *data = (unsigned char*) feature->GetFieldAsBinary(field_index, &count_of_bytes);
 
 	if (count_of_bytes > 0) {
-		return NanEscapeScope(FastBuffer::New(data, count_of_bytes));
+		return scope.Escape(FastBuffer::New(data, count_of_bytes));
 	}
 
-	return NanEscapeScope(NanUndefined());
+	return scope.Escape(Nan::Undefined());
 }
 
 
-Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_index)
+Local<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_index)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	int year, month, day, hour, minute, second, timezone;
 
@@ -588,33 +594,33 @@ Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_i
 				 &day, &hour, &minute, &second, &timezone);
 
 	if (result == TRUE) {
-		Local<Object> hash = NanNew<Object>();
+		Local<Object> hash = Nan::New<Object>();
 
 		if (year) {
-			hash->Set(NanNew("year"), NanNew<Integer>(year));
+			hash->Set(Nan::New("year").ToLocalChecked(), Nan::New<Integer>(year));
 		}
 		if (month) {
-			hash->Set(NanNew("month"), NanNew<Integer>(month));
+			hash->Set(Nan::New("month").ToLocalChecked(), Nan::New<Integer>(month));
 		}
 		if (day) {
-			hash->Set(NanNew("day"), NanNew<Integer>(day));
+			hash->Set(Nan::New("day").ToLocalChecked(), Nan::New<Integer>(day));
 		}
 		if (hour) {
-			hash->Set(NanNew("hour"), NanNew<Integer>(hour));
+			hash->Set(Nan::New("hour").ToLocalChecked(), Nan::New<Integer>(hour));
 		}
 		if (minute) {
-			hash->Set(NanNew("minute"), NanNew<Integer>(minute));
+			hash->Set(Nan::New("minute").ToLocalChecked(), Nan::New<Integer>(minute));
 		}
 		if (second) {
-			hash->Set(NanNew("second"), NanNew<Integer>(second));
+			hash->Set(Nan::New("second").ToLocalChecked(), Nan::New<Integer>(second));
 		}
 		if (timezone) {
-			hash->Set(NanNew("timezone"), NanNew<Integer>(timezone));
+			hash->Set(Nan::New("timezone").ToLocalChecked(), Nan::New<Integer>(timezone));
 		}
 
-		return NanEscapeScope(hash);
+		return scope.Escape(hash);
 	} else {
-		return NanEscapeScope(NanUndefined());
+		return scope.Escape(Nan::Undefined());
 	}
 }
 
@@ -627,8 +633,8 @@ Handle<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_i
  */
 NAN_GETTER(FeatureFields::featureGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

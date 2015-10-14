@@ -17,6 +17,7 @@
 				"src/utils/string_list.cpp",
 				"src/utils/number_list.cpp",
 				"src/utils/warp_options.cpp",
+				"src/utils/ptr_manager.cpp",
 				"src/node_gdal.cpp",
 				"src/gdal_common.cpp",
 				"src/gdal_dataset.cpp",

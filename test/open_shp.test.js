@@ -35,9 +35,12 @@ describe('Open', function() {
 				]);
 			});
 			describe('field properties', function() {
-				var integerDs = gdal.open(path.join(__dirname, 'data/shp/sample_int64.shp'));
-				var integerLayer = integerDs.layers.get(0);
+				var integerDs, integerLayer;
 
+				before(function(){
+					integerDs = gdal.open(path.join(__dirname, 'data/shp/sample_int64.shp'));
+					integerLayer = integerDs.layers.get(0);
+				})
 				it('should evaluate datatypes', function() {
 					var version_major = Number(gdal.version.split('.')[0]);
 					assert.equal(integerLayer.fields.get(0).type, 'string');

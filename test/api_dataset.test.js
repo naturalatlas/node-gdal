@@ -42,7 +42,11 @@ describe('gdal.Dataset', function() {
 					assert.equal(ds.bands.count(), 1);
 				});
 				it('should be 0 for vector datasets', function() {
+					var arr = []
+					for(var i = 0; i < 10000; i++) arr.push(i);
+						console.log("before")
 					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
+						console.log("after")
 					assert.equal(ds.bands.count(), 0);
 				});
 				it('should throw if dataset is closed', function() {

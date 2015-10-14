@@ -16,20 +16,19 @@
 
 #include "../gdal_common.hpp"
 
-//TODO: This could use some serious cleaning
-
-struct ObjectCacheWeakCallbackData {
-	void *key;
-	void *cache;
-	int uid;
+enum ObjectCacheItemStatus {
+	ITEM_ACTIVE = 0,
+	ITEM_RELEASED_FROM_CACHE = 1,
+	ITEM_RELEASED_FROM_WEAK_CALLBACK = 2,
+	ITEM_RELEASED_FROM_ALL = 3
 };
 
 template <typename K>
 struct ObjectCacheItem {
-	_NanWeakCallbackInfo<v8::Object, ObjectCacheWeakCallbackData> *cbinfo;
+	Nan::Persistent<v8::Object> obj;
 	K *key;
 	K *alias;
-	int uid; // a uniq id so that the weak callback can distinguish if the object in the cache with the given key is referring to the same object as when the persistent pointer was made
+	ObjectCacheItemStatus status;
 };
 
 // a class for maintaining a map of native pointers and persistent JS handles
@@ -39,12 +38,13 @@ template <typename K, typename W>
 class ObjectCache {
 public:
 	//map a native pointer to a handle to the V8 obj that wraps it
-	void add(K *key, v8::Handle<v8::Object> obj);
-	void add(K *key, K *alias, v8::Handle<v8::Object> obj);
+	void add(K *key, v8::Local<v8::Object> obj);
+	void add(K *key, K *alias, v8::Local<v8::Object> obj);
 
 	//fetch the V8 obj that wraps the native pointer (or alias)
 	//call has() before calling to get() to ensure handle exists
-	v8::Handle<v8::Object> get(K *key);
+	v8::Local<v8::Object> get(K *key);
+	W* getWrapped(K *key);
 
 	//check if native pointer has been wrapped, or if an alias wraps it
 	bool has(K *key);
@@ -54,18 +54,17 @@ public:
 	~ObjectCache();
 
 private:
-	NAN_WEAK_CALLBACK(cacheWeakCallback);
-
-	ObjectCacheItem<K> getItem(K *key);
-	void erase(ObjectCacheItem<K> key);
-	std::map<K*, ObjectCacheItem<K> > cache;
+	static void release(ObjectCacheItem<K> *item, ObjectCacheItemStatus status_change);
+	static void cacheWeakCallback(const Nan::WeakCallbackInfo< ObjectCacheItem<K> > &data);
+	ObjectCacheItem<K>* getItem(K *key);
+	void erase(ObjectCacheItem<K> *key);
+	std::map<K*, ObjectCacheItem<K>* > cache;
 	std::map<K*, K*> aliases;
-	int uid;
 };
 
 template <typename K, typename W>
 ObjectCache<K, W>::ObjectCache()
-	: cache(), aliases(), uid(0)
+	: cache(), aliases()
 {
 }
 
@@ -75,44 +74,32 @@ ObjectCache<K, W>::~ObjectCache()
 }
 
 template <typename K, typename W>
-template<typename T, typename P>
-void ObjectCache<K, W>::cacheWeakCallback(const _NanWeakCallbackData<T, P> &data)
+void ObjectCache<K, W>::cacheWeakCallback(const Nan::WeakCallbackInfo< ObjectCacheItem<K> > &data)
 {
-	//called when only reference to object is weak - after object destructor is called (... or before, who knows)
-	ObjectCacheWeakCallbackData *info = (ObjectCacheWeakCallbackData*) data.GetParameter();
-	ObjectCache<K, W> *cache = (ObjectCache<K, W>*) info->cache;
-	K *key = (K*) info->key;
+	ObjectCacheItem<K>* item = (ObjectCacheItem<K>*) data.GetParameter();
+	LOG("ObjectCache Weak Callback [%p]", item->key);
+	release(item, ITEM_RELEASED_FROM_WEAK_CALLBACK);
+}
 
-	LOG("ObjectCache Weak Callback [%p]", key);
-	
-	// dispose of the wrapped object before the handle in the cache gets deleted by NAN
-	// but do not dispose if destructor has already been called
-	if(cache->has(key)) {
-		LOG("Key still in ObjectCache [%p]", key);
-		//double check that the item in the cache isnt something new (meaning object was already disposed)
-		if(cache->getItem(key).uid == info->uid) { 
-			LOG("And it points to object that generated the weak callback [%p]", key);
-			W* wrapped = node::ObjectWrap::Unwrap<W>(data.GetValue());
-			wrapped->dispose();
-		}
+
+template <typename K, typename W>
+void ObjectCache<K, W>::release(ObjectCacheItem<K> *item, ObjectCacheItemStatus status_change)
+{
+	item->status = (ObjectCacheItemStatus) (item->status | status_change);
+	if(item->status == ITEM_RELEASED_FROM_ALL){
+		delete item;
 	}
-
-	delete info;
 }
 
 template <typename K, typename W>
-void ObjectCache<K, W>::add(K *key, K *alias, v8::Handle<v8::Object> obj)
+void ObjectCache<K, W>::add(K *key, K *alias, v8::Local<v8::Object> obj)
 {
-	ObjectCacheWeakCallbackData *cbdata = new ObjectCacheWeakCallbackData();
-	cbdata->cache = this;
-	cbdata->key = key;
-	cbdata->uid  = uid++;
-
-	ObjectCacheItem<K> item;
-	item.key    = key;
-	item.alias  = alias;
-	item.uid    = cbdata->uid;
-	item.cbinfo = NanMakeWeakPersistent(obj, cbdata, cacheWeakCallback);
+	ObjectCacheItem<K> *item = new ObjectCacheItem<K>();
+	item->key    = key;
+	item->alias  = alias;
+	item->status = ITEM_ACTIVE;
+	item->obj.Reset(obj);
+	item->obj.SetWeak(item, cacheWeakCallback, Nan::WeakCallbackType::kParameter);
 
 	//add it to the map
 	cache[key] = item;
@@ -121,27 +108,46 @@ void ObjectCache<K, W>::add(K *key, K *alias, v8::Handle<v8::Object> obj)
 	}
 }
 
-
 template <typename K, typename W>
-void ObjectCache<K, W>::add(K *key, v8::Handle<v8::Object> obj)
+void ObjectCache<K, W>::add(K *key, v8::Local<v8::Object> obj)
 {
 	add(key, NULL, obj);
 }
 
 template <typename K, typename W>
-bool ObjectCache<K, W>::has(K *key)
-{
+bool ObjectCache<K, W>::has(K *key){
 	return cache.count(key) > 0 || aliases.count(key) > 0;
+};
+
+template <typename K, typename W>
+v8::Local<v8::Object> ObjectCache<K, W>::get(K *key)
+{	
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(Nan::New(getItem(key)->obj));
 }
 
 template <typename K, typename W>
-v8::Handle<v8::Object> ObjectCache<K, W>::get(K *key)
-{
-	return NanNew(getItem(key).cbinfo->persistent);
+W* ObjectCache<K, W>::getWrapped(K *key)
+{	
+
+	ObjectCacheItem<K> *item = getItem(key);
+	v8::Local<v8::Object> obj = Nan::New(item->obj);
+
+	bool is_near_death = item->obj.IsNearDeath();
+	if(is_near_death){
+		LOG("About to Unwrap Near Death handle [%p]", key);
+	}
+
+	W *unwrapped = Nan::ObjectWrap::Unwrap<W>(obj);
+
+	if(is_near_death){
+		LOG("Unwrapped Near Death handle [%p]", key);
+	}
+	return unwrapped;
 }
 
 template <typename K, typename W>
-ObjectCacheItem<K> ObjectCache<K, W>::getItem(K *key)
+ObjectCacheItem<K>* ObjectCache<K, W>::getItem(K *key)
 {
 	//return handle to existing object if already wrapped
 	//check by calling has() first
@@ -161,15 +167,16 @@ void ObjectCache<K, W>::erase(K *key)
 }
 
 template <typename K, typename W>
-void ObjectCache<K, W>::erase(ObjectCacheItem<K> item)
+void ObjectCache<K, W>::erase(ObjectCacheItem<K> *item)
 {
-
-	LOG("ObjectCache erasing [%p]", item.key);
-	cache.erase(item.key);
-	if(item.alias){
-		LOG("ObjectCache erasing alias [%p]", item.alias);
-		aliases.erase(item.alias);
+	K* key = (K*) item->key;
+	cache.erase(key);
+	if(item->alias){
+		aliases.erase(item->alias);
 	}
+
+	LOG("Erased Object Cache Item [%p]", key);
+	release(item, ITEM_RELEASED_FROM_CACHE);
 }
 
 #endif

@@ -18,7 +18,7 @@ namespace node_gdal {
 
 class IntegerList {
 public:
-	int parse(Handle<Value> value);
+	int parse(Local<Value> value);
 
 	IntegerList();
 	IntegerList(const char* name);
@@ -38,7 +38,7 @@ private:
 
 class DoubleList {
 public:
-	int parse(Handle<Value> value);
+	int parse(Local<Value> value);
 
 	DoubleList();
 	DoubleList(const char* name);

@@ -22,17 +22,17 @@ using namespace node;
 
 namespace node_gdal {
 
-class Layer: public node::ObjectWrap {
+class Layer: public Nan::ObjectWrap {
 public:
-	static Persistent<FunctionTemplate> constructor;
-	static void Initialize(Handle<Object> target);
+	static Nan::Persistent<FunctionTemplate> constructor;
+	static void Initialize(Local<Object> target);
 	static NAN_METHOD(New);
 	#if GDAL_VERSION_MAJOR >= 2
-	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent);
-	static Handle<Value> New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set);
+	static Local<Value> New(OGRLayer *raw, GDALDataset *raw_parent);
+	static Local<Value> New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set);
 	#else
-	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent);
-	static Handle<Value> New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set);
+	static Local<Value> New(OGRLayer *raw, OGRDataSource *raw_parent);
+	static Local<Value> New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set);
 	#endif
 	static NAN_METHOD(toString);
 	static NAN_METHOD(getExtent);
@@ -51,6 +51,7 @@ public:
 	static NAN_GETTER(fidColumnGetter);
 	static NAN_GETTER(geomColumnGetter);
 	static NAN_GETTER(geomTypeGetter);
+	static NAN_GETTER(uidGetter);
 
 	static ObjectCache<OGRLayer, Layer> cache;
 
@@ -58,6 +59,9 @@ public:
 	Layer(OGRLayer *ds);
 	inline OGRLayer *get() {
 		return this_;
+	}
+	inline bool isAlive(){
+		return this_ && ptr_manager.isAlive(uid);
 	}
 	#if GDAL_VERSION_MAJOR >= 2
 	inline GDALDataset *getParent() {
@@ -69,6 +73,7 @@ public:
 	}
 	#endif
 	void dispose();
+	long uid;
 
 private:
 	~Layer();
@@ -77,8 +82,7 @@ private:
 	GDALDataset *parent_ds;
 	#else
 	OGRDataSource *parent_ds;
-	#endif 
-	bool is_result_set;
+	#endif
 };
 
 }

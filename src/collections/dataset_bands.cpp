@@ -6,30 +6,30 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> DatasetBands::constructor;
+Nan::Persistent<FunctionTemplate> DatasetBands::constructor;
 
-void DatasetBands::Initialize(Handle<Object> target)
+void DatasetBands::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(DatasetBands::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(DatasetBands::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("DatasetBands"));
+	lcons->SetClassName(Nan::New("DatasetBands").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "count", count);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "create", create);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "get", get);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "count", count);
+	Nan::SetPrototypeMethod(lcons, "create", create);
+	Nan::SetPrototypeMethod(lcons, "get", get);
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("DatasetBands"), lcons->GetFunction());
+	target->Set(Nan::New("DatasetBands").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 DatasetBands::DatasetBands()
-	: ObjectWrap()
+	: Nan::ObjectWrap()
 {}
 
 DatasetBands::~DatasetBands()
@@ -45,41 +45,42 @@ DatasetBands::~DatasetBands()
  */
 NAN_METHOD(DatasetBands::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		DatasetBands *f =  static_cast<DatasetBands *>(ptr);
-		f->Wrap(args.This());
-		NanReturnValue(args.This());
+		f->Wrap(info.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError("Cannot create DatasetBands directly");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create DatasetBands directly");
+		return;
 	}
 }
 
-Handle<Value> DatasetBands::New(Handle<Value> ds_obj)
+Local<Value> DatasetBands::New(Local<Value> ds_obj)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	DatasetBands *wrapped = new DatasetBands();
 
-	v8::Handle<v8::Value> ext = NanNew<External>(wrapped);
-	v8::Handle<v8::Object> obj = NanNew(DatasetBands::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(NanNew("parent_"), ds_obj);
+	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
+	v8::Local<v8::Object> obj = Nan::New(DatasetBands::constructor)->GetFunction()->NewInstance(1, &ext);
+	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), ds_obj);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(DatasetBands::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("DatasetBands"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("DatasetBands").ToLocalChecked());
 }
 
 /**
@@ -91,34 +92,32 @@ NAN_METHOD(DatasetBands::toString)
  */
 NAN_METHOD(DatasetBands::get)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+
+	if (!ds->isAlive()){
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
-		OGRDataSource* raw = ds->getDatasource();
-		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
-		}
-		NanReturnNull();
+		info.GetReturnValue().Set(Nan::Null());
+		return;
 	} else {
 	#else
 	{
 	#endif
 		GDALDataset* raw = ds->getDataset();
-		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
-		}
 		int band_id;
 		NODE_ARG_INT(0, "band id", band_id);
 
 		GDALRasterBand *band = raw->GetRasterBand(band_id);
 
-		NanReturnValue(RasterBand::New(band, raw));
+		info.GetReturnValue().Set(RasterBand::New(band, raw));
+		return;
 	}
 }
 
@@ -132,54 +131,54 @@ NAN_METHOD(DatasetBands::get)
  */
 NAN_METHOD(DatasetBands::create)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
-		NanThrowError("Dataset does not support getting creating bands");
-		NanReturnUndefined();
+		Nan::ThrowError("Dataset does not support getting creating bands");
+		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
-	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
-	}
-
 	GDALDataType type;
 	StringList options;
 
 	//NODE_ARG_ENUM(0, "data type", GDALDataType, type);
-	if(args.Length() < 1) {
-		NanThrowError("data type argument needed");
-		NanReturnUndefined();
+	if(info.Length() < 1) {
+		Nan::ThrowError("data type argument needed");
+		return;
 	}
-	if(args[0]->IsString()){
-		std::string type_name = *NanUtf8String(args[0]);
+	if(info[0]->IsString()){
+		std::string type_name = *Nan::Utf8String(info[0]);
 		type = GDALGetDataTypeByName(type_name.c_str());
-	} else if (args[0]->IsNull() || args[0]->IsUndefined()) {
+	} else if (info[0]->IsNull() || info[0]->IsUndefined()) {
 		type = GDT_Unknown;
 	} else {
-		NanThrowError("data type must be string or undefined");
-		NanReturnUndefined();
+		Nan::ThrowError("data type must be string or undefined");
+		return;
 	}
 
-	if(args.Length() > 1 && options.parse(args[1])){
-		NanReturnUndefined(); //error parsing creation options
+	if(info.Length() > 1 && options.parse(info[1])){
+		return; //error parsing creation options
 	}
 
 	CPLErr err = raw->AddBand(type, options.get());
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnValue(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount()), raw));
+	info.GetReturnValue().Set(RasterBand::New(raw->GetRasterBand(raw->GetRasterCount()), raw));
 }
 
 /**
@@ -190,28 +189,25 @@ NAN_METHOD(DatasetBands::create)
  */
 NAN_METHOD(DatasetBands::count)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Handle<Object> parent = args.This()->GetHiddenValue(NanNew("parent_")).As<Object>();
-	Dataset *ds = ObjectWrap::Unwrap<Dataset>(parent);
+	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
+
+	if (!ds->isAlive()) {
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
 
 	#if GDAL_VERSION_MAJOR < 2
 	if (ds->uses_ogr){
-		OGRDataSource* raw = ds->getDatasource();
-		if (!raw) {
-			NanThrowError("Dataset object has already been destroyed");
-			NanReturnUndefined();
-		}
-		NanReturnValue(NanNew<Integer>(0));
+		info.GetReturnValue().Set(Nan::New<Integer>(0));
+		return;
 	}
 	#endif
 
 	GDALDataset* raw = ds->getDataset();
-	if (!raw) {
-		NanThrowError("Dataset object has already been destroyed");
-		NanReturnUndefined();
-	}
-	NanReturnValue(NanNew<Integer>(raw->GetRasterCount()));
+	info.GetReturnValue().Set(Nan::New<Integer>(raw->GetRasterCount()));
 }
 
 /**
@@ -223,8 +219,8 @@ NAN_METHOD(DatasetBands::count)
  */
 NAN_GETTER(DatasetBands::dsGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("parent_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
 }
 
 } // namespace node_gdal

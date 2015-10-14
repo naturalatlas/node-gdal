@@ -15,26 +15,27 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> Layer::constructor;
+Nan::Persistent<FunctionTemplate> Layer::constructor;
 ObjectCache<OGRLayer, Layer> Layer::cache;
 
-void Layer::Initialize(Handle<Object> target)
+void Layer::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(Layer::New);
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(Layer::New);
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("Layer"));
+	lcons->SetClassName(Nan::New("Layer").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getExtent", getExtent);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "setAttributeFilter", setAttributeFilter);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "setSpatialFilter", setSpatialFilter);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "getSpatialFilter", getSpatialFilter);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "testCapability", testCapability);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "flush", syncToDisk);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "getExtent", getExtent);
+	Nan::SetPrototypeMethod(lcons, "setAttributeFilter", setAttributeFilter);
+	Nan::SetPrototypeMethod(lcons, "setSpatialFilter", setSpatialFilter);
+	Nan::SetPrototypeMethod(lcons, "getSpatialFilter", getSpatialFilter);
+	Nan::SetPrototypeMethod(lcons, "testCapability", testCapability);
+	Nan::SetPrototypeMethod(lcons, "flush", syncToDisk);
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
+	ATTR_DONT_ENUM(lcons, "_uid", uidGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "srs", srsGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "features", featuresGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "fields", fieldsGetter, READ_ONLY_SETTER);
@@ -43,25 +44,25 @@ void Layer::Initialize(Handle<Object> target)
 	ATTR(lcons, "geomColumn", geomColumnGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "fidColumn", fidColumnGetter, READ_ONLY_SETTER);
 
-	target->Set(NanNew("Layer"), lcons->GetFunction());
+	target->Set(Nan::New("Layer").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 Layer::Layer(OGRLayer *layer)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
+	  uid(0),
 	  this_(layer),
-	  parent_ds(0),
-	  is_result_set(false)
+	  parent_ds(0)
 {
 	LOG("Created layer [%p]", layer);
 }
 
 Layer::Layer()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
+	  uid(0),
 	  this_(0),
-	  parent_ds(0),
-	  is_result_set(false)
+	  parent_ds(0)
 {
 }
 
@@ -76,11 +77,7 @@ void Layer::dispose()
 
 		LOG("Disposing layer [%p]", this_);
 
-		cache.erase(this_);
-		if (is_result_set && parent_ds && this_) {
-			LOG("Releasing result set [%p] from datasource [%p]", this_, parent_ds);
-			parent_ds->ReleaseResultSet(this_);
-		}
+		ptr_manager.dispose(uid);
 
 		LOG("Disposed layer [%p]", this_);
 		this_ = NULL;
@@ -94,106 +91,108 @@ void Layer::dispose()
  */
 NAN_METHOD(Layer::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		Layer *f = static_cast<Layer *>(ptr);
-		f->Wrap(args.This());
+		f->Wrap(info.This());
 
-		Handle<Value> features = LayerFeatures::New(args.This());
-		args.This()->SetHiddenValue(NanNew("features_"), features);
+		Local<Value> features = LayerFeatures::New(info.This());
+		info.This()->SetHiddenValue(Nan::New("features_").ToLocalChecked(), features);
 
-		Handle<Value> fields = LayerFields::New(args.This());
-		args.This()->SetHiddenValue(NanNew("fields_"), fields);
+		Local<Value> fields = LayerFields::New(info.This());
+		info.This()->SetHiddenValue(Nan::New("fields_").ToLocalChecked(), fields);
 
-		NanReturnValue(args.This());
+		info.GetReturnValue().Set(info.This());
+		return;
 	} else {
-		NanThrowError("Cannot create layer directly. Create with dataset instead.");
-		NanReturnUndefined();
+		Nan::ThrowError("Cannot create layer directly. Create with dataset instead.");
+		return;
 	}
 
-	NanReturnValue(args.This());
+	info.GetReturnValue().Set(info.This());
 }
 
 #if GDAL_VERSION_MAJOR >= 2
-Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent)
+Local<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent)
 #else
-Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent)
+Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent)
 #endif
 {
-	NanEscapableScope();
-	return NanEscapeScope(Layer::New(raw, raw_parent, false));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(Layer::New(raw, raw_parent, false));
 }
 
 #if GDAL_VERSION_MAJOR >= 2
-Handle<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set)
+Local<Value> Layer::New(OGRLayer *raw, GDALDataset *raw_parent, bool result_set)
 #else
-Handle<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set)
+Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_set)
 #endif
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!raw) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 	if (cache.has(raw)) {
-		return NanEscapeScope(NanNew(cache.get(raw)));
+		return scope.Escape(cache.get(raw));
 	}
 
 	Layer *wrapped = new Layer(raw);
-	wrapped->is_result_set = result_set;
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(Layer::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(Layer::constructor)->GetFunction()->NewInstance(1, &ext);
 
 	cache.add(raw, obj);
 
 	//add reference to datasource so datasource doesnt get GC'ed while layer is alive
-	if (raw_parent) {
-		Handle<Value> ds;
-		#if GDAL_VERSION_MAJOR >= 2
-			if (Dataset::dataset_cache.has(raw_parent)) {
-				ds = NanNew(Dataset::dataset_cache.get(raw_parent));
-			}
-		#else
-			if (Dataset::datasource_cache.has(raw_parent)) {
-				ds = NanNew(Dataset::datasource_cache.get(raw_parent));
-			}
-		#endif
+	Local<Object> ds;
+	#if GDAL_VERSION_MAJOR >= 2
+		if (Dataset::dataset_cache.has(raw_parent)) {
+			ds = Dataset::dataset_cache.get(raw_parent);
+		}
+	#else
+		if (Dataset::datasource_cache.has(raw_parent)) {
+			ds = Dataset::datasource_cache.get(raw_parent);
+		}
+	#endif
 		else {
 			LOG("Layer's parent dataset disappeared from cache (layer = %p, dataset = %p)", raw, raw_parent);
-			NanThrowError("Layer's parent dataset disappeared from cache");
-			return NanEscapeScope(NanUndefined());
+			Nan::ThrowError("Layer's parent dataset disappeared from cache");
+			return scope.Escape(Nan::Undefined());
 			//ds = Dataset::New(raw_parent); //should never happen
 		}
 
-		wrapped->parent_ds = raw_parent;
-		obj->SetHiddenValue(NanNew("ds_"), ds);
-	}
+	long parent_uid = Nan::ObjectWrap::Unwrap<Dataset>(ds)->uid;
+	
+	wrapped->uid = ptr_manager.add(raw, parent_uid, result_set);
+	wrapped->parent_ds = raw_parent;
+	obj->SetHiddenValue(Nan::New("ds_").ToLocalChecked(), ds);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(Layer::toString)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
 	if (!layer->this_) {
-		NanReturnValue(NanNew("Null layer"));
+		info.GetReturnValue().Set(Nan::New("Null layer").ToLocalChecked());
+		return;
 	}
 
 	std::ostringstream ss;
 	ss << "Layer (" << layer->this_->GetName() << ")";
 
-	NanReturnValue(SafeString::New(ss.str().c_str()));
+	info.GetReturnValue().Set(SafeString::New(ss.str().c_str()));
 }
 
 /**
@@ -223,12 +222,12 @@ NODE_WRAPPED_METHOD_WITH_RESULT_1_STRING_PARAM(Layer, testCapability, Boolean, T
  */
 NAN_METHOD(Layer::getExtent)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
 
 	int force = 1;
@@ -237,19 +236,19 @@ NAN_METHOD(Layer::getExtent)
 	OGREnvelope *envelope = new OGREnvelope();
 	OGRErr err = layer->this_->GetExtent(envelope, force);
 	if(err) {
-		NanThrowError("Can't get layer extent without computing it");
-		NanReturnUndefined();
+		Nan::ThrowError("Can't get layer extent without computing it");
+		return;
 	}
 
-	Local<Object> obj = NanNew<Object>();
-	obj->Set(NanNew("minX"), NanNew<Number>(envelope->MinX));
-	obj->Set(NanNew("maxX"), NanNew<Number>(envelope->MaxX));
-	obj->Set(NanNew("minY"), NanNew<Number>(envelope->MinY));
-	obj->Set(NanNew("maxY"), NanNew<Number>(envelope->MaxY));
+	Local<Object> obj = Nan::New<Object>();
+	obj->Set(Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
+	obj->Set(Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
+	obj->Set(Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
+	obj->Set(Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
 
 	delete envelope;
 
-	NanReturnValue(obj);
+	info.GetReturnValue().Set(obj);
 }
 
 /**
@@ -261,15 +260,15 @@ NAN_METHOD(Layer::getExtent)
  */
 NAN_METHOD(Layer::getSpatialFilter)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
 
-	NanReturnValue(Geometry::New(layer->this_->GetSpatialFilter(), false));
+	info.GetReturnValue().Set(Geometry::New(layer->this_->GetSpatialFilter(), false));
 }
 
 /**
@@ -290,15 +289,15 @@ NAN_METHOD(Layer::getSpatialFilter)
  */
 NAN_METHOD(Layer::setSpatialFilter)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
 
-	if(args.Length() == 1) {
+	if(info.Length() == 1) {
 		Geometry *filter = NULL;
 		NODE_ARG_WRAPPED_OPT(0, "filter", Geometry, filter);
 
@@ -307,7 +306,7 @@ NAN_METHOD(Layer::setSpatialFilter)
 		} else {
 			layer->this_->SetSpatialFilter(NULL);
 		}
-	} else if(args.Length() == 4) {
+	} else if(info.Length() == 4) {
 		double minX, minY, maxX, maxY;
 		NODE_ARG_DOUBLE(0, "minX", minX);
 		NODE_ARG_DOUBLE(1, "minY", minY);
@@ -316,11 +315,11 @@ NAN_METHOD(Layer::setSpatialFilter)
 
 		layer->this_->SetSpatialFilterRect(minX, minY, maxX, maxY);
 	} else {
-		NanThrowError("Invalid number of arguments");
-		NanReturnUndefined();
+		Nan::ThrowError("Invalid number of arguments");
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /**
@@ -347,12 +346,12 @@ NAN_METHOD(Layer::setSpatialFilter)
  */
 NAN_METHOD(Layer::setAttributeFilter)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
 
 	std::string filter = "";
@@ -367,25 +366,25 @@ NAN_METHOD(Layer::setAttributeFilter)
 
 	if (err) {
 		NODE_THROW_OGRERR(err);
-		NanReturnUndefined();
+		return;
 	}
 
-	NanReturnUndefined();
+	return;
 }
 
 /*
 NAN_METHOD(Layer::getLayerDefn)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
 
-	if (!layer->this_) {
-		NanThrowError("Layer object already destroyed");
-		NanReturnUndefined();
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object already destroyed");
+		return;
 	}
 
-	NanReturnValue(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
+	info.GetReturnValue().Set(FeatureDefn::New(layer->this_->GetLayerDefn(), false));
 }*/
 
 /**
@@ -395,8 +394,8 @@ NAN_METHOD(Layer::getLayerDefn)
  */
 NAN_GETTER(Layer::dsGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("ds_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("ds_").ToLocalChecked()));
 }
 
 /**
@@ -406,13 +405,13 @@ NAN_GETTER(Layer::dsGetter)
  */
 NAN_GETTER(Layer::srsGetter)
 {
-	NanScope();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SpatialReference::New(layer->this_->GetSpatialRef(), false));
+	info.GetReturnValue().Set(SpatialReference::New(layer->this_->GetSpatialRef(), false));
 }
 
 /**
@@ -422,13 +421,13 @@ NAN_GETTER(Layer::srsGetter)
  */
 NAN_GETTER(Layer::nameGetter)
 {
-	NanScope();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SafeString::New(layer->this_->GetName()));
+	info.GetReturnValue().Set(SafeString::New(layer->this_->GetName()));
 }
 
 /**
@@ -438,13 +437,13 @@ NAN_GETTER(Layer::nameGetter)
  */
 NAN_GETTER(Layer::geomColumnGetter)
 {
-	NanScope();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SafeString::New(layer->this_->GetGeometryColumn()));
+	info.GetReturnValue().Set(SafeString::New(layer->this_->GetGeometryColumn()));
 }
 
 /**
@@ -454,13 +453,13 @@ NAN_GETTER(Layer::geomColumnGetter)
  */
 NAN_GETTER(Layer::fidColumnGetter)
 {
-	NanScope();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
-	NanReturnValue(SafeString::New(layer->this_->GetFIDColumn()));
+	info.GetReturnValue().Set(SafeString::New(layer->this_->GetFIDColumn()));
 }
 
 /**
@@ -470,13 +469,13 @@ NAN_GETTER(Layer::fidColumnGetter)
  */
 NAN_GETTER(Layer::geomTypeGetter)
 {
-	NanScope();
-	Layer *layer = ObjectWrap::Unwrap<Layer>(args.This());
-	if (!layer->this_) {
-		NanThrowError("Layer object has already been destroyed");
-		NanReturnUndefined();
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	if (!layer->isAlive()) {
+		Nan::ThrowError("Layer object has already been destroyed");
+		return;
 	}
-	NanReturnValue(NanNew<Integer>(layer->this_->GetGeomType()));
+	info.GetReturnValue().Set(Nan::New<Integer>(layer->this_->GetGeomType()));
 }
 
 /**
@@ -486,8 +485,8 @@ NAN_GETTER(Layer::geomTypeGetter)
  */
 NAN_GETTER(Layer::featuresGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("features_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("features_").ToLocalChecked()));
 }
 
 /**
@@ -497,8 +496,15 @@ NAN_GETTER(Layer::featuresGetter)
  */
 NAN_GETTER(Layer::fieldsGetter)
 {
-	NanScope();
-	NanReturnValue(args.This()->GetHiddenValue(NanNew("fields_")));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("fields_").ToLocalChecked()));
+}
+
+NAN_GETTER(Layer::uidGetter)
+{
+	Nan::HandleScope scope;
+	Layer *layer = Nan::ObjectWrap::Unwrap<Layer>(info.This());
+	info.GetReturnValue().Set(Nan::New((int)layer->uid));
 }
 
 } // namespace node_gdal

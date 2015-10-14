@@ -10,27 +10,27 @@
 
 namespace node_gdal {
 
-Persistent<FunctionTemplate> MultiLineString::constructor;
+Nan::Persistent<FunctionTemplate> MultiLineString::constructor;
 
-void MultiLineString::Initialize(Handle<Object> target)
+void MultiLineString::Initialize(Local<Object> target)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	Local<FunctionTemplate> lcons = NanNew<FunctionTemplate>(MultiLineString::New);
-	lcons->Inherit(NanNew(GeometryCollection::constructor));
+	Local<FunctionTemplate> lcons = Nan::New<FunctionTemplate>(MultiLineString::New);
+	lcons->Inherit(Nan::New(GeometryCollection::constructor));
 	lcons->InstanceTemplate()->SetInternalFieldCount(1);
-	lcons->SetClassName(NanNew("MultiLineString"));
+	lcons->SetClassName(Nan::New("MultiLineString").ToLocalChecked());
 
-	NODE_SET_PROTOTYPE_METHOD(lcons, "toString", toString);
-	NODE_SET_PROTOTYPE_METHOD(lcons, "polygonize", polygonize);
+	Nan::SetPrototypeMethod(lcons, "toString", toString);
+	Nan::SetPrototypeMethod(lcons, "polygonize", polygonize);
 
-	target->Set(NanNew("MultiLineString"), lcons->GetFunction());
+	target->Set(Nan::New("MultiLineString").ToLocalChecked(), lcons->GetFunction());
 
-	NanAssignPersistent(constructor, lcons);
+	constructor.Reset(lcons);
 }
 
 MultiLineString::MultiLineString(OGRMultiLineString *geom)
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(geom),
 	  owned_(true),
 	  size_(0)
@@ -39,7 +39,7 @@ MultiLineString::MultiLineString(OGRMultiLineString *geom)
 }
 
 MultiLineString::MultiLineString()
-	: ObjectWrap(),
+	: Nan::ObjectWrap(),
 	  this_(NULL),
 	  owned_(true),
 	  size_(0)
@@ -52,7 +52,7 @@ MultiLineString::~MultiLineString()
 		LOG("Disposing GeometryCollection [%p] (%s)", this_, owned_ ? "owned" : "unowned");
 		if (owned_) {
 			OGRGeometryFactory::destroyGeometry(this_);
-			NanAdjustExternalMemory(-size_);
+			Nan::AdjustExternalMemory(-size_);
 		}
 		LOG("Disposed GeometryCollection [%p]", this_);
 		this_ = NULL;
@@ -66,46 +66,46 @@ MultiLineString::~MultiLineString()
  */
 NAN_METHOD(MultiLineString::New)
 {
-	NanScope();
+	Nan::HandleScope scope;
 	MultiLineString *f;
 
-	if (!args.IsConstructCall()) {
-		NanThrowError("Cannot call constructor as function, you need to use 'new' keyword");
-		NanReturnUndefined();
+	if (!info.IsConstructCall()) {
+		Nan::ThrowError("Cannot call constructor as function, you need to use 'new' keyword");
+		return;
 	}
 
-	if (args[0]->IsExternal()) {
-		Local<External> ext = args[0].As<External>();
+	if (info[0]->IsExternal()) {
+		Local<External> ext = info[0].As<External>();
 		void* ptr = ext->Value();
 		f = static_cast<MultiLineString *>(ptr);
 
 	} else {
-		if (args.Length() != 0) {
-			NanThrowError("MultiLineString constructor doesn't take any arguments");
-			NanReturnUndefined();
+		if (info.Length() != 0) {
+			Nan::ThrowError("MultiLineString constructor doesn't take any arguments");
+			return;
 		}
 		f = new MultiLineString(new OGRMultiLineString());
 	}
 
-	Handle<Value> children = GeometryCollectionChildren::New(args.This());
-	args.This()->SetHiddenValue(NanNew("children_"), children);
+	Local<Value> children = GeometryCollectionChildren::New(info.This());
+	info.This()->SetHiddenValue(Nan::New("children_").ToLocalChecked(), children);
 
-	f->Wrap(args.This());
-	NanReturnValue(args.This());
+	f->Wrap(info.This());
+	info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> MultiLineString::New(OGRMultiLineString *geom)
+Local<Value> MultiLineString::New(OGRMultiLineString *geom)
 {
-	NanEscapableScope();
-	return NanEscapeScope(MultiLineString::New(geom, true));
+	Nan::EscapableHandleScope scope;
+	return scope.Escape(MultiLineString::New(geom, true));
 }
 
-Handle<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
+Local<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 {
-	NanEscapableScope();
+	Nan::EscapableHandleScope scope;
 
 	if (!geom) {
-		return NanEscapeScope(NanNull());
+		return scope.Escape(Nan::Null());
 	}
 
 	//make a copy of geometry owned by a feature
@@ -122,16 +122,16 @@ Handle<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
-	Handle<Value> ext = NanNew<External>(wrapped);
-	Handle<Object> obj = NanNew(MultiLineString::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Value> ext = Nan::New<External>(wrapped);
+	Local<Object> obj = Nan::New(MultiLineString::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }
 
 NAN_METHOD(MultiLineString::toString)
 {
-	NanScope();
-	NanReturnValue(NanNew("MultiLineString"));
+	Nan::HandleScope scope;
+	info.GetReturnValue().Set(Nan::New("MultiLineString").ToLocalChecked());
 }
 
 /**
@@ -142,11 +142,11 @@ NAN_METHOD(MultiLineString::toString)
  */
 NAN_METHOD(MultiLineString::polygonize)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
-	MultiLineString *geom = ObjectWrap::Unwrap<MultiLineString>(args.This());
+	MultiLineString *geom = Nan::ObjectWrap::Unwrap<MultiLineString>(info.This());
 
-	NanReturnValue(Geometry::New(geom->this_->Polygonize()));
+	info.GetReturnValue().Set(Geometry::New(geom->this_->Polygonize()));
 }
 
 } // namespace node_gdal
