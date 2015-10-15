@@ -942,7 +942,8 @@ describe('gdal.RasterBand', function() {
 					var band = ds.bands.get(1);
 					ds.buildOverviews("NEAREST",[2,4]);
 					var w = [];
-					band.overviews.forEach(function(overview){
+					band.overviews.forEach(function(overview, i) {
+						assert.isNumber(i);
 						w.push(overview.size.x);
 					});
 					assert.sameMembers(w, [ds.rasterSize.x/2,ds.rasterSize.x/4]);

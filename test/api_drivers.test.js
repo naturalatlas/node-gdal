@@ -102,12 +102,14 @@ describe('gdal.drivers', function() {
 	describe('forEach()', function() {
 		it('should iterate through all Driver objects', function() {
 			var n = gdal.drivers.count();
-			var i = 0;
-			gdal.drivers.forEach(function(driver) {
+			var count = 0;
+			gdal.drivers.forEach(function(driver, i) {
+				assert.isNumber(i);
 				assert.instanceOf(driver, gdal.Driver);
-				assert.equal(driver, gdal.drivers.get(i++));
+				assert.equal(driver, gdal.drivers.get(i));
+				count++;
 			});
-			assert.equal(i, n);
+			assert.equal(count, n);
 		});
 		it('should stop when false is returned from callback', function() {
 			var i = 0;

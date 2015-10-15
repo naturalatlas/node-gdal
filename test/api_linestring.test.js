@@ -209,10 +209,11 @@ describe('gdal.LineString', function() {
 					line.points.add(1, 2, 3);
 					line.points.add(2, 3, 4);
 					line.points.add(3, 4, 5);
-					var i = 0, count = 0;
-					line.points.forEach(function(pt) {
+					var count = 0;
+					line.points.forEach(function(pt, i) {
 						count++;
-						if (++i === 2) return false;
+						assert.isNumber(i);
+						if (i === 1) return false;
 					});
 					assert.equal(count, 2);
 				});
@@ -223,7 +224,8 @@ describe('gdal.LineString', function() {
 					line.points.add(1, 2, 3);
 					line.points.add(2, 3, 4);
 					line.points.add(3, 4, 5);
-					line.points.forEach(function(pt) {
+					line.points.forEach(function(pt, i) {
+						assert.isNumber(i);
 						x_actual.push(pt.x);
 					});
 					assert.deepEqual(x_actual, x_actual);

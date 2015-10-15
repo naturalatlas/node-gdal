@@ -79,7 +79,9 @@ describe('gdal.Dataset', function() {
 					var ds = gdal.open(__dirname + "/data/sample.tif");
 					var expected_ids = [1];
 					var ids = [];
-					ds.bands.forEach(function(band){
+					ds.bands.forEach(function(band, i) {
+						assert.isNumber(i);
+						assert.isTrue(i > 0);
 						assert.instanceOf(band, gdal.RasterBand);
 						ids.push(band.id);
 					});
@@ -156,7 +158,8 @@ describe('gdal.Dataset', function() {
 					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
 					var expected_names = ['sample'];
 					var names = [];
-					ds.layers.forEach(function(layer){
+					ds.layers.forEach(function(layer, i) {
+						assert.isNumber(i);
 						assert.instanceOf(layer, gdal.Layer);
 						names.push(layer.name);
 					});

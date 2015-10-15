@@ -106,10 +106,11 @@ describe('gdal.Polygon', function() {
 					polygon.rings.add([ring1, ring2, ring3]);
 				});
 				it('should stop if callback returns false', function() {
-					var i = 0, count = 0;
-					polygon.rings.forEach(function(pt) {
+					var count = 0;
+					polygon.rings.forEach(function(pt, i) {
 						count++;
-						if (++i === 2) return false;
+						assert.isNumber(i);
+						if (i === 1) return false;
 					});
 					assert.equal(count, 2);
 				});

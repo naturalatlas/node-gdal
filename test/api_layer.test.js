@@ -445,7 +445,8 @@ describe('gdal.Layer', function() {
 				it('should pass each feature to the callback', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						var count = 0;
-						layer.features.forEach(function(feature){
+						layer.features.forEach(function(feature, i) {
+							assert.isNumber(i);
 							assert.instanceOf(feature, gdal.Feature);
 							count++;
 						});

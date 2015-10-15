@@ -277,7 +277,7 @@ describe('gdal.Feature', function() {
 					var values = [];
 					var keys = [];
 					feature.fields.set(expected_values);
-					feature.fields.forEach(function(value, key){
+					feature.fields.forEach(function(value, key) {
 						values.push(value);
 						keys.push(key);
 					});
