@@ -124,4 +124,19 @@ describe('gdal.drivers', function() {
 			assert.equal(j, n);
 		});
 	});
+
+	describe('map()', function() {
+		it('should operate normally', function() {
+			var result = gdal.drivers.map(function(driver, i) {
+				assert.isNumber(i);
+				assert.instanceOf(driver, gdal.Driver);
+				assert.equal(driver, gdal.drivers.get(i));
+				return 'a';
+			});
+
+			assert.isArray(result);
+			assert.equal(result[0], 'a');
+			assert.equal(result.length, gdal.drivers.count());
+		});
+	});
 });

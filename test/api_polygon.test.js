@@ -141,6 +141,28 @@ describe('gdal.Polygon', function() {
     				]);
 				});
 			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					var polygon = new gdal.Polygon();
+					var ring = new gdal.LinearRing();
+					ring.points.add(0, 0, 0);
+					ring.points.add(10, 0, 0);
+					ring.points.add(10, 10, 0);
+					ring.points.add(0, 11, 0);
+					ring.points.add(0, 0, 0);
+					polygon.rings.add(ring);
+
+					var result = polygon.rings.map(function(ring, i) {
+						assert.isNumber(i);
+						assert.instanceOf(ring, gdal.LinearRing);
+						return 'a';
+					});
+
+					assert.isArray(result);
+					assert.lengthOf(result, 1);
+					assert.equal(result[0], 'a');
+				});
+			});
 			describe('toArray()', function() {
 				it('should return array of LinearRing instances', function() {
 					var polygon = new gdal.Polygon();

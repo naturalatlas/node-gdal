@@ -10,7 +10,7 @@ describe('gdal', function() {
 	afterEach(gc);
 
 	describe('suggestedWarpOutput()', function(){
-		var src; 
+		var src;
 		beforeEach(function(){
 			src = gdal.open(__dirname + "/data/sample.tif");
 		});
@@ -24,7 +24,7 @@ describe('gdal', function() {
 			var gt = src.geoTransform;
 
 			//warp options
-			var s_srs = src.srs; 
+			var s_srs = src.srs;
 			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 
@@ -41,7 +41,7 @@ describe('gdal', function() {
 			extent = extent.getEnvelope();
 
 			//compute pixel resolution in target srs (function assumes square pixels)
-			
+
 			var s_diagonal = new gdal.LineString();
 			s_diagonal.points.add(gt[0], gt[3]);
 			s_diagonal.points.add(gt[0]+gt[1]*w, gt[3]+gt[5]*h);
@@ -53,7 +53,7 @@ describe('gdal', function() {
 			var tr = t_diagonal.getLength() / pixels_along_diagonal;
 
 			//compute expected size / geotransform with computed resolution
-			
+
 			var expected = {
 				geoTransform: [
 					extent.minX, tr, gt[2],
@@ -82,7 +82,7 @@ describe('gdal', function() {
 		});
 	});
 	describe('reprojectImage()', function() {
-		var src; 
+		var src;
 		beforeEach(function(){
 			src = gdal.open(__dirname + "/data/sample.tif");
 		});
@@ -92,18 +92,18 @@ describe('gdal', function() {
 		it('should write reprojected image into dst dataset', function(){
 
 			/*
-			 * expected result is the same (but not necessarily exact) as the result of: 
-			 * 
+			 * expected result is the same (but not necessarily exact) as the result of:
+			 *
 			 *  gdalwarp
-			 * -tr 0.0005 0.0005 
-			 * -t_srs EPSG:4326 
-			 * -r bilinear 
+			 * -tr 0.0005 0.0005
+			 * -t_srs EPSG:4326
+			 * -r bilinear
 			 * -cutline ./test/data/cutline.shp
-			 * -dstalpha 
-			 * -of GTiff 
+			 * -dstalpha
+			 * -of GTiff
 			 * ./test/data/sample.tif ./test/data/sample_warped.tif
 			 */
-			
+
 			var expected = gdal.open(__dirname + "/data/sample_warped.tif");
 			var cutline_ds = gdal.open(__dirname + "/data/cutline.shp");
 
@@ -114,22 +114,22 @@ describe('gdal', function() {
 			var gt = src.geoTransform;
 
 			//warp options
-			var s_srs = src.srs; 
+			var s_srs = src.srs;
 			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
 			var tr = {x: .0005, y: .0005}; // target resolution
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 			var cutline = cutline_ds.layers.get(0).features.get(0).getGeometry();
 
-			//transform cutline to source dataset px/line coordinates 
+			//transform cutline to source dataset px/line coordinates
 			var geotransformer = new gdal.CoordinateTransformation(t_srs, src);
-			cutline.transform(geotransformer); 
+			cutline.transform(geotransformer);
 
 			//compute output geotransform / dimensions
 			var ul = tx.transformPoint(gt[0], gt[3]);
 			var ur = tx.transformPoint(gt[0]+gt[1]*w, gt[3]);
 			var lr = tx.transformPoint(gt[0]+gt[1]*w, gt[3]+gt[5]*h);
 			var ll = tx.transformPoint(gt[0], gt[3]+gt[5]*h);
-			
+
 			var extent = new gdal.Polygon();
 			var ring = new gdal.LinearRing();
 			ring.points.add([ul,ur,lr,ll,ul]);
@@ -161,7 +161,7 @@ describe('gdal', function() {
 			});
 
 			//compare with result of gdalwarp
-		
+
 			//gdalwarp might pick the output size slightly differently (+/- 1 px)
 			assert.closeTo(dst.rasterSize.x, expected.rasterSize.x, 1);
 			assert.closeTo(dst.rasterSize.y, expected.rasterSize.y, 1);
@@ -208,8 +208,8 @@ describe('gdal', function() {
 
 			//use lower than suggested resolution (faster)
 			info.rasterSize.x /= 4;
-			info.rasterSize.y /= 4; 
-			info.geoTransform[1] *= 4; 
+			info.rasterSize.y /= 4;
+			info.geoTransform[1] *= 4;
 			info.geoTransform[5] *= 4;
 
 			//compute exact version
@@ -229,7 +229,7 @@ describe('gdal', function() {
 
 			var approx_checksum = gdal.checksumImage(options.dst.bands.get(1));
 
-			
+
 			assert.notEqual(approx_checksum, exact_checksum);
 		});
 		it('should produce same result using multi option', function(){
@@ -242,8 +242,8 @@ describe('gdal', function() {
 
 			//use lower than suggested resolution (faster)
 			info.rasterSize.x /= 4;
-			info.rasterSize.y /= 4; 
-			info.geoTransform[1] *= 4; 
+			info.rasterSize.y /= 4;
+			info.geoTransform[1] *= 4;
 			info.geoTransform[5] *= 4;
 
 			options.dst = gdal.open('temp', 'w', 'MEM', info.rasterSize.x, info.rasterSize.y, 1, gdal.GDT_Byte);

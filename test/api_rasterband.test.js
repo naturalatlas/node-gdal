@@ -958,6 +958,22 @@ describe('gdal.RasterBand', function() {
 					});
 				});
 			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					var ds = gdal.open(fileUtils.clone(__dirname+"/data/sample.tif"), 'r+');
+					var band = ds.bands.get(1);
+					ds.buildOverviews("NEAREST",[2,4]);
+
+					var result = band.overviews.map(function(overview, i) {
+						assert.isNumber(i);
+						assert.isNumber(overview.size.x);
+						return 'a';
+					});
+					assert.isArray(result);
+					assert.lengthOf(result, band.overviews.count());
+					assert.equal(result[0], 'a');
+				});
+			});
 		});
 		describe("fill()", function(){
 			it("should set all pixels to given value", function(){

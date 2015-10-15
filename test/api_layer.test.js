@@ -462,7 +462,21 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					prepare_dataset_layer_test('r', function(dataset, layer) {
+						var result = layer.features.map(function(feature, i) {
+							assert.isNumber(i);
+							assert.instanceOf(feature, gdal.Feature);
+							return 'a';
+						});
 
+						assert.isArray(result);
+						assert.equal(result[0], 'a');
+						assert.equal(result.length, layer.features.count());
+					});
+				});
+			});
 			describe('add()', function() {
 				it('should add Feature to layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
@@ -648,12 +662,14 @@ describe('gdal.Layer', function() {
 							'state_fips',
 							'state_abbr'
 						];
-						var i = 0;
-						layer.fields.forEach(function(field){
+						var count = 0;
+						layer.fields.forEach(function(field, i) {
+							assert.isNumber(i);
+							assert.instanceOf(field, gdal.FieldDefn);
 							assert.equal(expected_names[i], field.name);
-							i++;
+							count++;
 						});
-						assert.equal(layer.fields.count(), i);
+						assert.equal(layer.fields.count(), count);
 						assert.deepEqual(layer.fields.getNames(), expected_names);
 					});
 				});
@@ -663,6 +679,21 @@ describe('gdal.Layer', function() {
 						assert.throws(function() {
 							layer.fields.forEach(function(field){});
 						}, /already destroyed/);
+					});
+				});
+			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					prepare_dataset_layer_test('r', function(dataset, layer) {
+						var result = layer.fields.map(function(field, i) {
+							assert.isNumber(i);
+							assert.instanceOf(field, gdal.FieldDefn);
+							return 'a';
+						});
+
+						assert.isArray(result);
+						assert.equal(result[0], 'a');
+						assert.equal(result.length, layer.fields.count());
 					});
 				});
 			});

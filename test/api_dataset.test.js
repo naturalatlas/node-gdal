@@ -95,6 +95,20 @@ describe('gdal.Dataset', function() {
 					});
 				});
 			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					var ds = gdal.open(__dirname + "/data/sample.tif");
+					var result = ds.bands.map(function(band, i) {
+						assert.isNumber(i);
+						assert.instanceOf(band, gdal.RasterBand);
+						return 'a';
+					});
+
+					assert.isArray(result);
+					assert.equal(result[0], 'a');
+					assert.equal(result.length, ds.bands.count());
+				});
+			});
 		});
 		describe('"layers" property', function() {
 			it('should exist', function() {
@@ -171,6 +185,20 @@ describe('gdal.Dataset', function() {
 					assert.throws(function(){
 						ds.layers.forEach(function(layer){});
 					});
+				});
+			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					var ds = gdal.open(__dirname + "/data/shp/sample.shp");
+					var result = ds.layers.map(function(layer, i) {
+						assert.isNumber(i);
+						assert.instanceOf(layer, gdal.Layer);
+						return 'a';
+					});
+
+					assert.isArray(result);
+					assert.equal(result[0], 'a');
+					assert.equal(result.length, ds.layers.count());
 				});
 			});
 			describe('create()', function() {

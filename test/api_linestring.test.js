@@ -231,6 +231,23 @@ describe('gdal.LineString', function() {
 					assert.deepEqual(x_actual, x_actual);
 				});
 			});
+			describe('map()', function() {
+				it('should operate normally', function() {
+					var line = new gdal.LineString();
+					line.points.add(1, 2, 3);
+					line.points.add(2, 3, 4);
+					line.points.add(3, 4, 5);
+					var result = line.points.map(function(pt, i) {
+						return [pt.x, pt.y, pt.z, i].join('/');
+					});
+
+					assert.deepEqual(result, [
+						'1/2/3/0',
+						'2/3/4/1',
+						'3/4/5/2'
+					]);
+				});
+			});
 			describe('toArray()', function() {
 				it('should return array of Point instances', function() {
 					var line = new gdal.LineString();
