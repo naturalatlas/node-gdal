@@ -45,6 +45,12 @@ ECHO using MSBuild^: && msbuild /version && ECHO.
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
+::activating VS command prompt seems to uppercase PLATFORM, but only for x64 not x86
+::with X64 AppVeyor cannot install node
+ECHO platform^: %platform%
+IF /I "%PLATFORM%"=="x64" ECHO lowercasing platform && SET PLATFORM=x64
+ECHO platform^: %platform%
+
 ECHO downloading/installing node
 ::only use Install-Product when using VS2013
 ::IF /I "%APPVEYOR%"=="True" IF /I "%msvs_toolset%"=="12" powershell Install-Product node $env:nodejs_version $env:Platform
