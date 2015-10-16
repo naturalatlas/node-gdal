@@ -54,8 +54,11 @@ IF /I "%APPVEYOR%"=="True" powershell Install-Product node $env:nodejs_version $
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
+::Skip downloads from mapbox for VS2013 and node>0.x
 IF /I "%msvs_toolset%"=="12" ECHO VS2013^: skipping custom node.exe download && GOTO NODE_INSTALLED
 
+SET NODE_MAJOR=%nodejs_version:~0,1%
+IF %NODE_MAJOR% GTR 0 ECHO skipping custom node.exe download, node version greater than zero && GOTO NODE_INSTALLED
 
 ::custom node for VS2015
 SET ARCHPATH=
@@ -91,7 +94,7 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO installing npm-windows-upgrade... && CALL npm install -g npm-windows-upgrade
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO upgrading npm... && CALL npm-windows-upgrade --version:3.2.1 --no-dns-check --no-prompt
+ECHO upgrading npm... && CALL npm-windows-upgrade --version:latest --no-dns-check --no-prompt
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
