@@ -33,6 +33,7 @@ artifacts:
 
 install:
    - dir C:\avvm\node
+   - tree C:\avvm
 #  - scripts\build-appveyor.bat
 
 build: off
