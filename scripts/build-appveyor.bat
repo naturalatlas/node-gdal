@@ -156,8 +156,13 @@ SET BUILD_CMD=npm install ^
 --loglevel=http %TOOLSET_ARGS% %ENABLE_LOGGING%
 ::add TOOLSET_ARGS last and on same line as this can be empty
 ECHO calling BUILD_CMD^: %BUILD_CMD%
+SET NODE_GDAL_BUILD_START_TIME=%TIME%
 CALL %BUILD_CMD%
+SET NODE_GDAL_BUILD_FINISH_TIME=%TIME%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO build started^: %NODE_GDAL_BUILD_START_TIME%
+ECHO build finished^: %NODE_GDAL_BUILD_FINISH_TIME%
 
 ::ECHO installing node-pre-gyp ...
 ::CALL npm install node-pre-gyp
@@ -226,5 +231,7 @@ SET EL=%ERRORLEVEL%
 
 :DONE
 ECHO ~~~~~~~~~~~~~~~~~~~~~~ DONE %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ECHO build started^: %NODE_GDAL_BUILD_START_TIME%
+ECHO build finished^: %NODE_GDAL_BUILD_FINISH_TIME%
 
 EXIT /b %EL%
