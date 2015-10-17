@@ -60,16 +60,19 @@ IF /I "%APPVEYOR%"=="True" powershell Install-Product node $env:nodejs_version $
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
-::Skip downloads from mapbox for VS2013 and node>0.x
+::Skip downloads from mapbox for VS2013
 IF /I "%msvs_toolset%"=="12" ECHO VS2013^: skipping custom node.exe download && GOTO NODE_INSTALLED
 
+::Skip downloads for node>=3.x
 SET NODE_MAJOR=%nodejs_version:~0,1%
-IF %NODE_MAJOR% GTR 0 ECHO skipping custom node.exe download, node version greater than zero && GOTO NODE_INSTALLED
+IF %NODE_MAJOR% GTR 3 ECHO skipping custom node.exe download, node version greater than zero && GOTO NODE_INSTALLED
 
 ::custom node for VS2015
 SET ARCHPATH=
 IF /I "%platform%"=="x64" (SET ARCHPATH=x64/)
 SET NODE_URL=https://mapbox.s3.amazonaws.com/node-cpp11/v%nodejs_version%/%ARCHPATH%node.exe
+::special case node 3.3.1
+IF /I "%nodejs_version%"=="3.3.1" SET NODE_URL=https://mapbox.s3.amazonaws.com/windows-builds/windows-deps/node-v3.3.1/win-%platform%/iojs.exe
 ECHO downloading node^: %NODE_URL%
 powershell Invoke-WebRequest "${env:NODE_URL}" -OutFile node.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
