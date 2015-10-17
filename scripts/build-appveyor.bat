@@ -56,7 +56,7 @@ ECHO downloading/installing node
 ::IF /I "%APPVEYOR%"=="True" IF /I "%msvs_toolset%"=="12" powershell Install-Product node $env:nodejs_version $env:Platform
 ::TESTING:
 ::always install (get npm matching node), but delete installed programfiles node.exe afterwards for VS2015 (using custom node.exe)
-IF /I "%APPVEYOR%"=="True" powershell Install-Product node $env:nodejs_version $env:Platform
+IF /I "%APPVEYOR%"=="True" IF /I NOT "%nodejs_version%"=="3.3.1" powershell Install-Product node $env:nodejs_version $env:Platform
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
