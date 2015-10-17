@@ -18,8 +18,8 @@ environment:
 #      TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
 #    - nodejs_version: "3.3.1"
 #      msvs_toolset: 14
-    - nodejs_version: "4.0.0"
-      msvs_toolset: 14
+#    - nodejs_version: "4.0.0"
+#      msvs_toolset: 14
     - nodejs_version: "4.2.1"
       msvs_toolset: 14
 
@@ -32,7 +32,8 @@ artifacts:
     name: Test Logs
 
 install:
-  - scripts\build-appveyor.bat
+   - dir C:\avvm\node
+#  - scripts\build-appveyor.bat
 
 build: off
 test: off
