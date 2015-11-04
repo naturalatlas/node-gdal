@@ -10,6 +10,8 @@ IF /I "%msvs_toolset%"=="14" SET msvs_version=2015
 
 IF /I "%platform%"=="x64" SET PATH=C:\Python27-x64;%PATH%
 
+::http://www.appveyor.com/docs/services-databases
+SET PATH=C:\Program Files\PostgreSQL\9.4\bin\;%PATH%
 
 ::make commit message env var shorter
 ::SET CM="%APPVEYOR_REPO_COMMIT_MESSAGE%"
