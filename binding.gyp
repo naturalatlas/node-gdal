@@ -79,6 +79,7 @@
 					"conditions": [
 						['OS == "win"', {
 							"libraries": [
+								"C:/mb/windows-builds-64/packages/postgresql/src/interfaces/libpq/Release/libpq.lib",
 								"-lsecur32.lib",
 								"-lws2_32.lib",
 								"-lodbccp32.lib",
