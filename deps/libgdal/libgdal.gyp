@@ -9,7 +9,6 @@
 			"type": "static_library",
 			"sources": [
 				"gdal/frmts/gdalallregister.cpp",
-
 				"gdal/ogr/osr_cs_wkt.c",
 				"gdal/ogr/osr_cs_wkt_parser.c",
 				"gdal/ogr/gml2ogrgeometry.cpp",
@@ -292,6 +291,7 @@
 					"link_settings": {
 						"libraries": [
 							"-lws2_32.lib",
+							"-llibpq.lib",
 						]
 					}
 				}]
@@ -306,7 +306,14 @@
 				],
 				"conditions": [
 					["OS == 'win'", {
-						"include_dirs": ["./arch/win"]
+						"include_dirs": ["./arch/win"],
+						"msvs_settings": {
+							"VCLinkerTool": {
+								"AdditionalLibraryDirectories": [
+									"C:/Program Files/PostgreSQL/9.4/lib"
+								]
+							}
+						}
 					}, {
 						"include_dirs": ["./arch/unix"]
 					}]

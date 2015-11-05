@@ -16,15 +16,19 @@
 			],
 			"include_dirs": [
 				"<!@(pg_config --includedir)",
-				"C:/mb/windows-builds-64/packages/postgresql/src/interfaces/libpq",
-				"C:/mb/windows-builds-64/packages/postgresql/src/include",
+				"C:/Program Files/PostgreSQL/9.4/include",
 				"../gdal/ogr/ogrsf_frmts/pgdump",
 				"../gdal/ogr/ogrsf_frmts/pg"
 			],
 			"libraries": [
 				"-lpq -L<!@(pg_config --libdir)",
-				"C:/mb/windows-builds-64/packages/postgresql/src/interfaces/libpq/Release/libpq.lib"
-			]
+				"libpq.lib"
+			],
+			"VCLinkerTool": {
+				"AdditionalLibraryDirectories": [
+					"C:/Program Files/PostgreSQL/9.4/lib"
+				]
+			}
 		}
 	]
 }
