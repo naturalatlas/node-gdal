@@ -3,6 +3,11 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 var fs = require('fs');
+var path = require('path');
+
+if (process.env.GDAL_DATA !== undefined) {
+	throw new Error("Sorry, this test requires that the GDAL_DATA environment option is not set");
+}
 
 describe('gdal', function() {
 	afterEach(gc);
@@ -55,6 +60,22 @@ describe('gdal', function() {
 				assert.equal(gdal.config.get('CPL_DEBUG'), 'ON');
 				gdal.config.set('CPL_DEBUG', null);
 				assert.isNull(gdal.config.get('CPL_DEBUG'));
+			});
+		});
+		describe('GDAL_DATA behavior', function() {
+			var data_path = path.resolve(__dirname, '../deps/libgdal/gdal/data');
+			it('should set GDAL_DATA config option to locally bundled path', function() {
+				assert.equal(gdal.config.get('GDAL_DATA'),data_path);
+			});
+			it('should respect GDAL_DATA environment over locally bundled path', function(done) {
+				process.env.GDAL_DATA = 'bogus';
+				var cp = require('child_process');
+				var command = "\"var gdal = require('./lib/gdal.js'); console.log(gdal.config.get('GDAL_DATA'));\"";
+				cp.exec(process.execPath + ' ' + ['-e',command].join(' '),{env:{GDAL_DATA:'bogus'}},function(err,stdout,stderr) {
+					if (err) throw err;
+					assert.equal(process.env.GDAL_DATA,stdout.trim());
+					done();
+				})
 			});
 		});
 	});
