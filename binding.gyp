@@ -100,7 +100,7 @@
 						}, {
 							"conditions": [
 								["runtime_link == 'static'", {
-									"libraries": ["<!@(gdal-config --dep-libs)"]
+									"libraries": ["<!@(gdal-config --dep-libs)","<!@(gdal-config --libs)"]
 								}, {
 									"libraries": ["<!@(gdal-config --libs)"]
 								}]
