@@ -52,7 +52,8 @@
 				"src/collections/linestring_points.cpp",
 				"src/collections/rasterband_overviews.cpp",
 				"src/collections/rasterband_pixels.cpp",
-				"src/collections/gdal_drivers.cpp"
+				"src/collections/gdal_drivers.cpp",
+				"src/apps/gdal_warp.cpp"
 			],
 			"include_dirs": [
 				"<!(node -e \"require('nan')\")"
@@ -95,7 +96,8 @@
 								"deps/libgdal/gdal/frmts/zlib",
 								"deps/libgdal/gdal/ogr",
 								"deps/libgdal/gdal/ogr/ogrsf_frmts",
-								"deps/libgdal/gdal/ogr/ogrsf_frmts/mem"
+								"deps/libgdal/gdal/ogr/ogrsf_frmts/mem",
+								"deps/libgdal/gdal/apps"
 							],
 						}, {
 							"conditions": [
@@ -113,6 +115,12 @@
 							}
 						}]
 					]
+				}],
+				["'<(mrsid_include)' != ''",{
+					"libraries": [
+						"<(mrsid_include)/Raster_DSDK/lib/lti_dsdk.lib",
+						"<(mrsid_include)/Raster_DSDK/lib/lti_dsdk_cdll.lib"
+					]
 				}]
 			]
 		},
@@ -127,7 +135,21 @@
 					],
 					"destination": "<(module_path)"
 				}
-			]
+			],
+			"conditions" : [
+                ["'<(mrsid_include)' != ''",{                    
+					"copies": [
+						{
+							"files": [                                
+								"<(mrsid_include)/Raster_DSDK/lib/lti_dsdk_9.1.dll",
+								"<(mrsid_include)/Raster_DSDK/lib/lti_dsdk_cdll_9.1.dll",
+								"<(mrsid_include)/Raster_DSDK/lib/tbb.dll"
+							],
+							"destination": "<(module_path)"
+						}
+					]              
+                }]
+            ]
 		}
 	]
 }

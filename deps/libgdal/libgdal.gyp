@@ -1,7 +1,8 @@
 {
 	"includes": [
 		"./common.gypi",
-		"./libgdal_formats.gypi"
+		"./libgdal_formats.gypi",
+		"./libgdal_apps.gypi"
 	],
 	"targets": [
 		{
@@ -279,10 +280,12 @@
 				"./gdal/ogr/ogrsf_frmts",
 				"./gdal/ogr/ogrsf_frmts/mem",
 				"./gdal/ogr/ogrsf_frmts/geojson",
-				"./gdal/frmts/jpeg/libjpeg"
+				"./gdal/frmts/jpeg/libjpeg",
+				"./gdal/apps"
 			],
 			"dependencies": [
-				'<@(gdal_format_gyps)'
+				'<@(gdal_format_gyps)',
+				'<@(gdal_app_gyps)'
 			],
 			"defines": [
 				'<@(gdal_format_defs)'
@@ -302,7 +305,8 @@
 					"./gdal/gcore",
 					"./gdal/port",
 					"./gdal/ogr",
-					"./gdal/ogr/ogrsf_frmts"
+					"./gdal/ogr/ogrsf_frmts",
+					"./gdal/apps"
 				],
 				"conditions": [
 					["OS == 'win'", {

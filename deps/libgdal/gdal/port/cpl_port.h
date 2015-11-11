@@ -622,4 +622,9 @@ int snprintf(char *str, size_t size, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT
 int sprintf(char *str, const char* fmt, ...) CPL_PRINT_FUNC_FORMAT(2, 3) CPL_WARN_DEPRECATED("Use CPLsprintf() instead");
 #endif
 
+#ifndef STARTS_WITH_CI
+#define STARTS_WITH(a,b)               (strncmp(a,b,strlen(b)) == 0)
+#define STARTS_WITH_CI(a,b)            EQUALN(a,b,strlen(b))
+#endif
+
 #endif /* ndef CPL_BASE_H_INCLUDED */
