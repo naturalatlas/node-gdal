@@ -53,7 +53,7 @@
 				"src/collections/rasterband_overviews.cpp",
 				"src/collections/rasterband_pixels.cpp",
 				"src/collections/gdal_drivers.cpp",
-				"src/apps/gdal_warp.cpp"
+				"src/apps/warputil.cpp"
 			],
 			"include_dirs": [
 				"<!(node -e \"require('nan')\")"

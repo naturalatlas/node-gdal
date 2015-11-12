@@ -12,6 +12,7 @@
 #pragma GCC diagnostic pop
 
 //gdal
+#include <gdal.h>
 #include <gdalwarp_lib.cpp>
 
 using namespace v8;
@@ -21,18 +22,24 @@ namespace node_gdal
 {
 	namespace apps
 	{
-		/*class WarpUtil : public node::ObjectWrap
+		class WarpUtil : public node::ObjectWrap
 		{
 		private:
-			static Persistent<FunctionTemplate> _constructor;
-			static int Warp(GDALWarpAppOptions* options);
+			static Nan::Persistent<FunctionTemplate> _constructor;
+			static int Warp(const char* destFilename, GDALDatasetH* targetDataset, GDALWarpAppOptions* options, int sourceFilesCount, GDALDatasetH* sourceFiles);
 			static GDALWarpAppOptions* SetOptions(Handle<Value> options);
 
 		public:
 			static void Initialize(Handle<Object> exports);
 			static NAN_METHOD(New);
 			static NAN_METHOD(Warp);
-		};	*/
+		};
+
+		class ExtendedWarpAppOptions : GDALWarpAppOptions
+		{
+		public:
+			GDALDatasetH targetDataset = NULL;
+		};
 	}
 }
 
