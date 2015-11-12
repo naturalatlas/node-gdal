@@ -72,6 +72,8 @@
 #include "collections/rasterband_pixels.hpp"
 #include "collections/gdal_drivers.hpp"
 
+#include "apps/warputil.hpp"
+
 // std
 #include <string>
 #include <sstream>
@@ -261,6 +263,8 @@ namespace node_gdal {
 			LineStringPoints::Initialize(target);
 			RasterBandOverviews::Initialize(target);
 			RasterBandPixels::Initialize(target);
+
+			apps::WarpUtil::Initialize(target);
 
 			/**
 			 * The collection of all drivers registered with GDAL

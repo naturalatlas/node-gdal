@@ -56,7 +56,8 @@
 				"src/apps/warputil.cpp"
 			],
 			"include_dirs": [
-				"<!(node -e \"require('nan')\")"
+				"<!(node -e \"require('nan')\")",
+				"deps/libgdal/gdal/apps"
 			],
 			"defines": [
 				"PLATFORM='<(OS)'",

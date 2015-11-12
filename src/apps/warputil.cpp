@@ -1,4 +1,5 @@
 #include "warputil.hpp"
+#include <gdalwarp_lib.cpp>
 
 namespace node_gdal
 {

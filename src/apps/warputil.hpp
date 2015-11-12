@@ -13,10 +13,11 @@
 
 //gdal
 #include <gdal.h>
-#include <gdalwarp_lib.cpp>
 
 using namespace v8;
 using namespace node;
+
+extern struct GDALWarpAppOptions;
 
 namespace node_gdal
 {
