@@ -71,7 +71,12 @@ describe('gdal', function() {
 				process.env.GDAL_DATA = 'bogus';
 				var cp = require('child_process');
 				var command = "\"var gdal = require('./lib/gdal.js'); console.log(gdal.config.get('GDAL_DATA'));\"";
-				cp.exec(process.execPath + ' ' + ['-e',command].join(' '),{env:{GDAL_DATA:'bogus'}},function(err,stdout,stderr) {
+				var execPath = process.execPath;
+				if (process.platform === 'win32') {
+					// attempt to avoid quoting problem that leads to error like ''C:\Program' is not recognized as an internal or external command'
+					execPath = execPath.replace(/ /g, '\\ ');
+				}
+				cp.exec(execPath + ' ' + ['-e',command].join(' '),{env:{GDAL_DATA:'bogus'}},function(err,stdout,stderr) {
 					if (err) throw err;
 					assert.equal(process.env.GDAL_DATA,stdout.trim());
 					done();
