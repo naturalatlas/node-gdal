@@ -52,12 +52,12 @@ namespace node_gdal
 			Nan::HandleScope scope;
 
             ExtendedWarpAppOptions* options = SetOptions(info[0]);
-            int result = Warp(options);
+            GDALDatasetH results = Warp(options);
 
-			info.GetReturnValue().Set(Nan::New(result));
+			//info.GetReturnValue().Set(Nan::New(result));
 		}
 
-        ExtendedWarpOptions* WarpUtil::SetOptions(Handle<Value> options)
+        ExtendedWarpAppOptions* WarpUtil::SetOptions(Handle<Value> options)
 		{
 			Nan::HandleScope scope;
 
@@ -218,7 +218,7 @@ namespace node_gdal
 			return warpOptions;
 		}
 
-        GDALDatasetH WarpUtil::Warp(ExtendedWarpOptions* options)
+        GDALDatasetH WarpUtil::Warp(ExtendedWarpAppOptions* options)
 		{
             return GDALWarp(options->targetFilename, options->targetDataset, options->sourceFilesCount, options->sourceFiles, options->options, NULL);
         }

@@ -22,31 +22,31 @@ namespace node_gdal
 {
 	namespace apps
 	{
+		class ExtendedWarpAppOptions
+		{
+		public:
+			ExtendedWarpAppOptions();
+			~ExtendedWarpAppOptions();
+
+			GDALWarpAppOptions* options;
+			GDALDatasetH targetDataset = NULL;
+			char* targetFilename;
+			int sourceFilesCount = 0;
+			GDALDatasetH* sourceFiles;
+		};
+
 		class WarpUtil : public node::ObjectWrap
 		{
 		private:
 			static Nan::Persistent<FunctionTemplate> _constructor;
-            static int Warp(ExtendedWarpOptions* options);
-            static ExtendedWarpOptions* SetOptions(Handle<Value> options);
+			static GDALDatasetH Warp(ExtendedWarpAppOptions* options);
+            static ExtendedWarpAppOptions* SetOptions(Handle<Value> options);
 
 		public:
 			static void Initialize(Handle<Object> exports);
 			static NAN_METHOD(New);
 			static NAN_METHOD(Warp);
-		};
-
-        class ExtendedWarpAppOptions
-		{
-		public:
-            ExtendedWarpAppOptions();
-            ~ExtendedWarpAppOptions();
-
-            GDALWarpAppOptions* options;
-			GDALDatasetH targetDataset = NULL;
-            char* destinationFilename;
-            int sourceFilesCount = 0;
-            GDALDatasetH* sourceFiles;
-		};
+		};        
 	}
 }
 
