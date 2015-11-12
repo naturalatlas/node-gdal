@@ -33,7 +33,7 @@ namespace node_gdal
 			GDALDatasetH targetDataset = NULL;
 			char* targetFilename;
 			int sourceFilesCount = 0;
-			GDALDatasetH* sourceFiles;
+			GDALDatasetH* sourceDatasets;
 		};
 
 		class WarpUtil : public node::ObjectWrap

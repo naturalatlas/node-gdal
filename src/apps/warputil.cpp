@@ -1,5 +1,6 @@
 #include "warputil.hpp"
 #include <gdalwarp_lib.cpp>
+#include "../gdal_dataset.hpp"
 
 namespace node_gdal
 {
@@ -8,6 +9,15 @@ namespace node_gdal
 		ExtendedWarpAppOptions::ExtendedWarpAppOptions()
 		{
 			this->options = GDALWarpAppOptionsNew(NULL, NULL);
+			this->options->bTargetAlignedPixels = FALSE;
+			this->options->bEnableDstAlpha = TRUE;
+			this->options->bEnableSrcAlpha = TRUE;
+			this->options->bCreateOutput = TRUE;
+			this->options->bMulti = TRUE;
+			this->options->bCopyMetadata = TRUE;
+			this->options->bCopyBandInfo = TRUE;
+			this->options->eOutputType = GDT_Unknown;
+			this->options->eWorkingType = GDT_Unknown;
 		}
 
 		ExtendedWarpAppOptions::~ExtendedWarpAppOptions()
@@ -55,15 +65,19 @@ namespace node_gdal
 			ExtendedWarpAppOptions* options = SetOptions(info[0]);
 			GDALDatasetH results = Warp(options);
 
-			//info.GetReturnValue().Set(Nan::New(result));
+			//clean up
+			for (int i = 0; i < options->sourceFilesCount; i++)
+			{
+				GDALClose(options->sourceDatasets[i]);				
+			}
+			delete options;
+			GDALClose(results);
+			info.GetReturnValue().Set(0);
 		}
 
 		ExtendedWarpAppOptions* WarpUtil::SetOptions(Handle<Value> options)
 		{
-			Nan::HandleScope scope;
-
-			ExtendedWarpAppOptions* warpOptions = new ExtendedWarpAppOptions();
-			GDALDatasetH targetDataset = NULL;
+			Nan::HandleScope scope;			
 
 			if (options->IsNull() || !options->IsObject())
 			{
@@ -71,103 +85,111 @@ namespace node_gdal
 				return NULL;
 			}
 
+			ExtendedWarpAppOptions* warpOptions = new ExtendedWarpAppOptions();			
+
 			Handle<Object> opts = options.As<Object>();
 			Handle<Value> prop;
 
-			//if (opts->HasOwnProperty(Nan::New("source").ToLocalChecked()))
-			//{
-			//	prop = opts->Get(Nan::New("source").ToLocalChecked());
-			//	if (prop->IsArray())
-			//	{
-			//		Handle<Array> array = prop.As<Array>();
-			//		if (array->Length() == 0)
-			//		{
-			//			Nan::ThrowTypeError("no input files given");
-			//		}
-			//		else
-			//		{
-			//			for (int i = 0; i < array->Length(); i++)
-			//			{
-			//				std::string val = *Nan::Utf8String(array->Get(i));
-			//				warpOptions.inputFiles.push_back(strdup(val.c_str()));
-			//			}
-			//		}
-			//	}
-			//	else if (prop->IsString())
-			//	{
-			//		std::string val = *Nan::Utf8String(prop);
-			//		warpOptions.inputFiles.push_back(strdup(val.c_str()));
-			//		//TODO: should we check that file exists? this will add slowdown.
-			//		/*FILE* f = VSIFOpen(_buildOptions.source[0], "r");
-			//		if (f)
-			//		{
-			//		VSIFClose(f);
-			//		}
-			//		else
-			//		{
-			//		NanThrowTypeError("source file must exist");
-			//		return 1;
-			//		}*/
-			//	}
-			//	else
-			//	{
-			//		Nan::ThrowTypeError("no input file/s given");
-			//	}
-			//}
-			//else
-			//{
-			//	Nan::ThrowTypeError("no source files given");
-			//}
+			if (opts->HasOwnProperty(Nan::New("source").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("source").ToLocalChecked());
+				if (prop->IsArray())
+				{
+					Handle<Array> array = prop.As<Array>();
+					if (array->Length() == 0)
+					{
+						Nan::ThrowTypeError("no input files given");
+					}
+					else
+					{
+						try
+						{
+							int count = array->Length();
+							GDALDatasetH* sourceDatasets = new GDALDatasetH[count];
+							warpOptions->sourceDatasets = sourceDatasets;
+							warpOptions->sourceFilesCount = count;
 
-			//if (opts->HasOwnProperty(NanNew("target")))
-			//{
-			//	prop = opts->Get(NanNew("target"));
-			//	if (prop->IsString())
-			//	{
-			//		std::string val = *NanUtf8String(prop);
-			//		warpOptions.destinationFile = strdup(val.c_str());
-			//	}
-			//	else
-			//	{
-			//		NanThrowTypeError("target must be a string");
-			//	}
-			//}
-			//else
-			//{
-			//	NanThrowTypeError("no target file name specified");
-			//}
+							for (int i = 0; i < count; i++)
+							{
+								std::string val = *Nan::Utf8String(array->Get(i));							
+								GDALDatasetH ds = GDALOpen(strdup(val.c_str()), GA_ReadOnly);
+								sourceDatasets[i] = ds;														
+							}							
+						}
+						catch (Exception e)
+						{
+							Nan::ThrowError("Invalid source file");
+						}
+					}
+				}
+				else if (prop->IsString())
+				{
+					
+					try
+					{
+						int count = 1;
+						GDALDatasetH* sourceDatasets = new GDALDatasetH[count];
+						warpOptions->sourceDatasets = sourceDatasets;
+						warpOptions->sourceFilesCount = count;
 
-			//if (opts->HasOwnProperty(NanNew("width")))
-			//{
-			//	prop = opts->Get(NanNew("width"));
-			//	warpOptions.width = prop->Int32Value();
-			//}
+						std::string val = *Nan::Utf8String(prop);
+						GDALDatasetH ds = GDALOpen(strdup(val.c_str()), GA_ReadOnly);
+						sourceDatasets[0] = ds;						
+					}
+					catch (Exception e)
+					{
+						Nan::ThrowError("Invalid source file");
+					}
+				}
+				else
+				{
+					Nan::ThrowTypeError("no input file/s given");
+				}
+			}
+			else
+			{
+				Nan::ThrowTypeError("no source files given");
+			}
 
-			//if (opts->HasOwnProperty(NanNew("targetSrs")))
-			//{
-			//	prop = opts->Get(NanNew("targetSrs"));
-			//	if (prop->IsString())
-			//	{
-			//		std::string val = *NanUtf8String(prop);
-			//		warpOptions.targetSrs = strdup(val.c_str());
-			//	}
-			//}
+			if (opts->HasOwnProperty(Nan::New("target").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("target").ToLocalChecked());
+				if (prop->IsString())
+				{
+					std::string val = *Nan::Utf8String(prop);
+					warpOptions->targetFilename = strdup(val.c_str());
+				}
+				else
+				{
+					Nan::ThrowTypeError("target must be a string");
+				}
+			}
+			else
+			{
+				Nan::ThrowTypeError("no target file name specified");
+			}
 
-			//if (opts->HasOwnProperty(NanNew("sourceSrs")))
-			//{
-			//	prop = opts->Get(NanNew("sourceSrs"));
-			//	if (prop->IsString())
-			//	{
-			//		std::string val = *NanUtf8String(prop);
-			//		warpOptions.sourceSrs = strdup(val.c_str());
-			//	}
-			//}
+			if (opts->HasOwnProperty(Nan::New("width").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("width").ToLocalChecked());
+				warpOptions->options->nForcePixels = prop->Int32Value();				
+			}
 
-			//if (opts->HasOwnProperty(NanNew("height")))
-			//{
-			//	prop = opts->Get(NanNew("height"));
-			//	warpOptions.height = prop->Int32Value();
-			//}
+			if (opts->HasOwnProperty(Nan::New("targetSrs").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("targetSrs").ToLocalChecked());
+				if (prop->IsString())
+				{
+					std::string val = *Nan::Utf8String(prop);
+					warpOptions->options->pszTE_SRS = strdup(val.c_str());
+				}
+			}			
+
+			if (opts->HasOwnProperty(Nan::New("height").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("height").ToLocalChecked());
+				warpOptions->options->nForceLines = prop->Int32Value();
+			}
 
 			if (opts->HasOwnProperty(Nan::New("extents").ToLocalChecked()))
 			{
@@ -200,13 +222,17 @@ namespace node_gdal
 				if (prop->IsString())
 				{
 					std::string val = *Nan::Utf8String(prop);
-					//warpOptions->format = strdup(val.c_str());
+					warpOptions->options->pszFormat = strdup(val.c_str());
 				}
 			}
 
 			if (opts->HasOwnProperty(Nan::New("tiled").ToLocalChecked()))
 			{
-				//if tiled is true we need to create the target dataset to pass in
+				prop = opts->Get(Nan::New("tiled").ToLocalChecked());
+				if (prop->BooleanValue() == true)
+				{
+					warpOptions->options->papszCreateOptions[0] = "TILED=YES";
+				}
 			}
 
 			if (opts->HasOwnProperty(Nan::New("silent").ToLocalChecked()))
@@ -220,7 +246,7 @@ namespace node_gdal
 
 		GDALDatasetH WarpUtil::Warp(ExtendedWarpAppOptions* options)
 		{
-			return GDALWarp(options->targetFilename, options->targetDataset, options->sourceFilesCount, options->sourceFiles, options->options, NULL);
+			return GDALWarp(options->targetFilename, options->targetDataset, options->sourceFilesCount, options->sourceDatasets, options->options, NULL);
 		}
 	}
 }

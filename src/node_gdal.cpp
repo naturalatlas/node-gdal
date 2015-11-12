@@ -83,6 +83,7 @@ namespace node_gdal {
 
 	using namespace node;
 	using namespace v8;
+	using namespace apps;
 
 	FILE *log_file = NULL;
 	PtrManager ptr_manager;
@@ -264,7 +265,7 @@ namespace node_gdal {
 			RasterBandOverviews::Initialize(target);
 			RasterBandPixels::Initialize(target);
 
-			apps::WarpUtil::Initialize(target);
+			WarpUtil::Initialize(target);
 
 			/**
 			 * The collection of all drivers registered with GDAL
