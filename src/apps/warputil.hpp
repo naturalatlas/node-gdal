@@ -26,8 +26,8 @@ namespace node_gdal
 		{
 		private:
 			static Nan::Persistent<FunctionTemplate> _constructor;
-			static int Warp(const char* destFilename, GDALDatasetH* targetDataset, GDALWarpAppOptions* options, int sourceFilesCount, GDALDatasetH* sourceFiles);
-			static GDALWarpAppOptions* SetOptions(Handle<Value> options);
+            static int Warp(ExtendedWarpOptions* options);
+            static ExtendedWarpOptions* SetOptions(Handle<Value> options);
 
 		public:
 			static void Initialize(Handle<Object> exports);
@@ -35,10 +35,17 @@ namespace node_gdal
 			static NAN_METHOD(Warp);
 		};
 
-		class ExtendedWarpAppOptions : GDALWarpAppOptions
+        class ExtendedWarpAppOptions
 		{
 		public:
+            ExtendedWarpAppOptions();
+            ~ExtendedWarpAppOptions();
+
+            GDALWarpAppOptions* options;
 			GDALDatasetH targetDataset = NULL;
+            char* destinationFilename;
+            int sourceFilesCount = 0;
+            GDALDatasetH* sourceFiles;
 		};
 	}
 }

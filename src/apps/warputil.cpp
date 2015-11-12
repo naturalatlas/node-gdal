@@ -4,6 +4,16 @@ namespace node_gdal
 {
 	namespace apps
 	{
+        ExtendedWarpAppOptions::ExtendedWarpAppOptions()
+        {
+            this->options = GDALWarpAppOptionsNew(NULL, NULL);
+        }
+
+        ExtendedWarpAppOptions::~ExtendedWarpAppOptions()
+        {
+            GDALWarpAppOptionsFree(this->options);
+        }
+
 		Nan::Persistent<FunctionTemplate> WarpUtil::_constructor;
 
 		void WarpUtil::Initialize(Local<Object> target)
@@ -41,17 +51,17 @@ namespace node_gdal
 		{
 			Nan::HandleScope scope;
 
-			GDALWarpAppOptions* options = SetOptions(info[0]);
-			int result = Warp(NULL, NULL, options, 0, NULL);
+            ExtendedWarpAppOptions* options = SetOptions(info[0]);
+            int result = Warp(options);
 
 			info.GetReturnValue().Set(Nan::New(result));
 		}
 
-		GDALWarpAppOptions* WarpUtil::SetOptions(Handle<Value> options)
+        ExtendedWarpOptions* WarpUtil::SetOptions(Handle<Value> options)
 		{
 			Nan::HandleScope scope;
 
-			GDALWarpAppOptions* warpOptions = GDALWarpAppOptionsNew(NULL, NULL);
+            ExtendedWarpAppOptions* warpOptions = new ExtendedWarpAppOptions();
 			GDALDatasetH targetDataset = NULL;
 
 			if (options->IsNull() || !options->IsObject())
@@ -158,40 +168,41 @@ namespace node_gdal
 			//	warpOptions.height = prop->Int32Value();
 			//}
 
-			//if (opts->HasOwnProperty(NanNew("extents")))
-			//{
-			//	prop = opts->Get(NanNew("extents"));
-			//	if (prop->IsObject())
-			//	{
-			//		Handle<Object> extObj = prop.As<Object>();
-			//		Handle<Value> minx = extObj->Get(NanNew("minX"));
-			//		Handle<Value> miny = extObj->Get(NanNew("minY"));
-			//		Handle<Value> maxx = extObj->Get(NanNew("maxX"));
-			//		Handle<Value> maxy = extObj->Get(NanNew("maxY"));
+            if (opts->HasOwnProperty(Nan::New("extents").ToLocalChecked()))
+            {
+                prop = opts->Get(Nan::New("extents").ToLocalChecked());
+                if (prop->IsObject())
+                {
+                    Handle<Object> extObj = prop.As<Object>();
+                    Handle<Value> minx = extObj->Get(Nan::New("minX").ToLocalChecked());
+                    Handle<Value> miny = extObj->Get(Nan::New("minY").ToLocalChecked());
+                    Handle<Value> maxx = extObj->Get(Nan::New("maxX").ToLocalChecked());
+                    Handle<Value> maxy = extObj->Get(Nan::New("maxY").ToLocalChecked());
 
-			//		try
-			//		{
-			//			warpOptions.bounds.minX = minx->NumberValue();
-			//			warpOptions.bounds.minY = miny->NumberValue();
-			//			warpOptions.bounds.maxX = maxx->NumberValue();
-			//			warpOptions.bounds.maxY = maxy->NumberValue();
-			//		}
-			//		catch (Exception e)
-			//		{
-			//			NanThrowTypeError("bad extents object. should be of the form: {minX: 0, minY: 0, maxX: 0, maxY: 0}");
-			//		}
-			//	}
-			//}
+                    try
+                    {
+                        warpOptions->options->dfMinX = minx->NumberValue();
+                        warpOptions->options->dfMinY = miny->NumberValue();
+                        warpOptions->options->dfMaxX = maxx->NumberValue();
+                        warpOptions->options->dfMaxY = maxy->NumberValue();
+                    }
+                    catch (Exception e)
+                    {
+                        Nan::ThrowTypeError("bad extents object. should be of the form: {minX: 0, minY: 0, maxX: 0, maxY: 0}");
+                        return;
+                    }
+                }
+            }
 
-			//if (opts->HasOwnProperty(NanNew("format")))
-			//{
-			//	prop = opts->Get(NanNew("format"));
-			//	if (prop->IsString())
-			//	{
-			//		std::string val = *NanUtf8String(prop);
-			//		warpOptions.format = strdup(val.c_str());
-			//	}
-			//}
+            if (opts->HasOwnProperty(Nan::New("format").ToLocalChecked()))
+            {
+                prop = opts->Get(Nan::New("format").ToLocalChecked());
+                if (prop->IsString())
+                {
+                    std::string val = *Nan::Utf8String(prop);
+                    //warpOptions->format = strdup(val.c_str());
+                }
+            }
 
 			if (opts->HasOwnProperty(Nan::New("tiled").ToLocalChecked()))
 			{
@@ -201,16 +212,14 @@ namespace node_gdal
 			if (opts->HasOwnProperty(Nan::New("silent").ToLocalChecked()))
 			{
 				prop = opts->Get(Nan::New("silent").ToLocalChecked());
-				warpOptions->bQuiet = prop->BooleanValue();
+                warpOptions->options->bQuiet = prop->BooleanValue();
 			}
 
 			return warpOptions;
 		}
 
-		int WarpUtil::Warp(const char* destFilename, GDALDatasetH* targetDataset, GDALWarpAppOptions* options, int sourceFilesCount, GDALDatasetH* sourceFiles)
+        GDALDatasetH WarpUtil::Warp(ExtendedWarpOptions* options)
 		{
-			GDALDatasetH result = GDALWarp(destFilename, targetDataset, sourceFilesCount, sourceFiles, options, 0);
-			return 0;
-		}
-	}
+            return GDALWarp(options->targetFilename, options->targetDataset, options->sourceFilesCount, options->sourceFiles, options->options, NULL);
+        }
 }
