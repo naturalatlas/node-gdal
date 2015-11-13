@@ -11,11 +11,11 @@ describe('warputil', function(){
 
 		var warpOptions = {
 			source: path.resolve('./test/data/BlueMarble.TIFF'),
-			target: path.resolve('./test/data/temp/WarpOut.tif'),
+			target: path.resolve('./test/data/temp/WarpOut.png'),
 			width: 512,
 			height: 512,
 			targetSrs: 'EPSG:4326',
-			format: 'GTiff',
+			format: 'PNG',
 			extents: {
 				minX: -100,
 				minY: 10,

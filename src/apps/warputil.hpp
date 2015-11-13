@@ -30,10 +30,11 @@ namespace node_gdal
 			~ExtendedWarpAppOptions();
 
 			GDALWarpAppOptions* options;
-			GDALDatasetH targetDataset = NULL;
+			GDALDatasetH targetDataset;
 			char* targetFilename;
 			int sourceFilesCount = 0;
 			GDALDatasetH* sourceDatasets;
+			char* format;
 		};
 
 		class WarpUtil : public node::ObjectWrap

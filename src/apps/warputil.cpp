@@ -18,6 +18,11 @@ namespace node_gdal
 			this->options->bCopyBandInfo = TRUE;
 			this->options->eOutputType = GDT_Unknown;
 			this->options->eWorkingType = GDT_Unknown;
+
+			//we will always create an in memory format and then save after the warp lib is done,
+			//this gives us the ability to support more output types
+			this->options->pszFormat = strdup("MEM");
+			this->targetDataset = NULL;
 		}
 
 		ExtendedWarpAppOptions::~ExtendedWarpAppOptions()
@@ -63,15 +68,28 @@ namespace node_gdal
 			Nan::HandleScope scope;
 
 			ExtendedWarpAppOptions* options = SetOptions(info[0]);
+
 			GDALDatasetH results = Warp(options);
+
+			//now take this in memory dataset and save to disk as the desired format
+			GDALDriverH driver = GDALGetDriverByName(options->format);
+			if (driver != NULL)
+			{
+				GDALDatasetH output = GDALCreateCopy(driver, options->targetFilename, results, false, NULL, NULL, NULL);
+				if (output != NULL)
+				{
+					GDALClose(output);
+				}
+			}
 
 			//clean up
 			for (int i = 0; i < options->sourceFilesCount; i++)
 			{
 				GDALClose(options->sourceDatasets[i]);				
 			}
-			delete options;
 			GDALClose(results);
+			delete options;
+			
 			info.GetReturnValue().Set(0);
 		}
 
@@ -222,7 +240,7 @@ namespace node_gdal
 				if (prop->IsString())
 				{
 					std::string val = *Nan::Utf8String(prop);
-					warpOptions->options->pszFormat = strdup(val.c_str());
+					warpOptions->format = strdup(val.c_str());
 				}
 			}
 
@@ -233,6 +251,16 @@ namespace node_gdal
 				{
 					warpOptions->options->papszCreateOptions[0] = "TILED=YES";
 				}
+			}
+
+			if (opts->HasOwnProperty(Nan::New("persistMetadata").ToLocalChecked()))
+			{
+				prop = opts->Get(Nan::New("persistMetadata").ToLocalChecked());
+				CPLSetConfigOption("GDAL_PAM_ENABLED", prop->BooleanValue() ? "YES" : "NO");				
+			}
+			else
+			{
+				CPLSetConfigOption("GDAL_PAM_ENABLED", "NO");
 			}
 
 			if (opts->HasOwnProperty(Nan::New("silent").ToLocalChecked()))
