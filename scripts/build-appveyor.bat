@@ -45,22 +45,34 @@ ECHO using MSBuild^: && msbuild /version && ECHO.
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
+::activating VS command prompt seems to uppercase PLATFORM, but only for x64 not x86
+::with X64 AppVeyor cannot install node
+ECHO platform^: %platform%
+IF /I "%PLATFORM%"=="x64" ECHO lowercasing platform && SET PLATFORM=x64
+ECHO platform^: %platform%
+
 ECHO downloading/installing node
 ::only use Install-Product when using VS2013
 ::IF /I "%APPVEYOR%"=="True" IF /I "%msvs_toolset%"=="12" powershell Install-Product node $env:nodejs_version $env:Platform
 ::TESTING:
 ::always install (get npm matching node), but delete installed programfiles node.exe afterwards for VS2015 (using custom node.exe)
-IF /I "%APPVEYOR%"=="True" powershell Install-Product node $env:nodejs_version $env:Platform
+IF /I "%APPVEYOR%"=="True" IF /I NOT "%nodejs_version%"=="3.3.1" powershell Install-Product node $env:nodejs_version $env:Platform
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
+::Skip downloads from mapbox for VS2013
 IF /I "%msvs_toolset%"=="12" ECHO VS2013^: skipping custom node.exe download && GOTO NODE_INSTALLED
 
+::Skip downloads for node>=3.x
+SET NODE_MAJOR=%nodejs_version:~0,1%
+IF %NODE_MAJOR% GTR 3 ECHO skipping custom node.exe download, node version greater than zero && GOTO NODE_INSTALLED
 
 ::custom node for VS2015
 SET ARCHPATH=
 IF /I "%platform%"=="x64" (SET ARCHPATH=x64/)
 SET NODE_URL=https://mapbox.s3.amazonaws.com/node-cpp11/v%nodejs_version%/%ARCHPATH%node.exe
+::special case node 3.3.1
+IF /I "%nodejs_version%"=="3.3.1" SET NODE_URL=https://mapbox.s3.amazonaws.com/windows-builds/windows-deps/node-v3.3.1/win-%platform%/iojs.exe
 ECHO downloading node^: %NODE_URL%
 powershell Invoke-WebRequest "${env:NODE_URL}" -OutFile node.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
@@ -91,7 +103,7 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO installing npm-windows-upgrade... && CALL npm install -g npm-windows-upgrade
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
-ECHO upgrading npm... && CALL npm-windows-upgrade --version:3.2.1 --no-dns-check --no-prompt
+ECHO upgrading npm... && CALL npm-windows-upgrade --version:latest --no-dns-check --no-prompt
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 
@@ -147,8 +159,13 @@ SET BUILD_CMD=npm install ^
 --loglevel=http %TOOLSET_ARGS% %ENABLE_LOGGING%
 ::add TOOLSET_ARGS last and on same line as this can be empty
 ECHO calling BUILD_CMD^: %BUILD_CMD%
+SET NODE_GDAL_BUILD_START_TIME=%TIME%
 CALL %BUILD_CMD%
+SET NODE_GDAL_BUILD_FINISH_TIME=%TIME%
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO build started^: %NODE_GDAL_BUILD_START_TIME%
+ECHO build finished^: %NODE_GDAL_BUILD_FINISH_TIME%
 
 ::ECHO installing node-pre-gyp ...
 ::CALL npm install node-pre-gyp
@@ -217,5 +234,7 @@ SET EL=%ERRORLEVEL%
 
 :DONE
 ECHO ~~~~~~~~~~~~~~~~~~~~~~ DONE %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ECHO build started^: %NODE_GDAL_BUILD_START_TIME%
+ECHO build finished^: %NODE_GDAL_BUILD_FINISH_TIME%
 
 EXIT /b %EL%

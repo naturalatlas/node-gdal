@@ -1,7 +1,8 @@
 {
 	"variables": {
 		"toolset%":'',
-		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
+		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")",
+		"mrsid_include": ""
 	},
 	"target_defaults": {
 		"default_configuration": "Release",
@@ -63,9 +64,14 @@
 				],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
+						#"Optimization": 0, # 0:/Od disable, 1:/O1 min size, 2:/O2 max speed, 3:/Ox full optimization
+						#"InlineFunctionExpansion": 0, #0:/Ob0: disable, 1:/Ob1 inline only marked funtions, 2:/Ob2 inline anything eligible
+						"AdditionalOptions": [
+							"/MP", # compile across multiple CPUs
+						],
 						"ExceptionHandling": 2, # /EHsc
 						"RuntimeTypeInfo": "true",
-						"DebugInformationFormat": "0"
+						"DebugInformationFormat": "0",
 					},
 					"VCLinkerTool": {
 						"GenerateDebugInformation": "false",
