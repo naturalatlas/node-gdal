@@ -74,7 +74,7 @@ describe('gdal', function() {
 				var execPath = process.execPath;
 				if (process.platform === 'win32') {
 					// attempt to avoid quoting problem that leads to error like ''C:\Program' is not recognized as an internal or external command'
-					execPath = execPath.replace(/ /g, '\\ ');
+					execPath = '"' + execPath + '"';
 				}
 				cp.exec(execPath + ' ' + ['-e',command].join(' '),{env:{GDAL_DATA:'bogus'}},function(err,stdout,stderr) {
 					if (err) throw err;
