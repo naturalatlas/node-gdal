@@ -18,7 +18,7 @@ environment:
       TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
     - nodejs_version: "4.2.1"
       msvs_toolset: 14
-    - nodejs_version: "5.1.0"
+    - nodejs_version: "5"
       msvs_toolset: 14
 
 platform:
