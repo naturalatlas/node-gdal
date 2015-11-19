@@ -63,9 +63,14 @@
 				],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
+						#"Optimization": 0, # 0:/Od disable, 1:/O1 min size, 2:/O2 max speed, 3:/Ox full optimization
+						#"InlineFunctionExpansion": 0, #0:/Ob0: disable, 1:/Ob1 inline only marked funtions, 2:/Ob2 inline anything eligible
+						"AdditionalOptions": [
+							"/MP", # compile across multiple CPUs
+						],
 						"ExceptionHandling": 2, # /EHsc
 						"RuntimeTypeInfo": "true",
-						"DebugInformationFormat": "0"
+						"DebugInformationFormat": "0",
 					},
 					"VCLinkerTool": {
 						"GenerateDebugInformation": "false",
