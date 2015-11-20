@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.2</b>
+                    API Docs for Version: <b>0.8.0</b>
                 </p>
             </li>
         </div>
@@ -205,7 +205,7 @@
 				
 				
 				
-				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">iterator</span>)</a></li>
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
@@ -218,6 +218,10 @@
 				
 				
 				<li><a href="#method-indexOf"><span class="im">indexOf</span>(<span class="ia">name</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-map"><span class="im">map</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
@@ -362,7 +366,7 @@
 			
 				<li class="arg">
 					
-						<code>iterator</code>
+						<code>callback</code>
 					
 				</li>
 			
@@ -393,7 +397,7 @@
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l129"><code>lib&#x2F;gdal.js:129</code></a>
+		<a href="../files/lib_gdal.js.html#l178"><code>lib&#x2F;gdal.js:178</code></a>
 		
 		</p>
 
@@ -416,7 +420,7 @@
 			
 				<li class="param">
 					
-						<code class="param-name">iterator</code>
+						<code class="param-name">callback</code>
 						<span class="type">Function</span>
 					
 
@@ -746,6 +750,108 @@ value = feature.fields.get(&#39;field&#39;);</code></pre>
 
 			<div class="example-content">
 				<pre class="code prettyprint"><code>var index = feature.fields.indexOf(&#39;field&#39;);</code></pre>
+
+			</div>
+		</div>
+	
+</div>
+
+            
+        
+        	
+            <div id="method-map" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>map</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l200"><code>lib&#x2F;gdal.js:200</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all fields using a callback function and builds
+an array of the returned values.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each feature <code>value</code> and <code>key</code>.</p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var result = layer.features.get(0).fields.map(function(value, key) {
+    return value;
+});</code></pre>
 
 			</div>
 		</div>
@@ -1102,7 +1208,7 @@ feature.fields.set(&#39;name&#39;, &#39;Something&#39;);</code></pre>
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l151"><code>lib&#x2F;gdal.js:151</code></a>
+		<a href="../files/lib_gdal.js.html#l216"><code>lib&#x2F;gdal.js:216</code></a>
 		
 		</p>
 

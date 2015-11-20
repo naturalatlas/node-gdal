@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.2</b>
+                    API Docs for Version: <b>0.8.0</b>
                 </p>
             </li>
         </div>
@@ -209,11 +209,19 @@
 				
 				
 				
-				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">iterator</span>)</a></li>
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
 				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">index</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-map"><span class="im">map</span>(<span class="ia">callback</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-map"><span class="im">map</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
@@ -436,7 +444,7 @@ lineString.points.add([
 			
 				<li class="arg">
 					
-						<code>iterator</code>
+						<code>callback</code>
 					
 				</li>
 			
@@ -467,7 +475,7 @@ lineString.points.add([
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l225"><code>lib&#x2F;gdal.js:225</code></a>
+		<a href="../files/lib_gdal.js.html#l354"><code>lib&#x2F;gdal.js:354</code></a>
 		
 		</p>
 
@@ -490,7 +498,7 @@ lineString.points.add([
 			
 				<li class="param">
 					
-						<code class="param-name">iterator</code>
+						<code class="param-name">callback</code>
 						<span class="type">Function</span>
 					
 
@@ -515,7 +523,7 @@ lineString.points.add([
 			<h4>Example:</h4>
 
 			<div class="example-content">
-				<pre class="code prettyprint"><code>lineString.points.forEach(function(point) { ... });</code></pre>
+				<pre class="code prettyprint"><code>lineString.points.forEach(function(point, i) { ... });</code></pre>
 
 			</div>
 		</div>
@@ -625,6 +633,210 @@ lineString.points.add([
 		</div>
 	
 
+	
+</div>
+
+            
+        
+        	
+            <div id="method-map" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>map</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l338"><code>lib&#x2F;gdal.js:338</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all rings using a callback function and builds
+an array of the returned values.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.LineString.html" class="crosslink">LineString</a></p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var result = polygon.rings.map(function(ring, i) {
+    return value;
+});</code></pre>
+
+			</div>
+		</div>
+	
+</div>
+
+            
+        
+        	
+            <div id="method-map" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>map</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l367"><code>lib&#x2F;gdal.js:367</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all points using a callback function and builds
+an array of the returned values.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.Point.html" class="crosslink">Point</a></p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var result = lineString.points.map(function(point, i) {
+    return value;
+});</code></pre>
+
+			</div>
+		</div>
 	
 </div>
 
@@ -927,7 +1139,7 @@ lineString.points.add([
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l275"><code>lib&#x2F;gdal.js:275</code></a>
+		<a href="../files/lib_gdal.js.html#l479"><code>lib&#x2F;gdal.js:479</code></a>
 		
 		</p>
 

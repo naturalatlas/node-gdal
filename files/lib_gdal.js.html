@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.2</b>
+                    API Docs for Version: <b>0.8.0</b>
                 </p>
             </li>
         </div>
@@ -176,10 +176,15 @@
 <div class="file">
     <pre class="prettyprint linenums">
 var path         = require(&#x27;path&#x27;);
+var fs           = require(&#x27;fs&#x27;);
 var pkg          = require(&#x27;../package.json&#x27;);
 var binding_path = path.join(__dirname, &#x27;../&#x27;, pkg.binary.module_path);
 var module_path  = path.join(binding_path, pkg.binary.module_name + &#x27;.node&#x27;);
 var data_path    = path.resolve(__dirname, &#x27;../deps/libgdal/gdal/data&#x27;);
+
+if (process.env.GDAL_DATA === undefined &amp;&amp; !fs.existsSync(data_path)) {
+	throw new Error(&quot;The bundled data path for node-gdal is missing &#x27;&quot; + data_path + &quot;&#x27; and GDAL_DATA environment is not set&quot;);
+}
 
 var gdal = module.exports = require(module_path);
 
@@ -226,7 +231,9 @@ gdal.config.set = gdal.setConfigOption;
 delete gdal.getConfigOption;
 delete gdal.setConfigOption;
 
-gdal.config.set(&#x27;GDAL_DATA&#x27;, data_path);
+if (process.env.GDAL_DATA === undefined) {
+	gdal.config.set(&#x27;GDAL_DATA&#x27;, data_path);
+}
 
 gdal.Envelope = require(&#x27;./envelope.js&#x27;)(gdal);
 gdal.Envelope3D = require(&#x27;./envelope_3d.js&#x27;)(gdal);
@@ -251,11 +258,19 @@ gdal.Layer.prototype.getExtent = function() {
 
 // --- add additional functionality to collections ---
 
-function defaultForEach(iterator) {
+function defaultForEach(callback) {
 	var n = this.count();
 	for (var i = 0; i &lt; n; i++) {
-		if (iterator(this.get(i)) === false) return;
+		if (callback(this.get(i), i) === false) return;
 	}
+}
+
+function defaultMap(callback) {
+	var result = [];
+	this.forEach(function(value, i) {
+		result.push(callback(value, i));
+	});
+	return result;
 }
 
 function defaultToArray() {
@@ -268,40 +283,74 @@ function defaultToArray() {
 
 /**
  * Iterates through all bands using a callback function.
+ * Note: GDAL band indexes start at 1, not 0.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * dataset.bands.forEach(function(band) { ... });&#x60;&#x60;&#x60;
+ * dataset.bands.forEach(function(band, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.DatasetBands
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}
  */
-gdal.DatasetBands.prototype.forEach = function(iterator) {
+gdal.DatasetBands.prototype.forEach = function(callback) {
 	var n = this.count();
 	for (var i = 1; i &lt;= n; i++) {
-		if (iterator(this.get(i)) === false) return;
+		if (callback(this.get(i), i) === false) return;
 	}
 };
+
+/**
+ * Iterates through all bands using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = dataset.bands.map(function(band, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.DatasetBands
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.RasterBand&quot;}}RasterBand{{/crossLink}}
+ */
+gdal.DatasetBands.prototype.map = defaultMap;
 
 /**
  * Iterates through all features using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * layer.features.forEach(function(features) { ... });&#x60;&#x60;&#x60;
+ * layer.features.forEach(function(feature, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.LayerFeatures
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.Feature&quot;}}Feature{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Feature&quot;}}Feature{{/crossLink}}
  */
-gdal.LayerFeatures.prototype.forEach = function(iterator) {
+gdal.LayerFeatures.prototype.forEach = function(callback) {
+	var i = 0;
 	var feature = this.first();
 	while (feature) {
-		if (iterator(feature) === false) return;
+		if (callback(feature, i++) === false) return;
 		feature = this.next();
 	}
 };
+
+/**
+ * Iterates through all features using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = layer.features.map(function(band, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.LayerFeatures
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Feature&quot;}}Feature{{/crossLink}}
+ */
+gdal.LayerFeatures.prototype.map = defaultMap;
 
 /**
  * Iterates through all fields using a callback function.
@@ -312,18 +361,34 @@ gdal.LayerFeatures.prototype.forEach = function(iterator) {
  *
  * @for gdal.FeatureFields
  * @method forEach
- * @param {Function} iterator The callback to be called with each feature &#x60;value&#x60; and &#x60;key&#x60;.
+ * @param {Function} callback The callback to be called with each feature &#x60;value&#x60; and &#x60;key&#x60;.
  */
-gdal.FeatureFields.prototype.forEach = function(iterator) {
+gdal.FeatureFields.prototype.forEach = function(callback) {
 	var obj = this.toObject();
 	var names = Object.keys(obj);
 	var n = names.length;
 	for (var i = 0; i &lt; n; i++) {
 		var key = names[i];
 		var value = obj[key];
-		if (iterator(value, key) === false) return;
+		if (callback(value, key) === false) return;
 	}
 };
+
+/**
+ * Iterates through all fields using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = layer.features.get(0).fields.map(function(value, key) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.FeatureFields
+ * @method map
+ * @param {Function} callback The callback to be called with each feature &#x60;value&#x60; and &#x60;key&#x60;.
+ */
+gdal.FeatureFields.prototype.map = defaultMap;
 
 /**
  * Outputs the fields as a serialized JSON string.
@@ -348,97 +413,236 @@ gdal.Geometry.prototype.toObject = function() {
 };
 
 /**
- * Iterates through all fields using a callback function.
+ * Iterates through all field definitions using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * layer.fields.forEach(function(field) { ... });&#x60;&#x60;&#x60;
+ * layer.fields.forEach(function(field, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.LayerFields
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
  */
 gdal.LayerFields.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all field definitions using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = layer.fields.map(function(field, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.LayerFields
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
+ */
+gdal.LayerFields.prototype.map = defaultMap;
 
 /**
  * Iterates through all layers using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * dataset.layers.forEach(function(layer) { ... });&#x60;&#x60;&#x60;
+ * dataset.layers.forEach(function(layer, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.DatasetLayers
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.Layer&quot;}}Layer{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Layer&quot;}}Layer{{/crossLink}}
  */
 gdal.DatasetLayers.prototype.forEach = defaultForEach;
 
 /**
- * Iterates through all fields using a callback function.
+ * Iterates through all layers using a callback function and builds
+ * an array of the returned values.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * featureDefn.forEach(function(field) { ... });&#x60;&#x60;&#x60;
+ * var result = dataset.layers.map(function(field, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.DatasetLayers
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Layer&quot;}}Layer{{/crossLink}}
+ */
+gdal.DatasetLayers.prototype.map = defaultMap;
+
+/**
+ * Iterates through all field definitions using a callback function.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * featureDefn.forEach(function(field, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.FeatureDefnFields
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
  */
 gdal.FeatureDefnFields.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all field definitions using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = dataset.layers.map(function(field, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.FeatureDefnFields
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.FieldDefn&quot;}}FieldDefn{{/crossLink}}
+ */
+gdal.FeatureDefnFields.prototype.map = defaultMap;
 
 /**
  * Iterates through all rings using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * polygon.rings.forEach(function(ring) { ... });&#x60;&#x60;&#x60;
+ * polygon.rings.forEach(function(ring, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.PolygonRings
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.LineString&quot;}}LineString{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.LineString&quot;}}LineString{{/crossLink}}
  */
 gdal.PolygonRings.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all rings using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = polygon.rings.map(function(ring, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.LineStringPoints
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.LineString&quot;}}LineString{{/crossLink}}
+ */
+gdal.PolygonRings.prototype.map = defaultMap;
 
 /**
  * Iterates through all points using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * lineString.points.forEach(function(point) { ... });&#x60;&#x60;&#x60;
+ * lineString.points.forEach(function(point, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.LineStringPoints
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.Point&quot;}}Point{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Point&quot;}}Point{{/crossLink}}
  */
 gdal.LineStringPoints.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all points using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = lineString.points.map(function(point, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.LineStringPoints
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Point&quot;}}Point{{/crossLink}}
+ */
+gdal.LineStringPoints.prototype.map = defaultMap;
 
 /**
  * Iterates through all child geometries using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * geometryCollection.children.forEach(function(geometry) { ... });&#x60;&#x60;&#x60;
+ * geometryCollection.children.forEach(function(geometry, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.GeometryCollectionChildren
  * @method forEach
- * @param {Function} iterator The callback to be called with each {{#crossLink &quot;gdal.Geometry&quot;}}Geometry{{/crossLink}}
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Geometry&quot;}}Geometry{{/crossLink}}
  */
 gdal.GeometryCollectionChildren.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all child geometries using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = geometryCollection.children.map(function(geometry, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.GeometryCollectionChildren
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Geometry&quot;}}Geometry{{/crossLink}}
+ */
+gdal.GeometryCollectionChildren.prototype.map = defaultMap;
 
 /**
  * Iterates through all overviews using a callback function.
  *
  * @example
  * &#x60;&#x60;&#x60;
- * band.overviews.forEach(function(overviewBand) { ... });&#x60;&#x60;&#x60;
+ * band.overviews.forEach(function(overviewBand, i) { ... });&#x60;&#x60;&#x60;
  *
  * @for gdal.RasterBandOverviews
  * @method forEach
- * @param {Function} iterator
+ * @param {Function} callback
  */
 gdal.RasterBandOverviews.prototype.forEach = defaultForEach;
 
+/**
+ * Iterates through all raster overviews using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = band.overviews.map(function(overviewBand, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.RasterBandOverviews
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Geometry&quot;}}Geometry{{/crossLink}}
+ */
+gdal.RasterBandOverviews.prototype.map = defaultMap;
+
+/**
+ * Iterates through all registered drivers using a callback function.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * gdal.drivers.forEach(function(driver, i) { ... });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.GDALDrivers
+ * @method forEach
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Driver&quot;}}Driver{{/crossLink}}
+ */
 gdal.GDALDrivers.prototype.forEach = defaultForEach;
+
+/**
+ * Iterates through all drivers using a callback function and builds
+ * an array of the returned values.
+ *
+ * @example
+ * &#x60;&#x60;&#x60;
+ * var result = gdal.drivers.map(function(driver, i) {
+ *     return value;
+ * });&#x60;&#x60;&#x60;
+ *
+ * @for gdal.GDALDrivers
+ * @method map
+ * @param {Function} callback The callback to be called with each {{#crossLink &quot;gdal.Driver&quot;}}Driver{{/crossLink}}
+ */
+gdal.GDALDrivers.prototype.map = defaultMap;
 
 /**
  * Outputs all geometries as a regular javascript array.

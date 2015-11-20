@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.7.2",
+        "version": "0.8.0",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -41,7 +41,8 @@
                 "gdal.PolygonRings": 1,
                 "gdal.LineStringPoints": 1,
                 "gdal.GeometryCollectionChildren": 1,
-                "gdal.RasterBandOverviews": 1
+                "gdal.RasterBandOverviews": 1,
+                "gdal.GDALDrivers": 1
             },
             "namespaces": {}
         },
@@ -1210,7 +1211,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 18,
+            "line": 23,
             "description": "Gets a GDAL configuration setting.",
             "example": [
                 "\n```\ndata_path = gdal.config.get('GDAL_DATA');```"
@@ -1233,7 +1234,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 33,
+            "line": 38,
             "description": "Sets a GDAL configuration setting.",
             "example": [
                 "\n```\ngdal.config.set('GDAL_DATA', data_path);```"
@@ -1261,16 +1262,16 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 92,
-            "description": "Iterates through all bands using a callback function.",
+            "line": 107,
+            "description": "Iterates through all bands using a callback function.\nNote: GDAL band indexes start at 1, not 0.",
             "example": [
-                "\n```\ndataset.bands.forEach(function(band) { ... });```"
+                "\n```\ndataset.bands.forEach(function(band, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1279,16 +1280,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 110,
+            "line": 126,
+            "description": "Iterates through all bands using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = dataset.bands.map(function(band, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.RasterBand\"}}RasterBand{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.DatasetBands"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 142,
             "description": "Iterates through all features using a callback function.",
             "example": [
-                "\n```\nlayer.features.forEach(function(features) { ... });```"
+                "\n```\nlayer.features.forEach(function(feature, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.Feature\"}}Feature{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1297,7 +1316,25 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 129,
+            "line": 162,
+            "description": "Iterates through all features using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = layer.features.map(function(band, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Feature\"}}Feature{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LayerFeatures"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 178,
             "description": "Iterates through all fields using a callback function.",
             "example": [
                 "\n```\nlayer.features.get(0).fields.forEach(function(value, key) { ... });```"
@@ -1306,7 +1343,7 @@
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each feature `value` and `key`.",
                     "type": "Function"
                 }
@@ -1315,7 +1352,25 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 151,
+            "line": 200,
+            "description": "Iterates through all fields using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = layer.features.get(0).fields.map(function(value, key) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each feature `value` and `key`.",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.FeatureFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 216,
             "description": "Outputs the fields as a serialized JSON string.",
             "itemtype": "method",
             "name": "toJSON",
@@ -1327,7 +1382,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 162,
+            "line": 227,
             "description": "Converts the geometry to a GeoJSON object representation.",
             "itemtype": "method",
             "name": "toObject",
@@ -1339,16 +1394,16 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 173,
-            "description": "Iterates through all fields using a callback function.",
+            "line": 238,
+            "description": "Iterates through all field definitions using a callback function.",
             "example": [
-                "\n```\nlayer.fields.forEach(function(field) { ... });```"
+                "\n```\nlayer.fields.forEach(function(field, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1357,16 +1412,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 186,
+            "line": 251,
+            "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = layer.fields.map(function(field, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LayerFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 267,
             "description": "Iterates through all layers using a callback function.",
             "example": [
-                "\n```\ndataset.layers.forEach(function(layer) { ... });```"
+                "\n```\ndataset.layers.forEach(function(layer, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.Layer\"}}Layer{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1375,16 +1448,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 199,
-            "description": "Iterates through all fields using a callback function.",
+            "line": 280,
+            "description": "Iterates through all layers using a callback function and builds\nan array of the returned values.",
             "example": [
-                "\n```\nfeatureDefn.forEach(function(field) { ... });```"
+                "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Layer\"}}Layer{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.DatasetLayers"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 296,
+            "description": "Iterates through all field definitions using a callback function.",
+            "example": [
+                "\n```\nfeatureDefn.forEach(function(field, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1393,16 +1484,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 212,
+            "line": 309,
+            "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.FieldDefn\"}}FieldDefn{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.FeatureDefnFields"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 325,
             "description": "Iterates through all rings using a callback function.",
             "example": [
-                "\n```\npolygon.rings.forEach(function(ring) { ... });```"
+                "\n```\npolygon.rings.forEach(function(ring, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.LineString\"}}LineString{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1411,16 +1520,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 225,
+            "line": 338,
+            "description": "Iterates through all rings using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = polygon.rings.map(function(ring, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.LineString\"}}LineString{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 354,
             "description": "Iterates through all points using a callback function.",
             "example": [
-                "\n```\nlineString.points.forEach(function(point) { ... });```"
+                "\n```\nlineString.points.forEach(function(point, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.Point\"}}Point{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1429,16 +1556,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 238,
+            "line": 367,
+            "description": "Iterates through all points using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = lineString.points.map(function(point, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Point\"}}Point{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.LineStringPoints"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 383,
             "description": "Iterates through all child geometries using a callback function.",
             "example": [
-                "\n```\ngeometryCollection.children.forEach(function(geometry) { ... });```"
+                "\n```\ngeometryCollection.children.forEach(function(geometry, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "The callback to be called with each {{#crossLink \"gdal.Geometry\"}}Geometry{{/crossLink}}",
                     "type": "Function"
                 }
@@ -1447,16 +1592,34 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 251,
+            "line": 396,
+            "description": "Iterates through all child geometries using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = geometryCollection.children.map(function(geometry, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Geometry\"}}Geometry{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.GeometryCollectionChildren"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 412,
             "description": "Iterates through all overviews using a callback function.",
             "example": [
-                "\n```\nband.overviews.forEach(function(overviewBand) { ... });```"
+                "\n```\nband.overviews.forEach(function(overviewBand, i) { ... });```"
             ],
             "itemtype": "method",
             "name": "forEach",
             "params": [
                 {
-                    "name": "iterator",
+                    "name": "callback",
                     "description": "",
                     "type": "Function"
                 }
@@ -1465,7 +1628,61 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 266,
+            "line": 425,
+            "description": "Iterates through all raster overviews using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = band.overviews.map(function(overviewBand, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Geometry\"}}Geometry{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.RasterBandOverviews"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 441,
+            "description": "Iterates through all registered drivers using a callback function.",
+            "example": [
+                "\n```\ngdal.drivers.forEach(function(driver, i) { ... });```"
+            ],
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Driver\"}}Driver{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.GDALDrivers"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 454,
+            "description": "Iterates through all drivers using a callback function and builds\nan array of the returned values.",
+            "example": [
+                "\n```\nvar result = gdal.drivers.map(function(driver, i) {\n    return value;\n});```"
+            ],
+            "itemtype": "method",
+            "name": "map",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "The callback to be called with each {{#crossLink \"gdal.Driver\"}}Driver{{/crossLink}}",
+                    "type": "Function"
+                }
+            ],
+            "class": "gdal.GDALDrivers"
+        },
+        {
+            "file": "lib/gdal.js",
+            "line": 470,
             "description": "Outputs all geometries as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1477,7 +1694,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 275,
+            "line": 479,
             "description": "Outputs all points as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1489,7 +1706,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 284,
+            "line": 488,
             "description": "Outputs all rings as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1501,7 +1718,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 293,
+            "line": 497,
             "description": "Creates or opens a dataset. Dataset should be explicitly closed with `dataset.close()` method if opened in `\"w\"` mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.",
             "example": [
                 "\n```\nvar dataset = gdal.open('./data.shp');```"
@@ -1570,7 +1787,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 396,
+            "line": 600,
             "description": "Creates a LayerFields instance from an object of keys and values.",
             "itemtype": "method",
             "name": "fromJSON",

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.2</b>
+                    API Docs for Version: <b>0.8.0</b>
                 </p>
             </li>
         </div>
@@ -204,7 +204,7 @@
 				
 				
 				
-				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">iterator</span>)</a></li>
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
@@ -221,6 +221,10 @@
 				
 				
 				<li><a href="#method-indexOf"><span class="im">indexOf</span>(<span class="ia">field</span>)</a></li>
+				
+				
+				
+				<li><a href="#method-map"><span class="im">map</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 				
@@ -454,7 +458,7 @@
 			
 				<li class="arg">
 					
-						<code>iterator</code>
+						<code>callback</code>
 					
 				</li>
 			
@@ -485,7 +489,7 @@
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l173"><code>lib&#x2F;gdal.js:173</code></a>
+		<a href="../files/lib_gdal.js.html#l238"><code>lib&#x2F;gdal.js:238</code></a>
 		
 		</p>
 
@@ -496,7 +500,7 @@
 	</div>
 
 	
-	<div class="description"><p>Iterates through all fields using a callback function.</p>
+	<div class="description"><p>Iterates through all field definitions using a callback function.</p>
 </div>
 	
 
@@ -508,7 +512,7 @@
 			
 				<li class="param">
 					
-						<code class="param-name">iterator</code>
+						<code class="param-name">callback</code>
 						<span class="type">Function</span>
 					
 
@@ -533,7 +537,7 @@
 			<h4>Example:</h4>
 
 			<div class="example-content">
-				<pre class="code prettyprint"><code>layer.fields.forEach(function(field) { ... });</code></pre>
+				<pre class="code prettyprint"><code>layer.fields.forEach(function(field, i) { ... });</code></pre>
 
 			</div>
 		</div>
@@ -590,7 +594,7 @@
 			
 		
 		
-		<a href="../files/lib_gdal.js.html#l396"><code>lib&#x2F;gdal.js:396</code></a>
+		<a href="../files/lib_gdal.js.html#l600"><code>lib&#x2F;gdal.js:600</code></a>
 		
 		</p>
 
@@ -929,6 +933,108 @@
 		</div>
 	
 
+	
+</div>
+
+            
+        
+        	
+            <div id="method-map" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>map</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l251"><code>lib&#x2F;gdal.js:251</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all field definitions using a callback function and builds
+an array of the returned values.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.FieldDefn.html" class="crosslink">FieldDefn</a></p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var result = layer.fields.map(function(field, i) {
+    return value;
+});</code></pre>
+
+			</div>
+		</div>
 	
 </div>
 

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.7.2</b>
+                    API Docs for Version: <b>0.8.0</b>
                 </p>
             </li>
         </div>
@@ -205,11 +205,19 @@
 				
 				
 				
+				<li><a href="#method-forEach"><span class="im">forEach</span>(<span class="ia">callback</span>)</a></li>
+				
+				
+				
 				<li><a href="#method-get"><span class="im">get</span>(<span class="ia">index</span>)</a></li>
 				
 				
 				
 				<li><a href="#method-getNames"><span class="im">getNames</span>()</a></li>
+				
+				
+				
+				<li><a href="#method-map"><span class="im">map</span>(<span class="ia">callback</span>)</a></li>
 				
 				
 			</ul>
@@ -300,6 +308,105 @@
 		</div>
 	
 
+	
+</div>
+
+            
+        
+        	
+            <div id="method-forEach" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>forEach</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l441"><code>lib&#x2F;gdal.js:441</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all registered drivers using a callback function.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.Driver.html" class="crosslink">Driver</a></p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>gdal.drivers.forEach(function(driver, i) { ... });</code></pre>
+
+			</div>
+		</div>
 	
 </div>
 
@@ -480,6 +587,108 @@
 		</div>
 	
 
+	
+</div>
+
+            
+        
+        	
+            <div id="method-map" class="method item">
+	<div class="method-signature">
+	<span class="name"><code>map</code></span>
+
+	
+		<div class="args">
+			<span class="paren">(</span><ul class="args-list inline commas">
+			
+				<li class="arg">
+					
+						<code>callback</code>
+					
+				</li>
+			
+			</ul><span class="paren">)</span>
+		</div>
+	
+	
+	</div>
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	<div class="meta">
+		
+			
+				
+				<p>
+				
+				Defined in
+				
+			
+		
+		
+		<a href="../files/lib_gdal.js.html#l454"><code>lib&#x2F;gdal.js:454</code></a>
+		
+		</p>
+
+
+		
+
+		
+	</div>
+
+	
+	<div class="description"><p>Iterates through all drivers using a callback function and builds
+an array of the returned values.</p>
+</div>
+	
+
+	
+		<div class="params">
+			<h4>Parameters:</h4>
+
+			<ul class="params-list">
+			
+				<li class="param">
+					
+						<code class="param-name">callback</code>
+						<span class="type">Function</span>
+					
+
+					
+
+					
+					<div class="param-description"><p>The callback to be called with each <a href="../classes/gdal.Driver.html" class="crosslink">Driver</a></p>
+</div>
+					
+
+					
+				</li>
+			
+			</ul>
+		</div>
+	
+
+	
+
+	
+		<div class="example">
+			<h4>Example:</h4>
+
+			<div class="example-content">
+				<pre class="code prettyprint"><code>var result = gdal.drivers.map(function(driver, i) {
+    return value;
+});</code></pre>
+
+			</div>
+		</div>
 	
 </div>
 
