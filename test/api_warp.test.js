@@ -180,7 +180,7 @@ describe('gdal', function() {
 				}
 			}
 			var avgerror = error / n;
-			assert(avgerror < 0.5, 'minimal error in pixel data');
+			assert.isBelow(avgerror, 0.5, 'minimal error in pixel data');
 
 			//check alpha band
 			expected_pixels = expected.bands.get(2).pixels;
@@ -192,7 +192,7 @@ describe('gdal', function() {
 				}
 			}
 			avgerror = error / n;
-			assert(avgerror < 0.5, 'minimal error in alpha band pixel data');
+			assert.isBelow(avgerror, 0.5, 'minimal error in alpha band pixel data');
 
 			dst.close();
 			cutline_ds.close();
