@@ -39,13 +39,13 @@ var corners = {
 	'Upper Right ' : {x: size.x, y: 0},
 	'Bottom Right' : {x: size.x, y: size.y},
 	'Bottom Left ' : {x: 0, y: size.y},
-	'Center      ' : {x: size.x/2, y: size.y/2}
+	'Center      ' : {x: size.x / 2, y: size.y / 2}
 };
 
 var wgs84 = gdal.SpatialReference.fromEPSG(4326);
 var coord_transform = new gdal.CoordinateTransformation(ds.srs, wgs84);
 
-console.log("Corner Coordinates:")
+console.log('Corner Coordinates:');
 var corner_names = Object.keys(corners);
 corner_names.forEach(function(corner_name) {
 	// convert pixel x,y to the coordinate system of the raster
@@ -54,7 +54,7 @@ corner_names.forEach(function(corner_name) {
 	var pt_orig     = {
 		x: geotransform[0] + corner.x * geotransform[1] + corner.y * geotransform[2],
 		y: geotransform[3] + corner.x * geotransform[4] + corner.y * geotransform[5]
-	}
+	};
 	var pt_wgs84    = coord_transform.transformPoint(pt_orig);
 	var description = util.format('%s (%d, %d) (%s, %s)',
 		corner_name,
@@ -67,7 +67,7 @@ corner_names.forEach(function(corner_name) {
 });
 
 // bands
-ds.bands.forEach(function(band){
+ds.bands.forEach(function(band) {
 	var description = util.format('Band %d Block=%dx%d Type=%s, ColorInterp=%s',
 		band.id,
 		band.blockSize.x,
@@ -78,21 +78,21 @@ ds.bands.forEach(function(band){
 	console.log(description);
 
 	if (band.description) {
-		console.log('  Description = '+band.description);
+		console.log('  Description = ' + band.description);
 	}
 	console.log('  Min=' + Math.floor(band.minimum * 1000) / 1000);
 	console.log('  Max=' + Math.floor(band.maximum * 1000) / 1000);
 	if (band.noDataValue !== null) {
-		console.log('  NoData Value='+band.noDataValue);
+		console.log('  NoData Value=' + band.noDataValue);
 	}
 
 	// band overviews
 	var overview_info = [];
 	band.overviews.forEach(function(overview) {
-		var overview_description = overview.size.x + "x" + overview.size.y;
+		var overview_description = overview.size.x + 'x' + overview.size.y;
 
 		var metadata = overview.getMetadata();
-		if (metadata['RESAMPLING'] == 'AVERAGE_BIT2') {
+		if (metadata['RESAMPLING'] === 'AVERAGE_BIT2') {
 			overview_description += '*';
 		}
 
@@ -128,7 +128,7 @@ ds.bands.forEach(function(band){
 	if (keys.length > 0) {
 		console.log('  Metadata:');
 		keys.forEach(function(key) {
-			console.log('    '+key+'='+metadata[key]);
+			console.log('    ' + key + '=' + metadata[key]);
 		});
 	}
 

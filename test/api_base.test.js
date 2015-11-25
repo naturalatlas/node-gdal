@@ -1,12 +1,9 @@
-'use strict';
-
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
-var fs = require('fs');
 var path = require('path');
 
 if (process.env.GDAL_DATA !== undefined) {
-	throw new Error("Sorry, this test requires that the GDAL_DATA environment option is not set");
+	throw new Error('Sorry, this test requires that the GDAL_DATA environment option is not set');
 }
 
 describe('gdal', function() {
@@ -25,7 +22,7 @@ describe('gdal', function() {
 					code: gdal.CPLE_AppDefined,
 					level: gdal.CE_Failure,
 					message: 'Mock error'
- 				});
+ 																																																																																																																																				});
 			});
 		});
 		describe('set()', function() {
@@ -65,7 +62,7 @@ describe('gdal', function() {
 		describe('GDAL_DATA behavior', function() {
 			var data_path = path.resolve(__dirname, '../deps/libgdal/gdal/data');
 			it('should set GDAL_DATA config option to locally bundled path', function() {
-				assert.equal(gdal.config.get('GDAL_DATA'),data_path);
+				assert.equal(gdal.config.get('GDAL_DATA'), data_path);
 			});
 			it('should respect GDAL_DATA environment over locally bundled path', function(done) {
 				process.env.GDAL_DATA = 'bogus';
@@ -73,14 +70,14 @@ describe('gdal', function() {
 				var command = "\"var gdal = require('./lib/gdal.js'); console.log(gdal.config.get('GDAL_DATA'));\"";
 				var execPath = process.execPath;
 				if (process.platform === 'win32') {
-					//quotes to avoid errors like ''C:\Program' is not recognized as an internal or external command'
+					// quotes to avoid errors like ''C:\Program' is not recognized as an internal or external command'
 					execPath = '"' + execPath + '"';
 				}
-				cp.exec(execPath + ' ' + ['-e',command].join(' '),{env:{GDAL_DATA:'bogus'}},function(err,stdout,stderr) {
+				cp.exec(execPath + ' ' + ['-e', command].join(' '), {env:{GDAL_DATA:'bogus'}}, function(err, stdout) {
 					if (err) throw err;
-					assert.equal(process.env.GDAL_DATA,stdout.trim());
+					assert.equal(process.env.GDAL_DATA, stdout.trim());
 					done();
-				})
+				});
 			});
 		});
 	});

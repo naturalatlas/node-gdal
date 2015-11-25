@@ -1,5 +1,4 @@
-'use strict';
-
+/* eslint no-new: 0 */
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 

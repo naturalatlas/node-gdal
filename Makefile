@@ -1,4 +1,4 @@
-.PHONY: clean clean-test build rebuild release test test-concurrent format-code authors
+.PHONY: clean clean-test build rebuild release test test-concurrent test-syntax authors
 
 MOCHA_ARGS=test -R list -gc --require ./test/_common.js
 
@@ -22,15 +22,6 @@ clean-test:
 	@rm -rf ./test/**/*.tmp*
 	@rm -rf ./test/data/**/*.tmp*
 
-format-code:
-	astyle \
-		--indent=force-tab=4 \
-		--indent-namespaces \
-		--add-brackets \
-		--style=stroustrup \
-		./src/*
-	@rm -rf ./src/*.orig
-
 ./node_modules/.bin/node-pre-gyp:
 	npm install node-pre-gyp
 
@@ -53,6 +44,9 @@ test: clean-test build
 test-shared: clean-test build-shared
 	./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
+
+test-syntax:
+	npm run test-syntax
 
 test-concurrent: clean-test
 	node ./node_modules/.bin/_mocha \

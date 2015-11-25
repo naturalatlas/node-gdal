@@ -1,5 +1,3 @@
-'use strict';
-
 var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
@@ -11,14 +9,14 @@ describe('Open', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname,"data/a39se10.jpg");
+			filename = path.join(__dirname, 'data/a39se10.jpg');
 			ds = gdal.open(filename);
 		});
 
 		it('should be able to read raster size', function() {
-			assert.equal(ds.rasterSize.x,1361);
-			assert.equal(ds.rasterSize.y,1744);
-			assert.equal(ds.bands.count(),3);
+			assert.equal(ds.rasterSize.x, 1361);
+			assert.equal(ds.rasterSize.y, 1744);
+			assert.equal(ds.bands.count(), 3);
 		});
 
 		it('should be able to read geotransform', function() {
@@ -32,7 +30,7 @@ describe('Open', function() {
 			];
 
 			var actual_geotransform = ds.geoTransform;
-			var delta = .00001;
+			var delta = 0.00001;
 			assert.closeTo(actual_geotransform[0], expected_geotransform[0], delta);
 			assert.closeTo(actual_geotransform[1], expected_geotransform[1], delta);
 			assert.closeTo(actual_geotransform[2], expected_geotransform[2], delta);
@@ -55,7 +53,7 @@ describe('Open', function() {
 			};
 
 			var actual_stats = band.getStatistics(false, true);
-			var delta = .00001;
+			var delta = 0.00001;
 			assert.closeTo(actual_stats.min, expected_stats.min, delta);
 			assert.closeTo(actual_stats.max, expected_stats.max, delta);
 			assert.closeTo(actual_stats.mean, expected_stats.mean, delta);
@@ -71,9 +69,9 @@ describe('Open', function() {
 
 		it('should have file list', function() {
 			var files = [
-				path.join(__dirname,"data/a39se10.jpg"),
-				path.join(__dirname,"data/a39se10.jpg.aux.xml"),
-				path.join(__dirname,"data/a39se10.jgw")
+				path.join(__dirname, 'data/a39se10.jpg'),
+				path.join(__dirname, 'data/a39se10.jpg.aux.xml'),
+				path.join(__dirname, 'data/a39se10.jgw')
 			];
 
 			var actual_files = ds.getFileList();

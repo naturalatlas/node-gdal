@@ -1,5 +1,3 @@
-'use strict';
-
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
@@ -138,7 +136,7 @@ describe('gdal.Polygon', function() {
 						'{ "type": "Point", "coordinates": [ 20.0, 11.0, 0.0 ] }',
 						'{ "type": "Point", "coordinates": [ 3.0, 10.0, 0.0 ] }',
 						'{ "type": "Point", "coordinates": [ 3.0, 0.0, 0.0 ] }' ]
-    				]);
+    																																																																																																																																																																				]);
 				});
 			});
 			describe('map()', function() {

@@ -18,7 +18,7 @@ describe('gdal.LineString', function() {
 				line.points.add(0, 0, 0);
 				line.points.add(10, 10, 0);
 				line.points.add(10, 20, 0);
-				assert.closeTo(line.getLength(), Math.sqrt(10*10 + 10*10) + 10, 0.001);
+				assert.closeTo(line.getLength(), Math.sqrt(10 * 10 + 10 * 10) + 10, 0.001);
 			});
 		});
 		describe('addSubLineString()', function() {
@@ -46,23 +46,23 @@ describe('gdal.LineString', function() {
 			it('should throw if given a non-linestring', function() {
 				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
 				var b = gdal.Geometry.fromWKT('POINT(0 2)');
-				assert.throws(function(){
+				assert.throws(function() {
 					a.addSubLineString(b);
 				});
 			});
 			it('should throw if given invalid indexes', function() {
 				var a = gdal.Geometry.fromWKT('LINESTRING(0 0, 0 1, 0 2)');
 				var b = gdal.Geometry.fromWKT('LINESTRING(1 2)');
-				assert.throws(function(){
+				assert.throws(function() {
 					a.addSubLineString(b, -1);
 				});
-				assert.throws(function(){
+				assert.throws(function() {
 					a.addSubLineString(b, 1);
 				});
-				assert.throws(function(){
+				assert.throws(function() {
 					a.addSubLineString(b, 0, 1);
 				});
-				assert.throws(function(){
+				assert.throws(function() {
 					a.addSubLineString(b, 0, -2);
 				});
 			});
@@ -228,7 +228,7 @@ describe('gdal.LineString', function() {
 						assert.isNumber(i);
 						x_actual.push(pt.x);
 					});
-					assert.deepEqual(x_actual, x_actual);
+					assert.deepEqual(x_actual, x_expected);
 				});
 			});
 			describe('map()', function() {

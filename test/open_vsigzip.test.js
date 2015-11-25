@@ -1,5 +1,3 @@
-'use strict';
-
 var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
@@ -11,7 +9,7 @@ describe('Open', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname, "data/vsigzip/hp40ne.gz");
+			filename = path.join(__dirname, 'data/vsigzip/hp40ne.gz');
 			ds = gdal.open(filename);
 		});
 		it('should be able to read layer count', function() {
@@ -41,12 +39,12 @@ describe('Open', function() {
 					assert.equal('string', layer2.fields.get(0).type);
 					assert.equal('integer', layer2.fields.get(1).type);
 					assert.equal('string', layer2.fields.get(2).type);
-				})
+				});
 			});
 			describe('features', function() {
 				it('should be readable', function() {
 					assert.equal(layer2.features.count(), 381);
-					//layer2.features.get(0); doesn't work, as there is no 'id', but 'fid' instead
+					// layer2.features.get(0); doesn't work, as there is no 'id', but 'fid' instead
 					var feature = layer2.features.next();
 					var fields = feature.fields.toObject();
 

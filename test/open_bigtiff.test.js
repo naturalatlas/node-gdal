@@ -1,12 +1,9 @@
-'use strict'
-
 var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
 
 if (process.env.TARGET !== 'SHARED') {
 	describe('Open', function() {
-
 		describe('BIGTIFF', function() {
 			var filename, ds;
 
@@ -15,7 +12,7 @@ if (process.env.TARGET !== 'SHARED') {
 			// > tiffcp -c zip -8 sample_wide.tif sample_bigtiff.tif
 
 			it('should not throw', function() {
-				filename = path.join(__dirname,"data/sample_bigtiff.tif");
+				filename = path.join(__dirname, 'data/sample_bigtiff.tif');
 				ds = gdal.open(filename);
 			});
 
@@ -26,4 +23,4 @@ if (process.env.TARGET !== 'SHARED') {
 			});
 		});
 	});
-};
+}

@@ -1,0 +1,7 @@
+{
+	"extends": "naturalatlas/base",
+	"rules": {
+		"no-shadow": 0,
+		"key-spacing": 0
+	}
+}

@@ -1,5 +1,3 @@
-'use strict';
-
 var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
@@ -11,7 +9,7 @@ describe('Open', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname,"data/park.geo.json");
+			filename = path.join(__dirname, 'data/park.geo.json');
 			ds = gdal.open(filename);
 		});
 		it('should be able to read layer count', function() {

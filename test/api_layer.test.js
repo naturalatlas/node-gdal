@@ -1,4 +1,3 @@
-var fs = require('fs');
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
 var fileUtils = require('./utils/file.js');
@@ -8,7 +7,7 @@ describe('gdal.Layer', function() {
 
 	describe('instance', function() {
 		var prepare_dataset_layer_test = function() {
-			var ds, layer, mode, options, callback, err, file, dir;
+			var ds, layer, mode, options, callback, err, file, dir, driver;
 
 			if (arguments.length === 2) {
 				mode = arguments[0];
@@ -27,21 +26,32 @@ describe('gdal.Layer', function() {
 				ds = gdal.open(file);
 				layer = ds.layers.get(0);
 			} else {
-				var driver = gdal.drivers.get('ESRI Shapefile');
-				file = __dirname + "/data/temp/layer_test." + String(Math.random()).substring(2) + ".tmp.shp";
+				driver = gdal.drivers.get('ESRI Shapefile');
+				file = __dirname + '/data/temp/layer_test.' + String(Math.random()).substring(2) + '.tmp.shp';
 				ds = driver.create(file);
 				layer = ds.layers.create('layer_test', null, gdal.Point);
 			}
 
 			// run test and then teardown
-			try { callback(ds, layer); }
-			catch (e) { err = e; }
+			try {
+				callback(ds, layer);
+			} catch (e) {
+				err = e;
+			}
 
 			// teardown
 			if (options.autoclose !== false) {
-				try { ds.close(); } catch (e) { }
+				try {
+					ds.close();
+				} catch (e) {
+					/* ignore */
+				}
 				if (file && mode === 'w') {
-					try { driver.deleteDataset(file); } catch (e) {};
+					try {
+						driver.deleteDataset(file);
+					} catch (e) {
+						/* ignore */
+					}
 				}
 			}
 
@@ -120,7 +130,7 @@ describe('gdal.Layer', function() {
 				it('should throw error', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
-							layer.srs = "ESPG:4326";
+							layer.srs = 'ESPG:4326';
 						}, /srs is a read-only property/);
 					});
 				});
@@ -187,7 +197,7 @@ describe('gdal.Layer', function() {
 					assert.isFalse(layer.testCapability(gdal.OLCCreateField));
 				});
 			});
-			it("should return true when layer does support capability", function() {
+			it('should return true when layer does support capability', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					assert.isTrue(layer.testCapability(gdal.OLCRandomRead));
 				});
@@ -203,7 +213,7 @@ describe('gdal.Layer', function() {
 		});
 
 		describe('getExtent()', function() {
-			it("should return Envelope", function() {
+			it('should return Envelope', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					var actual_envelope = layer.getExtent();
 					var expected_envelope = {
@@ -221,7 +231,7 @@ describe('gdal.Layer', function() {
 				});
 			});
 			it("should throw error if force flag is false and layer doesn't have extent already computed", function() {
-				var dataset = gdal.open(__dirname + "/data/park.geo.json");
+				var dataset = gdal.open(__dirname + '/data/park.geo.json');
 				var layer = dataset.layers.get(0);
 				assert.throws(function() {
 					layer.getExtent(false);
@@ -238,7 +248,7 @@ describe('gdal.Layer', function() {
 		});
 
 		describe('setSpatialFilter()', function() {
-			it("should accept 4 numbers", function() {
+			it('should accept 4 numbers', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					var count_before = layer.features.count();
 					layer.setSpatialFilter(-111, 41, -104, 43);
@@ -247,7 +257,7 @@ describe('gdal.Layer', function() {
 					assert.isTrue(count_after < count_before, 'feature count has decreased');
 				});
 			});
-			it("should accept Geometry", function() {
+			it('should accept Geometry', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					var count_before = layer.features.count();
 					var filter = new gdal.Polygon();
@@ -285,7 +295,7 @@ describe('gdal.Layer', function() {
 		});
 
 		describe('getSpatialFilter()', function() {
-			it("should return Geometry", function() {
+			it('should return Geometry', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					var filter = new gdal.Polygon();
 					var ring   = new gdal.LinearRing();
@@ -312,7 +322,7 @@ describe('gdal.Layer', function() {
 		});
 
 		describe('setAttributeFilter()', function() {
-			it("should filter layer by expression", function() {
+			it('should filter layer by expression', function() {
 				prepare_dataset_layer_test('r', function(dataset, layer) {
 					var count_before = layer.features.count();
 					layer.setAttributeFilter("name = 'Park'");
@@ -358,7 +368,7 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('count()', function(){
+			describe('count()', function() {
 				it('should return an integer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.equal(layer.features.count(), 23);
@@ -441,7 +451,7 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('forEach()', function(){
+			describe('forEach()', function() {
 				it('should pass each feature to the callback', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						var count = 0;
@@ -457,7 +467,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
-							layer.features.forEach(function(){});
+							layer.features.forEach(function() {});
 						}, /already destroyed/);
 					});
 				});
@@ -524,7 +534,11 @@ describe('gdal.Layer', function() {
 					});
 				});
 				afterEach(function() {
-					try { dataset.close(); } catch (e) { }
+					try {
+						dataset.close();
+					} catch (e) {
+						/* ignore */
+					}
 				});
 
 				describe('w/feature argument', function() {
@@ -560,7 +574,7 @@ describe('gdal.Layer', function() {
 				});
 			});
 
-			describe('remove()', function(){
+			describe('remove()', function() {
 				it('should make the feature at fid null', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						layer.features.add(new gdal.Feature(layer));
@@ -606,7 +620,7 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('count()', function(){
+			describe('count()', function() {
 				it('should return an integer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.equal(layer.fields.count(), 8);
@@ -649,7 +663,7 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('forEach()', function(){
+			describe('forEach()', function() {
 				it('should return pass each FieldDefn to callback', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						var expected_names = [
@@ -677,7 +691,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
-							layer.fields.forEach(function(field){});
+							layer.fields.forEach(function() {});
 						}, /already destroyed/);
 					});
 				});
@@ -806,7 +820,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						var sample_fields = {
 							id: 1,
-							name: "some_name",
+							name: 'some_name',
 							value: 3.1415,
 							flag: true
 						};
@@ -828,7 +842,7 @@ describe('gdal.Layer', function() {
 				it("should throw error if field name isn't supported", function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						assert.throws(function() {
-							layer.fields.fromJSON({some_really_long_name: "test"});
+							layer.fields.fromJSON({some_really_long_name: 'test'});
 						}, /Failed to add/);
 					});
 				});
@@ -836,12 +850,12 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
-							layer.fields.fromJSON({name: "test"});
+							layer.fields.fromJSON({name: 'test'});
 						}, /already destroyed/);
 					});
 				});
 			});
-			describe('remove()', function(){
+			describe('remove()', function() {
 				describe('w/id argument', function() {
 					it('should remove FieldDefn from layer definition', function() {
 						prepare_dataset_layer_test('w', function(dataset, layer) {
@@ -885,14 +899,14 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('reorder()', function(){
+			describe('reorder()', function() {
 				it('should reorder fields', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						layer.fields.add(new gdal.FieldDefn('field0', gdal.OFTString));
 						layer.fields.add(new gdal.FieldDefn('field1', gdal.OFTString));
 						layer.fields.add(new gdal.FieldDefn('field2', gdal.OFTString));
 
-						layer.fields.reorder([2,0,1]);
+						layer.fields.reorder([2, 0, 1]);
 						var f0 = layer.fields.get(0);
 						var f1 = layer.fields.get(1);
 						var f2 = layer.fields.get(2);
@@ -904,7 +918,7 @@ describe('gdal.Layer', function() {
 				it('should throw an error if layer doesnt support reordering fields', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
 						assert.throws(function() {
-							layer.fields.reorder([2,0,1,3,4,5,6,7]);
+							layer.fields.reorder([2, 0, 1, 3, 4, 5, 6, 7]);
 						}, /read\-only/);
 					});
 				});
@@ -915,12 +929,11 @@ describe('gdal.Layer', function() {
 						layer.fields.add(new gdal.FieldDefn('field2', gdal.OFTString));
 						dataset.close();
 						assert.throws(function() {
-							layer.fields.reorder([2,0,1]);
+							layer.fields.reorder([2, 0, 1]);
 						}, /already destroyed/);
 					});
 				});
 			});
 		});
-
 	});
 });

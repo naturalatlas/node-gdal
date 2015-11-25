@@ -1,5 +1,3 @@
-'use strict';
-
 var assert = require('chai').assert;
 var gdal = require('../lib/gdal.js');
 
@@ -39,34 +37,34 @@ describe('gdal.drivers', function() {
 
 		// raster drivers
 		var expected = {
-			"GTiff": {
-				DMD_LONGNAME: "GeoTIFF",
-				DMD_MIMETYPE: "image/tiff",
-				DMD_EXTENSION: "tif",
+			'GTiff': {
+				DMD_LONGNAME: 'GeoTIFF',
+				DMD_MIMETYPE: 'image/tiff',
+				DMD_EXTENSION: 'tif',
 				DCAP_CREATE: 'YES'
 			},
-			"VRT:raster": {
-				DMD_LONGNAME: "Virtual Raster",
+			'VRT:raster': {
+				DMD_LONGNAME: 'Virtual Raster',
 				DMD_MIMETYPE: undefined,
-				DMD_EXTENSION: "vrt",
+				DMD_EXTENSION: 'vrt',
 				DCAP_CREATE: 'YES'
 			},
-			"MEM": {
-				DMD_LONGNAME: "In Memory Raster",
+			'MEM': {
+				DMD_LONGNAME: 'In Memory Raster',
 				DMD_MIMETYPE: undefined,
 				DMD_EXTENSION: undefined,
 				DCAP_CREATE: 'YES'
 			},
-			"PNG": {
-				DMD_LONGNAME: "Portable Network Graphics",
-				DMD_MIMETYPE: "image/png",
-				DMD_EXTENSION: "png",
+			'PNG': {
+				DMD_LONGNAME: 'Portable Network Graphics',
+				DMD_MIMETYPE: 'image/png',
+				DMD_EXTENSION: 'png',
 				DCAP_CREATE: undefined
 			},
-			"JPEG": {
-				DMD_LONGNAME: "JPEG JFIF",
-				DMD_MIMETYPE: "image/jpeg",
-				DMD_EXTENSION: "jpg",
+			'JPEG': {
+				DMD_LONGNAME: 'JPEG JFIF',
+				DMD_MIMETYPE: 'image/jpeg',
+				DMD_EXTENSION: 'jpg',
 				DCAP_CREATE: undefined
 			}
 		};
@@ -78,16 +76,16 @@ describe('gdal.drivers', function() {
 
 				var metadata = driver.getMetadata();
 				var expected_meta = expected[o];
-				assert.equal(expected_meta.DMD_LONGNAME,metadata.DMD_LONGNAME);
-				assert.equal(expected_meta.DMD_MIMETYPE,metadata.DMD_MIMETYPE);
-				assert.equal(expected_meta.DMD_EXTENSION,metadata.DMD_EXTENSION);
-				assert.equal(expected_meta.DCAP_CREATE,metadata.DCAP_CREATE);
+				assert.equal(expected_meta.DMD_LONGNAME, metadata.DMD_LONGNAME);
+				assert.equal(expected_meta.DMD_MIMETYPE, metadata.DMD_MIMETYPE);
+				assert.equal(expected_meta.DMD_EXTENSION, metadata.DMD_EXTENSION);
+				assert.equal(expected_meta.DCAP_CREATE, metadata.DCAP_CREATE);
 			});
 		});
 
 		// vector drivers
 		var drivers = [
-			"GEOJSON", "VRT:vector", "ESRI Shapefile"
+			'GEOJSON', 'VRT:vector', 'ESRI Shapefile'
 		];
 
 		drivers.forEach(function(o) {

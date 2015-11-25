@@ -22,23 +22,23 @@ console.log('');
 // layers
 var i = 0;
 console.log('Layers: ');
-ds.layers.forEach(function(layer){
-	console.log((i++)+': '+ layer.name);
+ds.layers.forEach(function(layer) {
+	console.log((i++) + ': ' + layer.name);
 
-	console.log('  Geometry Type = '+gdal.Geometry.getName(layer.geomType));
-	console.log('  Spatial Reference = '+(layer.srs ? layer.srs.toWKT() : 'null'));
+	console.log('  Geometry Type = ' + gdal.Geometry.getName(layer.geomType));
+	console.log('  Spatial Reference = ' + (layer.srs ? layer.srs.toWKT() : 'null'));
 
 	var extent = layer.getExtent();
 	console.log('  Extent: ');
-	console.log('    minX = '+extent.minX);
-	console.log('    minY = '+extent.minY);
-	console.log('    maxX = '+extent.maxX);
-	console.log('    maxY = '+extent.maxY);
+	console.log('    minX = ' + extent.minX);
+	console.log('    minY = ' + extent.minY);
+	console.log('    maxX = ' + extent.maxX);
+	console.log('    maxY = ' + extent.maxY);
 
-	console.log('  Fields: ')
-	layer.fields.forEach(function(field){
-		console.log('    -'+field.name+' ('+field.type+')');
+	console.log('  Fields: ');
+	layer.fields.forEach(function(field) {
+		console.log('    -' + field.name + ' (' + field.type + ')');
 	});
 
-	console.log('  Feature Count = '+layer.features.count());
+	console.log('  Feature Count = ' + layer.features.count());
 });

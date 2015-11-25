@@ -1,5 +1,3 @@
-'use strict';
-
 var gdal = require('../lib/gdal.js');
 var path = require('path');
 var assert = require('chai').assert;
@@ -11,7 +9,7 @@ describe('Open', function() {
 		var filename, ds;
 
 		it('should not throw', function() {
-			filename = path.join(__dirname, "data/shp/sample.shp");
+			filename = path.join(__dirname, 'data/shp/sample.shp');
 			ds = gdal.open(filename);
 		});
 		it('should be able to read layer count', function() {
@@ -37,17 +35,17 @@ describe('Open', function() {
 			describe('field properties', function() {
 				var integerDs, integerLayer;
 
-				before(function(){
+				before(function() {
 					integerDs = gdal.open(path.join(__dirname, 'data/shp/sample_int64.shp'));
 					integerLayer = integerDs.layers.get(0);
-				})
+				});
 				it('should evaluate datatypes', function() {
 					var version_major = Number(gdal.version.split('.')[0]);
 					assert.equal(integerLayer.fields.get(0).type, 'string');
 					assert.equal(integerLayer.fields.get(3).type, version_major >= 2 ? 'integer64' : 'integer');
 					assert.equal(integerLayer.fields.get(5).type, 'real');
 					assert.equal(integerLayer.fields.get(10).type, 'date');
-				})
+				});
 			});
 			describe('features', function() {
 				it('should be readable', function() {
@@ -70,7 +68,7 @@ describe('Open', function() {
 
 			describe('integer64 fields', function() {
 				it('should be readable', function() {
-					var integerDs = gdal.open(path.join(__dirname, "data/shp/sample_int64.shp"));
+					var integerDs = gdal.open(path.join(__dirname, 'data/shp/sample_int64.shp'));
 					var integerLayer = integerDs.layers.get(0);
 
 					assert.equal(integerLayer.features.get(0).fields.get(3), 1);

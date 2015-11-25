@@ -1,14 +1,12 @@
-var fs = require('fs');
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
-var fileUtils = require('./utils/file.js');
 
 describe('gdal.Feature', function() {
 	afterEach(gc);
 
 	var ds, lyr, defn, fields, feature;
-	before(function(){
-		ds  = gdal.open('', 'w', 'Memory');
+	before(function() {
+		ds = gdal.open('', 'w', 'Memory');
 		lyr = ds.layers.create('', null, gdal.Point);
 		fields = [
 			new gdal.FieldDefn('id', gdal.OFTInteger),
@@ -22,8 +20,8 @@ describe('gdal.Feature', function() {
 
 	describe('constructor', function() {
 		describe('w/Layer', function() {
-			it('should create instance', function(){
-				var feature = new gdal.Feature(lyr);
+			it('should create instance', function() {
+				new gdal.Feature(lyr);
 			});
 			it('instance should use fields from LayerDefn', function() {
 				var feature = new gdal.Feature(lyr);
@@ -34,8 +32,8 @@ describe('gdal.Feature', function() {
 				var lyr = ds.layers.create('', null, gdal.Point);
 				lyr.fields.add(fields);
 				ds.close();
-				assert.throws(function(){
-					var feature = new gdal.Feature(lyr);
+				assert.throws(function() {
+					new gdal.Feature(lyr);
 				});
 			});
 			it('should not throw error if layer is destroyed after feature is created', function() {
@@ -45,13 +43,13 @@ describe('gdal.Feature', function() {
 				var feature = new gdal.Feature(lyr);
 				ds.close();
 				assert.doesNotThrow(function() {
-					var names = feature.defn.fields.getNames();
+					feature.defn.fields.getNames();
 				});
 			});
 		});
 		describe('w/FeatureDefn', function() {
 			it('should create instance', function() {
-				var feature = new gdal.Feature(defn);
+				new gdal.Feature(defn);
 			});
 			it('instance should use fields from FeatureDefn', function() {
 				var feature = new gdal.Feature(defn);
@@ -109,7 +107,7 @@ describe('gdal.Feature', function() {
 					}, /fields is a read-only property/);
 				});
 			});
-			describe('count()', function(){
+			describe('count()', function() {
 				it('should return an integer', function() {
 					var feature = new gdal.Feature(defn);
 					assert.equal(feature.fields.count(), 3);
@@ -128,15 +126,15 @@ describe('gdal.Feature', function() {
 						assert.equal(feature.fields.get(1), 'test');
 						assert.closeTo(feature.fields.get(2), 3.14, 0.0001);
 					});
-					it('should unset field if value is null', function(){
+					it('should unset field if value is null', function() {
 						var feature = new gdal.Feature(defn);
 						feature.fields.set(1, 'test');
 						feature.fields.set(1, null);
 						assert.isNull(feature.fields.get(1));
 					});
-					it('should throw an error if id is out of range', function(){
+					it('should throw an error if id is out of range', function() {
 						var feature = new gdal.Feature(defn);
-						assert.throws(function(){
+						assert.throws(function() {
 							feature.fields.set(100, 'test');
 						});
 					});
@@ -153,21 +151,21 @@ describe('gdal.Feature', function() {
 						assert.equal(feature.fields.get('name'), 'test');
 						assert.closeTo(feature.fields.get('value'), 3.14, 0.0001);
 					});
-					it('should unset field if value is null', function(){
+					it('should unset field if value is null', function() {
 						var feature = new gdal.Feature(defn);
 						feature.fields.set('name', 'test');
 						feature.fields.set('name', null);
 						assert.isNull(feature.fields.get('name'));
 					});
-					it('should throw an error if field name does not exist', function(){
+					it('should throw an error if field name does not exist', function() {
 						var feature = new gdal.Feature(defn);
-						assert.throws(function(){
+						assert.throws(function() {
 							feature.fields.set('bogus', 'test');
 						});
 					});
 				});
-				describe('w/array argument', function(){
-					it('should properly set all fields', function(){
+				describe('w/array argument', function() {
+					it('should properly set all fields', function() {
 						var feature = new gdal.Feature(defn);
 						feature.fields.set([5, 'test', 3.14]);
 						assert.equal(feature.fields.get(0), 5);
@@ -175,8 +173,8 @@ describe('gdal.Feature', function() {
 						assert.closeTo(feature.fields.get(2), 3.14, 0.0001);
 					});
 				});
-				describe('w/object argument', function(){
-					it('should properly set all fields', function(){
+				describe('w/object argument', function() {
+					it('should properly set all fields', function() {
 						var feature = new gdal.Feature(defn);
 						feature.fields.set({id:5, name:'test', value:3.14});
 						assert.equal(feature.fields.get(0), 5);
@@ -240,7 +238,7 @@ describe('gdal.Feature', function() {
 				});
 			});
 			describe('toObject()', function() {
-				it('should return the fields as a JSON object', function(){
+				it('should return the fields as a JSON object', function() {
 					var feature = new gdal.Feature(defn);
 					feature.fields.set([5, 'test', 3.14]);
 					var obj = feature.fields.toObject();
@@ -250,7 +248,7 @@ describe('gdal.Feature', function() {
 				});
 			});
 			describe('toJSON()', function() {
-				it('should return the fields as a stringified JSON object', function(){
+				it('should return the fields as a stringified JSON object', function() {
 					var feature = new gdal.Feature(defn);
 					feature.fields.set([5, 'test', 3.14]);
 					var obj = JSON.parse(feature.fields.toJSON());
@@ -260,7 +258,7 @@ describe('gdal.Feature', function() {
 				});
 			});
 			describe('toArray()', function() {
-				it('should return an array of field values' , function(){
+				it('should return an array of field values', function() {
 					var feature = new gdal.Feature(defn);
 					feature.fields.set([5, 'test', 3.14]);
 					var array = feature.fields.toArray();
@@ -301,7 +299,7 @@ describe('gdal.Feature', function() {
 					assert.equal(feature.fields.indexOf('name'), 1);
 				});
 			});
-			describe('reset()', function(){
+			describe('reset()', function() {
 				describe('w/no argument', function() {
 					it('should reset all fields to null', function() {
 						var feature = new gdal.Feature(defn);
@@ -325,30 +323,29 @@ describe('gdal.Feature', function() {
 			});
 		});
 
-		describe('clone()', function(){
-			it('should return new Feature', function(){
+		describe('clone()', function() {
+			it('should return new Feature', function() {
 				var feature = new gdal.Feature(defn);
 				var clone = feature.clone();
 				assert.instanceOf(clone, gdal.Feature);
 				assert.notEqual(clone, feature);
 			});
-
 		});
-		describe('setGeometry()', function(){
-			it('should set geometry', function(){
+		describe('setGeometry()', function() {
+			it('should set geometry', function() {
 				var feature = new gdal.Feature(defn);
 				feature.setGeometry(new gdal.Point(5, 10));
 				var pt = feature.getGeometry();
 				assert.equal(pt.x, 5);
 				assert.equal(pt.y, 10);
 			});
-			it('should clear geometry if null is passed', function(){
+			it('should clear geometry if null is passed', function() {
 				var feature = new gdal.Feature(defn);
 				feature.setGeometry(new gdal.Point(5, 10));
 				feature.setGeometry(null);
 				assert.isNull(feature.getGeometry());
 			});
-			it('should clear geometry if undefined is passed', function(){
+			it('should clear geometry if undefined is passed', function() {
 				var feature = new gdal.Feature(defn);
 				feature.setGeometry(new gdal.Point(5, 10));
 				feature.setGeometry(undefined);
@@ -365,22 +362,22 @@ describe('gdal.Feature', function() {
 			});
 			*/
 		});
-		describe('getGeometry()', function(){
-			it('should get geometry', function(){
+		describe('getGeometry()', function() {
+			it('should get geometry', function() {
 				var feature = new gdal.Feature(defn);
 				feature.setGeometry(new gdal.Point(5, 10));
 				var pt = feature.getGeometry();
 				assert.equal(pt.x, 5);
 				assert.equal(pt.y, 10);
 			});
-			it('should return null if geometry is not set', function(){
+			it('should return null if geometry is not set', function() {
 				var feature = new gdal.Feature(defn);
 				var geom = feature.getGeometry();
 				assert.isNull(geom);
 			});
 		});
-		describe('setFrom()', function(){
-			it('should set fields and geometry from other feature', function(){
+		describe('setFrom()', function() {
+			it('should set fields and geometry from other feature', function() {
 				var feature1 = new gdal.Feature(defn);
 				var feature2 = new gdal.Feature(defn);
 				feature1.setGeometry(new gdal.Point(5, 10));

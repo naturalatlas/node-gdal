@@ -1,0 +1,15 @@
+{
+	"globals": {
+		"gc": true,
+		"it": true,
+		"describe": true,
+		"before": true,
+		"after": true,
+		"beforeEach": true,
+		"afterEach": true
+	},
+	"rules": {
+		"no-console": 0,
+		"no-new": 0
+	}
+}

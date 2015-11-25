@@ -7,12 +7,12 @@ describe('gdal.Geometry', function() {
 
 	describe('toJSON()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			assert.deepEqual(JSON.parse(point2d.toJSON()), {
 				type: 'Point',
 				coordinates: [1, 2]
 			});
-			var point3d = new gdal.Point(1,2,3);
+			var point3d = new gdal.Point(1, 2, 3);
 			assert.deepEqual(JSON.parse(point3d.toJSON()), {
 				type: 'Point',
 				coordinates: [1, 2, 3]
@@ -21,12 +21,12 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toObject()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			assert.deepEqual(point2d.toObject(), {
 				type: 'Point',
 				coordinates: [1, 2]
 			});
-			var point3d = new gdal.Point(1,2,3);
+			var point3d = new gdal.Point(1, 2, 3);
 			assert.deepEqual(point3d.toObject(), {
 				type: 'Point',
 				coordinates: [1, 2, 3]
@@ -35,25 +35,25 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toKML()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			assert.equal(point2d.toKML(), '<Point><coordinates>1,2</coordinates></Point>');
-			var point3d = new gdal.Point(1,2,3);
+			var point3d = new gdal.Point(1, 2, 3);
 			assert.equal(point3d.toKML(), '<Point><coordinates>1,2,3</coordinates></Point>');
 		});
 	});
 	describe('toWKT()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			assert.equal(point2d.toWKT(), 'POINT (1 2)');
-			var point3d = new gdal.Point(1,2,3);
+			var point3d = new gdal.Point(1, 2, 3);
 			assert.equal(point3d.toWKT(), 'POINT (1 2 3)');
 		});
 	});
 	describe('toGML()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			assert.equal(point2d.toGML(), '<gml:Point><gml:coordinates>1,2</gml:coordinates></gml:Point>');
-			var point3d = new gdal.Point(1,2,3);
+			var point3d = new gdal.Point(1, 2, 3);
 			assert.equal(point3d.toGML(), '<gml:Point><gml:coordinates>1,2,3</gml:coordinates></gml:Point>');
 		});
 	});
@@ -103,7 +103,7 @@ describe('gdal.Geometry', function() {
 		});
 		describe('"srs" property', function() {
 			it('should be able to be get', function() {
-				var point = new gdal.Point(0,0);
+				var point = new gdal.Point(0, 0);
 				assert.equal(point.srs, null);
 
 				point.srs = gdal.SpatialReference.fromWKT(WGS84);
@@ -111,12 +111,12 @@ describe('gdal.Geometry', function() {
 				assert.equal(point.srs.toWKT(), WGS84);
 			});
 			it('should be able to be set', function() {
-				var point = new gdal.Point(1,2);
+				var point = new gdal.Point(1, 2);
 				point.srs = gdal.SpatialReference.fromWKT(WGS84);
 				point.srs = null;
 			});
 			it('must require SpatialReference when setting', function() {
-				var point = new gdal.Point(1,2);
+				var point = new gdal.Point(1, 2);
 				assert.throws(function() {
 					point.srs = 'invalid';
 				});
@@ -236,7 +236,7 @@ describe('gdal.Geometry', function() {
 			it('should return correct result', function() {
 				var point1 = new gdal.Point(0, 0);
 				var point2 = new gdal.Point(10, 10);
-				var distance_expected = Math.sqrt(10*10 + 10*10);
+				var distance_expected = Math.sqrt(10 * 10 + 10 * 10);
 				var distance_actual = point1.distance(point2);
 				assert.closeTo(distance_actual, distance_expected, 0.001);
 			});
@@ -294,11 +294,11 @@ describe('gdal.Geometry', function() {
 		describe('simplify()', function() {
 			it('should return simplified LineString', function() {
 				var line = new gdal.LineString();
-				line.points.add(0,0);
-				line.points.add(1,1);
-				line.points.add(10,10);
-				line.points.add(2,2);
-				line.points.add(5,5);
+				line.points.add(0, 0);
+				line.points.add(1, 1);
+				line.points.add(10, 10);
+				line.points.add(2, 2);
+				line.points.add(5, 5);
 
 				var simplified = line.simplify(0.1);
 				assert.instanceOf(simplified, gdal.LineString);

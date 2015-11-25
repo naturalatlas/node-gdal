@@ -7,9 +7,9 @@ describe('gdal.Point', function() {
 	var point2d;
 	var point3d;
 	before(function() {
-		point2d = new gdal.Point(1,2);
-		point3d = new gdal.Point(1,2,3);
-	})
+		point2d = new gdal.Point(1, 2);
+		point3d = new gdal.Point(1, 2, 3);
+	});
 	it('should inherit from Geometry', function() {
 		assert.instanceOf(point2d, gdal.Point);
 		assert.instanceOf(point2d, gdal.Geometry);
@@ -35,7 +35,7 @@ describe('gdal.Point', function() {
 				assert.equal(point3d.z, 3);
 			});
 			it('should be settable', function() {
-				var pt = new gdal.Point(1,2,3);
+				var pt = new gdal.Point(1, 2, 3);
 				pt.x = 4;
 				pt.y = 5;
 				pt.z = 6;
@@ -46,7 +46,7 @@ describe('gdal.Point', function() {
 		});
 		describe('swapXY()', function() {
 			it('should flip x,y coordinates', function() {
-				var pt = new gdal.Point(1,2,3);
+				var pt = new gdal.Point(1, 2, 3);
 				pt.swapXY();
 				assert.equal(pt.x, 2);
 				assert.equal(pt.y, 1);

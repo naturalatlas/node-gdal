@@ -1,5 +1,3 @@
-'use strict';
-
 var fs = require('fs');
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
