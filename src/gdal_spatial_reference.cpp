@@ -44,6 +44,7 @@ void SpatialReference::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "EPSGTreatsAsNorthingEasting", EPSGTreatsAsNorthingEasting);
 	Nan::SetPrototypeMethod(lcons, "getLinearUnits", getLinearUnits);
 	Nan::SetPrototypeMethod(lcons, "getAngularUnits", getAngularUnits);
+	Nan::SetPrototypeMethod(lcons, "isGeographic", isGeographic);
 	Nan::SetPrototypeMethod(lcons, "isGeocentric", isGeocentric);
 	Nan::SetPrototypeMethod(lcons, "isProjected", isProjected);
 	Nan::SetPrototypeMethod(lcons, "isLocal", isLocal);
@@ -244,7 +245,15 @@ NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsNorthingEasting, B
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeocentric, Boolean, IsGeocentric);
 
 /**
- * Check if geocentric coordinate system.
+ * Check if geographic coordinate system.
+ *
+ * @method isGeographic
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeographic, Boolean, IsGeographic);
+
+/**
+ * Check if projected coordinate system.
  *
  * @method isProjected
  * @return {Boolean}
@@ -831,9 +840,9 @@ NAN_METHOD(SpatialReference::fromEPSGA)
 
 /**
  * Import coordinate system from ESRI .prj format(s).
- * 
+ *
  * This function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().
- * 
+ *
  * Currently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.
  *
  * @static
@@ -913,7 +922,7 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 
 /**
  * Validate SRS tokens.
- * 
+ *
  * This method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.
  *
  * @method validate
