@@ -43,6 +43,7 @@ public:
 	static NAN_METHOD(getLinearUnits);
 	static NAN_METHOD(getAngularUnits);
 	static NAN_METHOD(isGeocentric);
+	static NAN_METHOD(isGeographic);
 	static NAN_METHOD(isProjected);
 	static NAN_METHOD(isLocal);
 	static NAN_METHOD(isVertical);

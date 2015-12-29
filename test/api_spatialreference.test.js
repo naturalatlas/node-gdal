@@ -91,4 +91,12 @@ describe('gdal.SpatialReference', function() {
 			assert.equal(srs.toProj4(), '+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs');
 		});
 	});
+	describe('isGeographic', function() {
+		it('should return true if geographic coordinate system', function() {
+			assert.equal(gdal.SpatialReference.fromEPSG(4326).isGeographic(), true);
+		});
+		it('should return false if not geographic coordinate system', function() {
+			assert.equal(gdal.SpatialReference.fromEPSG(2154).isGeographic(), false);
+		});
+	});
 });
