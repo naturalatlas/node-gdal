@@ -633,10 +633,10 @@ NAN_METHOD(Geometry::exportToWKB)
 		#else
 		wkb_variant = wkbVariantOgc;
 		#endif
-	} else if (order == "ISO") {
+	} else if (variant == "ISO") {
 		wkb_variant = wkbVariantIso;
 	} else {
-		Nan::ThrowError("byte order must be 'OGC' or 'ISO'");
+		Nan::ThrowError("variant must be 'OGC' or 'ISO'");
 		return;
 	}
 	OGRErr err = geom->this_->exportToWkb(byte_order, data, wkb_variant);
@@ -865,7 +865,7 @@ NAN_METHOD(Geometry::createFromWkb)
 
 	std::string obj_type = *Nan::Utf8String(wkb_obj->GetConstructorName());
 
-	if(obj_type != "Buffer"){
+	if(obj_type != "Buffer" && obj_type != "Uint8Array"){
 		Nan::ThrowError("Argument must be a buffer object");
 		return;
 	}

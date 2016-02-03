@@ -815,7 +815,7 @@ describe('gdal.Layer', function() {
 					});
 				});
 			});
-			describe('fromJSON()', function() {
+			describe('fromObject()', function() {
 				it('should make fields from object keys/values', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						var sample_fields = {
@@ -824,7 +824,7 @@ describe('gdal.Layer', function() {
 							value: 3.1415,
 							flag: true
 						};
-						layer.fields.fromJSON(sample_fields);
+						layer.fields.fromObject(sample_fields);
 						var f0 = layer.fields.get(0);
 						var f1 = layer.fields.get(1);
 						var f2 = layer.fields.get(2);
@@ -842,7 +842,7 @@ describe('gdal.Layer', function() {
 				it("should throw error if field name isn't supported", function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						assert.throws(function() {
-							layer.fields.fromJSON({some_really_long_name: 'test'});
+							layer.fields.fromObject({some_really_long_name: "test"});
 						}, /Failed to add/);
 					});
 				});
@@ -850,7 +850,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
-							layer.fields.fromJSON({name: 'test'});
+							layer.fields.fromObject({name: "test"});
 						}, /already destroyed/);
 					});
 				});

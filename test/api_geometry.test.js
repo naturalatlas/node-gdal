@@ -57,6 +57,49 @@ describe('gdal.Geometry', function() {
 			assert.equal(point3d.toGML(), '<gml:Point><gml:coordinates>1,2,3</gml:coordinates></gml:Point>');
 		});
 	});
+	describe('toWKB()', function() {
+		it('should return valid result', function() {
+			var point2d = new gdal.Point(1,2);
+			var wkb = point2d.toWKB();
+			var type, x, y;
+			if (wkb[0] === 0) {
+				type = wkb.readIntBE(1, 4);
+				x = wkb.readDoubleBE(5);
+				y = wkb.readDoubleBE(13);
+			} else {
+				type = wkb.readIntLE(1, 4);
+				x = wkb.readDoubleLE(5);
+				y = wkb.readDoubleLE(13);
+			}
+			assert.equal(type, gdal.wkbPoint);
+			assert.equal(x, 1);
+			assert.equal(y, 2);
+		});
+	});
+	describe('toWKT()', function() {
+		it('should return valid result', function() {
+			var point2d = new gdal.Point(1,2);
+			var wkt = point2d.toWKT();
+			assert.equal(wkt, 'POINT (1 2)');
+		});
+	});
+	describe('fromWKT()', function() {
+		it('should return valid result', function() {
+			var point2d = gdal.Geometry.fromWKT('POINT (1 2)');
+			assert.equal(point2d.wkbType, gdal.wkbPoint);
+			assert.equal(point2d.x, 1);
+			assert.equal(point2d.y, 2);
+		});
+	});
+	describe('fromWKB()', function() {
+		it('should return valid result', function() {
+			var wkb = new gdal.Point(1, 2).toWKB();
+			var point2d = gdal.Geometry.fromWKB(wkb);
+			assert.equal(point2d.wkbType, gdal.wkbPoint);
+			assert.equal(point2d.x, 1);
+			assert.equal(point2d.y, 2);
+		});
+	});
 	describe('getConstructor()', function() {
 		//  wkbUnknown = 0, wkbPoint = 1, wkbLineString = 2, wkbPolygon = 3,
 		//  wkbMultiPoint = 4, wkbMultiLineString = 5, wkbMultiPolygon = 6, wkbGeometryCollection = 7,
