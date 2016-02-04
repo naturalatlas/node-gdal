@@ -61,19 +61,13 @@ describe('gdal.Geometry', function() {
 		it('should return valid result', function() {
 			var point2d = new gdal.Point(1,2);
 			var wkb = point2d.toWKB();
-			var type, x, y;
+			var expected;
 			if (wkb[0] === 0) {
-				type = wkb.readIntBE(1, 4);
-				x = wkb.readDoubleBE(5);
-				y = wkb.readDoubleBE(13);
+				expected = new Buffer('00000000013ff00000000000004000000000000000', 'hex');
 			} else {
-				type = wkb.readIntLE(1, 4);
-				x = wkb.readDoubleLE(5);
-				y = wkb.readDoubleLE(13);
+				expected = new Buffer('0101000000000000000000f03f0000000000000040', 'hex');
 			}
-			assert.equal(type, gdal.wkbPoint);
-			assert.equal(x, 1);
-			assert.equal(y, 2);
+			assert(wkb.equals(expected), 'buffer 0x' + wkb.toString('hex') + ' should equal expected 0x' + expected.toString('hex'));
 		});
 	});
 	describe('toWKT()', function() {
