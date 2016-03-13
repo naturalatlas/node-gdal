@@ -63,11 +63,11 @@ describe('gdal.Geometry', function() {
 			var wkb = point2d.toWKB();
 			var expected;
 			if (wkb[0] === 0) {
-				expected = new Buffer('00000000013ff00000000000004000000000000000', 'hex');
+				expected = '00000000013ff00000000000004000000000000000';
 			} else {
-				expected = new Buffer('0101000000000000000000f03f0000000000000040', 'hex');
+				expected = '0101000000000000000000f03f0000000000000040';
 			}
-			assert(wkb.equals(expected), 'buffer 0x' + wkb.toString('hex') + ' should equal expected 0x' + expected.toString('hex'));
+			assert.equal(wkb.toString('hex'), expected);
 		});
 	});
 	describe('toWKT()', function() {
