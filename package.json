@@ -21,7 +21,7 @@
   ],
   "binary": {
     "module_name": "gdal",
-    "module_path": "./lib/binding/",
+    "module_path": "./lib/binding/{node_abi}-{platform}-{arch}",
     "remote_path": "./{module_name}/v{version}/{toolset}/",
     "host": "https://mapbox-node-binary.s3.amazonaws.com",
     "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
