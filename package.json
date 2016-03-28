@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "nan": "2.1.0",
-    "node-pre-gyp": "0.6.15"
+    "node-pre-gyp": "0.6.24"
   },
   "devDependencies": {
     "aws-sdk": "~2.0.25",

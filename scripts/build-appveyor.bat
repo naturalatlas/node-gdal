@@ -137,7 +137,7 @@ ECHO ===== where npm puts stuff END ============
 
 
 ECHO installing node-gyp...
-CALL npm install -g node-gyp
+CALL npm install -g node-gyp@3.2.1
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ::ERRORLEVEL 0: string found
