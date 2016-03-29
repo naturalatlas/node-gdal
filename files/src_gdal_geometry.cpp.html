@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.8.0</b>
+                    API Docs for Version: <b>0.9.0</b>
                 </p>
             </li>
         </div>
@@ -36,7 +36,7 @@
 <div class="container">
     <div class="row">
         <div class="span3">
-	    <div>
+<div>
     <div id="sidebar">
     <div id="classes">
         <ul id="api-classes" class="nav nav-list">
@@ -142,7 +142,7 @@
 
         </div>
         <div class="span9">
-                <form id="options-form" class="form-inline pull-right">
+    <form id="options-form" class="form-inline pull-right">
         Show:
         <label for="api-show-inherited" class="checkbox">
             <input type="checkbox" id="api-show-inherited" checked>
@@ -169,7 +169,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <div class="page-header">
+<div class="page-header">
     <h1>src/gdal_geometry.cpp <small>File</small></h1>
 </div>
 
@@ -810,10 +810,10 @@ NAN_METHOD(Geometry::exportToWKB)
 		#else
 		wkb_variant = wkbVariantOgc;
 		#endif
-	} else if (order == &quot;ISO&quot;) {
+	} else if (variant == &quot;ISO&quot;) {
 		wkb_variant = wkbVariantIso;
 	} else {
-		Nan::ThrowError(&quot;byte order must be &#x27;OGC&#x27; or &#x27;ISO&#x27;&quot;);
+		Nan::ThrowError(&quot;variant must be &#x27;OGC&#x27; or &#x27;ISO&#x27;&quot;);
 		return;
 	}
 	OGRErr err = geom-&gt;this_-&gt;exportToWkb(byte_order, data, wkb_variant);
@@ -1042,7 +1042,7 @@ NAN_METHOD(Geometry::createFromWkb)
 
 	std::string obj_type = *Nan::Utf8String(wkb_obj-&gt;GetConstructorName());
 
-	if(obj_type != &quot;Buffer&quot;){
+	if(obj_type != &quot;Buffer&quot; &amp;&amp; obj_type != &quot;Uint8Array&quot;){
 		Nan::ThrowError(&quot;Argument must be a buffer object&quot;);
 		return;
 	}

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.8.0</b>
+                    API Docs for Version: <b>0.9.0</b>
                 </p>
             </li>
         </div>
@@ -36,7 +36,7 @@
 <div class="container">
     <div class="row">
         <div class="span3">
-	    <div>
+<div>
     <div id="sidebar">
     <div id="classes">
         <ul id="api-classes" class="nav nav-list">
@@ -142,7 +142,7 @@
 
         </div>
         <div class="span9">
-                <form id="options-form" class="form-inline pull-right">
+    <form id="options-form" class="form-inline pull-right">
         Show:
         <label for="api-show-inherited" class="checkbox">
             <input type="checkbox" id="api-show-inherited" checked>
@@ -169,14 +169,13 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <div class="page-header">
+<div class="page-header">
     <h1>lib/envelope_3d.js <small>File</small></h1>
 </div>
 
 <div class="file">
     <pre class="prettyprint linenums">
-module.exports = function(gdal) {
-
+module.exports = function() {
 	/**
 	 * A 3D bounding box. For 2D envelopes, see {{#crossLink &quot;gdal.Envelope&quot;}}gdal.Envelope{{/crossLink}}.
 	 *
@@ -222,7 +221,7 @@ module.exports = function(gdal) {
 	 * @return {void}
 	 */
 	Envelope3D.prototype.merge = function(envelope) {
-	 	if (arguments.length == 1) {
+		if (arguments.length === 1) {
 			if (this.isEmpty()) {
 				this.minX = envelope.minX;
 				this.maxX = envelope.maxX;
@@ -312,8 +311,8 @@ module.exports = function(gdal) {
 	};
 
 	return Envelope3D;
-
 };
+
     </pre>
 </div>
 

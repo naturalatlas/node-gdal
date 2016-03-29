@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.8.0",
+        "version": "0.9.0",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -380,7 +380,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "lib/envelope.js",
-            "line": 3,
+            "line": 2,
             "description": "A 2D bounding box. For 3D envelopes, see {{#crossLink \"gdal.Envelope3D\"}}gdal.Envelope3D{{/crossLink}}.\n\n(Pure-javascript implementation of [OGREnvelope](http://www.gdal.org/classOGREnvelope.html))",
             "is_constructor": 1,
             "params": [
@@ -401,7 +401,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "lib/envelope_3d.js",
-            "line": 3,
+            "line": 2,
             "description": "A 3D bounding box. For 2D envelopes, see {{#crossLink \"gdal.Envelope\"}}gdal.Envelope{{/crossLink}}.\n\n(Pure-javascript implementation of [OGREnvelope3D](http://www.gdal.org/classOGREnvelope3D.html))",
             "is_constructor": 1,
             "params": [
@@ -851,7 +851,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 100,
+            "line": 101,
             "description": "This class respresents a OpenGIS Spatial Reference System, and contains methods\nfor converting between this object organization and well known text (WKT)\nformat.",
             "is_constructor": 1,
             "params": [
@@ -1023,7 +1023,7 @@
     "classitems": [
         {
             "file": "lib/envelope.js",
-            "line": 26,
+            "line": 25,
             "description": "Determines if the envelope has not been set yet.",
             "itemtype": "method",
             "name": "isEmpty",
@@ -1035,7 +1035,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 36,
+            "line": 35,
             "description": "Unions the provided envelope with the current envelope.",
             "itemtype": "method",
             "name": "merge",
@@ -1054,7 +1054,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 71,
+            "line": 70,
             "description": "Determines if the provided envelope touches it.",
             "itemtype": "method",
             "name": "intersects",
@@ -1073,7 +1073,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 83,
+            "line": 82,
             "description": "Updates the envelope to the intersection of the two envelopes.",
             "itemtype": "method",
             "name": "intersect",
@@ -1092,7 +1092,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 108,
+            "line": 107,
             "description": "Determines if the provided envelope is wholly-contained by the current envelope.",
             "itemtype": "method",
             "name": "contains",
@@ -1111,7 +1111,7 @@
         },
         {
             "file": "lib/envelope.js",
-            "line": 120,
+            "line": 119,
             "description": "Converts the envelope to a polygon.",
             "itemtype": "method",
             "name": "toPolygon",
@@ -1123,7 +1123,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 30,
+            "line": 29,
             "description": "Determines if the envelope has not been set yet.",
             "itemtype": "method",
             "name": "isEmpty",
@@ -1135,7 +1135,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 40,
+            "line": 39,
             "description": "Unions the provided envelope with the current envelope.",
             "itemtype": "method",
             "name": "merge",
@@ -1154,7 +1154,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 83,
+            "line": 82,
             "description": "Determines if the provided envelope touches it.",
             "itemtype": "method",
             "name": "intersects",
@@ -1173,7 +1173,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 96,
+            "line": 95,
             "description": "Updates the envelope to the intersection of the two envelopes.",
             "itemtype": "method",
             "name": "intersect",
@@ -1192,7 +1192,7 @@
         },
         {
             "file": "lib/envelope_3d.js",
-            "line": 125,
+            "line": 124,
             "description": "Determines if the provided envelope is wholly-contained by the current envelope.",
             "itemtype": "method",
             "name": "contains",
@@ -1211,7 +1211,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 23,
+            "line": 24,
             "description": "Gets a GDAL configuration setting.",
             "example": [
                 "\n```\ndata_path = gdal.config.get('GDAL_DATA');```"
@@ -1234,7 +1234,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 38,
+            "line": 39,
             "description": "Sets a GDAL configuration setting.",
             "example": [
                 "\n```\ngdal.config.set('GDAL_DATA', data_path);```"
@@ -1262,7 +1262,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 107,
+            "line": 108,
             "description": "Iterates through all bands using a callback function.\nNote: GDAL band indexes start at 1, not 0.",
             "example": [
                 "\n```\ndataset.bands.forEach(function(band, i) { ... });```"
@@ -1280,7 +1280,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 126,
+            "line": 127,
             "description": "Iterates through all bands using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.bands.map(function(band, i) {\n    return value;\n});```"
@@ -1298,7 +1298,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 142,
+            "line": 143,
             "description": "Iterates through all features using a callback function.",
             "example": [
                 "\n```\nlayer.features.forEach(function(feature, i) { ... });```"
@@ -1316,7 +1316,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 162,
+            "line": 163,
             "description": "Iterates through all features using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.features.map(function(band, i) {\n    return value;\n});```"
@@ -1334,7 +1334,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 178,
+            "line": 179,
             "description": "Iterates through all fields using a callback function.",
             "example": [
                 "\n```\nlayer.features.get(0).fields.forEach(function(value, key) { ... });```"
@@ -1352,7 +1352,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 200,
+            "line": 201,
             "description": "Iterates through all fields using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.features.get(0).fields.map(function(value, key) {\n    return value;\n});```"
@@ -1370,7 +1370,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 216,
+            "line": 217,
             "description": "Outputs the fields as a serialized JSON string.",
             "itemtype": "method",
             "name": "toJSON",
@@ -1382,7 +1382,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 227,
+            "line": 228,
             "description": "Converts the geometry to a GeoJSON object representation.",
             "itemtype": "method",
             "name": "toObject",
@@ -1394,7 +1394,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 238,
+            "line": 239,
             "description": "Iterates through all field definitions using a callback function.",
             "example": [
                 "\n```\nlayer.fields.forEach(function(field, i) { ... });```"
@@ -1412,7 +1412,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 251,
+            "line": 252,
             "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.fields.map(function(field, i) {\n    return value;\n});```"
@@ -1430,7 +1430,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 267,
+            "line": 268,
             "description": "Iterates through all layers using a callback function.",
             "example": [
                 "\n```\ndataset.layers.forEach(function(layer, i) { ... });```"
@@ -1448,7 +1448,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 280,
+            "line": 281,
             "description": "Iterates through all layers using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
@@ -1466,7 +1466,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 296,
+            "line": 297,
             "description": "Iterates through all field definitions using a callback function.",
             "example": [
                 "\n```\nfeatureDefn.forEach(function(field, i) { ... });```"
@@ -1484,7 +1484,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 309,
+            "line": 310,
             "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
@@ -1502,7 +1502,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 325,
+            "line": 326,
             "description": "Iterates through all rings using a callback function.",
             "example": [
                 "\n```\npolygon.rings.forEach(function(ring, i) { ... });```"
@@ -1520,7 +1520,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 338,
+            "line": 339,
             "description": "Iterates through all rings using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = polygon.rings.map(function(ring, i) {\n    return value;\n});```"
@@ -1538,7 +1538,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 354,
+            "line": 355,
             "description": "Iterates through all points using a callback function.",
             "example": [
                 "\n```\nlineString.points.forEach(function(point, i) { ... });```"
@@ -1556,7 +1556,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 367,
+            "line": 368,
             "description": "Iterates through all points using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = lineString.points.map(function(point, i) {\n    return value;\n});```"
@@ -1574,7 +1574,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 383,
+            "line": 384,
             "description": "Iterates through all child geometries using a callback function.",
             "example": [
                 "\n```\ngeometryCollection.children.forEach(function(geometry, i) { ... });```"
@@ -1592,7 +1592,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 396,
+            "line": 397,
             "description": "Iterates through all child geometries using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = geometryCollection.children.map(function(geometry, i) {\n    return value;\n});```"
@@ -1610,7 +1610,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 412,
+            "line": 413,
             "description": "Iterates through all overviews using a callback function.",
             "example": [
                 "\n```\nband.overviews.forEach(function(overviewBand, i) { ... });```"
@@ -1628,7 +1628,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 425,
+            "line": 426,
             "description": "Iterates through all raster overviews using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = band.overviews.map(function(overviewBand, i) {\n    return value;\n});```"
@@ -1646,7 +1646,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 441,
+            "line": 442,
             "description": "Iterates through all registered drivers using a callback function.",
             "example": [
                 "\n```\ngdal.drivers.forEach(function(driver, i) { ... });```"
@@ -1664,7 +1664,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 454,
+            "line": 455,
             "description": "Iterates through all drivers using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = gdal.drivers.map(function(driver, i) {\n    return value;\n});```"
@@ -1682,7 +1682,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 470,
+            "line": 471,
             "description": "Outputs all geometries as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1694,7 +1694,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 479,
+            "line": 480,
             "description": "Outputs all points as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1706,7 +1706,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 488,
+            "line": 489,
             "description": "Outputs all rings as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1718,7 +1718,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 497,
+            "line": 498,
             "description": "Creates or opens a dataset. Dataset should be explicitly closed with `dataset.close()` method if opened in `\"w\"` mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.",
             "example": [
                 "\n```\nvar dataset = gdal.open('./data.shp');```"
@@ -1787,7 +1787,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 600,
+            "line": 602,
             "description": "Creates a LayerFields instance from an object of keys and values.",
             "itemtype": "method",
             "name": "fromJSON",
@@ -5638,7 +5638,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 188,
+            "line": 189,
             "description": "Set a GeogCS based on well known name.",
             "itemtype": "method",
             "name": "setWellKnownGeogCS",
@@ -5653,7 +5653,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 196,
+            "line": 197,
             "description": "Convert in place to ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5664,7 +5664,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 204,
+            "line": 205,
             "description": "Convert in place from ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5675,7 +5675,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 212,
+            "line": 213,
             "description": "This method returns `true` if EPSG feels this geographic coordinate system\nshould be treated as having lat/long coordinate ordering.\n\nCurrently this returns `true` for all geographic coordinate systems with an\nEPSG code set, and AXIS values set defining it as lat, long. Note that\ncoordinate systems with an EPSG code and no axis settings will be assumed\nto not be lat/long.\n\n`false` will be returned for all coordinate systems that are not geographic,\nor that do not have an EPSG code set.",
             "itemtype": "method",
             "name": "EPSGTreatsAsLatLong",
@@ -5687,7 +5687,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 229,
+            "line": 230,
             "description": "This method returns `true` if EPSG feels this projected coordinate system should\nbe treated as having northing/easting coordinate ordering.",
             "itemtype": "method",
             "name": "EPSGTreatsAsNorthingEasting",
@@ -5699,7 +5699,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 238,
+            "line": 239,
             "description": "Check if geocentric coordinate system.",
             "itemtype": "method",
             "name": "isGeocentric",
@@ -5711,8 +5711,20 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 246,
-            "description": "Check if geocentric coordinate system.",
+            "line": 247,
+            "description": "Check if geographic coordinate system.",
+            "itemtype": "method",
+            "name": "isGeographic",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "gdal.SpatialReference"
+        },
+        {
+            "file": "src/gdal_spatial_reference.cpp",
+            "line": 255,
+            "description": "Check if projected coordinate system.",
             "itemtype": "method",
             "name": "isProjected",
             "return": {
@@ -5723,7 +5735,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 254,
+            "line": 263,
             "description": "Check if local coordinate system.",
             "itemtype": "method",
             "name": "isLocal",
@@ -5735,7 +5747,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 262,
+            "line": 271,
             "description": "Check if vertical coordinate system.",
             "itemtype": "method",
             "name": "isVertical",
@@ -5747,7 +5759,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 270,
+            "line": 279,
             "description": "Check if compound coordinate system.",
             "itemtype": "method",
             "name": "isCompound",
@@ -5759,7 +5771,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 278,
+            "line": 287,
             "description": "Do the GeogCS'es match?",
             "itemtype": "method",
             "name": "isSameGeogCS",
@@ -5778,7 +5790,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 287,
+            "line": 296,
             "description": "Do the VertCS'es match?",
             "itemtype": "method",
             "name": "isSameVertCS",
@@ -5797,7 +5809,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 296,
+            "line": 305,
             "description": "Do these two spatial references describe the same system?",
             "itemtype": "method",
             "name": "isSame",
@@ -5816,7 +5828,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 305,
+            "line": 314,
             "description": "Set EPSG authority info if possible.",
             "throws": {
                 "description": "Error"
@@ -5827,7 +5839,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 313,
+            "line": 322,
             "description": "Clones the spatial reference.",
             "itemtype": "method",
             "name": "clone",
@@ -5839,7 +5851,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 326,
+            "line": 335,
             "description": "Make a duplicate of the GEOGCS node of this OGRSpatialReference object.",
             "itemtype": "method",
             "name": "cloneGeogCS",
@@ -5851,7 +5863,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 339,
+            "line": 348,
             "description": "Get the authority name for a node. The most common authority is \"EPSG\".",
             "itemtype": "method",
             "name": "getAuthorityName",
@@ -5870,7 +5882,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 358,
+            "line": 367,
             "description": "Get the authority code for a node.",
             "itemtype": "method",
             "name": "getAuthorityCode",
@@ -5889,7 +5901,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 377,
+            "line": 386,
             "description": "Convert this SRS into WKT format.",
             "throws": {
                 "description": "Error"
@@ -5904,7 +5916,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 403,
+            "line": 412,
             "description": "Convert this SRS into a a nicely formatted WKT string for display to a person.",
             "throws": {
                 "description": "Error"
@@ -5928,7 +5940,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 433,
+            "line": 442,
             "description": "Export coordinate system in PROJ.4 format.",
             "throws": {
                 "description": "Error"
@@ -5943,7 +5955,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 464,
+            "line": 473,
             "description": "Export coordinate system in XML format.",
             "throws": {
                 "description": "Error"
@@ -5958,7 +5970,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 490,
+            "line": 499,
             "description": "Fetch indicated attribute of named node.",
             "itemtype": "method",
             "name": "getAttrValue",
@@ -5984,7 +5996,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 510,
+            "line": 519,
             "description": "Creates a spatial reference from a WKT string.",
             "static": 1,
             "throws": {
@@ -6007,7 +6019,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 537,
+            "line": 546,
             "description": "Creates a spatial reference from a Proj.4 string.",
             "static": 1,
             "throws": {
@@ -6030,7 +6042,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 563,
+            "line": 572,
             "description": "Creates a spatial reference from a WMSAUTO string.\n\nNote that the WMS 1.3 specification does not include the units code, while\napparently earlier specs do. GDAL tries to guess around this.",
             "example": [
                 "\n```\nvar wms = 'AUTO:42001,99,8888';\nvar ref = gdal.SpatialReference.fromWMSAUTO(wms);```"
@@ -6056,7 +6068,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 597,
+            "line": 606,
             "description": "Import coordinate system from XML format (GML only currently).",
             "static": 1,
             "throws": {
@@ -6079,7 +6091,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 623,
+            "line": 632,
             "description": "Initialize from OGC URN.\n\nThe OGC URN should be prefixed with \"urn:ogc:def:crs:\" per recommendation\npaper 06-023r1. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -6102,7 +6114,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 653,
+            "line": 662,
             "description": "Initialize from OGC URL.\n\nThe OGC URL should be prefixed with \"http://opengis.net/def/crs\" per best\npractice paper 11-135. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -6125,7 +6137,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 683,
+            "line": 692,
             "description": "Initialize spatial reference from a URL.\n\nThis method will download the spatial reference from the given URL.",
             "static": 1,
             "throws": {
@@ -6148,7 +6160,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 711,
+            "line": 720,
             "description": "Initialize from a Mapinfo style CoordSys definition.",
             "static": 1,
             "throws": {
@@ -6171,7 +6183,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 737,
+            "line": 746,
             "description": "Initialize from an arbitrary spatial reference string.\n\nThis method will examine the provided input, and try to deduce the format,\nand then use it to initialize the spatial reference system.",
             "static": 1,
             "throws": {
@@ -6194,7 +6206,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 766,
+            "line": 775,
             "description": "Initialize from EPSG GCS or PCS code.",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(4326);```"
@@ -6220,7 +6232,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 796,
+            "line": 805,
             "description": "Initialize from EPSG GCS or PCS code.\n\nThis method is similar to `fromEPSG()` except that EPSG preferred axis ordering\n*will* be applied for geographic and projected coordinate systems. EPSG normally\ndefines geographic coordinate systems to use lat/long, and also there are also\na few projected coordinate systems that use northing/easting order contrary\nto typical GIS use).",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(26910);```"
@@ -6246,7 +6258,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 832,
+            "line": 841,
             "description": "Import coordinate system from ESRI .prj format(s).\n\nThis function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().\n\nCurrently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.",
             "static": 1,
             "throws": {
@@ -6269,7 +6281,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 870,
+            "line": 879,
             "description": "Fetch linear geographic coordinate system units.",
             "itemtype": "method",
             "name": "getLinearUnits",
@@ -6281,7 +6293,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 892,
+            "line": 901,
             "description": "Fetch angular geographic coordinate system units.",
             "itemtype": "method",
             "name": "getAngularUnits",
@@ -6293,7 +6305,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 914,
+            "line": 923,
             "description": "Validate SRS tokens.\n\nThis method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.",
             "itemtype": "method",
             "name": "validate",

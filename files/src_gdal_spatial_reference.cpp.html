@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.8.0</b>
+                    API Docs for Version: <b>0.9.0</b>
                 </p>
             </li>
         </div>
@@ -36,7 +36,7 @@
 <div class="container">
     <div class="row">
         <div class="span3">
-	    <div>
+<div>
     <div id="sidebar">
     <div id="classes">
         <ul id="api-classes" class="nav nav-list">
@@ -142,7 +142,7 @@
 
         </div>
         <div class="span9">
-                <form id="options-form" class="form-inline pull-right">
+    <form id="options-form" class="form-inline pull-right">
         Show:
         <label for="api-show-inherited" class="checkbox">
             <input type="checkbox" id="api-show-inherited" checked>
@@ -169,7 +169,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <div class="page-header">
+<div class="page-header">
     <h1>src/gdal_spatial_reference.cpp <small>File</small></h1>
 </div>
 
@@ -221,6 +221,7 @@ void SpatialReference::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;EPSGTreatsAsNorthingEasting&quot;, EPSGTreatsAsNorthingEasting);
 	Nan::SetPrototypeMethod(lcons, &quot;getLinearUnits&quot;, getLinearUnits);
 	Nan::SetPrototypeMethod(lcons, &quot;getAngularUnits&quot;, getAngularUnits);
+	Nan::SetPrototypeMethod(lcons, &quot;isGeographic&quot;, isGeographic);
 	Nan::SetPrototypeMethod(lcons, &quot;isGeocentric&quot;, isGeocentric);
 	Nan::SetPrototypeMethod(lcons, &quot;isProjected&quot;, isProjected);
 	Nan::SetPrototypeMethod(lcons, &quot;isLocal&quot;, isLocal);
@@ -421,7 +422,15 @@ NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, EPSGTreatsAsNorthingEasting, B
 NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeocentric, Boolean, IsGeocentric);
 
 /**
- * Check if geocentric coordinate system.
+ * Check if geographic coordinate system.
+ *
+ * @method isGeographic
+ * @return {Boolean}
+ */
+NODE_WRAPPED_METHOD_WITH_RESULT(SpatialReference, isGeographic, Boolean, IsGeographic);
+
+/**
+ * Check if projected coordinate system.
  *
  * @method isProjected
  * @return {Boolean}
@@ -1008,9 +1017,9 @@ NAN_METHOD(SpatialReference::fromEPSGA)
 
 /**
  * Import coordinate system from ESRI .prj format(s).
- * 
+ *
  * This function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().
- * 
+ *
  * Currently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.
  *
  * @static
@@ -1090,7 +1099,7 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 
 /**
  * Validate SRS tokens.
- * 
+ *
  * This method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.
  *
  * @method validate
@@ -1123,6 +1132,7 @@ NAN_METHOD(SpatialReference::validate)
 
 
 } // namespace node_gdal
+
     </pre>
 </div>
 
