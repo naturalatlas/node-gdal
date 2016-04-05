@@ -76,7 +76,6 @@ static char* pj_replace_point_by_locale_point(const char* pszNumber, char point,
                                               char* pszWorkBuffer)
 {
 #if !defined(HAVE_LOCALECONV) || defined(_WIN32_WCE)
-#warning "localeconv not available"
     static char byPoint = 0;
     if (byPoint == 0)
     {
