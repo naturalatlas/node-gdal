@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_gensql.cpp 29482 2015-07-06 09:24:54Z rouault $
+ * $Id: ogr_gensql.cpp 31016 2015-10-16 08:11:46Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGenSQLResultsLayer.
@@ -36,7 +36,7 @@
 #include "cpl_time.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogr_gensql.cpp 29482 2015-07-06 09:24:54Z rouault $");
+CPL_CVSID("$Id: ogr_gensql.cpp 31016 2015-10-16 08:11:46Z rouault $");
 
 
 class OGRGenSQLGeomFieldDefn: public OGRGeomFieldDefn
@@ -2063,11 +2063,20 @@ int OGRGenSQLResultsLayer::Compare( OGRField *pasFirstTuple,
             poFDefn = poSrcLayer->GetLayerDefn()->GetFieldDefn( 
                 psKeyDef->field_index );
         
-        if( (pasFirstTuple[iKey].Set.nMarker1 == OGRUnsetMarker 
-             && pasFirstTuple[iKey].Set.nMarker2 == OGRUnsetMarker)
-            || (pasSecondTuple[iKey].Set.nMarker1 == OGRUnsetMarker 
-                && pasSecondTuple[iKey].Set.nMarker2 == OGRUnsetMarker) )
-            nResult = 0;
+        if( pasFirstTuple[iKey].Set.nMarker1 == OGRUnsetMarker 
+             && pasFirstTuple[iKey].Set.nMarker2 == OGRUnsetMarker )
+        {
+            if( pasSecondTuple[iKey].Set.nMarker1 == OGRUnsetMarker 
+                && pasSecondTuple[iKey].Set.nMarker2 == OGRUnsetMarker )
+                nResult = 0;
+            else
+                nResult = -1;
+        }
+        else if ( pasSecondTuple[iKey].Set.nMarker1 == OGRUnsetMarker 
+                && pasSecondTuple[iKey].Set.nMarker2 == OGRUnsetMarker )
+        {
+            nResult = 1;
+        }
         else if ( poFDefn == NULL )
         {
             switch (SpecialFieldTypes[psKeyDef->field_index - iFIDFieldIndex])

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: geotiff.cpp 29355 2015-06-15 09:27:47Z rouault $
+ * $Id: geotiff.cpp 33053 2016-01-20 10:53:18Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -63,7 +63,7 @@
 #include "tiffiop.h"
 #endif
 
-CPL_CVSID("$Id: geotiff.cpp 29355 2015-06-15 09:27:47Z rouault $");
+CPL_CVSID("$Id: geotiff.cpp 33053 2016-01-20 10:53:18Z rouault $");
 
 #if SIZEOF_VOIDP == 4
 static int bGlobalStripIntegerOverflow = FALSE;
@@ -716,13 +716,10 @@ CPLErr GTiffJPEGOverviewBand::IReadBlock( int nBlockXOff, int nBlockYOff, void *
             /* If the JPEG strip/tile is too big (e.g. a single-strip JPEG-in-TIFF) */
             /* we will use /vsisparse mechanism to make a fake JPEG file */
 
-            /* If the previous file was NOT opened as a /vsisparse/, we have to re-open */
-            if( poGDS->poJPEGDS != NULL &&
-                strncmp(GDALGetDescription(poGDS->poJPEGDS), "/vsisparse/", strlen("/vsisparse/")) != 0  )
-            {
-                GDALClose( (GDALDatasetH) poGDS->poJPEGDS );
-                poGDS->poJPEGDS = NULL;
-            }
+            /* Always re-open */
+            GDALClose( (GDALDatasetH) poGDS->poJPEGDS );
+            poGDS->poJPEGDS = NULL;
+
             osFileToOpen = CPLSPrintf("/vsisparse/%s", poGDS->osTmpFilename.c_str());
 
             VSIFPrintfL(fp, "<VSISparseFile><SubfileRegion><Filename relative='0'>%s</Filename>"
@@ -1061,7 +1058,8 @@ GTiffRasterBand::GTiffRasterBand( GTiffDataset *poDS, int nBand )
             int nBaseSamples;
             nBaseSamples = poDS->nSamplesPerPixel - count;
 
-            if( nBand > nBaseSamples 
+            if( nBand > nBaseSamples
+                && nBand-nBaseSamples-1 < count
                 && (v[nBand-nBaseSamples-1] == EXTRASAMPLE_ASSOCALPHA
                     || v[nBand-nBaseSamples-1] == EXTRASAMPLE_UNASSALPHA) )
                 eBandInterp = GCI_AlphaBand;
@@ -1229,7 +1227,10 @@ CPLErr GTiffRasterBand::DirectIO( GDALRWFlag eRWFlag,
     {
         for(iLine=0;iLine<nReqYSize;iLine++)
         {
-            GDALSwapWords( ppData[iLine], nDTSize, nReqXSize * nContigBands, nDTSize);
+            if( GDALDataTypeIsComplex(eDataType) )
+                GDALSwapWords( ppData[iLine], nDTSize / 2, 2 * nReqXSize * nContigBands, nDTSize / 2);
+            else
+                GDALSwapWords( ppData[iLine], nDTSize, nReqXSize * nContigBands, nDTSize);
         }
     }
 
@@ -1681,6 +1682,19 @@ int GTiffDataset::VirtualMemIO( GDALRWFlag eRWFlag,
     if( !SetDirectory() )
         return CE_Failure;
 
+    if( !(nCompression == COMPRESSION_NONE &&
+        (nPhotometric == PHOTOMETRIC_MINISBLACK ||
+        nPhotometric == PHOTOMETRIC_RGB ||
+        nPhotometric == PHOTOMETRIC_PALETTE) &&
+        (nBitsPerSample == 8 || (nBitsPerSample == 16) ||
+        nBitsPerSample == 32 || nBitsPerSample == 64) &&
+        nBitsPerSample == GDALGetDataTypeSize(eDataType) &&
+        !TIFFIsByteSwapped(hTIFF) ) )
+    {
+        eVirtualMemIOUsage = VIRTUAL_MEM_IO_NO;
+        return -1;
+    }
+
     size_t nMappingSize = 0;
     GByte* pabySrcData = NULL;
     if( strncmp(GetDescription(), "/vsimem/", strlen("/vsimem/")) == 0 )
@@ -1693,18 +1707,6 @@ int GTiffDataset::VirtualMemIO( GDALRWFlag eRWFlag,
     }
     else if( psVirtualMemIOMapping == NULL )
     {
-        if( !(nCompression == COMPRESSION_NONE &&
-              (nPhotometric == PHOTOMETRIC_MINISBLACK ||
-              nPhotometric == PHOTOMETRIC_RGB ||
-              nPhotometric == PHOTOMETRIC_PALETTE) &&
-              (nBitsPerSample == 8 || (nBitsPerSample == 16) ||
-              nBitsPerSample == 32 || nBitsPerSample == 64) &&
-              nBitsPerSample == GDALGetDataTypeSize(eDataType) &&
-              !TIFFIsByteSwapped(hTIFF) ) )
-        {
-            eVirtualMemIOUsage = VIRTUAL_MEM_IO_NO;
-            return -1;
-        }
         VSILFILE* fp = VSI_TIFFGetVSILFile(TIFFClientdata( hTIFF ));
         if( !CPLIsVirtualMemFileMapAvailable() ||
             VSIFGetNativeFileDescriptorL(fp) == NULL )
@@ -2345,7 +2347,10 @@ CPLErr GTiffDataset::DirectIO( GDALRWFlag eRWFlag,
     {
         for(iLine=0;iLine<nReqYSize;iLine++)
         {
-            GDALSwapWords( ppData[iLine], nDTSize, nReqXSize * nContigBands, nDTSize);
+            if( GDALDataTypeIsComplex(eDataType) )
+                GDALSwapWords( ppData[iLine], nDTSize / 2, 2 * nReqXSize * nContigBands, nDTSize / 2);
+            else
+                GDALSwapWords( ppData[iLine], nDTSize, nReqXSize * nContigBands, nDTSize);
         }
     }
 
@@ -3128,7 +3133,7 @@ CPLErr GTiffRasterBand::SetMetadata( char ** papszMD, const char *pszDomain )
             // Cancel any existing metadata from PAM file
             if( eAccess == GA_Update &&
                 GDALPamRasterBand::GetMetadata(pszDomain) != NULL )
-                GDALPamRasterBand::SetMetadata(papszMD, pszDomain);
+                GDALPamRasterBand::SetMetadata(NULL, pszDomain);
         }
     }
 
@@ -5168,7 +5173,7 @@ int GTiffDataset::GetJPEGOverviewCount()
         return nJPEGOverviewCount;
 
     nJPEGOverviewCount = 0;
-    if( eAccess != GA_ReadOnly || nCompression != COMPRESSION_JPEG ||
+    if( !bBase || eAccess != GA_ReadOnly || nCompression != COMPRESSION_JPEG ||
         (nRasterXSize < 256 && nRasterYSize < 256) ||
         !CSLTestBoolean(CPLGetConfigOption("GTIFF_IMPLICIT_JPEG_OVR", "YES")) ||
         GDALGetDriverByName("JPEG") == NULL )
@@ -5765,7 +5770,14 @@ CPLErr GTiffDataset::LoadBlockBuf( int nBlockId, int bReadFromDisk )
         }
     }
 
-    nLoadedBlock = nBlockId;
+    if( eErr == CE_None )
+    {
+        nLoadedBlock = nBlockId;
+    }
+    else
+    {
+        nLoadedBlock = -1;
+    }
     bLoadedBlockDirty = FALSE;
 
     return eErr;
@@ -7230,7 +7242,8 @@ void GTiffDataset::WriteGeoTIFFInfo()
 /* -------------------------------------------------------------------- */
 /*	Write out projection definition.				*/
 /* -------------------------------------------------------------------- */
-    if( pszProjection != NULL && !EQUAL( pszProjection, "" )
+    const bool bHasProjection = (pszProjection != NULL && strlen(pszProjection) > 0);
+    if( (bHasProjection || bPixelIsPoint)
         && !EQUAL(osProfile,"BASELINE") )
     {
         GTIF	*psGTIF;
@@ -7244,7 +7257,10 @@ void GTiffDataset::WriteGeoTIFFInfo()
         psGTIF = GTIFNew( hTIFF );  
 
         // set according to coordinate system.
-        GTIFSetFromOGISDefn( psGTIF, pszProjection );
+        if( bHasProjection )
+        {
+            GTIFSetFromOGISDefn( psGTIF, pszProjection );
+        }
 
         if( bPixelIsPoint )
         {
@@ -9480,8 +9496,12 @@ CPLErr GTiffDataset::OpenOffset( TIFF *hTIFFIn,
         // Lets treat large "one row" bitmaps using the scanline api.
         if( !TIFFIsTiled(hTIFF) 
             && nBlockYSize == nYSize 
-            && nYSize > 2000 )
+            && nYSize > 2000
+            /* libtiff does not support reading JBIG files with TIFFReadScanline() */
+            && nCompression != COMPRESSION_JBIG )
+        {
             bTreatAsSplitBitmap = TRUE;
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -9571,6 +9591,31 @@ CPLErr GTiffDataset::OpenOffset( TIFF *hTIFFIn,
               && nBitsPerSample != 64 
               && nBitsPerSample != 128 )
         bTreatAsOdd = TRUE;
+
+/* -------------------------------------------------------------------- */
+/*      We don't support 'chunks' bigger than 2GB although libtiff v4   */
+/*      can.                                                            */
+/* -------------------------------------------------------------------- */
+#if defined(BIGTIFF_SUPPORT)
+    tmsize_t nChunkSize;
+    if( bTreatAsSplit || bTreatAsSplitBitmap )
+    {
+        nChunkSize = TIFFScanlineSize( hTIFF );
+    }
+    else
+    {
+        if( TIFFIsTiled(hTIFF) )
+            nChunkSize = TIFFTileSize( hTIFF );
+        else
+            nChunkSize = TIFFStripSize( hTIFF );
+    }
+    if( nChunkSize > INT_MAX )
+    {
+        CPLError( CE_Failure, CPLE_NotSupported,
+                  "Scanline/tile/strip size bigger than 2GB." );
+        return CE_Failure;
+    }
+#endif
 
     int bMinIsWhite = nPhotometric == PHOTOMETRIC_MINISWHITE;
 
@@ -10190,6 +10235,7 @@ void GTiffDataset::ScanDirectories()
         /* Embedded mask of the main image */
         else if ((nSubType & FILETYPE_MASK) != 0 &&
                  (nSubType & FILETYPE_REDUCEDIMAGE) == 0 &&
+                 iDirIndex != 1 &&
                  poMaskDS == NULL )
         {
             poMaskDS = new GTiffDataset();
@@ -10226,7 +10272,8 @@ void GTiffDataset::ScanDirectories()
         /* Embedded mask of an overview */
         /* The TIFF6 specification allows the combination of the FILETYPE_xxxx masks */
         else if ((nSubType & FILETYPE_REDUCEDIMAGE) != 0 &&
-                 (nSubType & FILETYPE_MASK) != 0)
+                 (nSubType & FILETYPE_MASK) != 0 &&
+                 iDirIndex != 1)
         {
             GTiffDataset* poDS = new GTiffDataset();
             if( poDS->OpenOffset( hTIFF, ppoActiveDSRef, nThisDir, FALSE, 
@@ -12111,16 +12158,19 @@ GTiffDataset::CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /* -------------------------------------------------------------------- */
 /*      Write the projection information, if possible.                  */
 /* -------------------------------------------------------------------- */
-    if( pszProjection != NULL && strlen(pszProjection) > 0 && bGeoTIFF )
+    const bool bHasProjection = (pszProjection != NULL && strlen(pszProjection) > 0);
+    if( (bHasProjection || bPixelIsPoint) && bGeoTIFF )
     {
         GTIF	*psGTIF;
 
         psGTIF = GTIFNew( hTIFF );
-        GTIFSetFromOGISDefn( psGTIF, pszProjection );
 
-        if( poSrcDS->GetMetadataItem( GDALMD_AREA_OR_POINT ) 
-            && EQUAL(poSrcDS->GetMetadataItem(GDALMD_AREA_OR_POINT),
-                     GDALMD_AOP_POINT) )
+        if( bHasProjection )
+        {
+            GTIFSetFromOGISDefn( psGTIF, pszProjection );
+        }
+
+        if( bPixelIsPoint )
         {
             GTIFKeySet(psGTIF, GTRasterTypeGeoKey, TYPE_SHORT, 1,
                        RasterPixelIsPoint);
@@ -12899,7 +12949,7 @@ CPLErr GTiffDataset::SetMetadata( char ** papszMD, const char *pszDomain )
         // Cancel any existing metadata from PAM file
         if( eAccess == GA_Update &&
             GDALPamDataset::GetMetadata(pszDomain) != NULL )
-            GDALPamDataset::SetMetadata(papszMD, pszDomain);
+            GDALPamDataset::SetMetadata(NULL, pszDomain);
     }
 
     if( (pszDomain == NULL || EQUAL(pszDomain, "")) &&
@@ -13428,8 +13478,6 @@ int GTiffOneTimeInit()
     TIFFSetWarningHandler( GTiffWarningHandler );
     TIFFSetErrorHandler( GTiffErrorHandler );
 
-    // This only really needed if we are linked to an external libgeotiff
-    // with its own (lame) file searching logic. 
     LibgeotiffOneTimeInit();
 
     return TRUE;

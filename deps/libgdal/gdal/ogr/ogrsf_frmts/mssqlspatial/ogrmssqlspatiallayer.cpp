@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatiallayer.cpp 29469 2015-07-04 11:42:30Z rouault $
+ * $Id: ogrmssqlspatiallayer.cpp 31802 2015-11-27 20:47:36Z rouault $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -29,7 +29,7 @@
 
 #include "ogr_mssqlspatial.h"
 
-CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 29469 2015-07-04 11:42:30Z rouault $");
+CPL_CVSID("$Id: ogrmssqlspatiallayer.cpp 31802 2015-11-27 20:47:36Z rouault $");
 /************************************************************************/
 /*                        OGRMSSQLSpatialLayer()                        */
 /************************************************************************/
@@ -143,14 +143,39 @@ CPLErr OGRMSSQLSpatialLayer::BuildFeatureDefn( const char *pszLayerName,
         {
 		    if (EQUAL(poStmt->GetColName(iCol), pszFIDColumn) )
             {
-                if (EQUALN(poStmt->GetColTypeName( iCol ), "bigint", 6))
-                    SetMetadataItem(OLMD_FID64, "YES");
-            
-                if ( EQUAL(poStmt->GetColTypeName( iCol ), "int identity") ||
-                     EQUAL(poStmt->GetColTypeName( iCol ), "bigint identity"))
-                    bIsIdentityFid = TRUE;
-                /* skip FID */
-                continue;
+                bool bIntegerFID = false;
+                switch( CPLODBCStatement::GetTypeMapping(poStmt->GetColType(iCol)) )
+                {
+                    case SQL_C_SSHORT:
+                    case SQL_C_USHORT:
+                    case SQL_C_SLONG:
+                    case SQL_C_ULONG:
+                    case SQL_C_SBIGINT:
+                    case SQL_C_UBIGINT:
+                        bIntegerFID = true;
+                        break;
+                    default:
+                        break;
+                }
+                if( !bIntegerFID )
+                {
+                    CPLDebug("MSSQL", "Ignoring FID column %s as it is of non integer type",
+                             pszFIDColumn);
+                    CPLFree(pszFIDColumn);
+                    pszFIDColumn = NULL;
+                }
+                else
+                {
+                    if (EQUALN(poStmt->GetColTypeName( iCol ), "bigint", strlen("bigint")))
+                        SetMetadataItem(OLMD_FID64, "YES");
+
+                    if ( EQUAL(poStmt->GetColTypeName( iCol ), "int identity") ||
+                        EQUAL(poStmt->GetColTypeName( iCol ), "bigint identity"))
+                        bIsIdentityFid = TRUE;
+
+                    /* skip FID */
+                    continue;
+                }
             }
         }
         else

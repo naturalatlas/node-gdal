@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: pj_init.c 2163 2012-02-21 01:53:19Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Initialize projection object from string definition.  Includes
  *           pj_init(), pj_init_plus() and pj_free() function.
@@ -34,49 +32,184 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <locale.h>
+#include <ctype.h>
 
-PJ_CVSID("$Id: pj_init.c 2163 2012-02-21 01:53:19Z warmerdam $");
+typedef struct {
+    projCtx ctx;
+    PAFile fid;
+    char buffer[8193];
+    int buffer_filled;
+    int at_eof;
+} pj_read_state;
+
+/************************************************************************/
+/*                            fill_buffer()                             */
+/************************************************************************/
+
+static const char *fill_buffer(pj_read_state *state, const char *last_char)
+{
+    size_t bytes_read;
+    size_t char_remaining, char_requested;
+
+/* -------------------------------------------------------------------- */
+/*      Don't bother trying to read more if we are at eof, or if the    */
+/*      buffer is still over half full.                                 */
+/* -------------------------------------------------------------------- */
+    if (last_char == NULL)
+        last_char = state->buffer;
+
+    if (state->at_eof)
+        return last_char;
+
+    char_remaining = state->buffer_filled - (last_char - state->buffer);
+    if (char_remaining >= sizeof(state->buffer) / 2)
+        return last_char;
+
+/* -------------------------------------------------------------------- */
+/*      Move the existing data to the start of the buffer.              */
+/* -------------------------------------------------------------------- */
+    memmove(state->buffer, last_char, char_remaining);
+    state->buffer_filled = char_remaining;
+    last_char = state->buffer;
+
+/* -------------------------------------------------------------------- */
+/*      Refill.                                                         */
+/* -------------------------------------------------------------------- */
+    char_requested = sizeof(state->buffer) - state->buffer_filled - 1;
+    bytes_read = pj_ctx_fread( state->ctx, state->buffer + state->buffer_filled,
+                               1, char_requested, state->fid );
+    if (bytes_read < char_requested)
+    {
+        state->at_eof = 1;
+        state->buffer[state->buffer_filled + bytes_read] = '\0';
+    }
+
+    state->buffer_filled += bytes_read;
+    return last_char;
+}
 
 /************************************************************************/
 /*                              get_opt()                               */
 /************************************************************************/
 static paralist *
-get_opt(projCtx ctx, paralist **start, FILE *fid, char *name, paralist *next) {
-    char sword[302], *word = sword+1;
-    int first = 1, len, c;
+get_opt(projCtx ctx, paralist **start, PAFile fid, char *name, paralist *next,
+        int *found_def) {
+    pj_read_state *state = (pj_read_state*) calloc(1,sizeof(pj_read_state));
+    char sword[302];
+    int len;
+    int in_target = 0;
+    const char *next_char = NULL;
+
+    state->fid = fid;
+    state->ctx = ctx;
+    next_char = fill_buffer(state, NULL);
+    if(found_def)
+        *found_def = 0;
 
     len = strlen(name);
     *sword = 't';
-    while (fscanf(fid, "%300s", word) == 1) {
-        if (*word == '#') /* skip comments */
-            while((c = fgetc(fid)) != EOF && c != '\n') ;
-        else if (*word == '<') { /* control name */
-            if (first && !strncmp(name, word + 1, len)
-                && word[len + 1] == '>')
-                first = 0;
-            else if (!first && *word == '<') {
-                while((c = fgetc(fid)) != EOF && c != '\n') ;
+
+    /* loop till we find our target keyword */
+    while (*next_char) 
+    {
+        next_char = fill_buffer(state, next_char);
+
+        /* Skip white space. */
+        while( isspace(*next_char) )
+            next_char++;
+
+        next_char = fill_buffer(state, next_char);
+        
+        /* for comments, skip past end of line. */
+        if( *next_char == '#' ) 
+        {
+            while( *next_char && *next_char != '\n' )
+                next_char++;
+
+            next_char = fill_buffer(state, next_char);
+            if (*next_char == '\n')
+                next_char++;
+            if (*next_char == '\r')
+                next_char++;
+            
+        } 
+
+        /* Is this our target? */
+        else if( *next_char == '<' ) 
+        {
+            /* terminate processing target on the next block definition */
+            if (in_target)
                 break;
-            }
-        } else if (!first && !pj_param(ctx, *start, sword).i) {
-            /* don't default ellipse if datum, ellps or any earth model
-               information is set. */
-            if( strncmp(word,"ellps=",6) != 0 
-                || (!pj_param(ctx, *start, "tdatum").i 
-                    && !pj_param(ctx, *start, "tellps").i 
-                    && !pj_param(ctx, *start, "ta").i 
-                    && !pj_param(ctx, *start, "tb").i 
-                    && !pj_param(ctx, *start, "trf").i 
-                    && !pj_param(ctx, *start, "tf").i) )
+
+            next_char++;
+            if (strncmp(name, next_char, len) == 0
+                && next_char[len] == '>') 
             {
-                next = next->next = pj_mkparam(word);
+                /* skip past target word */
+                next_char += len + 1;
+                in_target = 1;
+                if(found_def)
+                    *found_def = 1;
+            }
+            else 
+            {
+                /* skip past end of line */
+                while( *next_char && *next_char != '\n' )
+                    next_char++;
             }
         }
-    }
+        else if (in_target) 
+        {
+            const char *start_of_word = next_char;
+            int word_len = 0;
+
+            if (*start_of_word == '+')
+            {
+                start_of_word++;
+                next_char++;
+            }
+
+            /* capture parameter */
+            while( *next_char && !isspace(*next_char) )
+            {
+                next_char++;
+                word_len++;
+            }
+
+            strncpy(sword+1, start_of_word, word_len);
+            sword[word_len+1] = '\0';
+
+            /* do not override existing parameter value of same name */
+            if (!pj_param(ctx, *start, sword).i) {
+                /* don't default ellipse if datum, ellps or any earth model
+                   information is set. */
+                if( strncmp(sword+1,"ellps=",6) != 0 
+                    || (!pj_param(ctx, *start, "tdatum").i 
+                        && !pj_param(ctx, *start, "tellps").i 
+                        && !pj_param(ctx, *start, "ta").i 
+                        && !pj_param(ctx, *start, "tb").i 
+                        && !pj_param(ctx, *start, "trf").i 
+                        && !pj_param(ctx, *start, "tf").i) )
+                {
+                    next = next->next = pj_mkparam(sword+1);
+                }
+            }
+            
+        }
+        else 
+        {
+            /* skip past word */
+            while( *next_char && !isspace(*next_char) )
+                next_char++;
+            
+        }
+    }        
 
     if (errno == 25)
         errno = 0;
+
+    free(state);
+
     return next;
 }
 
@@ -85,13 +218,13 @@ get_opt(projCtx ctx, paralist **start, FILE *fid, char *name, paralist *next) {
 /************************************************************************/
 static paralist *
 get_defaults(projCtx ctx, paralist **start, paralist *next, char *name) {
-    FILE *fid;
+    PAFile fid;
 
     if ( (fid = pj_open_lib(ctx,"proj_def.dat", "rt")) != NULL) {
-        next = get_opt(ctx, start, fid, "general", next);
-        rewind(fid);
-        next = get_opt(ctx, start, fid, name, next);
-        (void)fclose(fid);
+        next = get_opt(ctx, start, fid, "general", next, NULL);
+        pj_ctx_fseek(ctx, fid, 0, SEEK_SET);
+        next = get_opt(ctx, start, fid, name, next, NULL);
+        pj_ctx_fclose(ctx, fid);
     }
     if (errno)
         errno = 0; /* don't care if can't open file */
@@ -104,9 +237,10 @@ get_defaults(projCtx ctx, paralist **start, paralist *next, char *name) {
 /*                              get_init()                              */
 /************************************************************************/
 static paralist *
-get_init(projCtx ctx, paralist **start, paralist *next, char *name) {
+get_init(projCtx ctx, paralist **start, paralist *next, char *name,
+         int *found_def) {
     char fname[MAX_PATH_FILENAME+ID_TAG_MAX+3], *opt;
-    FILE *fid;
+    PAFile fid;
     paralist *init_items = NULL;
     const paralist *orig_next = next;
 
@@ -122,6 +256,7 @@ get_init(projCtx ctx, paralist **start, paralist *next, char *name) {
         next->next = init_items;
         while( next->next != NULL )
             next = next->next;
+        *found_def = 1;
         return next;
     }
 
@@ -133,10 +268,10 @@ get_init(projCtx ctx, paralist **start, paralist *next, char *name) {
     else { pj_ctx_set_errno(ctx,-3); return NULL; }
 
     if ( (fid = pj_open_lib(ctx,fname, "rt")) != NULL)
-        next = get_opt(ctx, start, fid, opt, next);
+        next = get_opt(ctx, start, fid, opt, next, found_def);
     else
         return NULL;
-    (void)fclose(fid);
+    pj_ctx_fclose(ctx, fid);
     if (errno == 25)
         errno = 0; /* unknown problem with some sys errno<-25 */
 
@@ -172,7 +307,7 @@ pj_init_plus_ctx( projCtx ctx, const char *definition )
     char	*argv[MAX_ARG];
     char	*defn_copy;
     int		argc = 0, i, blank_count = 0;
-    PJ	    *result;
+    PJ	    *result = NULL;
     
     /* make a copy that we can manipulate */
     defn_copy = (char *) pj_malloc( strlen(definition)+1 );
@@ -197,7 +332,7 @@ pj_init_plus_ctx( projCtx ctx, const char *definition )
                 if( argc+1 == MAX_ARG )
                 {
                     pj_ctx_set_errno( ctx, -44 );
-                    return NULL;
+                    goto bum_call;
                 }
                 
                 argv[argc++] = defn_copy + i + 1;
@@ -225,6 +360,7 @@ pj_init_plus_ctx( projCtx ctx, const char *definition )
     /* perform actual initialization */
     result = pj_init_ctx( ctx, argc, argv );
 
+bum_call:
     pj_dalloc( defn_copy );
 
     return result;
@@ -252,31 +388,28 @@ pj_init_ctx(projCtx ctx, int argc, char **argv) {
     paralist *curr;
     int i;
     PJ *PIN = 0;
-    char *old_locale;
 
     ctx->last_errno = 0;
     start = NULL;
 
-    old_locale = strdup(setlocale(LC_NUMERIC, NULL));
-    if( strcmp(old_locale,"C") != 0 )
-        setlocale(LC_NUMERIC,"C");
-
     /* put arguments into internal linked list */
     if (argc <= 0) { pj_ctx_set_errno( ctx, -1 ); goto bum_call; }
-    for (i = 0; i < argc; ++i)
-        if (i)
-            curr = curr->next = pj_mkparam(argv[i]);
-        else
-            start = curr = pj_mkparam(argv[i]);
+    start = curr = pj_mkparam(argv[0]);
+    for (i = 1; i < argc; ++i) {
+        curr->next = pj_mkparam(argv[i]);
+        curr = curr->next;
+    }
     if (ctx->last_errno) goto bum_call;
 
     /* check if +init present */
     if (pj_param(ctx, start, "tinit").i) {
-        paralist *last = curr;
+        int found_def = 0;
 
-        if (!(curr = get_init(ctx,&start, curr, pj_param(ctx, start, "sinit").s)))
+        if (!(curr = get_init(ctx,&start, curr,
+                              pj_param(ctx, start, "sinit").s,
+                              &found_def)))
             goto bum_call;
-        if (curr == last) { pj_ctx_set_errno( ctx, -2); goto bum_call; }
+        if (!found_def) { pj_ctx_set_errno( ctx, -2); goto bum_call; }
     }
 
     /* find projection selection */
@@ -405,9 +538,9 @@ pj_init_ctx(projCtx ctx, int argc, char **argv) {
         s = pj_units[i].to_meter;
     }
     if (s || (s = pj_param(ctx, start, "sto_meter").s)) {
-        PIN->to_meter = strtod(s, &s);
+        PIN->to_meter = pj_strtod(s, &s);
         if (*s == '/') /* ratio number */
-            PIN->to_meter /= strtod(++s, 0);
+            PIN->to_meter /= pj_strtod(++s, 0);
         PIN->fr_meter = 1. / PIN->to_meter;
     } else
         PIN->to_meter = PIN->fr_meter = 1.;
@@ -420,9 +553,9 @@ pj_init_ctx(projCtx ctx, int argc, char **argv) {
         s = pj_units[i].to_meter;
     }
     if (s || (s = pj_param(ctx, start, "svto_meter").s)) {
-        PIN->vto_meter = strtod(s, &s);
+        PIN->vto_meter = pj_strtod(s, &s);
         if (*s == '/') /* ratio number */
-            PIN->vto_meter /= strtod(++s, 0);
+            PIN->vto_meter /= pj_strtod(++s, 0);
         PIN->vfr_meter = 1. / PIN->vto_meter;
     } else {
         PIN->vto_meter = PIN->to_meter;
@@ -468,10 +601,6 @@ pj_init_ctx(projCtx ctx, int argc, char **argv) {
         PIN = 0;
     }
 
-    if( strcmp(old_locale,"C") != 0 )
-        setlocale(LC_NUMERIC,old_locale);
-    free( (char*)old_locale );
-
     return PIN;
 }
 
@@ -488,7 +617,7 @@ pj_init_ctx(projCtx ctx, int argc, char **argv) {
 void
 pj_free(PJ *P) {
     if (P) {
-        paralist *t = P->params, *n;
+        paralist *t, *n;
 
         /* free parameter list elements */
         for (t = P->params; t; t = n) {
@@ -499,10 +628,14 @@ pj_free(PJ *P) {
         /* free array of grid pointers if we have one */
         if( P->gridlist != NULL )
             pj_dalloc( P->gridlist );
-        
+
+        if( P->vgridlist_geoid != NULL )
+            pj_dalloc( P->vgridlist_geoid );
+
+        if( P->catalog != NULL )
+            pj_dalloc( P->catalog );
+
         /* free projection parameters */
         P->pfree(P);
     }
 }
-
-

@@ -1,7 +1,11 @@
 #!/bin/bash
+
+set -eu
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgeos"
 
+GEOS_VERSION=3.4.2
 dir_geos=./geos
 
 #
@@ -10,10 +14,10 @@ dir_geos=./geos
 
 rm -rf $dir_geos
 if [[ ! -f geos.tar.bz2 ]]; then
-	curl http://download.osgeo.org/geos/geos-3.4.2.tar.bz2 -o geos.tar.bz2
+	curl -L http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 -o geos.tar.bz2
 fi
 tar -xzf geos.tar.bz2
-mv geos-3.4.2 $dir_geos
+mv geos-${GEOS_VERSION} $dir_geos
 
 rm -rf $dir_geos/php
 rm -rf $dir_geos/swig

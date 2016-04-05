@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbtable.cpp 29330 2015-06-14 12:11:11Z rouault $
+ * $Id: filegdbtable.cpp 33153 2016-01-25 12:45:47Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB tables
@@ -2427,7 +2427,11 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
             OGRMultiLineString* poMLS = NULL;
             FileGDBOGRLineString* poLS = NULL;
             if( nParts > 1 )
+            {
                 poMLS = new OGRMultiLineString();
+                if( bHasZ )
+                    poMLS->setCoordinateDimension(3);
+            }
 
             dx = dy = dz = 0;
             for(i=0;i<nParts;i++)
@@ -2680,6 +2684,7 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
             }
 
             OGRMultiPolygon* poMP = new OGRMultiPolygon();
+            poMP->setCoordinateDimension(3);
             OGRPolygon* poLastPoly = NULL;
             int iAccPoints = 0;
             for(i=0;i<nParts;i++)

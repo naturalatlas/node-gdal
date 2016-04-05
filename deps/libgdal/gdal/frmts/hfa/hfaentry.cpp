@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hfaentry.cpp 28275 2015-01-02 18:45:58Z rouault $
+ * $Id: hfaentry.cpp 32495 2015-12-27 13:07:01Z rouault $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Implementation of the HFAEntry class for reading and relating
@@ -38,7 +38,7 @@
 #include "hfa_p.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: hfaentry.cpp 28275 2015-01-02 18:45:58Z rouault $");
+CPL_CVSID("$Id: hfaentry.cpp 32495 2015-12-27 13:07:01Z rouault $");
 
 /************************************************************************/
 /*                              HFAEntry()                              */
@@ -464,6 +464,12 @@ void HFAEntry::LoadData()
 {
     if( pabyData != NULL || nDataSize == 0 )
         return;
+    if( nDataSize > INT_MAX - 1 )
+    {
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Invalid value for nDataSize = %u", nDataSize);
+        return;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Allocate buffer, and read data.                                 */

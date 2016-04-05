@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ecrgtocdataset.cpp 29778 2015-08-25 09:02:53Z rouault $
+ * $Id: ecrgtocdataset.cpp 32232 2015-12-18 12:30:37Z rouault $
  *
  * Project:  ECRG TOC read Translator
  * Purpose:  Implementation of ECRGTOCDataset and ECRGTOCSubDataset.
@@ -35,7 +35,7 @@
 #include "cpl_minixml.h"
 #include <vector>
 
-CPL_CVSID("$Id: ecrgtocdataset.cpp 29778 2015-08-25 09:02:53Z rouault $");
+CPL_CVSID("$Id: ecrgtocdataset.cpp 32232 2015-12-18 12:30:37Z rouault $");
 
 /** Overview of used classes :
    - ECRGTOCDataset : lists the different subdatasets, listed in the .xml,
@@ -261,9 +261,9 @@ static GIntBig GetFromBase34(const char* pszVal, int nMaxSize)
             chVal = ch - '0';
         else if (ch >= 'a' && ch <= 'h')
             chVal = ch - 'a' + 10;
-        else if (ch >= 'j' && ch < 'n')
+        else if (ch >= 'j' && ch <= 'n')
             chVal = ch - 'a' + 10 - 1;
-        else if (ch > 'p' && ch <= 'z')
+        else if (ch >= 'p' && ch <= 'z')
             chVal = ch - 'a' + 10 - 2;
         else
         {
@@ -1058,7 +1058,7 @@ GDALDataset *ECRGTOCDataset::Open( GDALOpenInfo * poOpenInfo )
             {
                 osFilename = papszTokens[2];
                 osFilename += ":";
-                osFilename = papszTokens[3];
+                osFilename += papszTokens[3];
             }
             else
             {
@@ -1074,7 +1074,7 @@ GDALDataset *ECRGTOCDataset::Open( GDALOpenInfo * poOpenInfo )
             osScale = papszTokens[2];
             osFilename = papszTokens[3];
             osFilename += ":";
-            osFilename = papszTokens[4];
+            osFilename += papszTokens[4];
         }
         else
         {

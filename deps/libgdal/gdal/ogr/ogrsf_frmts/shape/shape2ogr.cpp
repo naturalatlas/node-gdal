@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shape2ogr.cpp 29234 2015-05-22 19:17:03Z rouault $
+ * $Id: shape2ogr.cpp 33049 2016-01-19 15:52:01Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements translation of Shapefile shapes into OGR
@@ -32,7 +32,7 @@
 #include "ogrshape.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: shape2ogr.cpp 29234 2015-05-22 19:17:03Z rouault $");
+CPL_CVSID("$Id: shape2ogr.cpp 33049 2016-01-19 15:52:01Z rouault $");
 
 /************************************************************************/
 /*                        RingStartEnd                                  */
@@ -118,9 +118,10 @@ OGRGeometry *SHPReadOGRObject( SHPHandle hSHP, int iShape, SHPObject *psShape )
     }
     else if(psShape->nSHPType == SHPT_POINTM )
     {
+        /* padfM will be always not NULL in the case */
         // Read XYM as XYZ
         poOGR = new OGRPoint( psShape->padfX[0], psShape->padfY[0],
-                              psShape->padfM[0] );
+                            psShape->padfM[0] );
     }
 /* -------------------------------------------------------------------- */
 /*      Multipoint.                                                     */
@@ -177,7 +178,7 @@ OGRGeometry *SHPReadOGRObject( SHPHandle hSHP, int iShape, SHPObject *psShape )
             if( psShape->nSHPType == SHPT_ARCZ )
                 poOGRLine->setPoints( psShape->nVertices,
                                     psShape->padfX, psShape->padfY, psShape->padfZ );
-            else if( psShape->nSHPType == SHPT_ARCM )
+            else if( psShape->nSHPType == SHPT_ARCM && psShape->padfM != NULL )
                 // Read XYM as XYZ
                 poOGRLine->setPoints( psShape->nVertices,
                                     psShape->padfX, psShape->padfY, psShape->padfM );
@@ -224,7 +225,7 @@ OGRGeometry *SHPReadOGRObject( SHPHandle hSHP, int iShape, SHPObject *psShape )
                                     psShape->padfX + nRingStart,
                                     psShape->padfY + nRingStart,
                                     psShape->padfZ + nRingStart );
-                else if( psShape->nSHPType == SHPT_ARCM )
+                else if( psShape->nSHPType == SHPT_ARCM && psShape->padfM != NULL )
                     // Read XYM as XYZ
                     poLine->setPoints( nRingPoints,
                                     psShape->padfX + nRingStart,

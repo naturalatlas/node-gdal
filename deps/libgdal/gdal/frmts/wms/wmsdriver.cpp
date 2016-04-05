@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wmsdriver.cpp 28911 2015-04-15 14:46:06Z bishop $
+ * $Id: wmsdriver.cpp 31240 2015-10-29 03:32:45Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -584,6 +584,15 @@ static CPLXMLNode* GDALWMSDatasetGetConfigFromArcGISJSON(const char* pszURL,
         nTileCountX = 2;
         dfMaxX = 180;
     }
+
+    const int nLevelCountOri = nLevelCount;
+    while( (double)nTileCountX * nTileWidth * (1 << nLevelCount) > INT_MAX )
+        nLevelCount --;
+    while( (double)nTileHeight * (1 << nLevelCount) > INT_MAX )
+        nLevelCount --;
+    if( nLevelCount != nLevelCountOri )
+        CPLDebug("WMS", "Had to limit level count to %d instead of %d to stay within GDAL raster size limits",
+                 nLevelCount, nLevelCountOri);
 
     CPLString osXML = CPLSPrintf(
             "<GDAL_WMS>\n"

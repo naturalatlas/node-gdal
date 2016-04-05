@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_mdreader.cpp 29190 2015-05-13 21:40:30Z bishop $
+ * $Id: gdal_mdreader.cpp 31770 2015-11-25 23:01:18Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata (mainly the remote sensing imagery) from files of 
@@ -48,7 +48,7 @@
 #include "mdreader/reader_eros.h"
 #include "mdreader/reader_kompsat.h"
 
-CPL_CVSID("$Id: gdal_mdreader.cpp 29190 2015-05-13 21:40:30Z bishop $");
+CPL_CVSID("$Id: gdal_mdreader.cpp 31770 2015-11-25 23:01:18Z rouault $");
 
 /**
  * The RPC parameters names
@@ -111,6 +111,10 @@ GDALMDReaderBase* GDALMDReaderManager::GetReader(const char *pszPath,
                                                  char **papszSiblingFiles,
                                                  GUInt32 nType)
 {
+    /* Do no attempt reading side-car files on /vsisubfile/ (#6241) */
+    if( strncmp(pszPath, "/vsisubfile/", strlen("/vsisubfile/")) == 0 )
+        return NULL;
+
     if(nType & MDR_DG)
     {
         INIT_READER(GDALMDReaderDigitalGlobe);

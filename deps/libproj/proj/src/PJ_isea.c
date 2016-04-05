@@ -59,7 +59,7 @@ int hex_iso(struct hex *h) {
 }
 
 ISEA_STATIC
-int hexbin2(int horizontal, double width, double x, double y,
+int hexbin2(double width, double x, double y,
                 int *i, int *j) {
 	double z, rx, ry, rz;
 	double abs_dx, abs_dy, abs_dz;
@@ -160,10 +160,10 @@ ISEA_STATIC
 struct snyder_constants constants[] = {
 	{23.80018260, 62.15458023, 60.0, 3.75, 1.033, 0.968, 5.09, 1.195, 1.0},
 	{20.07675127, 55.69063953, 54.0, 2.65, 1.030, 0.983, 3.59, 1.141, 1.027},
-	{0.0},
-	{0.0},
-	{0.0},
-	{0.0},
+	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
 	{37.37736814, 36.0, 30.0, 17.27, 1.163, 0.860, 13.14, 1.584, 1.0},
 };
 
@@ -369,23 +369,14 @@ isea_snyder_forward(struct isea_geo * ll, struct isea_pt * out)
 		center = icostriangles[i];
 
 		/* step 1 */
-#if 0
-		z = sph_distance(center.lon, center.lat, ll->lon, ll->lat);
-#else
 		z = acos(sin(center.lat) * sin(ll->lat)
 			 + cos(center.lat) * cos(ll->lat) * cos(ll->lon - center.lon));
-#endif
-
 		/* not on this triangle */
 		if (z > g + 0.000005) { /* TODO DBL_EPSILON */
 			continue;
 		}
-		Az = sph_azimuth(ll->lon, ll->lat, center.lon, center.lat);
 
-		Az = atan2(cos(ll->lat) * sin(ll->lon - center.lon),
-			   cos(center.lat) * sin(ll->lat)
-		- sin(center.lat) * cos(ll->lat) * cos(ll->lon - center.lon)
-			);
+		Az = sph_azimuth(center.lon, center.lat, ll->lon, ll->lat);
 
 		/* step 2 */
 
@@ -735,7 +726,7 @@ isea_dddi_ap3odd(struct isea_dgg *g, int quad, struct isea_pt *pt, struct isea_p
 	maxcoord = (int) (sidelength * 2.0 + 0.5);
 
 	v = *pt;
-	hexbin2(0, hexwidth, v.x, v.y, &h.x, &h.y);
+	hexbin2(hexwidth, v.x, v.y, &h.x, &h.y);
 	h.iso = 0;
 	hex_iso(&h);
 
@@ -813,7 +804,7 @@ isea_dddi(struct isea_dgg *g, int quad, struct isea_pt *pt, struct isea_pt *di) 
 
 	v = *pt;
 	isea_rotate(&v, -30.0);
-	hexbin2(0, hexwidth, v.x, v.y, &h.x, &h.y);
+	hexbin2(hexwidth, v.x, v.y, &h.x, &h.y);
 	h.iso = 0;
 	hex_iso(&h);
 
@@ -919,7 +910,6 @@ int isea_hex(struct isea_dgg *g, int tri,
 	struct isea_pt v;
 	int sidelength;
 	int d, i, x, y, quad;
-	double oddsl;
 
 	quad = isea_ptdi(g, tri, pt, &v);
 
@@ -934,8 +924,6 @@ int isea_hex(struct isea_dgg *g, int tri,
 	/* Aperture 3 odd resolutions */
 	if (g->aperture == 3 && g->resolution % 2 != 0) {
 		int offset = (int)(pow(3.0, g->resolution - 1) + 0.5);
-
-		oddsl = (pow(2.0, g->resolution) + 1.0) / 2.0;
 
 		d += offset * ((g->quad-1) % 5);
 		i += offset * ((g->quad-1) % 5);
@@ -979,13 +967,10 @@ ISEA_STATIC
 struct isea_pt
 isea_forward(struct isea_dgg *g, struct isea_geo *in)
 {
-	int             tri, downtri, quad;
+	int             tri;
 	struct isea_pt  out, coord;
 
 	tri = isea_transform(g, in, &out);
-
-	downtri = (((tri - 1) / 5) % 2 == 1);
-	quad = ((tri - 1) % 5) + ((tri - 1) / 10) * 5 + 1;
 
 	if (g->output == ISEA_PLANE) {
 		isea_tri_plane(tri, &out, g->radius);

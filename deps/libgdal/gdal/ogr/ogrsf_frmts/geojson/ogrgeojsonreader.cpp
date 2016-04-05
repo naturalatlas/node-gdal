@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.cpp 29156 2015-05-05 10:19:17Z rouault $
+ * $Id: ogrgeojsonreader.cpp 31112 2015-10-23 20:28:27Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONReader class (OGR GeoJSON Driver).
@@ -670,7 +670,7 @@ bool OGRGeoJSONReader::GenerateFeatureDefn( OGRGeoJSONLayer* poLayer, json_objec
 
         bSuccess = true; // SUCCESS
     }
-    else
+    else if( poObj != NULL && json_object_get_type(poObj) == json_type_object )
     {
         json_object_iter it;
         it.key = NULL;

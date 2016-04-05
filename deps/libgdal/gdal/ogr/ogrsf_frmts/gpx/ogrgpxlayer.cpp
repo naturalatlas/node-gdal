@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgpxlayer.cpp 28900 2015-04-14 09:40:34Z rouault $
+ * $Id: ogrgpxlayer.cpp 31752 2015-11-25 11:02:14Z rouault $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXLayer class.
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgpxlayer.cpp 28900 2015-04-14 09:40:34Z rouault $");
+CPL_CVSID("$Id: ogrgpxlayer.cpp 31752 2015-11-25 11:02:14Z rouault $");
 
 #define FLD_TRACK_FID       0
 #define FLD_TRACK_SEG_ID    1
@@ -904,7 +904,9 @@ void OGRGPXLayer::endElementCbk(const char *pszName)
             if (poFeature && pszSubElementValue && nSubElementValueLen)
             {
                 pszSubElementValue[nSubElementValueLen] = 0;
-                if (strcmp(pszSubElementName, "time") == 0)
+                if (strcmp(pszSubElementName, "time") == 0 &&
+                    iCurrentField >= 0 &&
+                    poFeature->GetFieldDefnRef(iCurrentField)->GetType() == OFTDateTime )
                 {
                     OGRField sField;
                     if (OGRParseXMLDateTime(pszSubElementValue, &sField))

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdumpdatasource.cpp 28988 2015-04-24 11:58:49Z rouault $
+ * $Id: ogrpgdumpdatasource.cpp 31741 2015-11-24 10:22:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDumpDataSource class.
@@ -32,7 +32,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrpgdumpdatasource.cpp 28988 2015-04-24 11:58:49Z rouault $");
+CPL_CVSID("$Id: ogrpgdumpdatasource.cpp 31741 2015-11-24 10:22:41Z rouault $");
 
 /************************************************************************/
 /*                      OGRPGDumpDataSource()                           */
@@ -171,22 +171,21 @@ OGRPGDumpDataSource::ICreateLayer( const char * pszLayerName,
     const char* pszFIDColumnNameIn = CSLFetchNameValue(papszOptions, "FID");
     CPLString osFIDColumnName, osFIDColumnNameEscaped;
     if (pszFIDColumnNameIn == NULL)
-        osFIDColumnNameEscaped = osFIDColumnName = "OGC_FID";
+        osFIDColumnName = "ogc_fid";
     else
     {
         if( CSLFetchBoolean(papszOptions,"LAUNDER", TRUE) )
         {
             char* pszLaunderedFid = OGRPGCommonLaunderName(pszFIDColumnNameIn, "PGDump");
             osFIDColumnName = pszLaunderedFid;
-            osFIDColumnNameEscaped = OGRPGDumpEscapeColumnName(osFIDColumnName);
             CPLFree(pszLaunderedFid);
         }
         else
         {
             osFIDColumnName = pszFIDColumnNameIn;
-            osFIDColumnNameEscaped = OGRPGDumpEscapeColumnName(osFIDColumnName);
         }
     }
+    osFIDColumnNameEscaped = OGRPGDumpEscapeColumnName(osFIDColumnName);
 
     if (strncmp(pszLayerName, "pg", 2) == 0)
     {

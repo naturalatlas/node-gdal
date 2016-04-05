@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgdatasource.cpp 29465 2015-07-03 08:51:45Z rouault $
+ * $Id: ogrpgdatasource.cpp 31320 2015-11-02 17:22:45Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDataSource class.
@@ -37,7 +37,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgdatasource.cpp 29465 2015-07-03 08:51:45Z rouault $");
+CPL_CVSID("$Id: ogrpgdatasource.cpp 31320 2015-11-02 17:22:45Z rouault $");
 
 static void OGRPGNoticeProcessor( void *arg, const char * pszMessage );
 
@@ -2775,6 +2775,7 @@ OGRLayer * OGRPGDataSource::ExecuteSQL( const char *pszSQLCommand,
             
             osCommand.Printf( "CLOSE %s", "executeSQLCursor" );
             hResult = OGRPG_PQexec(hPGConn, osCommand );
+            OGRPGClearResult( hResult );
             
             SoftCommitTransaction();
 
@@ -2787,17 +2788,6 @@ OGRLayer * OGRPGDataSource::ExecuteSQL( const char *pszSQLCommand,
         {
             SoftRollbackTransaction();
         }
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Generate an error report if an error occured.                   */
-/* -------------------------------------------------------------------- */
-    if( !hResult ||
-        (PQresultStatus(hResult) == PGRES_NONFATAL_ERROR
-         || PQresultStatus(hResult) == PGRES_FATAL_ERROR ) )
-    {
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "%s", PQerrorMessage( hPGConn ) );
     }
 
     OGRPGClearResult( hResult );
