@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrshapelayer.cpp 29066 2015-04-30 08:50:05Z rouault $
+ * $Id: ogrshapelayer.cpp 32350 2015-12-20 17:46:02Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRShapeLayer class.
@@ -44,7 +44,7 @@
 
 #define UNSUPPORTED_OP_READ_ONLY "%s : unsupported operation on a read-only datasource."
 
-CPL_CVSID("$Id: ogrshapelayer.cpp 29066 2015-04-30 08:50:05Z rouault $");
+CPL_CVSID("$Id: ogrshapelayer.cpp 32350 2015-12-20 17:46:02Z rouault $");
 
 /************************************************************************/
 /*                           OGRShapeLayer()                            */
@@ -2528,7 +2528,8 @@ OGRErr OGRShapeLayer::Repack()
 /* -------------------------------------------------------------------- */
 /*      Update total shape count.                                       */
 /* -------------------------------------------------------------------- */
-    nTotalShapeCount = hDBF->nRecords;
+    if( hDBF != NULL )
+        nTotalShapeCount = hDBF->nRecords;
     bSHPNeedsRepack = FALSE;
 
     return OGRERR_NONE;

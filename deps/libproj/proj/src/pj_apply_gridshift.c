@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: pj_apply_gridshift.c 2154 2012-02-09 21:25:41Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Apply datum shifts based on grid shift files (normally NAD27 to
  *           NAD83 or the reverse).  This module is responsible for keeping
@@ -85,6 +83,10 @@ int pj_apply_gridshift_2( PJ *defn, int inverse,
                           double *x, double *y, double *z )
 
 {
+    if( defn->catalog_name != NULL )
+        return pj_gc_apply_gridshift( defn, inverse, point_count, point_offset,
+                                      x, y, z );
+                                      
     if( defn->gridlist == NULL )
     {
         defn->gridlist = 
@@ -115,6 +117,7 @@ int pj_apply_gridshift_3( projCtx ctx, PJ_GRIDINFO **tables, int grid_count,
 {
     int  i;
     static int debug_count = 0;
+    (void) z;
 
     if( tables == NULL || grid_count == 0 )
     {
@@ -152,7 +155,7 @@ int pj_apply_gridshift_3( projCtx ctx, PJ_GRIDINFO **tables, int grid_count,
                 continue;
 
             /* If we have child nodes, check to see if any of them apply. */
-            if( gi->child != NULL )
+            while( gi->child )
             {
                 PJ_GRIDINFO *child;
 
@@ -173,12 +176,14 @@ int pj_apply_gridshift_3( projCtx ctx, PJ_GRIDINFO **tables, int grid_count,
                     break;
                 }
 
-                /* we found a more refined child node to use */
-                if( child != NULL )
-                {
-                    gi = child;
-                    ct = child->ct;
-                }
+                /* If we didn't find a child then nothing more to do */
+
+                if( child == NULL ) break;
+
+                /* Otherwise use the child, first checking it's children */
+
+                gi = child;
+                ct = child->ct;
             }
 
             /* load the grid shift info if we don't have it. */

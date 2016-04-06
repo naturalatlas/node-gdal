@@ -1,7 +1,11 @@
 #!/bin/bash
+
+set -eu
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgdal"
 
+GDAL_VERSION=2.0.2
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
 dir_gyp_templates=./gyp-templates
@@ -12,10 +16,10 @@ dir_gyp_templates=./gyp-templates
 
 rm -rf $dir_gdal
 if [[ ! -f gdal.tar.gz ]]; then
-	curl http://download.osgeo.org/gdal/2.0.1/gdal-2.0.1.tar.gz -o gdal.tar.gz
+	curl -L http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz -o gdal.tar.gz
 fi
 tar -xzf gdal.tar.gz
-mv gdal-2.0.1 $dir_gdal
+mv gdal-${GDAL_VERSION} $dir_gdal
 
 rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig
@@ -99,7 +103,7 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	coasp tsx terragen blx til r northwood saga xyz hf2
 	kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib
 	jpeg png
-	${OPT_GDAL_FORMATS}"
+	${OPT_GDAL_FORMATS:-}"
 
 OGR_FORMATS="shape vrt avc geojson mem mitab kml gpx aeronavfaa
 	bna dxf csv edigeo geoconcept georss gml gmt gpsbabel gtm htf
@@ -146,7 +150,7 @@ format_gyp_template=`cat ${dir_gyp_templates}/libgdal_format.gyp`
 function generate_formats() {
 	local formats="$1"
 	local directory="$2"
-	local prefix="$3"
+	local prefix="${3:-}"
 
 	for fmt in $formats; do
 		file_gyp="${dir_formats_gyp}/${prefix}${fmt}.gyp"

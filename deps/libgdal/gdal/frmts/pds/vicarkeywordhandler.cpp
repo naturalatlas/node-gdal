@@ -73,24 +73,27 @@ int VICARKeywordHandler::Ingest( VSILFILE *fp, GByte *pabyHeader )
     if( VSIFSeekL( fp, 0, SEEK_SET ) != 0 )
         return FALSE;
 
-    char *pch1, *pch2;
-    char keyval[100];
-
     // Find LBLSIZE Entry
-    char* pszLBLSIZE=strstr((char*)pabyHeader,"LBLSIZE");
+    char* pszLBLSIZE = strstr(reinterpret_cast<char *>( pabyHeader ), "LBLSIZE");
     int nOffset = 0;
 
     if (pszLBLSIZE)
-        nOffset = pszLBLSIZE - (const char *)pabyHeader;
-    pch1=strstr((char*)pabyHeader+nOffset,"=");
-    if( pch1 == NULL ) return FALSE;
-    pch1 ++;
-    pch2=strstr((char*)pabyHeader+nOffset," ");
-    if( pch2 == NULL ) return FALSE;
-    strncpy(keyval,pch1,MAX(pch2-pch1, 99));
-    keyval[MAX(pch2-pch1, 99)] = 0;
-    LabelSize=atoi(keyval);    
-    if( LabelSize > 10 * 1024 * 124 )
+        nOffset = static_cast<int>(pszLBLSIZE - (const char *)pabyHeader);
+
+    const char *pch1 = strstr(reinterpret_cast<char *>( pabyHeader + nOffset ), "=");
+    if( pch1 == NULL )
+        return FALSE;
+
+    ++pch1;
+    const char *pch2 = strstr(pch1, " ");
+    if( pch2 == NULL )
+        return FALSE;
+
+    char keyval[100];
+    strncpy( keyval, pch1, MIN( static_cast<size_t>(pch2-pch1), sizeof(keyval)-1 ) );
+    keyval[MIN( static_cast<size_t>(pch2-pch1), sizeof(keyval)-1 )] = '\0';
+    LabelSize = atoi( keyval );
+    if( LabelSize <= 0 || LabelSize > 10 * 1024 * 124 )
         return FALSE;
 
     char* pszChunk = (char*) VSIMalloc(LabelSize+1);
@@ -146,7 +149,7 @@ int VICARKeywordHandler::Ingest( VSILFILE *fp, GByte *pabyHeader )
     nBandOffset = nLineOffset * nRows;
     long int starteol = LabelSize + nBandOffset * nBands;
     if( VSIFSeekL( fp, starteol, SEEK_SET ) != 0 ) {
-        printf("Error seeking to EOL!\n");
+        CPLError(CE_Failure, CPLE_AppDefined, "Error seeking again to EOL!");
         return FALSE;
         }
     char szChunk[100];
@@ -156,15 +159,25 @@ int VICARKeywordHandler::Ingest( VSILFILE *fp, GByte *pabyHeader )
     nOffset=0;
     
     if (pszLBLSIZE)
-        nOffset = pszLBLSIZE - (const char *)szChunk;
-    pch1=strstr((char*)szChunk+nOffset,"=")+1;
-    pch2=strstr((char*)szChunk+nOffset," ");
-    strncpy(keyval,pch1,pch2-pch1);
-    int EOLabelSize=atoi(keyval);
-    if( EOLabelSize > 99 )
-        EOLabelSize = 99;
-    if( VSIFSeekL( fp, starteol, SEEK_SET ) != 0 ) {
-        printf("Error seeking again to EOL!\n");
+        nOffset = static_cast<int>(pszLBLSIZE - (const char *)szChunk);
+    pch1 = strstr( reinterpret_cast<char *>( szChunk + nOffset ), "=" );
+    if( pch1 == NULL )
+        return FALSE;
+    pch1 ++;
+    pch2 = strstr( pch1, " " );
+    if( pch2 == NULL )
+        return FALSE;
+    strncpy( keyval, pch1, MIN( static_cast<size_t>(pch2-pch1), sizeof(keyval)-1 ) );
+    keyval[MIN( static_cast<size_t>(pch2-pch1), sizeof(keyval)-1 )] = '\0';
+
+    int EOLabelSize = atoi( keyval );
+    if( EOLabelSize <= 0 )
+        return FALSE;
+    if( EOLabelSize > static_cast<int>(sizeof(szChunk) - 1) )
+        EOLabelSize = static_cast<int>(sizeof(szChunk) - 1);
+    if( VSIFSeekL( fp, starteol, SEEK_SET ) != 0 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "Error seeking again to EOL!");
         return FALSE;
         }
     nBytesRead = VSIFReadL( szChunk, 1, EOLabelSize, fp );
@@ -237,8 +250,8 @@ int VICARKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue ) {
         while( ReadWord( osWord ) )
         {
             osValue += osWord;
-            if ( strlen(osWord) < 2 ) continue;
-            if( osWord[strlen(osWord)-1] == ')' && osWord[strlen(osWord)-2] == '\'' ) break;
+            if ( osWord.size() < 2 ) continue;
+            if( osWord[osWord.size()-1] == ')' && osWord[osWord.size()-2] == '\'' ) break;
         }
     }
 
@@ -251,7 +264,7 @@ int VICARKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue ) {
             SkipWhite();
 
             osValue += osWord;
-            if( osWord[strlen(osWord)-1] == ')'  ) break;
+            if( osWord.size() && osWord[osWord.size()-1] == ')'  ) break;
         }
     }
 
@@ -287,11 +300,22 @@ int VICARKeywordHandler::ReadWord( CPLString &osWord )
     if( *pszHeaderNext == '\'' )
     {
         pszHeaderNext++;
-        while( *pszHeaderNext != '\'' )
+        while( true )
         {
-            //Skip Double Quotes
-                        if( *pszHeaderNext+1 == '\'' ) continue;
-            osWord += *(pszHeaderNext++);
+            if( *pszHeaderNext == '\0' )
+                return FALSE;
+            if( *(pszHeaderNext) == '\'' )
+            {
+                if( *(pszHeaderNext+1) == '\'' )
+                {
+                    //Skip Double Quotes
+                    pszHeaderNext++;
+                }
+                else
+                    break;
+            }
+            osWord += *pszHeaderNext;
+            pszHeaderNext++;
         }
         pszHeaderNext++;
         return TRUE;
@@ -299,6 +323,8 @@ int VICARKeywordHandler::ReadWord( CPLString &osWord )
 
     while( *pszHeaderNext != '=' && !isspace((unsigned char)*pszHeaderNext) )
     {
+        if( *pszHeaderNext == '\0' )
+            return FALSE;
         osWord += *pszHeaderNext;
         pszHeaderNext++;
 

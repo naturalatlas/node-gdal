@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: proj_api.h 2160 2012-02-15 23:51:45Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Public (application) include file for PROJ.4 API, and constants.
  * Author:   Frank Warmerdam, <warmerdam@pobox.com>
@@ -40,7 +38,11 @@ extern "C" {
 #endif
 
 /* Try to update this every version! */
-#define PJ_VERSION 480
+#define PJ_VERSION 492
+
+/* pj_init() and similar functions can be used with a non-C locale */
+/* Can be detected too at runtime if the symbol pj_atof exists */
+#define PJ_LOCALE_SAFE 1
 
 extern char const pj_release[]; /* global release id string */
 
@@ -63,6 +65,16 @@ extern int pj_errno;	/* global error return code */
 #   define projLP       LP
 #endif
 
+/* file reading api, like stdio */
+typedef int *PAFile;
+typedef struct projFileAPI_t {
+    PAFile  (*FOpen)(projCtx ctx, const char *filename, const char *access);
+    size_t  (*FRead)(void *buffer, size_t size, size_t nmemb, PAFile file);
+    int     (*FSeek)(PAFile file, long offset, int whence);
+    long    (*FTell)(PAFile file);
+    void    (*FClose)(PAFile);
+} projFileAPI;
+
 /* procedure prototypes */
 
 projXY pj_fwd(projLP, projPJ);
@@ -79,7 +91,7 @@ int pj_geodetic_to_geocentric( double a, double es,
                                long point_count, int point_offset,
                                double *x, double *y, double *z );
 int pj_compare_datums( projPJ srcdefn, projPJ dstdefn );
-int pj_apply_gridshift( projCtx, const char *, int, 
+int pj_apply_gridshift( projCtx, const char *, int,
                         long point_count, int point_offset,
                         double *x, double *y, double *z );
 void pj_deallocate_grids(void);
@@ -117,9 +129,23 @@ void pj_ctx_set_debug( projCtx, int );
 void pj_ctx_set_logger( projCtx, void (*)(void *, int, const char *) );
 void pj_ctx_set_app_data( projCtx, void * );
 void *pj_ctx_get_app_data( projCtx );
+void pj_ctx_set_fileapi( projCtx, projFileAPI *);
+projFileAPI *pj_ctx_get_fileapi( projCtx );
 
 void pj_log( projCtx ctx, int level, const char *fmt, ... );
 void pj_stderr_logger( void *, int, const char * );
+
+/* file api */
+projFileAPI *pj_get_default_fileapi();
+
+PAFile pj_ctx_fopen(projCtx ctx, const char *filename, const char *access);
+size_t pj_ctx_fread(projCtx ctx, void *buffer, size_t size, size_t nmemb, PAFile file);
+int    pj_ctx_fseek(projCtx ctx, PAFile file, long offset, int whence);
+long   pj_ctx_ftell(projCtx ctx, PAFile file);
+void   pj_ctx_fclose(projCtx ctx, PAFile file);
+char  *pj_ctx_fgets(projCtx ctx, char *line, int size, PAFile file);
+
+PAFile pj_open_lib(projCtx, const char *, const char *);
 
 #define PJ_LOG_NONE        0
 #define PJ_LOG_ERROR       1

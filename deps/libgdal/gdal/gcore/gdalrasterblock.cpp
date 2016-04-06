@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalrasterblock.cpp 29334 2015-06-14 17:30:54Z rouault $
+ * $Id: gdalrasterblock.cpp 31657 2015-11-20 13:14:23Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALRasterBlock class and related global 
@@ -32,7 +32,7 @@
 #include "gdal_priv.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalrasterblock.cpp 29334 2015-06-14 17:30:54Z rouault $");
+CPL_CVSID("$Id: gdalrasterblock.cpp 31657 2015-11-20 13:14:23Z rouault $");
 
 static int bCacheMaxInitialized = FALSE;
 static GIntBig nCacheMax = 40 * 1024*1024;
@@ -737,7 +737,7 @@ CPLErr GDALRasterBlock::Internalize()
                     }
                     if( nBlocksToFree == 64 )
                     {
-                        CPLDebug("GDAL", "More than 64 blocks are flagged to be flushed. Not trying more");
+                        bLoopAgain = ( nCacheUsed > nCurCacheMax );
                         break;
                     }
 
@@ -774,7 +774,7 @@ CPLErr GDALRasterBlock::Internalize()
             /* Try to recycle the data of an existing block */
             void* pDataBlock = poBlock->pData;
             if( pNewData == NULL && pDataBlock != NULL &&
-                poBlock->GetBlockSize() >= nSizeInBytes )
+                poBlock->GetBlockSize() == nSizeInBytes )
             {
                 pNewData = pDataBlock;
                 poBlock->pData = NULL;

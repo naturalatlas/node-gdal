@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalpamrasterband.cpp 29038 2015-04-28 09:03:36Z rouault $
+ * $Id: gdalpamrasterband.cpp 32191 2015-12-16 16:14:07Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALPamRasterBand, a raster band base class
@@ -34,7 +34,7 @@
 #include "gdal_rat.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: gdalpamrasterband.cpp 29038 2015-04-28 09:03:36Z rouault $");
+CPL_CVSID("$Id: gdalpamrasterband.cpp 32191 2015-12-16 16:14:07Z rouault $");
 
 /************************************************************************/
 /*                         GDALPamRasterBand()                          */
@@ -1083,7 +1083,8 @@ PamHistogramToXMLTree( double dfMin, double dfMax,
     if( nBuckets > (INT_MAX - 10) / 12 )
         return NULL;
 
-    pszHistCounts = (char *) VSIMalloc(12 * nBuckets + 10);
+    const size_t nLen = 22 * static_cast<size_t>(nBuckets) + 10;
+    pszHistCounts = (char *) VSIMalloc(nLen);
     if( pszHistCounts == NULL )
         return NULL;
 

@@ -1,7 +1,11 @@
 #!/bin/bash
+
+set -eu
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libexpat"
 
+EXPAT_VERSION=2.1.0
 dir_expat=./expat
 
 #
@@ -10,10 +14,10 @@ dir_expat=./expat
 
 rm -rf $dir_expat
 if [[ ! -f expat.tar.gz ]]; then
-	curl "http://softlayer-dal.dl.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz" -o expat.tar.gz
+	curl -L "https://fossies.org/linux/www/expat-${EXPAT_VERSION}.tar.gz" -o expat.tar.gz
 fi
 tar -xzf expat.tar.gz
-mv expat-2.1.0 $dir_expat
+mv expat-${EXPAT_VERSION} $dir_expat
 
 rm -rf $dir_expat/win32
 rm -rf $dir_expat/tests

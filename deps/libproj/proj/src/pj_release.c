@@ -2,7 +2,7 @@
 
 #include <projects.h>
 
-char const pj_release[]="Rel. 4.8.0, 6 March 2012";
+char const pj_release[]="Rel. 4.9.2, 08 September 2015";
 
 const char *pj_get_release()
 

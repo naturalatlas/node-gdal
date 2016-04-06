@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_wkt_srs.cpp 29049 2015-04-29 15:54:12Z rouault $
+ * $Id: gt_wkt_srs.cpp 31128 2015-10-25 18:07:26Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Implements translation between GeoTIFF normalized projection
@@ -46,7 +46,7 @@
 #include "gt_wkt_srs_priv.h"
 #include "gtiff.h"
 
-CPL_CVSID("$Id: gt_wkt_srs.cpp 29049 2015-04-29 15:54:12Z rouault $")
+CPL_CVSID("$Id: gt_wkt_srs.cpp 31128 2015-10-25 18:07:26Z rouault $")
 
 #define ProjLinearUnitsInterpCorrectGeoKey   3059
 
@@ -107,6 +107,9 @@ void LibgeotiffOneTimeInit()
     // If linking with an external libgeotiff we hope this will call the
     // SetCSVFilenameHook() in libgeotiff, not the one in gdal/port!
     SetCSVFilenameHook( GDALDefaultCSVFilename );
+
+    // This isn't thread-safe, so better do it now
+    XTIFFInitialize();
 }
 
 /************************************************************************/
@@ -211,11 +214,11 @@ static void WKTMassageDatum( char ** ppszDatum )
 /************************************************************************/
 
 /* For example:
-   GTCitationGeoKey (Ascii,215): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 29049 $ $Date: 2015-04-29 08:54:12 -0700 (Wed, 29 Apr 2015) $\nProjection Name = UTM\nUnits = meters\nGeoTIFF Units = meters"
+   GTCitationGeoKey (Ascii,215): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 31128 $ $Date: 2015-10-25 11:07:26 -0700 (Sun, 25 Oct 2015) $\nProjection Name = UTM\nUnits = meters\nGeoTIFF Units = meters"
 
-   GeogCitationGeoKey (Ascii,267): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 29049 $ $Date: 2015-04-29 08:54:12 -0700 (Wed, 29 Apr 2015) $\nUnable to match Ellipsoid (Datum) to a GeographicTypeGeoKey value\nEllipsoid = Clarke 1866\nDatum = NAD27 (CONUS)"
+   GeogCitationGeoKey (Ascii,267): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 31128 $ $Date: 2015-10-25 11:07:26 -0700 (Sun, 25 Oct 2015) $\nUnable to match Ellipsoid (Datum) to a GeographicTypeGeoKey value\nEllipsoid = Clarke 1866\nDatum = NAD27 (CONUS)"
 
-   PCSCitationGeoKey (Ascii,214): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 29049 $ $Date: 2015-04-29 08:54:12 -0700 (Wed, 29 Apr 2015) $\nUTM Zone 10N\nEllipsoid = Clarke 1866\nDatum = NAD27 (CONUS)"
+   PCSCitationGeoKey (Ascii,214): "IMAGINE GeoTIFF Support\nCopyright 1991 - 2001 by ERDAS, Inc. All Rights Reserved\n@(#)$RCSfile$ $Revision: 31128 $ $Date: 2015-10-25 11:07:26 -0700 (Sun, 25 Oct 2015) $\nUTM Zone 10N\nEllipsoid = Clarke 1866\nDatum = NAD27 (CONUS)"
  
 */
 
@@ -633,8 +636,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     }
     else
     {
-        GDALGTIFKeyGetDOUBLE(hGTIF, GeogAngularUnitSizeGeoKey, &(psDefn->UOMAngleInDegrees), 0, 1 );
-        aUnitGot = TRUE;
+        double dfRadians = 0.0;
+        if( GDALGTIFKeyGetDOUBLE(hGTIF, GeogAngularUnitSizeGeoKey, &dfRadians, 0, 1 ) )
+        {
+            aUnitGot = TRUE;
+            psDefn->UOMAngleInDegrees = dfRadians / CPLAtof(SRS_UA_DEGREE_CONV);
+        }
     }
 
     if( pszDatumName != NULL )
@@ -664,20 +671,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
         pszGeogName = CPLStrdup( pszDatumName ? pszDatumName : "unknown" );
     }
 
-    if(aUnitGot)
-        oSRS.SetGeogCS( pszGeogName, pszDatumName, 
-                        pszSpheroidName, dfSemiMajor, dfInvFlattening,
-                        pszPMName,
-                        psDefn->PMLongToGreenwich / psDefn->UOMAngleInDegrees,
-                        pszAngularUnits,
-                        psDefn->UOMAngleInDegrees );
-    else
-        oSRS.SetGeogCS( pszGeogName, pszDatumName, 
-                        pszSpheroidName, dfSemiMajor, dfInvFlattening,
-                        pszPMName,
-                        psDefn->PMLongToGreenwich / psDefn->UOMAngleInDegrees,
-                        pszAngularUnits,
-                        psDefn->UOMAngleInDegrees * 0.0174532925199433 );
+    oSRS.SetGeogCS( pszGeogName, pszDatumName, 
+                    pszSpheroidName, dfSemiMajor, dfInvFlattening,
+                    pszPMName,
+                    psDefn->PMLongToGreenwich / psDefn->UOMAngleInDegrees,
+                    pszAngularUnits,
+                    psDefn->UOMAngleInDegrees * CPLAtof(SRS_UA_DEGREE_CONV) );
 
     if( psDefn->GCS != KvUserDefined && psDefn->GCS > 0 )
         oSRS.SetAuthority( "GEOGCS", "EPSG", psDefn->GCS );
@@ -2253,6 +2252,24 @@ int GTIFSetFromOGISDefn( GTIF * psGTIF, const char *pszOGCWKT )
     if(EQUAL(angUnitName, "Degree"))
         GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1, 
                    Angular_Degree );
+    else if (EQUAL(angUnitName, "arc-second"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   Angular_Arc_Second);
+    else if (EQUAL(angUnitName, "arc-minute"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   Angular_Arc_Minute);
+    else if (EQUAL(angUnitName, "grad"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   Angular_Grad);
+    else if (EQUAL(angUnitName, "gon"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   Angular_Gon);
+    else if (EQUAL(angUnitName, "radian"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   Angular_Radian);
+    /*else if (EQUAL(angUnitName, "microradian"))
+        GTIFKeySet(psGTIF, GeogAngularUnitsGeoKey, TYPE_SHORT, 1,
+                   9109);*/
     else if(angUnitName)
     {
         GTIFKeySet(psGTIF, GeogCitationGeoKey, TYPE_ASCII, 0, 

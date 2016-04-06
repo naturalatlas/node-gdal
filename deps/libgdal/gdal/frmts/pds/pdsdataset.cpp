@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdsdataset.cpp 29625 2015-08-07 20:38:54Z rouault $
+ * $Id: pdsdataset.cpp 30712 2015-09-26 08:06:35Z rouault $
  *
  * Project:  PDS Driver; Planetary Data System Format
  * Purpose:  Implementation of PDSDataset
@@ -47,7 +47,7 @@
 #include "cpl_string.h" 
 #include "nasakeywordhandler.h"
 
-CPL_CVSID("$Id: pdsdataset.cpp 29625 2015-08-07 20:38:54Z rouault $");
+CPL_CVSID("$Id: pdsdataset.cpp 30712 2015-09-26 08:06:35Z rouault $");
 
 CPL_C_START
 void	GDALRegister_PDS(void);
@@ -357,11 +357,13 @@ void PDSDataset::ParseSRS()
     double   dfSampleOffset_Mult;
     double   dfLineOffset_Mult;
 
+    /* See https://trac.osgeo.org/gdal/ticket/5941 for the history of the default */
+    /* value of PDS_SampleProjOffset_Shift and PDS_LineProjOffset_Shift */
     dfSampleOffset_Shift = 
-        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "0.5" ));
     
     dfLineOffset_Shift = 
-        CPLAtof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "0.5" ));
 
     dfSampleOffset_Mult =
         CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Mult", "-1.0") );

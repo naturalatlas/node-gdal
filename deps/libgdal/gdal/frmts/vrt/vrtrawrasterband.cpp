@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtrawrasterband.cpp 28053 2014-12-04 09:31:07Z rouault $
+ * $Id: vrtrawrasterband.cpp 32756 2016-01-05 16:03:53Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTRawRasterBand
@@ -33,7 +33,7 @@
 #include "cpl_string.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: vrtrawrasterband.cpp 28053 2014-12-04 09:31:07Z rouault $");
+CPL_CVSID("$Id: vrtrawrasterband.cpp 32756 2016-01-05 16:03:53Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -329,12 +329,12 @@ CPLErr VRTRawRasterBand::XMLInit( CPLXMLNode * psTree,
 /* -------------------------------------------------------------------- */
 /*      Collect layout information.                                     */
 /* -------------------------------------------------------------------- */
-    vsi_l_offset nImageOffset;
     int nPixelOffset, nLineOffset;
     int nWordDataSize = GDALGetDataTypeSize( GetRasterDataType() ) / 8;
 
-    nImageOffset = CPLScanUIntBig(
-        CPLGetXMLValue( psTree, "ImageOffset", "0"), 20);
+    const char* pszImageOffset = CPLGetXMLValue( psTree, "ImageOffset", "0");
+    const vsi_l_offset nImageOffset = CPLScanUIntBig(
+                                    pszImageOffset, strlen(pszImageOffset));
 
     if( CPLGetXMLValue( psTree, "PixelOffset", NULL ) == NULL )
         nPixelOffset = nWordDataSize;

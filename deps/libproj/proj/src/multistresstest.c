@@ -28,13 +28,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <string.h>
 #include "proj_api.h"
+
+#ifdef _WIN32
+	#include <windows.h>
+#else
+	#include <pthread.h>
+	#include <unistd.h>
+#endif
 
 #define num_threads    10
 #define num_iterations 1000000
-#define reinit_every_iteration 0
+static int reinit_every_iteration=0;
+static int add_no_defs = 0;
 
 typedef struct {
     const char *src_def;
@@ -45,8 +52,6 @@ typedef struct {
     
     int     dst_error;
     int     skip;
-    
-
 } TestItem; 
 
 TestItem test_list[] = {
@@ -124,19 +129,40 @@ TestItem test_list[] = {
         "+init=epsg:3309",
         "+init=epsg:4326",
         150000.0, 30000.0, 0.0,
-    }
+    },
+	{
+		//Bad projection (invalid ellipsoid parameter +R_A=0)
+		"+proj=utm +zone=11 +datum=WGS84",
+		"+proj=merc +datum=potsdam +R_A=0",
+		150000.0, 3000000.0, 0.0,
+	}
 };
 
 static volatile int active_thread_count = 0;
+
+static projPJ* custom_pj_init_plus_ctx(projCtx ctx, const char* def)
+{
+    if( add_no_defs )
+    {
+        char szBuffer[256];
+        strcpy(szBuffer, def);
+        strcat(szBuffer, " +no_defs");
+        return pj_init_plus_ctx(ctx, szBuffer);
+    }
+    else
+        return pj_init_plus_ctx(ctx, def);
+}
 
 /************************************************************************/
 /*                             TestThread()                             */
 /************************************************************************/
 
-static void *TestThread( void *pData )
+static void TestThread()
 
 {
     int i, test_count = sizeof(test_list) / sizeof(TestItem); 
+    int repeat_count = num_iterations;
+    int i_iter;
 
 /* -------------------------------------------------------------------- */
 /*      Initialize coordinate system definitions.                       */
@@ -148,20 +174,20 @@ static void *TestThread( void *pData )
     src_pj_list = (projPJ *) calloc(test_count,sizeof(projPJ));
     dst_pj_list = (projPJ *) calloc(test_count,sizeof(projPJ));
                                 
-#if reinit_every_iteration == 0
-    for( i = 0; i < test_count; i++ )
+    if(!reinit_every_iteration)
     {
-        TestItem *test = test_list + i;
+        for( i = 0; i < test_count; i++ )
+        {
+            TestItem *test = test_list + i;
 
-        src_pj_list[i] = pj_init_plus_ctx( ctx, test->src_def );
-        dst_pj_list[i] = pj_init_plus_ctx( ctx, test->dst_def );
+            src_pj_list[i] = custom_pj_init_plus_ctx( ctx, test->src_def );
+            dst_pj_list[i] = custom_pj_init_plus_ctx( ctx, test->dst_def );
+        }
     }
-#endif
     
 /* -------------------------------------------------------------------- */
 /*      Perform tests - over and over.                                  */
 /* -------------------------------------------------------------------- */
-    int repeat_count = num_iterations, i_iter;
     
     for( i_iter = 0; i_iter < repeat_count; i_iter++ )
     {
@@ -171,17 +197,32 @@ static void *TestThread( void *pData )
             double x, y, z;
             int error;
 
-            if( test->skip )
-                continue;
-            
             x = test->src_x;
             y = test->src_y;
             z = test->src_z;
 
-#if reinit_every_iteration == 1
-            src_pj_list[i] = pj_init_plus_ctx( ctx, test->src_def );
-            dst_pj_list[i] = pj_init_plus_ctx( ctx, test->dst_def );
-#endif
+            if( reinit_every_iteration )
+            {
+                src_pj_list[i] = custom_pj_init_plus_ctx( ctx, test->src_def );
+                dst_pj_list[i] = custom_pj_init_plus_ctx( ctx, test->dst_def );
+
+                {
+                    int skipTest = (src_pj_list[i] == NULL || dst_pj_list[i] == NULL);
+                            
+                    if ( skipTest != test->skip )
+                        fprintf( stderr, "Threaded projection initialization does not match unthreaded initialization\n" );
+
+                    if (skipTest)
+                    {
+                        pj_free( src_pj_list[i] );
+                        pj_free( dst_pj_list[i] );
+                        continue;
+                    }
+                }
+            }
+
+            if ( test->skip )
+                continue;
 
             error = pj_transform( src_pj_list[i], dst_pj_list[i], 1, 0, 
                                   &x, &y, &z );
@@ -197,28 +238,32 @@ static void *TestThread( void *pData )
             {
                 fprintf( stderr, 
                          "Got %.15g,%.15g,%.15g\n"
-                         "Expected %.15g,%.15g,%.15g\n",
+                         "Expected %.15g,%.15g,%.15g\n"
+                         "Diff %.15g,%.15g,%.15g\n",
                          x, y, z, 
-                         test->dst_x, test->dst_y, test->dst_z );
+                         test->dst_x, test->dst_y, test->dst_z,
+                         x-test->dst_x, y-test->dst_y, z-test->dst_z);
             }
 
-#if reinit_every_iteration == 1
-            pj_free( src_pj_list[i] );
-            pj_free( dst_pj_list[i] );
-#endif
+            if( reinit_every_iteration )
+            {
+                pj_free( src_pj_list[i] );
+                pj_free( dst_pj_list[i] );
+            }
         }
     }
 
 /* -------------------------------------------------------------------- */
 /*      Cleanup                                                         */
 /* -------------------------------------------------------------------- */
-#if reinit_every_iteration == 0
-    for( i = 0; i < test_count; i++ )
+    if( !reinit_every_iteration )
     {
-        pj_free( src_pj_list[i] );
-        pj_free( dst_pj_list[i] );
+        for( i = 0; i < test_count; i++ )
+        {
+            pj_free( src_pj_list[i] );
+            pj_free( dst_pj_list[i] );
+        }
     }
-#endif
     
     free( src_pj_list );
     free( dst_pj_list );
@@ -229,15 +274,42 @@ static void *TestThread( void *pData )
             repeat_count, test_count );
 
     active_thread_count--;
+}
 
+#ifdef _WIN32
+/************************************************************************/
+/*                             WinTestThread()                        */
+/************************************************************************/
+
+static DWORD WINAPI WinTestThread( LPVOID lpParameter )
+
+{
+    TestThread();
+
+    return 0;
+}
+
+#else
+/************************************************************************/
+/*                             PosixTestThread()                        */
+/************************************************************************/
+
+static void *PosixTestThread( void *pData )
+
+{
+    TestThread();
     return NULL;
 }
+#endif
 
 /************************************************************************/
 /*                                main()                                */
 /************************************************************************/
-int main( int argc, char **argv )
-
+#ifdef _WIN32
+static DWORD WINAPI do_main( LPVOID unused )
+#else
+int do_main(void)
+#endif
 {
 /* -------------------------------------------------------------------- */
 /*      Our first pass is to establish the correct answers for all      */
@@ -251,8 +323,8 @@ int main( int argc, char **argv )
 
         projPJ src_pj, dst_pj;
 
-        src_pj = pj_init_plus( test->src_def );
-        dst_pj = pj_init_plus( test->dst_def );
+        src_pj = custom_pj_init_plus_ctx( pj_get_default_ctx(), test->src_def );
+        dst_pj = custom_pj_init_plus_ctx( pj_get_default_ctx(), test->dst_def );
 
         if( src_pj == NULL )
         {
@@ -292,26 +364,81 @@ int main( int argc, char **argv )
 /* -------------------------------------------------------------------- */
 /*      Now launch a bunch of threads to repeat the tests.              */
 /* -------------------------------------------------------------------- */
-    pthread_t ahThread[num_threads];
-    pthread_attr_t hThreadAttr;
+#ifdef _WIN32
 
-    pthread_attr_init( &hThreadAttr );
-    pthread_attr_setdetachstate( &hThreadAttr, PTHREAD_CREATE_DETACHED );
+	{ //Scoped to workaround lack of c99 support in VS
+		HANDLE ahThread[num_threads];
 
-    for( i = 0; i < num_threads; i++ )
+		for( i = 0; i < num_threads; i++ )
+		{
+			active_thread_count++;
+
+			ahThread[i] = CreateThread(NULL, 0, WinTestThread, NULL, 0, NULL);
+			
+			if (ahThread[i] == 0)
+			{
+				printf( "Thread creation failed.");
+				return 1;
+			}
+		}
+
+		printf( "%d test threads launched.\n", num_threads );
+
+		WaitForMultipleObjects(num_threads, ahThread, TRUE, INFINITE);
+	}
+
+#else
     {
-        active_thread_count++;
-        
-        pthread_create( &(ahThread[i]), &hThreadAttr, 
-                        TestThread, NULL );
-    }
+	pthread_t ahThread[num_threads];
+	pthread_attr_t hThreadAttr;
 
-    printf( "%d test threads launched.\n", num_threads );
-            
-    while( active_thread_count > 0 )				       
-        sleep( 1 );
+	pthread_attr_init( &hThreadAttr );
+	pthread_attr_setdetachstate( &hThreadAttr, PTHREAD_CREATE_DETACHED );
+
+	for( i = 0; i < num_threads; i++ )
+	{
+		active_thread_count++;
+
+		pthread_create( &(ahThread[i]), &hThreadAttr, 
+			PosixTestThread, NULL );
+	}
+
+	printf( "%d test threads launched.\n", num_threads );
+
+	while( active_thread_count > 0 )				       
+		sleep( 1 );
+    }
+#endif
 
     printf( "all tests complete.\n" );
 
+    return 0;
+}
+
+
+int main( int argc, char **argv )
+{
+    int i;
+    for(i=0;i<argc;i++)
+    {
+        if( strcmp(argv[i], "-reinit") == 0 )
+            reinit_every_iteration = 1;
+        else if( strcmp(argv[i], "-add_no_defs") == 0 )
+            add_no_defs = 1;
+    }
+
+#ifdef _WIN32
+    /* This is an incredible weirdness but with mingw cross-compiler */
+    /* 1. - b/a; where double a = 6378206.4; and double b = 6356583.8; */
+    /* does not evaluate the same in the main thread or in a thread forked */
+    /* by CreateThread(), so run the main in a thread... */
+    {
+        HANDLE thread = CreateThread(NULL, 0, do_main, NULL, 0, NULL);
+        WaitForSingleObject(thread, INFINITE);
+        CloseHandle( thread );
+    }
+#else
+    do_main();
+#endif
     return 0;
 }

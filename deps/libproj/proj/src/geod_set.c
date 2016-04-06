@@ -3,7 +3,7 @@
 
 #include <string.h>
 #include "projects.h"
-#include "geodesic.h"
+#include "geod_interface.h"
 #include "emess.h"
 	void
 geod_set(int argc, char **argv) {
@@ -15,11 +15,11 @@ geod_set(int argc, char **argv) {
     /* put arguments into internal linked list */
 	if (argc <= 0)
 		emess(1, "no arguments in initialization list");
-	for (i = 0; i < argc; ++i)
-		if (i)
-			curr = curr->next = pj_mkparam(argv[i]);
-		else
-			start = curr = pj_mkparam(argv[i]);
+	start = curr = pj_mkparam(argv[0]);
+	for (i = 1; i < argc; ++i) {
+		curr->next = pj_mkparam(argv[i]);
+		curr = curr->next;
+	}
 	/* set elliptical parameters */
 	if (pj_ell_set(pj_get_default_ctx(),start, &geod_a, &es)) emess(1,"ellipse setup failure");
 	/* set units */
@@ -32,16 +32,8 @@ geod_set(int argc, char **argv) {
 		fr_meter = 1. / (to_meter = atof(unit_list[i].to_meter));
 	} else
 		to_meter = fr_meter = 1.;
-	if ((ellipse = es) != 0.) {
-		onef = sqrt(1. - es);
-		geod_f = 1 - onef;
-		f2 = geod_f/2;
-		f4 = geod_f/4;
-		f64 = geod_f*geod_f/64;
-	} else {
-		onef = 1.;
-		geod_f = f2 = f4 = f64 = 0.;
-	}
+	geod_f = es/(1 + sqrt(1 - es));
+	geod_ini();
 	/* check if line or arc mode */
 	if (pj_param(NULL,start, "tlat_1").i) {
 		double del_S;

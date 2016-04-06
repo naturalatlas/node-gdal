@@ -43,7 +43,7 @@
 
 #include <string>
 
-CPL_CVSID("$Id: vicardataset.cpp 28786 2015-03-26 21:13:18Z rouault $");
+CPL_CVSID("$Id: vicardataset.cpp 31757 2015-11-25 13:54:13Z rouault $");
 
 CPL_C_START
 void GDALRegister_VICAR(void);
@@ -339,10 +339,10 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
     double   dfLineOffset_Mult;
     
     dfSampleOffset_Shift = 
-        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Shift", "0.5" ));
     
     dfLineOffset_Shift = 
-        CPLAtof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "-0.5" ));
+        CPLAtof(CPLGetConfigOption( "PDS_LineProjOffset_Shift", "0.5" ));
 
     dfSampleOffset_Mult =
         CPLAtof(CPLGetConfigOption( "PDS_SampleProjOffset_Mult", "-1.0") );

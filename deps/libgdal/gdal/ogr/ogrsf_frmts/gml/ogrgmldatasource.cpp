@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgmldatasource.cpp 29330 2015-06-14 12:11:11Z rouault $
+ * $Id: ogrgmldatasource.cpp 32902 2016-01-10 17:54:15Z rouault $
  *
  * Project:  OGR
  * Purpose:  Implements OGRGMLDataSource class.
@@ -47,7 +47,7 @@
 
 #include <vector>
 
-CPL_CVSID("$Id: ogrgmldatasource.cpp 29330 2015-06-14 12:11:11Z rouault $");
+CPL_CVSID("$Id: ogrgmldatasource.cpp 32902 2016-01-10 17:54:15Z rouault $");
 
 static int ExtractSRSName(const char* pszXML, char* szSRSName,
                           size_t sizeof_szSRSName);
@@ -1338,7 +1338,7 @@ void OGRGMLDataSource::BuildJointClassFromScannedSchema()
             if( osPrefix == aapoGeomProps[iSubClass].first )
                 break;
         }
-        if( iSubClass == (int)aapoProps.size() )
+        if( iSubClass == (int)aapoGeomProps.size() )
             aapoGeomProps.push_back( std::pair< CPLString, std::vector<GMLGeometryPropertyDefn*> >
                     (osPrefix, std::vector<GMLGeometryPropertyDefn*>()) );
         aapoGeomProps[iSubClass].second.push_back(poProp);

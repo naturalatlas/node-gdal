@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtsources.cpp 29326 2015-06-10 20:36:31Z rouault $
+ * $Id: vrtsources.cpp 31003 2015-10-14 16:19:20Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTSimpleSource, VRTFuncSource and 
@@ -43,7 +43,7 @@
 #define isnan std::isnan
 #endif
 
-CPL_CVSID("$Id: vrtsources.cpp 29326 2015-06-10 20:36:31Z rouault $");
+CPL_CVSID("$Id: vrtsources.cpp 31003 2015-10-14 16:19:20Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -1603,7 +1603,7 @@ CPLXMLNode *VRTComplexSource::SerializeToXML( const char *pszVRTPath )
             CPLSetXMLValue( psSrc, "NODATA", "nan");
         else
             CPLSetXMLValue( psSrc, "NODATA", 
-                            CPLSPrintf("%g", dfNoDataValue) );
+                            CPLSPrintf("%.16g", dfNoDataValue) );
     }
         
     switch( eScalingType )

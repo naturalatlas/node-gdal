@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxypool.cpp 29450 2015-07-02 08:44:48Z rouault $
+ * $Id: gdalproxypool.cpp 31754 2015-11-25 11:06:14Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that differ the opening of the
@@ -31,7 +31,7 @@
 #include "gdal_proxy.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalproxypool.cpp 29450 2015-07-02 08:44:48Z rouault $");
+CPL_CVSID("$Id: gdalproxypool.cpp 31754 2015-11-25 11:06:14Z rouault $");
 
 /* We *must* share the same mutex as the gdaldataset.cpp file, as we are */
 /* doing GDALOpen() calls that can indirectly call GDALOpenShared() on */
@@ -490,6 +490,7 @@ void free_func_get_metadata(void* _elt)
     GetMetadataElt* elt = (GetMetadataElt*) _elt;
     CPLFree(elt->pszDomain);
     CSLDestroy(elt->papszMetadata);
+    CPLFree(elt);
 }
 
 
@@ -523,6 +524,7 @@ void free_func_get_metadata_item(void* _elt)
     CPLFree(elt->pszName);
     CPLFree(elt->pszDomain);
     CPLFree(elt->pszMetadataItem);
+    CPLFree(elt);
 }
 
 CPL_C_END

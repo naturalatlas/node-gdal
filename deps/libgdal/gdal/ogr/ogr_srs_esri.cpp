@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_esri.cpp 29518 2015-07-11 10:58:41Z rouault $
+ * $Id: ogr_srs_esri.cpp 30733 2015-09-28 19:41:53Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGRSpatialReference translation to/from ESRI .prj definitions.
@@ -36,7 +36,7 @@
 
 #include "ogr_srs_esri_names.h"
 
-CPL_CVSID("$Id: ogr_srs_esri.cpp 29518 2015-07-11 10:58:41Z rouault $");
+CPL_CVSID("$Id: ogr_srs_esri.cpp 30733 2015-09-28 19:41:53Z rouault $");
 
 void  SetNewName( OGRSpatialReference* pOgr, const char* keyName, const char* newName );
 int   RemapImgWGSProjcsName(OGRSpatialReference* pOgr, const char* pszProjCSName, 
@@ -1614,6 +1614,13 @@ OGRErr OGRSpatialReference::morphFromESRI()
         pszProjection = GetAttrValue("PROJECTION");
     }
 
+    if( pszProjection != NULL &&
+             EQUAL(pszProjection, SRS_PT_MERCATOR_AUXILIARY_SPHERE) )
+    {
+        CPLFree( pszDatumOrig );
+        return importFromEPSG(3857);
+    }
+
 /* -------------------------------------------------------------------- */
 /*      If we are remapping Hotine_Oblique_Mercator_Azimuth_Center      */
 /*      add a rectified_grid_angle parameter - to match the azimuth     */
@@ -1696,6 +1703,14 @@ OGRErr OGRSpatialReference::morphFromESRI()
 /* -------------------------------------------------------------------- */
     if( pszProjection != NULL && EQUAL(pszProjection,"Mercator") )
     {
+        /* Such as found in #6134 */
+        if( GetAttrValue("PROJCS") != NULL &&
+            EQUAL(GetAttrValue("PROJCS"), "WGS_84_Pseudo_Mercator"))
+        {
+            CPLFree( pszDatumOrig );
+            return importFromEPSG(3857);
+        }
+
         SetNode( "PROJCS|PROJECTION", SRS_PT_MERCATOR_2SP );
         pszProjection = GetAttrValue("PROJECTION");
     }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.cpp 29616 2015-08-06 10:07:50Z rouault $
+ * $Id: vrtdataset.cpp 32756 2016-01-05 16:03:53Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTDataset
@@ -33,7 +33,7 @@
 #include "cpl_minixml.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: vrtdataset.cpp 29616 2015-08-06 10:07:50Z rouault $");
+CPL_CVSID("$Id: vrtdataset.cpp 32756 2016-01-05 16:03:53Z rouault $");
 
 /************************************************************************/
 /*                            VRTDataset()                             */
@@ -864,7 +864,6 @@ CPLErr VRTDataset::AddBand( GDALDataType eType, char **papszOptions )
     if( pszSubClass != NULL && EQUAL(pszSubClass,"VRTRawRasterBand") )
     {
         int nWordDataSize = GDALGetDataTypeSize( eType ) / 8;
-        vsi_l_offset nImageOffset = 0;
         int nPixelOffset = nWordDataSize;
         int nLineOffset = nWordDataSize * GetRasterXSize();
         const char *pszFilename;
@@ -874,9 +873,9 @@ CPLErr VRTDataset::AddBand( GDALDataType eType, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Collect required information.                                   */
 /* -------------------------------------------------------------------- */
-        if( CSLFetchNameValue(papszOptions, "ImageOffset") != NULL )
-            nImageOffset = CPLScanUIntBig(
-                CSLFetchNameValue(papszOptions, "ImageOffset"), 20);
+        const char* pszImageOffset = CSLFetchNameValueDef(papszOptions, "ImageOffset", "0");
+        vsi_l_offset nImageOffset = CPLScanUIntBig(
+                                    pszImageOffset, strlen(pszImageOffset));
 
         if( CSLFetchNameValue(papszOptions, "PixelOffset") != NULL )
             nPixelOffset = atoi(CSLFetchNameValue(papszOptions,"PixelOffset"));

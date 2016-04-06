@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: pj_transform.c 2000 2011-05-10 17:06:33Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Perform overall coordinate system to coordinate system 
  *           transformations (pj_transform() function) including reprojection
@@ -33,8 +31,6 @@
 #include <string.h>
 #include <math.h>
 #include "geocent.h"
-
-PJ_CVSID("$Id: pj_transform.c 2000 2011-05-10 17:06:33Z warmerdam $");
 
 static int pj_adjust_axis( projCtx ctx, const char *axis, int denormalize_flag,
                            long point_count, int point_offset, 
@@ -212,7 +208,7 @@ int pj_transform( PJ *srcdefn, PJ *dstdefn, long point_count, int point_offset,
 /*      Do we need to translate from geoid to ellipsoidal vertical      */
 /*      datum?                                                          */
 /* -------------------------------------------------------------------- */
-    if( srcdefn->has_geoid_vgrids )
+    if( srcdefn->has_geoid_vgrids && z != NULL )
     {
         if( pj_apply_vgridshift( srcdefn, "sgeoidgrids", 
                                  &(srcdefn->vgridlist_geoid), 
@@ -237,7 +233,7 @@ int pj_transform( PJ *srcdefn, PJ *dstdefn, long point_count, int point_offset,
 /*      Do we need to translate from geoid to ellipsoidal vertical      */
 /*      datum?                                                          */
 /* -------------------------------------------------------------------- */
-    if( dstdefn->has_geoid_vgrids )
+    if( dstdefn->has_geoid_vgrids && z != NULL )
     {
         if( pj_apply_vgridshift( dstdefn, "sgeoidgrids", 
                                  &(dstdefn->vgridlist_geoid), 

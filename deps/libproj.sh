@@ -1,7 +1,11 @@
 #!/bin/bash
+
+set -eu
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libproj"
 
+PROJ_VERSION=4.9.2
 dir_proj=./proj
 
 #
@@ -10,10 +14,10 @@ dir_proj=./proj
 
 rm -rf $dir_proj
 if [[ ! -f proj.tar.gz ]]; then
-	curl http://download.osgeo.org/proj/proj-4.8.0.tar.gz -o proj.tar.gz
+	curl -L http://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz -o proj.tar.gz
 fi
 tar -xzf proj.tar.gz
-mv proj-4.8.0 $dir_proj
+mv proj-${PROJ_VERSION} $dir_proj
 
 rm -rf $dir_proj/config*
 rm -rf $dir_proj/makefile*

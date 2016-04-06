@@ -1,4 +1,3 @@
-# $Id: makefile.vc 2182 2012-03-04 00:15:57Z warmerdam $
 #
 # makefile.vc - builds PROJ.4 library with Visual C++
 #
@@ -27,7 +26,7 @@ misc = \
 	PJ_lask.obj PJ_nocol.obj PJ_ob_tran.obj PJ_oea.obj \
 	PJ_tpeqd.obj PJ_vandg.obj PJ_vandg2.obj PJ_vandg4.obj \
 	PJ_wag7.obj pj_latlong.obj PJ_krovak.obj pj_geocent.obj \
-	PJ_healpix.obj PJ_natearth.obj
+	PJ_healpix.obj PJ_natearth.obj PJ_qsc.obj
 
 pseudo = \
 	PJ_boggs.obj PJ_collg.obj PJ_crast.obj PJ_denoy.obj \
@@ -38,7 +37,8 @@ pseudo = \
 	PJ_nell.obj PJ_nell_h.obj PJ_putp2.obj PJ_putp3.obj \
 	PJ_putp4p.obj PJ_putp5.obj PJ_putp6.obj PJ_robin.obj \
 	PJ_sts.obj PJ_urm5.obj PJ_urmfps.obj PJ_wag2.obj \
-	PJ_wag3.obj PJ_wink1.obj PJ_wink2.obj PJ_isea.obj 
+	PJ_wag3.obj PJ_wink1.obj PJ_wink2.obj PJ_isea.obj \
+	PJ_calcofi.obj 
 
 support = \
 	aasincos.obj adjlon.obj bch2bps.obj bchgen.obj pj_gauss.obj \
@@ -50,23 +50,29 @@ support = \
 	pj_qsfn.obj pj_strerrno.obj pj_tsfn.obj pj_units.obj \
 	pj_zpoly1.obj rtodms.obj vector1.obj pj_release.obj \
 	geocent.obj pj_transform.obj pj_datum_set.obj pj_datums.obj \
-	pj_apply_gridshift.obj nad_cvt.obj nad_init.obj \
-	nad_intr.obj pj_utils.obj pj_gridlist.obj pj_gridinfo.obj \
+	pj_apply_gridshift.obj pj_gc_reader.obj pj_gridcatalog.obj \
+	nad_cvt.obj nad_init.obj nad_intr.obj \
+	pj_utils.obj pj_gridlist.obj pj_gridinfo.obj \
 	proj_mdist.obj pj_mutex.obj pj_initcache.obj \
-	pj_ctx.obj pj_log.obj pj_apply_vgridshift.obj
+	pj_ctx.obj pj_fileapi.obj pj_log.obj pj_apply_vgridshift.obj \
+	pj_strtod.obj
 
-LIBOBJ	=	$(support) $(pseudo) $(azimuthal) $(conic) $(cylinder) $(misc)
+geodesic = geodesic.obj
+LIBOBJ	=	$(support) $(pseudo) $(azimuthal) $(conic) $(cylinder) $(misc) \
+	$(geodesic)
 PROJEXE_OBJ	= proj.obj gen_cheb.obj p_series.obj emess.obj
 CS2CSEXE_OBJ	= cs2cs.obj gen_cheb.obj p_series.obj emess.obj
-GEODEXE_OBJ	= geod.obj geod_set.obj geod_for.obj geod_inv.obj emess.obj
+GEODEXE_OBJ	= geod.obj geod_set.obj geod_interface.obj emess.obj
+MULTISTRESSTEST_OBJ = multistresstest.obj
 PROJ_DLL 	= proj$(VERSION).dll
 PROJ_EXE    = proj.exe
 CS2CS_EXE   = cs2cs.exe
 GEOD_EXE    = geod.exe
 NAD2BIN_EXE = nad2bin.exe
+MULTISTRESSTEST_EXE = multistresstest.exe
 
 CFLAGS	=	/nologo -I. -DPROJ_LIB=\"$(PROJ_LIB_DIR)\" \
-		-DHAVE_STRERROR=1 $(OPTFLAGS)
+		-DHAVE_STRERROR=1 -DHAVE_LOCALECONV=1 $(OPTFLAGS)
 
 default:	all
 
@@ -97,6 +103,10 @@ $(GEOD_EXE):	$(GEODEXE_OBJ) $(EXE_PROJ)
 
 $(NAD2BIN_EXE):	nad2bin.obj emess.obj $(EXE_PROJ)
 	cl nad2bin.obj emess.obj $(EXE_PROJ)
+
+$(MULTISTRESSTEST_EXE): $(MULTISTRESSTEST_OBJ)
+	cl $(MULTISTRESSTEST_OBJ) $(EXE_PROJ)
+	if exist $(MULTISTRESSTEST_EXE).manifest mt -manifest $(MULTISTRESSTEST_EXE).manifest -outputresource:$(MULTISTRESSTEST_EXE);1
 
 nadshift:	nad2bin.exe
 	cd ..\nad
@@ -133,4 +143,6 @@ install: all
 	copy *.dll $(INSTDIR)\bin
 	copy *.lib $(INSTDIR)\lib
 	copy proj_api.h $(INSTDIR)\include
+	copy projects.h $(INSTDIR)\include
+	copy geodesic.h $(INSTDIR)\include
 	

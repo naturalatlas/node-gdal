@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcsvlayer.cpp 29897 2015-08-29 12:36:40Z rouault $
+ * $Id: ogrcsvlayer.cpp 32442 2015-12-24 19:13:22Z rouault $
  *
  * Project:  CSV Translator
  * Purpose:  Implements OGRCSVLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_csv.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcsvlayer.cpp 29897 2015-08-29 12:36:40Z rouault $");
+CPL_CVSID("$Id: ogrcsvlayer.cpp 32442 2015-12-24 19:13:22Z rouault $");
 
 
 
@@ -1549,7 +1549,7 @@ OGRErr OGRCSVLayer::CreateGeomField( OGRGeomFieldDefn *poGeomField,
     panGeomFieldIndex[poFeatureDefn->GetFieldCount() - 1] =
         poFeatureDefn->GetGeomFieldCount() - 1;
 
-    return OGRERR_FAILURE;
+    return OGRERR_NONE;
 }
 
 /************************************************************************/

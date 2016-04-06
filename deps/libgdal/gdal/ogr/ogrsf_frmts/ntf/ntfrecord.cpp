@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ntfrecord.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ntfrecord.cpp 32416 2015-12-21 10:16:11Z rouault $
  *
  * Project:  NTF Translator
  * Purpose:  NTFRecord class implementation.
@@ -31,7 +31,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ntfrecord.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ntfrecord.cpp 32416 2015-12-21 10:16:11Z rouault $");
 
 static int nFieldBufSize = 0;
 static char *pszFieldBuf = NULL;
@@ -69,7 +69,7 @@ NTFRecord::NTFRecord( FILE * fp )
         while( nNewLength > 0 && szLine[nNewLength-1] == ' ' )
                szLine[--nNewLength] = '\0';
 
-        if( szLine[nNewLength-1] != '%' )
+        if( nNewLength < 2 || szLine[nNewLength-1] != '%' )
         {
             CPLError( CE_Failure, CPLE_AppDefined, 
                       "Corrupt NTF record, missing end '%%'." );
@@ -92,7 +92,7 @@ NTFRecord::NTFRecord( FILE * fp )
         }
         else
         {
-            if( !EQUALN(szLine,"00",2) )
+            if( !EQUALN(szLine,"00",2) || nNewLength < 4 )
             {
                 CPLError( CE_Failure, CPLE_AppDefined, "Invalid line");
                 VSIFree(pszData);

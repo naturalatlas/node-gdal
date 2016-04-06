@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 29111 2015-05-02 18:06:16Z rouault $
+ * $Id: ogr_geojson.h 32121 2015-12-11 10:25:38Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -37,7 +37,7 @@
 #include <vector> // used by OGRGeoJSONLayer
 #include "ogrgeojsonutils.h"
 
-#define SPACE_FOR_BBOX  80
+#define SPACE_FOR_BBOX  130
 
 class OGRGeoJSONDataSource;
 

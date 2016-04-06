@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: pj_datum_set.c 1856 2010-06-11 03:26:04Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Apply datum definition to PJ structure from initialization string.
  * Author:   Frank Warmerdam, warmerda@home.com
@@ -40,7 +38,7 @@
 int pj_datum_set(projCtx ctx, paralist *pl, PJ *projdef)
 
 {
-    const char *name, *towgs84, *nadgrids;
+    const char *name, *towgs84, *nadgrids, *catalog;
 
     projdef->datum_type = PJD_UNKNOWN;
 
@@ -93,6 +91,21 @@ int pj_datum_set(projCtx ctx, paralist *pl, PJ *projdef)
     }
 
 /* -------------------------------------------------------------------- */
+/*      Check for grid catalog parameter, and optional date.            */
+/* -------------------------------------------------------------------- */
+    else if( (catalog = pj_param(ctx, pl,"scatalog").s) != NULL )
+    {
+        const char *date;
+
+        projdef->datum_type = PJD_GRIDSHIFT;
+        projdef->catalog_name = strdup(catalog);
+
+        date = pj_param(ctx, pl, "sdate").s;
+        if( date != NULL) 
+            projdef->datum_date = pj_gc_parsedate( ctx, date);
+    }
+
+/* -------------------------------------------------------------------- */
 /*      Check for towgs84 parameter.                                    */
 /* -------------------------------------------------------------------- */
     else if( (towgs84 = pj_param(ctx, pl,"stowgs84").s) != NULL )
@@ -103,10 +116,9 @@ int pj_datum_set(projCtx ctx, paralist *pl, PJ *projdef)
         memset( projdef->datum_params, 0, sizeof(double) * 7);
 
         /* parse out the parameters */
-        s = towgs84;
         for( s = towgs84; *s != '\0' && parm_count < 7; ) 
         {
-            projdef->datum_params[parm_count++] = atof(s);
+            projdef->datum_params[parm_count++] = pj_atof(s);
             while( *s != '\0' && *s != ',' )
                 s++;
             if( *s == ',' )
