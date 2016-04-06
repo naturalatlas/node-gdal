@@ -8,10 +8,10 @@
 		"msbuild_toolset":"<(toolset)",
 		"cflags_cc!": ["-fno-exceptions"],
 		"cflags!": ["-fno-exceptions"],
+		'defines!': ["_HAS_EXCEPTIONS=0"],
 		"defines": [
 			"NOGDI=1",
-			"HAVE_LIBZ",
-			'_HAS_EXCEPTIONS=1'
+			"HAVE_LIBZ"
 		],
 		"xcode_settings": {
 			"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
