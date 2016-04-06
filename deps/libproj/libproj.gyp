@@ -7,6 +7,7 @@
 			"target_name": "libproj",
 			"type": "static_library",
 			"sources": [
+				"proj/src/geodesic.c",
 				"proj/src/aasincos.c",
 				"proj/src/adjlon.c",
 				"proj/src/bch2bps.c",
