@@ -1,6 +1,6 @@
 {
   "name": "gdal",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Bindings to GDAL (Geospatial Data Abstraction Library)",
   "license": "Apache-2.0",
   "url": "http://github.com/naturalatlas/node-gdal",
