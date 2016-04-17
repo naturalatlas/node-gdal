@@ -63,3 +63,7 @@ script:
   - ./node_modules/.bin/node-pre-gyp package testpackage
   - npm test
   - if [[ "${TARGET}" == "STATIC" && "${PUBLISH_BINARY}" == "true" ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install; npm test; fi
+
+after_script:
+  - npm install coveralls
+  - cat ./coverage/lcov.info | coveralls

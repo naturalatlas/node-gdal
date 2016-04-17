@@ -5,6 +5,7 @@ node_modules
 lib/binding
 build
 test
+coverage
 benchmark
 Makefile
 .travis.yml
