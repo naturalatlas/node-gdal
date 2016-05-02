@@ -36,7 +36,8 @@
 				"../gdal/frmts/raw/pnmdataset.cpp",
 				"../gdal/frmts/raw/rawdataset.cpp",
 				"../gdal/frmts/raw/snodasdataset.cpp",
-				"../gdal/frmts/raw/roipacdataset.cpp"
+				"../gdal/frmts/raw/roipacdataset.cpp",
+				"../gdal/frmts/raw/iscedataset.cpp"
 			],
 			"include_dirs": [
 				"../gdal/frmts/raw"

@@ -158,6 +158,7 @@
  */
 
 #include "shapefil.h"
+#include "cpl_port.h"
 
 #include <math.h>
 #include <stdlib.h>

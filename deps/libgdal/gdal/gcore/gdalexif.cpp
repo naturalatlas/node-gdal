@@ -210,6 +210,7 @@ static void EXIFPrintData(char* pszData, GUInt16 type,
 /*                                                                      */
 /*      Extract all entry from a IFD                                    */
 /************************************************************************/
+#pragma optimize("", off)
 CPLErr EXIFExtractMetadata(char**& papszMetadata,
                            void *fpInL, int nOffset,
                            int bSwabflag, int nTIFFHEADER,
@@ -486,3 +487,4 @@ CPLErr EXIFExtractMetadata(char**& papszMetadata,
 
     return CE_None;
 }
+#pragma optimize("", on)
