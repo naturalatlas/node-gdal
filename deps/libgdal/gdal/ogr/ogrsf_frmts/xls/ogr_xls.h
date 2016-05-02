@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xls.h 28375 2015-01-30 12:06:11Z rouault $
+ * $Id: ogr_xls.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  XLS Translator
  * Purpose:  Definition of classes for OGR .xls driver.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_XLS_H_INCLUDED
-#define _OGR_XLS_H_INCLUDED
+#ifndef OGR_XLS_H_INCLUDED
+#define OGR_XLS_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 
@@ -126,4 +126,4 @@ class OGRXLSDriver : public OGRSFDriver
 };
 
 
-#endif /* ndef _OGR_XLS_H_INCLUDED */
+#endif /* ndef OGR_XLS_H_INCLUDED */

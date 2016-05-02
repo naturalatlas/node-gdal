@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgridsse.cpp 29914 2015-08-29 21:21:33Z rouault $
+ * $Id: gdalgridsse.cpp 29913 2015-08-29 21:16:44Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -33,7 +33,7 @@
 #ifdef HAVE_SSE_AT_COMPILE_TIME
 #include <xmmintrin.h>
 
-CPL_CVSID("$Id: gdalgridsse.cpp 29914 2015-08-29 21:21:33Z rouault $");
+CPL_CVSID("$Id: gdalgridsse.cpp 29913 2015-08-29 21:16:44Z rouault $");
 
 /************************************************************************/
 /*         GDALGridInverseDistanceToAPower2NoSmoothingNoSearchSSE()     */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsdtsdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrsdtsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implements OGRSDTSDriver
@@ -30,7 +30,7 @@
 #include "ogr_sdts.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsdtsdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrsdtsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 /************************************************************************/
 /*                                Open()                                */
@@ -66,7 +66,7 @@ static GDALDataset *OGRSDTSDriverOpen( GDALOpenInfo* poOpenInfo )
         delete poDS;
         poDS = NULL;
     }
-    
+
     return poDS;
 }
 
@@ -77,21 +77,17 @@ static GDALDataset *OGRSDTSDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSDTS()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "OGR_SDTS" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "OGR_SDTS" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "OGR_SDTS" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "SDTS" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_sdts.html" );
+    poDriver->SetDescription( "OGR_SDTS" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "SDTS" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_sdts.html" );
 
-        poDriver->pfnOpen = OGRSDTSDriverOpen;
+    poDriver->pfnOpen = OGRSDTSDriverOpen;
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }

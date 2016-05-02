@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceosopen.h 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: ceosopen.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  CEOS Translator
  * Purpose:  Public (C callable) interface for CEOS and related formats such
@@ -28,8 +28,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _CEOSOPEN_H_INCLUDED
-#define _CEOSOPEN_H_INCLUDED
+#ifndef CEOSOPEN_H_INCLUDED
+#define CEOSOPEN_H_INCLUDED
 
 /* -------------------------------------------------------------------- */
 /*      Include standard portability stuff.                             */
@@ -102,7 +102,7 @@ void CPL_ODLL	     CEOSDestroyRecord( CEOSRecord * );
 
 CPL_C_END
 
-#endif /* ndef _CEOSOPEN_H_INCLUDED */
+#endif /* ndef CEOSOPEN_H_INCLUDED */
 
 
 

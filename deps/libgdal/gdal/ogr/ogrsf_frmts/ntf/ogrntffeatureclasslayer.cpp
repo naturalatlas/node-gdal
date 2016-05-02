@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrntffeatureclasslayer.cpp 28382 2015-01-30 15:29:41Z rouault $
+ * $Id: ogrntffeatureclasslayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  UK NTF Reader
  * Purpose:  Implements OGRNTFFeatureClassLayer class.
@@ -30,7 +30,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
+CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 
 /************************************************************************/
 /*                      OGRNTFFeatureClassLayer()                       */
@@ -60,7 +60,7 @@ OGRNTFFeatureClassLayer::OGRNTFFeatureClassLayer( OGRNTFDataSource *poDSIn )
 
     oFCNum.SetWidth( 4 );
     poFeatureDefn->AddFieldDefn( &oFCNum );
-    
+
     OGRFieldDefn      oFCName( "FC_NAME", OFTString );
 
     oFCNum.SetWidth( 80 );
@@ -132,9 +132,9 @@ OGRFeature *OGRNTFFeatureClassLayer::GetFeature( GIntBig nFeatureId )
 
     if( nFeatureId < 0 || nFeatureId >= poDS->GetFCCount() )
         return NULL;
-    
+
     poDS->GetFeatureClass( (int)nFeatureId, &pszFCId, &pszFCName );
-    
+
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding feature.                                 */
 /* -------------------------------------------------------------------- */
@@ -143,7 +143,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetFeature( GIntBig nFeatureId )
     poFeature->SetField( 0, pszFCId );
     poFeature->SetField( 1, pszFCName );
     poFeature->SetFID( nFeatureId );
-    
+
     return poFeature;
 }
 
@@ -171,7 +171,7 @@ int OGRNTFFeatureClassLayer::TestCapability( const char * pszCap )
     if( EQUAL(pszCap,OLCRandomRead) )
         return TRUE;
 
-    else if( EQUAL(pszCap,OLCSequentialWrite) 
+    else if( EQUAL(pszCap,OLCSequentialWrite)
              || EQUAL(pszCap,OLCRandomWrite) )
         return FALSE;
 
@@ -181,6 +181,6 @@ int OGRNTFFeatureClassLayer::TestCapability( const char * pszCap )
     else if( EQUAL(pszCap,OLCFastSpatialFilter) )
         return TRUE;
 
-    else 
+    else
         return FALSE;
 }

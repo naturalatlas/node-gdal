@@ -1,8 +1,8 @@
 /******************************************************************************
- * $Id: ntfdump.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ntfdump.cpp 32177 2015-12-14 07:25:30Z goatbar $
  *
  * Project:  NTF Translator
- * Purpose:  Simple test harnass.
+ * Purpose:  Simple test harness.
  * Author:   Frank Warmerdam, warmerdam@pobox.com
  *
  ******************************************************************************
@@ -31,7 +31,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ntfdump.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ntfdump.cpp 32177 2015-12-14 07:25:30Z goatbar $");
 
 static void NTFDump( const char * pszFile, char **papszOptions );
 static void NTFCount( const char * pszFile );
@@ -45,10 +45,10 @@ int main( int argc, char ** argv )
 {
     const char  *pszMode = "-d";
     char        **papszOptions = NULL;
-    
+
     if( argc == 1 )
         printf( "Usage: ntfdump [-s n] [-g] [-d] [-c] [-codelist] files\n" );
-    
+
     for( int i = 1; i < argc; i++ )
     {
         if( EQUAL(argv[i],"-g") )
@@ -92,7 +92,7 @@ static void NTFCount( const char * pszFile )
     fp = VSIFOpen( pszFile, "r" );
     if( fp == NULL )
         return;
-    
+
     do {
         if( poRecord != NULL )
             delete poRecord;
@@ -123,7 +123,7 @@ static void NTFDump( const char * pszFile, char **papszOptions )
     OGRNTFDataSource   oDS;
 
     oDS.SetOptionList( papszOptions );
-    
+
     if( !oDS.Open( pszFile ) )
         return;
 

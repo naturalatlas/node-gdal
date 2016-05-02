@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: hdf4compat.h 15691 2008-11-07 09:54:58Z dron $
+ * $Id: hdf4compat.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  Hierarchical Data Format Release 4 (HDF4)
  * Purpose:  Header file for HDF4 compatibility
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _HDF4COMPAT_H_INCLUDED_
-#define _HDF4COMPAT_H_INCLUDED_
+#ifndef HDF4COMPAT_H_INCLUDED_
+#define HDF4COMPAT_H_INCLUDED_
 
 /*  New versions of the HDF4 library define H4_xxx instead of xxx to
     avoid potential conflicts with NetCDF-3 library. The following

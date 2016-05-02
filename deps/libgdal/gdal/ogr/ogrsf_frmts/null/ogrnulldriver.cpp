@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrnulldriver.cpp 28039 2014-11-30 18:24:59Z rouault $
+ * $Id: ogrnulldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  NULL output driver.
@@ -27,14 +27,16 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-/* NOTE: this driver is only useful for debugging and is not included in the build process */
-/* To compile it as a pluing under Linux :
+/* NOTE: this driver is only useful for debugging and is not included
+   in the build process */
+
+/* To compile it as a plugin under Linux :
     g++ -Wall -DDEBUG -fPIC -g ogr/ogrsf_frmts/null/ogrnulldriver.cpp  -shared -o ogr_NULL.so -L. -lgdal -Iport -Igcore -Iogr -Iogr/ogrsf_frmts
 */
 
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrnulldriver.cpp 28039 2014-11-30 18:24:59Z rouault $");
+CPL_CVSID("$Id: ogrnulldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 extern "C" void CPL_DLL RegisterOGRNULL();
 
@@ -259,7 +261,7 @@ int OGRNULLDriver::TestCapability( const char * pszCap )
 
 void RegisterOGRNULL()
 {
-    if (! GDAL_CHECK_VERSION("OGR/NULL driver"))
+    if( !GDAL_CHECK_VERSION("OGR/NULL driver") )
         return;
 
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRNULLDriver );

@@ -1,9 +1,9 @@
 /******************************************************************************
- * $Id: mrsidstream.cpp 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: mrsidstream.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  Multi-resolution Seamless Image Database (MrSID)
  * Purpose:  Input/output stream wrapper for usage with LizardTech's
- *           MrSID SDK, implemenattion of the wrapper class methods.
+ *           MrSID SDK, implementation of the wrapper class methods.
  * Author:   Andrey Kiselev, dron@ak4719.spb.edu
  *
  ******************************************************************************
@@ -29,10 +29,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#ifdef DEBUG_BOOL
+#define DO_NOT_USE_DEBUG_BOOL
+#endif
+
 #include "cpl_error.h"
 #include "mrsidstream.h"
 
-CPL_CVSID("$Id: mrsidstream.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: mrsidstream.cpp 33717 2016-03-14 06:29:14Z goatbar $");
 
 LT_USE_NAMESPACE(LizardTech)
 
@@ -42,7 +46,7 @@ LT_USE_NAMESPACE(LizardTech)
 /* ==================================================================== */
 /************************************************************************/
 
-LTIVSIStream::LTIVSIStream() : poFileHandle(NULL), nError(0), pnRefCount(NULL), 
+LTIVSIStream::LTIVSIStream() : poFileHandle(NULL), nError(0), pnRefCount(NULL),
 bIsOpen(FALSE)
 {
 }
@@ -203,7 +207,7 @@ LT_STATUS LTIVSIStream::seek( lt_int64 nOffset, LTIOSeekDir nOrigin )
         case (LTIO_SEEK_DIR_BEG):
             nWhence = SEEK_SET;
             break;
-      
+
         case (LTIO_SEEK_DIR_CUR):
         {
             nWhence =  SEEK_CUR;
@@ -214,11 +218,11 @@ LT_STATUS LTIVSIStream::seek( lt_int64 nOffset, LTIOSeekDir nOrigin )
             }
             break;
         }
-      
+
         case (LTIO_SEEK_DIR_END):
             nWhence = SEEK_END;
             break;
-      
+
         default:
             return LT_STS_Failure;
     }
@@ -276,4 +280,3 @@ const char *LTIVSIStream::getID() const
 {
     return "LTIVSIStream:";
 }
-

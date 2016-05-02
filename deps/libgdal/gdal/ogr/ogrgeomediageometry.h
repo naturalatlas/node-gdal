@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeomediageometry.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrgeomediageometry.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements decoder of geomedia geometry blobs
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_GEOMEDIAGEOMETRY_H_INCLUDED
-#define _OGR_GEOMEDIAGEOMETRY_H_INCLUDED
+#ifndef OGR_GEOMEDIAGEOMETRY_H_INCLUDED
+#define OGR_GEOMEDIAGEOMETRY_H_INCLUDED
 
 #include "ogr_geometry.h"
 #include "ogr_spatialref.h"

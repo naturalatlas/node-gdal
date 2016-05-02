@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmutexedlayer.cpp 28601 2015-03-03 11:06:40Z rouault $
+ * $Id: ogrmutexedlayer.cpp 31705 2015-11-21 22:57:18Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMutexedLayer class
@@ -30,7 +30,7 @@
 #include "ogrmutexedlayer.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmutexedlayer.cpp 28601 2015-03-03 11:06:40Z rouault $");
+CPL_CVSID("$Id: ogrmutexedlayer.cpp 31705 2015-11-21 22:57:18Z rouault $");
 
 OGRMutexedLayer::OGRMutexedLayer(OGRLayer* poDecoratedLayer,
                                  int bTakeOwnership,
@@ -192,10 +192,10 @@ OGRErr      OGRMutexedLayer::ReorderFields( int* panMap )
     return OGRLayerDecorator::ReorderFields(panMap);
 }
 
-OGRErr      OGRMutexedLayer::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags )
+OGRErr      OGRMutexedLayer::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlagsIn )
 {
     CPLMutexHolderOptionalLockD(m_hMutex);
-    return OGRLayerDecorator::AlterFieldDefn(iField, poNewFieldDefn, nFlags);
+    return OGRLayerDecorator::AlterFieldDefn(iField, poNewFieldDefn, nFlagsIn);
 }
 
 OGRErr      OGRMutexedLayer::SyncToDisk()

@@ -1,8 +1,8 @@
 /******************************************************************************
- * $Id: gdal_csv.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdal_csv.h 33844 2016-04-01 08:42:13Z rouault $
  *
  * Project:  Common Portability Library
- * Purpose:  Functions for reading and scaning CSV (comma separated,
+ * Purpose:  Functions for reading and scanning CSV (comma separated,
  *           variable length text files holding tables) files.
  * Author:   Frank Warmerdam, warmerdam@pobox.com
  *

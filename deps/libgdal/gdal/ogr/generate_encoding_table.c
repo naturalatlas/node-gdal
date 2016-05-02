@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: generate_encoding_table.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: generate_encoding_table.c 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Generate a mapping table from a 1-byte encoding to unicode,
@@ -128,8 +128,8 @@ int main(int argc, char* argv[])
 
     if ( sConv == (iconv_t)-1 )
     {
-        fprintf(stderr, 
-                  "Recode from %s to %s failed with the error: \"%s\".", 
+        fprintf(stderr,
+                  "Recode from %s to %s failed with the error: \"%s\".",
                   pszSrcEncoding, pszDstEncoding, strerror(errno) );
         return 1;
     }

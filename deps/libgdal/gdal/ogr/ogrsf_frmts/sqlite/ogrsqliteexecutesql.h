@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteexecutesql.h 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrsqliteexecutesql.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Run SQL requests with SQLite SQL engine
@@ -28,8 +28,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_SQLITE_EXECUTE_SQL_H_INCLUDED
-#define _OGR_SQLITE_EXECUTE_SQL_H_INCLUDED
+#ifndef OGR_SQLITE_EXECUTE_SQL_H_INCLUDED
+#define OGR_SQLITE_EXECUTE_SQL_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 #include <set>
@@ -62,6 +62,6 @@ class LayerDesc
 
 std::set<LayerDesc> OGRSQLiteGetReferencedLayers(const char* pszStatement);
 
-#endif /* ndef _OGR_SQLITE_EXECUTE_SQL_H_INCLUDED */
+#endif /* ndef OGR_SQLITE_EXECUTE_SQL_H_INCLUDED */
 
 

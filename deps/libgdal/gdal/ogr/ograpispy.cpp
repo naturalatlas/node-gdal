@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograpispy.cpp 28808 2015-03-28 15:01:36Z rouault $
+ * $Id: ograpispy.cpp 33680 2016-03-08 09:59:03Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGR C API "Spy"
@@ -55,7 +55,7 @@ class LayerDescription
         int iLayer;
 
         LayerDescription(): iLayer(-1) {}
-        LayerDescription(int iLayer): iLayer(iLayer) {}
+        LayerDescription(int iLayerIn): iLayer(iLayerIn) {}
 };
 
 class DatasetDescription
@@ -65,7 +65,7 @@ class DatasetDescription
         std::map<OGRLayerH, LayerDescription> oMapLayer;
 
         DatasetDescription() : iDS(-1) {}
-        DatasetDescription(int iDS) : iDS(iDS) {}
+        DatasetDescription(int iDSIn) : iDS(iDSIn) {}
         ~DatasetDescription();
 };
 
@@ -78,7 +78,7 @@ class FeatureDefnDescription
         std::map<OGRGeomFieldDefnH, int> oMapGeomFieldDefn;
 
         FeatureDefnDescription(): hFDefn(NULL), iUniqueNumber(-1) {}
-        FeatureDefnDescription(OGRFeatureDefnH hFDefn, int iUniqueNumber): hFDefn(hFDefn), iUniqueNumber(iUniqueNumber) {}
+        FeatureDefnDescription(OGRFeatureDefnH hFDefnIn, int iUniqueNumberIn): hFDefn(hFDefnIn), iUniqueNumber(iUniqueNumberIn) {}
         void Free();
 };
 
@@ -86,7 +86,7 @@ static std::map<OGRDataSourceH, DatasetDescription> oMapDS;
 static std::map<OGRLayerH, CPLString> oGlobalMapLayer;
 static OGRLayerH hLayerGetNextFeature = NULL;
 static OGRLayerH hLayerGetLayerDefn = NULL;
-static int bDeferGetFieldCount = FALSE;
+static bool bDeferGetFieldCount = false;
 static int nGetNextFeatureCalls = 0;
 static std::set<CPLString> aoSetCreatedDS;
 static std::map<OGRFeatureDefnH, FeatureDefnDescription> oMapFDefn;
@@ -133,7 +133,7 @@ static void OGRAPISpyFileClose()
     }
 }
 
-static int OGRAPISpyEnabled()
+static bool OGRAPISpyEnabled()
 {
     const char* pszSpyFile = CPLGetConfigOption("OGR_API_SPY_FILE", NULL);
     bOGRAPISpyEnabled = (pszSpyFile != NULL);
@@ -141,10 +141,10 @@ static int OGRAPISpyEnabled()
     {
         osSpyFile.resize(0);
         aoSetCreatedDS.clear();
-        return FALSE;
+        return false;
     }
     if( osSpyFile.size() )
-        return TRUE;
+        return true;
 
     osSpyFile = pszSpyFile;
 
@@ -172,7 +172,7 @@ static int OGRAPISpyEnabled()
     fprintf(fpSpyFile, "shutil.copy\n"); // same here
     fprintf(fpSpyFile, "\n");
 
-    return TRUE;
+    return true;
 }
 
 static CPLString OGRAPISpyGetOptions(char** papszOptions)
@@ -290,6 +290,8 @@ static CPLString OGRAPISpyGetGeomType(OGRwkbGeometryType eType)
         casePrefixOgrDot(wkbCurvePolygon)
         casePrefixOgrDot(wkbMultiCurve)
         casePrefixOgrDot(wkbMultiSurface)
+        casePrefixOgrDot(wkbCurve)
+        casePrefixOgrDot(wkbSurface)
         casePrefixOgrDot(wkbNone)
         casePrefixOgrDot(wkbLinearRing)
         casePrefixOgrDot(wkbCircularStringZ)
@@ -297,6 +299,8 @@ static CPLString OGRAPISpyGetGeomType(OGRwkbGeometryType eType)
         casePrefixOgrDot(wkbCurvePolygonZ)
         casePrefixOgrDot(wkbMultiCurveZ)
         casePrefixOgrDot(wkbMultiSurfaceZ)
+        casePrefixOgrDot(wkbCurveZ)
+        casePrefixOgrDot(wkbSurfaceZ)
         casePrefixOgrDot(wkbPoint25D)
         casePrefixOgrDot(wkbLineString25D)
         casePrefixOgrDot(wkbPolygon25D)
@@ -304,6 +308,47 @@ static CPLString OGRAPISpyGetGeomType(OGRwkbGeometryType eType)
         casePrefixOgrDot(wkbMultiLineString25D)
         casePrefixOgrDot(wkbMultiPolygon25D)
         casePrefixOgrDot(wkbGeometryCollection25D)
+        casePrefixOgrDot(wkbPolyhedralSurface)
+        casePrefixOgrDot(wkbTIN)
+        casePrefixOgrDot(wkbTriangle)
+        casePrefixOgrDot(wkbPolyhedralSurfaceZ)
+        casePrefixOgrDot(wkbTINZ)
+        casePrefixOgrDot(wkbTriangleZ)
+        casePrefixOgrDot(wkbPointM)
+        casePrefixOgrDot(wkbLineStringM)
+        casePrefixOgrDot(wkbPolygonM)
+        casePrefixOgrDot(wkbMultiPointM)
+        casePrefixOgrDot(wkbMultiLineStringM)
+        casePrefixOgrDot(wkbMultiPolygonM)
+        casePrefixOgrDot(wkbGeometryCollectionM)
+        casePrefixOgrDot(wkbCircularStringM)
+        casePrefixOgrDot(wkbCompoundCurveM)
+        casePrefixOgrDot(wkbCurvePolygonM)
+        casePrefixOgrDot(wkbMultiCurveM)
+        casePrefixOgrDot(wkbMultiSurfaceM)
+        casePrefixOgrDot(wkbCurveM)
+        casePrefixOgrDot(wkbSurfaceM)
+        casePrefixOgrDot(wkbPolyhedralSurfaceM)
+        casePrefixOgrDot(wkbTINM)
+        casePrefixOgrDot(wkbTriangleM)
+        casePrefixOgrDot(wkbPointZM)
+        casePrefixOgrDot(wkbLineStringZM)
+        casePrefixOgrDot(wkbPolygonZM)
+        casePrefixOgrDot(wkbMultiPointZM)
+        casePrefixOgrDot(wkbMultiLineStringZM)
+        casePrefixOgrDot(wkbMultiPolygonZM)
+        casePrefixOgrDot(wkbGeometryCollectionZM)
+        casePrefixOgrDot(wkbCircularStringZM)
+        casePrefixOgrDot(wkbCompoundCurveZM)
+        casePrefixOgrDot(wkbCurvePolygonZM)
+        casePrefixOgrDot(wkbMultiCurveZM)
+        casePrefixOgrDot(wkbMultiSurfaceZM)
+        casePrefixOgrDot(wkbCurveZM)
+        casePrefixOgrDot(wkbSurfaceZM)
+        casePrefixOgrDot(wkbPolyhedralSurfaceZM)
+        casePrefixOgrDot(wkbTriangleZM)
+        casePrefixOgrDot(wkbTINZM)
+
     }
     return "error";
 }
@@ -359,7 +404,7 @@ static void OGRAPISpyFlushDefered()
         {
             fprintf(fpSpyFile, "%s.GetFieldCount()\n",
                     OGRAPISpyGetFeatureDefnVar(hDefn).c_str());
-            bDeferGetFieldCount = FALSE;
+            bDeferGetFieldCount = false;
         }
 
         hLayerGetLayerDefn = NULL;
@@ -403,7 +448,7 @@ int OGRAPISpyOpenTakeSnapshot(const char* pszName, int bUpdate)
                 CPLString osBaseDir;
                 CPLString osSrcDir;
                 CPLString osWorkingDir;
-                while(TRUE)
+                while( true )
                 {
                     osBaseDir = CPLFormFilename(osSnapshotPath,
                                         CPLSPrintf("snapshot_%d", i), NULL );
@@ -478,7 +523,7 @@ void OGRAPISpyPreClose(OGRDataSourceH hDS)
     OGRAPISpyFileClose();
 }
 
-void OGRAPISpyPostClose(CPL_UNUSED OGRDataSourceH hDS)
+void OGRAPISpyPostClose()
 {
     if( !GDALIsInGlobalDestructor() )
     {
@@ -564,7 +609,7 @@ void OGRAPISpy_DS_GetLayerByName( OGRDataSourceH hDS, const char* pszLayerName,
     OGRAPISpyFileClose();
 }
 
-void OGRAPISpy_DS_ExecuteSQL( OGRDataSourceH hDS, 
+void OGRAPISpy_DS_ExecuteSQL( OGRDataSourceH hDS,
                               const char *pszStatement,
                               OGRGeometryH hSpatialFilter,
                               const char *pszDialect,
@@ -596,7 +641,7 @@ void OGRAPISpy_DS_ReleaseResultSet( OGRDataSourceH hDS, OGRLayerH hLayer)
     OGRAPISpyFileClose();
 }
 
-void OGRAPISpy_DS_CreateLayer( OGRDataSourceH hDS, 
+void OGRAPISpy_DS_CreateLayer( OGRDataSourceH hDS,
                                const char * pszName,
                                OGRSpatialReferenceH hSpatialRef,
                                OGRwkbGeometryType eType,
@@ -741,13 +786,13 @@ static void OGRAPISpyDumpFeature( OGRFeatureH hFeat )
         if( poGeom != NULL )
         {
             fprintf(fpSpyFile, "f.SetGeomField(%d, %s)\n", i, OGRAPISpyGetGeom(
-                (OGRGeometryH)poGeom ).c_str() ); 
+                (OGRGeometryH)poGeom ).c_str() );
         }
     }
     const char* pszStyleString = poFeature->GetStyleString();
     if( pszStyleString != NULL )
         fprintf(fpSpyFile, "f.SetStyleString(%s)\n",
-                OGRAPISpyGetString(pszStyleString).c_str() ); 
+                OGRAPISpyGetString(pszStyleString).c_str() );
 }
 
 void OGRAPISpy_L_SetFeature( OGRLayerH hLayer, OGRFeatureH hFeat )
@@ -786,7 +831,7 @@ static void OGRAPISpyDumpFieldDefn( OGRFieldDefn* poFieldDefn )
                 OGRAPISpyGetString(poFieldDefn->GetDefault()).c_str());
 }
 
-void OGRAPISpy_L_CreateField( OGRLayerH hLayer, OGRFieldDefnH hField, 
+void OGRAPISpy_L_CreateField( OGRLayerH hLayer, OGRFieldDefnH hField,
                               int bApproxOK )
 {
     OGRAPISpyFlushDefered();
@@ -840,7 +885,7 @@ void OGRAPISpy_L_AlterFieldDefn( OGRLayerH hLayer, int iField,
     OGRAPISpyFileClose();
 }
 
-void OGRAPISpy_L_CreateGeomField( OGRLayerH hLayer, OGRGeomFieldDefnH hField, 
+void OGRAPISpy_L_CreateGeomField( OGRLayerH hLayer, OGRGeomFieldDefnH hField,
                                   int bApproxOK )
 {
     OGRAPISpyFlushDefered();
@@ -928,7 +973,7 @@ void OGRAPISpy_L_SetSpatialFilterEx( OGRLayerH hLayer, int iGeomField,
 }
 
 void OGRAPISpy_L_SetSpatialFilterRect( OGRLayerH hLayer,
-                                       double dfMinX, double dfMinY, 
+                                       double dfMinX, double dfMinY,
                                        double dfMaxX, double dfMaxY)
 {
     OGRAPISpyFlushDefered();
@@ -939,7 +984,7 @@ void OGRAPISpy_L_SetSpatialFilterRect( OGRLayerH hLayer,
 }
 
 void OGRAPISpy_L_SetSpatialFilterRectEx( OGRLayerH hLayer, int iGeomField,
-                                         double dfMinX, double dfMinY, 
+                                         double dfMinX, double dfMinY,
                                          double dfMaxX, double dfMaxY)
 {
 
@@ -983,7 +1028,7 @@ void OGRAPISpy_FD_GetFieldCount(OGRFeatureDefnH hDefn)
     if( hLayerGetLayerDefn != NULL &&
         (OGRFeatureDefnH)(((OGRLayer*)hLayerGetLayerDefn)->GetLayerDefn()) == hDefn )
     {
-        bDeferGetFieldCount = TRUE;
+        bDeferGetFieldCount = true;
     }
     else
     {

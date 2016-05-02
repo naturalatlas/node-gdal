@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_orb_view.cpp 29145 2015-05-04 10:00:40Z rouault $
+ * $Id: reader_orb_view.cpp 29915 2015-08-29 21:29:57Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from OrbView imagery.
@@ -30,7 +30,7 @@
 
 #include "reader_orb_view.h"
 
-CPL_CVSID("$Id: reader_orb_view.cpp 29145 2015-05-04 10:00:40Z rouault $");
+CPL_CVSID("$Id: reader_orb_view.cpp 29915 2015-08-29 21:29:57Z rouault $");
 
 /**
  * GDALMDReaderOrbView()
@@ -80,7 +80,7 @@ GDALMDReaderOrbView::~GDALMDReaderOrbView()
 /**
  * HasRequiredFiles()
  */
-const bool GDALMDReaderOrbView::HasRequiredFiles() const
+bool GDALMDReaderOrbView::HasRequiredFiles() const
 {
     if (!m_osIMDSourceFilename.empty() && !m_osRPBSourceFilename.empty())
         return true;

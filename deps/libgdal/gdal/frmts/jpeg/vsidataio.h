@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vsidataio.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: vsidataio.h 32062 2015-12-07 11:02:56Z rouault $
  *
  * Project:  JPEG JFIF Driver
  * Purpose:  Implement JPEG read/write io indirection through VSI.
@@ -34,7 +34,11 @@
 #include "cpl_vsi.h"
 
 CPL_C_START
-#include "jpeglib.h"
+#ifdef LIBJPEG_12_PATH
+#  include LIBJPEG_12_PATH
+#else
+#  include "jpeglib.h"
+#endif
 CPL_C_END
 
 void jpeg_vsiio_src (j_decompress_ptr cinfo, VSILFILE * infile);

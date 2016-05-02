@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogringresdriver.cpp 15463 2008-10-06 18:31:28Z rouault $
+ * $Id: ogringresdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIngresDriver class.
@@ -30,7 +30,7 @@
 #include "ogr_ingres.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogringresdriver.cpp 15463 2008-10-06 18:31:28Z rouault $");
+CPL_CVSID("$Id: ogringresdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRIngresDriver()                           */
@@ -89,7 +89,7 @@ OGRDataSource *OGRIngresDriver::Open( const char * pszFilename,
     }
 
     CSLDestroy( papszOptions );
-    
+
     return poDS;
 }
 
@@ -117,7 +117,7 @@ OGRDataSource *OGRIngresDriver::CreateDataSource( const char * pszName,
         {
             delete poDS;
             poDS = NULL;
-            CPLError( CE_Failure, CPLE_AppDefined, 
+            CPLError( CE_Failure, CPLE_AppDefined,
                       "Ingres driver doesn't currently support database creation.\n"
                       "Please create database before using." );
         }
@@ -139,10 +139,10 @@ int OGRIngresDriver::TestCapability( const char * pszCap )
     if( EQUAL(pszCap,ODsCCreateLayer) )
         return TRUE;
     if( EQUAL(pszCap,ODsCDeleteLayer) )
-        return TRUE;     
+        return TRUE;
     if( EQUAL(pszCap,ODrCCreateDataSource) )
         return TRUE;
-        
+
     return FALSE;
 }
 
@@ -153,8 +153,7 @@ int OGRIngresDriver::TestCapability( const char * pszCap )
 void RegisterOGRIngres()
 
 {
-    if (! GDAL_CHECK_VERSION("Ingres"))
+    if( !GDAL_CHECK_VERSION("Ingres") )
         return;
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(new OGRIngresDriver);
 }
-

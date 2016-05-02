@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reflectancecalculator.cpp 15066 2008-07-28 20:21:59Z mloskot $
+ * $Id: reflectancecalculator.cpp 32179 2015-12-14 16:22:34Z goatbar $
  *
  * Purpose:  Implementation of ReflectanceCalculator class. Calculate
  *           reflectance values from radiance, for visual bands.
@@ -31,8 +31,6 @@
 #include <cmath>
 #include <cstdlib>
 using namespace std;
-
-#define M_PI        3.14159265358979323846
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -88,7 +86,7 @@ const double ReflectanceCalculator::rDeclination() const
   double rJulianDay = m_iDay - 1;
   double yearFraction = (rJulianDay + m_rHours / 24) / iDaysInYear(m_iYear);
   double T = 2 * M_PI * yearFraction;
-  
+
   double declin = 0.006918 - 0.399912 * cos(T) + 0.070257 * sin(T)
           - 0.006758 * cos(2 * T) + 0.000907 * sin(2 * T)
           - 0.002697 * cos(3 * T) + 0.00148 * sin(3 * T);
@@ -97,8 +95,8 @@ const double ReflectanceCalculator::rDeclination() const
 
 double ReflectanceCalculator::rHourAngle(double rLon) const
 {
-	// In: rLon (in degrees)
-	// Out: hourAngle (in radians)
+  // In: rLon (in degrees)
+  // Out: hourAngle (in radians)
   double rJulianDay = m_iDay - 1;
   double yearFraction = (rJulianDay + m_rHours / 24) / iDaysInYear(m_iYear);
   double T = 2 * M_PI * yearFraction;
@@ -128,7 +126,7 @@ const double ReflectanceCalculator::rSunDistance() const
 int ReflectanceCalculator::iDaysInYear(int iYear) const
 {
   bool fLeapYear = iDaysInMonth(2, iYear) == 29;
-  
+
   if (fLeapYear)
       return 366;
   else

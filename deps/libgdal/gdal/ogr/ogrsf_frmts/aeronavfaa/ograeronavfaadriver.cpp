@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograeronavfaadriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ograeronavfaadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAADriver.
@@ -30,7 +30,7 @@
 #include "ogr_aeronavfaa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ograeronavfaadriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ograeronavfaadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 // g++ ogr/ogrsf_frmts/aeronavfaa/*.cpp -Wall -g -fPIC -shared -o ogr_AeronavFAA.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/aernovfaa -Iogr/ogrsf_frmts
 
@@ -69,24 +69,19 @@ static GDALDataset *OGRAeronavFAADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRAeronavFAA()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "AeronavFAA" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "AeronavFAA" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver  *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "AeronavFAA" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Aeronav FAA" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_aeronavfaa.html" );
+    poDriver->SetDescription( "AeronavFAA" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "Aeronav FAA" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_aeronavfaa.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->pfnOpen = OGRAeronavFAADriverOpen;
 
-        poDriver->pfnOpen = OGRAeronavFAADriverOpen;
-
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }
 

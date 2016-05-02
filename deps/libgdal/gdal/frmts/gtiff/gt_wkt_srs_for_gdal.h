@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_wkt_srs_for_gdal.h 29049 2015-04-29 15:54:12Z rouault $
+ * $Id: gt_wkt_srs_for_gdal.h 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Read/Write in-memory GeoTIFF file
@@ -50,7 +50,7 @@ CPLErr CPL_DLL GTIFWktFromMemBuf( int nSize, unsigned char *pabyBuffer,
                           char **ppszWKT, double *padfGeoTransform,
                           int *pnGCPCount, GDAL_GCP **ppasGCPList );
 
-CPLErr GTIFWktFromMemBufEx( int nSize, unsigned char *pabyBuffer, 
+CPLErr GTIFWktFromMemBufEx( int nSize, unsigned char *pabyBuffer,
                             char **ppszWKT, double *padfGeoTransform,
                             int *pnGCPCount, GDAL_GCP **ppasGCPList,
                             int *pbPixelIsPoint, char*** ppapszRPCMD );

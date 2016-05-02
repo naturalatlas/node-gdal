@@ -29,7 +29,7 @@
 
 #include "ogr_xplane_fix_reader.h"
 
-CPL_CVSID("$Id: ogr_xplane_fix_reader.cpp 27044 2014-03-16 23:41:27Z rouault $");
+CPL_CVSID("$Id: ogr_xplane_fix_reader.cpp 31120 2015-10-24 19:55:09Z rouault $");
 
 /************************************************************************/
 /*                   OGRXPlaneCreateFixFileReader                       */
@@ -88,7 +88,7 @@ OGRXPlaneReader* OGRXPlaneFixReader::CloneForLayer(OGRXPlaneLayer* poLayer)
 
 int OGRXPlaneFixReader::IsRecognizedVersion( const char* pszVersionString)
 {
-    return EQUALN(pszVersionString, "600 Version", 11);
+    return STARTS_WITH_CI(pszVersionString, "600 Version");
 }
 
 /************************************************************************/

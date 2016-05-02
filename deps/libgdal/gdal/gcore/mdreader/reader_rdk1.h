@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_rdk1.h 29190 2015-05-13 21:40:30Z bishop $
+ * $Id: reader_rdk1.h 29915 2015-08-29 21:29:57Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Resurs-DK1 imagery.
@@ -50,11 +50,11 @@ class GDALMDReaderResursDK1: public GDALMDReaderBase
 public:
     GDALMDReaderResursDK1(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderResursDK1();
-    virtual const bool HasRequiredFiles() const;
+    virtual bool HasRequiredFiles() const;
     virtual char** GetMetadataFiles() const;
 protected:
     virtual void LoadMetadata();
-    virtual const time_t GetAcquisitionTimeFromString(const char* pszDateTime);
+    virtual time_t GetAcquisitionTimeFromString(const char* pszDateTime);
     virtual char** AddXMLNameValueToList(char** papszList, const char *pszName,
                                          const char *pszValue);
 protected:

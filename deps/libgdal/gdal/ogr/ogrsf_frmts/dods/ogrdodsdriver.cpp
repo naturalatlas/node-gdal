@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrdodsdriver.cpp 27597 2014-08-22 17:15:49Z rouault $
+ * $Id: ogrdodsdriver.cpp 31120 2015-10-24 19:55:09Z rouault $
  *
  * Project:  OGR/DODS Interface
  * Purpose:  Implements OGRDODSDriver class.
@@ -30,7 +30,7 @@
 #include "ogr_dods.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdodsdriver.cpp 27597 2014-08-22 17:15:49Z rouault $");
+CPL_CVSID("$Id: ogrdodsdriver.cpp 31120 2015-10-24 19:55:09Z rouault $");
 
 /************************************************************************/
 /*                            ~OGRDODSDriver()                            */
@@ -61,7 +61,7 @@ OGRDataSource *OGRDODSDriver::Open( const char * pszFilename,
 {
     OGRDODSDataSource     *poDS;
 
-    if( !EQUALN(pszFilename,"DODS:http:",10) )
+    if( !STARTS_WITH_CI(pszFilename, "DODS:http:") )
         return NULL;
 
     poDS = new OGRDODSDataSource();

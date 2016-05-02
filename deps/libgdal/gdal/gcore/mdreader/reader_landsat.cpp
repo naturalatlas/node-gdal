@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_landsat.cpp 29245 2015-05-24 16:46:56Z rouault $
+ * $Id: reader_landsat.cpp 31120 2015-10-24 19:55:09Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Landsat imagery.
@@ -30,7 +30,7 @@
 
 #include "reader_landsat.h"
 
-CPL_CVSID("$Id: reader_landsat.cpp 29245 2015-05-24 16:46:56Z rouault $");
+CPL_CVSID("$Id: reader_landsat.cpp 31120 2015-10-24 19:55:09Z rouault $");
 
 /**
  * GDALMDReaderLandsat()
@@ -50,7 +50,7 @@ GDALMDReaderLandsat::GDALMDReaderLandsat(const char *pszPath,
     for(i = 0; i < nBaseNameLen; i++)
     {
         szMetadataName[i] = pszBaseName[i];
-        if(EQUALN(pszBaseName + i, "_B", 2) || EQUALN(pszBaseName + i, "_b", 2))
+        if(STARTS_WITH_CI(pszBaseName + i, "_B") || STARTS_WITH_CI(pszBaseName + i, "_b"))
         {
             break;
         }
@@ -90,7 +90,7 @@ GDALMDReaderLandsat::~GDALMDReaderLandsat()
 /**
  * HasRequiredFiles()
  */
-const bool GDALMDReaderLandsat::HasRequiredFiles() const
+bool GDALMDReaderLandsat::HasRequiredFiles() const
 {
     if (!m_osIMDSourceFilename.empty())
         return true;

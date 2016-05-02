@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerdecorator.cpp 28601 2015-03-03 11:06:40Z rouault $
+ * $Id: ogrlayerdecorator.cpp 32467 2015-12-26 10:54:09Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRLayerDecorator class
@@ -29,15 +29,15 @@
 
 #include "ogrlayerdecorator.h"
 
-CPL_CVSID("$Id: ogrlayerdecorator.cpp 28601 2015-03-03 11:06:40Z rouault $");
+CPL_CVSID("$Id: ogrlayerdecorator.cpp 32467 2015-12-26 10:54:09Z rouault $");
 
 OGRLayerDecorator::OGRLayerDecorator(OGRLayer* poDecoratedLayer,
                                      int bTakeOwnership) :
                                         m_poDecoratedLayer(poDecoratedLayer),
                                         m_bHasOwnership(bTakeOwnership)
 {
-    SetDescription( poDecoratedLayer->GetDescription() );
     CPLAssert(poDecoratedLayer != NULL);
+    SetDescription( poDecoratedLayer->GetDescription() );
 }
 
 OGRLayerDecorator::~OGRLayerDecorator()
@@ -194,10 +194,17 @@ OGRErr      OGRLayerDecorator::ReorderFields( int* panMap )
     return m_poDecoratedLayer->ReorderFields(panMap);
 }
 
-OGRErr      OGRLayerDecorator::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags )
+OGRErr      OGRLayerDecorator::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlagsIn )
 {
     if( !m_poDecoratedLayer ) return OGRERR_FAILURE;
-    return m_poDecoratedLayer->AlterFieldDefn(iField, poNewFieldDefn, nFlags);
+    return m_poDecoratedLayer->AlterFieldDefn(iField, poNewFieldDefn, nFlagsIn);
+}
+
+OGRErr      OGRLayerDecorator::CreateGeomField( OGRGeomFieldDefn *poField,
+                                            int bApproxOK )
+{
+    if( !m_poDecoratedLayer ) return OGRERR_FAILURE;
+    return m_poDecoratedLayer->CreateGeomField(poField, bApproxOK);
 }
 
 OGRErr      OGRLayerDecorator::SyncToDisk()

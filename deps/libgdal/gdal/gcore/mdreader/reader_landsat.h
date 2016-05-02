@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_landsat.h 29190 2015-05-13 21:40:30Z bishop $
+ * $Id: reader_landsat.h 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Landsat imagery.
@@ -38,7 +38,7 @@
 
 TIFF filename:      xxxxxx_aaa.tif
 Metadata filename:  xxxxxx_MTL.txt
-RPC filename:           
+RPC filename:
 
 Common metadata (from metadata filename):
     SatelliteId:         SPACECRAFT_ID
@@ -54,7 +54,7 @@ class GDALMDReaderLandsat: public GDALMDReaderBase
 public:
     GDALMDReaderLandsat(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderLandsat();
-    virtual const bool HasRequiredFiles() const;
+    virtual bool HasRequiredFiles() const;
     virtual char** GetMetadataFiles() const;
 protected:
     virtual void LoadMetadata();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_expat.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: ogr_expat.cpp 30134 2015-09-05 14:27:57Z rouault $
  *
  * Project:  OGR
  * Purpose:  Convenience function for parsing with Expat library
@@ -32,7 +32,7 @@
 #include "ogr_expat.h"
 #include "cpl_error.h"
 
-CPL_CVSID("$Id: ogr_expat.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: ogr_expat.cpp 30134 2015-09-05 14:27:57Z rouault $");
 
 #define OGR_EXPAT_MAX_ALLOWED_ALLOC 10000000
 
@@ -161,7 +161,10 @@ static int OGRExpatUnknownEncodingHandler (CPL_UNUSED void *unused_encodingHandl
     else if( EQUAL(name, "ISO-8859-15") )
         FillISO885915(info);
     else
+    {
+        CPLDebug("OGR", "Unhandled encoding %s", name);
         return XML_STATUS_ERROR;
+    }
 
     info->data    = NULL;
     info->convert = NULL;

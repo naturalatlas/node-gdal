@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsfdriverregistrar.cpp 28806 2015-03-28 14:37:47Z rouault $
+ * $Id: ogrsfdriverregistrar.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRSFDriverRegistrar class implementation.
@@ -32,7 +32,7 @@
 #include "ogr_api.h"
 #include "ograpispy.h"
 
-CPL_CVSID("$Id: ogrsfdriverregistrar.cpp 28806 2015-03-28 14:37:47Z rouault $");
+CPL_CVSID("$Id: ogrsfdriverregistrar.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 
 /************************************************************************/
 /*                         OGRSFDriverRegistrar                         */
@@ -41,15 +41,12 @@ CPL_CVSID("$Id: ogrsfdriverregistrar.cpp 28806 2015-03-28 14:37:47Z rouault $");
 /**
  * \brief Constructor
  *
- * Normally the driver registrar is constucted by the 
+ * Normally the driver registrar is constructed by the
  * OGRSFDriverRegistrar::GetRegistrar() accessor which ensures singleton
- * status.  
+ * status.
  */
 
-OGRSFDriverRegistrar::OGRSFDriverRegistrar()
-
-{
-}
+OGRSFDriverRegistrar::OGRSFDriverRegistrar() {}
 
 /************************************************************************/
 /*                       ~OGRSFDriverRegistrar()                        */
@@ -83,7 +80,7 @@ int OGRwillNeverBeTrue = FALSE;
 #endif
 
 /**
- * \brief Cleanup all OGR related resources. 
+ * \brief Cleanup all OGR related resources.
  *
  * FIXME
  */
@@ -163,7 +160,7 @@ OGRErr OGRReleaseDataSource( OGRDataSourceH hDS )
 
 #ifdef OGRAPISPY_ENABLED
     if( bOGRAPISpyEnabled )
-        OGRAPISpyPostClose(hDS);
+        OGRAPISpyPostClose();
 #endif
 
     return OGRERR_NONE;
@@ -304,7 +301,7 @@ void OGRRegisterDriver( OGRSFDriverH hDriver )
 
 {
     VALIDATE_POINTER0( hDriver, "OGRRegisterDriver" );
-    
+
     GetGDALDriverManager()->RegisterDriver( (GDALDriver*)hDriver );
 }
 
@@ -316,7 +313,7 @@ void OGRDeregisterDriver( OGRSFDriverH hDriver )
 
 {
     VALIDATE_POINTER0( hDriver, "OGRDeregisterDriver" );
-    
+
     GetGDALDriverManager()->DeregisterDriver( (GDALDriver*)hDriver );
 }
 
@@ -411,6 +408,6 @@ OGRSFDriverH OGRGetDriverByName( const char *pszName )
 {
     VALIDATE_POINTER1( pszName, "OGRGetDriverByName", NULL );
 
-    return (OGRSFDriverH) 
+    return (OGRSFDriverH)
         OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName( pszName );
 }

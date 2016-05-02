@@ -29,7 +29,7 @@
 
 #include "ogr_xplane_nav_reader.h"
 
-CPL_CVSID("$Id: ogr_xplane_nav_reader.cpp 29366 2015-06-16 17:17:49Z rouault $");
+CPL_CVSID("$Id: ogr_xplane_nav_reader.cpp 31120 2015-10-24 19:55:09Z rouault $");
 
 /************************************************************************/
 /*                   OGRXPlaneCreateNavFileReader                       */
@@ -112,8 +112,8 @@ OGRXPlaneReader* OGRXPlaneNavReader::CloneForLayer(OGRXPlaneLayer* poLayer)
 
 int OGRXPlaneNavReader::IsRecognizedVersion( const char* pszVersionString)
 {
-    return EQUALN(pszVersionString, "810 Version", 11) ||
-           EQUALN(pszVersionString, "740 Version", 11);
+    return STARTS_WITH_CI(pszVersionString, "810 Version") ||
+           STARTS_WITH_CI(pszVersionString, "740 Version");
 }
 
 /************************************************************************/

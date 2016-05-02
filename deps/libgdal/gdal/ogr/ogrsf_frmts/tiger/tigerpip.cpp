@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpip.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: tigerpip.cpp 33706 2016-03-11 13:33:27Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPIP, providing access to .RTP files.
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpip.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: tigerpip.cpp 33706 2016-03-11 13:33:27Z goatbar $");
 
 #define FILE_CODE "P"
 
@@ -98,6 +98,6 @@ OGRFeature *TigerPIP::GetFeature( int nRecordId )
 
 OGRErr TigerPIP::CreateFeature( OGRFeature *poFeature )
 {
-  return TigerPoint::CreateFeature( poFeature, 
+  return TigerPoint::CreateFeature( poFeature,
                                     26 );
 }

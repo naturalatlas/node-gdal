@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tigerpoint.cpp 23871 2012-02-02 03:24:07Z warmerdam $
+ * $Id: tigerpoint.cpp 33706 2016-03-11 13:33:27Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPoint class.
@@ -30,15 +30,15 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpoint.cpp 23871 2012-02-02 03:24:07Z warmerdam $");
+CPL_CVSID("$Id: tigerpoint.cpp 33706 2016-03-11 13:33:27Z goatbar $");
 
 /************************************************************************/
 /*                             TigerPoint()                             */
 /************************************************************************/
-TigerPoint::TigerPoint( int bRequireGeom, const TigerRecordInfo *psRTInfoIn,
+TigerPoint::TigerPoint( int bRequireGeomIn, const TigerRecordInfo *psRTInfoIn,
                         const char            *m_pszFileCodeIn ) : TigerFileBase(psRTInfoIn, m_pszFileCodeIn)
 {
-    this->bRequireGeom = bRequireGeom;
+    this->bRequireGeom = bRequireGeomIn;
 }
 
 /************************************************************************/
@@ -98,14 +98,14 @@ OGRFeature *TigerPoint::GetFeature( int nRecordId,
     if( dfX != 0.0 || dfY != 0.0 ) {
         poFeature->SetGeometryDirectly( new OGRPoint( dfX, dfY ) );
     }
-        
+
     return poFeature;
 }
 
 /************************************************************************/
 /*                           CreateFeature()                            */
 /************************************************************************/
-OGRErr TigerPoint::CreateFeature( OGRFeature *poFeature, 
+OGRErr TigerPoint::CreateFeature( OGRFeature *poFeature,
                                   int pointIndex)
 
 {
@@ -119,7 +119,7 @@ OGRErr TigerPoint::CreateFeature( OGRFeature *poFeature,
 
     WriteFields( psRTInfo, poFeature, szRecord );
 
-    if( poPoint != NULL 
+    if( poPoint != NULL
         && (poPoint->getGeometryType() == wkbPoint
             || poPoint->getGeometryType() == wkbPoint25D) ) {
         WritePoint( szRecord, pointIndex, poPoint->getX(), poPoint->getY() );

@@ -157,7 +157,7 @@ GDALMDReaderALOS::~GDALMDReaderALOS()
 /**
  * HasRequiredFiles()
  */
-const bool GDALMDReaderALOS::HasRequiredFiles() const
+bool GDALMDReaderALOS::HasRequiredFiles() const
 {
     if (!m_osIMDSourceFilename.empty())
         return true;
@@ -284,7 +284,7 @@ void GDALMDReaderALOS::LoadMetadata()
     }
 }
 
-static const char *apszRPCTXT20ValItems[] =
+static const char * const apszRPCTXT20ValItems[] =
 {
     RPC_LINE_NUM_COEFF,
     RPC_LINE_DEN_COEFF,
@@ -373,7 +373,7 @@ char** GDALMDReaderALOS::LoadRPCTxtFile()
 /**
  * GetAcqisitionTimeFromString()
  */
-const time_t GDALMDReaderALOS::GetAcquisitionTimeFromString(
+time_t GDALMDReaderALOS::GetAcquisitionTimeFromString(
         const char* pszDateTime)
 {
     if(NULL == pszDateTime)

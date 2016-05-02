@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmutexeddatasource.cpp 28602 2015-03-03 11:16:35Z rouault $
+ * $Id: ogrmutexeddatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMutexedDataSource class
@@ -30,7 +30,7 @@
 #include "ogrmutexeddatasource.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmutexeddatasource.cpp 28602 2015-03-03 11:16:35Z rouault $");
+CPL_CVSID("$Id: ogrmutexeddatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 
 OGRMutexedDataSource::OGRMutexedDataSource(OGRDataSource* poBaseDataSource,
                                            int bTakeOwnership,
@@ -74,10 +74,10 @@ OGRLayer* OGRMutexedDataSource::WrapLayerIfNecessary(OGRLayer* poLayer)
             poLayer = poWrappedLayer;
         else
         {
-            OGRMutexedLayer* poWrappedLayer = new OGRMutexedLayer(poLayer, FALSE, m_hGlobalMutex);
-            m_oMapLayers[poLayer] = poWrappedLayer;
-            m_oReverseMapLayers[poWrappedLayer] = poLayer;
-            poLayer = poWrappedLayer;
+            OGRMutexedLayer* poMutexedLayer = new OGRMutexedLayer(poLayer, FALSE, m_hGlobalMutex);
+            m_oMapLayers[poLayer] = poMutexedLayer;
+            m_oReverseMapLayers[poMutexedLayer] = poLayer;
+            poLayer = poMutexedLayer;
         }
     }
     return poLayer;
@@ -119,7 +119,7 @@ int         OGRMutexedDataSource::TestCapability( const char * pszCap )
     return m_poBaseDataSource->TestCapability(pszCap);
 }
 
-OGRLayer   *OGRMutexedDataSource::ICreateLayer( const char *pszName, 
+OGRLayer   *OGRMutexedDataSource::ICreateLayer( const char *pszName,
                                      OGRSpatialReference *poSpatialRef,
                                      OGRwkbGeometryType eGType,
                                      char ** papszOptions)
@@ -128,8 +128,8 @@ OGRLayer   *OGRMutexedDataSource::ICreateLayer( const char *pszName,
     return WrapLayerIfNecessary(m_poBaseDataSource->CreateLayer(pszName, poSpatialRef, eGType, papszOptions));
 }
 
-OGRLayer   *OGRMutexedDataSource::CopyLayer( OGRLayer *poSrcLayer, 
-                                   const char *pszNewName, 
+OGRLayer   *OGRMutexedDataSource::CopyLayer( OGRLayer *poSrcLayer,
+                                   const char *pszNewName,
                                    char **papszOptions )
 {
     CPLMutexHolderOptionalLockD(m_hGlobalMutex);

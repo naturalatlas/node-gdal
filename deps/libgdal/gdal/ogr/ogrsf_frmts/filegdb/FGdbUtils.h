@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: FGdbUtils.h 28573 2015-02-27 18:13:19Z rouault $
+ * $Id: FGdbUtils.h 33563 2016-02-26 14:57:06Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Various FileGDB OGR Datasource utility functions
@@ -28,8 +28,8 @@
  ****************************************************************************/
 
 
-#ifndef _FGDB_UTILS_H_INCLUDED
-#define _FGDB_UTILS_H_INCLUDED
+#ifndef FGDB_UTILS_H_INCLUDED
+#define FGDB_UTILS_H_INCLUDED
 
 #include "ogr_fgdb.h"
 #include <iostream>
@@ -44,8 +44,8 @@ std::string WStringToString(const std::wstring& s);
 //
 
 // Type mapping
-bool GDBToOGRGeometry(std::string geoType, bool hasZ, OGRwkbGeometryType* pOut);
-bool OGRGeometryToGDB(OGRwkbGeometryType ogrType, std::string *gdbType, bool *hasZ);
+bool GDBToOGRGeometry(std::string geoType, bool hasZ, bool hasM, OGRwkbGeometryType* pOut);
+bool OGRGeometryToGDB(OGRwkbGeometryType ogrType, std::string *gdbType, bool *hasZ, bool *hasM);
 
 
 bool GDBToOGRSpatialReference(const std::string & wkt, OGRSpatialReference** ppSR);

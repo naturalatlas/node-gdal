@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmutexedlayer.h 28601 2015-03-03 11:06:40Z rouault $
+ * $Id: ogrmutexedlayer.h 31812 2015-11-28 22:37:37Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLMutexedLayer class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGRMUTEXEDLAYER_H_INCLUDED
-#define _OGRMUTEXEDLAYER_H_INCLUDED
+#ifndef OGRMUTEXEDLAYER_H_INCLUDED
+#define OGRMUTEXEDLAYER_H_INCLUDED
 
 #include "ogrlayerdecorator.h"
 #include "cpl_multiproc.h"
@@ -37,7 +37,7 @@
  *
  *  If the passed mutex is NULL, then no locking will be done.
  *
- *  Note that the constructors and destructors are not explictely protected
+ *  Note that the constructors and destructors are not explicitly protected
  *  by the mutex.
  */
 class CPL_DLL OGRMutexedLayer : public OGRLayerDecorator
@@ -117,4 +117,4 @@ class CPL_DLL OGRMutexedLayer : public OGRLayerDecorator
                                          const char * pszDomain = "" );
 };
 
-#endif // _OGRMUTEXEDLAYER_H_INCLUDED
+#endif // OGRMUTEXEDLAYER_H_INCLUDED

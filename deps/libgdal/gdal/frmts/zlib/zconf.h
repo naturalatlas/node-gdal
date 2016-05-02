@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h 10656 2007-01-19 01:31:01Z mloskot $ */
+/* @(#) $Id: zconf.h 30901 2015-10-08 04:18:30Z goatbar $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -68,7 +68,7 @@
 #if defined(_WINDOWS) && !defined(WINDOWS)
 #  define WINDOWS
 #endif
-#if defined(_WIN32) || defined(_WIN32_WCE) || defined(__WIN32__)
+#if defined(_WIN32) || defined(__WIN32__)
 #  ifndef WIN32
 #    define WIN32
 #  endif

@@ -1,7 +1,7 @@
 /******************************************************************************
- * $Id: gdaljp2abstractdataset.h 29131 2015-05-03 14:47:58Z rouault $
+ * $Id: gdaljp2abstractdataset.h 33794 2016-03-26 13:19:07Z goatbar $
  *
- * Project:  GDAL 
+ * Project:  GDAL
  * Purpose:  GDALGeorefPamDataset with helper to read georeferencing and other
  *           metadata from JP2Boxes
  * Author:   Even Rouault <even dot rouault at mines-paris dot org>
@@ -45,10 +45,10 @@ class CPL_DLL GDALJP2AbstractDataset: public GDALGeorefPamDataset
 
   public:
         GDALJP2AbstractDataset();
-        ~GDALJP2AbstractDataset();
+        virtual ~GDALJP2AbstractDataset();
 
         void LoadJP2Metadata(GDALOpenInfo* poOpenInfo,
-                             const char* pszOverideFilename = NULL);
+                             const char* pszOverrideFilename = NULL);
         void            LoadVectorLayers(int bOpenRemoteResources = FALSE);
 
         virtual char      **GetFileList(void);

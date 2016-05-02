@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geocoding.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogr_geocoding.h 33631 2016-03-04 06:28:09Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Client of geocoding service.
@@ -27,15 +27,15 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_GEOCODING_H_INCLUDED
-#define _OGR_GEOCODING_H_INCLUDED
+#ifndef OGR_GEOCODING_H_INCLUDED
+#define OGR_GEOCODING_H_INCLUDED
 
 #include "cpl_port.h"
 #include "ogr_api.h"
 
 /**
  * \file ogr_geocoding.h
- * 
+ *
  * C API for geocoding client.
  */
 
@@ -60,4 +60,4 @@ void CPL_DLL OGRGeocodeFreeResult(OGRLayerH hLayer);
 
 CPL_C_END
 
-#endif // _OGR_GEOCODING_H_INCLUDED
+#endif // OGR_GEOCODING_H_INCLUDED

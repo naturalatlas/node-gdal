@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrunionlayer.h 29330 2015-06-14 12:11:11Z rouault $
+ * $Id: ogrunionlayer.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRUnionLayer class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGRUNIONLAYER_H_INCLUDED
-#define _OGRUNIONLAYER_H_INCLUDED
+#ifndef OGRUNIONLAYER_H_INCLUDED
+#define OGRUNIONLAYER_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 
@@ -150,4 +150,4 @@ class OGRUnionLayer : public OGRLayer
     virtual OGRErr      SyncToDisk();
 };
 
-#endif // _OGRUNIONLAYER_H_INCLUDED
+#endif // OGRUNIONLAYER_H_INCLUDED

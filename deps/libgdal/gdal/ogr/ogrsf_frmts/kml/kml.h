@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: kml.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: kml.h 34104 2016-04-25 17:17:20Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  Class for reading, parsing and handling a kmlfile.
@@ -89,6 +89,8 @@ public:
     int getNumFeatures();
     Feature* getFeature(std::size_t nNum, int& nLastAsked, int &nLastCount);
 
+    void unregisterLayerIfMatchingThisNode(KMLNode* poNode);
+
 protected:
 	void checkValidity();
 
@@ -117,7 +119,7 @@ private:
 	std::string sError_;
 	// current KMLNode
 	KMLNode *poCurrent_;
-        
+
         XML_Parser oCurrentParser;
         int nDataHandlerCounter;
         int nWithoutEventCounter;

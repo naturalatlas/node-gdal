@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reflectancecalculator.h 15064 2008-07-28 19:10:23Z mloskot $
+ * $Id: reflectancecalculator.h 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Purpose:  Interface of ReflectanceCalculator class. Calculate reflectance
  *           values from radiance, for visual bands.
@@ -36,7 +36,7 @@
 
 #include <string>
 
-class ReflectanceCalculator  
+class ReflectanceCalculator
 {
 public:
 	ReflectanceCalculator(std::string sTimeStamp, double rRTOA);

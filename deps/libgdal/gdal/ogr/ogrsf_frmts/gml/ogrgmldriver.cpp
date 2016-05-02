@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgmldriver.cpp 29240 2015-05-24 10:58:38Z rouault $
+ * $Id: ogrgmldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  OGR
  * Purpose:  OGRGMLDriver implementation
@@ -32,7 +32,7 @@
 #include "cpl_multiproc.h"
 #include "gmlreaderp.h"
 
-CPL_CVSID("$Id: ogrgmldriver.cpp 29240 2015-05-24 10:58:38Z rouault $");
+CPL_CVSID("$Id: ogrgmldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 /************************************************************************/
 /*                        OGRGMLDriverUnload()                          */
@@ -63,7 +63,7 @@ static int OGRGMLDriverIdentify( GDALOpenInfo* poOpenInfo )
     else
     if ( poOpenInfo->pabyHeader[0] == 0x1f && poOpenInfo->pabyHeader[1] == 0x8b &&
          EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "gz") &&
-         strncmp(poOpenInfo->pszFilename, "/vsigzip/", strlen("/vsigzip/")) != 0 )
+         !STARTS_WITH(poOpenInfo->pszFilename, "/vsigzip/") )
     {
         return -1; /* must be later checked */
     }
@@ -145,22 +145,20 @@ static GDALDataset *OGRGMLDriverCreate( const char * pszName,
 void RegisterOGRGML()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "GML" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "GML" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver  *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "GML" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Geography Markup Language (GML)" );
-        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gml" );
-        poDriver->SetMetadataItem( GDAL_DMD_EXTENSIONS, "gml xml" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_gml.html" );
+    poDriver->SetDescription( "GML" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                               "Geography Markup Language (GML)" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gml" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSIONS, "gml xml" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_gml.html" );
 
-        poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST,
+    poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST,
 "<OpenOptionList>"
 "  <Option name='XSD' type='string' description='Name of the related application schema file (.xsd).'/>"
 "  <Option name='GFS_TEMPLATE' type='string' description='Filename of a .gfs template file to appli.'/>"
@@ -193,7 +191,7 @@ void RegisterOGRGML()
 "  <Option name='REGISTRY' type='string' description='Filename of the registry with application schemas.'/>"
 "</OpenOptionList>" );
 
-        poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
 "<CreationOptionList>"
 "  <Option name='XSISCHEMAURI' type='string' description='URI to be inserted as the schema location.'/>"
 "  <Option name='XSISCHEMA' type='string-select' description='where to write a .xsd application schema. INTERNAL should not normally be used' default='EXTERNAL'>"
@@ -212,7 +210,7 @@ void RegisterOGRGML()
 "  </Option>"
 "  <Option name='GML3_LONGSRS' type='boolean' description='Whether to write SRS with \"urn:ogc:def:crs:EPSG::\" prefix with GML3* versions' default='YES'/>"
 "  <Option name='WRITE_FEATURE_BOUNDED_BY' type='boolean' description='Whether to write <gml:boundedBy> element for each feature with GML3* versions' default='YES'/>"
-"  <Option name='SPACE_INDENTATION' type='boolean' description='Whether to indentate the output for readability' default='YES'/>"
+"  <Option name='SPACE_INDENTATION' type='boolean' description='Whether to indent the output for readability' default='YES'/>"
 "  <Option name='SRSDIMENSION_LOC' type='string-select' description='(only valid for FORMAT=GML3xx) Location where to put srsDimension attribute' default='POSLIST'>"
 "    <Value>POSLIST</Value>"
 "    <Value>GEOMETRY</Value>"
@@ -223,19 +221,16 @@ void RegisterOGRGML()
 "  <Option name='DESCRIPTION' type='string' description='Content of GML description element'/>"
 "</CreationOptionList>");
 
-        poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST, "<LayerCreationOptionList/>");
-        
-        poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime IntegerList Integer64List RealList StringList" );
-        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
-        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST, "<LayerCreationOptionList/>");
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime IntegerList Integer64List RealList StringList" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
-        
-        poDriver->pfnOpen = OGRGMLDriverOpen;
-        poDriver->pfnIdentify = OGRGMLDriverIdentify;
-        poDriver->pfnCreate = OGRGMLDriverCreate;
-        poDriver->pfnUnloadDriver = OGRGMLDriverUnload;
+    poDriver->pfnOpen = OGRGMLDriverOpen;
+    poDriver->pfnIdentify = OGRGMLDriverIdentify;
+    poDriver->pfnCreate = OGRGMLDriverCreate;
+    poDriver->pfnUnloadDriver = OGRGMLDriverUnload;
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }

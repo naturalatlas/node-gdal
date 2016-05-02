@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: adler32.c 10656 2007-01-19 01:31:01Z mloskot $ */
+/* @(#) $Id: adler32.c 31978 2015-12-03 16:02:10Z goatbar $ */
 
 #define ZLIB_INTERNAL
 #include "zlib.h"
@@ -106,7 +106,7 @@ uLong ZEXPORT adler32(adler, buf, len)
     }
 
     /* do remaining bytes (less than NMAX, still just one modulo) */
-    if (len) {                  /* avoid modulos if none remaining */
+    if (len) {                  /* avoid modulo if none remaining */
         while (len >= 16) {
             len -= 16;
             DO16(buf);

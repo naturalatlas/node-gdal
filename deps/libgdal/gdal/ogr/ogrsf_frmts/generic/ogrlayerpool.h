@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerpool.h 28375 2015-01-30 12:06:11Z rouault $
+ * $Id: ogrlayerpool.h 32177 2015-12-14 07:25:30Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLayerPool and OGRProxiedLayer class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGRLAYERPOOL_H_INCLUDED
-#define _OGRLAYERPOOL_H_INCLUDED
+#ifndef OGRLAYERPOOL_H_INCLUDED
+#define OGRLAYERPOOL_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 
@@ -107,7 +107,7 @@ class OGRProxiedLayer : public OGRAbstractProxiedLayer
                                         FreeUserDataFunc pfnFreeUserData,
                                         void* pUserData);
     virtual            ~OGRProxiedLayer();
-    
+
     OGRLayer           *GetUnderlyingLayer();
 
     virtual OGRGeometry *GetSpatialFilter();
@@ -159,4 +159,4 @@ class OGRProxiedLayer : public OGRAbstractProxiedLayer
     virtual OGRErr      SetIgnoredFields( const char **papszFields );
 };
 
-#endif // _OGRLAYERPOOL_H_INCLUDED
+#endif // OGRLAYERPOOL_H_INCLUDED

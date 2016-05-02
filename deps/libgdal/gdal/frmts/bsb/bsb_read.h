@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsb_read.h 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: bsb_read.h 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  BSB Reader
  * Purpose:  non-GDAL BSB API Declarations
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _BSBREAD_H_INCLUDED
-#define _BSBREAD_H_INCLUDED
+#ifndef BSBREAD_H_INCLUDED
+#define BSBREAD_H_INCLUDED
 
 #include "cpl_port.h"
 #include "cpl_vsi.h"
@@ -66,18 +66,17 @@ typedef struct {
 } BSBInfo;
 
 BSBInfo CPL_DLL *BSBOpen( const char *pszFilename );
-int CPL_DLL BSBReadScanline( BSBInfo *psInfo, int nScanline, 
+int CPL_DLL BSBReadScanline( BSBInfo *psInfo, int nScanline,
                              unsigned char *pabyScanlineBuf );
 void CPL_DLL BSBClose( BSBInfo *psInfo );
 
-BSBInfo CPL_DLL *BSBCreate( const char *pszFilename, int nCreationFlags, 
+BSBInfo CPL_DLL *BSBCreate( const char *pszFilename, int nCreationFlags,
                             int nVersion, int nXSize, int nYSize );
-int CPL_DLL BSBWritePCT( BSBInfo *psInfo, 
+int CPL_DLL BSBWritePCT( BSBInfo *psInfo,
                          int nPCTSize, unsigned char *pabyPCT );
-int CPL_DLL BSBWriteScanline( BSBInfo *psInfo, 
+int CPL_DLL BSBWriteScanline( BSBInfo *psInfo,
                               unsigned char *pabyScanlineBuf );
-                            
+
 CPL_C_END
 
-
-#endif /* ndef _BSBREAD_H_INCLUDED */
+#endif /* ndef BSBREAD_H_INCLUDED */

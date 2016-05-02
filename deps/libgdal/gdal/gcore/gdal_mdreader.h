@@ -1,8 +1,8 @@
 /******************************************************************************
- * $Id: gdal_mdreader.h 29190 2015-05-13 21:40:30Z bishop $
+ * $Id: gdal_mdreader.h 33694 2016-03-10 17:54:30Z goatbar $
  *
  * Project:  GDAL Core
- * Purpose:  Read metadata (mainly the remote sensing imagery) from files of 
+ * Purpose:  Read metadata (mainly the remote sensing imagery) from files of
  *           different providers like DigitalGlobe, GeoEye etc.
  * Author:   Dmitry Baryshnikov, polimax@mail.ru
  *
@@ -27,7 +27,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
- 
+
 #ifndef GDAL_MDREADER_H_INCLUDED
 #define GDAL_MDREADER_H_INCLUDED
 
@@ -99,22 +99,22 @@ public:
 
     /**
      * @brief Get specified metadata domain
-     * @param pszDomain The metadata domain to return  
-     * @return List of metadata items 
+     * @param pszDomain The metadata domain to return
+     * @return List of metadata items
      */
     virtual char ** GetMetadataDomain(const char *pszDomain);
     /**
-     * @brief Fill provided metatada store class
-     * @param poMDMD Metatada store class
+     * @brief Fill provided metadata store class
+     * @param poMDMD Metadata store class
      * @return true on success or false
      */
     virtual bool FillMetadata(GDALMultiDomainMetadata* poMDMD);
     /**
-      * @brief Determine whether the input parameter correspond to the particular 
+      * @brief Determine whether the input parameter correspond to the particular
       *        provider of remote sensing data completely
       * @return True if all needed sources files found
       */
-    virtual const bool HasRequiredFiles() const = 0;
+    virtual bool HasRequiredFiles() const = 0;
     /**
      * @brief Get metadata file names. The caller become owner of returned list
      *        and have to free it via CSLDestroy.
@@ -132,7 +132,7 @@ protected:
      * @param pszDateTime String to convert
      * @return value in time_t
      */
-    virtual const time_t GetAcquisitionTimeFromString(const char* pszDateTime);
+    virtual time_t GetAcquisitionTimeFromString(const char* pszDateTime);
     /**
      * @brief ReadXMLToList Transform xml to list of NULL terminated name=value
      *        strings
@@ -160,31 +160,31 @@ protected:
     char **m_papszRPCMD;
     char **m_papszIMAGERYMD;
     char **m_papszDEFAULTMD;
-    bool m_bIsMetadataLoad; 
+    bool m_bIsMetadataLoad;
 };
 
 /**
  * The metadata reader main class.
- * The main purpose of this class is to provide an correspondent reader 
- * for provided path. 
+ * The main purpose of this class is to provide an correspondent reader
+ * for provided path.
  */
 class CPL_DLL GDALMDReaderManager{
 public:
     GDALMDReaderManager();
     virtual ~GDALMDReaderManager();
-    
+
     /**
-     * @brief Try to detect metadata reader correspondent to the provided 
-     *        datasource path 
-     * @param pszPath a path to GDALDataset 
+     * @brief Try to detect metadata reader correspondent to the provided
+     *        datasource path
+     * @param pszPath a path to GDALDataset
      * @param papszSiblingFiles file list for metadata search purposes
      * @param nType a preferable reader type (may be the OR of MDReaders)
      * @return an appropriate reader or NULL if no such reader or error.
      * The pointer delete by the GDALMDReaderManager, so the user have not
      * delete it.
      */
-    virtual GDALMDReaderBase* GetReader(const char *pszPath, 
-                                        char **papszSiblingFiles, 
+    virtual GDALMDReaderBase* GetReader(const char *pszPath,
+                                        char **papszSiblingFiles,
                                         GUInt32 nType = MDR_ANY);
 protected:
     GDALMDReaderBase *m_pReader;
@@ -196,7 +196,7 @@ CPLString CPLStripQuotes(const CPLString& osString);
 char** GDALLoadRPBFile( const CPLString& osFilePath );
 char** GDALLoadRPCFile( const CPLString& osFilePath );
 char** GDALLoadIMDFile( const CPLString& osFilePath );
-const bool GDALCheckFileHeader(const CPLString& soFilePath,
+bool GDALCheckFileHeader(const CPLString& soFilePath,
                                const char * pszTestString,
                                int nBufferSize = 256);
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gdalgrid.h 29541 2015-07-20 14:03:42Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Prototypes, and definitions for of GDAL scattered data gridder.
@@ -44,6 +44,7 @@
  */
 
 static const char szAlgNameInvDist[] = "invdist";
+static const char szAlgNameInvDistNearestNeighbor[] = "invdistnn";
 static const char szAlgNameAverage[] = "average";
 static const char szAlgNameNearest[] = "nearest";
 static const char szAlgNameMinimum[] = "minimum";
@@ -52,6 +53,7 @@ static const char szAlgNameRange[] = "range";
 static const char szAlgNameCount[] = "count";
 static const char szAlgNameAverageDistance[] = "average_distance";
 static const char szAlgNameAverageDistancePts[] = "average_distance_pts";
+static const char szAlgNameLinear[] = "linear";
 
 CPL_C_START
 
@@ -62,6 +64,12 @@ typedef CPLErr (*GDALGridFunction)( const void *, GUInt32,
                                     void* );
 CPLErr
 GDALGridInverseDistanceToAPower( const void *, GUInt32,
+                                 const double *, const double *,
+                                 const double *,
+                                 double, double, double *,
+                                 void* );
+CPLErr
+GDALGridInverseDistanceToAPowerNearestNeighbor( const void *, GUInt32,
                                  const double *, const double *,
                                  const double *,
                                  double, double, double *,
@@ -113,6 +121,13 @@ GDALGridDataMetricAverageDistancePts( const void *, GUInt32,
                                       const double *, double, double,
                                       double *,
                                       void*  );
+CPLErr
+GDALGridLinear( const void *, GUInt32,
+                                 const double *, const double *,
+                                 const double *,
+                                 double, double, double *,
+                                 void* );
+
 CPLErr CPL_DLL
 ParseAlgorithmAndOptions( const char *,
                           GDALGridAlgorithm *,

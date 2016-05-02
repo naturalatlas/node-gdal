@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgridavx.cpp 29914 2015-08-29 21:21:33Z rouault $
+ * $Id: gdalgridavx.cpp 31631 2015-11-18 17:55:29Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -33,7 +33,7 @@
 #ifdef HAVE_AVX_AT_COMPILE_TIME
 #include <immintrin.h>
 
-CPL_CVSID("$Id: gdalgridavx.cpp 29914 2015-08-29 21:21:33Z rouault $");
+CPL_CVSID("$Id: gdalgridavx.cpp 31631 2015-11-18 17:55:29Z rouault $");
 
 /************************************************************************/
 /*         GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX()     */
@@ -124,6 +124,11 @@ GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
             if( mask & (1 << j) )
             {
                 (*pdfValue) = (pafZ)[i + j];
+
+                // GCC and MSVC need explicit zeroing
+#if !defined(__clang__)
+                _mm256_zeroupper();
+#endif
                 return CE_None;
             }
         }
@@ -134,6 +139,12 @@ GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
     float afNominator[8], afDenominator[8];
     _mm256_storeu_ps(afNominator, ymm_nominator);
     _mm256_storeu_ps(afDenominator, ymm_denominator);
+
+    // MSVC doesn't emit AVX afterwards but may use SSE, so clear upper bits
+    // Other compilers will continue using AVX for the below floating points operations
+#if defined(_MSC_FULL_VER)
+    _mm256_zeroupper();
+#endif
 
     float fNominator = afNominator[0] + afNominator[1] +
                        afNominator[2] + afNominator[3] +
@@ -179,7 +190,12 @@ GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
     else
         (*pdfValue) = fNominator / fDenominator;
 
+    // GCC needs explicit zeroing
+#if defined(__GNUC__) && !defined(__clang__)
+    _mm256_zeroupper();
+#endif
+
     return CE_None;
 }
 
-#endif
+#endif /* HAVE_AVX_AT_COMPILE_TIME */

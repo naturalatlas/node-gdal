@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c 10656 2007-01-19 01:31:01Z mloskot $ */
+/* @(#) $Id: zutil.c 30901 2015-10-08 04:18:30Z goatbar $ */
 
 #include "zutil.h"
 
@@ -135,14 +135,6 @@ const char * ZEXPORT zError(err)
 {
     return ERR_MSG(err);
 }
-
-#if defined(_WIN32_WCE)
-    /* The Microsoft C Run-Time Library for Windows CE doesn't have
-     * errno.  We define it as a global variable to simplify porting.
-     * Its value is always 0 and should not be used.
-     */
-    int errno = 0;
-#endif
 
 #ifndef HAVE_MEMCPY
 

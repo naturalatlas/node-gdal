@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_arcgen.h 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogr_arcgen.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Definition of classes for OGR .arcgen driver.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_ARCGEN_H_INCLUDED
-#define _OGR_ARCGEN_H_INCLUDED
+#ifndef OGR_ARCGEN_H_INCLUDED
+#define OGR_ARCGEN_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 
@@ -86,4 +86,4 @@ class OGRARCGENDataSource : public OGRDataSource
     virtual int                 TestCapability( const char * );
 };
 
-#endif /* ndef _OGR_ARCGEN_H_INCLUDED */
+#endif /* ndef OGR_ARCGEN_H_INCLUDED */

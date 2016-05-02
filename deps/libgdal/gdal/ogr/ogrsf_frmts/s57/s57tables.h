@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57tables.h 9412 2006-03-28 23:13:12Z fwarmerdam $
+ * $Id: s57tables.h 32444 2015-12-25 01:14:58Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Inline tables.
@@ -27,7 +27,9 @@
  * DEALINGS IN THE SOFTWARE.
  *****************************************************************************/
 
-char *gpapszS57Classes[] = {
+// Only included in s57classregistrar.cpp.
+
+static const char *gpapszS57Classes[] = {
 "\"Code\",\"ObjectClass\",\"Acronym\",\"Attribute_A\",\"Attribute_B\",\"Attribute_C\",\"Class\",\"Primitives\"",
 "1,Administration area (Named),ADMARE,JRSDTN;NATION;NOBJNM;OBJNAM;,INFORM;NINFOM;NTXTDS;PICREP;SCAMAX;SCAMIN;TXTDSC;,RECDAT;RECIND;SORDAT;SORIND;,G,Area;",
 "2,Airport / airfield,AIRARE,CATAIR;CONDTN;CONVIS;NOBJNM;OBJNAM;STATUS;,INFORM;NINFOM;NTXTDS;PICREP;SCAMAX;SCAMIN;TXTDSC;,RECDAT;RECIND;SORDAT;SORIND;,G,Point;Area;",
@@ -211,7 +213,7 @@ char *gpapszS57Classes[] = {
 "503,Compass,$COMPS,$CSIZE;RYRMGV;VALACM;VALMAG;,INFORM;NINFOM;NTXTDS;PICREP;SCAMAX;SCAMIN;TXTDSC;,RECDAT;RECIND;SORDAT;SORIND;,$,",
 "504,Text,$TEXTS,$CHARS;COLOUR;$JUSTH;$JUSTV;$NTXST;$SPACE;$TXSTR;,INFORM;NINFOM;NTXTDS;PICREP;SCAMAX;SCAMIN;TXTDSC;,RECDAT;RECIND;SORDAT;SORIND;,$,",
 NULL };
-char *gpapszS57attributes[] = {
+static const char *gpapszS57attributes[] = {
 "\"Code\",\"Attribute\",\"Acronym\",\"Attributetype\",\"Class\"",
 "1,Agency responsible for production,AGENCY,A,F",
 "2,Beacon shape,BCNSHP,E,F",

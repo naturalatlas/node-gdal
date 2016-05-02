@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogredigeolayer.cpp 28382 2015-01-30 15:29:41Z rouault $
+ * $Id: ogredigeolayer.cpp 32011 2015-12-06 10:19:18Z rouault $
  *
  * Project:  EDIGEO Translator
  * Purpose:  Implements OGREDIGEOLayer class.
@@ -33,21 +33,21 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogredigeolayer.cpp 28382 2015-01-30 15:29:41Z rouault $");
+CPL_CVSID("$Id: ogredigeolayer.cpp 32011 2015-12-06 10:19:18Z rouault $");
 
 /************************************************************************/
 /*                          OGREDIGEOLayer()                            */
 /************************************************************************/
 
-OGREDIGEOLayer::OGREDIGEOLayer( OGREDIGEODataSource* poDS,
+OGREDIGEOLayer::OGREDIGEOLayer( OGREDIGEODataSource* poDSIn,
                                 const char* pszName, OGRwkbGeometryType eType,
-                                OGRSpatialReference* poSRS )
+                                OGRSpatialReference* poSRSIn )
 
 {
-    this->poDS = poDS;
+    this->poDS = poDSIn;
     nNextFID = 0;
 
-    this->poSRS = poSRS;
+    this->poSRS = poSRSIn;
     if (poSRS)
         poSRS->Reference();
 
@@ -95,7 +95,7 @@ OGRFeature *OGREDIGEOLayer::GetNextFeature()
 {
     OGRFeature  *poFeature;
 
-    while(TRUE)
+    while( true )
     {
         poFeature = GetNextRawFeature();
         if (poFeature == NULL)

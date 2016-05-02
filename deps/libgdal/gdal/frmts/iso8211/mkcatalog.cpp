@@ -1,5 +1,5 @@
 /* ****************************************************************************
- * $Id: mkcatalog.cpp 16861 2009-04-26 19:22:29Z rouault $
+ * $Id: mkcatalog.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  ISO8211 Library
  * Purpose:  Test ISO8211 writing capability.
@@ -29,7 +29,7 @@
 
 #include "iso8211.h"
 
-CPL_CVSID("$Id: mkcatalog.cpp 16861 2009-04-26 19:22:29Z rouault $");
+CPL_CVSID("$Id: mkcatalog.cpp 33717 2016-03-14 06:29:14Z goatbar $");
 
 
 /************************************************************************/
@@ -58,7 +58,7 @@ void mk_s57()
 /* -------------------------------------------------------------------- */
     poFDefn = new DDFFieldDefn();
 
-    poFDefn->Create( "0001", "ISO 8211 Record Identifier", "", 
+    poFDefn->Create( "0001", "ISO 8211 Record Identifier", "",
                      dsc_elementary, dtc_bit_string,
                      "(b12)" );
 
@@ -197,7 +197,7 @@ void mk_s57()
 
 /* -------------------------------------------------------------------- */
 
-// need to add: VRPC, VRPT, SGCC, FRID, FOID, ATTF, NATF, FFPC, 
+// need to add: VRPC, VRPT, SGCC, FRID, FOID, ATTF, NATF, FFPC,
 // FFPT, FSPC, and FSPT
 
 /* -------------------------------------------------------------------- */
@@ -325,8 +325,8 @@ void mk_catalog()
 /* -------------------------------------------------------------------- */
     poFDefn = new DDFFieldDefn();
 
-    poFDefn->Create( "0000", "", "0001CATD", 
-                     dsc_elementary, 
+    poFDefn->Create( "0000", "", "0001CATD",
+                     dsc_elementary,
                      dtc_char_string );
 
     oModule.AddField( poFDefn );
@@ -336,7 +336,7 @@ void mk_catalog()
 /* -------------------------------------------------------------------- */
     poFDefn = new DDFFieldDefn();
 
-    poFDefn->Create( "0001", "ISO 8211 Record Identifier", "", 
+    poFDefn->Create( "0001", "ISO 8211 Record Identifier", "",
                      dsc_elementary, dtc_bit_string,
                      "(b12)" );
 
@@ -384,7 +384,7 @@ void mk_catalog()
     poRec->SetStringSubfield( "CATD", 0, "FILE", 0, "CATALOG.030" );
     poRec->SetStringSubfield( "CATD", 0, "VOLM", 0, "V01X01" );
     poRec->SetStringSubfield( "CATD", 0, "IMPL", 0, "ASC" );
-    poRec->SetStringSubfield( "CATD", 0, "COMT", 0, 
+    poRec->SetStringSubfield( "CATD", 0, "COMT", 0,
                               "Exchange Set Catalog file" );
     poRec->Write();
     delete poRec;
@@ -421,4 +421,3 @@ int main( int nArgc, char ** papszArgv )
 {
     mk_s57();
 }
-
