@@ -286,7 +286,7 @@ describe('gdal.Dataset', function() {
 				it('should return SpatialReference', function() {
 					var ds;
 					ds = gdal.open(__dirname + '/data/dem_azimuth50_pa.img');
-					assert.ok(ds.srs.toWKT().indexOf('PROJCS["WGS_1984_Albers"' > -1));
+					assert.ok(ds.srs.toWKT().indexOf('PROJCS["WGS_1984_Albers"') > -1);
 				});
 				it('should return null when dataset doesn\'t have projection', function() {
 					var ds;
