@@ -8,6 +8,7 @@
 			"target_name": "libgdal",
 			"type": "static_library",
 			"sources": [
+				"gdal/apps/ogr2ogr_lib.cpp",
 				"gdal/frmts/gdalallregister.cpp",
 
 				"gdal/ogr/osr_cs_wkt.c",
@@ -84,6 +85,7 @@
 				"gdal/ogr/ogrsf_frmts/generic/ogrunionlayer.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogrwarpedlayer.cpp",
 
+				"gdal/alg/gdalpansharpen.cpp",
 				"gdal/alg/contour.cpp",
 				"gdal/alg/polygonize.cpp",
 				"gdal/alg/gdal_octave.cpp",
@@ -151,6 +153,7 @@
 				"gdal/gcore/gdalrasterblock.cpp",
 				"gdal/gcore/gdalabstractbandblockcache.cpp",
 				"gdal/gcore/gdalarraybandblockcache.cpp",
+				"gdal/gcore/gdalhashsetbandblockcache.cpp",
 				"gdal/gcore/gdalrescaledalphaband.cpp",
 				"gdal/gcore/gdalvirtualmem.cpp",
 				"gdal/gcore/overview.cpp",
@@ -171,6 +174,7 @@
 				# "gdal/port/cpl_odbc.cpp",
 				# "gdal/port/cpl_win32ce_api.cpp",
 				# "gdal/port/vsipreload.cpp",
+				"gdal/port/cpl_worker_thread_pool.cpp",
 				"gdal/port/cpl_atomic_ops.cpp",
 				"gdal/port/cpl_base64.cpp",
 				"gdal/port/cpl_conv.cpp",
