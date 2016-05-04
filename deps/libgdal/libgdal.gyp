@@ -86,6 +86,7 @@
 				"gdal/ogr/ogrsf_frmts/generic/ogrwarpedlayer.cpp",
 
 				"gdal/alg/gdalpansharpen.cpp",
+				"gdal/alg/delaunay.c",
 				"gdal/alg/contour.cpp",
 				"gdal/alg/polygonize.cpp",
 				"gdal/alg/gdal_octave.cpp",
