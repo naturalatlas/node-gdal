@@ -93,6 +93,7 @@ patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.d
 patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
 patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
 patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
+patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
 patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
 
 #
