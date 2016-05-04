@@ -13,6 +13,7 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
+    - libc6-dev # for libiconv which is needed by libgdal
 
 env:
   matrix:
@@ -20,8 +21,6 @@ env:
     - NODE_NVM_VERSION="5.1" TARGET=SHARED
     - NODE_NVM_VERSION="4.2" TARGET=STATIC
     - NODE_NVM_VERSION="4.2" TARGET=SHARED
-    - NODE_NVM_VERSION="iojs-v3" TARGET=STATIC
-    - NODE_NVM_VERSION="iojs-v3" TARGET=SHARED
     - NODE_NVM_VERSION="0.12" TARGET=STATIC
     - NODE_NVM_VERSION="0.12" TARGET=SHARED
     - NODE_NVM_VERSION="0.10" TARGET=STATIC
