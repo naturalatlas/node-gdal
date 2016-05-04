@@ -62,6 +62,9 @@
 				"_LARGEFILE_SOURCE",
 				"_FILE_OFFSET_BITS=64"
 			],
+			"ldflags": [
+				"-Wl,-z,now"
+			],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
 				"OTHER_LDFLAGS":[

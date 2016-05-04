@@ -316,8 +316,10 @@
 					["OS == 'win'", {
 						"include_dirs": ["./arch/win"]
 					}, {
-						"include_dirs": ["./arch/unix"],
-						"libraries": [
+						"include_dirs": ["./arch/unix"]
+					}],
+					[ "OS == 'mac'", {
+					    "libraries": [
 							"-liconv"
 						]
 					}]
