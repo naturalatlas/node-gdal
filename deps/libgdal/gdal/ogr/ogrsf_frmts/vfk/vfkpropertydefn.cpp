@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vfkpropertydefn.cpp 25201 2012-11-04 11:11:31Z martinl $
+ * $Id: vfkpropertydefn.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  VFK Reader - Data block property definition
  * Purpose:  Implements VFKPropertyDefn class.
@@ -59,13 +59,13 @@ VFKPropertyDefn::VFKPropertyDefn(const char *pszName, const char *pszType,
     pszWidth = (char *) CPLMalloc(nLength+1);
     strncpy(pszWidth, poWidth, nLength);
     pszWidth[nLength] = '\0';
-    
+
     m_nWidth  = atoi(pszWidth);
     CPLFree(pszWidth);
-    
+
     /* precision */
     m_nPrecision = 0;
-    
+
     /* type */
     m_pszEncoding = NULL;
     if (*m_pszType == 'N') {
@@ -111,7 +111,7 @@ VFKPropertyDefn::~VFKPropertyDefn()
 }
 
 /*!
-  \brief Get SQL data type 
+  \brief Get SQL data type
 
   \return string with data type ("text" by default)
 */

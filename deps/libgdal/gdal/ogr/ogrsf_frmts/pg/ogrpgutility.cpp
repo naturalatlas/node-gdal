@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrpgutility.cpp 27784 2014-10-02 15:43:18Z rouault $
+ * $Id: ogrpgutility.cpp 32078 2015-12-08 09:09:45Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Utility methods
@@ -30,7 +30,7 @@
 #include "ogr_pg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgutility.cpp 27784 2014-10-02 15:43:18Z rouault $");
+CPL_CVSID("$Id: ogrpgutility.cpp 32078 2015-12-08 09:09:45Z rouault $");
 
 /************************************************************************/
 /*                         OGRPG_PQexec()                               */
@@ -60,7 +60,7 @@ PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllo
         {
             case PGRES_TUPLES_OK:
                 pszRetCode = "PGRES_TUPLES_OK";
-                sprintf(szNTuples, ", ntuples = %d", PQntuples(hResult));
+                snprintf(szNTuples, sizeof(szNTuples), ", ntuples = %d", PQntuples(hResult));
                 break;
             case PGRES_COMMAND_OK:
                 pszRetCode = "PGRES_COMMAND_OK";
@@ -81,7 +81,7 @@ PGresult *OGRPG_PQexec(PGconn *conn, const char *query, int bMultipleCommandAllo
 #endif
 
 /* -------------------------------------------------------------------- */
-/*      Generate an error report if an error occured.                   */
+/*      Generate an error report if an error occurred.                  */
 /* -------------------------------------------------------------------- */
     if ( !hResult || (PQresultStatus(hResult) == PGRES_NONFATAL_ERROR ||
                       PQresultStatus(hResult) == PGRES_FATAL_ERROR ) )

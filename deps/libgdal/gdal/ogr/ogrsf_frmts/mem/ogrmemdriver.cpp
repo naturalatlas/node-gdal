@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmemdriver.cpp 28375 2015-01-30 12:06:11Z rouault $
+ * $Id: ogrmemdriver.cpp 32896 2016-01-10 13:37:26Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMemDriver class.
@@ -31,16 +31,13 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdriver.cpp 28375 2015-01-30 12:06:11Z rouault $");
+CPL_CVSID("$Id: ogrmemdriver.cpp 32896 2016-01-10 13:37:26Z goatbar $");
 
 /************************************************************************/
 /*                          ~OGRMemDriver()                           */
 /************************************************************************/
 
-OGRMemDriver::~OGRMemDriver()
-
-{
-}
+OGRMemDriver::~OGRMemDriver() {}
 
 /************************************************************************/
 /*                              GetName()                               */
@@ -56,7 +53,7 @@ const char *OGRMemDriver::GetName()
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRMemDriver::Open( CPL_UNUSED const char * pszFilename, int )
+OGRDataSource *OGRMemDriver::Open( const char * /* pszFilename */, int )
 {
     return NULL;
 }
@@ -81,8 +78,8 @@ int OGRMemDriver::TestCapability( const char * pszCap )
 {
     if( EQUAL(pszCap,ODrCCreateDataSource) )
         return TRUE;
-    else
-        return FALSE;
+
+    return FALSE;
 }
 
 /************************************************************************/
@@ -92,9 +89,22 @@ int OGRMemDriver::TestCapability( const char * pszCap )
 void RegisterOGRMEM()
 
 {
+    if( GDALGetDriverByName( "Memory" ) != NULL )
+      return;
+
     OGRSFDriver* poDriver = new OGRMemDriver;
-    
-    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime Time IntegerList Integer64List RealList StringList Binary" );
+
+    poDriver->SetMetadataItem(
+        GDAL_DMD_CREATIONFIELDDATATYPES,
+        "Integer Integer64 Real String Date DateTime Time IntegerList "
+        "Integer64List RealList StringList Binary" );
+
+    poDriver->SetMetadataItem(
+        GDAL_DS_LAYER_CREATIONOPTIONLIST,
+        "<LayerCreationOptionList>"
+        "  <Option name='ADVERTIZE_UTF8' type='boolean' description='Whether "
+        "the layer will contain UTF-8 strings' default='NO'/>"
+        "</LayerCreationOptionList>" );
 
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }

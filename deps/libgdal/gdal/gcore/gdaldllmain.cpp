@@ -57,29 +57,27 @@ void CPLFinalizeTLS();
  * if GDAL is dynamically linked, since it is automatically called through
  * the unregistration mechanisms of dynamic library loading.
  *
- * Note: no GDAL/OGR code should be called after this call !
+ * Note: no GDAL/OGR code should be called after this call!
  *
  * @since GDAL 2.0
  */
 
-static int bGDALDestroyAlreadyCalled = FALSE;
+static bool bGDALDestroyAlreadyCalled = FALSE;
 void GDALDestroy(void)
 {
     if( bGDALDestroyAlreadyCalled )
         return;
-    bGDALDestroyAlreadyCalled = TRUE;
+    bGDALDestroyAlreadyCalled = true;
 
     CPLDebug("GDAL", "In GDALDestroy - unloading GDAL shared library.");
     bInGDALGlobalDestructor = TRUE;
     GDALDestroyDriverManager();
 
-#ifdef OGR_ENABLED
     OGRCleanupAll();
-#endif
     bInGDALGlobalDestructor = FALSE;
 
     /* See https://trac.osgeo.org/gdal/ticket/6139 */
-    /* Needed in case no driver manager has been instanciated */
+    /* Needed in case no driver manager has been instantiated. */
     CPLFreeConfig();
     CPLFinalizeTLS();
     CPLCleanupMasterMutex();
@@ -120,7 +118,7 @@ static void GDALDestructor(void)
 {
     if( bGDALDestroyAlreadyCalled )
         return;
-    if( !CSLTestBoolean(CPLGetConfigOption("GDAL_DESTROY", "YES")) )
+    if( !CPLTestBool(CPLGetConfigOption("GDAL_DESTROY", "YES")) )
         return;
     GDALDestroy();
 }
@@ -158,8 +156,7 @@ extern "C" int WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRese
         GDALDestroy();
     }
 
-    return 1; // ignroed for all reasons but DLL_PROCESS_ATTACH
+    return 1; // ignored for all reasons but DLL_PROCESS_ATTACH
 }
 
 #endif // _MSC_VER
-

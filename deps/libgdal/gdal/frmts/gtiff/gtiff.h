@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtiff.h 29049 2015-04-29 15:54:12Z rouault $
+ * $Id: gtiff.h 33806 2016-03-28 22:26:19Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -33,8 +33,8 @@
 
 #include "cpl_port.h"
 
-#include "tiffio.h"
 #include "gdal.h"
+#include "tiffio.h"
 
 CPL_C_START
 int    GTiffOneTimeInit();
@@ -42,6 +42,7 @@ void CPL_DLL LibgeotiffOneTimeInit();
 void   LibgeotiffOneTimeCleanupMutex();
 CPL_C_END
 
+void    GTIFFSetInExternalOvr(bool b);
 void    GTIFFGetOverviewBlockSize(int* pnBlockXSize, int* pnBlockYSize);
 void    GTIFFSetJpegQuality(GDALDatasetH hGTIFFDS, int nJpegQuality);
 int     GTIFFGetCompressionMethod(const char* pszValue, const char* pszVariableName);

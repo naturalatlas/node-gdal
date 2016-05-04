@@ -5,7 +5,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgdal"
 
-GDAL_VERSION=2.0.2
+GDAL_VERSION=2.1.0
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
 dir_gyp_templates=./gyp-templates
@@ -25,7 +25,9 @@ rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig
 rm -rf $dir_gdal/vb6
 rm -rf $dir_gdal/html
-rm -rf $dir_gdal/apps
+# commented since headers are now in apps/ in gdal >= 2.1.0
+# https://trac.osgeo.org/gdal/ticket/6496#ticket
+#rm -rf $dir_gdal/apps
 rm -rf $dir_gdal/man
 rm -rf $dir_gdal/m4
 rm -rf $dir_gdal/doc
@@ -85,11 +87,13 @@ rm -f $dir_gdal/Vagrantfile
 # apply patches
 #
 
-patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
-# patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
+#patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
+#patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
 patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
 patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
 patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
+patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
+patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
 patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
 
 #

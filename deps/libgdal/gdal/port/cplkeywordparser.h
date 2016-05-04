@@ -1,16 +1,16 @@
 /******************************************************************************
- * $Id: cplkeywordparser.h 20996 2010-10-28 18:38:15Z rouault $
+ * $Id: cplkeywordparser.h 33666 2016-03-07 05:21:07Z goatbar $
  *
  * Project:  Common Portability Library
  * Purpose:  Implementation of CPLKeywordParser - a class for parsing
  *           the keyword format used for files like QuickBird .RPB files.
  *           This is a slight variation on the NASAKeywordParser used for
- *           the PDS/ISIS2/ISIS3 formats. 
+ *           the PDS/ISIS2/ISIS3 formats.
  * Author:   Frank Warmerdam <warmerdam@pobox.com
  *
  ******************************************************************************
  * Copyright (c) 2008, Frank Warmerdam <warmerdam@pobox.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation

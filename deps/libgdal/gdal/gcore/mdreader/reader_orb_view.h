@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_orb_view.h 29190 2015-05-13 21:40:30Z bishop $
+ * $Id: reader_orb_view.h 29915 2015-08-29 21:29:57Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from OrbView imagery.
@@ -50,7 +50,7 @@ class GDALMDReaderOrbView: public GDALMDReaderBase
 public:
     GDALMDReaderOrbView(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderOrbView();
-    virtual const bool HasRequiredFiles() const;
+    virtual bool HasRequiredFiles() const;
     virtual char** GetMetadataFiles() const;
 protected:
     virtual void LoadMetadata();

@@ -1,0 +1,10 @@
+--- gdal/ogr/ogrsf_frmts/shape/sbnsearch.c_	2016-05-04 08:30:04.000000000 -0700
++++ gdal/ogr/ogrsf_frmts/shape/sbnsearch.c	2016-05-04 08:30:32.000000000 -0700
+@@ -34,6 +34,7 @@
+  ******************************************************************************/
+ 
+ #include "shapefil.h"
++#include "cpl_port.h"
+ 
+ #include <math.h>
+ #include <assert.h>

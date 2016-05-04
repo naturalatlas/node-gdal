@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osr_cs_wkt.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: osr_cs_wkt.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  CS WKT parser
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OSR_CS_WKT_H_INCLUDED_
-#define _OSR_CS_WKT_H_INCLUDED_
+#ifndef OSR_CS_WKT_H_INCLUDED_
+#define OSR_CS_WKT_H_INCLUDED_
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,4 +52,4 @@ int osr_cs_wkt_parse(osr_cs_wkt_parse_context *context);
 }
 #endif
 
-#endif /*  _OSR_CS_WKT_H_INCLUDED_ */
+#endif /*  OSR_CS_WKT_H_INCLUDED_ */

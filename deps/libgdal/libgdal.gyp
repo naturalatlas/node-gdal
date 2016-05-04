@@ -8,6 +8,7 @@
 			"target_name": "libgdal",
 			"type": "static_library",
 			"sources": [
+				"gdal/apps/ogr2ogr_lib.cpp",
 				"gdal/frmts/gdalallregister.cpp",
 
 				"gdal/ogr/osr_cs_wkt.c",
@@ -67,6 +68,7 @@
 				"gdal/ogr/ogrcurvepolygon.cpp",
 				"gdal/ogr/ogrmulticurve.cpp",
 				"gdal/ogr/ogrmultisurface.cpp",
+				"gdal/ogr/ogrsf_frmts/generic/ogreditablelayer.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogremulatedtransaction.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogr_attrind.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogr_gensql.cpp",
@@ -83,8 +85,10 @@
 				"gdal/ogr/ogrsf_frmts/generic/ogrunionlayer.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogrwarpedlayer.cpp",
 
+				"gdal/alg/gdalpansharpen.cpp",
+				"gdal/alg/delaunay.c",
 				"gdal/alg/contour.cpp",
-				"gdal/alg/fpolygonize.cpp",
+				"gdal/alg/polygonize.cpp",
 				"gdal/alg/gdal_octave.cpp",
 				"gdal/alg/gdal_rpc.cpp",
 				"gdal/alg/gdal_simplesurf.cpp",
@@ -99,7 +103,6 @@
 				"gdal/alg/gdalmatching.cpp",
 				"gdal/alg/gdalmediancut.cpp",
 				"gdal/alg/gdalproximity.cpp",
-				"gdal/alg/gdalrasterfpolygonenumerator.cpp",
 				"gdal/alg/gdalrasterize.cpp",
 				"gdal/alg/gdalrasterpolygonenumerator.cpp",
 				"gdal/alg/gdalsievefilter.cpp",
@@ -149,9 +152,11 @@
 				"gdal/gcore/gdalproxypool.cpp",
 				"gdal/gcore/gdalrasterband.cpp",
 				"gdal/gcore/gdalrasterblock.cpp",
+				"gdal/gcore/gdalabstractbandblockcache.cpp",
+				"gdal/gcore/gdalarraybandblockcache.cpp",
+				"gdal/gcore/gdalhashsetbandblockcache.cpp",
 				"gdal/gcore/gdalrescaledalphaband.cpp",
 				"gdal/gcore/gdalvirtualmem.cpp",
-				"gdal/gcore/jp2dump.cpp",
 				"gdal/gcore/overview.cpp",
 				"gdal/gcore/rasterio.cpp",
 				"gdal/gcore/gdaloverviewdataset.cpp",
@@ -170,6 +175,7 @@
 				# "gdal/port/cpl_odbc.cpp",
 				# "gdal/port/cpl_win32ce_api.cpp",
 				# "gdal/port/vsipreload.cpp",
+				"gdal/port/cpl_worker_thread_pool.cpp",
 				"gdal/port/cpl_atomic_ops.cpp",
 				"gdal/port/cpl_base64.cpp",
 				"gdal/port/cpl_conv.cpp",
@@ -198,7 +204,9 @@
 				"gdal/port/cpl_time.cpp",
 				"gdal/port/cpl_virtualmem.cpp",
 				"gdal/port/cpl_vsi_mem.cpp",
+				"gdal/port/cpl_vsi_error.cpp",
 				"gdal/port/cpl_vsil.cpp",
+				"gdal/port/cpl_vsil_crypt.cpp",
 				"gdal/port/cpl_vsil_abstract_archive.cpp",
 				"gdal/port/cpl_vsil_buffered_reader.cpp",
 				"gdal/port/cpl_vsil_cache.cpp",
@@ -308,7 +316,10 @@
 					["OS == 'win'", {
 						"include_dirs": ["./arch/win"]
 					}, {
-						"include_dirs": ["./arch/unix"]
+						"include_dirs": ["./arch/unix"],
+						"libraries": [
+							"-liconv"
+						]
 					}]
 				],
 				"defines": [

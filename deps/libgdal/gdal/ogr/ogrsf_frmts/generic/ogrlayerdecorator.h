@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlayerdecorator.h 28601 2015-03-03 11:06:40Z rouault $
+ * $Id: ogrlayerdecorator.h 32467 2015-12-26 10:54:09Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRLayerDecorator class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGRLAYERDECORATOR_H_INCLUDED
-#define _OGRLAYERDECORATOR_H_INCLUDED
+#ifndef OGRLAYERDECORATOR_H_INCLUDED
+#define OGRLAYERDECORATOR_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 
@@ -80,6 +80,9 @@ class CPL_DLL OGRLayerDecorator : public OGRLayer
     virtual OGRErr      ReorderFields( int* panMap );
     virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags );
 
+    virtual OGRErr      CreateGeomField( OGRGeomFieldDefn *poField,
+                                         int bApproxOK = TRUE );
+
     virtual OGRErr      SyncToDisk();
 
     virtual OGRStyleTable *GetStyleTable();
@@ -108,4 +111,4 @@ class CPL_DLL OGRLayerDecorator : public OGRLayer
     OGRLayer* GetBaseLayer()    { return m_poDecoratedLayer; }
 };
 
-#endif // _OGRLAYERDECORATOR_H_INCLUDED
+#endif // OGRLAYERDECORATOR_H_INCLUDED

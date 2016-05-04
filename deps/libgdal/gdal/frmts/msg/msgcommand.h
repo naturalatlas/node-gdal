@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgcommand.h 15085 2008-07-31 13:41:31Z mloskot $
+ * $Id: msgcommand.h 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Purpose:  Interface of MSGCommand class. Parse the src_dataset string
  *           that is meant for the MSG driver.
@@ -32,7 +32,7 @@
 
 #include <string>
 
-class MSGCommand  
+class MSGCommand
 {
 public:
   MSGCommand();
@@ -65,4 +65,3 @@ private:
 };
 
 #endif // GDAL_MSG_MSGCOMMAND_H_INCLUDED
-

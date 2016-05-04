@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.h 29111 2015-05-02 18:06:16Z rouault $
+ * $Id: ogrgeojsonreader.h 32461 2015-12-26 03:46:04Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines GeoJSON reader within OGR OGRGeoJSON Driver.
@@ -31,6 +31,7 @@
 #define OGR_GEOJSONREADER_H_INCLUDED
 
 #include <ogr_core.h>
+#include "cpl_string.h"
 #include "ogrsf_frmts.h"
 #include <json.h> // JSON-C
 
@@ -71,7 +72,7 @@ struct GeoJSONObject
         eFeature,
         eFeatureCollection
     };
-    
+
     enum CoordinateDimension
     {
         eMinCoordinateDimension = 2,
@@ -95,6 +96,8 @@ public:
     void SetPreserveGeometryType( bool bPreserve );
     void SetSkipAttributes( bool bSkip );
     void SetFlattenNestedAttributes( bool bFlatten, char chSeparator );
+    void SetStoreNativeData( bool bStoreNativeData );
+    void SetArrayAsString( bool bArrayAsString );
 
     OGRErr Parse( const char* pszText );
     void ReadLayers( OGRGeoJSONDataSource* poDS );
@@ -112,9 +115,16 @@ private:
     bool bAttributesSkip_;
     bool bFlattenNestedAttributes_;
     char chNestedAttributeSeparator_;
+    bool bStoreNativeData_;
+    bool bArrayAsString_;
 
+    // bFlatten... is a tri-state boolean with -1 being unset.
     int bFlattenGeocouchSpatiallistFormat;
-    bool bFoundId, bFoundRev, bFoundTypeFeature, bIsGeocouchSpatiallistFormat;
+
+    bool bFoundId;
+    bool bFoundRev;
+    bool bFoundTypeFeature;
+    bool bIsGeocouchSpatiallistFormat;
 
     //
     // Copy operations not supported.
@@ -146,7 +156,8 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
                                       const char* pszKey,
                                       json_object* poVal,
                                       bool bFlattenNestedAttributes,
-                                      char chNestedAttributeSeparator);
+                                      char chNestedAttributeSeparator,
+                                      bool bArrayAsString = false);
 
 /************************************************************************/
 /*                 GeoJSON Parsing Utilities                            */
@@ -154,6 +165,10 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
 
 json_object* OGRGeoJSONFindMemberByName(json_object* poObj,  const char* pszName );
 GeoJSONObject::Type OGRGeoJSONGetType( json_object* poObj );
+
+json_object* json_ex_get_object_by_path(json_object* poObj, const char* pszPath );
+
+bool OGRJSonParse(const char* pszText, json_object** ppoObj, bool bVerboseError = true);
 
 /************************************************************************/
 /*                 GeoJSON Geometry Translators                         */

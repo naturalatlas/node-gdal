@@ -63,7 +63,10 @@
 				"_FILE_OFFSET_BITS=64"
 			],
 			"xcode_settings": {
-				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
+				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+				"OTHER_LDFLAGS":[
+					"-Wl,-bind_at_load"
+				]
 			},
 			"conditions": [
 				["enable_logging == 'true'", {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_rdk1.cpp 29145 2015-05-04 10:00:40Z rouault $
+ * $Id: reader_rdk1.cpp 31812 2015-11-28 22:37:37Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Resurs-DK1 imagery.
@@ -30,7 +30,7 @@
 
 #include "reader_rdk1.h"
 
-CPL_CVSID("$Id: reader_rdk1.cpp 29145 2015-05-04 10:00:40Z rouault $");
+CPL_CVSID("$Id: reader_rdk1.cpp 31812 2015-11-28 22:37:37Z goatbar $");
 
 /**
  * GDALMDReaderResursDK1()
@@ -55,7 +55,7 @@ GDALMDReaderResursDK1::~GDALMDReaderResursDK1()
 /**
  * HasRequiredFiles()
  */
-const bool GDALMDReaderResursDK1::HasRequiredFiles() const
+bool GDALMDReaderResursDK1::HasRequiredFiles() const
 {
     // check <MSP_ROOT>
     if (!m_osXMLSourceFilename.empty() &&
@@ -144,7 +144,7 @@ void GDALMDReaderResursDK1::LoadMetadata()
 /**
  * GetAcqisitionTimeFromString()
  */
-const time_t GDALMDReaderResursDK1::GetAcquisitionTimeFromString(
+time_t GDALMDReaderResursDK1::GetAcquisitionTimeFromString(
         const char* pszDateTime)
 {
     if(NULL == pszDateTime)
@@ -157,7 +157,7 @@ const time_t GDALMDReaderResursDK1::GetAcquisitionTimeFromString(
     int iMin;
     int iSec;
 
-// string exampe: <Normal>
+// string example <Normal>
 //                  tSceneTime = 10:21:36.000000
 //                  dSceneDate = 16/9/2008
 //                </Normal>

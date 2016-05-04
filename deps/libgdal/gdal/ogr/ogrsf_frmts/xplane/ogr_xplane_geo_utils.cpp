@@ -28,14 +28,9 @@
  ****************************************************************************/
 
 #include "ogr_xplane_geo_utils.h"
-#include <math.h>
 #include "cpl_port.h"
 
-CPL_CVSID("$Id: ogr_xplane_geo_utils.cpp 27044 2014-03-16 23:41:27Z rouault $");
-
-#ifndef M_PI
-# define M_PI  3.1415926535897932384626433832795
-#endif
+CPL_CVSID("$Id: ogr_xplane_geo_utils.cpp 30726 2015-09-27 17:25:12Z goatbar $");
 
 #define RAD2METER            ((180./M_PI)*60.*1852.)
 #define METER2RAD            (1/RAD2METER)

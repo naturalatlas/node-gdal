@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsvgdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrsvgdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGDriver.
@@ -30,7 +30,7 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvgdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrsvgdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 CPL_C_START
 void RegisterOGRSVG();
@@ -42,7 +42,7 @@ CPL_C_END
 /*                                Open()                                */
 /************************************************************************/
 
-GDALDataset *OGRSVGDriverOpen( GDALOpenInfo* poOpenInfo )
+static GDALDataset *OGRSVGDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update || poOpenInfo->fpL == NULL )
@@ -69,27 +69,23 @@ GDALDataset *OGRSVGDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSVG()
 
 {
-    if (! GDAL_CHECK_VERSION("OGR/SVG driver"))
+    if(! GDAL_CHECK_VERSION("OGR/SVG driver") )
         return;
-    GDALDriver  *poDriver;
 
-    if( GDALGetDriverByName( "SVG" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    if( GDALGetDriverByName( "SVG" ) != NULL )
+        return;
 
-        poDriver->SetDescription( "SVG" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Scalable Vector Graphics" );
-        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "svg" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_svg.html" );
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetDescription( "SVG" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "Scalable Vector Graphics" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "svg" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_svg.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->pfnOpen = OGRSVGDriverOpen;
+    poDriver->pfnOpen = OGRSVGDriverOpen;
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }
 

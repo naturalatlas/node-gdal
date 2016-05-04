@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: IntergraphDataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: IntergraphDataset.h 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  Intergraph Raster Format support
  * Purpose:  Read selected types of Intergraph Raster Format
@@ -58,18 +58,17 @@ public:
     static GDALDataset *Create( const char *pszFilename,
         int nXSize,
         int nYSize,
-        int nBands, 
+        int nBands,
         GDALDataType eType,
         char **papszOptions );
-    static GDALDataset *CreateCopy( const char *pszFilename, 
+    static GDALDataset *CreateCopy( const char *pszFilename,
         GDALDataset *poSrcDS,
         int bStrict,
         char **papszOptions,
-        GDALProgressFunc pfnProgress, 
+        GDALProgressFunc pfnProgress,
         void * pProgressData );
 
     virtual CPLErr GetGeoTransform( double *padfTransform );
     virtual CPLErr SetGeoTransform( double *padfTransform );
     virtual CPLErr SetProjection( const char *pszProjString );
 };
-

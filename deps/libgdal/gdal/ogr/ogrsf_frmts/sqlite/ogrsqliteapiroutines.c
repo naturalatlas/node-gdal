@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteapiroutines.c 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqliteapiroutines.c 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Static registration of sqlite3 entry points
@@ -36,8 +36,8 @@
     /*
     / using an AMALGAMATED version of SpatiaLite
     / a private internal copy of SQLite is included:
-    / so we are required including the SpatiaLite's 
-    / own header 
+    / so we are required including the SpatiaLite's
+    / own header
     /
     / IMPORTANT NOTICE: using AMALAGATION is only
     / useful on Windows (to skip DLL hell related oddities)

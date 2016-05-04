@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegukooadriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrsegukooadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SEG-P1 / UKOOA P1-90 Translator
  * Purpose:  Implements OGRSEGUKOOADriver.
@@ -30,7 +30,7 @@
 #include "ogr_segukooa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsegukooadriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrsegukooadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 extern "C" void RegisterOGRSEGUKOOA();
 
@@ -65,24 +65,19 @@ static GDALDataset *OGRSEGUKOOADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSEGUKOOA()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "SEGUKOOA" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "SEGUKOOA" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "SEGUKOOA" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "SEG-P1 / UKOOA P1/90" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_segukooa.html" );
+    poDriver->SetDescription( "SEGUKOOA" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "SEG-P1 / UKOOA P1/90" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_segukooa.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->pfnOpen = OGRSEGUKOOADriverOpen;
 
-        poDriver->pfnOpen = OGRSEGUKOOADriverOpen;
-
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }
 

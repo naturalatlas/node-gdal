@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: wmsmetadataset.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: wmsmetadataset.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Declaration of GDALWMSMetaDataset class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _WMS_METADATASET_H_INCLUDED
-#define _WMS_METADATASET_H_INCLUDED
+#ifndef WMS_METADATASET_H_INCLUDED
+#define WMS_METADATASET_H_INCLUDED
 
 #include "gdal_pam.h"
 #include "cpl_string.h"
@@ -119,4 +119,4 @@ class GDALWMSMetaDataset : public GDALPamDataset
     static GDALDataset* DownloadGetTileService(GDALOpenInfo *poOpenInfo);
 };
 
-#endif // _WMS_METADATASET_H_INCLUDED
+#endif // WMS_METADATASET_H_INCLUDED

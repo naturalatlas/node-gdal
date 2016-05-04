@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonutils.h 28009 2014-11-26 12:50:04Z rouault $
+ * $Id: ogrgeojsonutils.h 32181 2015-12-15 10:41:07Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private utilities within OGR OGRGeoJSON Driver.
@@ -75,7 +75,8 @@ int GeoJSONIsObject( const char* pszText );
 /************************************************************************/
 
 OGRFieldType GeoJSONPropertyToFieldType( json_object* poObject,
-                                         OGRFieldSubType& eSubType );
+                                         OGRFieldSubType& eSubType,
+                                         bool bArrayAsString = false );
 
 
 /************************************************************************/

@@ -1,7 +1,7 @@
 /******************************************************************************
- * $Id: gdalgeorefpamdataset.h 26571 2013-10-30 10:59:11Z rouault $
+ * $Id: gdalgeorefpamdataset.h 33794 2016-03-26 13:19:07Z goatbar $
  *
- * Project:  GDAL 
+ * Project:  GDAL
  * Purpose:  GDALPamDataset with internal storage for georeferencing, with
  *           priority for PAM over internal georeferencing
  * Author:   Even Rouault <even dot rouault at mines-paris dot org>
@@ -36,7 +36,7 @@
 class CPL_DLL GDALGeorefPamDataset : public GDALPamDataset
 {
   protected:
-    int         bGeoTransformValid;
+    bool        bGeoTransformValid;
     double      adfGeoTransform[6];
     char        *pszProjection;
     int         nGCPCount;
@@ -44,7 +44,7 @@ class CPL_DLL GDALGeorefPamDataset : public GDALPamDataset
 
   public:
         GDALGeorefPamDataset();
-        ~GDALGeorefPamDataset();
+        virtual ~GDALGeorefPamDataset();
 
     virtual CPLErr          GetGeoTransform( double * );
     virtual const char     *GetProjectionRef();

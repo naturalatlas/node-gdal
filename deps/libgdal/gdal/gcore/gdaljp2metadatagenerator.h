@@ -1,7 +1,7 @@
 /******************************************************************************
- * $Id: gdaljp2metadatagenerator.h 29048 2015-04-29 14:48:33Z rouault $
+ * $Id: gdaljp2metadatagenerator.h 33694 2016-03-10 17:54:30Z goatbar $
  *
- * Project:  GDAL 
+ * Project:  GDAL
  * Purpose:  GDALJP2Metadata: metadata generator
  * Author:   Even Rouault <even dot rouault at spatialys dot com>
  *

@@ -203,10 +203,10 @@
 /* #undef VSI_NEED_LARGEFILE64_SOURCE */
 
 /* Define to name of 64bit stat function */
-#define VSI_STAT64 stat64
+#define VSI_STAT64 stat
 
 /* Define to name of 64bit stat structure */
-#define VSI_STAT64_T stat64
+#define VSI_STAT64_T stat
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

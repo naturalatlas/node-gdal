@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalallvalidmaskband.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: gdalallvalidmaskband.cpp 31440 2015-11-12 01:38:25Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALAllValidMaskBand, a class implementing all
@@ -30,14 +30,14 @@
 
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: gdalallvalidmaskband.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: gdalallvalidmaskband.cpp 31440 2015-11-12 01:38:25Z goatbar $");
 
 /************************************************************************/
 /*                        GDALAllValidMaskBand()                        */
 /************************************************************************/
 
-GDALAllValidMaskBand::GDALAllValidMaskBand( GDALRasterBand *poParent )
-
+GDALAllValidMaskBand::GDALAllValidMaskBand( GDALRasterBand *poParent ) :
+    GDALRasterBand(FALSE)
 {
     poDS = NULL;
     nBand = 0;
@@ -53,18 +53,15 @@ GDALAllValidMaskBand::GDALAllValidMaskBand( GDALRasterBand *poParent )
 /*                       ~GDALAllValidMaskBand()                        */
 /************************************************************************/
 
-GDALAllValidMaskBand::~GDALAllValidMaskBand()
-
-{
-}
+GDALAllValidMaskBand::~GDALAllValidMaskBand() {}
 
 /************************************************************************/
 /*                             IReadBlock()                             */
 /************************************************************************/
 
-CPLErr GDALAllValidMaskBand::IReadBlock( CPL_UNUSED int nXBlockOff,
-                                         CPL_UNUSED int nYBlockOff,
-                                         void * pImage )
+CPLErr GDALAllValidMaskBand::IReadBlock( int /* nXBlockOff */,
+                                         int /* nYBlockOff */,
+                                         void *pImage )
 {
     memset( pImage, 255, nBlockXSize * nBlockYSize );
 

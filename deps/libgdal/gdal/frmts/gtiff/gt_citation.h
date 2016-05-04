@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gt_citation.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: gt_citation.h 33796 2016-03-27 13:21:07Z goatbar $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  Implements special parsing of Imagine citation strings, and
@@ -40,7 +40,7 @@ char* ImagineCitationTranslation(char* psCitation, geokey_t keyID);
 char** CitationStringParse(char* psCitation, geokey_t keyID);
 
 #define nCitationNameTypes 9
-typedef enum 
+typedef enum
 {
   CitCsName = 0,
   CitPcsName = 1,
@@ -61,12 +61,12 @@ void SetGeogCSCitation(GTIF * psGTIF, OGRSpatialReference *poSRS, char* angUnitN
 OGRBoolean SetCitationToSRS(GTIF* hGTIF, char* szCTString, int nCTStringLen,
                             geokey_t geoKey, OGRSpatialReference* poSRS, OGRBoolean* linearUnitIsSet);
 void GetGeogCSFromCitation(char* szGCSName, int nGCSName,
-                           geokey_t geoKey, 
-                          char	**ppszGeogName,
-                          char	**ppszDatumName,
-                          char	**ppszPMName,
-                          char	**ppszSpheroidName,
-                          char	**ppszAngularUnits);
+                           geokey_t geoKey,
+                          char **ppszGeogName,
+                          char **ppszDatumName,
+                          char **ppszPMName,
+                          char **ppszSpheroidName,
+                          char **ppszAngularUnits);
 void CheckUTM( GTIFDefn * psDefn, const char * pszCtString );
 
 

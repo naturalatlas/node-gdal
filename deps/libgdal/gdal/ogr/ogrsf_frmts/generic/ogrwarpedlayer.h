@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwarpedlayer.h 28375 2015-01-30 12:06:11Z rouault $
+ * $Id: ogrwarpedlayer.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines OGRWarpedLayer class
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGRWARPEDLAYER_H_INCLUDED
-#define _OGRWARPEDLAYER_H_INCLUDED
+#ifndef OGRWARPEDLAYER_H_INCLUDED
+#define OGRWARPEDLAYER_H_INCLUDED
 
 #include "ogrlayerdecorator.h"
 
@@ -88,4 +88,4 @@ class OGRWarpedLayer : public OGRLayerDecorator
     virtual int         TestCapability( const char * );
 };
 
-#endif //  _OGRWARPEDLAYER_H_INCLUDED
+#endif //  OGRWARPEDLAYER_H_INCLUDED

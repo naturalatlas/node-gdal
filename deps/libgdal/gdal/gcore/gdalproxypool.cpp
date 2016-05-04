@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalproxypool.cpp 31754 2015-11-25 11:06:14Z rouault $
+ * $Id: gdalproxypool.cpp 32234 2015-12-18 12:40:59Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  A dataset and raster band classes that differ the opening of the
@@ -31,7 +31,7 @@
 #include "gdal_proxy.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: gdalproxypool.cpp 31754 2015-11-25 11:06:14Z rouault $");
+CPL_CVSID("$Id: gdalproxypool.cpp 32234 2015-12-18 12:40:59Z rouault $");
 
 /* We *must* share the same mutex as the gdaldataset.cpp file, as we are */
 /* doing GDALOpen() calls that can indirectly call GDALOpenShared() on */
@@ -117,9 +117,9 @@ class GDALDatasetPool
 /*                         GDALDatasetPool()                            */
 /************************************************************************/
 
-GDALDatasetPool::GDALDatasetPool(int maxSize)
+GDALDatasetPool::GDALDatasetPool(int maxSizeIn)
 {
-    this->maxSize = maxSize;
+    maxSize = maxSizeIn;
     currentSize = 0;
     firstEntry = NULL;
     lastEntry = NULL;
@@ -263,7 +263,7 @@ GDALProxyPoolCacheEntry* GDALDatasetPool::_RefDataset(const char* pszFileName,
         }
         CPLFree(lastEntryWithZeroRefCount->pszFileName);
 
-        /* Recycle this entry for the to-be-openeded dataset and */
+        /* Recycle this entry for the to-be-opened dataset and */
         /* moves it to the top of the list */
         if (lastEntryWithZeroRefCount->prev)
             lastEntryWithZeroRefCount->prev->next = lastEntryWithZeroRefCount->next;
@@ -320,7 +320,7 @@ GDALProxyPoolCacheEntry* GDALDatasetPool::_RefDataset(const char* pszFileName,
 /*                       _CloseDataset()                                */
 /************************************************************************/
 
-void GDALDatasetPool::_CloseDataset(const char* pszFileName, GDALAccess eAccess)
+void GDALDatasetPool::_CloseDataset(const char* pszFileName, CPL_UNUSED GDALAccess eAccess)
 {
     GDALProxyPoolCacheEntry* cur = firstEntry;
     GIntBig responsiblePID = GDALGetResponsiblePIDForCurrentThread();
@@ -342,7 +342,7 @@ void GDALDatasetPool::_CloseDataset(const char* pszFileName, GDALAccess eAccess)
             refCountOfDisableRefCount --;
 
             GDALSetResponsiblePIDForCurrentThread(responsiblePID);
-            
+
             cur->poDS = NULL;
             cur->pszFileName[0] = '\0';
             break;
@@ -361,10 +361,10 @@ void GDALDatasetPool::Ref()
     CPLMutexHolderD( GDALGetphDLMutex() );
     if (singleton == NULL)
     {
-        int maxSize = atoi(CPLGetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", "100"));
-        if (maxSize < 2 || maxSize > 1000)
-            maxSize = 100;
-        singleton = new GDALDatasetPool(maxSize);
+        int l_maxSize = atoi(CPLGetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", "100"));
+        if (l_maxSize < 2 || l_maxSize > 1000)
+            l_maxSize = 100;
+        singleton = new GDALDatasetPool(l_maxSize);
     }
     if (singleton->refCountOfDisableRefCount == 0)
       singleton->refCount++;
@@ -380,6 +380,8 @@ void GDALDatasetPool::PreventDestroy()
 }
 
 /* keep that in sync with gdaldrivermanager.cpp */
+extern void GDALDatasetPoolPreventDestroy();
+
 void GDALDatasetPoolPreventDestroy()
 {
     GDALDatasetPool::PreventDestroy();
@@ -423,6 +425,8 @@ void GDALDatasetPool::ForceDestroy()
 }
 
 /* keep that in sync with gdaldrivermanager.cpp */
+extern void GDALDatasetPoolForceDestroy();
+
 void GDALDatasetPoolForceDestroy()
 {
     GDALDatasetPool::ForceDestroy();
@@ -544,31 +548,31 @@ CPL_C_END
 /* object */
 
 GDALProxyPoolDataset::GDALProxyPoolDataset(const char* pszSourceDatasetDescription,
-                                   int nRasterXSize, int nRasterYSize,
-                                   GDALAccess eAccess, int bShared,
-                                   const char * pszProjectionRef,
+                                   int nRasterXSizeIn, int nRasterYSizeIn,
+                                   GDALAccess eAccessIn, int bSharedIn,
+                                   const char * pszProjectionRefIn,
                                    double * padfGeoTransform)
 {
     GDALDatasetPool::Ref();
 
     SetDescription(pszSourceDatasetDescription);
 
-    this->nRasterXSize = nRasterXSize;
-    this->nRasterYSize = nRasterYSize;
-    this->eAccess = eAccess;
+    nRasterXSize = nRasterXSizeIn;
+    nRasterYSize = nRasterYSizeIn;
+    eAccess = eAccessIn;
 
-    this->bShared = bShared;
+    bShared = static_cast<GByte>(bSharedIn);
 
-    this->responsiblePID = GDALGetResponsiblePIDForCurrentThread();
+    responsiblePID = GDALGetResponsiblePIDForCurrentThread();
 
-    if (pszProjectionRef)
+    if (pszProjectionRefIn)
     {
-        this->pszProjectionRef = NULL;
+        pszProjectionRef = NULL;
         bHasSrcProjection = FALSE;
     }
     else
     {
-        this->pszProjectionRef = CPLStrdup(pszProjectionRef);
+        pszProjectionRef = CPLStrdup(pszProjectionRefIn);
         bHasSrcProjection = TRUE;
     }
     if (padfGeoTransform)
@@ -631,10 +635,10 @@ GDALProxyPoolDataset::~GDALProxyPoolDataset()
 /*                        SetOpenOptions()                              */
 /************************************************************************/
 
-void GDALProxyPoolDataset::SetOpenOptions(char** papszOpenOptions)
+void GDALProxyPoolDataset::SetOpenOptions(char** papszOpenOptionsIn)
 {
-    CPLAssert(this->papszOpenOptions == NULL);
-    this->papszOpenOptions = CSLDuplicate(papszOpenOptions);
+    CPLAssert(papszOpenOptions == NULL);
+    papszOpenOptions = CSLDuplicate(papszOpenOptionsIn);
 }
 
 /************************************************************************/
@@ -695,10 +699,10 @@ void GDALProxyPoolDataset::UnrefUnderlyingDataset(CPL_UNUSED GDALDataset* poUnde
 /*                        SetProjection()                               */
 /************************************************************************/
 
-CPLErr GDALProxyPoolDataset::SetProjection(const char* pszProjectionRef)
+CPLErr GDALProxyPoolDataset::SetProjection(const char* pszProjectionRefIn)
 {
     bHasSrcProjection = FALSE;
-    return GDALProxyDataset::SetProjection(pszProjectionRef);
+    return GDALProxyDataset::SetProjection(pszProjectionRefIn);
 }
 
 /************************************************************************/
@@ -900,17 +904,17 @@ void GDALProxyPoolDatasetAddSrcBandDescription( GDALProxyPoolDatasetH hProxyPool
 /*                    GDALProxyPoolRasterBand()                         */
 /* ******************************************************************** */
 
-GDALProxyPoolRasterBand::GDALProxyPoolRasterBand(GDALProxyPoolDataset* poDS, int nBand,
-                                                 GDALDataType eDataType,
-                                                 int nBlockXSize, int nBlockYSize)
+GDALProxyPoolRasterBand::GDALProxyPoolRasterBand(GDALProxyPoolDataset* poDSIn, int nBandIn,
+                                                 GDALDataType eDataTypeIn,
+                                                 int nBlockXSizeIn, int nBlockYSizeIn)
 {
-    this->poDS         = poDS;
-    this->nBand        = nBand;
-    this->eDataType    = eDataType;
-    this->nRasterXSize = poDS->GetRasterXSize();
-    this->nRasterYSize = poDS->GetRasterYSize();
-    this->nBlockXSize  = nBlockXSize;
-    this->nBlockYSize  = nBlockYSize;
+    poDS         = poDSIn;
+    nBand        = nBandIn;
+    eDataType    = eDataTypeIn;
+    nRasterXSize = poDSIn->GetRasterXSize();
+    nRasterYSize = poDSIn->GetRasterYSize();
+    nBlockXSize  = nBlockXSizeIn;
+    nBlockYSize  = nBlockYSizeIn;
 
     Init();
 }
@@ -919,14 +923,14 @@ GDALProxyPoolRasterBand::GDALProxyPoolRasterBand(GDALProxyPoolDataset* poDS, int
 /*                    GDALProxyPoolRasterBand()                         */
 /* ******************************************************************** */
 
-GDALProxyPoolRasterBand::GDALProxyPoolRasterBand(GDALProxyPoolDataset* poDS,
+GDALProxyPoolRasterBand::GDALProxyPoolRasterBand(GDALProxyPoolDataset* poDSIn,
                                                  GDALRasterBand* poUnderlyingRasterBand)
 {
-    this->poDS         = poDS;
-    this->nBand        = poUnderlyingRasterBand->GetBand();
-    this->eDataType    = poUnderlyingRasterBand->GetRasterDataType();
-    this->nRasterXSize = poUnderlyingRasterBand->GetXSize();
-    this->nRasterYSize = poUnderlyingRasterBand->GetYSize();
+    poDS         = poDSIn;
+    nBand        = poUnderlyingRasterBand->GetBand();
+    eDataType    = poUnderlyingRasterBand->GetRasterDataType();
+    nRasterXSize = poUnderlyingRasterBand->GetXSize();
+    nRasterYSize = poUnderlyingRasterBand->GetYSize();
     poUnderlyingRasterBand->GetBlockSize(&nBlockXSize, &nBlockYSize);
 
     Init();
@@ -979,14 +983,14 @@ GDALProxyPoolRasterBand::~GDALProxyPoolRasterBand()
 /*                 AddSrcMaskBandDescription()                          */
 /************************************************************************/
 
-void GDALProxyPoolRasterBand::AddSrcMaskBandDescription( GDALDataType eDataType,
-                                                         int nBlockXSize,
-                                                         int nBlockYSize)
+void GDALProxyPoolRasterBand::AddSrcMaskBandDescription( GDALDataType eDataTypeIn,
+                                                         int nBlockXSizeIn,
+                                                         int nBlockYSizeIn)
 {
     CPLAssert(poProxyMaskBand == NULL);
     poProxyMaskBand = new GDALProxyPoolMaskBand((GDALProxyPoolDataset*)poDS,
-                                                this, eDataType,
-                                                nBlockXSize, nBlockYSize);
+                                                this, eDataTypeIn,
+                                                nBlockXSizeIn, nBlockYSizeIn);
 }
 
 /************************************************************************/
@@ -1226,14 +1230,14 @@ GDALRasterBand *GDALProxyPoolRasterBand::GetMaskBand()
 /*             GDALProxyPoolOverviewRasterBand()                        */
 /* ******************************************************************** */
 
-GDALProxyPoolOverviewRasterBand::GDALProxyPoolOverviewRasterBand(GDALProxyPoolDataset* poDS,
+GDALProxyPoolOverviewRasterBand::GDALProxyPoolOverviewRasterBand(GDALProxyPoolDataset* poDSIn,
                                                                  GDALRasterBand* poUnderlyingOverviewBand,
-                                                                 GDALProxyPoolRasterBand* poMainBand,
-                                                                 int nOverviewBand) :
-        GDALProxyPoolRasterBand(poDS, poUnderlyingOverviewBand)
+                                                                 GDALProxyPoolRasterBand* poMainBandIn,
+                                                                 int nOverviewBandIn) :
+        GDALProxyPoolRasterBand(poDSIn, poUnderlyingOverviewBand)
 {
-    this->poMainBand = poMainBand;
-    this->nOverviewBand = nOverviewBand;
+    poMainBand = poMainBandIn;
+    nOverviewBand = nOverviewBandIn;
 
     poUnderlyingMainRasterBand = NULL;
     nRefCountUnderlyingMainRasterBand = 0;
@@ -1277,12 +1281,12 @@ void GDALProxyPoolOverviewRasterBand::UnrefUnderlyingRasterBand(CPL_UNUSED GDALR
 /*                     GDALProxyPoolMaskBand()                          */
 /* ******************************************************************** */
 
-GDALProxyPoolMaskBand::GDALProxyPoolMaskBand(GDALProxyPoolDataset* poDS,
+GDALProxyPoolMaskBand::GDALProxyPoolMaskBand(GDALProxyPoolDataset* poDSIn,
                                              GDALRasterBand* poUnderlyingMaskBand,
-                                             GDALProxyPoolRasterBand* poMainBand) :
-        GDALProxyPoolRasterBand(poDS, poUnderlyingMaskBand)
+                                             GDALProxyPoolRasterBand* poMainBandIn) :
+        GDALProxyPoolRasterBand(poDSIn, poUnderlyingMaskBand)
 {
-    this->poMainBand = poMainBand;
+    poMainBand = poMainBandIn;
 
     poUnderlyingMainRasterBand = NULL;
     nRefCountUnderlyingMainRasterBand = 0;
@@ -1292,13 +1296,13 @@ GDALProxyPoolMaskBand::GDALProxyPoolMaskBand(GDALProxyPoolDataset* poDS,
 /*                     GDALProxyPoolMaskBand()                          */
 /* ******************************************************************** */
 
-GDALProxyPoolMaskBand::GDALProxyPoolMaskBand(GDALProxyPoolDataset* poDS,
-                                             GDALProxyPoolRasterBand* poMainBand,
-                                             GDALDataType eDataType,
-                                             int nBlockXSize, int nBlockYSize) :
-        GDALProxyPoolRasterBand(poDS, 1, eDataType, nBlockXSize, nBlockYSize)
+GDALProxyPoolMaskBand::GDALProxyPoolMaskBand(GDALProxyPoolDataset* poDSIn,
+                                             GDALProxyPoolRasterBand* poMainBandIn,
+                                             GDALDataType eDataTypeIn,
+                                             int nBlockXSizeIn, int nBlockYSizeIn) :
+        GDALProxyPoolRasterBand(poDSIn, 1, eDataTypeIn, nBlockXSizeIn, nBlockYSizeIn)
 {
-    this->poMainBand = poMainBand;
+    poMainBand = poMainBandIn;
 
     poUnderlyingMainRasterBand = NULL;
     nRefCountUnderlyingMainRasterBand = 0;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxfopen.h 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: gxfopen.h 32179 2015-12-14 16:22:34Z goatbar $
  *
  * Project:  GXF Reader
  * Purpose:  GXF-3 access function declarations.
@@ -28,8 +28,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _GXFOPEN_H_INCLUDED
-#define _GXFOPEN_H_INCLUDED
+#ifndef GXFOPEN_H_INCLUDED
+#define GXFOPEN_H_INCLUDED
 
 /**
  * \file gxfopen.h
@@ -114,13 +114,11 @@ typedef struct {
 
     char	*pszUnitName;
     double	dfUnitToMeter;
-    
 
     double	dfZMaximum;
     double	dfZMinimum;
 
     long	*panRawLineOffset;
-    
 } GXFInfo_t;
 
-#endif /* ndef _GXFOPEN_H_INCLUDED */
+#endif /* ndef GXFOPEN_H_INCLUDED */

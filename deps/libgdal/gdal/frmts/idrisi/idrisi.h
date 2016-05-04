@@ -1,5 +1,5 @@
 /*****************************************************************************
-* $Id: idrisi.h 27044 2014-03-16 23:41:27Z rouault $
+* $Id: idrisi.h 31777 2015-11-26 14:14:41Z rouault $
 *
 * Project:  Idrisi Raster Image File Driver
 * Purpose:  Read/write Idrisi Raster Image Format RST
@@ -28,8 +28,8 @@
 * DEALINGS IN THE SOFTWARE.
 ****************************************************************************/
 
-#ifndef _IDRISI_H_INCLUDED
-#define _IDRISI_H_INCLUDED
+#ifndef IDRISI_H_INCLUDED
+#define IDRISI_H_INCLUDED
 
 #include "cpl_error.h"
 
@@ -38,4 +38,4 @@ CPLErr IdrisiGeoReference2Wkt( const char* pszFilename,
                                const char *pszRefUnits,
                                char **ppszProjString );
 
-#endif /*  _IDRISI_H_INCLUDED */
+#endif /*  IDRISI_H_INCLUDED */

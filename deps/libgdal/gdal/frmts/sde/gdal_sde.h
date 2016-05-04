@@ -4,12 +4,10 @@
 #include "gdal_pam.h"
 
 
-CPL_CVSID("$Id: gdal_sde.h 10726 2007-01-30 04:43:45Z hobu $");
+CPL_CVSID("$Id: gdal_sde.h 32190 2015-12-16 13:50:27Z goatbar $");
 
 CPL_C_START
-void    GDALRegister_SDE(void);
-
-
+void GDALRegister_SDE();
 CPL_C_END
 
 #include <sdetype.h>

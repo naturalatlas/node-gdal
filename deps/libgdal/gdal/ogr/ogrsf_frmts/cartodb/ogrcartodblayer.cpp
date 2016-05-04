@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcartodblayer.cpp 29000 2015-04-24 21:46:17Z rouault $
+ * $Id: ogrcartodblayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  CartoDB Translator
  * Purpose:  Implements OGRCARTODBLayer class.
@@ -30,23 +30,17 @@
 #include "ogr_cartodb.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcartodblayer.cpp 29000 2015-04-24 21:46:17Z rouault $");
+CPL_CVSID("$Id: ogrcartodblayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 
 /************************************************************************/
 /*                         OGRCARTODBLayer()                            */
 /************************************************************************/
 
-OGRCARTODBLayer::OGRCARTODBLayer(OGRCARTODBDataSource* poDS)
-
+OGRCARTODBLayer::OGRCARTODBLayer(OGRCARTODBDataSource* poDSIn) :
+    poDS(poDSIn),
+    poFeatureDefn(NULL),
+    poCachedObj(NULL)
 {
-    this->poDS = poDS;
-
-    poSRS = NULL;
-
-    poFeatureDefn = NULL;
-    
-    poCachedObj = NULL;
-
     ResetReading();
 }
 
@@ -59,9 +53,6 @@ OGRCARTODBLayer::~OGRCARTODBLayer()
 {
     if( poCachedObj != NULL )
         json_object_put(poCachedObj);
-
-    if( poSRS != NULL )
-        poSRS->Release();
 
     if( poFeatureDefn != NULL )
         poFeatureDefn->Release();
@@ -102,6 +93,7 @@ OGRFeature *OGRCARTODBLayer::BuildFeature(json_object* poRowObj)
     if( poRowObj != NULL &&
         json_object_get_type(poRowObj) == json_type_object )
     {
+        //CPLDebug("CartoDB", "Row: %s", json_object_to_json_string(poRowObj));
         poFeature = new OGRFeature(poFeatureDefn);
 
         if( osFIDColName.size() )
@@ -175,7 +167,7 @@ OGRFeature *OGRCARTODBLayer::BuildFeature(json_object* poRowObj)
 /*                        FetchNewFeatures()                            */
 /************************************************************************/
 
-json_object* OGRCARTODBLayer::FetchNewFeatures(GIntBig iNext)
+json_object* OGRCARTODBLayer::FetchNewFeatures(GIntBig iNextIn)
 {
     CPLString osSQL = osBaseSQL;
     if( osSQL.ifind("SELECT") != std::string::npos &&
@@ -184,7 +176,7 @@ json_object* OGRCARTODBLayer::FetchNewFeatures(GIntBig iNext)
         osSQL += " LIMIT ";
         osSQL += CPLSPrintf("%d", GetFeaturesToFetch());
         osSQL += " OFFSET ";
-        osSQL += CPLSPrintf(CPL_FRMT_GIB, iNext);
+        osSQL += CPLSPrintf(CPL_FRMT_GIB, iNextIn);
     }
     return poDS->RunSQL(osSQL);
 }
@@ -195,7 +187,7 @@ json_object* OGRCARTODBLayer::FetchNewFeatures(GIntBig iNext)
 
 OGRFeature *OGRCARTODBLayer::GetNextRawFeature()
 {
-    if( bEOF ) 
+    if( bEOF )
         return NULL;
 
     if( iNextInFetchedObjects >= nFetchedObjects )
@@ -260,7 +252,7 @@ OGRFeature *OGRCARTODBLayer::GetNextFeature()
 {
     OGRFeature  *poFeature;
 
-    while(TRUE)
+    while( true )
     {
         poFeature = GetNextRawFeature();
         if (poFeature == NULL)
@@ -382,12 +374,12 @@ void OGRCARTODBLayer::EstablishLayerDefn(const char* pszLayerName,
                         OGRCartoDBGeomFieldDefn *poFieldDefn =
                             new OGRCartoDBGeomFieldDefn(pszColName, wkbUnknown);
                         poFeatureDefn->AddGeomFieldDefn(poFieldDefn, FALSE);
-                        OGRSpatialReference* poSRS = GetSRS(pszColName, &poFieldDefn->nSRID);
-                        if( poSRS != NULL )
+                        OGRSpatialReference* l_poSRS = GetSRS(pszColName, &poFieldDefn->nSRID);
+                        if( l_poSRS != NULL )
                         {
                             poFeatureDefn->GetGeomFieldDefn(
-                                poFeatureDefn->GetGeomFieldCount() - 1)->SetSpatialRef(poSRS);
-                            poSRS->Release();
+                                poFeatureDefn->GetGeomFieldCount() - 1)->SetSpatialRef(l_poSRS);
+                            l_poSRS->Release();
                         }
                     }
                 }
@@ -410,12 +402,12 @@ void OGRCARTODBLayer::EstablishLayerDefn(const char* pszLayerName,
                 OGRCartoDBGeomFieldDefn *poFieldDefn =
                     new OGRCartoDBGeomFieldDefn(pszColName, wkbUnknown);
                 poFeatureDefn->AddGeomFieldDefn(poFieldDefn, FALSE);
-                OGRSpatialReference* poSRS = GetSRS(pszColName, &poFieldDefn->nSRID);
-                if( poSRS != NULL )
+                OGRSpatialReference* l_poSRS = GetSRS(pszColName, &poFieldDefn->nSRID);
+                if( l_poSRS != NULL )
                 {
                     poFeatureDefn->GetGeomFieldDefn(
-                        poFeatureDefn->GetGeomFieldCount() - 1)->SetSpatialRef(poSRS);
-                    poSRS->Release();
+                        poFeatureDefn->GetGeomFieldCount() - 1)->SetSpatialRef(l_poSRS);
+                    l_poSRS->Release();
                 }
             }
         }
@@ -447,19 +439,19 @@ OGRSpatialReference* OGRCARTODBLayer::GetSRS(const char* pszGeomCol,
     }
 
     json_object* poSRTEXT = json_object_object_get(poRowObj, "srtext");
-    OGRSpatialReference* poSRS = NULL;
+    OGRSpatialReference* l_poSRS = NULL;
     if( poSRTEXT != NULL && json_object_get_type(poSRTEXT) == json_type_string )
     {
         const char* pszSRTEXT = json_object_get_string(poSRTEXT);
-        poSRS = new OGRSpatialReference();
+        l_poSRS = new OGRSpatialReference();
         char* pszTmp = (char* )pszSRTEXT;
-        if( poSRS->importFromWkt(&pszTmp) != OGRERR_NONE )
+        if( l_poSRS->importFromWkt(&pszTmp) != OGRERR_NONE )
         {
-            delete poSRS;
-            poSRS = NULL;
+            delete l_poSRS;
+            l_poSRS = NULL;
         }
     }
     json_object_put(poObj);
 
-    return poSRS;
+    return l_poSRS;
 }

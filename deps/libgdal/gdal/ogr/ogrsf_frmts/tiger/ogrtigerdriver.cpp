@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrtigerdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: ogrtigerdriver.cpp 33105 2016-01-23 15:27:32Z rouault $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerDriver
@@ -30,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrtigerdriver.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: ogrtigerdriver.cpp 33105 2016-01-23 15:27:32Z rouault $");
 
 /************************************************************************/
 /*                                Open()                                */
@@ -58,9 +58,9 @@ static GDALDataset *OGRTigerDriverOpen( GDALOpenInfo* poOpenInfo )
             }
         }
         if( !bFoundCompatibleFile )
-            return FALSE;
+            return NULL;
     }
- 
+
     OGRTigerDataSource  *poDS = new OGRTigerDataSource;
 
     if( !poDS->Open( poOpenInfo->pszFilename, TRUE ) )
@@ -105,30 +105,25 @@ static GDALDataset *OGRTigerDriverCreate( const char * pszName,
 }
 
 /************************************************************************/
-/*                           RegisterOGRTiger()                           */
+/*                           RegisterOGRTiger()                         */
 /************************************************************************/
 
 void RegisterOGRTiger()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "TIGER" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "TIGER" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "TIGER" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "U.S. Census TIGER/Line" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_tiger.html" );
+    poDriver->SetDescription( "TIGER" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "U.S. Census TIGER/Line" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_tiger.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->pfnOpen = OGRTigerDriverOpen;
+    poDriver->pfnCreate = OGRTigerDriverCreate;
 
-        poDriver->pfnOpen = OGRTigerDriverOpen;
-        poDriver->pfnCreate = OGRTigerDriverCreate;
-
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }

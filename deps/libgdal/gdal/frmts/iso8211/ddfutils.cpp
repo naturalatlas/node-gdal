@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ddfutils.cpp 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: ddfutils.cpp 32179 2015-12-14 16:22:34Z goatbar $
  *
  * Project:  ISO 8211 Access
  * Purpose:  Various utility functions.
@@ -30,7 +30,7 @@
 #include "iso8211.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ddfutils.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ddfutils.cpp 32179 2015-12-14 16:22:34Z goatbar $");
 
 /************************************************************************/
 /*                             DDFScanInt()                             */
@@ -39,7 +39,7 @@ CPL_CVSID("$Id: ddfutils.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
 /*      as an integer.                                                  */
 /************************************************************************/
 
-long DDFScanInt( const char * pszString, int nMaxChars )
+int DDFScanInt( const char * pszString, int nMaxChars )
 
 {
     char        szWorking[33];
@@ -64,7 +64,7 @@ int DDFScanVariable( const char *pszRecord, int nMaxChars, int nDelimChar )
 
 {
     int         i;
-    
+
     for( i = 0; i < nMaxChars-1 && pszRecord[i] != nDelimChar; i++ ) {}
 
     return i;

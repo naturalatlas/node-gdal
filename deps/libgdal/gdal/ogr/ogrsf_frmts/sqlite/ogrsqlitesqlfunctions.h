@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqlitesqlfunctions.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: ogrsqlitesqlfunctions.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Extension SQL functions
@@ -27,12 +27,12 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_SQLITE_SQL_FUNCTIONS_INCLUDED
-#define _OGR_SQLITE_SQL_FUNCTIONS_INCLUDED
+#ifndef OGR_SQLITE_SQL_FUNCTIONS_INCLUDED
+#define OGR_SQLITE_SQL_FUNCTIONS_INCLUDED
 
 #include "ogr_sqlite.h"
 
 static void* OGRSQLiteRegisterSQLFunctions(sqlite3* hDB);
 static void OGRSQLiteUnregisterSQLFunctions(void* hHandle);
 
-#endif // _OGR_SQLITE_SQL_FUNCTIONS_INCLUDED
+#endif // OGR_SQLITE_SQL_FUNCTIONS_INCLUDED

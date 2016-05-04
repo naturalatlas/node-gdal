@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrocidriver.cpp 29019 2015-04-25 20:34:19Z rouault $
+ * $Id: ogrocidriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCIDriver class.
@@ -29,7 +29,7 @@
 
 #include "ogr_oci.h"
 
-CPL_CVSID("$Id: ogrocidriver.cpp 29019 2015-04-25 20:34:19Z rouault $");
+CPL_CVSID("$Id: ogrocidriver.cpp 33713 2016-03-12 17:41:57Z goatbar $");
 
 
 /************************************************************************/
@@ -38,7 +38,7 @@ CPL_CVSID("$Id: ogrocidriver.cpp 29019 2015-04-25 20:34:19Z rouault $");
 
 static int OGROCIDriverIdentify( GDALOpenInfo* poOpenInfo )
 {
-    return EQUALN(poOpenInfo->pszFilename,"OCI:",4);
+    return STARTS_WITH_CI(poOpenInfo->pszFilename, "OCI:");
 }
 
 /************************************************************************/
@@ -85,7 +85,7 @@ static GDALDataset *OGROCIDriverCreate( const char * pszName,
     if( !poDS->Open( pszName, NULL, TRUE, TRUE ) )
     {
         delete poDS;
-        CPLError( CE_Failure, CPLE_AppDefined, 
+        CPLError( CE_Failure, CPLE_AppDefined,
          "Oracle driver doesn't currently support database creation.\n"
                   "Please create database with Oracle tools before loading tables." );
         return NULL;
@@ -101,23 +101,20 @@ static GDALDataset *OGROCIDriverCreate( const char * pszName,
 void RegisterOGROCI()
 
 {
-    if (! GDAL_CHECK_VERSION("OCI driver"))
+    if( !GDAL_CHECK_VERSION("OCI driver") )
         return;
-    
-    if( GDALGetDriverByName( "OCI" ) == NULL )
-    {
-        GDALDriver* poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "OCI" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                        "Oracle Spatial" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                        "drv_oci.html" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    if( GDALGetDriverByName( "OCI" ) != NULL )
+        return;
 
-        poDriver->SetMetadataItem( GDAL_DMD_CONNECTION_PREFIX, "OCI:" );
+    GDALDriver* poDriver = new GDALDriver();
 
-        poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST,
+    poDriver->SetDescription( "OCI" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "Oracle Spatial" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_oci.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_CONNECTION_PREFIX, "OCI:" );
+    poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST,
 "<OpenOptionList>"
 "  <Option name='DBNAME' type='string' description='Database name'/>"
 "  <Option name='USER' type='string' description='User name'/>"
@@ -125,7 +122,7 @@ void RegisterOGROCI()
 "  <Option name='TABLES' type='string' description='Restricted set of tables to list (comma separated)'/>"
 "</OpenOptionList>");
 
-        poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
+    poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
         "<LayerCreationOptionList>"
         "  <Option name='LAUNDER' type='boolean' description='Whether layer and field names will be laundered' default='NO'/>"
         "  <Option name='PRECISION' type='boolean' description='Whether fields created should keep the width and precision' default='YES'/>"
@@ -144,17 +141,16 @@ void RegisterOGROCI()
         "  <Option name='DIMINFO_Z' type='string' description='zmin,zmax,zres values to control the Z dimension info written into the USER_SDO_GEOM_METADATA table'/>"
         "  <Option name='SRID' type='int' description='Forced SRID of the layer'/>"
         "</LayerCreationOptionList>");
-            
-        poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime" );
-        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
-        poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
-        poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
 
-        poDriver->pfnOpen = OGROCIDriverOpen;
-        poDriver->pfnIdentify = OGROCIDriverIdentify;
-        poDriver->pfnCreate = OGROCIDriverCreate;
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,
+                               "Integer Integer64 Real String Date DateTime" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    poDriver->pfnOpen = OGROCIDriverOpen;
+    poDriver->pfnIdentify = OGROCIDriverIdentify;
+    poDriver->pfnCreate = OGROCIDriverCreate;
+
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

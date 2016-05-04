@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osm_parser.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: osm_parser.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OSM_PARSER_H_INCLUDED
-#define _OSM_PARSER_H_INCLUDED
+#ifndef OSM_PARSER_H_INCLUDED
+#define OSM_PARSER_H_INCLUDED
 
 #include "cpl_port.h"
 /* typedef long long GIntBig; */
@@ -130,4 +130,4 @@ void OSM_Close( OSMContext* psOSMContext );
 
 CPL_C_END
 
-#endif /*  _OSM_PARSER_H_INCLUDED */
+#endif /*  OSM_PARSER_H_INCLUDED */

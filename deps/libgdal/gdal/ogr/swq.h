@@ -3,7 +3,7 @@
  * Component: OGDI Driver Support Library
  * Purpose: Generic SQL WHERE Expression Evaluator Declarations.
  * Author: Frank Warmerdam <warmerdam@pobox.com>
- * 
+ *
  ******************************************************************************
  * Copyright (C) 2001 Information Interoperability Institute (3i)
  * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
@@ -11,24 +11,22 @@
  * its documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies, that
  * both the copyright notice and this permission notice appear in
- * supporting documentation, and that the name of 3i not be used 
- * in advertising or publicity pertaining to distribution of the software 
+ * supporting documentation, and that the name of 3i not be used
+ * in advertising or publicity pertaining to distribution of the software
  * without specific, written prior permission.  3i makes no
  * representations about the suitability of this software for any purpose.
  * It is provided "as is" without express or implied warranty.
  ****************************************************************************/
 
-#ifndef _SWQ_H_INCLUDED_
-#define _SWQ_H_INCLUDED_
+#ifndef SWQ_H_INCLUDED_
+#define SWQ_H_INCLUDED_
 
 #include "cpl_conv.h"
 #include "cpl_string.h"
 #include "ogr_core.h"
 
-#if defined(_WIN32) && !defined(_WIN32_WCE)
+#if defined(_WIN32) && !defined(strcasecmp)
 #  define strcasecmp stricmp
-#elif defined(_WIN32_WCE)
-#  define strcasecmp _stricmp
 #endif
 
 typedef enum {
@@ -67,7 +65,7 @@ typedef enum {
     SWQ_INTEGER,
     SWQ_INTEGER64,
     SWQ_FLOAT,
-    SWQ_STRING, 
+    SWQ_STRING,
     SWQ_BOOLEAN,  // integer
     SWQ_DATE,     // string
     SWQ_TIME,     // string
@@ -82,7 +80,7 @@ typedef enum {
 
 typedef enum {
     SNT_CONSTANT,
-    SNT_COLUMN, 
+    SNT_COLUMN,
     SNT_OPERATION
 } swq_node_type;
 
@@ -105,12 +103,12 @@ class swq_expr_node {
 public:
     swq_expr_node();
 
-    swq_expr_node( const char * );
-    swq_expr_node( int );
-    swq_expr_node( GIntBig );
-    swq_expr_node( double );
-    swq_expr_node( OGRGeometry* );
-    swq_expr_node( swq_op );
+    explicit swq_expr_node( const char * );
+    explicit swq_expr_node( int );
+    explicit swq_expr_node( GIntBig );
+    explicit swq_expr_node( double );
+    explicit swq_expr_node( OGRGeometry* );
+    explicit swq_expr_node( swq_op );
 
     ~swq_expr_node();
 
@@ -121,7 +119,7 @@ public:
     swq_field_type Check( swq_field_list *, int bAllowFieldsInSecondaryTables,
                           int bAllowMismatchTypeOnFieldComparison,
                           swq_custom_func_registrar* poCustomFuncRegistrar );
-    swq_expr_node* Evaluate( swq_field_fetcher pfnFetcher, 
+    swq_expr_node* Evaluate( swq_field_fetcher pfnFetcher,
                              void *record );
     swq_expr_node* Clone();
 
@@ -147,11 +145,10 @@ public:
     GIntBig     int_value;
     double      float_value;
     OGRGeometry *geometry_value;
-    
+
     /* shared by SNT_COLUMN, SNT_CONSTANT and also possibly SNT_OPERATION when */
     /* nOperation == SWQ_CUSTOM_FUNC */
     char        *string_value; /* column name when SNT_COLUMN */
-
 
     static CPLString   QuoteIfNecessary( const CPLString &, char chQuote = '\'' );
     static CPLString   Quote( const CPLString &, char chQuote = '\'' );
@@ -214,8 +211,8 @@ public:
 };
 
 /* Compile an SQL WHERE clause into an internal form.  The field_list is
-** the list of fields in the target 'table', used to render where into 
-** field numbers instead of names. 
+** the list of fields in the target 'table', used to render where into
+** field numbers instead of names.
 */
 int swqparse( swq_parse_context *context );
 int swqlex( swq_expr_node **ppNode, swq_parse_context *context );
@@ -225,7 +222,7 @@ int swq_identify_field( const char* table_name,
                         const char *token, swq_field_list *field_list,
                         swq_field_type *this_type, int *table_id );
 
-CPLErr swq_expr_compile( const char *where_clause, 
+CPLErr swq_expr_compile( const char *where_clause,
                          int field_count,
                          char **field_list,
                          swq_field_type *field_types,
@@ -233,8 +230,8 @@ CPLErr swq_expr_compile( const char *where_clause,
                          swq_custom_func_registrar* poCustomFuncRegistrar,
                          swq_expr_node **expr_root );
 
-CPLErr swq_expr_compile2( const char *where_clause, 
-                          swq_field_list *field_list, 
+CPLErr swq_expr_compile2( const char *where_clause,
+                          swq_field_list *field_list,
                           int bCheck,
                           swq_custom_func_registrar* poCustomFuncRegistrar,
                           swq_expr_node **expr_root );
@@ -288,7 +285,7 @@ typedef struct {
 
 typedef struct {
     GIntBig     count;
-    
+
     char        **distinct_list; /* items of the list can be NULL */
     double      sum;
     double      min;
@@ -381,12 +378,12 @@ CPLErr swq_select_parse( swq_select *select_info,
                          int parse_flags );
 
 const char *swq_select_finish_summarize( swq_select *select_info );
-const char *swq_select_summarize( swq_select *select_info, 
-                                  int dest_column, 
+const char *swq_select_summarize( swq_select *select_info,
+                                  int dest_column,
                                   const char *value );
 
 int swq_is_reserved_keyword(const char* pszStr);
 
 char* OGRHStoreGetValue(const char* pszHStore, const char* pszSearchedKey);
 
-#endif /* def _SWQ_H_INCLUDED_ */
+#endif /* def SWQ_H_INCLUDED_ */

@@ -1,6 +1,6 @@
 /*-*-C++-*-*/
 /******************************************************************************
- * $Id: ogr_tiger.h 28382 2015-01-30 15:29:41Z rouault $
+ * $Id: ogr_tiger.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Main declarations for Tiger translator.
@@ -29,8 +29,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_TIGER_H_INCLUDED
-#define _OGR_TIGER_H_INCLUDED
+#ifndef OGR_TIGER_H_INCLUDED
+#define OGR_TIGER_H_INCLUDED
 
 #include "cpl_conv.h"
 #include "ogrsf_frmts.h"
@@ -602,4 +602,4 @@ class OGRTigerDataSource : public OGRDataSource
                                       char ** = NULL );
 };
 
-#endif /* ndef _OGR_TIGER_H_INCLUDED */
+#endif /* ndef OGR_TIGER_H_INCLUDED */

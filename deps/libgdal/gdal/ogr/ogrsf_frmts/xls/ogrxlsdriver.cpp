@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlsdriver.cpp 27794 2014-10-04 10:13:46Z rouault $
+ * $Id: ogrxlsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  XLS Translator
  * Purpose:  Implements OGRXLSDriver.
@@ -30,7 +30,7 @@
 #include "ogr_xls.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrxlsdriver.cpp 27794 2014-10-04 10:13:46Z rouault $");
+CPL_CVSID("$Id: ogrxlsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 /************************************************************************/
 /*                           ~OGRXLSDriver()                            */
@@ -97,11 +97,11 @@ void RegisterOGRXLS()
 
 {
     OGRSFDriver* poDriver = new OGRXLSDriver;
-    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                "MS Excel format" );
+
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "MS Excel format" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "xls" );
-    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                "drv_xls.html" );
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_xls.html" );
+
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }
 

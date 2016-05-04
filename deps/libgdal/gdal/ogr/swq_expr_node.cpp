@@ -4,7 +4,7 @@
  * Purpose: Implementation of the swq_expr_node class used to represent a
  *          node in an SQL expression.
  * Author: Frank Warmerdam <warmerdam@pobox.com>
- * 
+ *
  ******************************************************************************
  * Copyright (C) 2010 Frank Warmerdam <warmerdam@pobox.com>
  * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
@@ -120,7 +120,7 @@ swq_expr_node::swq_expr_node( swq_op eOp )
     Initialize();
 
     eNodeType = SNT_OPERATION;
-    
+
     nOperation = (int) eOp;
     nSubExprCount = 0;
     papoSubExpr = NULL;
@@ -133,16 +133,21 @@ swq_expr_node::swq_expr_node( swq_op eOp )
 void swq_expr_node::Initialize()
 
 {
+    nOperation = 0;
+    nSubExprCount = 0;
+    papoSubExpr = NULL;
+
+    field_index = 0;
+    table_index = 0;
+    table_name = NULL;
     eNodeType = SNT_CONSTANT;
     field_type = SWQ_INTEGER;
-    int_value = 0;
 
     is_null = FALSE;
-    table_name = NULL;
     string_value = NULL;
+    int_value = 0;
+    float_value = 0;
     geometry_value = NULL;
-    papoSubExpr = NULL;
-    nSubExprCount = 0;
 }
 
 /************************************************************************/
@@ -155,8 +160,7 @@ swq_expr_node::~swq_expr_node()
     CPLFree( table_name );
     CPLFree( string_value );
 
-    int i;
-    for( i = 0; i < nSubExprCount; i++ )
+    for( int i = 0; i < nSubExprCount; i++ )
         delete papoSubExpr[i];
     CPLFree( papoSubExpr );
     delete geometry_value;
@@ -170,9 +174,9 @@ void swq_expr_node::PushSubExpression( swq_expr_node *child )
 
 {
     nSubExprCount++;
-    papoSubExpr = (swq_expr_node **) 
+    papoSubExpr = (swq_expr_node **)
         CPLRealloc( papoSubExpr, sizeof(void*) * nSubExprCount );
-    
+
     papoSubExpr[nSubExprCount-1] = child;
 }
 
@@ -183,8 +187,7 @@ void swq_expr_node::PushSubExpression( swq_expr_node *child )
 void swq_expr_node::ReverseSubExpressions()
 
 {
-    int i;
-    for( i = 0; i < nSubExprCount / 2; i++ )
+    for( int i = 0; i < nSubExprCount / 2; i++ )
     {
         swq_expr_node *temp;
 
@@ -218,18 +221,18 @@ swq_field_type swq_expr_node::Check( swq_field_list *poFieldList,
 /* -------------------------------------------------------------------- */
     if( eNodeType == SNT_COLUMN && field_index == -1 )
     {
-        field_index = 
+        field_index =
             swq_identify_field( table_name, string_value, poFieldList,
                                 &field_type, &table_index );
-        
+
         if( field_index < 0 )
         {
             if( table_name )
-                CPLError( CE_Failure, CPLE_AppDefined, 
+                CPLError( CE_Failure, CPLE_AppDefined,
                       "\"%s\".\"%s\" not recognised as an available field.",
                       table_name, string_value );
             else
-                CPLError( CE_Failure, CPLE_AppDefined, 
+                CPLError( CE_Failure, CPLE_AppDefined,
                       "\"%s\" not recognised as an available field.",
                       string_value );
 
@@ -244,14 +247,14 @@ swq_field_type swq_expr_node::Check( swq_field_list *poFieldList,
             return SWQ_ERROR;
         }
     }
-    
+
     if( eNodeType == SNT_COLUMN )
         return field_type;
-    
+
 /* -------------------------------------------------------------------- */
 /*      We are dealing with an operation - fetch the definition.        */
 /* -------------------------------------------------------------------- */
-    const swq_operation *poOp = 
+    const swq_operation *poOp =
         (nOperation == SWQ_CUSTOM_FUNC && poCustomFuncRegistrar != NULL ) ?
             poCustomFuncRegistrar->GetOperator(string_value) :
             swq_op_registrar::GetOperator((swq_op)nOperation);
@@ -272,16 +275,14 @@ swq_field_type swq_expr_node::Check( swq_field_list *poFieldList,
 /* -------------------------------------------------------------------- */
 /*      Check subexpressions first.                                     */
 /* -------------------------------------------------------------------- */
-    int i;
-
-    for( i = 0; i < nSubExprCount; i++ )
+    for( int i = 0; i < nSubExprCount; i++ )
     {
         if( papoSubExpr[i]->Check(poFieldList, bAllowFieldsInSecondaryTables,
                                   bAllowMismatchTypeOnFieldComparison,
                                   poCustomFuncRegistrar) == SWQ_ERROR )
             return SWQ_ERROR;
     }
-    
+
 /* -------------------------------------------------------------------- */
 /*      Check this node.                                                */
 /* -------------------------------------------------------------------- */
@@ -336,7 +337,7 @@ void swq_expr_node::Dump( FILE * fp, int depth )
 
     CPLAssert( eNodeType == SNT_OPERATION );
 
-    const swq_operation *op_def = 
+    const swq_operation *op_def =
         swq_op_registrar::GetOperator( (swq_op) nOperation );
     if( op_def )
         fprintf( fp, "%s%s\n", spaces, op_def->pszName );
@@ -347,7 +348,7 @@ void swq_expr_node::Dump( FILE * fp, int depth )
         papoSubExpr[i]->Dump( fp, depth+1 );
 }
 
-        
+
 /************************************************************************/
 /*                       QuoteIfNecessary()                             */
 /*                                                                      */
@@ -375,7 +376,7 @@ CPLString swq_expr_node::QuoteIfNecessary( const CPLString &osExpr, char chQuote
     {
         return Quote(osExpr, chQuote);
     }
-    
+
     return osExpr;
 }
 
@@ -389,11 +390,10 @@ CPLString swq_expr_node::Quote( const CPLString &osTarget, char chQuote )
 
 {
     CPLString osNew;
-    int i;
 
     osNew += chQuote;
 
-    for( i = 0; i < (int) osTarget.size(); i++ )
+    for( int i = 0; i < (int) osTarget.size(); i++ )
     {
         if( osTarget[i] == chQuote )
         {
@@ -437,11 +437,11 @@ char *swq_expr_node::Unparse( swq_field_list *field_list, char chColumnQuote )
                 strchr(osExpr, 'E') == NULL)
                 osExpr += '.';
         }
-        else 
+        else
         {
             osExpr = Quote( string_value );
         }
-        
+
         return CPLStrdup(osExpr);
     }
 
@@ -460,8 +460,8 @@ char *swq_expr_node::Unparse( swq_field_list *field_list, char chColumnQuote )
                 osExpr.Printf( "%s",
                                QuoteIfNecessary(string_value, chColumnQuote).c_str() );
         }
-        else if( field_index != -1 
-            && table_index < field_list->table_count 
+        else if( field_index != -1
+            && table_index < field_list->table_count
             && table_index > 0 )
         {
             for(int i = 0; i < field_list->count; i++ )
@@ -502,17 +502,16 @@ char *swq_expr_node::Unparse( swq_field_list *field_list, char chColumnQuote )
 /*      Operation - start by unparsing all the subexpressions.          */
 /* -------------------------------------------------------------------- */
     std::vector<char*> apszSubExpr;
-    int i;
 
-    for( i = 0; i < nSubExprCount; i++ )
+    for( int i = 0; i < nSubExprCount; i++ )
         apszSubExpr.push_back( papoSubExpr[i]->Unparse(field_list, chColumnQuote) );
 
     osExpr = UnparseOperationFromUnparsedSubExpr(&apszSubExpr[0]);
-    
+
 /* -------------------------------------------------------------------- */
 /*      cleanup subexpressions.                                         */
 /* -------------------------------------------------------------------- */
-    for( i = 0; i < nSubExprCount; i++ )
+    for( int i = 0; i < nSubExprCount; i++ )
         CPLFree( apszSubExpr[i] );
 
     return CPLStrdup( osExpr.c_str() );
@@ -524,13 +523,12 @@ char *swq_expr_node::Unparse( swq_field_list *field_list, char chColumnQuote )
 
 CPLString swq_expr_node::UnparseOperationFromUnparsedSubExpr(char** apszSubExpr)
 {
-    int i;
     CPLString osExpr;
 
 /* -------------------------------------------------------------------- */
 /*      Put things together in a fashion depending on the operator.     */
 /* -------------------------------------------------------------------- */
-    const swq_operation *poOp = 
+    const swq_operation *poOp =
         swq_op_registrar::GetOperator( (swq_op) nOperation );
 
     if( poOp == NULL && nOperation != SWQ_CUSTOM_FUNC )
@@ -590,15 +588,15 @@ CPLString swq_expr_node::UnparseOperationFromUnparsedSubExpr(char** apszSubExpr)
         CPLAssert( nSubExprCount == 1 );
         osExpr.Printf( "NOT (%s)", apszSubExpr[0] );
         break;
-        
+
       case SWQ_ISNULL:
         CPLAssert( nSubExprCount == 1 );
         osExpr.Printf( "%s IS NULL", apszSubExpr[0] );
         break;
-        
+
       case SWQ_IN:
         osExpr.Printf( "%s IN (", apszSubExpr[0] );
-        for( i = 1; i < nSubExprCount; i++ )
+        for( int i = 1; i < nSubExprCount; i++ )
         {
             if( i > 1 )
                 osExpr += ",";
@@ -620,7 +618,7 @@ CPLString swq_expr_node::UnparseOperationFromUnparsedSubExpr(char** apszSubExpr)
 
       case SWQ_CAST:
         osExpr = "CAST(";
-        for( i = 0; i < nSubExprCount; i++ )
+        for( int i = 0; i < nSubExprCount; i++ )
         {
             if( i == 1 )
                 osExpr += " AS ";
@@ -651,7 +649,7 @@ CPLString swq_expr_node::UnparseOperationFromUnparsedSubExpr(char** apszSubExpr)
             osExpr.Printf( "%s(", poOp->pszName );
         else
             osExpr.Printf( "%s(", string_value );
-        for( i = 0; i < nSubExprCount; i++ )
+        for( int i = 0; i < nSubExprCount; i++ )
         {
             if( i > 0 )
                 osExpr += ",";
@@ -662,7 +660,7 @@ CPLString swq_expr_node::UnparseOperationFromUnparsedSubExpr(char** apszSubExpr)
         osExpr += ")";
         break;
     }
-    
+
     return osExpr;
 }
 
@@ -680,7 +678,7 @@ swq_expr_node *swq_expr_node::Clone()
     {
         poRetNode->nOperation = nOperation;
         poRetNode->nSubExprCount = nSubExprCount;
-        poRetNode->papoSubExpr = (swq_expr_node **) 
+        poRetNode->papoSubExpr = (swq_expr_node **)
                 CPLMalloc( sizeof(void*) * nSubExprCount );
         for(int i=0;i<nSubExprCount;i++)
             poRetNode->papoSubExpr[i] = papoSubExpr[i]->Clone();
@@ -737,9 +735,9 @@ swq_expr_node *swq_expr_node::Evaluate( swq_field_fetcher pfnFetcher,
 /* -------------------------------------------------------------------- */
     std::vector<swq_expr_node*> apoValues;
     std::vector<int> anValueNeedsFree;
-    int i, bError = FALSE;
+    bool bError = false;
 
-    for( i = 0; i < nSubExprCount && !bError; i++ )
+    for( int i = 0; i < nSubExprCount && !bError; i++ )
     {
         if( papoSubExpr[i]->eNodeType == SNT_CONSTANT )
         {
@@ -751,7 +749,7 @@ swq_expr_node *swq_expr_node::Evaluate( swq_field_fetcher pfnFetcher,
         {
             swq_expr_node* poSubExprVal = papoSubExpr[i]->Evaluate(pfnFetcher,pRecord);
             if( poSubExprVal == NULL )
-                bError = TRUE;
+                bError = true;
             else
             {
                 apoValues.push_back(poSubExprVal);
@@ -765,7 +763,7 @@ swq_expr_node *swq_expr_node::Evaluate( swq_field_fetcher pfnFetcher,
 /* -------------------------------------------------------------------- */
     if( !bError )
     {
-        const swq_operation *poOp = 
+        const swq_operation *poOp =
             swq_op_registrar::GetOperator( (swq_op) nOperation );
         if( poOp == NULL )
         {
@@ -786,7 +784,7 @@ swq_expr_node *swq_expr_node::Evaluate( swq_field_fetcher pfnFetcher,
 /* -------------------------------------------------------------------- */
 /*      Cleanup                                                         */
 /* -------------------------------------------------------------------- */
-    for( i = 0; i < (int) apoValues.size(); i++ )
+    for( int i = 0; i < (int) apoValues.size(); i++ )
     {
         if( anValueNeedsFree[i] )
             delete apoValues[i];
@@ -817,7 +815,7 @@ void swq_expr_node::ReplaceBetweenByGEAndLERecurse()
     swq_expr_node* poExpr0 = papoSubExpr[0];
     swq_expr_node* poExpr1 = papoSubExpr[1];
     swq_expr_node* poExpr2 = papoSubExpr[2];
-    
+
     nSubExprCount = 2;
     nOperation = SWQ_AND;
     papoSubExpr[0] = new swq_expr_node(SWQ_GE);

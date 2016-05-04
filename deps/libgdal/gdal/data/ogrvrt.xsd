@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /******************************************************************************
- * $Id: ogrvrt.xsd 28950 2015-04-18 23:24:49Z rouault $
+ * $Id: ogrvrt.xsd 33680 2016-03-08 09:59:03Z rouault $
  *
  * Project:  GDAL/OGR
  * Purpose:  XML Schema for OGR VRT files.
@@ -201,6 +201,8 @@
             <xs:enumeration value="wkbCurvePolygon"/> <!-- new in GDAL 2.0 -->
             <xs:enumeration value="wkbMultiCurve"/> <!-- new in GDAL 2.0 -->
             <xs:enumeration value="wkbMultiSurface"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCurve"/> <!-- new in GDAL 2.1 -->
+            <xs:enumeration value="wkbSurface"/> <!-- new in GDAL 2.1 -->
             <xs:enumeration value="wkbPoint25D"/>
             <xs:enumeration value="wkbLineString25D"/>
             <xs:enumeration value="wkbPolygon25D"/>
@@ -213,6 +215,40 @@
             <xs:enumeration value="wkbCurvePolygonZ"/> <!-- new in GDAL 2.0 -->
             <xs:enumeration value="wkbMultiCurveZ"/> <!-- new in GDAL 2.0 -->
             <xs:enumeration value="wkbMultiSurfaceZ"/> <!-- new in GDAL 2.0 -->
+            <xs:enumeration value="wkbCurveZ"/> <!-- new in GDAL 2.1 -->
+            <xs:enumeration value="wkbSurfaceZ"/> <!-- new in GDAL 2.1 -->
+
+            <!-- below is new in GDAL 2.1 -->
+            <xs:enumeration value="wkbPointM"/>
+            <xs:enumeration value="wkbLineStringM"/>
+            <xs:enumeration value="wkbPolygonM"/>
+            <xs:enumeration value="wkbMultiPointM"/>
+            <xs:enumeration value="wkbMultiLineStringM"/>
+            <xs:enumeration value="wkbMultiPolygonM"/>
+            <xs:enumeration value="wkbGeometryCollectionM"/>
+            <xs:enumeration value="wkbCircularStringM"/>
+            <xs:enumeration value="wkbCompoundCurveM"/>
+            <xs:enumeration value="wkbCurvePolygonM"/>
+            <xs:enumeration value="wkbMultiCurveM"/>
+            <xs:enumeration value="wkbMultiSurfaceM"/>
+            <xs:enumeration value="wkbCurveM"/>
+            <xs:enumeration value="wkbSurfaceM"/>
+
+            <xs:enumeration value="wkbPointZM"/>
+            <xs:enumeration value="wkbLineStringZM"/>
+            <xs:enumeration value="wkbPolygonZM"/>
+            <xs:enumeration value="wkbMultiPointZM"/>
+            <xs:enumeration value="wkbMultiLineStringZM"/>
+            <xs:enumeration value="wkbMultiPolygonZM"/>
+            <xs:enumeration value="wkbGeometryCollectionZM"/>
+            <xs:enumeration value="wkbCircularStringZM"/>
+            <xs:enumeration value="wkbCompoundCurveZM"/>
+            <xs:enumeration value="wkbCurvePolygonZM"/>
+            <xs:enumeration value="wkbMultiCurveZM"/>
+            <xs:enumeration value="wkbMultiSurfaceZM"/>
+            <xs:enumeration value="wkbCurveZM"/>
+            <xs:enumeration value="wkbSurfaceZM"/>
+
         </xs:restriction>
     </xs:simpleType>
 

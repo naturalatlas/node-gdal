@@ -8,6 +8,7 @@
 			"type": "static_library",
 			"sources": [
 				"../gdal/frmts/vrt/vrtdataset.cpp",
+				"../gdal/frmts/vrt/vrtpansharpened.cpp",
 				"../gdal/frmts/vrt/vrtderivedrasterband.cpp",
 				"../gdal/frmts/vrt/vrtdriver.cpp",
 				"../gdal/frmts/vrt/vrtfilters.cpp",

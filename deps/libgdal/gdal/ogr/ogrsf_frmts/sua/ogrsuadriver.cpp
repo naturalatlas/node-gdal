@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsuadriver.cpp 29253 2015-05-27 08:49:16Z rouault $
+ * $Id: ogrsuadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUADriver.
@@ -30,7 +30,7 @@
 #include "ogr_sua.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsuadriver.cpp 29253 2015-05-27 08:49:16Z rouault $");
+CPL_CVSID("$Id: ogrsuadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 extern "C" void RegisterOGRSUA();
 
@@ -106,24 +106,23 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSUA()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "SUA" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "SUA" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "SUA" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Tim Newport-Peace's Special Use Airspace Format" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_sua.html" );
+    poDriver->SetDescription( "SUA" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                               "Tim Newport-Peace's Special Use Airspace "
+                               "Format" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
+                               "drv_sua.html" );
 
-        poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
-        poDriver->pfnOpen = OGRSUADriverOpen;
+    poDriver->pfnOpen = OGRSUADriverOpen;
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }
 

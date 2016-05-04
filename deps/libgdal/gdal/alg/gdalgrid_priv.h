@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid_priv.h 29314 2015-06-05 20:21:11Z rouault $
+ * $Id: gdalgrid_priv.h 33715 2016-03-13 08:52:06Z goatbar $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Prototypes, and definitions for of GDAL scattered data gridder.
@@ -49,6 +49,14 @@ typedef struct
     const float *pafX;
     const float *pafY;
     const float *pafZ;
+    GDALTriangulation* psTriangulation;
+    int                nInitialFacetIdx;
+    /*! Weighting power divided by 2 (pre-computation). */
+    double  dfPowerDiv2PreComp;
+    /*! The radius of search circle squared (pre-computation). */
+    double  dfRadiusPower2PreComp;
+    /*! The radius of search circle to power 4 (pre-computation). */
+    double  dfRadiusPower4PreComp;
 } GDALGridExtraParameters;
 
 #ifdef HAVE_SSE_AT_COMPILE_TIME
@@ -79,8 +87,7 @@ CPLErr GDALGridInverseDistanceToAPower2NoSmoothingNoSearchAVX(
                                         double *pdfValue,
                                         void* hExtraParamsIn );
 #endif
-
-#if defined(__GNUC__) 
+#if defined(__GNUC__)
 #if defined(__x86_64)
 #define GCC_CPUID(level, a, b, c, d)            \
   __asm__ ("xchgq %%rbx, %q1\n"                 \

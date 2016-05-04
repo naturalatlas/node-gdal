@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogravcbindriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogravcbindriver.cpp 32122 2015-12-11 16:01:28Z goatbar $
  *
  * Project:  OGR
  * Purpose:  OGRAVCBinDriver implementation (Arc/Info Binary Coverages)
@@ -29,7 +29,7 @@
 
 #include "ogr_avc.h"
 
-CPL_CVSID("$Id: ogravcbindriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogravcbindriver.cpp 32122 2015-12-11 16:01:28Z goatbar $");
 
 /************************************************************************/
 /*                                Open()                                */
@@ -38,9 +38,6 @@ CPL_CVSID("$Id: ogravcbindriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
 static GDALDataset *OGRAVCBinDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    OGRAVCBinDataSource	*poDS;
-    OGRAVCE00DataSource *poDSE00;
-
     if( poOpenInfo->eAccess == GA_Update )
         return NULL;
     if( !poOpenInfo->bStatOK )
@@ -56,13 +53,12 @@ static GDALDataset *OGRAVCBinDriverOpen( GDALOpenInfo* poOpenInfo )
             char** papszSiblingFiles = poOpenInfo->GetSiblingFiles();
             if( papszSiblingFiles != NULL )
             {
-                int i;
-                int bFoundCandidateFile = FALSE;
-                for( i = 0; papszSiblingFiles[i] != NULL; i++ )
+                bool bFoundCandidateFile = false;
+                for( int i = 0; papszSiblingFiles[i] != NULL; i++ )
                 {
                     if( EQUAL(CPLGetExtension(papszSiblingFiles[i]), "ADF") )
                     {
-                        bFoundCandidateFile = TRUE;
+                        bFoundCandidateFile = true;
                         break;
                     }
                 }
@@ -72,7 +68,7 @@ static GDALDataset *OGRAVCBinDriverOpen( GDALOpenInfo* poOpenInfo )
         }
     }
 
-    poDS = new OGRAVCBinDataSource();
+    OGRAVCBinDataSource *poDS = new OGRAVCBinDataSource();
 
     if( poDS->Open( poOpenInfo->pszFilename, TRUE )
         && poDS->GetLayerCount() > 0 )
@@ -81,7 +77,7 @@ static GDALDataset *OGRAVCBinDriverOpen( GDALOpenInfo* poOpenInfo )
     }
     delete poDS;
 
-    poDSE00 = new OGRAVCE00DataSource();
+    OGRAVCE00DataSource *poDSE00 = new OGRAVCE00DataSource();
 
     if( poDSE00->Open( poOpenInfo->pszFilename, TRUE )
         && poDSE00->GetLayerCount() > 0 )
@@ -100,21 +96,17 @@ static GDALDataset *OGRAVCBinDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRAVCBin()
 
 {
-    GDALDriver  *poDriver;
+    if( GDALGetDriverByName( "AVCBin" ) != NULL )
+        return;
 
-    if( GDALGetDriverByName( "AVCBin" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    GDALDriver  *poDriver = new GDALDriver();
 
-        poDriver->SetDescription( "AVCBin" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Arc/Info Binary Coverage" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_avcbin.html" );
+    poDriver->SetDescription( "AVCBin" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "Arc/Info Binary Coverage" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_avcbin.html" );
 
-        poDriver->pfnOpen = OGRAVCBinDriverOpen;
+    poDriver->pfnOpen = OGRAVCBinDriverOpen;
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }

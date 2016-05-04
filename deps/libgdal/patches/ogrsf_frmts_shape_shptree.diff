@@ -1,10 +1,12 @@
---- ./libgdal/gdal/ogr/ogrsf_frmts/shape/shptree_new.c	2014-06-06 12:25:02.000000000 -0600
-+++ ./libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c	2014-06-06 12:24:49.000000000 -0600
-@@ -90,6 +90,7 @@
+diff --git a/deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c b/deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c
+index b6f1b85..0720a15 100644
+--- a/deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c
++++ b/deps/libgdal/gdal/ogr/ogrsf_frmts/shape/shptree.c
+@@ -35,6 +35,7 @@
+  *******************************************************************************/
  
  #include "shapefil.h"
++#include "cpl_port.h"
  
-+#include <limits.h>
  #include <math.h>
  #include <assert.h>
- #include <stdlib.h>

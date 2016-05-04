@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_gpsbabel.h 29172 2015-05-07 22:15:24Z rouault $
+ * $Id: ogr_gpsbabel.h 32577 2015-12-31 06:39:56Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/GPSBabel driver.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _OGR_GPSBABEL_H_INCLUDED
-#define _OGR_GPSBABEL_H_INCLUDED
+#ifndef OGR_GPSBABEL_H_INCLUDED
+#define OGR_GPSBABEL_H_INCLUDED
 
 #include "ogrsf_frmts.h"
 #include "cpl_string.h"
@@ -100,5 +100,4 @@ class OGRGPSBabelWriteDataSource : public OGRDataSource
     int                 Create ( const char* pszFilename, char **papszOptions );
 };
 
-#endif /* ndef _OGR_GPSBABEL_H_INCLUDED */
-
+#endif /* ndef OGR_GPSBABEL_H_INCLUDED */

@@ -11,6 +11,7 @@
 		"include_dirs": [
 			"./gdal/alg",
 			"./gdal/gcore",
+			"./gdal/apps",
 			"./gdal/port",
 			"./gdal/frmts",
 			"./gdal/frmts/gtiff",

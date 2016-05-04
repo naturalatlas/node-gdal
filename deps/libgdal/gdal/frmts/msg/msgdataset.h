@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgdataset.h 15064 2008-07-28 19:10:23Z mloskot $
+ * $Id: msgdataset.h 32190 2015-12-16 13:50:27Z goatbar $
  *
  * Project:  MSG Driver
  * Purpose:  GDALDataset driver for MSG translator for read support.
@@ -36,7 +36,7 @@
 #include <fstream>
 
 CPL_C_START
-void  GDALRegister_MSG(void);
+void GDALRegister_MSG();
 CPL_C_END
 
 /************************************************************************/
@@ -72,7 +72,7 @@ class MSGRasterBand : public GDALRasterBand
 class MSGDataset : public GDALDataset
 {
   friend class MSGRasterBand;
-  
+
   public:
     MSGDataset();
     ~MSGDataset();

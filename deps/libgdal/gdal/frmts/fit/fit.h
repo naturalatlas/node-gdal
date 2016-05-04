@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: fit.h 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: fit.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  FIT Driver
  * Purpose:  Implement FIT Support - not using the SGI iflFIT library.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef __FIT_H__
-#define __FIT_H__
+#ifndef FIT_H_
+#define FIT_H_
 
 #include "gdal.h"
 
@@ -112,4 +112,4 @@ int fitGetColorModel(GDALColorInterp colorInterp, int nBands);
 }
 #endif
 
-#endif // __FIT_H__
+#endif // FIT_H_

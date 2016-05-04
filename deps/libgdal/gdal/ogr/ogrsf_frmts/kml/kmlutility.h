@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: kmlutility.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: kmlutility.h 33339 2016-02-03 11:48:06Z rouault $
  *
  * Project:  KML Driver
  * Purpose:  KML driver utilities
@@ -34,9 +34,13 @@
 #include <vector>
 #include "ogr_geometry.h"
 
+namespace OGRKML
+{
+
 enum Nodetype
 {
-    Unknown, Empty, Mixed, Point, LineString, Polygon, Rest, MultiGeometry, MultiPoint, MultiLineString, MultiPolygon
+    Unknown, Empty, Mixed, Point, LineString, Polygon, Rest, MultiGeometry,
+    MultiPoint, MultiLineString, MultiPolygon
 };
 
 struct Attribute
@@ -67,13 +71,16 @@ struct Feature
     Feature()
         : eType(Unknown), poGeom(NULL)
     {}
-    
+
     ~Feature()
     {
         delete poGeom;
     }
 };
 
+}
+
+using namespace OGRKML;
 
 #endif /* OGR_KMLUTILITY_H_INCLUDED */
 

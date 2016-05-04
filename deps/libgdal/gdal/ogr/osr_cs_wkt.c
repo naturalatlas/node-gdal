@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: osr_cs_wkt.c 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: osr_cs_wkt.c 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  CS WKT parser
@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define EQUALN_CST(x,y)  (strncmp(x, y, strlen(y)) == 0)
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
@@ -46,9 +45,9 @@ void osr_cs_wkt_error( osr_cs_wkt_parse_context *context, const char *msg )
 {
     int i, n;
     char* szPtr;
-    sprintf(context->szErrorMsg,
-            "Parsing error : %s. Error occured around:\n", msg );
-    n = context->pszLastSuccess - context->pszInput;
+    snprintf( context->szErrorMsg, sizeof(context->szErrorMsg),
+             "Parsing error : %s. Error occurred around:\n", msg );
+    n = (int)(context->pszLastSuccess - context->pszInput);
 
     szPtr = context->szErrorMsg + strlen(context->szErrorMsg);
     for( i = MAX(0,n-40); i < n + 40 && context->pszInput[i]; i ++ )
@@ -119,7 +118,7 @@ int osr_cs_wkt_lex(CPL_UNUSED YYSTYPE* pNode,
     if( *pszInput == '\0' )
     {
         context->pszNext = pszInput;
-        return EOF; 
+        return EOF;
     }
 
 /* -------------------------------------------------------------------- */
@@ -127,7 +126,7 @@ int osr_cs_wkt_lex(CPL_UNUSED YYSTYPE* pNode,
 /* -------------------------------------------------------------------- */
     for(i = 0; i < sizeof(tokens) / sizeof(tokens[0]); i++)
     {
-        if( EQUALN_CST(pszInput, tokens[i].pszToken) )
+        if( STARTS_WITH_CI(pszInput, tokens[i].pszToken) )
         {
             context->pszNext = pszInput + strlen(tokens[i].pszToken);
             return tokens[i].nTokenVal;
@@ -145,7 +144,7 @@ int osr_cs_wkt_lex(CPL_UNUSED YYSTYPE* pNode,
         if(  *pszInput == '\0' )
         {
             context->pszNext = pszInput;
-            return EOF; 
+            return EOF;
         }
         context->pszNext = pszInput + 1;
         return T_STRING;

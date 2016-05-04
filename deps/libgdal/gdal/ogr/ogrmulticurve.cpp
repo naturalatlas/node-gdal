@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmulticurve.cpp 27960 2014-11-14 18:31:32Z rouault $
+ * $Id: ogrmulticurve.cpp 33631 2016-03-04 06:28:09Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRMultiCurve class.
@@ -31,7 +31,7 @@
 #include "ogr_p.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: ogrmulticurve.cpp 27960 2014-11-14 18:31:32Z rouault $");
+CPL_CVSID("$Id: ogrmulticurve.cpp 33631 2016-03-04 06:28:09Z goatbar $");
 
 /************************************************************************/
 /*                            OGRMultiCurve()                           */
@@ -46,11 +46,51 @@ OGRMultiCurve::OGRMultiCurve()
 }
 
 /************************************************************************/
+/*                OGRMultiCurve( const OGRMultiCurve& )                 */
+/************************************************************************/
+
+/**
+ * \brief Copy constructor.
+ *
+ * Note: before GDAL 2.1, only the default implementation of the constructor
+ * existed, which could be unsafe to use.
+ *
+ * @since GDAL 2.1
+ */
+
+OGRMultiCurve::OGRMultiCurve( const OGRMultiCurve& other ) :
+    OGRGeometryCollection(other)
+{
+}
+
+/************************************************************************/
 /*                           ~OGRMultiCurve()                           */
 /************************************************************************/
 
 OGRMultiCurve::~OGRMultiCurve()
 {
+}
+
+/************************************************************************/
+/*                  operator=( const OGRMultiCurve&)                    */
+/************************************************************************/
+
+/**
+ * \brief Assignment operator.
+ *
+ * Note: before GDAL 2.1, only the default implementation of the operator
+ * existed, which could be unsafe to use.
+ *
+ * @since GDAL 2.1
+ */
+
+OGRMultiCurve& OGRMultiCurve::operator=( const OGRMultiCurve& other )
+{
+    if( this != &other)
+    {
+        OGRGeometryCollection::operator=( other );
+    }
+    return *this;
 }
 
 /************************************************************************/
@@ -60,7 +100,11 @@ OGRMultiCurve::~OGRMultiCurve()
 OGRwkbGeometryType OGRMultiCurve::getGeometryType() const
 
 {
-    if( getCoordinateDimension() == 3 )
+    if( (flags & OGR_G_3D) && (flags & OGR_G_MEASURED) )
+        return wkbMultiCurveZM;
+    else if( flags & OGR_G_MEASURED  )
+        return wkbMultiCurveM;
+    else if( flags & OGR_G_3D )
         return wkbMultiCurveZ;
     else
         return wkbMultiCurve;
@@ -155,11 +199,11 @@ OGRBoolean OGRMultiCurve::hasCurveGeometry(int bLookForNonLinear) const
  * instances of OGRLineString. This can be verified if hasCurveGeometry(TRUE)
  * returns FALSE. It is not intended to approximate circular curves. For that
  * use getLinearGeometry().
- * 
+ *
  * The passed in geometry is consumed and a new one returned (or NULL in case
- * of failure). 
- * 
- * @param poMS the input geometry - ownership is passed to the method.
+ * of failure).
+ *
+ * @param poMC the input geometry - ownership is passed to the method.
  * @return new geometry.
  */
 

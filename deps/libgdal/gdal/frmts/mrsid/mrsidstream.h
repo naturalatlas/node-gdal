@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: mrsidstream.h 16078 2009-01-14 05:43:02Z warmerdam $
+ * $Id: mrsidstream.h 32179 2015-12-14 16:22:34Z goatbar $
  *
  * Project:  Multi-resolution Seamless Image Database (MrSID)
  * Purpose:  Input/output stream wrapper for usage with LizardTech's
@@ -47,20 +47,20 @@ class LTIVSIStream : public LTIOStreamInf
 
     bool isEOF();
     bool isOpen();
-    
+
     LT_STATUS open();
     LT_STATUS close();
-    
+
     lt_uint32 read( lt_uint8 *, lt_uint32 );
     lt_uint32 write( const lt_uint8 *, lt_uint32 );
-    
+
     LT_STATUS seek( lt_int64, LTIOSeekDir );
     lt_int64 tell();
-    
+
     LTIOStreamInf* duplicate();
-    
+
     LT_STATUS getLastError() const;
-    
+
     const char* getID() const;
 
   private:

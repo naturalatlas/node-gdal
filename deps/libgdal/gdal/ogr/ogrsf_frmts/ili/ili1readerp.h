@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili1readerp.h 29093 2015-05-01 18:50:08Z pka $
+ * $Id: ili1readerp.h 31777 2015-11-26 14:14:41Z rouault $
  *
  * Project:  Interlis 1 Reader
  * Purpose:  Private Declarations for Reader code.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef _CPL_ILI1READERP_H_INCLUDED
-#define _CPL_ILI1READERP_H_INCLUDED
+#ifndef CPL_ILI1READERP_H_INCLUDED
+#define CPL_ILI1READERP_H_INCLUDED
 
 #include "ili1reader.h"
 #include "ogr_ili1.h"

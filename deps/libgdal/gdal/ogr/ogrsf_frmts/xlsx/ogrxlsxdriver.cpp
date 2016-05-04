@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrxlsxdriver.cpp 28375 2015-01-30 12:06:11Z rouault $
+ * $Id: ogrxlsxdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  XLSX Translator
  * Purpose:  Implements OGRXLSXDriver.
@@ -30,9 +30,11 @@
 #include "ogr_xlsx.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrxlsxdriver.cpp 28375 2015-01-30 12:06:11Z rouault $");
+CPL_CVSID("$Id: ogrxlsxdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 extern "C" void RegisterOGRXLSX();
+
+using namespace OGRXLSX;
 
 // g++ -DHAVE_EXPAT -g -Wall -fPIC ogr/ogrsf_frmts/xlsx/*.cpp -shared -o ogr_XLSX.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/mem -Iogr/ogrsf_frmts/xlsx -L. -lgdal
 
@@ -193,13 +195,16 @@ void RegisterOGRXLSX()
 
 {
     OGRSFDriver* poDriver = new OGRXLSXDriver;
+
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                "MS Office Open XML spreadsheet" );
+                               "MS Office Open XML spreadsheet" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "xlsx" );
-    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                "drv_xlsx.html" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_xlsx.html" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
-    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime Time" );
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,
+                               "Integer Integer64 Real String Date DateTime "
+                               "Time" );
+
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }
 

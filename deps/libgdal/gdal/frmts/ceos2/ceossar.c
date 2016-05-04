@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceossar.c 27745 2014-09-27 16:38:57Z goatbar $
+ * $Id: ceossar.c 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  Functions related to CeosSARVolume_t.
@@ -29,7 +29,7 @@
 
 #include "ceos.h"
 
-CPL_CVSID("$Id: ceossar.c 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: ceossar.c 33720 2016-03-15 00:39:53Z goatbar $");
 
 extern Link_t *RecipeFunctions;
 
@@ -69,17 +69,17 @@ void CalcCeosSARImageFilePosition(CeosSARVolume_t *volume, int channel, int line
 
 	    switch( ImageDesc->ChannelInterleaving )
 	    {
-	    case __CEOS_IL_PIXEL:
+	    case CEOS_IL_PIXEL:
 		TotalRecords = (line - 1) * ImageDesc->RecordsPerLine;
 		TotalBytes = (TotalRecords) * ( ImageDesc->BytesPerRecord );
 		break;
-	    case __CEOS_IL_LINE:
-		TotalRecords = (ImageDesc->NumChannels * (line - 1) + 
+	    case CEOS_IL_LINE:
+		TotalRecords = (ImageDesc->NumChannels * (line - 1) +
 				(channel - 1)) * ImageDesc->RecordsPerLine;
 		TotalBytes = (TotalRecords) * ( ImageDesc->BytesPerRecord ) ;
 		break;
-	    case __CEOS_IL_BAND:
-		TotalRecords = (((channel - 1) * ImageDesc->Lines) * 
+	    case CEOS_IL_BAND:
+		TotalRecords = (((channel - 1) * ImageDesc->Lines) *
 				ImageDesc->RecordsPerLine) +
 				(line - 1) * ImageDesc->RecordsPerLine;
 
@@ -119,7 +119,7 @@ void GetCeosSAREmbeddedInfo(CPL_UNUSED CeosSARVolume_t *volume,
 void DeleteCeosSARVolume(CeosSARVolume_t *volume)
 {
     Link_t *Links;
-    
+
     if( volume )
     {
 	if( volume->RecordList )

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrcouchdbrowslayer.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrcouchdbrowslayer.cpp 32370 2015-12-20 19:40:13Z rouault $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBRowsLayer class.
@@ -29,15 +29,15 @@
 
 #include "ogr_couchdb.h"
 
-CPL_CVSID("$Id: ogrcouchdbrowslayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrcouchdbrowslayer.cpp 32370 2015-12-20 19:40:13Z rouault $");
 
 /************************************************************************/
 /*                         OGRCouchDBRowsLayer()                        */
 /************************************************************************/
 
-OGRCouchDBRowsLayer::OGRCouchDBRowsLayer(OGRCouchDBDataSource* poDS) :
-                                                    OGRCouchDBLayer(poDS)
-
+OGRCouchDBRowsLayer::OGRCouchDBRowsLayer(OGRCouchDBDataSource* poDSIn) :
+    OGRCouchDBLayer(poDSIn),
+    bAllInOne(FALSE)
 {
     poFeatureDefn = new OGRFeatureDefn( "rows" );
     poFeatureDefn->Reference();
@@ -49,18 +49,13 @@ OGRCouchDBRowsLayer::OGRCouchDBRowsLayer(OGRCouchDBDataSource* poDS) :
     poFeatureDefn->AddFieldDefn(&oFieldRev);
 
     SetDescription( poFeatureDefn->GetName() );
-
-    bAllInOne = FALSE;
 }
 
 /************************************************************************/
 /*                        ~OGRCouchDBRowsLayer()                        */
 /************************************************************************/
 
-OGRCouchDBRowsLayer::~OGRCouchDBRowsLayer()
-
-{
-}
+OGRCouchDBRowsLayer::~OGRCouchDBRowsLayer() {}
 
 /************************************************************************/
 /*                            ResetReading()                            */
@@ -111,7 +106,7 @@ int OGRCouchDBRowsLayer::FetchNextRows()
     {
         if (!bHasEsperluet)
         {
-            bHasEsperluet = TRUE;
+            /*bHasEsperluet = TRUE;*/
             osURI += "?";
         }
 

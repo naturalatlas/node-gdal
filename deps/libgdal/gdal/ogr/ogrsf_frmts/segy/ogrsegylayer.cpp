@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsegylayer.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrsegylayer.cpp 32011 2015-12-06 10:19:18Z rouault $
  *
  * Project:  SEG-Y Translator
  * Purpose:  Implements OGRSEGYLayer class.
@@ -33,7 +33,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogrsegylayer.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrsegylayer.cpp 32011 2015-12-06 10:19:18Z rouault $");
 
 #define DT_IBM_4BYTES_FP         1
 #define DT_4BYTES_INT            2
@@ -226,11 +226,11 @@ static float SEGYReadMSBFloat32(const GByte* pabyVal)
 
 
 OGRSEGYLayer::OGRSEGYLayer( const char* pszFilename,
-                            VSILFILE* fp,
+                            VSILFILE* fpIn,
                             SEGYBinaryFileHeader* psBFH )
 
 {
-    this->fp = fp;
+    this->fp = fpIn;
     nNextFID = 0;
     bEOF = FALSE;
     memcpy(&sBFH, psBFH, sizeof(sBFH));
@@ -309,7 +309,7 @@ OGRFeature *OGRSEGYLayer::GetNextFeature()
 {
     OGRFeature  *poFeature;
 
-    while(TRUE)
+    while( true )
     {
         poFeature = GetNextRawFeature();
         if (poFeature == NULL)
@@ -573,8 +573,8 @@ OGRFeature *OGRSEGYLayer::GetNextRawFeature()
     }
 #endif
 
-    GByte* pabyData = (GByte*) VSIMalloc( nDataSize * nSamples );
-    double* padfValues = (double*) VSICalloc( nSamples, sizeof(double) );
+    GByte* pabyData = (GByte*) VSI_MALLOC_VERBOSE( nDataSize * nSamples );
+    double* padfValues = (double*) VSI_CALLOC_VERBOSE( nSamples, sizeof(double) );
     if (pabyData == NULL || padfValues == NULL)
     {
         VSIFSeekL( fp, nDataSize * nSamples, SEEK_CUR );
@@ -857,7 +857,7 @@ OGRFeature *OGRSEGYHeaderLayer::GetNextFeature()
 {
     OGRFeature  *poFeature;
 
-    while(TRUE)
+    while( true )
     {
         poFeature = GetNextRawFeature();
         if (poFeature == NULL)

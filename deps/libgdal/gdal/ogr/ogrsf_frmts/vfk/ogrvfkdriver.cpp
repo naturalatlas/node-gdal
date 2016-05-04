@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrvfkdriver.cpp 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: ogrvfkdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVFKDriver class.
@@ -33,13 +33,13 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrvfkdriver.cpp 27384 2014-05-24 12:28:12Z rouault $");
+CPL_CVSID("$Id: ogrvfkdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 
 static int OGRVFKDriverIdentify(GDALOpenInfo* poOpenInfo)
 {
     return ( poOpenInfo->fpL != NULL &&
              poOpenInfo->nHeaderBytes >= 2 &&
-             strncmp((const char*)poOpenInfo->pabyHeader, "&H", 2) == 0 );
+             STARTS_WITH((const char*)poOpenInfo->pabyHeader, "&H") );
 }
 
 /*
@@ -70,25 +70,23 @@ static GDALDataset *OGRVFKDriverOpen(GDALOpenInfo* poOpenInfo)
 */
 void RegisterOGRVFK()
 {
-    if (!GDAL_CHECK_VERSION("OGR/VFK driver"))
+    if( !GDAL_CHECK_VERSION("OGR/VFK driver") )
         return;
-    GDALDriver  *poDriver;
 
-    if( GDALGetDriverByName( "VFK" ) == NULL )
-    {
-        poDriver = new GDALDriver();
+    if( GDALGetDriverByName( "VFK" ) != NULL )
+        return;
 
-        poDriver->SetDescription( "VFK" );
-        poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
-        poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                                   "Czech Cadastral Exchange Data Format" );
-        poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "vfk" );
-        poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
-                                   "drv_vfk.html" );
+    GDALDriver *poDriver = new GDALDriver();
 
-        poDriver->pfnOpen = OGRVFKDriverOpen;
-        poDriver->pfnIdentify = OGRVFKDriverIdentify;
+    poDriver->SetDescription( "VFK" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
+                               "Czech Cadastral Exchange Data Format" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "vfk" );
+    poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_vfk.html" );
 
-        GetGDALDriverManager()->RegisterDriver( poDriver );
-    }
+    poDriver->pfnOpen = OGRVFKDriverOpen;
+    poDriver->pfnIdentify = OGRVFKDriverIdentify;
+
+    GetGDALDriverManager()->RegisterDriver( poDriver );
 }

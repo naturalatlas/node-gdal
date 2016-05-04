@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 32121 2015-12-11 10:25:38Z rouault $
+ * $Id: ogr_geojson.h 33138 2016-01-24 11:18:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -32,6 +32,7 @@
 
 #include "cpl_port.h"
 #include <ogrsf_frmts.h>
+#include "../mem/ogr_mem.h"
 
 #include <cstdio>
 #include <vector> // used by OGRGeoJSONLayer
@@ -45,14 +46,15 @@ class OGRGeoJSONDataSource;
 /*                           OGRGeoJSONLayer                            */
 /************************************************************************/
 
-class OGRGeoJSONLayer : public OGRLayer
+class OGRGeoJSONLayer : public OGRMemLayer
 {
+    friend class OGRGeoJSONDataSource;
 public:
 
     static const char* const DefaultName;
     static const char* const DefaultFIDColumn;
     static const OGRwkbGeometryType DefaultGeometryType;
- 
+
     OGRGeoJSONLayer( const char* pszName,
                      OGRSpatialReference* poSRS,
                      OGRwkbGeometryType eGType,
@@ -62,31 +64,22 @@ public:
     //
     // OGRLayer Interface
     //
-    OGRFeatureDefn* GetLayerDefn();
-    
-    GIntBig GetFeatureCount( int bForce = TRUE );
-    void ResetReading();
-    OGRFeature* GetNextFeature();
-    int TestCapability( const char* pszCap );
-    const char* GetFIDColumn();
-    void SetFIDColumn( const char* pszFIDColumn );
-    
+    virtual const char* GetFIDColumn();
+    virtual int         TestCapability( const char * pszCap );
+
+    virtual OGRErr      SyncToDisk();
     //
     // OGRGeoJSONLayer Interface
     //
+    void SetFIDColumn( const char* pszFIDColumn );
     void AddFeature( OGRFeature* poFeature );
     void DetectGeometryType();
 
 private:
 
-    typedef std::vector<OGRFeature*> FeaturesSeq;
-    FeaturesSeq seqFeatures_;
-    FeaturesSeq::iterator iterCurrent_;
-
-
-    // CPL_UNUSED OGRGeoJSONDataSource* poDS_;
-    OGRFeatureDefn* poFeatureDefn_;
+    OGRGeoJSONDataSource* poDS_;
     CPLString sFIDColumn_;
+    bool bUpdated_;
 };
 
 /************************************************************************/
@@ -97,9 +90,10 @@ class OGRGeoJSONWriteLayer : public OGRLayer
 {
 public:
     OGRGeoJSONWriteLayer( const char* pszName,
-                     OGRwkbGeometryType eGType,
-                     char** papszOptions,
-                     OGRGeoJSONDataSource* poDS );
+                          OGRwkbGeometryType eGType,
+                          char** papszOptions,
+                          bool bWriteFC_BBOXIn,
+                          OGRGeoJSONDataSource* poDS );
     ~OGRGeoJSONWriteLayer();
 
     //
@@ -120,11 +114,13 @@ private:
     OGRFeatureDefn* poFeatureDefn_;
     int nOutCounter_;
 
-    int bWriteBBOX;
-    int bBBOX3D;
+    bool bWriteBBOX;
+    bool bBBOX3D;
+    bool bWriteFC_BBOX;
     OGREnvelope3D sEnvelopeLayer;
 
-    int nCoordPrecision;
+    int nCoordPrecision_;
+    int nSignificantFigures_;
 };
 
 /************************************************************************/
@@ -151,7 +147,7 @@ public:
                            OGRwkbGeometryType eGType = wkbUnknown,
                            char** papszOptions = NULL );
     int TestCapability( const char* pszCap );
-    
+
     void AddLayer( OGRGeoJSONLayer* poLayer );
 
     //
@@ -165,13 +161,13 @@ public:
         eGeometryPreserve,
         eGeometryAsCollection,
     };
-    
+
     void SetGeometryTranslation( GeometryTranslation type );
 
     enum AttributesTranslation
     {
-        eAtributesPreserve,
-        eAtributesSkip
+        eAttributesPreserve,
+        eAttributesSkip
     };
 
     void SetAttributesTranslation( AttributesTranslation type );
@@ -179,31 +175,36 @@ public:
     int  GetFpOutputIsSeekable() const { return bFpOutputIsSeekable_; }
     int  GetBBOXInsertLocation() const { return nBBOXInsertLocation_; }
     int  HasOtherPages() const { return bOtherPages_; }
+    bool IsUpdatable() const { return bUpdatable_; }
+
+    virtual void        FlushCache();
 
 private:
-
     //
     // Private data members
     //
     char* pszName_;
     char* pszGeoData_;
     vsi_l_offset nGeoDataLen_;
-    OGRLayer** papoLayers_;
+    OGRGeoJSONLayer** papoLayers_;
+    OGRGeoJSONWriteLayer** papoLayersWriter_;
     int nLayers_;
     VSILFILE* fpOut_;
-    
+
     //
     // Translation/Creation control flags
-    // 
+    //
     GeometryTranslation flTransGeom_;
     AttributesTranslation flTransAttrs_;
-    int bOtherPages_; /* ERSI Feature Service specific */
+    bool bOtherPages_;  // ESRI Feature Service specific.
 
-    int bFpOutputIsSeekable_;
+    bool bFpOutputIsSeekable_;
     int nBBOXInsertLocation_;
 
+    bool bUpdatable_;
+
     //
-    // Priavte utility functions
+    // Private utility functions
     //
     void Clear();
     int ReadFromFile( GDALOpenInfo* poOpenInfo );
