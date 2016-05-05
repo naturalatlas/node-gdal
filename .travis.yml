@@ -32,7 +32,7 @@ env:
 
 matrix:
   allow_failures:
-    - env: NODE_NVM_VERSION="5.1" TARGET=TRUNK
+    - env: NODE_NVM_VERSION="5" TARGET=TRUNK
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
