@@ -39,6 +39,8 @@ before_install:
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - PUBLISH_BINARY=false
   - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then PUBLISH_BINARY=true; fi;
+  - REPUBLISH_BINARY=false
+  - if test "${COMMIT_MESSAGE#*'[republish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then REPUBLISH_BINARY=true; fi;
   - git clone https://github.com/creationix/nvm.git ../.nvm && source ../.nvm/nvm.sh
   - nvm install $NODE_NVM_VERSION
   - nvm use $NODE_NVM_VERSION
@@ -61,4 +63,5 @@ install:
 script:
   - ./node_modules/.bin/node-pre-gyp package testpackage
   - npm test
-  - if [[ "${TARGET}" == "STATIC" && "${PUBLISH_BINARY}" == "true" ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install; npm test; fi
+  - if [[ "${TARGET}" == "STATIC" && "${PUBLISH_BINARY}" == "true" ]]; then ./node_modules/.bin/node-pre-gyp publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install --fallback-to-build=false; npm test; fi
+  - if [[ "${TARGET}" == "STATIC" && "${REPUBLISH_BINARY}" == "true" ]]; then ./node_modules/.bin/node-pre-gyp unpublish publish; rm -rf {build,lib/binding}; ./node_modules/.bin/node-pre-gyp install --fallback-to-build=false; npm test; fi
