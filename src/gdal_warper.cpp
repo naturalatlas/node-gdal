@@ -353,11 +353,27 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	void *hTransformArg;
 	void *hGenTransformArg = GDALCreateGenImgProjTransformer(ds->getDataset(), s_srs_wkt, NULL, t_srs_wkt, TRUE, 1000.0, 0 );
+	
+	if(!hGenTransformArg) {
+		CPLFree(s_srs_wkt);
+		CPLFree(t_srs_wkt);
+		Nan::ThrowError(CPLGetLastErrorMsg());
+		return;
+	}
+
 	GDALTransformerFunc pfnTransformer;
 
 	if(maxError > 0.0){
 		hTransformArg = GDALCreateApproxTransformer( GDALGenImgProjTransform, hGenTransformArg, maxError );
 		pfnTransformer = GDALApproxTransform;
+
+		if(!hTransformArg) {
+			CPLFree(s_srs_wkt);
+			CPLFree(t_srs_wkt);
+			GDALDestroyGenImgProjTransformer(hGenTransformArg);
+			Nan::ThrowError(CPLGetLastErrorMsg());
+			return;
+		}
 	} else {
 		hTransformArg = hGenTransformArg;
 		pfnTransformer = GDALGenImgProjTransform;
