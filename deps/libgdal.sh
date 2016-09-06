@@ -5,7 +5,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgdal"
 
-GDAL_VERSION=2.1.0
+GDAL_VERSION=2.1.1
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
 dir_gyp_templates=./gyp-templates
@@ -15,10 +15,10 @@ dir_gyp_templates=./gyp-templates
 #
 
 rm -rf $dir_gdal
-if [[ ! -f gdal.tar.gz ]]; then
-	curl -L http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz -o gdal.tar.gz
+if [[ ! -f gdal-${GDAL_VERSION}.tar.gz ]]; then
+	curl -L http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz -o gdal-${GDAL_VERSION}.tar.gz
 fi
-tar -xzf gdal.tar.gz
+tar -xzf gdal-${GDAL_VERSION}.tar.gz
 mv gdal-${GDAL_VERSION} $dir_gdal
 
 rm -rf $dir_gdal/wince
@@ -95,6 +95,7 @@ patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.
 patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
 patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
 patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
+
 
 #
 # create format gyps
@@ -180,6 +181,9 @@ function generate_formats() {
 
 		if [[ $directory == *ogrsf* ]]; then
 			frmt_upper=`echo $fmt | tr '[:lower:]' '[:upper:]'`
+			if [[ ${frmt_upper} == "MITAB" ]]; then
+				format_list_defs="$format_list_defs"$'\n'"TAB_ENABLED=1"
+			fi
 			format_list_defs="$format_list_defs"$'\n'"${frmt_upper}_ENABLED=1"
 		else
 			format_list_defs="$format_list_defs"$'\n'"FRMT_$fmt=1"
