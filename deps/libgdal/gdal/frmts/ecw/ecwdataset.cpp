@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ecwdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: ecwdataset.cpp 34287 2016-05-24 15:49:52Z mloskot $
  *
  * Project:  GDAL
  * Purpose:  ECW (ERDAS Wavelet Compression Format) Driver
@@ -37,7 +37,7 @@
 
 #include "../mem/memdataset.h"
 
-CPL_CVSID("$Id: ecwdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: ecwdataset.cpp 34287 2016-05-24 15:49:52Z mloskot $");
 
 #undef NOISY_DEBUG
 
@@ -3013,7 +3013,18 @@ void ECWDataset::ECW2WKTProjection()
 
         adfGeoTransform[3] = psFileInfo->fOriginY;
         adfGeoTransform[4] = 0.0;
-        adfGeoTransform[5] = -fabs(psFileInfo->fCellIncrementY);
+
+        /* By default, set Y-resolution negative assuming images always */
+        /* have "Upward" orientation (Y coordinates increase "Upward"). */
+        /* Setting ECW_ALWAYS_UPWARD=FALSE option relexes that policy   */
+        /* and makes the driver rely on the actual Y-resolution         */
+        /* value (sign) of an image. This allows to correctly process   */
+        /* rare images with "Downward" orientation, where Y coordinates */
+        /* increase "Downward" and Y-resolution is positive.            */
+        if( CPLTestBool( CPLGetConfigOption("ECW_ALWAYS_UPWARD","TRUE") ) )
+            adfGeoTransform[5] = -fabs(psFileInfo->fCellIncrementY);
+        else
+            adfGeoTransform[5] = psFileInfo->fCellIncrementY;
     }
 
 /* -------------------------------------------------------------------- */

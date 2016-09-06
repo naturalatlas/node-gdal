@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr2ogr_bin.cpp 33615 2016-03-02 20:19:22Z goatbar $
+ * $Id: ogr2ogr_bin.cpp 34578 2016-07-07 10:26:20Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Simple client for translating between formats.
@@ -33,7 +33,7 @@
 #include "gdal_utils_priv.h"
 #include "commonutils.h"
 
-CPL_CVSID("$Id: ogr2ogr_bin.cpp 33615 2016-03-02 20:19:22Z goatbar $");
+CPL_CVSID("$Id: ogr2ogr_bin.cpp 34578 2016-07-07 10:26:20Z rouault $");
 
 static void Usage(int bShort = TRUE);
 static void Usage(const char* pszAdditionalMsg, int bShort = TRUE);
@@ -151,6 +151,7 @@ int main( int nArgc, char ** papszArgv )
         {
             printf("%s was compiled against GDAL %s and is running against GDAL %s\n",
                    papszArgv[0], GDAL_RELEASE_NAME, GDALVersionInfo("RELEASE_NAME"));
+            nRetCode = 0;
             goto exit;
         }
         else if( EQUAL(papszArgv[iArg],"--help") )
@@ -190,7 +191,8 @@ int main( int nArgc, char ** papszArgv )
     if( strcmp(psOptionsForBinary->pszDestDataSource, "/vsistdout/") == 0 )
         psOptionsForBinary->bQuiet = TRUE;
 
-    if (!psOptionsForBinary->bQuiet && psOptionsForBinary->bFormatExplicitlySet)
+    if (!psOptionsForBinary->bQuiet && !psOptionsForBinary->bFormatExplicitlySet &&
+        psOptionsForBinary->eAccessMode == ACCESS_CREATION)
     {
         CheckDestDataSourceNameConsistency(psOptionsForBinary->pszDestDataSource,
                                            psOptionsForBinary->pszFormat);

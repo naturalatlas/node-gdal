@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialtablelayer.cpp 33891 2016-04-04 11:27:35Z tamas $
+ * $Id: ogrmssqlspatialtablelayer.cpp 34289 2016-05-24 19:43:40Z tamas $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Implements OGRMSSQLSpatialTableLayer class, access to an existing table.
@@ -34,7 +34,7 @@
 #include <sqlncli.h>
 #endif
 
-CPL_CVSID("$Id: ogrmssqlspatialtablelayer.cpp 33891 2016-04-04 11:27:35Z tamas $");
+CPL_CVSID("$Id: ogrmssqlspatialtablelayer.cpp 34289 2016-05-24 19:43:40Z tamas $");
 
 /************************************************************************/
 /*                         OGRMSSQLAppendEscaped( )                     */
@@ -1385,7 +1385,7 @@ OGRErr OGRMSSQLSpatialTableLayer::CreateFeatureBCP( OGRFeature *poFeature )
             return OGRERR_FAILURE;
 
         /* Initialize the bulk copy */
-        if (Failed2( bcp_init(hDBCBCP, pszTableName, NULL, NULL, DB_IN) ))
+        if (Failed2( bcp_init(hDBCBCP, CPLSPrintf("[%s].[%s]", pszSchemaName, pszTableName), NULL, NULL, DB_IN) ))
         {
             CloseBCP();
             return OGRERR_FAILURE;

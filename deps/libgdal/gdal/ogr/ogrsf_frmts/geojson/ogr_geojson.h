@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 33138 2016-01-24 11:18:11Z rouault $
+ * $Id: ogr_geojson.h 34331 2016-06-09 20:03:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -52,7 +52,6 @@ class OGRGeoJSONLayer : public OGRMemLayer
 public:
 
     static const char* const DefaultName;
-    static const char* const DefaultFIDColumn;
     static const OGRwkbGeometryType DefaultGeometryType;
 
     OGRGeoJSONLayer( const char* pszName,
@@ -80,6 +79,7 @@ private:
     OGRGeoJSONDataSource* poDS_;
     CPLString sFIDColumn_;
     bool bUpdated_;
+    bool bOriginalIdModified_;
 };
 
 /************************************************************************/

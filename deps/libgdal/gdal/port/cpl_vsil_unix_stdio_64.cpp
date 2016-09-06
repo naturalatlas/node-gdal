@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_vsil_unix_stdio_64.cpp 33758 2016-03-21 09:06:22Z rouault $
+ * $Id: cpl_vsil_unix_stdio_64.cpp 34353 2016-06-16 08:23:41Z rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Implement VSI large file api for Unix platforms with fseek64()
@@ -66,7 +66,7 @@
 #include <errno.h>
 #include <new>
 
-CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 33758 2016-03-21 09:06:22Z rouault $");
+CPL_CVSID("$Id: cpl_vsil_unix_stdio_64.cpp 34353 2016-06-16 08:23:41Z rouault $");
 
 #if defined(UNIX_STDIO_64)
 
@@ -526,7 +526,7 @@ VSIUnixStdioFilesystemHandler::Open( const char *pszFilename,
 
     if( fp == NULL )
     {
-        if(bSetError) { VSIError(VSIE_FileError, "%s", strerror(nError)); }
+        if(bSetError) { VSIError(VSIE_FileError, "%s: %s", pszFilename, strerror(nError)); }
         errno = nError;
         return NULL;
     }

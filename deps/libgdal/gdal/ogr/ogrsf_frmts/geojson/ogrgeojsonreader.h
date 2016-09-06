@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.h 32461 2015-12-26 03:46:04Z goatbar $
+ * $Id: ogrgeojsonreader.h 34331 2016-06-09 20:03:05Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines GeoJSON reader within OGR OGRGeoJSON Driver.
@@ -34,6 +34,7 @@
 #include "cpl_string.h"
 #include "ogrsf_frmts.h"
 #include <json.h> // JSON-C
+#include <set>
 
 /************************************************************************/
 /*                         FORWARD DECLARATIONS                         */
@@ -117,6 +118,7 @@ private:
     char chNestedAttributeSeparator_;
     bool bStoreNativeData_;
     bool bArrayAsString_;
+    std::set<int> aoSetUndeterminedTypeFields_;
 
     // bFlatten... is a tri-state boolean with -1 being unset.
     int bFlattenGeocouchSpatiallistFormat;
@@ -125,6 +127,7 @@ private:
     bool bFoundRev;
     bool bFoundTypeFeature;
     bool bIsGeocouchSpatiallistFormat;
+    bool bFoundFeatureId;
 
     //
     // Copy operations not supported.
@@ -157,7 +160,8 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
                                       json_object* poVal,
                                       bool bFlattenNestedAttributes,
                                       char chNestedAttributeSeparator,
-                                      bool bArrayAsString = false);
+                                      bool bArrayAsString,
+                                      std::set<int>& aoSetUndeterminedTypeFields);
 
 /************************************************************************/
 /*                 GeoJSON Parsing Utilities                            */

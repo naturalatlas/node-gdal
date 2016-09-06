@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrlinearring.cpp 33631 2016-03-04 06:28:09Z goatbar $
+ * $Id: ogrlinearring.cpp 34469 2016-06-30 08:52:13Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRLinearRing geometry class.
@@ -31,7 +31,7 @@
 #include "ogr_geometry.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrlinearring.cpp 33631 2016-03-04 06:28:09Z goatbar $");
+CPL_CVSID("$Id: ogrlinearring.cpp 34469 2016-06-30 08:52:13Z rouault $");
 
 /************************************************************************/
 /*                           OGRLinearRing()                            */
@@ -278,7 +278,7 @@ OGRErr OGRLinearRing::_importFromWkb( OGRwkbByteOrder eByteOrder, int _flags,
             }
             if( flags & OGR_G_MEASURED )
             {
-                CPL_SWAPDOUBLE( padfZ + i );
+                CPL_SWAPDOUBLE( padfM + i );
             }
         }
     }

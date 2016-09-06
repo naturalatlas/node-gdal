@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: contour.cpp 33757 2016-03-20 20:22:33Z goatbar $
+ * $Id: contour.cpp 34472 2016-06-30 10:51:45Z rouault $
  *
  * Project:  Contour Generation
  * Purpose:  Core algorithm implementation for contour line generation.
@@ -33,7 +33,7 @@
 #include "gdal_alg.h"
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: contour.cpp 33757 2016-03-20 20:22:33Z goatbar $");
+CPL_CVSID("$Id: contour.cpp 34472 2016-06-30 10:51:45Z rouault $");
 
 // The amount of a contour interval that pixels should be fudged by if they
 // match a contour level exactly.
@@ -70,6 +70,9 @@ public:
                        double dfXEnd, double dfYEnd, int bLeftHigh );
     void   MakeRoomFor( int );
     int    Merge( GDALContourItem * );
+    double DistanceSqr(double x0, double y0, double x1, double y1);
+    int    MergeCase( double ax0, double ay0, double ax1, double ay1,
+                      double bx0, double by0, double bx1, double by1);
     void   PrepareEjection();
 };
 
@@ -120,11 +123,14 @@ class GDALContourGenerator
     double  dfContourInterval;
     double  dfContourOffset;
 
+
     CPLErr AddSegment( double dfLevel,
                        double dfXStart, double dfYStart,
                        double dfXEnd, double dfYEnd, int bLeftHigh );
 
-    CPLErr ProcessPixel( int iPixel );
+    template<EMULATED_BOOL bNoDataIsNan> inline bool IsNoData(double dfVal) const;
+
+    template<EMULATED_BOOL bNoDataIsNan> CPLErr ProcessPixel( int iPixel );
     CPLErr ProcessRect( double, double, double,
                         double, double, double,
                         double, double, double,
@@ -158,6 +164,17 @@ public:
 
 };
 
+template<> inline bool GDALContourGenerator::IsNoData<true>(double dfVal) const
+{
+    return CPL_TO_BOOL(CPLIsNan(dfVal));
+}
+
+template<> inline bool GDALContourGenerator::IsNoData<false>(double dfVal) const
+{
+    return dfVal == dfNoDataValue;
+}
+
+
 /************************************************************************/
 /*                           GDAL_CG_Create()                           */
 /************************************************************************/
@@ -170,7 +187,11 @@ GDAL_CG_Create( int nWidth, int nHeight, int bNoDataSet, double dfNoDataValue,
 {
     GDALContourGenerator *poCG = new GDALContourGenerator( nWidth, nHeight,
                                                            pfnWriter, pCBData );
-
+    if( !poCG->Init() )
+    {
+        delete poCG;
+        return NULL;
+    }
     if( bNoDataSet )
         poCG->SetNoData( dfNoDataValue );
 
@@ -292,7 +313,7 @@ void GDALContourGenerator::SetNoData( double dfNewValue )
 /*                            ProcessPixel()                            */
 /************************************************************************/
 
-CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
+template<EMULATED_BOOL bNoDataIsNan> CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
 
 {
     double  dfUpLeft, dfUpRight, dfLoLeft, dfLoRight;
@@ -313,11 +334,13 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
 /*      Check if we have any nodata values.                             */
 /* -------------------------------------------------------------------- */
     if( bNoDataActive
-        && ( dfUpLeft == dfNoDataValue
-             || dfLoLeft == dfNoDataValue
-             || dfLoRight == dfNoDataValue
-             || dfUpRight == dfNoDataValue ) )
+        && ( IsNoData<bNoDataIsNan>(dfUpLeft)
+            || IsNoData<bNoDataIsNan>(dfLoLeft)
+            || IsNoData<bNoDataIsNan>(dfLoRight)
+            || IsNoData<bNoDataIsNan>(dfUpRight) ) )
+    {
         bSubdivide = TRUE;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Check if we have any nodata, if so, go to a special case of     */
@@ -339,25 +362,25 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
     double dfASum = 0.0;
     double dfTop=0.0, dfRight=0.0, dfLeft=0.0, dfBottom=0.0;
 
-    if( dfUpLeft != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfUpLeft) )
     {
         dfASum += dfUpLeft;
         nGoodCount++;
     }
 
-    if( dfLoLeft != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfLoLeft) )
     {
         dfASum += dfLoLeft;
         nGoodCount++;
     }
 
-    if( dfLoRight != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfLoRight) )
     {
         dfASum += dfLoRight;
         nGoodCount++;
     }
 
-    if( dfUpRight != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfUpRight) )
     {
         dfASum += dfUpRight;
         nGoodCount++;
@@ -368,14 +391,14 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
 
     double dfCenter = dfASum / nGoodCount;
 
-    if( dfUpLeft != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfUpLeft) )
     {
-        if( dfUpRight != dfNoDataValue )
+        if( !IsNoData<bNoDataIsNan>(dfUpRight) )
             dfTop = (dfUpLeft + dfUpRight) / 2.0;
         else
             dfTop = dfUpLeft;
 
-        if( dfLoLeft != dfNoDataValue )
+        if( !IsNoData<bNoDataIsNan>(dfLoLeft) )
             dfLeft = (dfUpLeft + dfLoLeft) / 2.0;
         else
             dfLeft = dfUpLeft;
@@ -386,14 +409,14 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
         dfLeft = dfLoLeft;
     }
 
-    if( dfLoRight != dfNoDataValue )
+    if( !IsNoData<bNoDataIsNan>(dfLoRight) )
     {
-        if( dfUpRight != dfNoDataValue )
+        if( !IsNoData<bNoDataIsNan>(dfUpRight) )
             dfRight = (dfLoRight + dfUpRight) / 2.0;
         else
             dfRight = dfLoRight;
 
-        if( dfLoLeft != dfNoDataValue )
+        if( !IsNoData<bNoDataIsNan>(dfLoLeft) )
             dfBottom = (dfLoRight + dfLoLeft) / 2.0;
         else
             dfBottom = dfLoRight;
@@ -409,7 +432,7 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
 /* -------------------------------------------------------------------- */
     CPLErr eErr = CE_None;
 
-    if( dfUpLeft != dfNoDataValue && iPixel > 0 && iLine > 0 )
+    if( !IsNoData<bNoDataIsNan>(dfUpLeft) && iPixel > 0 && iLine > 0 )
     {
         eErr = ProcessRect( dfUpLeft, iPixel - 0.5, iLine - 0.5,
                             dfLeft, iPixel - 0.5, iLine,
@@ -417,7 +440,7 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
                             dfTop, iPixel, iLine - 0.5 );
     }
 
-    if( dfLoLeft != dfNoDataValue && eErr == CE_None
+    if( !IsNoData<bNoDataIsNan>(dfLoLeft) && eErr == CE_None
         && iPixel > 0 && iLine < nHeight )
     {
         eErr = ProcessRect( dfLeft, iPixel - 0.5, iLine,
@@ -426,7 +449,7 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
                             dfCenter, iPixel, iLine );
     }
 
-    if( dfLoRight != dfNoDataValue && iPixel < nWidth && iLine < nHeight )
+    if( !IsNoData<bNoDataIsNan>(dfLoRight) && iPixel < nWidth && iLine < nHeight )
     {
         eErr = ProcessRect( dfCenter, iPixel, iLine,
                             dfBottom, iPixel, iLine + 0.5,
@@ -434,7 +457,7 @@ CPLErr GDALContourGenerator::ProcessPixel( int iPixel )
                             dfRight, iPixel + 0.5, iLine );
     }
 
-    if( dfUpRight != dfNoDataValue && iPixel < nWidth && iLine > 0 )
+    if( !IsNoData<bNoDataIsNan>(dfUpRight) && iPixel < nWidth && iLine > 0 )
     {
         eErr = ProcessRect( dfTop, iPixel, iLine - 0.5,
                             dfCenter, iPixel, iLine,
@@ -798,9 +821,11 @@ CPLErr GDALContourGenerator::FeedLine( double *padfScanline )
 /* -------------------------------------------------------------------- */
 /*      Process each pixel.                                             */
 /* -------------------------------------------------------------------- */
+    const bool bNoDataIsNan = CPL_TO_BOOL(CPLIsNan(dfNoDataValue));
     for( iPixel = 0; iPixel < nWidth+1; iPixel++ )
     {
-        CPLErr eErr = ProcessPixel( iPixel );
+        CPLErr eErr = bNoDataIsNan ? ProcessPixel<true>( iPixel ) :
+                                     ProcessPixel<false>( iPixel );
         if( eErr != CE_None )
             return eErr;
     }
@@ -1205,105 +1230,189 @@ int GDALContourItem::AddSegment( double dfXStart, double dfYStart,
 }
 
 /************************************************************************/
+/*                               DistanceSqr()                          */
+/************************************************************************/
+
+double GDALContourItem::DistanceSqr( 
+   double x0, double y0, double x1, double y1
+)
+{
+// --------------------------------------------------------------------
+// Coumpute the square of the euclidian distance between
+// (x0;y0)-(x1;y1)
+// --------------------------------------------------------------------
+   double dx = x0 - x1;
+   double dy = y0 - y1;
+
+   return (dx*dx + dy*dy);
+}
+
+/************************************************************************/
+/*                               MergeCase()                            */
+/************************************************************************/
+
+int GDALContourItem::MergeCase( 
+   double ax0, double ay0, double ax1, double ay1,
+   double bx0, double by0, double bx1, double by1
+)
+{
+    double dd;
+
+// --------------------------------------------------------------------
+// Try to find a match case between line ends
+// Calculate all possible distances and choose the closest
+// if less than JOIN_DIST
+// --------------------------------------------------------------------
+
+    // avoid sqrt()
+    const double jds = JOIN_DIST * JOIN_DIST;   
+
+    // case 1 e-b
+    int cs = 1;
+    double dmin = DistanceSqr (ax1, ay1, bx0, by0);
+
+    // case 2 b-e
+    dd = DistanceSqr (ax0, ay0, bx1, by1);
+    if (dd < dmin)
+    {
+        dmin = dd;
+        cs   = 2;
+    }
+
+    // case 3 e-e
+    dd = DistanceSqr (ax1, ay1, bx1, by1);
+    if (dd < dmin)
+    {
+        dmin = dd;
+        cs   = 3;
+    }
+
+    // case 4 b-b
+    dd = DistanceSqr (ax0, ay0, bx0, by0);
+    if (dd < dmin)
+    {
+        dmin = dd;
+        cs   = 4;
+    }
+
+    if (dmin > jds)
+        cs = 0;
+
+    return cs;
+}
+
+/************************************************************************/
 /*                               Merge()                                */
 /************************************************************************/
 
 int GDALContourItem::Merge( GDALContourItem *poOther )
 
 {
+    int rc = FALSE;
+    int i;
+
     if( poOther->dfLevel != dfLevel )
         return FALSE;
 
 /* -------------------------------------------------------------------- */
 /*      Try to matching up with one of the ends, and insert.            */
 /* -------------------------------------------------------------------- */
-    if( fabs(padfX[nPoints-1]-poOther->padfX[0]) < JOIN_DIST
-        && fabs(padfY[nPoints-1]-poOther->padfY[0]) < JOIN_DIST )
+
+    int mc = MergeCase (
+        padfX[0],                           padfY[0], 
+        padfX[nPoints-1],                   padfY[nPoints-1],
+        poOther->padfX[0],                  poOther->padfY[0], 
+        poOther->padfX[poOther->nPoints-1], poOther->padfY[poOther->nPoints-1]
+    );
+
+    switch (mc)
     {
-        MakeRoomFor( nPoints + poOther->nPoints - 1 );
+        case 0:
+            break;
 
-        memcpy( padfX + nPoints, poOther->padfX + 1,
-                sizeof(double) * (poOther->nPoints-1) );
-        memcpy( padfY + nPoints, poOther->padfY + 1,
-                sizeof(double) * (poOther->nPoints-1) );
-        nPoints += poOther->nPoints - 1;
+        case 1:   // case 1 e-b
+            MakeRoomFor( nPoints + poOther->nPoints - 1 );
 
-        bRecentlyAccessed = TRUE;
+            memcpy( padfX + nPoints, poOther->padfX + 1,
+                    sizeof(double) * (poOther->nPoints-1) );
+            memcpy( padfY + nPoints, poOther->padfY + 1,
+                    sizeof(double) * (poOther->nPoints-1) );
+            nPoints += poOther->nPoints - 1;
 
-        dfTailX = padfX[nPoints-1];
+            bRecentlyAccessed = TRUE;
 
-        return TRUE;
+            dfTailX = padfX[nPoints-1];
+
+            rc = TRUE;
+            break;
+
+        case 2:   // case 2 b-e
+            MakeRoomFor( nPoints + poOther->nPoints - 1 );
+
+            memmove( padfX + poOther->nPoints - 1, padfX,
+                    sizeof(double) * nPoints );
+            memmove( padfY + poOther->nPoints - 1, padfY,
+                    sizeof(double) * nPoints );
+            memcpy( padfX, poOther->padfX,
+                    sizeof(double) * (poOther->nPoints-1) );
+            memcpy( padfY, poOther->padfY,
+                    sizeof(double) * (poOther->nPoints-1) );
+            nPoints += poOther->nPoints - 1;
+
+            bRecentlyAccessed = TRUE;
+
+            dfTailX = padfX[nPoints-1];
+
+            rc = TRUE;
+            break;
+
+        case 3:   // case 3 e-e
+            MakeRoomFor( nPoints + poOther->nPoints - 1 );
+
+            for( i = 0; i < poOther->nPoints-1; i++ )
+            {
+                padfX[i+nPoints] = poOther->padfX[poOther->nPoints-i-2];
+                padfY[i+nPoints] = poOther->padfY[poOther->nPoints-i-2];
+            }
+
+            nPoints += poOther->nPoints - 1;
+
+            bRecentlyAccessed = TRUE;
+
+            dfTailX = padfX[nPoints-1];
+
+            rc = TRUE;
+            break;
+
+        case 4:   // case 3 b-b
+            MakeRoomFor( nPoints + poOther->nPoints - 1 );
+
+            memmove( padfX + poOther->nPoints - 1, padfX,
+                    sizeof(double) * nPoints );
+            memmove( padfY + poOther->nPoints - 1, padfY,
+                    sizeof(double) * nPoints );
+
+            for( i = 0; i < poOther->nPoints-1; i++ )
+            {
+                padfX[i] = poOther->padfX[poOther->nPoints - i - 1];
+                padfY[i] = poOther->padfY[poOther->nPoints - i - 1];
+            }
+
+            nPoints += poOther->nPoints - 1;
+
+            bRecentlyAccessed = TRUE;
+
+            dfTailX = padfX[nPoints-1];
+
+            rc = TRUE;
+            break;
+
+        default:
+            CPLAssert(FALSE);
+            break;
     }
-    else if( fabs(padfX[0]-poOther->padfX[poOther->nPoints-1]) < JOIN_DIST
-             && fabs(padfY[0]-poOther->padfY[poOther->nPoints-1]) < JOIN_DIST )
-    {
-        MakeRoomFor( nPoints + poOther->nPoints - 1 );
 
-        memmove( padfX + poOther->nPoints - 1, padfX,
-                sizeof(double) * nPoints );
-        memmove( padfY + poOther->nPoints - 1, padfY,
-                sizeof(double) * nPoints );
-        memcpy( padfX, poOther->padfX,
-                sizeof(double) * (poOther->nPoints-1) );
-        memcpy( padfY, poOther->padfY,
-                sizeof(double) * (poOther->nPoints-1) );
-        nPoints += poOther->nPoints - 1;
-
-        bRecentlyAccessed = TRUE;
-
-        dfTailX = padfX[nPoints-1];
-
-        return TRUE;
-    }
-    else if( fabs(padfX[nPoints-1]-poOther->padfX[poOther->nPoints-1]) < JOIN_DIST
-        && fabs(padfY[nPoints-1]-poOther->padfY[poOther->nPoints-1]) < JOIN_DIST )
-    {
-        int i;
-
-        MakeRoomFor( nPoints + poOther->nPoints - 1 );
-
-        for( i = 0; i < poOther->nPoints-1; i++ )
-        {
-            padfX[i+nPoints] = poOther->padfX[poOther->nPoints-i-2];
-            padfY[i+nPoints] = poOther->padfY[poOther->nPoints-i-2];
-        }
-
-        nPoints += poOther->nPoints - 1;
-
-        bRecentlyAccessed = TRUE;
-
-        dfTailX = padfX[nPoints-1];
-
-        return TRUE;
-    }
-    else if( fabs(padfX[0]-poOther->padfX[0]) < JOIN_DIST
-        && fabs(padfY[0]-poOther->padfY[0]) < JOIN_DIST )
-    {
-        int i;
-
-        MakeRoomFor( nPoints + poOther->nPoints - 1 );
-
-        memmove( padfX + poOther->nPoints - 1, padfX,
-                sizeof(double) * nPoints );
-        memmove( padfY + poOther->nPoints - 1, padfY,
-                sizeof(double) * nPoints );
-
-        for( i = 0; i < poOther->nPoints-1; i++ )
-        {
-            padfX[i] = poOther->padfX[poOther->nPoints - i - 1];
-            padfY[i] = poOther->padfY[poOther->nPoints - i - 1];
-        }
-
-        nPoints += poOther->nPoints - 1;
-
-        bRecentlyAccessed = TRUE;
-
-        dfTailX = padfX[nPoints-1];
-
-        return TRUE;
-    }
-    else
-        return FALSE;
+    return rc;
 }
 
 /************************************************************************/

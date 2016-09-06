@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarp_lib.cpp 33757 2016-03-20 20:22:33Z goatbar $
+ * $Id: gdalwarp_lib.cpp 34210 2016-05-10 21:08:22Z rouault $
  *
  * Project:  High Performance Image Reprojector
  * Purpose:  Test program for high performance warper API.
@@ -42,7 +42,7 @@
 #include <algorithm>
 #include "gdal_utils_priv.h"
 
-CPL_CVSID("$Id: gdalwarp_lib.cpp 33757 2016-03-20 20:22:33Z goatbar $");
+CPL_CVSID("$Id: gdalwarp_lib.cpp 34210 2016-05-10 21:08:22Z rouault $");
 
 /************************************************************************/
 /*                        GDALWarpAppOptions                            */
@@ -2271,8 +2271,18 @@ TransformCutlineToSource( GDALDatasetH hSrcDS, void *hCutline,
         {
             bDensify = ( OGRGeometryFactory::haveGEOS() && !bWasValidInitialy );
         }
+        else if( CSLFetchNameValue( *ppapszWarpOptions, "CUTLINE_BLEND_DIST" ) != NULL &&
+                 CPLGetConfigOption("GDALWARP_DENSIFY_CUTLINE", NULL) == NULL )
+        {
+            // TODO: we should only emit this message if a transform/reprojection will be actually done
+            CPLDebug("WARP", "Densification of cutline could perhaps be useful but as "
+                     "CUTLINE_BLEND_DIST is used, this could be very slow. So disabled "
+                     "unless GDALWARP_DENSIFY_CUTLINE=YES is explicitly specified as configuration option");
+        }
         else
+        {
             bDensify = CPLTestBool(pszDensifyCutline);
+        }
     }
     if( bDensify )
     {

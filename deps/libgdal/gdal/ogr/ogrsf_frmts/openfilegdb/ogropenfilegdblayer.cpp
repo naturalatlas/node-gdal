@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogropenfilegdblayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ogropenfilegdblayer.cpp 34480 2016-06-30 16:07:59Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Open FileGDB OGR driver.
@@ -413,7 +413,9 @@ int OGROpenFileGDBLayer::BuildLayerDefinition()
 
         // Check that the first feature has actually a M value before advertizing
         // it.
-        if( poGDBGeomField->HasM() && m_poLyrTable->GetAndSelectNextNonEmptyRow(0) >= 0 )
+        if( poGDBGeomField->HasM() &&
+            m_poLyrTable->GetValidRecordCount() > 0 &&
+            m_poLyrTable->GetAndSelectNextNonEmptyRow(0) >= 0 )
         {
             const OGRField* psField = m_poLyrTable->GetFieldValue(m_iGeomFieldIdx);
             if( psField != NULL )

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwfslayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ogrwfslayer.cpp 34401 2016-06-24 12:34:12Z rouault $
  *
  * Project:  WFS Translator
  * Purpose:  Implements OGRWFSLayer class.
@@ -34,7 +34,7 @@
 #include "cpl_http.h"
 #include "parsexsd.h"
 
-CPL_CVSID("$Id: ogrwfslayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrwfslayer.cpp 34401 2016-06-24 12:34:12Z rouault $");
 
 
 /************************************************************************/
@@ -1153,6 +1153,16 @@ void OGRWFSLayer::ResetReading()
         poBaseLayer->ResetReading();
 }
 
+/************************************************************************/
+/*                         SetIgnoredFields()                           */
+/************************************************************************/
+
+OGRErr OGRWFSLayer::SetIgnoredFields( const char **papszFields )
+{
+    bReloadNeeded = TRUE;
+    ResetReading();
+    return OGRLayer::SetIgnoredFields(papszFields);
+}
 
 /************************************************************************/
 /*                           GetNextFeature()                           */
@@ -1433,7 +1443,7 @@ int OGRWFSLayer::TestCapability( const char * pszCap )
     }
     else if( EQUAL(pszCap,OLCIgnoreFields) )
     {
-        return poBaseDS == NULL;
+        return TRUE;
     }
 
     return FALSE;

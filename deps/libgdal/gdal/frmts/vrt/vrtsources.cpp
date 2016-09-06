@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtsources.cpp 33826 2016-03-31 14:37:01Z rouault $
+ * $Id: vrtsources.cpp 34511 2016-07-01 21:50:45Z rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Implementation of VRTSimpleSource, VRTFuncSource and
@@ -43,7 +43,7 @@
 #define isnan std::isnan
 #endif
 
-CPL_CVSID("$Id: vrtsources.cpp 33826 2016-03-31 14:37:01Z rouault $");
+CPL_CVSID("$Id: vrtsources.cpp 34511 2016-07-01 21:50:45Z rouault $");
 
 /************************************************************************/
 /* ==================================================================== */
@@ -180,6 +180,16 @@ void VRTSimpleSource::SetSrcMaskBand( GDALRasterBand *poNewSrcBand )
 }
 
 /************************************************************************/
+/*                         RoundIfCloseToInt()                          */
+/************************************************************************/
+
+static double RoundIfCloseToInt(double dfValue)
+{
+    double dfClosestInt = floor(dfValue + 0.5);
+    return (fabs( dfValue - dfClosestInt ) < 1e-5) ? dfClosestInt : dfValue;
+}
+
+/************************************************************************/
 /*                            SetSrcWindow()                            */
 /************************************************************************/
 
@@ -187,10 +197,10 @@ void VRTSimpleSource::SetSrcWindow( double dfNewXOff, double dfNewYOff,
                                     double dfNewXSize, double dfNewYSize )
 
 {
-    m_dfSrcXOff = dfNewXOff;
-    m_dfSrcYOff = dfNewYOff;
-    m_dfSrcXSize = dfNewXSize;
-    m_dfSrcYSize = dfNewYSize;
+    m_dfSrcXOff = RoundIfCloseToInt(dfNewXOff);
+    m_dfSrcYOff = RoundIfCloseToInt(dfNewYOff);
+    m_dfSrcXSize = RoundIfCloseToInt(dfNewXSize);
+    m_dfSrcYSize = RoundIfCloseToInt(dfNewYSize);
 }
 
 /************************************************************************/
@@ -201,10 +211,10 @@ void VRTSimpleSource::SetDstWindow( double dfNewXOff, double dfNewYOff,
                                     double dfNewXSize, double dfNewYSize )
 
 {
-    m_dfDstXOff = dfNewXOff;
-    m_dfDstYOff = dfNewYOff;
-    m_dfDstXSize = dfNewXSize;
-    m_dfDstYSize = dfNewYSize;
+    m_dfDstXOff = RoundIfCloseToInt(dfNewXOff);
+    m_dfDstYOff = RoundIfCloseToInt(dfNewYOff);
+    m_dfDstXSize = RoundIfCloseToInt(dfNewXSize);
+    m_dfDstYSize = RoundIfCloseToInt(dfNewYSize);
 }
 
 /************************************************************************/
@@ -637,10 +647,10 @@ CPLErr VRTSimpleSource::XMLInit( CPLXMLNode *psSrc, const char *pszVRTPath )
     CPLXMLNode* psSrcRect = CPLGetXMLNode(psSrc,"SrcRect");
     if (psSrcRect)
     {
-        m_dfSrcXOff = CPLAtof(CPLGetXMLValue(psSrcRect,"xOff","-1"));
-        m_dfSrcYOff = CPLAtof(CPLGetXMLValue(psSrcRect,"yOff","-1"));
-        m_dfSrcXSize = CPLAtof(CPLGetXMLValue(psSrcRect,"xSize","-1"));
-        m_dfSrcYSize = CPLAtof(CPLGetXMLValue(psSrcRect,"ySize","-1"));
+        SetSrcWindow( CPLAtof(CPLGetXMLValue(psSrcRect,"xOff","-1")),
+                      CPLAtof(CPLGetXMLValue(psSrcRect,"yOff","-1")),
+                      CPLAtof(CPLGetXMLValue(psSrcRect,"xSize","-1")),
+                      CPLAtof(CPLGetXMLValue(psSrcRect,"ySize","-1")) );
     }
     else
     {
@@ -650,10 +660,10 @@ CPLErr VRTSimpleSource::XMLInit( CPLXMLNode *psSrc, const char *pszVRTPath )
     CPLXMLNode* psDstRect = CPLGetXMLNode(psSrc,"DstRect");
     if (psDstRect)
     {
-        m_dfDstXOff = CPLAtof(CPLGetXMLValue(psDstRect,"xOff","-1"));
-        m_dfDstYOff = CPLAtof(CPLGetXMLValue(psDstRect,"yOff","-1"));
-        m_dfDstXSize = CPLAtof(CPLGetXMLValue(psDstRect,"xSize","-1"));
-        m_dfDstYSize = CPLAtof(CPLGetXMLValue(psDstRect,"ySize","-1"));
+        SetDstWindow( CPLAtof(CPLGetXMLValue(psDstRect,"xOff","-1")),
+                      CPLAtof(CPLGetXMLValue(psDstRect,"yOff","-1")),
+                      CPLAtof(CPLGetXMLValue(psDstRect,"xSize","-1")),
+                      CPLAtof(CPLGetXMLValue(psDstRect,"ySize","-1")) );
     }
     else
     {
@@ -1098,13 +1108,19 @@ VRTSimpleSource::RasterIO( int nXOff, int nYOff, int nXSize, int nYSize,
     {
         return CE_None;
     }
-    /*CPLDebug("VRT", "nXOff=%d, nYOff=%d, nXSize=%d, nYSize=%d, nBufXSize=%d, nBufYSize=%d, "
-                    "dfReqXOff=%g, dfReqYOff=%g, dfReqXSize=%g, dfReqYSize=%g, "
-                    "nOutXOff=%d, nOutYOff=%d, nOutXSize=%d, nOutYSize=%d",
-                    nXOff, nYOff, nXSize, nYSize,
-                    nBufXSize, nBufYSize,
-                    dfReqXOff, dfReqYOff, dfReqXSize, dfReqYSize,
-                    nOutXOff, nOutYOff, nOutXSize, nOutYSize);*/
+#if DEBUG_VERBOSE
+    CPLDebug(
+        "VRT",
+        "nXOff=%d, nYOff=%d, nXSize=%d, nYSize=%d, nBufXSize=%d, nBufYSize=%d,\n"
+        "dfReqXOff=%g, dfReqYOff=%g, dfReqXSize=%g, dfReqYSize=%g,\n"
+        "nReqXOff=%d, nReqYOff=%d, nReqXSize=%d, nReqYSize=%d,\n"
+        "nOutXOff=%d, nOutYOff=%d, nOutXSize=%d, nOutYSize=%d",
+        nXOff, nYOff, nXSize, nYSize,
+        nBufXSize, nBufYSize,
+        dfReqXOff, dfReqYOff, dfReqXSize, dfReqYSize,
+        nReqXOff, nReqYOff, nReqXSize, nReqYSize,
+        nOutXOff, nOutYOff, nOutXSize, nOutYSize );
+#endif
 
 /* -------------------------------------------------------------------- */
 /*      Actually perform the IO request.                                */
@@ -2088,6 +2104,19 @@ VRTComplexSource::RasterIO( int nXOff, int nYOff, int nXSize, int nYSize,
                           &nReqXOff, &nReqYOff, &nReqXSize, &nReqYSize,
                           &nOutXOff, &nOutYOff, &nOutXSize, &nOutYSize ) )
         return CE_None;
+#if DEBUG_VERBOSE
+    CPLDebug(
+        "VRT",
+        "nXOff=%d, nYOff=%d, nXSize=%d, nYSize=%d, nBufXSize=%d, nBufYSize=%d,\n"
+        "dfReqXOff=%g, dfReqYOff=%g, dfReqXSize=%g, dfReqYSize=%g,\n"
+        "nReqXOff=%d, nReqYOff=%d, nReqXSize=%d, nReqYSize=%d,\n"
+        "nOutXOff=%d, nOutYOff=%d, nOutXSize=%d, nOutYSize=%d",
+        nXOff, nYOff, nXSize, nYSize,
+        nBufXSize, nBufYSize,
+        dfReqXOff, dfReqYOff, dfReqXSize, dfReqYSize,
+        nReqXOff, nReqYOff, nReqXSize, nReqYSize,
+        nOutXOff, nOutYOff, nOutXSize, nOutYSize );
+#endif
 
     if( m_osResampling.size() )
     {

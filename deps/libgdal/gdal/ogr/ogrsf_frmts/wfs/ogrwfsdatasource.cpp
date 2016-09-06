@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrwfsdatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ogrwfsdatasource.cpp 34572 2016-07-06 18:31:02Z rouault $
  *
  * Project:  WFS Translator
  * Purpose:  Implements OGRWFSDataSource class
@@ -37,7 +37,7 @@
 #include "swq.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrwfsdatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrwfsdatasource.cpp 34572 2016-07-06 18:31:02Z rouault $");
 
 #define DEFAULT_BASE_START_INDEX     0
 #define DEFAULT_PAGE_SIZE            100
@@ -1484,7 +1484,7 @@ int OGRWFSDataSource::Open( const char * pszFilename, int bUpdateIn,
                     for( CPLXMLNode* psKeyword = psKeywords->psChild;
                          psKeyword != NULL; psKeyword = psKeyword->psNext )
                     {
-                        if( psKeyword->eType == CXT_Element )
+                        if( psKeyword->eType == CXT_Element && psKeyword->psChild != NULL )
                         {
                             poLayer->SetMetadataItem(CPLSPrintf("KEYWORD_%d", nKeywordCounter),
                                                      psKeyword->psChild->pszValue);
