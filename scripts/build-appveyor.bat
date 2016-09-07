@@ -105,6 +105,9 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO upgrading npm... && CALL npm-windows-upgrade --npm-version 2.15.9 --no-dns-check --no-prompt
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+:: attempt to workaround https://github.com/mapbox/node-pre-gyp/issues/209
+npm config set -g cafile=package.json
+npm config set -g strict-ssl=false
 
 ECHO available node.exe^:
 where node
