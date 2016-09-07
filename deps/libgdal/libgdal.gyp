@@ -172,7 +172,6 @@
 				"gdal/gcore/mdreader/reader_rdk1.cpp",
 				"gdal/gcore/mdreader/reader_spot.cpp",
 
-				# "gdal/port/cpl_odbc.cpp",
 				# "gdal/port/cpl_win32ce_api.cpp",
 				# "gdal/port/vsipreload.cpp",
 				"gdal/port/cpl_worker_thread_pool.cpp",
@@ -297,9 +296,13 @@
 			],
 			"conditions": [
 				["OS == 'win'", {
+					"sources": [
+						"gdal/port/cpl_odbc.cpp"
+					],
 					"link_settings": {
 						"libraries": [
 							"-lws2_32.lib",
+							"-lodbccp32.lib"
 						]
 					}
 				}]
