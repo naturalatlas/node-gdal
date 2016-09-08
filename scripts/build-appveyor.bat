@@ -100,11 +100,14 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO elevating powershell script execution
 powershell Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-ECHO installing npm-windows-upgrade... && CALL npm install -g npm-windows-upgrade@0.5.3
+ECHO installing npm-windows-upgrade... && CALL npm install -g npm-windows-upgrade
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-ECHO upgrading npm... && CALL npm-windows-upgrade --version:3.6.0 --no-dns-check --no-prompt
+ECHO upgrading npm... && CALL npm-windows-upgrade --npm-version 2.15.9 --no-dns-check --no-prompt
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+:: attempt to workaround https://github.com/mapbox/node-pre-gyp/issues/209
+npm config set -g cafile=package.json
+npm config set -g strict-ssl=false
 
 ECHO available node.exe^:
 where node

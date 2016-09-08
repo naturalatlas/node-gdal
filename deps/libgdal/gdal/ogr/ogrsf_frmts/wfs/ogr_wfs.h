@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_wfs.h 32177 2015-12-14 07:25:30Z goatbar $
+ * $Id: ogr_wfs.h 34401 2016-06-24 12:34:12Z rouault $
  *
  * Project:  WFS Translator
  * Purpose:  Definition of classes for OGR WFS driver.
@@ -186,6 +186,8 @@ class OGRWFSLayer : public OGRLayer
     virtual OGRErr      StartTransaction();
     virtual OGRErr      CommitTransaction();
     virtual OGRErr      RollbackTransaction();
+
+    virtual OGRErr      SetIgnoredFields( const char **papszFields );
 
     int                 HasLayerDefn() { return poFeatureDefn != NULL; }
 

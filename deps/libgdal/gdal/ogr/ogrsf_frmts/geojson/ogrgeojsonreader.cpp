@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.cpp 33914 2016-04-07 19:38:01Z rouault $
+ * $Id: ogrgeojsonreader.cpp 34362 2016-06-17 11:45:09Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRGeoJSONReader class (OGR GeoJSON Driver).
@@ -49,7 +49,8 @@ OGRGeoJSONReader::OGRGeoJSONReader() :
     bFoundId(false),
     bFoundRev(false),
     bFoundTypeFeature(false),
-    bIsGeocouchSpatiallistFormat(false)
+    bIsGeocouchSpatiallistFormat(false),
+    bFoundFeatureId(false)
 { }
 
 /************************************************************************/
@@ -154,6 +155,8 @@ void OGRGeoJSONReader::ReadLayer( OGRGeoJSONDataSource* poDS,
         }
     }
 
+    CPLErrorReset();
+
     OGRGeoJSONLayer* poLayer = new OGRGeoJSONLayer( pszName, poSRS,
                                     OGRGeoJSONLayer::DefaultGeometryType,
                                     poDS );
@@ -213,7 +216,8 @@ void OGRGeoJSONReader::ReadLayer( OGRGeoJSONDataSource* poDS,
         ReadFeatureCollection( poLayer, poObj );
     }
 
-    CPLErrorReset();
+    if( CPLGetLastErrorType() != CE_Warning )
+        CPLErrorReset();
 
     poDS->AddLayer(poLayer);
 }
@@ -438,31 +442,18 @@ bool OGRGeoJSONReader::GenerateLayerDefn( OGRGeoJSONLayer* poLayer, json_object*
     OGRFeatureDefn* poLayerDefn = poLayer->GetLayerDefn();
     CPLAssert( NULL != poLayerDefn );
 
-    /* bool bHasFID = false; */
-
-    for( int i = 0; i < poLayerDefn->GetFieldCount(); ++i )
+    if( !bFoundFeatureId )
     {
-        OGRFieldDefn* poDefn = poLayerDefn->GetFieldDefn(i);
-        if( EQUAL( poDefn->GetNameRef(), OGRGeoJSONLayer::DefaultFIDColumn )
-            && (OFTInteger == poDefn->GetType() || OFTInteger64 == poDefn->GetType()) )
+        int idx = poLayerDefn->GetFieldIndex( "id" );
+        if( idx >= 0 )
         {
-            poLayer->SetFIDColumn( poDefn->GetNameRef() );
-            /* bHasFID = true; */
-            break;
+            OGRFieldDefn* poFDefn = poLayerDefn->GetFieldDefn(idx);
+            if( poFDefn->GetType() == OFTInteger || poFDefn->GetType() == OFTInteger64 )
+            {
+                poLayer->SetFIDColumn( poLayerDefn->GetFieldDefn(idx)->GetNameRef() );
+            }
         }
     }
-
-    // TODO - mloskot: This is wrong! We want to add only FID field if
-    // found in source layer (by default name or by FID_PROPERTY= specifier,
-    // the latter has to be implemented).
-    /*
-      if( !bHasFID )
-      {
-      OGRFieldDefn fldDefn( OGRGeoJSONLayer::DefaultFIDColumn, OFTInteger );
-      poLayerDefn->AddFieldDefn( &fldDefn );
-      poLayer_->SetFIDColumn( fldDefn.GetNameRef() );
-      }
-    */
 
     return bSuccess;
 }
@@ -476,7 +467,8 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
                                       json_object* poVal,
                                       bool bFlattenNestedAttributes,
                                       char chNestedAttributeSeparator,
-                                      bool bArrayAsString)
+                                      bool bArrayAsString,
+                                      std::set<int>& aoSetUndeterminedTypeFields)
 {
     if( bFlattenNestedAttributes &&
         poVal != NULL && json_object_get_type(poVal) == json_type_object )
@@ -496,12 +488,12 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
             {
                 OGRGeoJSONReaderAddOrUpdateField(poDefn, osAttrName, it.val,
                                                  true, chNestedAttributeSeparator,
-                                                 bArrayAsString);
+                                                 bArrayAsString, aoSetUndeterminedTypeFields);
             }
             else
             {
                 OGRGeoJSONReaderAddOrUpdateField(poDefn, osAttrName, it.val, false, 0,
-                                                 bArrayAsString);
+                                                 bArrayAsString, aoSetUndeterminedTypeFields);
             }
         }
         return;
@@ -521,12 +513,29 @@ void OGRGeoJSONReaderAddOrUpdateField(OGRFeatureDefn* poDefn,
             fldDefn.SetType(GeoJSONStringPropertyToFieldType( poVal ));
         }
         poDefn->AddFieldDefn( &fldDefn );
+        if( poVal == NULL )
+            aoSetUndeterminedTypeFields.insert( poDefn->GetFieldCount() - 1 );
     }
     else if ( poVal ) // If there is a null value: do not update field definition
     {
         OGRFieldDefn* poFDefn = poDefn->GetFieldDefn(nIndex);
         OGRFieldType eType = poFDefn->GetType();
-        if( eType == OFTInteger )
+        if( aoSetUndeterminedTypeFields.find(nIndex) != aoSetUndeterminedTypeFields.end() )
+        {
+            OGRFieldSubType eSubType;
+            OGRFieldType eNewType = GeoJSONPropertyToFieldType( poVal, eSubType, bArrayAsString );
+            poFDefn->SetSubType(OFSTNone);
+            poFDefn->SetType(eNewType);
+            if( eSubType == OFSTBoolean )
+                poFDefn->SetWidth(1);
+            if( poFDefn->GetType() == OFTString )
+            {
+                poFDefn->SetType(GeoJSONStringPropertyToFieldType( poVal ));
+            }
+            poFDefn->SetSubType(eSubType);
+            aoSetUndeterminedTypeFields.erase(nIndex);
+        }
+        else if( eType == OFTInteger )
         {
             OGRFieldSubType eSubType;
             OGRFieldType eNewType = GeoJSONPropertyToFieldType( poVal, eSubType, bArrayAsString );
@@ -599,24 +608,64 @@ bool OGRGeoJSONReader::GenerateFeatureDefn( OGRGeoJSONLayer* poLayer, json_objec
 /* -------------------------------------------------------------------- */
     json_object* poObjProps = OGRGeoJSONFindMemberByName( poObj, "properties" );
 
-    // If there's a top-level id of type string, and no properties.id, then
-    // declare a id field
-    if( poDefn->GetFieldIndex( "id" ) < 0 )
+    json_object* poObjId = OGRGeoJSONFindMemberByName( poObj, "id" );
+    if( poObjId )
     {
-        json_object* poObjId = OGRGeoJSONFindMemberByName( poObj, "id" );
-        if( poObjId && json_object_get_type(poObjId) == json_type_string )
+        int nIdx = poDefn->GetFieldIndex( "id" );
+        if( nIdx < 0 )
         {
-            bool bHasRegularIdProp = false;
-            if( NULL != poObjProps &&
-                json_object_get_type(poObjProps) == json_type_object )
+            if( json_object_get_type(poObjId) == json_type_int )
             {
-                bHasRegularIdProp = (json_object_object_get(poObjProps, "id") != NULL);
+                // If the value is negative, we cannot use it as the FID
+                // as OGRMemLayer doesn't support negative FID. And we would
+                // have an ambiguity with -1 that can mean OGRNullFID
+                // so in that case create a regular attribute and let OGR
+                // attribute sequential OGR FIDs
+                if( json_object_get_int64(poObjId) < 0 )
+                {
+                    bFoundFeatureId = false;
+                }
+                else
+                {
+                    bFoundFeatureId = true;
+                }
             }
-            if( !bHasRegularIdProp )
+            if( !bFoundFeatureId )
             {
-                OGRFieldDefn fldDefn( "id", OFTString );
-                poDefn->AddFieldDefn(&fldDefn);
+                // If there's a top-level id of type string or negative int,
+                // and no properties.id, then declare a id field
+                bool bHasRegularIdProp = false;
+                if( NULL != poObjProps &&
+                    json_object_get_type(poObjProps) == json_type_object )
+                {
+                    bHasRegularIdProp = (json_object_object_get(poObjProps, "id") != NULL);
+                }
+                if( !bHasRegularIdProp )
+                {
+                    OGRFieldType eType = OFTString;
+                    if( json_object_get_type(poObjId) == json_type_int )
+                    {
+                        if( CPL_INT64_FITS_ON_INT32( json_object_get_int64(poObjId) ) )
+                            eType = OFTInteger;
+                        else
+                            eType = OFTInteger64;
+                    }
+                    OGRFieldDefn fldDefn( "id", eType );
+                    poDefn->AddFieldDefn(&fldDefn);
+                }
             }
+        }
+        else if( json_object_get_type(poObjId) == json_type_int )
+        {
+            if( poDefn->GetFieldDefn(nIdx)->GetType() == OFTInteger )
+            {
+                if( !CPL_INT64_FITS_ON_INT32( json_object_get_int64(poObjId) ) )
+                    poDefn->GetFieldDefn(nIdx)->SetType(OFTInteger64);
+            }
+        }
+        else
+        {
+            poDefn->GetFieldDefn(nIdx)->SetType(OFTString);
         }
     }
 
@@ -673,7 +722,8 @@ bool OGRGeoJSONReader::GenerateFeatureDefn( OGRGeoJSONLayer* poLayer, json_objec
             OGRGeoJSONReaderAddOrUpdateField(poDefn, it.key, it.val,
                                              bFlattenNestedAttributes_,
                                              chNestedAttributeSeparator_,
-                                             bArrayAsString_);
+                                             bArrayAsString_,
+                                             aoSetUndeterminedTypeFields_);
         }
 
         bSuccess = true; // SUCCESS
@@ -1013,35 +1063,26 @@ OGRFeature* OGRGeoJSONReader::ReadFeature( OGRGeoJSONLayer* poLayer, json_object
     }
 
 /* -------------------------------------------------------------------- */
-/*      If FID not set, try to use feature-level ID if available        */
+/*      Try to use feature-level ID if available                        */
 /*      and of integral type. Otherwise, leave unset (-1) then index    */
 /*      in features sequence will be used as FID.                       */
 /* -------------------------------------------------------------------- */
-    if( -1 == poFeature->GetFID() )
+    json_object* poObjId = OGRGeoJSONFindMemberByName( poObj, "id" );
+    if( NULL != poObjId && bFoundFeatureId )
     {
-        json_object* poObjId = NULL;
-        OGRFieldSubType eSubType;
-        poObjId = OGRGeoJSONFindMemberByName( poObj, OGRGeoJSONLayer::DefaultFIDColumn );
-        if( NULL != poObjId
-            && EQUAL( OGRGeoJSONLayer::DefaultFIDColumn, poLayer->GetFIDColumn() )
-            && (OFTInteger == GeoJSONPropertyToFieldType( poObjId, eSubType ) ||
-                OFTInteger64 == GeoJSONPropertyToFieldType( poObjId, eSubType )) )
-        {
-            poFeature->SetFID( (GIntBig)json_object_get_int64( poObjId ) );
-            int nField = poFeature->GetFieldIndex( poLayer->GetFIDColumn() );
-            if( -1 != nField )
-                poFeature->SetField( nField, poFeature->GetFID() );
-        }
+        poFeature->SetFID( (GIntBig)json_object_get_int64( poObjId ) );
     }
 
-    if( -1 == poFeature->GetFID() )
+/* -------------------------------------------------------------------- */
+/*      Handle the case where the special id is in a regular field.     */
+/* -------------------------------------------------------------------- */
+    else if( NULL != poObjId )
     {
-        json_object* poObjId = OGRGeoJSONFindMemberByName( poObj, "id" );
-        if (poObjId != NULL && json_object_get_type(poObjId) == json_type_int)
-            poFeature->SetFID( (GIntBig)json_object_get_int64( poObjId ) );
-        else if (poObjId != NULL && json_object_get_type(poObjId) == json_type_string &&
-                 !poFeature->IsFieldSet(poFeature->GetFieldIndex("id")))
-            poFeature->SetField( "id", json_object_get_string(poObjId) );
+        int nIdx = poLayer->GetLayerDefn()->GetFieldIndex( "id" );
+        if( nIdx >= 0 && !poFeature->IsFieldSet(nIdx) )
+        {
+            poFeature->SetField(nIdx, json_object_get_string(poObjId));
+        }
     }
 
 /* -------------------------------------------------------------------- */

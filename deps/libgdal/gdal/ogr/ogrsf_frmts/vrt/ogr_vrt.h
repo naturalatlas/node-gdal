@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_vrt.h 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: ogr_vrt.h 34203 2016-05-10 14:06:35Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/VRT driver.
@@ -70,7 +70,7 @@ class OGRVRTGeomFieldProps
         int                 iGeomField;
 
                             // VGS_PointFromColumn
-        int                 iGeomXField, iGeomYField, iGeomZField;
+        int                 iGeomXField, iGeomYField, iGeomZField, iGeomMField;
         int                 bReportSrcColumn;
         int                 bUseSpatialSubquery;
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /******************************************************************************
- * $Id: ogrvrt.xsd 33680 2016-03-08 09:59:03Z rouault $
+ * $Id: ogrvrt.xsd 34203 2016-05-10 14:06:35Z rouault $
  *
  * Project:  GDAL/OGR
  * Purpose:  XML Schema for OGR VRT files.
@@ -346,6 +346,11 @@
             </xs:annotation>
         </xs:attribute>
         <xs:attribute name="z" type="nonEmptyStringType">
+            <xs:annotation>
+                <xs:documentation>Only used if encoding = "PointFromColumns"</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="m" type="nonEmptyStringType">
             <xs:annotation>
                 <xs:documentation>Only used if encoding = "PointFromColumns"</xs:documentation>
             </xs:annotation>

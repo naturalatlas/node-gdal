@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_pleiades.h 29915 2015-08-29 21:29:57Z rouault $
+ * $Id: reader_pleiades.h 34367 2016-06-17 13:58:32Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Pleiades imagery.
@@ -57,6 +57,7 @@ protected:
     virtual void LoadMetadata();
     char** LoadRPCXmlFile();
 protected:
+    CPLString m_osBaseFilename;
     CPLString m_osIMDSourceFilename;
     CPLString m_osRPBSourceFilename;
 };

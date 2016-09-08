@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: geotiff.cpp 33843 2016-04-01 08:37:57Z rouault $
+ * $Id: geotiff.cpp 34555 2016-07-05 18:39:17Z rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -65,7 +65,7 @@
 #include "tifvsi.h"
 #include "xtiffio.h"
 
-CPL_CVSID("$Id: geotiff.cpp 33843 2016-04-01 08:37:57Z rouault $");
+CPL_CVSID("$Id: geotiff.cpp 34555 2016-07-05 18:39:17Z rouault $");
 
 #if SIZEOF_VOIDP == 4
 static int bGlobalStripIntegerOverflow = FALSE;
@@ -436,6 +436,8 @@ class GTiffDataset CPL_FINAL : public GDALPamDataset
 
     bool        m_bHasGotSiblingFiles;
     char      **GetSiblingFiles();
+
+    void        FlushCacheInternal( bool bFlushDirectory );
 
   protected:
     virtual int         CloseDependentDatasets();
@@ -818,6 +820,14 @@ CPLErr GTiffJPEGOverviewBand::IReadBlock( int nBlockXOff, int nBlockYOff, void *
         if( poGDS->poJPEGDS == NULL )
         {
             const char* apszDrivers[] = { "JPEG", NULL };
+            
+            CPLString osOldVal;
+            if( poGDS->poParentDS->nPlanarConfig == PLANARCONFIG_CONTIG && poGDS->nBands == 4 )
+            {
+                osOldVal = CPLGetThreadLocalConfigOption("GDAL_JPEG_TO_RGB", "");
+                CPLSetThreadLocalConfigOption("GDAL_JPEG_TO_RGB", "NO");
+            }
+
             poGDS->poJPEGDS = (GDALDataset*) GDALOpenEx(osFileToOpen,
                                                         GDAL_OF_RASTER | GDAL_OF_INTERNAL,
                                                                 apszDrivers,
@@ -830,6 +840,11 @@ CPLErr GTiffJPEGOverviewBand::IReadBlock( int nBlockXOff, int nBlockYOff, void *
                 CPLSetThreadLocalConfigOption("JPEG_FORCE_INTERNAL_OVERVIEWS", NULL);
 
                 poGDS->nBlockId = nBlockId;
+            }
+            
+            if( poGDS->poParentDS->nPlanarConfig == PLANARCONFIG_CONTIG && poGDS->nBands == 4 )
+            {
+                CPLSetThreadLocalConfigOption("GDAL_JPEG_TO_RGB", osOldVal.size() ? osOldVal.c_str() : NULL);
             }
         }
         else
@@ -6170,43 +6185,32 @@ int GTiffDataset::Finalize()
     psVirtualMemIOMapping = NULL;
 
 /* -------------------------------------------------------------------- */
-/*      Ensure any blocks write cached by GDAL gets pushed through libtiff.*/
-/* -------------------------------------------------------------------- */
-    GDALPamDataset::FlushCache();
-
-/* -------------------------------------------------------------------- */
 /*      Fill in missing blocks with empty data.                         */
 /* -------------------------------------------------------------------- */
     if( bFillEmptyTiles )
     {
+/* -------------------------------------------------------------------- */
+/*  Ensure any blocks write cached by GDAL gets pushed through libtiff. */
+/* -------------------------------------------------------------------- */
+        FlushCacheInternal( false /* do not call FlushDirectory */ );
+
         FillEmptyTiles();
-        bFillEmptyTiles = FALSE;
+        bFillEmptyTiles = false;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Force a complete flush, including either rewriting(moving)      */
 /*      of writing in place the current directory.                      */
 /* -------------------------------------------------------------------- */
-    FlushCache();
+    FlushCacheInternal( true );
 
-    // Finish compression
+    // Destroy compression pool
     if( poCompressThreadPool )
     {
-        poCompressThreadPool->WaitCompletion();
         delete poCompressThreadPool;
 
-        // Flush remaining data
-        for(int i=0;i<(int)asCompressionJobs.size();i++)
+        for( int i = 0; i < static_cast<int>(asCompressionJobs.size()); ++i )
         {
-            if( asCompressionJobs[i].bReady )
-            {
-                if( asCompressionJobs[i].nCompressedBufferSize )
-                {
-                    WriteRawStripOrTile( asCompressionJobs[i].nStripOrTile,
-                                   asCompressionJobs[i].pabyCompressedBuffer,
-                                   asCompressionJobs[i].nCompressedBufferSize );
-                }
-            }
             CPLFree(asCompressionJobs[i].pabyBuffer);
             if( asCompressionJobs[i].pszTmpFilename )
             {
@@ -6358,6 +6362,13 @@ int GTiffDataset::GetJPEGOverviewCount()
         GDALGetDriverByName("JPEG") == NULL )
     {
         return 0;
+    }
+    const char* pszSourceColorSpace = oGTiffMDMD.GetMetadataItem( "SOURCE_COLOR_SPACE", "IMAGE_STRUCTURE");
+    if( pszSourceColorSpace != NULL && EQUAL(pszSourceColorSpace, "CMYK") )
+    {
+        // We cannot handle implicit overviews on JPEG CMYK datasets converted to RGBA
+        // This would imply doing the conversion in GTiffJPEGOverviewBand
+       return 0;
     }
 
     /* libjpeg-6b only supports 2, 4 and 8 scale denominators */
@@ -7688,8 +7699,14 @@ int GTiffDataset::IsBlockAvailable( int nBlockId )
 /*      cache if need be.                                               */
 /************************************************************************/
 
+
 void GTiffDataset::FlushCache()
 
+{
+    FlushCacheInternal( true );
+}
+
+void GTiffDataset::FlushCacheInternal( bool bFlushDirectory )
 {
     if (bIsFinalized || ppoActiveDSRef == NULL)
         return;
@@ -7702,11 +7719,38 @@ void GTiffDataset::FlushCache()
     CPLFree( pabyBlockBuf );
     pabyBlockBuf = NULL;
     nLoadedBlock = -1;
-    bLoadedBlockDirty = FALSE;
+    bLoadedBlockDirty = false;
 
-    if (!SetDirectory())
-        return;
-    FlushDirectory();
+    // Finish compression
+    if( poCompressThreadPool )
+    {
+        poCompressThreadPool->WaitCompletion();
+
+        // Flush remaining data
+        for( int i = 0; i < static_cast<int>(asCompressionJobs.size()); ++i )
+        {
+            if( asCompressionJobs[i].bReady )
+            {
+                if( asCompressionJobs[i].nCompressedBufferSize )
+                {
+                    WriteRawStripOrTile( asCompressionJobs[i].nStripOrTile,
+                                   asCompressionJobs[i].pabyCompressedBuffer,
+                                   asCompressionJobs[i].nCompressedBufferSize );
+                }
+                asCompressionJobs[i].pabyCompressedBuffer = NULL;
+                asCompressionJobs[i].nBufferSize = 0;
+                asCompressionJobs[i].bReady = false;
+                asCompressionJobs[i].nStripOrTile = -1;
+            }
+        }
+    }
+
+    if( bFlushDirectory )
+    {
+        if( !SetDirectory() )
+            return;
+        FlushDirectory();
+    }
 }
 
 /************************************************************************/

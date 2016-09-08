@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid.cpp 33808 2016-03-29 21:15:28Z goatbar $
+ * $Id: gdalgrid.cpp 34393 2016-06-22 21:21:29Z rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Implementation of GDAL scattered data gridder.
@@ -38,7 +38,7 @@
 #include "gdalgrid_priv.h"
 #include <cstdlib>
 
-CPL_CVSID("$Id: gdalgrid.cpp 33808 2016-03-29 21:15:28Z goatbar $");
+CPL_CVSID("$Id: gdalgrid.cpp 34393 2016-06-22 21:21:29Z rouault $");
 
 #define TO_RADIANS (M_PI / 180.0)
 
@@ -2310,8 +2310,7 @@ CPLErr GDALGridContextProcess(GDALGridContext* psContext,
         sJob.nYStep = nThreads;
         sJob.hCondMutex = CPLCreateMutex(); /* and  implicitly take the mutex */
         sJob.hCond = CPLCreateCond();
-        if( sJob.pfnRealProgress != NULL && sJob.pfnRealProgress != GDALDummyProgress )
-            sJob.pfnProgress = GDALGridProgressMultiThread;
+        sJob.pfnProgress = GDALGridProgressMultiThread;
 
 /* -------------------------------------------------------------------- */
 /*      Start threads.                                                  */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsosidriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
+ * $Id: ogrsosidriver.cpp 34420 2016-06-24 21:06:03Z rouault $
  *
  * Project:  SOSI Translator
  * Purpose:  Implements OGRSOSIDriver.
@@ -70,6 +70,7 @@ static GDALDataset *OGRSOSIDriverOpen( GDALOpenInfo* poOpenInfo )
     return poDS;
 }
 
+#ifdef WRITE_SUPPORT
 /************************************************************************/
 /*                              Create()                                */
 /************************************************************************/
@@ -91,13 +92,14 @@ static GDALDataset *OGRSOSIDriverCreate( const char * pszName,
     }
     return poDS;
 }
+#endif
 
 /************************************************************************/
 /*                         RegisterOGRSOSI()                            */
 /************************************************************************/
 
 void RegisterOGRSOSI() {
-    if( GDALGetDriverByName( "SOSI" ) == NULL )
+    if( GDALGetDriverByName( "SOSI" ) != NULL )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -108,7 +110,9 @@ void RegisterOGRSOSI() {
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_sosi.html" );
 
     poDriver->pfnOpen = OGRSOSIDriverOpen;
+#ifdef WRITE_SUPPORT
     poDriver->pfnCreate = OGRSOSIDriverCreate;
+#endif
     poDriver->pfnUnloadDriver = OGRSOSIDriverUnload;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );

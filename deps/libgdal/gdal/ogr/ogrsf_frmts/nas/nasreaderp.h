@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreaderp.h 32898 2016-01-10 14:44:10Z goatbar $
+ * $Id: nasreaderp.h 34462 2016-06-28 18:51:52Z jef $
  *
  * Project:  NAS Reader
  * Purpose:  Private Declarations for OGR NAS Reader code.
@@ -36,6 +36,7 @@
 #include "ogr_api.h"
 #include "ogr_geometry.h"
 #include "cpl_string.h"
+#include <list>
 
 IGMLReader *CreateNASReader();
 
@@ -76,7 +77,8 @@ class NASHandler : public DefaultHandler
     CPLString  m_osLastPropertyName;
     CPLString  m_osLastPropertyValue;
     CPLString  m_osLastEnded;
-    CPLString  m_osLastOccasion;
+
+    std::list<CPLString> m_LastOccasions;
 
 public:
     NASHandler( NASReader *poReader );

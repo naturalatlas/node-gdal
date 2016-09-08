@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbtable.cpp 34072 2016-04-24 13:09:01Z rouault $
+ * $Id: filegdbtable.cpp 34423 2016-06-25 10:03:48Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB tables
@@ -603,6 +603,21 @@ int FileGDBTable::ReadTableXHeader()
 }
 
 /************************************************************************/
+/*                            ReadUTF16String()                         */
+/************************************************************************/
+
+static std::string ReadUTF16String(const GByte* pabyIter, int nCarCount)
+{
+    std::wstring osWideStr;
+    for(int j=0;j<nCarCount;j++)
+        osWideStr += pabyIter[2 * j] | (pabyIter[2 * j + 1] << 8);
+    char* pszStr = CPLRecodeFromWChar(osWideStr.c_str(), CPL_ENC_UCS2, CPL_ENC_UTF8);
+    std::string osRet(pszStr);
+    CPLFree(pszStr);
+    return osRet;
+}
+
+/************************************************************************/
 /*                                 Open()                               */
 /************************************************************************/
 
@@ -741,9 +756,7 @@ int FileGDBTable::Open(const char* pszFilename,
         pabyIter ++;
         nRemaining --;
         returnErrorIf(nRemaining < (GUInt32)(2 * nCarCount + 1) );
-        std::string osName;
-        for(int j=0;j<nCarCount;j++) //FIXME? UTF16
-            osName += pabyIter[2 * j];
+        std::string osName(ReadUTF16String(pabyIter, nCarCount));
         pabyIter += 2 * nCarCount;
         nRemaining -= 2 * nCarCount;
 
@@ -752,9 +765,7 @@ int FileGDBTable::Open(const char* pszFilename,
         pabyIter ++;
         nRemaining --;
         returnErrorIf(nRemaining < (GUInt32)(2 * nCarCount + 1) );
-        std::string osAlias;
-        for(int j=0;j<nCarCount;j++) //FIXME? UTF16
-            osAlias += pabyIter[2 * j];
+        std::string osAlias(ReadUTF16String(pabyIter, nCarCount));
         pabyIter += 2 * nCarCount;
         nRemaining -= 2 * nCarCount;
 
@@ -909,9 +920,7 @@ int FileGDBTable::Open(const char* pszFilename,
                 pabyIter ++;
                 nRemaining --;
                 returnErrorIf(nRemaining < (GUInt32)(2 * nCarCount + 1) );
-                std::string osRasterColumn;
-                for(int j=0;j<nCarCount;j++) //FIXME? UTF16
-                    osRasterColumn += pabyIter[2 * j];
+                std::string osRasterColumn(ReadUTF16String(pabyIter, nCarCount));
                 pabyIter += 2 * nCarCount;
                 nRemaining -= 2 * nCarCount;
                 poRasterField->osRasterColumnName = osRasterColumn;
@@ -923,8 +932,7 @@ int FileGDBTable::Open(const char* pszFilename,
             nRemaining -= sizeof(nLengthWKT);
 
             returnErrorIf(nRemaining < (GUInt32)(1 + nLengthWKT) );
-            for(int j=0;j<nLengthWKT/2;j++) //FIXME? UTF16
-                poField->osWKT += pabyIter[2 * j];
+            poField->osWKT = ReadUTF16String(pabyIter, nLengthWKT/2);
             pabyIter += nLengthWKT;
             nRemaining -= nLengthWKT;
 
@@ -1676,10 +1684,7 @@ int FileGDBTable::GetIndexCount()
         pabyCur += sizeof(GUInt32);
         returnErrorAndCleanupIf(nIdxNameCarCount > 1024, VSIFree(pabyIdx) );
         returnErrorAndCleanupIf((GUInt32)(pabyEnd - pabyCur) < 2 * nIdxNameCarCount, VSIFree(pabyIdx) );
-        std::string osIndexName;
-        GUInt32 j;
-        for(j=0;j<nIdxNameCarCount;j++) //FIXME? UTF16
-            osIndexName += pabyCur[2 * j];
+        std::string osIndexName(ReadUTF16String(pabyCur, nIdxNameCarCount));
         pabyCur += 2 * nIdxNameCarCount;
 
         // Skip magic fields
@@ -1690,9 +1695,7 @@ int FileGDBTable::GetIndexCount()
         pabyCur += sizeof(GUInt32);
         returnErrorAndCleanupIf(nColNameCarCount > 1024, VSIFree(pabyIdx) );
         returnErrorAndCleanupIf((GUInt32)(pabyEnd - pabyCur) < 2 * nColNameCarCount, VSIFree(pabyIdx) );
-        std::string osFieldName;
-        for(j=0;j<nColNameCarCount;j++) //FIXME? UTF16
-            osFieldName += pabyCur[2 * j];
+        std::string osFieldName(ReadUTF16String(pabyCur, nColNameCarCount));
         pabyCur += 2 * nColNameCarCount;
 
         // Skip magic field
@@ -2495,7 +2498,11 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                 }
             }
 
-            if( bHasM )
+            // It seems that absence of M is marked with a single byte
+            // with value 66. Be more tolerant and only try to parse the M
+            // array is there are at least as many remaining bytes as
+            // expected points
+            if( bHasM && pabyCur + nPoints <= pabyEnd )
             {
                 poMP->setMeasured(TRUE);
                 GIntBig dm = 0;
@@ -2597,6 +2604,17 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                     if( nParts > 1 )
                         poLS = (FileGDBOGRLineString*) poMLS->getGeometryRef(i);
 
+                    // It seems that absence of M is marked with a single byte
+                    // with value 66. Be more tolerant and only try to parse the M
+                    // array is there are at least as many remaining bytes as
+                    // expected points
+                    if( pabyCur + panPointCount[i] > pabyEnd )
+                    {
+                        if( nParts > 1 )
+                            poMLS->setMeasured(FALSE);
+                        break;
+                    }
+                    
                     MLineStringSetter lsmSetter(poLS);
                     if( !ReadMArray<MLineStringSetter>(lsmSetter,
                                     pabyCur, pabyEnd,
@@ -2659,8 +2677,13 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                                  panPointCount[i],
                                  dx, dy) )
                 {
-                    while( (int)i >= 0 )
-                        delete papoRings[i--];
+                    while( true )
+                    {
+                        delete papoRings[i];
+                        if( i == 0 )
+                            break;
+                        i--;
+                    }
                     delete[] papoRings;
                     returnError();
                 }
@@ -2677,8 +2700,8 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                                     pabyCur, pabyEnd,
                                     panPointCount[i], dz) )
                     {
-                        while( (int)i >= 0 )
-                            delete papoRings[i--];
+                        for(i=0;i<nParts;i++)
+                            delete papoRings[i];
                         delete[] papoRings;
                         returnError();
                     }
@@ -2690,6 +2713,20 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                 GIntBig dm = 0;
                 for(i=0;i<nParts;i++)
                 {
+                    // It seems that absence of M is marked with a single byte
+                    // with value 66. Be more tolerant and only try to parse the M
+                    // array is there are at least as many remaining bytes as
+                    // expected points
+                    if( pabyCur + panPointCount[i] > pabyEnd )
+                    {
+                        while( i != 0 )
+                        {
+                            --i;
+                            papoRings[i]->setMeasured(FALSE);
+                        }
+                        break;
+                    }
+                    
                     papoRings[i]->setMeasured(TRUE);
 
                     MLineStringSetter lsmSetter(papoRings[i]);
@@ -2697,8 +2734,8 @@ OGRGeometry* FileGDBOGRGeometryConverterImpl::GetAsGeometry(const OGRField* psFi
                                     pabyCur, pabyEnd,
                                     panPointCount[i], dm) )
                     {
-                        while( (int)i >= 0 )
-                            delete papoRings[i--];
+                        for(i=0;i<nParts;i++)
+                            delete papoRings[i];
                         delete[] papoRings;
                         returnError();
                     }
