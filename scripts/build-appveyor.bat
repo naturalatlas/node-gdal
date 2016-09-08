@@ -106,8 +106,8 @@ ECHO upgrading npm... && CALL npm-windows-upgrade --npm-version 2.15.9 --no-dns-
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 :: attempt to workaround https://github.com/mapbox/node-pre-gyp/issues/209
-npm config set -g cafile=package.json
-npm config set -g strict-ssl=false
+CALL npm config set -g cafile=package.json
+CALL npm config set -g strict-ssl=false
 
 ECHO available node.exe^:
 where node
@@ -209,25 +209,17 @@ ECHO branch^: %APPVEYOR_REPO_BRANCH%
 ECHO IS_PR^: %IS_PR%
 ECHO PUBLISH^: %PUBLISH%
 
-::IF %PUBLISH% EQU 1 (IF NOT DEFINED IS_PR (IF "%APPVEYOR_REPO_BRANCH%"=="master" node_modules\.bin\node-pre-gyp unpublish publish))
 IF %PUBLISH% NEQ 1 ECHO not publishing && GOTO DONE
 IF DEFINED IS_PR ECHO IS_PR^: not publishing && GOTO DONE
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" ECHO not publishing^: not on master branch && GOTO DONE
-::IF NOT "%APPVEYOR_REPO_BRANCH%"=="visual-studio-2015" ECHO not publishing^: not on visual-studio-2015 branch && GOTO DONE
 
-ECHO packaging, unpublishing, publishing ...
-CALL node_modules\.bin\node-pre-gyp.cmd ^
-package unpublish publish ^
---target=%nodejs_version% ^
---target_arch=%NODEARCH% ^
---msvs_version=%msvs_version% ^
---loglevel=http %TOOLSET_ARGS% %ENABLE_LOGGING%
-IF %ERRORLEVEL% EQU 0 GOTO DONE
-
+SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
+IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not publishing)
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http unpublish publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not republishing)
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE
-
-
 
 :ERROR
 ECHO ~~~~~~~~~~~~~~~~~~~~~~ ERROR %~f0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
