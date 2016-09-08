@@ -214,9 +214,9 @@ IF DEFINED IS_PR ECHO IS_PR^: not publishing && GOTO DONE
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" ECHO not publishing^: not on master branch && GOTO DONE
 
 SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
-IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not publishing)
+IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http package publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not publishing)
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http unpublish publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not republishing)
+IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp --target=%nodejs_version% --target_arch=%NODEARCH% --msvs_version=%msvs_version% --loglevel=http package unpublish publish %TOOLSET_ARGS% %ENABLE_LOGGING%) ELSE (ECHO not republishing)
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 GOTO DONE
