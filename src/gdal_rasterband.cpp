@@ -145,7 +145,7 @@ Local<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	Local<Value> ext = Nan::New<External>(wrapped);
 	Local<Object> obj = Nan::New(RasterBand::constructor)->GetFunction()->NewInstance(1, &ext);
 
-	LOG("Adding band to cache[%p] (parent=%p)", raw, raw_parent); 
+	LOG("Adding band to cache[%p] (parent=%p)", raw, raw_parent);
 	cache.add(raw, obj);
 
 	//add reference to dataset so dataset doesnt get GC'ed while band is alive
@@ -349,7 +349,7 @@ NAN_METHOD(RasterBand::getStatistics)
  * may be used in computing the statistics.
  *
  * @throws Error
- * @method getStatistics
+ * @method computeStatistics
  * @param {Boolean} allow_approximation If `true` statistics may be computed based on overviews or a subset of all tiles.
  * @return {Object} Statistics containing `"min"`, `"max"`, `"mean"`, `"std_dev"` properties.
  */
