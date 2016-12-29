@@ -67,7 +67,7 @@ Local<Value> GeometryCollectionChildren::New(Local<Value> geom)
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
 	v8::Local<v8::Object> obj = Nan::New(GeometryCollectionChildren::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), geom);
+	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
 }
@@ -88,7 +88,7 @@ NAN_METHOD(GeometryCollectionChildren::count)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	info.GetReturnValue().Set(Nan::New<Integer>(geom->get()->getNumGeometries()));
@@ -105,7 +105,7 @@ NAN_METHOD(GeometryCollectionChildren::get)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	int i;
@@ -124,7 +124,7 @@ NAN_METHOD(GeometryCollectionChildren::remove)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	int i;
@@ -160,7 +160,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap<GeometryCollection>(parent);
 
 	Geometry *child;

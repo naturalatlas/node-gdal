@@ -73,7 +73,7 @@ Local<Value> FeatureDefnFields::New(Local<Value> feature_defn)
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
 	v8::Local<v8::Object> obj = Nan::New(FeatureDefnFields::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), feature_defn);
+	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), feature_defn);
 
 	return scope.Escape(obj);
 }
@@ -94,7 +94,7 @@ NAN_METHOD(FeatureDefnFields::count)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -115,7 +115,7 @@ NAN_METHOD(FeatureDefnFields::indexOf)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -139,7 +139,7 @@ NAN_METHOD(FeatureDefnFields::get)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -167,7 +167,7 @@ NAN_METHOD(FeatureDefnFields::getNames)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -196,7 +196,7 @@ NAN_METHOD(FeatureDefnFields::remove)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -231,7 +231,7 @@ NAN_METHOD(FeatureDefnFields::add)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -284,7 +284,7 @@ NAN_METHOD(FeatureDefnFields::reorder)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	FeatureDefn *feature_def = Nan::ObjectWrap::Unwrap<FeatureDefn>(parent);
 	if (!feature_def->isAlive()) {
 		Nan::ThrowError("FeatureDefn object already destroyed");
@@ -343,7 +343,7 @@ NAN_METHOD(FeatureDefnFields::reorder)
 NAN_GETTER(FeatureDefnFields::featureDefnGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal

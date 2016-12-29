@@ -99,7 +99,7 @@ NAN_METHOD(LineString::New)
 	}
 
 	Local<Value> points = LineStringPoints::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("points_").ToLocalChecked(), points);
+	Nan::SetPrivate(info.This(), Nan::New("points_").ToLocalChecked(), points);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -223,7 +223,7 @@ NAN_METHOD(LineString::addSubLineString)
 NAN_GETTER(LineString::pointsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("points_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("points_").ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal

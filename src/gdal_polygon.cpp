@@ -91,7 +91,7 @@ NAN_METHOD(Polygon::New)
 	}
 
 	Local<Value> rings = PolygonRings::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("rings_").ToLocalChecked(), rings);
+	Nan::SetPrivate(info.This(), Nan::New("rings_").ToLocalChecked(), rings);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -154,7 +154,7 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getArea, Number, get_Area);
 NAN_GETTER(Polygon::ringsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("rings_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("rings_").ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal

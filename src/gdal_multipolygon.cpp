@@ -88,7 +88,7 @@ NAN_METHOD(MultiPolygon::New)
 	}
 
 	Local<Value> children = GeometryCollectionChildren::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("children_").ToLocalChecked(), children);
+	Nan::SetPrivate(info.This(), Nan::New("children_").ToLocalChecked(), children);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());

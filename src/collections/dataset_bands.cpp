@@ -72,7 +72,7 @@ Local<Value> DatasetBands::New(Local<Value> ds_obj)
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
 	v8::Local<v8::Object> obj = Nan::New(DatasetBands::constructor)->GetFunction()->NewInstance(1, &ext);
-	obj->SetHiddenValue(Nan::New("parent_").ToLocalChecked(), ds_obj);
+	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), ds_obj);
 
 	return scope.Escape(obj);
 }
@@ -94,7 +94,7 @@ NAN_METHOD(DatasetBands::get)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	if (!ds->isAlive()){
@@ -133,7 +133,7 @@ NAN_METHOD(DatasetBands::create)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	if (!ds->isAlive()) {
@@ -191,7 +191,7 @@ NAN_METHOD(DatasetBands::count)
 {
 	Nan::HandleScope scope;
 
-	Local<Object> parent = info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()).As<Object>();
+	Local<Object> parent = Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked().As<Object>();
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(parent);
 
 	if (!ds->isAlive()) {
@@ -220,7 +220,7 @@ NAN_METHOD(DatasetBands::count)
 NAN_GETTER(DatasetBands::dsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("parent_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("parent_").ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
