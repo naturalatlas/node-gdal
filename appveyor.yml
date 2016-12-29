@@ -14,6 +14,8 @@ environment:
       msvs_toolset: 12
     - nodejs_version: "6.0.0"
       msvs_toolset: 12
+    - nodejs_version: "7.0.0"
+      msvs_toolset: 12
     - nodejs_version: "0.10.40"
       msvs_toolset: 14
       TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
