@@ -90,7 +90,7 @@ NAN_METHOD(LinearRing::New)
 	}
 
 	Local<Value> points = LineStringPoints::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("points_").ToLocalChecked(), points);
+	Nan::SetPrivate(info.This(), Nan::New("points_").ToLocalChecked(), points);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());

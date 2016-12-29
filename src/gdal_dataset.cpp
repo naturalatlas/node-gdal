@@ -144,10 +144,10 @@ NAN_METHOD(Dataset::New)
 		f->Wrap(info.This());
 
 		Local<Value> bands = DatasetBands::New(info.This());
-		info.This()->SetHiddenValue(Nan::New("bands_").ToLocalChecked(), bands);
+		Nan::SetPrivate(info.This(), Nan::New("bands_").ToLocalChecked(), bands);
 
 		Local<Value> layers = DatasetLayers::New(info.This());
-		info.This()->SetHiddenValue(Nan::New("layers_").ToLocalChecked(), layers);
+		Nan::SetPrivate(info.This(), Nan::New("layers_").ToLocalChecked(), layers);
 
 		info.GetReturnValue().Set(info.This());
 		return;
@@ -974,7 +974,7 @@ NAN_SETTER(Dataset::geoTransformSetter)
 NAN_GETTER(Dataset::bandsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("bands_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("bands_").ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -985,7 +985,7 @@ NAN_GETTER(Dataset::bandsGetter)
 NAN_GETTER(Dataset::layersGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("layers_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("layers_").ToLocalChecked()).ToLocalChecked());
 }
 
 NAN_GETTER(Dataset::uidGetter)

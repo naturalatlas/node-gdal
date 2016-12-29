@@ -85,7 +85,7 @@ NAN_METHOD(FeatureDefn::New)
 	}
 
 	Local<Value> fields = FeatureDefnFields::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("fields_").ToLocalChecked(), fields);
+	Nan::SetPrivate(info.This(), Nan::New("fields_").ToLocalChecked(), fields);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -201,7 +201,7 @@ NAN_GETTER(FeatureDefn::styleIgnoredGetter)
 NAN_GETTER(FeatureDefn::fieldsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("fields_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("fields_").ToLocalChecked()).ToLocalChecked());
 }
 
 NAN_SETTER(FeatureDefn::geomTypeSetter)

@@ -92,7 +92,7 @@ NAN_METHOD(GeometryCollection::New)
 	}
 
 	Local<Value> children = GeometryCollectionChildren::New(info.This());
-	info.This()->SetHiddenValue(Nan::New("children_").ToLocalChecked(), children);
+	Nan::SetPrivate(info.This(), Nan::New("children_").ToLocalChecked(), children);
 
 	f->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -164,7 +164,7 @@ NODE_WRAPPED_METHOD_WITH_RESULT(GeometryCollection, getLength, Number, get_Lengt
 NAN_GETTER(GeometryCollection::childrenGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()->GetHiddenValue(Nan::New("children_").ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New("children_").ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
