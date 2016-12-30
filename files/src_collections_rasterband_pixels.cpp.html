@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -256,7 +256,7 @@ Local&lt;Value&gt; RasterBandPixels::New(Local&lt;Value&gt; band_obj)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(RasterBandPixels::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), band_obj);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), band_obj);
 
 	return scope.Escape(obj);
 }
@@ -279,7 +279,7 @@ NAN_METHOD(RasterBandPixels::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
@@ -313,7 +313,7 @@ NAN_METHOD(RasterBandPixels::set)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
@@ -358,7 +358,7 @@ NAN_METHOD(RasterBandPixels::read)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
@@ -465,7 +465,7 @@ NAN_METHOD(RasterBandPixels::write)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
@@ -545,7 +545,7 @@ NAN_METHOD(RasterBandPixels::readBlock)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);
@@ -602,7 +602,7 @@ NAN_METHOD(RasterBandPixels::writeBlock)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	RasterBand *band = Nan::ObjectWrap::Unwrap&lt;RasterBand&gt;(parent);
 	if (!band-&gt;isAlive()) {
 		Nan::ThrowError(&quot;RasterBand object has already been destroyed&quot;);

@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -282,10 +282,10 @@ NAN_METHOD(Layer::New)
 		f-&gt;Wrap(info.This());
 
 		Local&lt;Value&gt; features = LayerFeatures::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;features_&quot;).ToLocalChecked(), features);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;features_&quot;).ToLocalChecked(), features);
 
 		Local&lt;Value&gt; fields = LayerFields::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;fields_&quot;).ToLocalChecked(), fields);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;fields_&quot;).ToLocalChecked(), fields);
 
 		info.GetReturnValue().Set(info.This());
 		return;
@@ -351,7 +351,7 @@ Local&lt;Value&gt; Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool res
 	
 	wrapped-&gt;uid = ptr_manager.add(raw, parent_uid, result_set);
 	wrapped-&gt;parent_ds = raw_parent;
-	obj-&gt;SetHiddenValue(Nan::New(&quot;ds_&quot;).ToLocalChecked(), ds);
+	Nan::SetPrivate(obj, Nan::New(&quot;ds_&quot;).ToLocalChecked(), ds);
 
 	return scope.Escape(obj);
 }
@@ -572,7 +572,7 @@ NAN_METHOD(Layer::getLayerDefn)
 NAN_GETTER(Layer::dsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;ds_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;ds_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -663,7 +663,7 @@ NAN_GETTER(Layer::geomTypeGetter)
 NAN_GETTER(Layer::featuresGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;features_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;features_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -674,7 +674,7 @@ NAN_GETTER(Layer::featuresGetter)
 NAN_GETTER(Layer::fieldsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;fields_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;fields_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 NAN_GETTER(Layer::uidGetter)
@@ -685,6 +685,7 @@ NAN_GETTER(Layer::uidGetter)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

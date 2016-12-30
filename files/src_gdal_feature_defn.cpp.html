@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -262,7 +262,7 @@ NAN_METHOD(FeatureDefn::New)
 	}
 
 	Local&lt;Value&gt; fields = FeatureDefnFields::New(info.This());
-	info.This()-&gt;SetHiddenValue(Nan::New(&quot;fields_&quot;).ToLocalChecked(), fields);
+	Nan::SetPrivate(info.This(), Nan::New(&quot;fields_&quot;).ToLocalChecked(), fields);
 
 	f-&gt;Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -378,7 +378,7 @@ NAN_GETTER(FeatureDefn::styleIgnoredGetter)
 NAN_GETTER(FeatureDefn::fieldsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;fields_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;fields_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 NAN_SETTER(FeatureDefn::geomTypeSetter)
@@ -415,6 +415,7 @@ NAN_SETTER(FeatureDefn::styleIgnoredSetter)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

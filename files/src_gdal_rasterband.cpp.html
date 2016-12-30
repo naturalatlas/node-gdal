@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -295,9 +295,9 @@ NAN_METHOD(RasterBand::New)
 		f-&gt;Wrap(info.This());
 
 		Local&lt;Value&gt; overviews = RasterBandOverviews::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;overviews_&quot;).ToLocalChecked(), overviews);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;overviews_&quot;).ToLocalChecked(), overviews);
 		Local&lt;Value&gt; pixels = RasterBandPixels::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;pixels_&quot;).ToLocalChecked(), pixels);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;pixels_&quot;).ToLocalChecked(), pixels);
 
 		info.GetReturnValue().Set(info.This());
 		return;
@@ -322,7 +322,7 @@ Local&lt;Value&gt; RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	Local&lt;Object&gt; obj = Nan::New(RasterBand::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
 
-	LOG(&quot;Adding band to cache[%p] (parent=%p)&quot;, raw, raw_parent); 
+	LOG(&quot;Adding band to cache[%p] (parent=%p)&quot;, raw, raw_parent);
 	cache.add(raw, obj);
 
 	//add reference to dataset so dataset doesnt get GC&#x27;ed while band is alive
@@ -342,7 +342,7 @@ Local&lt;Value&gt; RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	long parent_uid = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(ds)-&gt;uid;
 	wrapped-&gt;uid = ptr_manager.add(raw, parent_uid);
 	wrapped-&gt;parent_ds = raw_parent;
-	obj-&gt;SetHiddenValue(Nan::New(&quot;ds_&quot;).ToLocalChecked(), ds);
+	Nan::SetPrivate(obj, Nan::New(&quot;ds_&quot;).ToLocalChecked(), ds);
 
 	return scope.Escape(obj);
 }
@@ -526,7 +526,7 @@ NAN_METHOD(RasterBand::getStatistics)
  * may be used in computing the statistics.
  *
  * @throws Error
- * @method getStatistics
+ * @method computeStatistics
  * @param {Boolean} allow_approximation If &#x60;true&#x60; statistics may be computed based on overviews or a subset of all tiles.
  * @return {Object} Statistics containing &#x60;&quot;min&quot;&#x60;, &#x60;&quot;max&quot;&#x60;, &#x60;&quot;mean&quot;&#x60;, &#x60;&quot;std_dev&quot;&#x60; properties.
  */
@@ -628,7 +628,7 @@ NAN_METHOD(RasterBand::getMetadata)
 NAN_GETTER(RasterBand::dsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;ds_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;ds_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -639,7 +639,7 @@ NAN_GETTER(RasterBand::dsGetter)
 NAN_GETTER(RasterBand::overviewsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;overviews_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;overviews_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -650,7 +650,7 @@ NAN_GETTER(RasterBand::overviewsGetter)
 NAN_GETTER(RasterBand::pixelsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;pixels_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;pixels_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -1149,6 +1149,7 @@ NAN_GETTER(RasterBand::uidGetter)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

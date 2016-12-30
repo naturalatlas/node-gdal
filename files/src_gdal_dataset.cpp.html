@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -321,10 +321,10 @@ NAN_METHOD(Dataset::New)
 		f-&gt;Wrap(info.This());
 
 		Local&lt;Value&gt; bands = DatasetBands::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;bands_&quot;).ToLocalChecked(), bands);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;bands_&quot;).ToLocalChecked(), bands);
 
 		Local&lt;Value&gt; layers = DatasetLayers::New(info.This());
-		info.This()-&gt;SetHiddenValue(Nan::New(&quot;layers_&quot;).ToLocalChecked(), layers);
+		Nan::SetPrivate(info.This(), Nan::New(&quot;layers_&quot;).ToLocalChecked(), layers);
 
 		info.GetReturnValue().Set(info.This());
 		return;
@@ -1151,7 +1151,7 @@ NAN_SETTER(Dataset::geoTransformSetter)
 NAN_GETTER(Dataset::bandsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;bands_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;bands_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 /**
@@ -1162,7 +1162,7 @@ NAN_GETTER(Dataset::bandsGetter)
 NAN_GETTER(Dataset::layersGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;layers_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;layers_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 NAN_GETTER(Dataset::uidGetter)
@@ -1173,6 +1173,7 @@ NAN_GETTER(Dataset::uidGetter)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

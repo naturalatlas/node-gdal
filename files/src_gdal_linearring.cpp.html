@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -267,7 +267,7 @@ NAN_METHOD(LinearRing::New)
 	}
 
 	Local&lt;Value&gt; points = LineStringPoints::New(info.This());
-	info.This()-&gt;SetHiddenValue(Nan::New(&quot;points_&quot;).ToLocalChecked(), points);
+	Nan::SetPrivate(info.This(), Nan::New(&quot;points_&quot;).ToLocalChecked(), points);
 
 	f-&gt;Wrap(info.This());
 	info.GetReturnValue().Set(info.This());

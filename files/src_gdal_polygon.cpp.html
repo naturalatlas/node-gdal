@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -268,7 +268,7 @@ NAN_METHOD(Polygon::New)
 	}
 
 	Local&lt;Value&gt; rings = PolygonRings::New(info.This());
-	info.This()-&gt;SetHiddenValue(Nan::New(&quot;rings_&quot;).ToLocalChecked(), rings);
+	Nan::SetPrivate(info.This(), Nan::New(&quot;rings_&quot;).ToLocalChecked(), rings);
 
 	f-&gt;Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -331,10 +331,11 @@ NODE_WRAPPED_METHOD_WITH_RESULT(Polygon, getArea, Number, get_Area);
 NAN_GETTER(Polygon::ringsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;rings_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;rings_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

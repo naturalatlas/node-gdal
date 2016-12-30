@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -276,7 +276,7 @@ NAN_METHOD(LineString::New)
 	}
 
 	Local&lt;Value&gt; points = LineStringPoints::New(info.This());
-	info.This()-&gt;SetHiddenValue(Nan::New(&quot;points_&quot;).ToLocalChecked(), points);
+	Nan::SetPrivate(info.This(), Nan::New(&quot;points_&quot;).ToLocalChecked(), points);
 
 	f-&gt;Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
@@ -400,10 +400,11 @@ NAN_METHOD(LineString::addSubLineString)
 NAN_GETTER(LineString::pointsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;points_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;points_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

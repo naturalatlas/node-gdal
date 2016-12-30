@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -250,7 +250,7 @@ Local&lt;Value&gt; FeatureFields::New(Local&lt;Value&gt; layer_obj)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(FeatureFields::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
 }
@@ -302,7 +302,7 @@ NAN_METHOD(FeatureFields::set)
 	int field_index;
 	unsigned int i, n, n_fields_set;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -404,7 +404,7 @@ NAN_METHOD(FeatureFields::reset)
 	int field_index;
 	unsigned int i, n;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -463,7 +463,7 @@ NAN_METHOD(FeatureFields::count)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -488,7 +488,7 @@ NAN_METHOD(FeatureFields::indexOf)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -512,7 +512,7 @@ NAN_METHOD(FeatureFields::toObject)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -554,7 +554,7 @@ NAN_METHOD(FeatureFields::toArray)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -629,7 +629,7 @@ NAN_METHOD(FeatureFields::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -665,7 +665,7 @@ NAN_METHOD(FeatureFields::getNames)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Feature *f = Nan::ObjectWrap::Unwrap&lt;Feature&gt;(parent);
 	if (!f-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Feature object already destroyed&quot;);
@@ -811,10 +811,11 @@ Local&lt;Value&gt; FeatureFields::getFieldAsDateTime(OGRFeature* feature, int fi
 NAN_GETTER(FeatureFields::featureGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

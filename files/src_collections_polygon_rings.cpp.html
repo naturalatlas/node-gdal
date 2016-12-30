@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -244,7 +244,7 @@ Local&lt;Value&gt; PolygonRings::New(Local&lt;Value&gt; geom)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(PolygonRings::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
 }
@@ -265,7 +265,7 @@ NAN_METHOD(PolygonRings::count)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	int i = geom-&gt;get()-&gt;getExteriorRing() ? 1 : 0;
@@ -290,7 +290,7 @@ NAN_METHOD(PolygonRings::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	int i;
@@ -330,7 +330,7 @@ NAN_METHOD(PolygonRings::add)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Polygon *geom = Nan::ObjectWrap::Unwrap&lt;Polygon&gt;(parent);
 
 	LinearRing *ring;

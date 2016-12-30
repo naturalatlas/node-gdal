@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -249,7 +249,7 @@ Local&lt;Value&gt; DatasetBands::New(Local&lt;Value&gt; ds_obj)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(DatasetBands::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), ds_obj);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), ds_obj);
 
 	return scope.Escape(obj);
 }
@@ -271,7 +271,7 @@ NAN_METHOD(DatasetBands::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Dataset *ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
 
 	if (!ds-&gt;isAlive()){
@@ -310,7 +310,7 @@ NAN_METHOD(DatasetBands::create)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Dataset *ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
 
 	if (!ds-&gt;isAlive()) {
@@ -368,7 +368,7 @@ NAN_METHOD(DatasetBands::count)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Dataset *ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(parent);
 
 	if (!ds-&gt;isAlive()) {
@@ -397,10 +397,11 @@ NAN_METHOD(DatasetBands::count)
 NAN_GETTER(DatasetBands::dsGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

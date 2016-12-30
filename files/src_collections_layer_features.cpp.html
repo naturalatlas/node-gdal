@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -249,7 +249,7 @@ Local&lt;Value&gt; LayerFeatures::New(Local&lt;Value&gt; layer_obj)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(LayerFeatures::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
 }
@@ -274,7 +274,7 @@ NAN_METHOD(LayerFeatures::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -299,7 +299,7 @@ NAN_METHOD(LayerFeatures::first)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -326,7 +326,7 @@ NAN_METHOD(LayerFeatures::next)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -356,7 +356,7 @@ NAN_METHOD(LayerFeatures::add)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -385,7 +385,7 @@ NAN_METHOD(LayerFeatures::count)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -410,7 +410,7 @@ NAN_METHOD(LayerFeatures::set)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -460,7 +460,7 @@ NAN_METHOD(LayerFeatures::remove)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	Layer *layer = Nan::ObjectWrap::Unwrap&lt;Layer&gt;(parent);
 	if (!layer-&gt;isAlive()) {
 		Nan::ThrowError(&quot;Layer object already destroyed&quot;);
@@ -487,10 +487,11 @@ NAN_METHOD(LayerFeatures::remove)
 NAN_GETTER(LayerFeatures::layerGetter)
 {
 	Nan::HandleScope scope;
-	info.GetReturnValue().Set(info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()));
+	info.GetReturnValue().Set(Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked());
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

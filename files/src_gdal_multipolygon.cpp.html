@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -265,7 +265,7 @@ NAN_METHOD(MultiPolygon::New)
 	}
 
 	Local&lt;Value&gt; children = GeometryCollectionChildren::New(info.This());
-	info.This()-&gt;SetHiddenValue(Nan::New(&quot;children_&quot;).ToLocalChecked(), children);
+	Nan::SetPrivate(info.This(), Nan::New(&quot;children_&quot;).ToLocalChecked(), children);
 
 	f-&gt;Wrap(info.This());
 	info.GetReturnValue().Set(info.This());

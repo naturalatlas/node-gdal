@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.3</b>
+                    API Docs for Version: <b>0.9.4</b>
                 </p>
             </li>
         </div>
@@ -244,7 +244,7 @@ Local&lt;Value&gt; GeometryCollectionChildren::New(Local&lt;Value&gt; geom)
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
 	v8::Local&lt;v8::Object&gt; obj = Nan::New(GeometryCollectionChildren::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
-	obj-&gt;SetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
+	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
 }
@@ -265,7 +265,7 @@ NAN_METHOD(GeometryCollectionChildren::count)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
 	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(geom-&gt;get()-&gt;getNumGeometries()));
@@ -282,7 +282,7 @@ NAN_METHOD(GeometryCollectionChildren::get)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
 	int i;
@@ -301,7 +301,7 @@ NAN_METHOD(GeometryCollectionChildren::remove)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
 	int i;
@@ -337,7 +337,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 {
 	Nan::HandleScope scope;
 
-	Local&lt;Object&gt; parent = info.This()-&gt;GetHiddenValue(Nan::New(&quot;parent_&quot;).ToLocalChecked()).As&lt;Object&gt;();
+	Local&lt;Object&gt; parent = Nan::GetPrivate(info.This(), Nan::New(&quot;parent_&quot;).ToLocalChecked()).ToLocalChecked().As&lt;Object&gt;();
 	GeometryCollection *geom = Nan::ObjectWrap::Unwrap&lt;GeometryCollection&gt;(parent);
 
 	Geometry *child;

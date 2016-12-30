@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.9.3",
+        "version": "0.9.4",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -1211,7 +1211,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 24,
+            "line": 23,
             "description": "Gets a GDAL configuration setting.",
             "example": [
                 "\n```\ndata_path = gdal.config.get('GDAL_DATA');```"
@@ -1234,7 +1234,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 39,
+            "line": 38,
             "description": "Sets a GDAL configuration setting.",
             "example": [
                 "\n```\ngdal.config.set('GDAL_DATA', data_path);```"
@@ -1262,7 +1262,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 108,
+            "line": 107,
             "description": "Iterates through all bands using a callback function.\nNote: GDAL band indexes start at 1, not 0.",
             "example": [
                 "\n```\ndataset.bands.forEach(function(band, i) { ... });```"
@@ -1280,7 +1280,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 127,
+            "line": 126,
             "description": "Iterates through all bands using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.bands.map(function(band, i) {\n    return value;\n});```"
@@ -1298,7 +1298,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 143,
+            "line": 142,
             "description": "Iterates through all features using a callback function.",
             "example": [
                 "\n```\nlayer.features.forEach(function(feature, i) { ... });```"
@@ -1316,7 +1316,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 163,
+            "line": 162,
             "description": "Iterates through all features using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.features.map(function(band, i) {\n    return value;\n});```"
@@ -1334,7 +1334,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 179,
+            "line": 178,
             "description": "Iterates through all fields using a callback function.",
             "example": [
                 "\n```\nlayer.features.get(0).fields.forEach(function(value, key) { ... });```"
@@ -1352,7 +1352,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 201,
+            "line": 200,
             "description": "Iterates through all fields using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.features.get(0).fields.map(function(value, key) {\n    return value;\n});```"
@@ -1370,7 +1370,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 217,
+            "line": 216,
             "description": "Outputs the fields as a serialized JSON string.",
             "itemtype": "method",
             "name": "toJSON",
@@ -1382,7 +1382,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 228,
+            "line": 227,
             "description": "Converts the geometry to a GeoJSON object representation.",
             "itemtype": "method",
             "name": "toObject",
@@ -1394,7 +1394,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 239,
+            "line": 238,
             "description": "Iterates through all field definitions using a callback function.",
             "example": [
                 "\n```\nlayer.fields.forEach(function(field, i) { ... });```"
@@ -1412,7 +1412,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 252,
+            "line": 251,
             "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = layer.fields.map(function(field, i) {\n    return value;\n});```"
@@ -1430,7 +1430,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 268,
+            "line": 267,
             "description": "Iterates through all layers using a callback function.",
             "example": [
                 "\n```\ndataset.layers.forEach(function(layer, i) { ... });```"
@@ -1448,7 +1448,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 281,
+            "line": 280,
             "description": "Iterates through all layers using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
@@ -1466,7 +1466,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 297,
+            "line": 296,
             "description": "Iterates through all field definitions using a callback function.",
             "example": [
                 "\n```\nfeatureDefn.forEach(function(field, i) { ... });```"
@@ -1484,7 +1484,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 310,
+            "line": 309,
             "description": "Iterates through all field definitions using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = dataset.layers.map(function(field, i) {\n    return value;\n});```"
@@ -1502,7 +1502,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 326,
+            "line": 325,
             "description": "Iterates through all rings using a callback function.",
             "example": [
                 "\n```\npolygon.rings.forEach(function(ring, i) { ... });```"
@@ -1520,7 +1520,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 339,
+            "line": 338,
             "description": "Iterates through all rings using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = polygon.rings.map(function(ring, i) {\n    return value;\n});```"
@@ -1538,7 +1538,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 355,
+            "line": 354,
             "description": "Iterates through all points using a callback function.",
             "example": [
                 "\n```\nlineString.points.forEach(function(point, i) { ... });```"
@@ -1556,7 +1556,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 368,
+            "line": 367,
             "description": "Iterates through all points using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = lineString.points.map(function(point, i) {\n    return value;\n});```"
@@ -1574,7 +1574,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 384,
+            "line": 383,
             "description": "Iterates through all child geometries using a callback function.",
             "example": [
                 "\n```\ngeometryCollection.children.forEach(function(geometry, i) { ... });```"
@@ -1592,7 +1592,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 397,
+            "line": 396,
             "description": "Iterates through all child geometries using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = geometryCollection.children.map(function(geometry, i) {\n    return value;\n});```"
@@ -1610,7 +1610,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 413,
+            "line": 412,
             "description": "Iterates through all overviews using a callback function.",
             "example": [
                 "\n```\nband.overviews.forEach(function(overviewBand, i) { ... });```"
@@ -1628,7 +1628,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 426,
+            "line": 425,
             "description": "Iterates through all raster overviews using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = band.overviews.map(function(overviewBand, i) {\n    return value;\n});```"
@@ -1646,7 +1646,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 442,
+            "line": 441,
             "description": "Iterates through all registered drivers using a callback function.",
             "example": [
                 "\n```\ngdal.drivers.forEach(function(driver, i) { ... });```"
@@ -1664,7 +1664,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 455,
+            "line": 454,
             "description": "Iterates through all drivers using a callback function and builds\nan array of the returned values.",
             "example": [
                 "\n```\nvar result = gdal.drivers.map(function(driver, i) {\n    return value;\n});```"
@@ -1682,7 +1682,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 471,
+            "line": 470,
             "description": "Outputs all geometries as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1694,7 +1694,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 480,
+            "line": 479,
             "description": "Outputs all points as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1706,7 +1706,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 489,
+            "line": 488,
             "description": "Outputs all rings as a regular javascript array.",
             "itemtype": "method",
             "name": "toArray",
@@ -1718,7 +1718,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 498,
+            "line": 497,
             "description": "Creates or opens a dataset. Dataset should be explicitly closed with `dataset.close()` method if opened in `\"w\"` mode to flush any changes. Otherwise, datasets are closed when (and if) node decides to garbage collect them.",
             "example": [
                 "\n```\nvar dataset = gdal.open('./data.shp');```"
@@ -1787,7 +1787,7 @@
         },
         {
             "file": "lib/gdal.js",
-            "line": 602,
+            "line": 601,
             "description": "Creates a LayerFields instance from an object of keys and values.",
             "itemtype": "method",
             "name": "fromJSON",
@@ -1872,7 +1872,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 89,
+            "line": 90,
             "description": "Returns the layer with the given name or identifier.",
             "itemtype": "method",
             "name": "get",
@@ -1891,7 +1891,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 138,
+            "line": 139,
             "description": "Adds a new layer.",
             "example": [
                 "\n```\ndataset.layers.create('layername', null, gdal.Point);\n```"
@@ -1931,7 +1931,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 205,
+            "line": 206,
             "description": "Returns the number of layers.",
             "itemtype": "method",
             "name": "count",
@@ -1943,7 +1943,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 236,
+            "line": 237,
             "description": "Copies a layer.",
             "itemtype": "method",
             "name": "copy",
@@ -1974,7 +1974,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 290,
+            "line": 291,
             "description": "Removes a layer.",
             "itemtype": "method",
             "name": "remove",
@@ -1992,7 +1992,7 @@
         },
         {
             "file": "src/collections/dataset_layers.cpp",
-            "line": 330,
+            "line": 331,
             "description": "Parent dataset",
             "readonly": "",
             "itemtype": "attribute",
@@ -5403,7 +5403,7 @@
                 "description": "Error"
             },
             "itemtype": "method",
-            "name": "getStatistics",
+            "name": "computeStatistics",
             "params": [
                 {
                     "name": "allow_approximation",
