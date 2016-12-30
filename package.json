@@ -59,7 +59,7 @@
     "yuidocjs": "~0.3.50"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 0.8.0 <3.0.0"
   },
   "engineStrict": true
 }
