@@ -198,5 +198,17 @@
 			"XPLANE_ENABLED=1",
 			"WASP_ENABLED=1"
 		]
-	}
+	},
+    "conditions" : [
+        ["'<(mrsid_base)' != ''",{
+            "variables": {
+                "gdal_format_gyps": [
+                    "./gyp-formats/mrsid.gyp:libgdal_mrsid_frmt"
+                ],
+                "gdal_format_defs": [
+                    "FRMT_mrsid=1",
+                ]
+            }
+        }]
+    ]
 }
