@@ -1,9 +1,5 @@
 os: Visual Studio 2015
 
-platform:
-  - x86
-  - x64
-
 environment:
   AWS_ACCESS_KEY_ID:
     secure: ihP9C8AMdicFGeffdKqgNG1O4n68jDHQPAZCB/IfuZg=
