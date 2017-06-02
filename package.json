@@ -49,6 +49,7 @@
     "node-pre-gyp": "~0.6.27"
   },
   "devDependencies": {
+    "node-gyp": "^3.6.1",
     "aws-sdk": "~2.0.25",
     "chai": "^3.4.1",
     "eslint": "^1.10.1",
