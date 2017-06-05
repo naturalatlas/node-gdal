@@ -38,7 +38,6 @@
   "scripts": {
     "test": "mocha test -R tap --timeout 600000 --no-colors -gc --require ./test/_common.js",
     "test-syntax": "eslint lib test --fix",
-    "preinstall":"npm install node-pre-gyp",
     "install": "node-pre-gyp install --fallback-to-build",
     "postpublish": "npm run publish-yuidoc",
     "yuidoc": "yuidoc --extension .js,.cpp,.hpp",
