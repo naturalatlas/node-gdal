@@ -45,7 +45,7 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "nan": "~2.5.0",
+    "nan": "~2.6.0",
     "node-pre-gyp": "~0.6.27"
   },
   "devDependencies": {
