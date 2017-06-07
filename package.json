@@ -58,6 +58,9 @@
     "yuidoc-lucid-theme": "~0.1.1",
     "yuidocjs": "~0.3.50"
   },
+  "bundledDependencies": [		
+    "node-pre-gyp"		
+  ],
   "engines": {
     "node": ">= 0.8.0"
   },
