@@ -11,6 +11,10 @@ platform:
   - x64
 
 environment:
+  AWS_ACCESS_KEY_ID:
+    secure: ihP9C8AMdicFGeffdKqgNG1O4n68jDHQPAZCB/IfuZg=
+  AWS_SECRET_ACCESS_KEY:
+    secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
     - nodejs_version: 0.10
       msvs_toolset: 12
@@ -33,8 +37,7 @@ environment:
       msvs_toolset: 14
 
 install:
-# TODO link to versioned build script
-  - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/master/node/ci-cpp.bat' -FileName ci.bat
+  - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-cpp.bat' -FileName ci.bat
   - CALL ci.bat
 
 build: OFF
