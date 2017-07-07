@@ -42,6 +42,45 @@ console.log("extent: " + JSON.stringify(layer.extent));
 console.log("srs: " + (layer.srs ? layer.srs.toWKT() : 'null'));
 ```
 
+#### Shape creation
+```js
+const gdal = require('gdal');
+
+const outfile = '/tmp/test.shp';
+
+const driver = gdal.drivers.get('ESRI Shapefile');
+const dataset = driver.create(outfile);
+const srs = gdal.SpatialReference.fromEPSG(3857);
+const layer = dataset.layers.create('test', srs, gdal.Polygon);
+
+const shapeField = new gdal.FieldDefn('id', gdal.OFTInteger);
+layer.fields.add(shapeField);
+
+const p0 = [0, 0], p1 = [1, 1], p2 = [2,2];
+const features = [
+  {
+    id: 1,
+    geometry: `POLYGON((${p0[0]} ${p0[1]},${p0[0]} ${p1[1]},${p1[0]} ${p1[1]},${p1[0]} ${p0[1]},${p0[0]} ${p0[1]}))`
+  },
+  {
+    id: 2,
+    geometry: `POLYGON((${p2[0]} ${p2[1]},${p2[0]} ${p1[1]},${p1[0]} ${p1[1]},${p1[0]} ${p2[1]},${p2[0]} ${p2[1]}))`
+  }
+];
+
+features.forEach(function(f) {
+  const feature = new gdal.Feature(layer);
+
+  feature.fields.set(0, f.id);
+  const geometry = gdal.Geometry.fromWKT(f.geometry, srs);
+
+  feature.setGeometry(geometry);
+  layer.features.add(feature);
+});
+
+dataset.flush();
+```
+
 ## Notes
 
 - This binding is currently *not* async, so it will block node's event loop. This will be changing in the future ([#18](https://github.com/naturalatlas/node-gdal/issues/18#issuecomment-57513723)). In the meantime, be very careful (or avoid) using it in server code. We recommended using tools like [worker-farm](https://www.npmjs.com/package/worker-farm) to push expensive operations to a seperate process.
