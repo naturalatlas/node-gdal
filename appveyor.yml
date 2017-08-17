@@ -1,4 +1,14 @@
+# This variable requests the highest version of
+# Visual Studio to be installed. Previous versions
+# will also be available and work. So, choosing 2015 here makes
+# available both `msvs_toolset: 12` (from Visual Studio 2013)
+# and `msvs_toolset: 14` (from Visual Studio 2015)
+# Note/TODO: it is not yet confirmed that earlier versions work with the the `Visual Studio 2017` os image.
 os: Visual Studio 2015
+
+platform:
+  - x86
+  - x64
 
 environment:
   AWS_ACCESS_KEY_ID:
@@ -6,31 +16,25 @@ environment:
   AWS_SECRET_ACCESS_KEY:
     secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
-    - nodejs_version: "0.10.40"
+# Visual Studio 2013 builds
+    - nodejs_version: 4
       msvs_toolset: 12
-    - nodejs_version: "4.2.1"
+    - nodejs_version: 6
       msvs_toolset: 12
-    - nodejs_version: "5.0.0"
+    - nodejs_version: 8
       msvs_toolset: 12
-    - nodejs_version: "6.0.0"
-      msvs_toolset: 12
-    - nodejs_version: "7.0.0"
-      msvs_toolset: 12
-    - nodejs_version: "0.10.40"
+# Visual Studio 2015 builds
+    - nodejs_version: 4
       msvs_toolset: 14
-      TOOLSET_ARGS: --dist-url=https://s3.amazonaws.com/mapbox/node-cpp11 --toolset=v140
-
-platform:
-  - x86
-  - x64
-
-artifacts:
-  - path: test/artifacts/*.txt
-    name: Test Logs
+    - nodejs_version: 6
+      msvs_toolset: 14
+    - nodejs_version: 8
+      msvs_toolset: 14
 
 install:
-  - scripts\build-appveyor.bat
+  - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-cpp.bat' -FileName ci.bat
+  - CALL ci.bat
 
-build: off
-test: off
-deploy: off
+build: OFF
+test: OFF
+deploy: OFF
