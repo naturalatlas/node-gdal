@@ -8,6 +8,7 @@
   "keywords": [
     "gdal",
     "libgdal",
+    "ogr",
     "gis",
     "geo",
     "geos",
@@ -44,25 +45,25 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "nan": "~2.6.0",
-    "node-pre-gyp": "~0.6.27"
+    "nan": "~2.6.2",
+    "node-pre-gyp": "~0.6.36"
   },
   "bundledDependencies": [
     "node-pre-gyp"
   ],
   "devDependencies": {
-    "node-gyp": "^3.6.1",
     "aws-sdk": "~2.0.25",
-    "chai": "^3.4.1",
-    "eslint": "^1.10.1",
-    "eslint-config-naturalatlas": "latest",
+    "chai": "~4.1.1",
+    "eslint": "~4.5.0",
+    "eslint-config-naturalatlas": "~1.0.1",
     "gh-pages": "~0.2.0",
-    "mocha": "^2.3.4",
+    "mocha": "~3.5.0",
+    "node-gyp": "~3.6.2",
     "yuidoc-lucid-theme": "~0.1.1",
     "yuidocjs": "~0.3.50"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 0.10.0"
   },
   "engineStrict": true
 }
