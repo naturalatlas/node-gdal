@@ -1,5 +1,7 @@
 language: cpp
 
+dist: precise
+
 compiler:
   - gcc
 
