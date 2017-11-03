@@ -23,8 +23,6 @@ environment:
       msvs_toolset: 12
     - nodejs_version: 8
       msvs_toolset: 12
-    - nodejs_version: 9
-      msvs_toolset: 12
 # Visual Studio 2015 builds
     - nodejs_version: 4
       msvs_toolset: 14
