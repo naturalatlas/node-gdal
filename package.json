@@ -63,7 +63,6 @@
     "yuidocjs": "~0.3.50"
   },
   "engines": {
-    "node": ">= 0.10.0"
-  },
-  "engineStrict": true
+    "node": ">= 4.0.0"
+  }
 }
