@@ -1,5 +1,7 @@
 language: cpp
 
+dist: precise
+
 compiler:
   - gcc
 
@@ -17,22 +19,22 @@ addons:
 
 env:
   matrix:
+    - NODE_NVM_VERSION="9" TARGET=STATIC
+    - NODE_NVM_VERSION="9" TARGET=SHARED
+    - NODE_NVM_VERSION="9" TARGET=TRUNK
     - NODE_NVM_VERSION="8" TARGET=STATIC
     - NODE_NVM_VERSION="8" TARGET=SHARED
-    - NODE_NVM_VERSION="8" TARGET=TRUNK
     - NODE_NVM_VERSION="6" TARGET=STATIC
     - NODE_NVM_VERSION="6" TARGET=SHARED
     - NODE_NVM_VERSION="4" TARGET=STATIC
     - NODE_NVM_VERSION="4" TARGET=SHARED
-    - NODE_NVM_VERSION="0.10" TARGET=STATIC
-    - NODE_NVM_VERSION="0.10" TARGET=SHARED
   global:
     - secure: M1x63eUh8DT4hDLUYzN6kmIHogLbrUp0j1wjLD3h7fQZTRaFZWShJ3HtHnmpFWZ/6ucrJAxnV4Tw6NUiXRp268WXqF9pWpeOEr8UyLJXpV/h4QW0c7eU55C1/L7rE8OqaZT2KnjnCKSjRqAYGbPcZ/BJQFNCy/xnbdjLPnMTeqY=
     - secure: REiXQBC1h0krjRn4z57AcQnA2TPISUmzTZGiu4Go8fAmDtvcbQhr0TIMKn/gFd1QCzyJQTQoZObdC+e9fK2EWdLTxUH/LVxgE+jg89i2HrnH9ydvGog3QNQwM52m9i36N9huUPz6m4aCQIHw9/zA+lgTAB0Lmzo4iZmRWVc9Ih4=
 
 matrix:
   allow_failures:
-    - env: NODE_NVM_VERSION="8" TARGET=TRUNK
+    - env: NODE_NVM_VERSION="9" TARGET=TRUNK
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
@@ -54,7 +56,7 @@ before_install:
 install:
   - if [[ "${TARGET}" == "TRUNK" ]]; then ./scripts/gdal-trunk.sh; fi;
   - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Linux" ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libgdal1-dev libgdal1h=1.10.0-1~precise1; fi;
-  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Darwin" ]]; then brew uninstall gdal; brew install gdal; fi;
+  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Darwin" ]]; then brew update; brew uninstall --ignore-dependencies gdal; brew install gdal; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then npm install --build-from-source --shared_gdal; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then gdal-config --version --version; fi;
   - if [[ "${TARGET}" == "STATIC" ]]; then npm install --build-from-source > /dev/null; fi;
