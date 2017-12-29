@@ -304,7 +304,7 @@ NAN_SETTER(READ_ONLY_SETTER);
     Nan::ThrowError(name " must be given"); return;                                               \
   }                                                                                                           \
   if (!info[num]->IsString()) {                                                                               \
-    Nan::ThrowTypeError(name " must be an string"); return;                                       \
+    Nan::ThrowTypeError(name " must be a string"); return;                                       \
   }                                                                                                           \
   var = (*Nan::Utf8String(info[num]))
 
@@ -345,7 +345,7 @@ NAN_SETTER(READ_ONLY_SETTER);
     if (info[num]->IsString()) {                                                                                \
       var = *Nan::Utf8String(info[num]);                                                                          \
     } else if(!info[num]->IsNull() && !info[num]->IsUndefined()) {                                              \
-      Nan::ThrowTypeError(name " must be an string"); return;                                       \
+      Nan::ThrowTypeError(name " must be a string"); return;                                       \
     }                                                                                                           \
   }
 

@@ -85,6 +85,43 @@ describe('gdal.SpatialReference', function() {
 			assert.instanceOf(ref, gdal.SpatialReference);
 		});
 	});
+	describe('getAuthorityCode', function() {
+		it('should support string argument', function() {
+			var srs = gdal.SpatialReference.fromUserInput('EPSG:27700');
+			assert.strictEqual(srs.getAuthorityCode('PROJCS'), '27700');
+		});
+		it('should support null argument', function() {
+			// https://github.com/naturalatlas/node-gdal/issues/218
+			var wkt = 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]';
+			var srs = gdal.SpatialReference.fromWKT(wkt);
+			srs.autoIdentifyEPSG();
+			assert.strictEqual(srs.getAuthorityCode(null), '4269');
+		});
+		it('should support no arguments', function() {
+			var wkt = 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]';
+			var srs = gdal.SpatialReference.fromWKT(wkt);
+			srs.autoIdentifyEPSG();
+			assert.strictEqual(srs.getAuthorityCode(), '4269');
+		});
+	});
+	describe('getAuthorityName', function() {
+		it('should support string argument', function() {
+			var srs = gdal.SpatialReference.fromUserInput('EPSG:27700');
+			assert.strictEqual(srs.getAuthorityName('PROJCS'), 'EPSG');
+		});
+		it('should support null argument', function() {
+			var wkt = 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]';
+			var srs = gdal.SpatialReference.fromWKT(wkt);
+			srs.autoIdentifyEPSG();
+			assert.strictEqual(srs.getAuthorityName(null), 'EPSG');
+		});
+		it('should support no arguments', function() {
+			var wkt = 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]';
+			var srs = gdal.SpatialReference.fromWKT(wkt);
+			srs.autoIdentifyEPSG();
+			assert.strictEqual(srs.getAuthorityName(), 'EPSG');
+		});
+	});
 	describe('toProj4', function() {
 		it('should return string', function() {
 			var srs = gdal.SpatialReference.fromUserInput('NAD83');

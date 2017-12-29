@@ -357,11 +357,11 @@ NAN_METHOD(SpatialReference::getAuthorityName)
 	Nan::HandleScope scope;
 
 	std::string key = "";
-	NODE_ARG_STR(0, "target key", key);
+	NODE_ARG_OPT_STR(0, "target key", key);
 
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap<SpatialReference>(info.This());
 
-	info.GetReturnValue().Set(SafeString::New(srs->this_->GetAuthorityName(key.c_str())));
+	info.GetReturnValue().Set(SafeString::New(srs->this_->GetAuthorityName(key.length() ? key.c_str() : NULL)));
 }
 
 /**
@@ -376,11 +376,11 @@ NAN_METHOD(SpatialReference::getAuthorityCode)
 	Nan::HandleScope scope;
 
 	std::string key = "";
-	NODE_ARG_STR(0, "target key", key);
+	NODE_ARG_OPT_STR(0, "target key", key);
 
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap<SpatialReference>(info.This());
 
-	info.GetReturnValue().Set(SafeString::New(srs->this_->GetAuthorityCode(key.c_str())));
+	info.GetReturnValue().Set(SafeString::New(srs->this_->GetAuthorityCode(key.length() ? key.c_str() : NULL)));
 }
 
 /**
