@@ -16,7 +16,7 @@ import sys
 import glob
 
 if len(sys.argv) < 2:
-  print 'no argument'
+  print('no argument')
   sys.exit(1)
 
 for f in glob.glob(sys.argv[1]):
@@ -25,4 +25,4 @@ for f in glob.glob(sys.argv[1]):
   # as "print" outputs just single backslashes (\) on Windows
   f = f.replace('\\', '/')
   # use line feed as delimiter between file names to prevent problems with whitespaces in file names
-  print f
+  print(f)
