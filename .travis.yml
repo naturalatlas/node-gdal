@@ -19,9 +19,11 @@ addons:
 
 env:
   matrix:
+    - NODE_NVM_VERSION="10" TARGET=STATIC
+    - NODE_NVM_VERSION="10" TARGET=SHARED
+    - NODE_NVM_VERSION="10" TARGET=TRUNK
     - NODE_NVM_VERSION="9" TARGET=STATIC
     - NODE_NVM_VERSION="9" TARGET=SHARED
-    - NODE_NVM_VERSION="9" TARGET=TRUNK
     - NODE_NVM_VERSION="8" TARGET=STATIC
     - NODE_NVM_VERSION="8" TARGET=SHARED
     - NODE_NVM_VERSION="6" TARGET=STATIC
@@ -31,7 +33,7 @@ env:
 
 matrix:
   allow_failures:
-    - env: NODE_NVM_VERSION="9" TARGET=TRUNK
+    - env: NODE_NVM_VERSION="10" TARGET=TRUNK
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi

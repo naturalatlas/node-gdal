@@ -28,6 +28,8 @@ environment:
       msvs_toolset: 14
     - nodejs_version: 9
       msvs_toolset: 14
+    - nodejs_version: 10
+      msvs_toolset: 14
 
 install:
   - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-cpp.bat' -FileName ci.bat
