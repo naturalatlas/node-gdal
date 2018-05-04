@@ -311,7 +311,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	NODE_ARG_OBJECT(0, "Warp options", obj);
 
-	if(obj->HasOwnProperty(Nan::New("src").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("src").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("src").ToLocalChecked());
 		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
 			ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());

@@ -66,7 +66,7 @@ Local<Value> PolygonRings::New(Local<Value> geom)
 	PolygonRings *wrapped = new PolygonRings();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(PolygonRings::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(PolygonRings::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), geom);
 
 	return scope.Escape(obj);

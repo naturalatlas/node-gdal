@@ -15,7 +15,7 @@ Local<Value> FastBuffer::New(unsigned char *data, int length)
 	Local<Function> bufferConstructor = globalObj->Get(Nan::New("Buffer").ToLocalChecked()).As<Function>();
 	Local<Value> constructorArgs[3] = { slowBuffer, Nan::New<Integer>(length), Nan::New<Integer>(0) };
 	
-	Local<Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+	Local<Object> actualBuffer = Nan::NewInstance(bufferConstructor, 3, constructorArgs).ToLocalChecked();
 
 	return scope.Escape(actualBuffer);
 }

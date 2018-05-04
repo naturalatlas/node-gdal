@@ -148,7 +148,7 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 	Layer *wrapped = new Layer(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Layer::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(Layer::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	cache.add(raw, obj);
 

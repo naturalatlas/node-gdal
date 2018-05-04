@@ -143,7 +143,7 @@ Local<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	RasterBand *wrapped = new RasterBand(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(RasterBand::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(RasterBand::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	LOG("Adding band to cache[%p] (parent=%p)", raw, raw_parent);
 	cache.add(raw, obj);

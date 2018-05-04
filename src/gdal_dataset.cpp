@@ -171,7 +171,7 @@ Local<Value> Dataset::New(GDALDataset *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(Dataset::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	dataset_cache.add(raw, obj);
 	wrapped->uid = ptr_manager.add(raw);
@@ -194,7 +194,7 @@ Local<Value> Dataset::New(OGRDataSource *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Dataset::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(Dataset::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	datasource_cache.add(raw, obj);
 	wrapped->uid = ptr_manager.add(raw);

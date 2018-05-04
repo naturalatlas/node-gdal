@@ -69,7 +69,7 @@ Local<Value> GDALDrivers::New()
 	GDALDrivers *wrapped = new GDALDrivers();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(GDALDrivers::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(GDALDrivers::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

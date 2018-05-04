@@ -88,7 +88,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_DOUBLE_FROM_OBJ(obj, key, var)                                                               \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                     \
-  if (!obj->HasOwnProperty(sym)){                                                                         \
+  if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                                 \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -102,7 +102,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_INT_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                     \
-  if (!obj->HasOwnProperty(sym)){                                                                         \
+  if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                                 \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -116,7 +116,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (!obj->HasOwnProperty(sym)){                                                                         \
+  if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                     \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -130,7 +130,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_WRAPPED_FROM_OBJ(obj, key, type, var)                                                        \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (!obj->HasOwnProperty(sym)){                                                                         \
+  if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                     \
   }                                                                                                       \
   Local<Value> val = obj->Get(sym);                                                                       \
@@ -148,7 +148,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_WRAPPED_FROM_OBJ_OPT(obj, key, type, var)                                                    \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (obj->HasOwnProperty(sym)){                                                                          \
+  if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
     Local<Value> val = obj->Get(sym);                                                                     \
     if(val->IsObject() && Nan::New(type::constructor)->HasInstance(val)){                                        \
       var = Nan::ObjectWrap::Unwrap<type>(val.As<Object>());                                                   \
@@ -166,7 +166,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_DOUBLE_FROM_OBJ_OPT(obj, key, var)                                                           \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (obj->HasOwnProperty(sym)){                                                                          \
+  if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsNumber()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
@@ -179,7 +179,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_INT_FROM_OBJ_OPT(obj, key, var)                                                              \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (obj->HasOwnProperty(sym)){                                                                          \
+  if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsNumber()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
@@ -192,7 +192,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_STR_FROM_OBJ_OPT(obj, key, var)                                                              \
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
-  if (obj->HasOwnProperty(sym)){                                                                          \
+  if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
     Local<Value> val = obj->Get(sym);                                                                     \
     if (!val->IsString()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a string");                                         \

@@ -123,7 +123,7 @@ Local<Value> FieldDefn::New(OGRFieldDefn *def, bool owned)
 	wrapped->owned_ = true;
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(FieldDefn::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FieldDefn::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

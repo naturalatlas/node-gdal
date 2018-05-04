@@ -74,7 +74,7 @@ Local<Value> DatasetLayers::New(Local<Value> ds_obj)
 	DatasetLayers *wrapped = new DatasetLayers();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(DatasetLayers::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(DatasetLayers::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), ds_obj);
 

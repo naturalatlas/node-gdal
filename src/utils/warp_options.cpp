@@ -79,13 +79,13 @@ int WarpOptions::parse(Local<Value> value)
 	Local<Object> obj = value.As<Object>();
 	Local<Value> prop;
 
-	if(obj->HasOwnProperty(Nan::New("options").ToLocalChecked()) && additional_options.parse(obj->Get(Nan::New("options").ToLocalChecked()))){
+	if(Nan::HasOwnProperty(obj, Nan::New("options").ToLocalChecked()).FromMaybe(false) && additional_options.parse(obj->Get(Nan::New("options").ToLocalChecked()))){
 		return 1; // error parsing string list
 	}
 
 	options->papszWarpOptions = additional_options.get();
 
-	if(obj->HasOwnProperty(Nan::New("memoryLimit").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("memoryLimit").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("memoryLimit").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->dfWarpMemoryLimit = prop->Int32Value();
@@ -93,13 +93,13 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("memoryLimit property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("resampling").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("resampling").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("resampling").ToLocalChecked());
 		if(parseResamplingAlg(prop)){
 			return 1; //error parsing resampling algorithm
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("src").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("src").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("src").ToLocalChecked());
 		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
 			Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
@@ -121,7 +121,7 @@ int WarpOptions::parse(Local<Value> value)
 		Nan::ThrowError("Warp options must include a source dataset");
 		return 1;
 	}
-	if(obj->HasOwnProperty(Nan::New("dst").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("dst").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("dst").ToLocalChecked());
 		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
 			Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
@@ -140,7 +140,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("dst property must be a Dataset object"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("srcBands").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("srcBands").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("srcBands").ToLocalChecked());
 		if(src_bands.parse(prop)){
 			return 1; //error parsing number list
@@ -148,7 +148,7 @@ int WarpOptions::parse(Local<Value> value)
 		options->panSrcBands = src_bands.get();
 		options->nBandCount = src_bands.length();
 	}
-	if(obj->HasOwnProperty(Nan::New("dstBands").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("dstBands").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("dstBands").ToLocalChecked());
 		if(dst_bands.parse(prop)){
 			return 1; //error parsing number list
@@ -168,7 +168,7 @@ int WarpOptions::parse(Local<Value> value)
 		Nan::ThrowError("dstBands must be provided if srcBands option is used"); 
 		return 1;
 	}
-	if(obj->HasOwnProperty(Nan::New("srcNodata").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("srcNodata").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("srcNodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			src_nodata = new double(prop->NumberValue());
@@ -177,7 +177,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("srcNodata property must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("dstNodata").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("dstNodata").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("dstNodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			dst_nodata = new double(prop->NumberValue());
@@ -186,7 +186,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("dstNodata property must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("srcAlphaBand").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("srcAlphaBand").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("srcAlphaBand").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->nSrcAlphaBand = prop->Int32Value();
@@ -194,7 +194,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("srcAlphaBand property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("dstAlphaBand").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("dstAlphaBand").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("dstAlphaBand").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->nDstAlphaBand = prop->Int32Value();
@@ -202,7 +202,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("dstAlphaBand property must be an integer"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("blend").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("blend").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("blend").ToLocalChecked());
 		if(prop->IsNumber()){
 			options->dfCutlineBlendDist = prop->NumberValue();
@@ -210,7 +210,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("cutline blend distance must be a number"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("cutline").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("cutline").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("cutline").ToLocalChecked());
 		if(prop->IsObject() && !prop->IsNull() && Nan::New(Geometry::constructor)->HasInstance(prop)){
 			options->hCutline = Nan::ObjectWrap::Unwrap<Geometry>(prop.As<Object>())->get();
@@ -218,7 +218,7 @@ int WarpOptions::parse(Local<Value> value)
 			Nan::ThrowTypeError("cutline property must be a Geometry object"); return 1;
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("multi").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("multi").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("multi").ToLocalChecked());
 		if(prop->IsTrue()){
 			multi = true;

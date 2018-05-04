@@ -166,7 +166,7 @@ Local<Value> Feature::New(OGRFeature *feature, bool owned)
 	Feature *wrapped = new Feature(feature);
 	wrapped->owned_ = owned;
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Feature::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(Feature::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	return scope.Escape(obj);
 }
 

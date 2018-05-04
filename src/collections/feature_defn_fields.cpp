@@ -72,7 +72,7 @@ Local<Value> FeatureDefnFields::New(Local<Value> feature_defn)
 	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(FeatureDefnFields::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FeatureDefnFields::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), feature_defn);
 
 	return scope.Escape(obj);

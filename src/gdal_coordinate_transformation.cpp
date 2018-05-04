@@ -155,7 +155,7 @@ Local<Value> CoordinateTransformation::New(OGRCoordinateTransformation *transfor
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(CoordinateTransformation::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(CoordinateTransformation::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

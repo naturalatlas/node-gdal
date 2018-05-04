@@ -125,7 +125,7 @@ Local<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(LinearRing::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(LinearRing::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

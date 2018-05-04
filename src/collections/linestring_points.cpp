@@ -69,7 +69,7 @@ Local<Value> LineStringPoints::New(Local<Value> geom)
 	LineStringPoints *wrapped = new LineStringPoints();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(LineStringPoints::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(LineStringPoints::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -210,7 +210,7 @@ NAN_METHOD(LineStringPoints::set)
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
 
 			Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
-			if (obj->HasOwnProperty(z_prop_name)) {
+			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
 				Local<Value> z_val = obj->Get(z_prop_name);
 				if (!z_val->IsNumber()) {
 					Nan::ThrowError("z property must be number");
@@ -304,7 +304,7 @@ NAN_METHOD(LineStringPoints::add)
 					NODE_DOUBLE_FROM_OBJ(element_obj, "y", y);
 
 					Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
-					if (element_obj->HasOwnProperty(z_prop_name)) {
+					if (Nan::HasOwnProperty(element_obj, z_prop_name).FromMaybe(false)) {
 						Local<Value> z_val = element_obj->Get(z_prop_name);
 						if (!z_val->IsNumber()) {
 							Nan::ThrowError("z property must be number");
@@ -324,7 +324,7 @@ NAN_METHOD(LineStringPoints::add)
 			NODE_DOUBLE_FROM_OBJ(obj, "y", y);
 
 			Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
-			if (obj->HasOwnProperty(z_prop_name)) {
+			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
 				Local<Value> z_val = obj->Get(z_prop_name);
 				if (!z_val->IsNumber()) {
 					Nan::ThrowError("z property must be number");
