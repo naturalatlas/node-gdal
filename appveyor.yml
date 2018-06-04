@@ -11,10 +11,6 @@ platform:
   - x64
 
 environment:
-  AWS_ACCESS_KEY_ID:
-    secure: ihP9C8AMdicFGeffdKqgNG1O4n68jDHQPAZCB/IfuZg=
-  AWS_SECRET_ACCESS_KEY:
-    secure: G45Qz4paCV4VpsA939dz7i2PQiTdVOYwh1paZ3sGSdS9REKnLHB2cmToak8uAyHP
   matrix:
 # Visual Studio 2013 builds
     - nodejs_version: 4
