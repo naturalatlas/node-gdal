@@ -46,7 +46,6 @@ before_install:
 install:
   - if [[ "${TARGET}" == "TRUNK" ]]; then ./scripts/gdal-trunk.sh; fi;
   - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Linux" ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libc6-dev; fi;
-  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Darwin" ]]; then brew update; brew uninstall --ignore-dependencies gdal; brew install gdal; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then npm install --build-from-source --shared_gdal; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then gdal-config --version --version; fi;
   - if [[ "${TARGET}" == "STATIC" ]]; then npm install --build-from-source > /dev/null; fi;
