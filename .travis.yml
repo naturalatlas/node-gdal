@@ -1,33 +1,78 @@
 language: cpp
 
-dist: trusty
-
 compiler:
   - gcc
 
-os:
-  - linux
-  - osx
-
-env:
-  matrix:
-    - NODE_NVM_VERSION="10" TARGET=STATIC
-    - NODE_NVM_VERSION="10" TARGET=SHARED
-    - NODE_NVM_VERSION="10" TARGET=TRUNK
-    - NODE_NVM_VERSION="9" TARGET=STATIC
-    - NODE_NVM_VERSION="9" TARGET=SHARED
-    - NODE_NVM_VERSION="8" TARGET=STATIC
-    - NODE_NVM_VERSION="8" TARGET=SHARED
-    - NODE_NVM_VERSION="6" TARGET=STATIC
-    - NODE_NVM_VERSION="6" TARGET=SHARED
-    - NODE_NVM_VERSION="4" TARGET=STATIC
-    - NODE_NVM_VERSION="4" TARGET=SHARED
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+    - libc6-dev # for libiconv which is needed by libgdal
 
 matrix:
+  include:
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="10" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="10" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=TRUNK
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="10" TARGET=TRUNK
+    - os: osx
+      env: NODE_NVM_VERSION="9" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="9" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="9" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="9" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="8" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="8" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="8" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="8" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="6" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="6" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="6" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="6" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="4" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="4" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="4" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="4" TARGET=SHARED
   allow_failures:
     - env: NODE_NVM_VERSION="10" TARGET=TRUNK
 
 before_install:
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - PUBLISH_BINARY=false
   - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then PUBLISH_BINARY=true; fi;
