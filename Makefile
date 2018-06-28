@@ -67,6 +67,7 @@ else
 	make test
 	@make authors
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package.json
+	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package-lock.json
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' yuidoc.json
 	rm *.bak
 	git add .
