@@ -71,7 +71,7 @@ Local<Value> LayerFeatures::New(Local<Value> layer_obj)
 	LayerFeatures *wrapped = new LayerFeatures();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(LayerFeatures::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(LayerFeatures::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);

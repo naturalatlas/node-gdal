@@ -140,7 +140,7 @@ Local<Value> Driver::New(GDALDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Driver::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(Driver::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	//LOG("ADDING DRIVER TO CACHE [%p]", driver);
 	cache.add(driver, obj);
@@ -163,7 +163,7 @@ Local<Value> Driver::New(OGRSFDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(Driver::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(Driver::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	cache_ogr.add(driver, obj);
 

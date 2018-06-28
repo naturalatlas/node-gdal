@@ -173,7 +173,7 @@ Local<Value> SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	SpatialReference *wrapped = new SpatialReference(cloned_srs);
 	wrapped->owned_ = true;
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(SpatialReference::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(SpatialReference::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	cache.add(cloned_srs, raw, obj);
 

@@ -1,13 +1,7 @@
 language: cpp
 
-dist: precise
-
 compiler:
   - gcc
-
-os:
-  - linux
-  - osx
 
 addons:
   apt:
@@ -17,21 +11,65 @@ addons:
     - g++-4.8
     - libc6-dev # for libiconv which is needed by libgdal
 
-env:
-  matrix:
-    - NODE_NVM_VERSION="9" TARGET=STATIC
-    - NODE_NVM_VERSION="9" TARGET=SHARED
-    - NODE_NVM_VERSION="9" TARGET=TRUNK
-    - NODE_NVM_VERSION="8" TARGET=STATIC
-    - NODE_NVM_VERSION="8" TARGET=SHARED
-    - NODE_NVM_VERSION="6" TARGET=STATIC
-    - NODE_NVM_VERSION="6" TARGET=SHARED
-    - NODE_NVM_VERSION="4" TARGET=STATIC
-    - NODE_NVM_VERSION="4" TARGET=SHARED
-
 matrix:
+  include:
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="10" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="10" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="10" TARGET=TRUNK
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="10" TARGET=TRUNK
+    - os: osx
+      env: NODE_NVM_VERSION="9" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="9" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="9" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="9" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="8" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="8" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="8" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="8" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="6" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="6" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="6" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="6" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="4" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="4" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="4" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="4" TARGET=SHARED
   allow_failures:
-    - env: NODE_NVM_VERSION="9" TARGET=TRUNK
+    - env: NODE_NVM_VERSION="10" TARGET=TRUNK
 
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
@@ -52,8 +90,7 @@ before_install:
 
 install:
   - if [[ "${TARGET}" == "TRUNK" ]]; then ./scripts/gdal-trunk.sh; fi;
-  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Linux" ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libgdal1-dev libgdal1h=1.10.0-1~precise1; fi;
-  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Darwin" ]]; then brew update; brew uninstall --ignore-dependencies gdal; brew install gdal; fi;
+  - if [[ "${TARGET}" == "SHARED" && "$(uname -s)" == "Linux" ]]; then sudo apt-get -qq update; sudo apt-get --force-yes -qq install libgdal-dev libc6-dev; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then npm install --build-from-source --shared_gdal; fi;
   - if [[ "${TARGET}" == "SHARED" || "${TARGET}" == "TRUNK" ]]; then gdal-config --version --version; fi;
   - if [[ "${TARGET}" == "STATIC" ]]; then npm install --build-from-source > /dev/null; fi;

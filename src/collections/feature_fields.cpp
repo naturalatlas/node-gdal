@@ -72,7 +72,7 @@ Local<Value> FeatureFields::New(Local<Value> layer_obj)
 	FeatureFields *wrapped = new FeatureFields();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(FeatureFields::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FeatureFields::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
@@ -171,7 +171,7 @@ NAN_METHOD(FeatureFields::set)
 
 				//skip value if field name doesnt exist
 				//both in the feature definition and the passed object
-				if (field_index == -1 || !values->HasOwnProperty(Nan::New(field_name).ToLocalChecked())) {
+				if (field_index == -1 || !Nan::HasOwnProperty(values, Nan::New(field_name).ToLocalChecked()).FromMaybe(false)) {
 					continue;
 				}
 

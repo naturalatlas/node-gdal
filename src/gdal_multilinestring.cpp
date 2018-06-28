@@ -123,7 +123,7 @@ Local<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(MultiLineString::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(MultiLineString::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

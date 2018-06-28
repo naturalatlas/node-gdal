@@ -78,7 +78,7 @@ Local<Value> RasterBandPixels::New(Local<Value> band_obj)
 	RasterBandPixels *wrapped = new RasterBandPixels();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::New(RasterBandPixels::constructor)->GetFunction()->NewInstance(1, &ext);
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(RasterBandPixels::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), band_obj);
 
 	return scope.Escape(obj);

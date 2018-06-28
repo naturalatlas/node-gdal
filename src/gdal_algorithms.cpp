@@ -102,7 +102,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_INT_FROM_OBJ_OPT(obj, "elevField", elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "interval", interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "offset", base);
-	if(obj->HasOwnProperty(Nan::New("fixedLevels").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("fixedLevels").ToLocalChecked()).FromMaybe(false)){
 		if(fixed_level_array.parse(obj->Get(Nan::New("fixedLevels").ToLocalChecked()))){
 			return; //error parsing double list
 		} else {
@@ -110,7 +110,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 			n_fixed_levels = fixed_level_array.length();
 		}
 	}
-	if(obj->HasOwnProperty(Nan::New("nodata").ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New("nodata").ToLocalChecked()).FromMaybe(false)){
 		prop = obj->Get(Nan::New("nodata").ToLocalChecked());
 		if(prop->IsNumber()){
 			use_nodata = 1;
@@ -273,7 +273,7 @@ NAN_METHOD(Algorithms::polygonize)
 	}
 
 	CPLErr err;
-	if(obj->HasOwnProperty(Nan::New("useFloats").ToLocalChecked()) && obj->Get(Nan::New("useFloats").ToLocalChecked())->BooleanValue()){
+	if(Nan::HasOwnProperty(obj, Nan::New("useFloats").ToLocalChecked()).FromMaybe(false) && obj->Get(Nan::New("useFloats").ToLocalChecked())->BooleanValue()){
 		err = GDALFPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);

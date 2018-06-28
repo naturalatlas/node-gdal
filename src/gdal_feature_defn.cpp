@@ -122,7 +122,7 @@ Local<Value> FeatureDefn::New(OGRFeatureDefn *def, bool owned)
 	def->Reference();
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::New(FeatureDefn::constructor)->GetFunction()->NewInstance(1, &ext);
+	Local<Object> obj = Nan::NewInstance(Nan::New(FeatureDefn::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
