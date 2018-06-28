@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -325,7 +325,7 @@ Local&lt;Value&gt; Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool res
 	Layer *wrapped = new Layer(raw);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Layer::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Layer::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	cache.add(raw, obj);
 

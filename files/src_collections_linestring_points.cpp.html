@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -246,7 +246,7 @@ Local&lt;Value&gt; LineStringPoints::New(Local&lt;Value&gt; geom)
 	LineStringPoints *wrapped = new LineStringPoints();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::New(LineStringPoints::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(LineStringPoints::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -387,7 +387,7 @@ NAN_METHOD(LineStringPoints::set)
 			NODE_DOUBLE_FROM_OBJ(obj, &quot;y&quot;, y);
 
 			Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
-			if (obj-&gt;HasOwnProperty(z_prop_name)) {
+			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
 				Local&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
 				if (!z_val-&gt;IsNumber()) {
 					Nan::ThrowError(&quot;z property must be number&quot;);
@@ -481,7 +481,7 @@ NAN_METHOD(LineStringPoints::add)
 					NODE_DOUBLE_FROM_OBJ(element_obj, &quot;y&quot;, y);
 
 					Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
-					if (element_obj-&gt;HasOwnProperty(z_prop_name)) {
+					if (Nan::HasOwnProperty(element_obj, z_prop_name).FromMaybe(false)) {
 						Local&lt;Value&gt; z_val = element_obj-&gt;Get(z_prop_name);
 						if (!z_val-&gt;IsNumber()) {
 							Nan::ThrowError(&quot;z property must be number&quot;);
@@ -501,7 +501,7 @@ NAN_METHOD(LineStringPoints::add)
 			NODE_DOUBLE_FROM_OBJ(obj, &quot;y&quot;, y);
 
 			Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
-			if (obj-&gt;HasOwnProperty(z_prop_name)) {
+			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
 				Local&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
 				if (!z_val-&gt;IsNumber()) {
 					Nan::ThrowError(&quot;z property must be number&quot;);

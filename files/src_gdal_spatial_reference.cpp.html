@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -350,7 +350,7 @@ Local&lt;Value&gt; SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	SpatialReference *wrapped = new SpatialReference(cloned_srs);
 	wrapped-&gt;owned_ = true;
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(SpatialReference::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(SpatialReference::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	cache.add(cloned_srs, raw, obj);
 
@@ -534,11 +534,11 @@ NAN_METHOD(SpatialReference::getAuthorityName)
 	Nan::HandleScope scope;
 
 	std::string key = &quot;&quot;;
-	NODE_ARG_STR(0, &quot;target key&quot;, key);
+	NODE_ARG_OPT_STR(0, &quot;target key&quot;, key);
 
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap&lt;SpatialReference&gt;(info.This());
 
-	info.GetReturnValue().Set(SafeString::New(srs-&gt;this_-&gt;GetAuthorityName(key.c_str())));
+	info.GetReturnValue().Set(SafeString::New(srs-&gt;this_-&gt;GetAuthorityName(key.length() ? key.c_str() : NULL)));
 }
 
 /**
@@ -553,11 +553,11 @@ NAN_METHOD(SpatialReference::getAuthorityCode)
 	Nan::HandleScope scope;
 
 	std::string key = &quot;&quot;;
-	NODE_ARG_STR(0, &quot;target key&quot;, key);
+	NODE_ARG_OPT_STR(0, &quot;target key&quot;, key);
 
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap&lt;SpatialReference&gt;(info.This());
 
-	info.GetReturnValue().Set(SafeString::New(srs-&gt;this_-&gt;GetAuthorityCode(key.c_str())));
+	info.GetReturnValue().Set(SafeString::New(srs-&gt;this_-&gt;GetAuthorityCode(key.length() ? key.c_str() : NULL)));
 }
 
 /**

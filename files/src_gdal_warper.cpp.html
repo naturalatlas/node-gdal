@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -488,7 +488,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 
 	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
 
-	if(obj-&gt;HasOwnProperty(Nan::New(&quot;src&quot;).ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New(&quot;src&quot;).ToLocalChecked()).FromMaybe(false)){
 		prop = obj-&gt;Get(Nan::New(&quot;src&quot;).ToLocalChecked());
 		if(prop-&gt;IsObject() &amp;&amp; !prop-&gt;IsNull() &amp;&amp; Nan::New(Dataset::constructor)-&gt;HasInstance(prop)){
 			ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(prop.As&lt;Object&gt;());

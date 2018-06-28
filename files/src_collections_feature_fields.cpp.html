@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -249,7 +249,7 @@ Local&lt;Value&gt; FeatureFields::New(Local&lt;Value&gt; layer_obj)
 	FeatureFields *wrapped = new FeatureFields();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::New(FeatureFields::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(FeatureFields::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
@@ -348,7 +348,7 @@ NAN_METHOD(FeatureFields::set)
 
 				//skip value if field name doesnt exist
 				//both in the feature definition and the passed object
-				if (field_index == -1 || !values-&gt;HasOwnProperty(Nan::New(field_name).ToLocalChecked())) {
+				if (field_index == -1 || !Nan::HasOwnProperty(values, Nan::New(field_name).ToLocalChecked()).FromMaybe(false)) {
 					continue;
 				}
 

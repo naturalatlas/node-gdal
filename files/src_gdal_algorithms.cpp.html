@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -279,7 +279,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_INT_FROM_OBJ_OPT(obj, &quot;elevField&quot;, elev_field);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;interval&quot;, interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;offset&quot;, base);
-	if(obj-&gt;HasOwnProperty(Nan::New(&quot;fixedLevels&quot;).ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()).FromMaybe(false)){
 		if(fixed_level_array.parse(obj-&gt;Get(Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()))){
 			return; //error parsing double list
 		} else {
@@ -287,7 +287,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 			n_fixed_levels = fixed_level_array.length();
 		}
 	}
-	if(obj-&gt;HasOwnProperty(Nan::New(&quot;nodata&quot;).ToLocalChecked())){
+	if(Nan::HasOwnProperty(obj, Nan::New(&quot;nodata&quot;).ToLocalChecked()).FromMaybe(false)){
 		prop = obj-&gt;Get(Nan::New(&quot;nodata&quot;).ToLocalChecked());
 		if(prop-&gt;IsNumber()){
 			use_nodata = 1;
@@ -450,7 +450,7 @@ NAN_METHOD(Algorithms::polygonize)
 	}
 
 	CPLErr err;
-	if(obj-&gt;HasOwnProperty(Nan::New(&quot;useFloats&quot;).ToLocalChecked()) &amp;&amp; obj-&gt;Get(Nan::New(&quot;useFloats&quot;).ToLocalChecked())-&gt;BooleanValue()){
+	if(Nan::HasOwnProperty(obj, Nan::New(&quot;useFloats&quot;).ToLocalChecked()).FromMaybe(false) &amp;&amp; obj-&gt;Get(Nan::New(&quot;useFloats&quot;).ToLocalChecked())-&gt;BooleanValue()){
 		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);

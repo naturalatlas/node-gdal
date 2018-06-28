@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -317,7 +317,7 @@ Local&lt;Value&gt; Driver::New(GDALDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Driver::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Driver::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	//LOG(&quot;ADDING DRIVER TO CACHE [%p]&quot;, driver);
 	cache.add(driver, obj);
@@ -340,7 +340,7 @@ Local&lt;Value&gt; Driver::New(OGRSFDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Driver::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(Driver::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	cache_ogr.add(driver, obj);
 

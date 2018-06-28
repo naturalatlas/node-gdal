@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -348,7 +348,7 @@ Local&lt;Value&gt; Dataset::New(GDALDataset *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Dataset::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Dataset::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	dataset_cache.add(raw, obj);
 	wrapped-&gt;uid = ptr_manager.add(raw);
@@ -371,7 +371,7 @@ Local&lt;Value&gt; Dataset::New(OGRDataSource *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Dataset::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(Dataset::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	datasource_cache.add(raw, obj);
 	wrapped-&gt;uid = ptr_manager.add(raw);

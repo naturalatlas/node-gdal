@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -251,7 +251,7 @@ Local&lt;Value&gt; DatasetLayers::New(Local&lt;Value&gt; ds_obj)
 	DatasetLayers *wrapped = new DatasetLayers();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::New(DatasetLayers::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(DatasetLayers::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), ds_obj);
 

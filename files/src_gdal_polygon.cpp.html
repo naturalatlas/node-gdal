@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.6</b>
+                    API Docs for Version: <b>0.9.7</b>
                 </p>
             </li>
         </div>
@@ -303,7 +303,7 @@ Local&lt;Value&gt; Polygon::New(OGRPolygon *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::New(Polygon::constructor)-&gt;GetFunction()-&gt;NewInstance(1, &amp;ext);
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Polygon::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
