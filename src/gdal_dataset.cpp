@@ -583,13 +583,14 @@ NAN_METHOD(Dataset::setGCPs)
 		gcp++;
 	}
 
+	CPLErr err = raw->SetGCPs(gcps->Length(), list, projection.c_str());
+
 	if (list) {
 		delete [] list;
 		delete [] pszId_list;
 		delete [] pszInfo_list;
 	}
 
-	CPLErr err = raw->SetGCPs(gcps->Length(), list, projection.c_str());
 	if (err) {
 		NODE_THROW_CPLERR(err);
 		return;
