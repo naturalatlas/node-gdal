@@ -588,4 +588,58 @@ describe('gdal.Dataset', function() {
 			});
 		});
 	});
+	describe('setGCPs()', function() {
+		it('should update gcps', function() {
+			var driver = gdal.drivers.get('MEM');
+			var outputFilename = ''; // __dirname + '/data/12_791_1476.tif';
+			var ds = driver.createCopy(outputFilename, gdal.open(__dirname + '/data/12_791_1476.jpg'));
+			ds.srs = gdal.SpatialReference.fromEPSG(4326);
+			var bounds = {
+				minX: -110.478515625,
+				maxX: -110.390625,
+				minY: 44.77793589631623,
+				maxY: 44.84029065139799
+			};
+			var expectedGCPs = [{
+				dfGCPPixel: 0,
+				dfGCPLine: 0,
+				dfGCPX: bounds.minX,
+				dfGCPY: bounds.maxY,
+				dfGCPZ: 0
+			}, {
+				dfGCPPixel: 255,
+				dfGCPLine: 0,
+				dfGCPX: bounds.maxX,
+				dfGCPY: bounds.maxY,
+				dfGCPZ: 0
+			}, {
+				dfGCPPixel: 255,
+				dfGCPLine: 255,
+				dfGCPX: bounds.maxX,
+				dfGCPY: bounds.minY,
+				dfGCPZ: 0
+			}, {
+				dfGCPPixel: 0,
+				dfGCPLine: 255,
+				dfGCPX: bounds.minX,
+				dfGCPY: bounds.minY,
+				dfGCPZ: 0
+			}];
+
+			ds.setGCPs(expectedGCPs);
+			var actualGCPs = ds.getGCPs();
+
+			expectedGCPs.forEach(function(expectedGCP, i) {
+				var actualGCP = actualGCPs[i];
+				var delta = 0.00001;
+				assert.closeTo(actualGCP.dfGCPLine, expectedGCP.dfGCPLine, delta);
+				assert.closeTo(actualGCP.dfGCPPixel, expectedGCP.dfGCPPixel, delta);
+				assert.closeTo(actualGCP.dfGCPX, expectedGCP.dfGCPX, delta);
+				assert.closeTo(actualGCP.dfGCPY, expectedGCP.dfGCPY, delta);
+				assert.closeTo(actualGCP.dfGCPZ, expectedGCP.dfGCPZ, delta);
+			});
+
+			ds.close();
+		});
+	});
 });
