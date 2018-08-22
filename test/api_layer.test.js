@@ -90,7 +90,12 @@ describe('gdal.Layer', function() {
 			describe('getter', function() {
 				it('should return SpatialReference', function() {
 					prepare_dataset_layer_test('r', function(dataset, layer) {
-						assert.equal(layer.srs.toWKT(), 'GEOGCS["GCS_North_American_1983",DATUM["North_American_Datum_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]');
+						// EPSG:4269 - exact WKT can vary when using shared GDAL / Proj4 library
+						var expectedWKT = [
+							'GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4269"]]',
+							'GEOGCS["GCS_North_American_1983",DATUM["North_American_Datum_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]'
+						];
+						assert.include(expectedWKT, layer.srs.toWKT());
 					});
 				});
 				it('should return the same SpatialReference object', function() {
@@ -842,7 +847,7 @@ describe('gdal.Layer', function() {
 				it("should throw error if field name isn't supported", function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						assert.throws(function() {
-							layer.fields.fromObject({some_really_long_name: "test"});
+							layer.fields.fromObject({some_really_long_name: 'test'});
 						}, /Failed to add/);
 					});
 				});
@@ -850,7 +855,7 @@ describe('gdal.Layer', function() {
 					prepare_dataset_layer_test('w', function(dataset, layer) {
 						dataset.close();
 						assert.throws(function() {
-							layer.fields.fromObject({name: "test"});
+							layer.fields.fromObject({name: 'test'});
 						}, /already destroyed/);
 					});
 				});
