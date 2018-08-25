@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.9.7",
+        "version": "0.9.8",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -3634,7 +3634,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 601,
+            "line": 602,
             "description": "Builds dataset overviews.",
             "throws": {
                 "description": "Error"
@@ -3663,7 +3663,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 686,
+            "line": 687,
             "readonly": "",
             "itemtype": "attribute",
             "name": "description",
@@ -3672,7 +3672,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 717,
+            "line": 718,
             "description": "Raster dimensions. An object containing `x` and `y` properties.",
             "readonly": "",
             "itemtype": "attribute",
@@ -3682,7 +3682,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 758,
+            "line": 759,
             "description": "Spatial reference associated with raster dataset",
             "throws": {
                 "description": "Error"
@@ -3694,7 +3694,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 802,
+            "line": 803,
             "description": "An affine transform which maps pixel/line coordinates into georeferenced space using the following relationship:",
             "example": [
                 "\n```\nvar GT = dataset.geoTransform;\nvar Xgeo = GT[0] + Xpixel*GT[1] + Yline*GT[2];\nvar Ygeo = GT[3] + Xpixel*GT[4] + Yline*GT[5];```"
@@ -3706,7 +3706,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 852,
+            "line": 853,
             "readonly": "",
             "itemtype": "attribute",
             "name": "driver",
@@ -3715,7 +3715,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 969,
+            "line": 970,
             "readonly": "",
             "itemtype": "attribute",
             "name": "bands",
@@ -3724,7 +3724,7 @@
         },
         {
             "file": "src/gdal_dataset.cpp",
-            "line": 980,
+            "line": 981,
             "readonly": "",
             "itemtype": "attribute",
             "name": "layers",
