@@ -8,6 +8,7 @@
 #include "gdal_geometry.hpp"
 #include "collections/dataset_bands.hpp"
 #include "collections/dataset_layers.hpp"
+#include "./utils/typed_array.hpp"
 
 namespace node_gdal {
 
@@ -36,6 +37,8 @@ void Dataset::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "testCapability", testCapability);
 	Nan::SetPrototypeMethod(lcons, "executeSQL", executeSQL);
 	Nan::SetPrototypeMethod(lcons, "buildOverviews", buildOverviews);
+	Nan::SetPrototypeMethod(lcons, "read", read);
+	Nan::SetPrototypeMethod(lcons, "write", write);
 
 	ATTR_DONT_ENUM(lcons, "_uid", uidGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "description", descriptionGetter, READ_ONLY_SETTER);
@@ -994,6 +997,354 @@ NAN_GETTER(Dataset::uidGetter)
 	Nan::HandleScope scope;
 	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
 	info.GetReturnValue().Set(Nan::New((int)ds->uid));
+}
+
+/**
+ * Read a region of image data from multiple bands.
+ *
+ * @method read
+ * @throws Error
+ * @param {Integer} nXOff
+ * @param {Integer} nYOff
+ * @param {Integer} nXSize
+ * @param {Integer} nYSize
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Integer} nBufXSize
+ * @param {Integer} nBufYSize
+ * @param {String} [eBufType] See {{#crossLink "Constants (GDT)"}}GDT constants{{/crossLink}}.
+ * @param {Integer} nBandCount
+ * @param {TypedArray} [bandMap] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Integer} nPixelSpace
+ * @param {Integer} nLineSpace
+ * @param {Integer} nBandSpace
+ * @param {Object} extraArg
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
+NAN_METHOD(Dataset::read)
+{
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
+
+	if(!ds->isAlive()){
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
+	
+	GDALDataset* raw = ds->getDataset();
+	
+	//printf("read...\n");
+	
+	int	nXOff, nYOff, nXSize, nYSize; 
+	int nBufXSize, nBufYSize, nBandCount;
+	GDALRWFlag eRWFlag = GF_Read;
+	GDALDataType eBufType;
+	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
+	int * 	panBandMap = NULL;
+	int bandMap[32];
+	unsigned int max_bands = 32;
+	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+	
+	NODE_ARG_INT(0, "x_offset", nXOff);
+	NODE_ARG_INT(1, "y_offset", nYOff);
+	NODE_ARG_INT(2, "x_size", nXSize);
+	NODE_ARG_INT(3, "y_size", nYSize);
+	
+	std::string type_name = "";
+	
+	nBufXSize = nXSize;
+	nBufYSize = nYSize;
+	nBandCount = raw->GetRasterCount();
+	nPixelSpace = 0;
+	nLineSpace = 0;
+	nBandSpace = 0;
+	eBufType = raw->GetRasterBand(1)->GetRasterDataType();
+	
+	NODE_ARG_INT_OPT(5, "buffer_width", nBufXSize);
+	NODE_ARG_INT_OPT(6, "buffer_height", nBufYSize);
+	NODE_ARG_OPT_STR(7, "data_type", type_name);
+	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
+	
+	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+	
+	if(!type_name.empty()) {
+		eBufType = GDALGetDataTypeByName(type_name.c_str());
+	}
+	
+	/*
+	printf("nXOff %d\n", nXOff);
+	printf("nYOff %d\n", nYOff);
+	printf("nXSize %d\n", nXSize);
+	printf("nYSize %d\n", nYSize);
+	printf("nBufXSize %d\n", nBufXSize);
+	printf("nBufYSize %d\n", nBufYSize);
+	printf("nBandCount %d\n", nBandCount);
+	
+	printf("nPixelSpace %lld\n", nPixelSpace);
+	printf("nLineSpace %lld\n", nLineSpace);
+	printf("nBandSpace %lld\n", nBandSpace);
+	printf("eBufType %d\n",eBufType);
+	*/
+	
+	
+	Local<Value> array;
+	Local<Object> obj;
+	int w = nBufXSize == 0 ? nXSize : nBufXSize;
+	int h = nBufYSize == 0 ? nYSize : nBufYSize;
+	int min_length ;
+	
+	if(nBandSpace == 0)
+		min_length = w * h * nBandCount;
+	else
+		min_length = w * h  ;
+
+	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
+		//printf("have buffer\n");
+		NODE_ARG_OBJECT(4, "data", obj);
+		eBufType = TypedArray::Identify(obj);
+		if(eBufType == GDT_Unknown) {
+			Nan::ThrowError("Invalid array");
+			return;
+		}
+ 		array = obj;
+ 		
+	} else {
+		//printf("alloc array %dx%d\n",w,h);
+		
+		array = TypedArray::New(eBufType, min_length);
+			
+		if(array.IsEmpty() || !array->IsObject()) {
+			return; //TypedArray::New threw an error
+		}
+		obj = array.As<Object>();
+	}
+
+	void* data = TypedArray::Validate(obj, eBufType, min_length);
+	if(!data){
+		return; //TypedArray::Validate threw an error
+	}
+	
+	if(!info[9]->IsUndefined() && !info[9]->IsNull() && info[9]->IsArray()) {
+		Local<Array> iarray = info[9].As<Array>();
+		unsigned int length = iarray->Length();
+		
+		if(length != (unsigned int)nBandCount) {
+			Nan::ThrowError("nBandCount / bandMap size mismatch");
+			return;
+		}
+		
+		if(length >= max_bands) {
+			Nan::ThrowError("max bands exceeded");
+			return;
+		}
+		
+		//printf("have bandMap length=%d\n",length);
+		for(unsigned int i = 0; i < length && i < max_bands; i++) {
+			Local<Value> element = iarray->Get(i);
+			if(element->IsNumber()){
+				bandMap[i] = element->Int32Value();
+			} else {
+				Nan::ThrowTypeError("Every element in bandMap must be a number");
+				return;
+			}
+		}
+		
+		panBandMap = bandMap;
+	}
+	
+	CPLErr err = raw->RasterIO(
+		eRWFlag,
+		nXOff, nYOff,
+		nXSize, nYSize,
+		data,
+		nBufXSize, nBufYSize,
+		eBufType,
+		nBandCount,
+		panBandMap,
+		nPixelSpace,
+		nLineSpace,
+		nBandSpace,
+		psExtraArg
+	);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		return;
+	}
+
+	info.GetReturnValue().Set(obj);
+	//printf("OK\n");
+}
+
+/**
+ * Write a region of image data from multiple bands.
+ *
+ * @method write
+ * @throws Error
+ * @param {Integer} nXOff
+ * @param {Integer} nYOff
+ * @param {Integer} nXSize
+ * @param {Integer} nYSize
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Integer} nBufXSize
+ * @param {Integer} nBufYSize
+ * @param {String} [eBufType] See {{#crossLink "Constants (GDT)"}}GDT constants{{/crossLink}}.
+ * @param {Integer} nBandCount
+ * @param {TypedArray} [bandMap] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {Integer} nPixelSpace
+ * @param {Integer} nLineSpace
+ * @param {Integer} nBandSpace
+ * @param {Object} extraArg
+ * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
+ */
+NAN_METHOD(Dataset::write)
+{
+	Nan::HandleScope scope;
+	Dataset *ds = Nan::ObjectWrap::Unwrap<Dataset>(info.This());
+
+	if(!ds->isAlive()){
+		Nan::ThrowError("Dataset object has already been destroyed");
+		return;
+	}
+	
+	GDALDataset* raw = ds->getDataset();
+	
+	//printf("read...\n");
+	
+	int	nXOff, nYOff, nXSize, nYSize; 
+	int nBufXSize, nBufYSize, nBandCount;
+	GDALRWFlag eRWFlag = GF_Write;
+	GDALDataType eBufType;
+	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
+	int * 	panBandMap = NULL;
+	int bandMap[32];
+	unsigned int max_bands = 32;
+	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+	
+	NODE_ARG_INT(0, "x_offset", nXOff);
+	NODE_ARG_INT(1, "y_offset", nYOff);
+	NODE_ARG_INT(2, "x_size", nXSize);
+	NODE_ARG_INT(3, "y_size", nYSize);
+	
+	std::string type_name = "";
+	
+	nBufXSize = nXSize;
+	nBufYSize = nYSize;
+	nBandCount = raw->GetRasterCount();
+	nPixelSpace = 0;
+	nLineSpace = 0;
+	nBandSpace = 0;
+	eBufType = raw->GetRasterBand(1)->GetRasterDataType();
+	
+	NODE_ARG_INT_OPT(5, "buffer_width", nBufXSize);
+	NODE_ARG_INT_OPT(6, "buffer_height", nBufYSize);
+	NODE_ARG_OPT_STR(7, "data_type", type_name);
+	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
+	
+	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+	
+	if(!type_name.empty()) {
+		eBufType = GDALGetDataTypeByName(type_name.c_str());
+	}
+	
+	/*
+	printf("nXOff %d\n", nXOff);
+	printf("nYOff %d\n", nYOff);
+	printf("nXSize %d\n", nXSize);
+	printf("nYSize %d\n", nYSize);
+	printf("nBufXSize %d\n", nBufXSize);
+	printf("nBufYSize %d\n", nBufYSize);
+	printf("nBandCount %d\n", nBandCount);
+	
+	printf("nPixelSpace %lld\n", nPixelSpace);
+	printf("nLineSpace %lld\n", nLineSpace);
+	printf("nBandSpace %lld\n", nBandSpace);
+	printf("eBufType %d\n",eBufType);
+	*/
+	
+	
+	Local<Value> array;
+	Local<Object> obj;
+	int w = nBufXSize == 0 ? nXSize : nBufXSize;
+	int h = nBufYSize == 0 ? nYSize : nBufYSize;
+	int min_length ;
+	
+	if(nBandSpace == 0)
+		min_length = w * h * nBandCount;
+	else
+		min_length = w * h  ;
+
+	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
+		//printf("have buffer\n");
+		NODE_ARG_OBJECT(4, "data", obj);
+		eBufType = TypedArray::Identify(obj);
+		if(eBufType == GDT_Unknown) {
+			Nan::ThrowError("Invalid array");
+			return;
+		}
+ 		array = obj;
+ 		
+	} else {
+		Nan::ThrowError("Missing data parameter");
+		return;
+	}
+
+	void* data = TypedArray::Validate(obj, eBufType, min_length);
+	if(!data){
+		return; //TypedArray::Validate threw an error
+	}
+	
+	if(!info[9]->IsUndefined() && !info[9]->IsNull() && info[9]->IsArray()) {
+		Local<Array> iarray = info[9].As<Array>();
+		unsigned int length = iarray->Length();
+		
+		if(length != (unsigned int)nBandCount) {
+			Nan::ThrowError("nBandCount / bandMap size mismatch");
+			return;
+		}
+		
+		if(length >= max_bands) {
+			Nan::ThrowError("max bands exceeded");
+			return;
+		}
+		
+		//printf("have bandMap length=%d\n",length);
+		for(unsigned int i = 0; i < length && i < max_bands; i++) {
+			Local<Value> element = iarray->Get(i);
+			if(element->IsNumber()){
+				bandMap[i] = element->Int32Value();
+			} else {
+				Nan::ThrowTypeError("Every element in bandMap must be a number");
+				return;
+			}
+		}
+		
+		panBandMap = bandMap;
+	}
+	
+	CPLErr err = raw->RasterIO(
+		eRWFlag,
+		nXOff, nYOff,
+		nXSize, nYSize,
+		data,
+		nBufXSize, nBufYSize,
+		eBufType,
+		nBandCount,
+		panBandMap,
+		nPixelSpace,
+		nLineSpace,
+		nBandSpace,
+		psExtraArg
+	);
+	if(err) {
+		NODE_THROW_CPLERR(err);
+		return;
+	}
+
+	//printf("OK\n");
+	return;
 }
 
 } // namespace node_gdal

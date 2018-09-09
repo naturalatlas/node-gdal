@@ -56,6 +56,9 @@ public:
 
 	static NAN_SETTER(srsSetter);
 	static NAN_SETTER(geoTransformSetter);
+	
+	static NAN_METHOD(read);
+	static NAN_METHOD(write);
 
 	static ObjectCache<GDALDataset, Dataset> dataset_cache;
 
