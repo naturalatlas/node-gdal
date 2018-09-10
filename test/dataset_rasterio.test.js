@@ -17,14 +17,16 @@ describe('gdal.Dataset', function() {
 			
 			it('should read data (destination buffer pixel interleaved)', function() {
 				bandSpace=1; 
+				pixelSpace=4;
 				var ds = gdal.open(__dirname + '/data/multiband.tif');
 				var data = ds.read(
 				  0,0,w,h,null,bufw,bufh,
-				  gdal.GDT_UInt32,bandCount,null,pixelSpace,lineSpace,bandSpace,null);
+				  gdal.GDT_Byte,bandCount,null,pixelSpace,lineSpace,bandSpace,null);
 				ds.close();
 			});
 			it('should read data (destination buffer band sequential)', function() {
 				bandSpace=0;
+				pixelSpace=0;
 				var ds = gdal.open(__dirname + '/data/multiband.tif');
 				var data = ds.read(
 				  0,0,w,h,null,bufw,bufh,
@@ -32,20 +34,16 @@ describe('gdal.Dataset', function() {
 				ds.close();
 			});
 			it('should read data w/default parameters', function() {
-				bandSpace=0;
 				var ds = gdal.open(__dirname + '/data/multiband.tif');
-				var data = ds.read(
-				  0,0,w,h);
+				var data = ds.read(0,0,w,h);
 				assert.instanceOf(data, Uint8Array);
 				assert.equal(data.length, w * h * bandCount);
 				ds.close();
 			});
 			it('should read data w/default parameters into passed array', function() {
-				bandSpace=0;
 				var ds = gdal.open(__dirname + '/data/multiband.tif');
 				var data = new Uint8Array(new ArrayBuffer(w * h * bandCount));
-				ds.read(
-				  0,0,w,h,data);
+				ds.read(0,0,w,h,data);
 				ds.close();
 			});
 			it('should read data w/bandMap argument', function() {

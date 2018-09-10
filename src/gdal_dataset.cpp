@@ -1041,8 +1041,13 @@ NAN_METHOD(Dataset::read)
 	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
 	int * 	panBandMap = NULL;
 	int bandMap[32];
+	int bytes_per_pixel;
+	int size, length ;
+	void *data;
 	unsigned int max_bands = 32;
 	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+	Local<Value> array;
+	Local<Object> obj;
 	
 	NODE_ARG_INT(0, "x_offset", nXOff);
 	NODE_ARG_INT(1, "y_offset", nYOff);
@@ -1054,9 +1059,6 @@ NAN_METHOD(Dataset::read)
 	nBufXSize = nXSize;
 	nBufYSize = nYSize;
 	nBandCount = raw->GetRasterCount();
-	nPixelSpace = 0;
-	nLineSpace = 0;
-	nBandSpace = 0;
 	eBufType = raw->GetRasterBand(1)->GetRasterDataType();
 	
 	NODE_ARG_INT_OPT(5, "buffer_width", nBufXSize);
@@ -1064,13 +1066,50 @@ NAN_METHOD(Dataset::read)
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
 	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
 	
-	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
-	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
-	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
-	
 	if(!type_name.empty()) {
 		eBufType = GDALGetDataTypeByName(type_name.c_str());
 	}
+	
+	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
+		//printf("have buffer\n");
+		NODE_ARG_OBJECT(4, "data", obj);
+		eBufType = TypedArray::Identify(obj);
+		if(eBufType == GDT_Unknown) {
+			Nan::ThrowError("Invalid array");
+			return;
+		}
+ 		array = obj;
+	}
+	
+	bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+	nPixelSpace = 0;
+	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+	nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+	
+	nLineSpace = 0;
+	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+	nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+	
+	nBandSpace = 0;
+	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+	
+	if(nPixelSpace < bytes_per_pixel) {
+		Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+		return;
+	}
+	if(nLineSpace < nPixelSpace * nBufXSize) {
+		Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
+		return;
+	}
+	
+	size  = nBandSpace == 0 ? nLineSpace * nBufYSize * nBandCount : 
+	                          nLineSpace * nBufYSize ; //bytes
+	//min_size   = size - (nPixelSpace - bytes_per_pixel); //subtract away padding on last pixel that wont be written
+	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	//min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+	
+	nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
+	
 	
 	/*
 	printf("nXOff %d\n", nXOff);
@@ -1085,42 +1124,21 @@ NAN_METHOD(Dataset::read)
 	printf("nLineSpace %lld\n", nLineSpace);
 	printf("nBandSpace %lld\n", nBandSpace);
 	printf("eBufType %d\n",eBufType);
+	printf("size %d\n", size);
+	//printf("min_size %d\n", min_size);
+	printf("length %d\n", length);
+	//printf("min_length %d\n", min_length);
 	*/
 	
-	
-	Local<Value> array;
-	Local<Object> obj;
-	int w = nBufXSize == 0 ? nXSize : nBufXSize;
-	int h = nBufYSize == 0 ? nYSize : nBufYSize;
-	int min_length ;
-	
-	if(nBandSpace == 0)
-		min_length = w * h * nBandCount;
-	else
-		min_length = w * h  ;
-
-	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
-		//printf("have buffer\n");
-		NODE_ARG_OBJECT(4, "data", obj);
-		eBufType = TypedArray::Identify(obj);
-		if(eBufType == GDT_Unknown) {
-			Nan::ThrowError("Invalid array");
-			return;
-		}
- 		array = obj;
- 		
-	} else {
-		//printf("alloc array %dx%d\n",w,h);
-		
-		array = TypedArray::New(eBufType, min_length);
-			
+	if(obj.IsEmpty()){
+		array = TypedArray::New(eBufType, length);
 		if(array.IsEmpty() || !array->IsObject()) {
 			return; //TypedArray::New threw an error
 		}
 		obj = array.As<Object>();
 	}
 
-	void* data = TypedArray::Validate(obj, eBufType, min_length);
+	data = TypedArray::Validate(obj, eBufType, length);
 	if(!data){
 		return; //TypedArray::Validate threw an error
 	}
@@ -1209,7 +1227,7 @@ NAN_METHOD(Dataset::write)
 	
 	GDALDataset* raw = ds->getDataset();
 	
-	//printf("read...\n");
+	//printf("write...\n");
 	
 	int	nXOff, nYOff, nXSize, nYSize; 
 	int nBufXSize, nBufYSize, nBandCount;
@@ -1218,8 +1236,13 @@ NAN_METHOD(Dataset::write)
 	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
 	int * 	panBandMap = NULL;
 	int bandMap[32];
+	int bytes_per_pixel;
+	int size, length ;
+	void *data;
 	unsigned int max_bands = 32;
 	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+	Local<Value> array;
+	Local<Object> obj;
 	
 	NODE_ARG_INT(0, "x_offset", nXOff);
 	NODE_ARG_INT(1, "y_offset", nYOff);
@@ -1231,9 +1254,6 @@ NAN_METHOD(Dataset::write)
 	nBufXSize = nXSize;
 	nBufYSize = nYSize;
 	nBandCount = raw->GetRasterCount();
-	nPixelSpace = 0;
-	nLineSpace = 0;
-	nBandSpace = 0;
 	eBufType = raw->GetRasterBand(1)->GetRasterDataType();
 	
 	NODE_ARG_INT_OPT(5, "buffer_width", nBufXSize);
@@ -1241,13 +1261,54 @@ NAN_METHOD(Dataset::write)
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
 	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
 	
-	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
-	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
-	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
-	
 	if(!type_name.empty()) {
 		eBufType = GDALGetDataTypeByName(type_name.c_str());
 	}
+	
+	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
+		//printf("have buffer\n");
+		NODE_ARG_OBJECT(4, "data", obj);
+		eBufType = TypedArray::Identify(obj);
+		if(eBufType == GDT_Unknown) {
+			Nan::ThrowError("Invalid array");
+			return;
+		}
+ 		array = obj;
+	}
+	else {
+		Nan::ThrowError("Missing data");
+		return;
+	}
+	
+	bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+	nPixelSpace = 0;
+	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+	nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+	
+	nLineSpace = 0;
+	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+	nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+	
+	nBandSpace = 0;
+	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+	
+	if(nPixelSpace < bytes_per_pixel) {
+		Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+		return;
+	}
+	if(nLineSpace < nPixelSpace * nBufXSize) {
+		Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
+		return;
+	}
+	
+	size  = nBandSpace == 0 ? nLineSpace * nBufYSize * nBandCount : 
+	                          nLineSpace * nBufYSize ; //bytes
+	//min_size   = size - (nPixelSpace - bytes_per_pixel); //subtract away padding on last pixel that wont be written
+	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	//min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
+	
+	nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
+	
 	
 	/*
 	printf("nXOff %d\n", nXOff);
@@ -1262,36 +1323,13 @@ NAN_METHOD(Dataset::write)
 	printf("nLineSpace %lld\n", nLineSpace);
 	printf("nBandSpace %lld\n", nBandSpace);
 	printf("eBufType %d\n",eBufType);
+	printf("size %d\n", size);
+	//printf("min_size %d\n", min_size);
+	printf("length %d\n", length);
+	//printf("min_length %d\n", min_length);
 	*/
 	
-	
-	Local<Value> array;
-	Local<Object> obj;
-	int w = nBufXSize == 0 ? nXSize : nBufXSize;
-	int h = nBufYSize == 0 ? nYSize : nBufYSize;
-	int min_length ;
-	
-	if(nBandSpace == 0)
-		min_length = w * h * nBandCount;
-	else
-		min_length = w * h  ;
-
-	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
-		//printf("have buffer\n");
-		NODE_ARG_OBJECT(4, "data", obj);
-		eBufType = TypedArray::Identify(obj);
-		if(eBufType == GDT_Unknown) {
-			Nan::ThrowError("Invalid array");
-			return;
-		}
- 		array = obj;
- 		
-	} else {
-		Nan::ThrowError("Missing data parameter");
-		return;
-	}
-
-	void* data = TypedArray::Validate(obj, eBufType, min_length);
+	data = TypedArray::Validate(obj, eBufType, length);
 	if(!data){
 		return; //TypedArray::Validate threw an error
 	}
