@@ -1245,7 +1245,7 @@ NAN_METHOD(Dataset::read)
  * @param {Integer} nYOff
  * @param {Integer} nXSize
  * @param {Integer} nYSize
- * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.
+ * @param {TypedArray} [data] The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to read the data from. 
  * @param {Integer} nBufXSize
  * @param {Integer} nBufYSize
  * @param {String} [eBufType] See {{#crossLink "Constants (GDT)"}}GDT constants{{/crossLink}}.
@@ -1254,7 +1254,7 @@ NAN_METHOD(Dataset::read)
  * @param {Integer} nPixelSpace
  * @param {Integer} nLineSpace
  * @param {Integer} nBandSpace
- * @param {String} interleave The output data buffer interleave (pixel or band) 
+ * @param {String} interleave The input data buffer interleave (pixel or band) 
  * @param {Object} extraArg
  */
 NAN_METHOD(Dataset::write)
