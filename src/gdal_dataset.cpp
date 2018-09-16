@@ -1025,7 +1025,7 @@ static void toLower(std::string& s) {
  * @param {Integer} nPixelSpace
  * @param {Integer} nLineSpace
  * @param {Integer} nBandSpace
- * @param {String} interleave
+ * @param {String} interleave The output data buffer interleave (pixel or band) 
  * @param {Object} extraArg
  * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
  */
@@ -1254,8 +1254,8 @@ NAN_METHOD(Dataset::read)
  * @param {Integer} nPixelSpace
  * @param {Integer} nLineSpace
  * @param {Integer} nBandSpace
+ * @param {String} interleave The output data buffer interleave (pixel or band) 
  * @param {Object} extraArg
- * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
  */
 NAN_METHOD(Dataset::write)
 {
