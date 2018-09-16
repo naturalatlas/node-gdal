@@ -999,6 +999,14 @@ NAN_GETTER(Dataset::uidGetter)
 	info.GetReturnValue().Set(Nan::New((int)ds->uid));
 }
 
+static void toLower(std::string& s) {
+   for (std::string::iterator p = s.begin();
+        p != s.end(); ++p) {
+      *p = tolower(*p);
+   }
+}
+
+
 /**
  * Read a region of image data from multiple bands.
  *
@@ -1017,6 +1025,7 @@ NAN_GETTER(Dataset::uidGetter)
  * @param {Integer} nPixelSpace
  * @param {Integer} nLineSpace
  * @param {Integer} nBandSpace
+ * @param {String} interleave
  * @param {Object} extraArg
  * @return {TypedArray} A [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) of values.
  */
@@ -1055,6 +1064,7 @@ NAN_METHOD(Dataset::read)
 	NODE_ARG_INT(3, "y_size", nYSize);
 	
 	std::string type_name = "";
+	std::string interleave = "";
 	
 	nBufXSize = nXSize;
 	nBufYSize = nYSize;
@@ -1065,9 +1075,17 @@ NAN_METHOD(Dataset::read)
 	NODE_ARG_INT_OPT(6, "buffer_height", nBufYSize);
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
 	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
+	NODE_ARG_OPT_STR(13, "interleave", interleave);
 	
 	if(!type_name.empty()) {
 		eBufType = GDALGetDataTypeByName(type_name.c_str());
+	}
+	
+	if(!interleave.empty()) {
+		toLower(interleave);
+	}
+	else {
+		interleave = "band";
 	}
 	
 	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
@@ -1081,35 +1099,59 @@ NAN_METHOD(Dataset::read)
  		array = obj;
 	}
 	
-	bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
-	nPixelSpace = 0;
-	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
-	nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+	if(interleave == "band") {
+		//printf("band interleave\n");
 	
-	nLineSpace = 0;
-	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
-	nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+		nPixelSpace = 0;
+		NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+		nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+		
+		nLineSpace = 0;
+		NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+		nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		
+		nBandSpace = 0;
+		NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+		nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
+		
+		if(nPixelSpace < bytes_per_pixel) {
+			Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+			return;
+		}
+		if(nLineSpace < nPixelSpace * nBufXSize) {
+			Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
+			return;
+		}
+		
+		size  = nLineSpace * nBufYSize * nBandCount ; 
+		length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	}
+	else if(interleave == "pixel") {
+		//printf("pixel interleave\n");
 	
-	nBandSpace = 0;
-	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
-	
-	if(nPixelSpace < bytes_per_pixel) {
-		Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+		bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+		nPixelSpace = 0;
+		NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+		nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel*nBandCount : nPixelSpace;
+		
+		nLineSpace = 0;
+		NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+		nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		
+		nBandSpace = 0;
+		NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+		nBandSpace = nBandSpace == 0 ? bytes_per_pixel : nBandSpace;
+		
+		size  = nLineSpace * nBufYSize ; 
+		length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	}
+	else {
+		size = 0;
+		length = 0;
+		Nan::ThrowError("interleave must be 'pixel' or 'band'");
 		return;
 	}
-	if(nLineSpace < nPixelSpace * nBufXSize) {
-		Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
-		return;
-	}
-	
-	size  = nBandSpace == 0 ? nLineSpace * nBufYSize * nBandCount : 
-	                          nBandSpace * nBandCount ; //bytes
-	//min_size   = size - (nPixelSpace - bytes_per_pixel); //subtract away padding on last pixel that wont be written
-	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
-	//min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
-	
-	nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
-	
 	
 	/*
 	printf("nXOff %d\n", nXOff);
@@ -1227,7 +1269,7 @@ NAN_METHOD(Dataset::write)
 	
 	GDALDataset* raw = ds->getDataset();
 	
-	//printf("write...\n");
+	//printf("read...\n");
 	
 	int	nXOff, nYOff, nXSize, nYSize; 
 	int nBufXSize, nBufYSize, nBandCount;
@@ -1250,6 +1292,7 @@ NAN_METHOD(Dataset::write)
 	NODE_ARG_INT(3, "y_size", nYSize);
 	
 	std::string type_name = "";
+	std::string interleave = "";
 	
 	nBufXSize = nXSize;
 	nBufYSize = nYSize;
@@ -1260,9 +1303,17 @@ NAN_METHOD(Dataset::write)
 	NODE_ARG_INT_OPT(6, "buffer_height", nBufYSize);
 	NODE_ARG_OPT_STR(7, "data_type", type_name);
 	NODE_ARG_INT_OPT(8, "band_count", nBandCount);
+	NODE_ARG_OPT_STR(13, "interleave", interleave);
 	
 	if(!type_name.empty()) {
 		eBufType = GDALGetDataTypeByName(type_name.c_str());
+	}
+	
+	if(!interleave.empty()) {
+		toLower(interleave);
+	}
+	else {
+		interleave = "band";
 	}
 	
 	if(info.Length() >= 5 && !info[4]->IsUndefined() && !info[4]->IsNull()) {
@@ -1276,39 +1327,63 @@ NAN_METHOD(Dataset::write)
  		array = obj;
 	}
 	else {
-		Nan::ThrowError("Missing data");
+		Nan::ThrowError("Missing data buffer");
 		return;
 	}
 	
-	bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
-	nPixelSpace = 0;
-	NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
-	nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+	if(interleave == "band") {
+		//printf("band interleave\n");
 	
-	nLineSpace = 0;
-	NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
-	nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+		nPixelSpace = 0;
+		NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+		nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel : nPixelSpace;
+		
+		nLineSpace = 0;
+		NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+		nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		
+		nBandSpace = 0;
+		NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+		nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
+		
+		if(nPixelSpace < bytes_per_pixel) {
+			Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+			return;
+		}
+		if(nLineSpace < nPixelSpace * nBufXSize) {
+			Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
+			return;
+		}
+		
+		size  = nLineSpace * nBufYSize * nBandCount ; 
+		length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	}
+	else if(interleave == "pixel") {
+		//printf("pixel interleave\n");
 	
-	nBandSpace = 0;
-	NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
-	
-	if(nPixelSpace < bytes_per_pixel) {
-		Nan::ThrowError("pixel_space must be greater than or equal to size of data_type");
+		bytes_per_pixel = GDALGetDataTypeSize(eBufType) / 8;
+		nPixelSpace = 0;
+		NODE_ARG_INT_OPT(10, "pixel_space", nPixelSpace);
+		nPixelSpace = nPixelSpace == 0 ? bytes_per_pixel*nBandCount : nPixelSpace;
+		
+		nLineSpace = 0;
+		NODE_ARG_INT_OPT(11, "line_space", nLineSpace);
+		nLineSpace = nLineSpace == 0 ? nPixelSpace * nBufXSize : nLineSpace;
+		
+		nBandSpace = 0;
+		NODE_ARG_INT_OPT(12, "band_space", nBandSpace);
+		nBandSpace = nBandSpace == 0 ? bytes_per_pixel : nBandSpace;
+		
+		size  = nLineSpace * nBufYSize ; 
+		length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
+	}
+	else {
+		size = 0;
+		length = 0;
+		Nan::ThrowError("interleave must be 'pixel' or 'band'");
 		return;
 	}
-	if(nLineSpace < nPixelSpace * nBufXSize) {
-		Nan::ThrowError("line_space must be greater than or equal to pixel_space * buffer_w");
-		return;
-	}
-	
-	size  = nBandSpace == 0 ? nLineSpace * nBufYSize * nBandCount : 
-	                          nLineSpace * nBufYSize ; //bytes
-	//min_size   = size - (nPixelSpace - bytes_per_pixel); //subtract away padding on last pixel that wont be written
-	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
-	//min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
-	
-	nBandSpace = nBandSpace == 0 ? nLineSpace * nBufYSize : nBandSpace;
-	
 	
 	/*
 	printf("nXOff %d\n", nXOff);
