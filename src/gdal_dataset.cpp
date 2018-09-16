@@ -1103,7 +1103,7 @@ NAN_METHOD(Dataset::read)
 	}
 	
 	size  = nBandSpace == 0 ? nLineSpace * nBufYSize * nBandCount : 
-	                          nLineSpace * nBufYSize ; //bytes
+	                          nBandSpace * nBandCount ; //bytes
 	//min_size   = size - (nPixelSpace - bytes_per_pixel); //subtract away padding on last pixel that wont be written
 	length     = (size+bytes_per_pixel-1)/bytes_per_pixel;
 	//min_length = (min_size+bytes_per_pixel-1)/bytes_per_pixel;
