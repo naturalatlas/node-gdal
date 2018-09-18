@@ -1047,14 +1047,20 @@ NAN_METHOD(Dataset::read)
 	int nBufXSize, nBufYSize, nBandCount;
 	GDALRWFlag eRWFlag = GF_Read;
 	GDALDataType eBufType;
+#if GDAL_VERSION_MAJOR < 2
+	int 	nPixelSpace, nLineSpace, nBandSpace;
+#else
 	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
+#endif
 	int * 	panBandMap = NULL;
 	int bandMap[32];
 	int bytes_per_pixel;
 	int size, length ;
 	void *data;
 	unsigned int max_bands = 32;
+#if GDAL_VERSION_MAJOR >= 2
 	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+#endif
 	Local<Value> array;
 	Local<Object> obj;
 	
@@ -1224,8 +1230,10 @@ NAN_METHOD(Dataset::read)
 		panBandMap,
 		nPixelSpace,
 		nLineSpace,
-		nBandSpace,
-		psExtraArg
+		nBandSpace
+#if GDAL_VERSION_MAJOR >= 2
+		,psExtraArg
+#endif
 	);
 	if(err) {
 		NODE_THROW_CPLERR(err);
@@ -1275,14 +1283,22 @@ NAN_METHOD(Dataset::write)
 	int nBufXSize, nBufYSize, nBandCount;
 	GDALRWFlag eRWFlag = GF_Write;
 	GDALDataType eBufType;
+	
+#if GDAL_VERSION_MAJOR < 2
+	int 	nPixelSpace, nLineSpace, nBandSpace;
+#else
 	GSpacing 	nPixelSpace, nLineSpace, nBandSpace;
+#endif
+
 	int * 	panBandMap = NULL;
 	int bandMap[32];
 	int bytes_per_pixel;
 	int size, length ;
 	void *data;
 	unsigned int max_bands = 32;
+#if GDAL_VERSION_MAJOR >= 2
 	GDALRasterIOExtraArg * 	psExtraArg = NULL;
+#endif
 	Local<Value> array;
 	Local<Object> obj;
 	
@@ -1448,8 +1464,10 @@ NAN_METHOD(Dataset::write)
 		panBandMap,
 		nPixelSpace,
 		nLineSpace,
-		nBandSpace,
-		psExtraArg
+		nBandSpace
+#if GDAL_VERSION_MAJOR >= 2
+		,psExtraArg
+#endif
 	);
 	if(err) {
 		NODE_THROW_CPLERR(err);
