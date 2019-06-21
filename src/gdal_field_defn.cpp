@@ -22,7 +22,7 @@ void FieldDefn::Initialize(Local<Object> target)
 	ATTR(lcons, "precision", precisionGetter, precisionSetter);
 	ATTR(lcons, "ignored", ignoredGetter, ignoredSetter);
 
-	target->Set(Nan::New("FieldDefn").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("FieldDefn").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -123,7 +123,7 @@ Local<Value> FieldDefn::New(OGRFieldDefn *def, bool owned)
 	wrapped->owned_ = true;
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FieldDefn::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FieldDefn::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -280,7 +280,7 @@ NAN_SETTER(FieldDefn::widthSetter)
 		Nan::ThrowError("width must be an integer");
 		return;
 	}
-	def->this_->SetWidth(value->IntegerValue());
+	def->this_->SetWidth(Nan::To<int64_t>(value).ToChecked());
 }
 
 NAN_SETTER(FieldDefn::precisionSetter)
@@ -291,7 +291,7 @@ NAN_SETTER(FieldDefn::precisionSetter)
 		Nan::ThrowError("precision must be an integer");
 		return;
 	}
-	def->this_->SetPrecision(value->IntegerValue());
+	def->this_->SetPrecision(Nan::To<int64_t>(value).ToChecked());
 }
 
 NAN_SETTER(FieldDefn::ignoredSetter)
@@ -302,7 +302,7 @@ NAN_SETTER(FieldDefn::ignoredSetter)
 		Nan::ThrowError("ignored must be a boolean");
 		return;
 	}
-	def->this_->SetIgnored(value->IntegerValue());
+	def->this_->SetIgnored(Nan::To<int64_t>(value).ToChecked());
 }
 
 } // namespace node_gdal

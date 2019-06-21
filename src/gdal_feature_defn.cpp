@@ -25,7 +25,7 @@ void FeatureDefn::Initialize(Local<Object> target)
 	ATTR(lcons, "geomIgnored", geomIgnoredGetter, geomIgnoredSetter);
 	ATTR(lcons, "geomType", geomTypeGetter, geomTypeSetter);
 
-	target->Set(Nan::New("FeatureDefn").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("FeatureDefn").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -122,7 +122,7 @@ Local<Value> FeatureDefn::New(OGRFeatureDefn *def, bool owned)
 	def->Reference();
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(FeatureDefn::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FeatureDefn::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -212,7 +212,7 @@ NAN_SETTER(FeatureDefn::geomTypeSetter)
 		Nan::ThrowError("geomType must be an integer");
 		return;
 	}
-	def->this_->SetGeomType(OGRwkbGeometryType(value->IntegerValue()));
+	def->this_->SetGeomType(OGRwkbGeometryType(Nan::To<int64_t>(value).ToChecked()));
 }
 
 NAN_SETTER(FeatureDefn::geomIgnoredSetter)
@@ -223,7 +223,7 @@ NAN_SETTER(FeatureDefn::geomIgnoredSetter)
 		Nan::ThrowError("geomIgnored must be a boolean");
 		return;
 	}
-	def->this_->SetGeometryIgnored(value->IntegerValue());
+	def->this_->SetGeometryIgnored(Nan::To<int64_t>(value).ToChecked());
 }
 
 NAN_SETTER(FeatureDefn::styleIgnoredSetter)
@@ -234,7 +234,7 @@ NAN_SETTER(FeatureDefn::styleIgnoredSetter)
 		Nan::ThrowError("styleIgnored must be a boolean");
 		return;
 	}
-	def->this_->SetStyleIgnored(value->IntegerValue());
+	def->this_->SetStyleIgnored(Nan::To<int64_t>(value).ToChecked());
 }
 
 } // namespace node_gdal

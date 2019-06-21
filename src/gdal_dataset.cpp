@@ -46,7 +46,7 @@ void Dataset::Initialize(Local<Object> target)
 	ATTR(lcons, "srs", srsGetter, srsSetter);
 	ATTR(lcons, "geoTransform", geoTransformGetter, geoTransformSetter);
 
-	target->Set(Nan::New("Dataset").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Dataset").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -171,7 +171,7 @@ Local<Value> Dataset::New(GDALDataset *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Dataset::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Dataset::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	dataset_cache.add(raw, obj);
 	wrapped->uid = ptr_manager.add(raw);
@@ -194,7 +194,7 @@ Local<Value> Dataset::New(OGRDataSource *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(Dataset::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Dataset::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	datasource_cache.add(raw, obj);
 	wrapped->uid = ptr_manager.add(raw);
@@ -452,7 +452,7 @@ NAN_METHOD(Dataset::getFileList)
 
 	int i = 0;
 	while (list[i]) {
-		results->Set(i, SafeString::New(list[i]));
+		Nan::Set(results, i, SafeString::New(list[i]));
 		i++;
 	}
 
@@ -503,14 +503,14 @@ NAN_METHOD(Dataset::getGCPs)
 	for (int i = 0; i < n; i++) {
 		GDAL_GCP gcp = gcps[i];
 		Local<Object> obj = Nan::New<Object>();
-		obj->Set(Nan::New("pszId").ToLocalChecked(), Nan::New(gcp.pszId).ToLocalChecked());
-		obj->Set(Nan::New("pszInfo").ToLocalChecked(), Nan::New(gcp.pszInfo).ToLocalChecked());
-		obj->Set(Nan::New("dfGCPPixel").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPPixel));
-		obj->Set(Nan::New("dfGCPLine").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPLine));
-		obj->Set(Nan::New("dfGCPX").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPX));
-		obj->Set(Nan::New("dfGCPY").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPY));
-		obj->Set(Nan::New("dfGCPZ").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPZ));
-		results->Set(i, obj);
+		Nan::Set(obj, Nan::New("pszId").ToLocalChecked(), Nan::New(gcp.pszId).ToLocalChecked());
+		Nan::Set(obj, Nan::New("pszInfo").ToLocalChecked(), Nan::New(gcp.pszInfo).ToLocalChecked());
+		Nan::Set(obj, Nan::New("dfGCPPixel").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPPixel));
+		Nan::Set(obj, Nan::New("dfGCPLine").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPLine));
+		Nan::Set(obj, Nan::New("dfGCPX").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPX));
+		Nan::Set(obj, Nan::New("dfGCPY").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPY));
+		Nan::Set(obj, Nan::New("dfGCPZ").ToLocalChecked(), Nan::New<Number>(gcp.dfGCPZ));
+		Nan::Set(results, i, obj);
 	}
 
 	info.GetReturnValue().Set(results);
@@ -557,7 +557,7 @@ NAN_METHOD(Dataset::setGCPs)
 	std::string *pszInfo_list = new std::string [gcps->Length()];
 	GDAL_GCP *gcp = list;
 	for (unsigned int i = 0; i < gcps->Length(); ++i) {
-		Local<Value> val = gcps->Get(i);
+		Local<Value> val = Nan::Get(gcps, i).ToLocalChecked();
 		if (!val->IsObject()) {
 			if (list) {
 				delete [] list;
@@ -640,27 +640,27 @@ NAN_METHOD(Dataset::buildOverviews)
 
 	o = new int[n_overviews];
 	for(i = 0; i<n_overviews; i++){
-		Local<Value> val = overviews->Get(i);
+		Local<Value> val = Nan::Get(overviews, i).ToLocalChecked();
 		if(!val->IsNumber()) {
 			delete [] o;
 			Nan::ThrowError("overviews array must only contain numbers");
 			return;
 		}
-		o[i] = val->Int32Value();
+		o[i] = Nan::To<int32_t>(val).ToChecked();
 	}
 
 	if(!bands.IsEmpty()){
 		n_bands = bands->Length();
 		b = new int[n_bands];
 		for(i = 0; i<n_bands; i++){
-			Local<Value> val = bands->Get(i);
+			Local<Value> val = Nan::Get(bands, i).ToLocalChecked();
 			if(!val->IsNumber()) {
 				delete [] o;
 				delete [] b;
 				Nan::ThrowError("band array must only contain numbers");
 				return;
 			}
-			b[i] = val->Int32Value();
+			b[i] = Nan::To<int32_t>(val).ToChecked();
 			if(b[i] > raw->GetRasterCount() || b[i] < 1) {
 				//BuildOverviews prints an error but segfaults before returning
 				delete [] o;
@@ -751,8 +751,8 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 	#endif
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("x").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterXSize()));
-	result->Set(Nan::New("y").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterYSize()));
+	Nan::Set(result, Nan::New("x").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterXSize()));
+	Nan::Set(result, Nan::New("y").ToLocalChecked(), Nan::New<Integer>(raw->GetRasterYSize()));
 	info.GetReturnValue().Set(result);
 }
 
@@ -840,12 +840,12 @@ NAN_GETTER(Dataset::geoTransformGetter)
 	}
 
 	Local<Array> result = Nan::New<Array>(6);
-	result->Set(0, Nan::New<Number>(transform[0]));
-	result->Set(1, Nan::New<Number>(transform[1]));
-	result->Set(2, Nan::New<Number>(transform[2]));
-	result->Set(3, Nan::New<Number>(transform[3]));
-	result->Set(4, Nan::New<Number>(transform[4]));
-	result->Set(5, Nan::New<Number>(transform[5]));
+	Nan::Set(result, 0, Nan::New<Number>(transform[0]));
+	Nan::Set(result, 1, Nan::New<Number>(transform[1]));
+	Nan::Set(result, 2, Nan::New<Number>(transform[2]));
+	Nan::Set(result, 3, Nan::New<Number>(transform[3]));
+	Nan::Set(result, 4, Nan::New<Number>(transform[4]));
+	Nan::Set(result, 5, Nan::New<Number>(transform[5]));
 
 	info.GetReturnValue().Set(result);
 }
@@ -953,12 +953,12 @@ NAN_SETTER(Dataset::geoTransformSetter)
 
 	double buffer[6];
 	for (int i = 0; i < 6; i++) {
-		Local<Value> val = transform->Get(i);
+		Local<Value> val = Nan::Get(transform, i).ToLocalChecked();
 		if (!val->IsNumber()) {
 			Nan::ThrowError("Transform array must only contain numbers");
 			return;
 		}
-		buffer[i] = val->NumberValue();
+		buffer[i] = Nan::To<double>(val).ToChecked();
 	}
 
 	CPLErr err = raw->SetGeoTransform(buffer);

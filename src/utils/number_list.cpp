@@ -37,9 +37,9 @@ int IntegerList::parse(Local<Value> value)
 
 		list = new int [len];
 		for (i = 0; i < len; ++i) {
-			Local<Value> element = arr->Get(i);
+			Local<Value> element = Nan::Get(arr, i).ToLocalChecked();
 			if(element->IsNumber()){
-				list[i] = element->Int32Value();
+				list[i] = Nan::To<int32_t>(element).ToChecked();
 			} else {
 				std::string err = std::string("Every element in the")+name+" array must be a number";
 				Nan::ThrowTypeError(err.c_str());
@@ -48,7 +48,7 @@ int IntegerList::parse(Local<Value> value)
 		}
 	} else if (value->IsNumber()) {
 		list = new int [1];
-		list[0] = value->Int32Value();
+		list[0] = Nan::To<int32_t>(value).ToChecked();
 		len = 1;
 	} else {
 		std::string err = std::string(name)+"integer list must be an array or single integer";
@@ -91,9 +91,9 @@ int DoubleList::parse(Local<Value> value)
 
 		list = new double [len];
 		for (i = 0; i < len; ++i) {
-			Local<Value> element = arr->Get(i);
+			Local<Value> element = Nan::Get(arr, i).ToLocalChecked();
 			if(element->IsNumber()){
-				list[i] = element->NumberValue();
+				list[i] = Nan::To<double>(element).ToChecked();
 			} else {
 				std::string err = std::string("Every element in the")+name+" array must be a number";
 				Nan::ThrowTypeError(err.c_str());
@@ -102,7 +102,7 @@ int DoubleList::parse(Local<Value> value)
 		}
 	} else if (value->IsNumber()) {
 		list = new double [1];
-		list[0] = value->NumberValue();
+		list[0] = Nan::To<double>(value).ToChecked();
 		len = 1;
 	} else {
 		std::string err = std::string(name)+"double list must be an array or single number";

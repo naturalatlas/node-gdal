@@ -83,7 +83,7 @@ void Geometry::Initialize(Local<Object> target)
 	ATTR(lcons, "wkbType", typeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "name", nameGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("Geometry").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Geometry").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -766,10 +766,10 @@ NAN_METHOD(Geometry::getEnvelope)
 	geom->this_->getEnvelope(envelope);
 
 	Local<Object> obj = Nan::New<Object>();
-	obj->Set(Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
-	obj->Set(Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
-	obj->Set(Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
-	obj->Set(Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
+	Nan::Set(obj, Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
+	Nan::Set(obj, Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
+	Nan::Set(obj, Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
+	Nan::Set(obj, Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
 
 	delete envelope;
 
@@ -794,12 +794,12 @@ NAN_METHOD(Geometry::getEnvelope3D)
 	geom->this_->getEnvelope(envelope);
 
 	Local<Object> obj = Nan::New<Object>();
-	obj->Set(Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
-	obj->Set(Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
-	obj->Set(Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
-	obj->Set(Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
-	obj->Set(Nan::New("minZ").ToLocalChecked(), Nan::New<Number>(envelope->MinZ));
-	obj->Set(Nan::New("maxZ").ToLocalChecked(), Nan::New<Number>(envelope->MaxZ));
+	Nan::Set(obj, Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
+	Nan::Set(obj, Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
+	Nan::Set(obj, Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
+	Nan::Set(obj, Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
+	Nan::Set(obj, Nan::New("minZ").ToLocalChecked(), Nan::New<Number>(envelope->MinZ));
+	Nan::Set(obj, Nan::New("maxZ").ToLocalChecked(), Nan::New<Number>(envelope->MaxZ));
 
 	delete envelope;
 
@@ -1003,7 +1003,7 @@ NAN_SETTER(Geometry::coordinateDimensionSetter)
 		Nan::ThrowError("coordinateDimension must be an integer");
 		return;
 	}
-	int dim = value->IntegerValue();
+	int dim = Nan::To<int64_t>(value).ToChecked();
 	if (dim != 2 && dim != 3) {
 		Nan::ThrowError("coordinateDimension must be 2 or 3");
 		return;
@@ -1018,14 +1018,14 @@ Local<Value> Geometry::getConstructor(OGRwkbGeometryType type){
 
 	type = wkbFlatten(type);
 	switch (type) {
-		case wkbPoint:              return scope.Escape(Nan::New(Point::constructor)->GetFunction());
-		case wkbLineString:         return scope.Escape(Nan::New(LineString::constructor)->GetFunction());
-		case wkbLinearRing:         return scope.Escape(Nan::New(LinearRing::constructor)->GetFunction());
-		case wkbPolygon:            return scope.Escape(Nan::New(Polygon::constructor)->GetFunction());
-		case wkbGeometryCollection: return scope.Escape(Nan::New(GeometryCollection::constructor)->GetFunction());
-		case wkbMultiPoint:         return scope.Escape(Nan::New(MultiPoint::constructor)->GetFunction());
-		case wkbMultiLineString:    return scope.Escape(Nan::New(MultiLineString::constructor)->GetFunction());
-		case wkbMultiPolygon:       return scope.Escape(Nan::New(MultiPolygon::constructor)->GetFunction());
+		case wkbPoint:              return scope.Escape(Nan::GetFunction(Nan::New(Point::constructor)).ToLocalChecked());
+		case wkbLineString:         return scope.Escape(Nan::GetFunction(Nan::New(LineString::constructor)).ToLocalChecked());
+		case wkbLinearRing:         return scope.Escape(Nan::GetFunction(Nan::New(LinearRing::constructor)).ToLocalChecked());
+		case wkbPolygon:            return scope.Escape(Nan::GetFunction(Nan::New(Polygon::constructor)).ToLocalChecked());
+		case wkbGeometryCollection: return scope.Escape(Nan::GetFunction(Nan::New(GeometryCollection::constructor)).ToLocalChecked());
+		case wkbMultiPoint:         return scope.Escape(Nan::GetFunction(Nan::New(MultiPoint::constructor)).ToLocalChecked());
+		case wkbMultiLineString:    return scope.Escape(Nan::GetFunction(Nan::New(MultiLineString::constructor)).ToLocalChecked());
+		case wkbMultiPolygon:       return scope.Escape(Nan::GetFunction(Nan::New(MultiPolygon::constructor)).ToLocalChecked());
 		default:                    return scope.Escape(Nan::Null());
 	}
 }

@@ -31,7 +31,7 @@ void Driver::Initialize(Local<Object> target)
 
 	ATTR(lcons, "description", descriptionGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("Driver").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Driver").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -140,7 +140,7 @@ Local<Value> Driver::New(GDALDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Driver::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Driver::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	//LOG("ADDING DRIVER TO CACHE [%p]", driver);
 	cache.add(driver, obj);
@@ -163,7 +163,7 @@ Local<Value> Driver::New(OGRSFDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local<Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(Driver::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Driver::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	cache_ogr.add(driver, obj);
 
@@ -471,7 +471,7 @@ NAN_METHOD(Driver::getMetadata)
 	#if GDAL_VERSION_MAJOR < 2
 	if (driver->uses_ogr){
 		result = Nan::New<Object>();
-		result->Set(Nan::New("DCAP_VECTOR").ToLocalChecked(), Nan::New("YES").ToLocalChecked());
+		Nan::Set(result, Nan::New("DCAP_VECTOR").ToLocalChecked(), Nan::New("YES").ToLocalChecked());
 		info.GetReturnValue().Set(result);
 		return;
 	}
@@ -480,7 +480,7 @@ NAN_METHOD(Driver::getMetadata)
 	GDALDriver* raw = driver->getGDALDriver();
 	result = MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str());
 	#if GDAL_VERSION_MAJOR < 2
-		result->Set(Nan::New("DCAP_RASTER").ToLocalChecked(), Nan::New("YES").ToLocalChecked());
+		Nan::Set(result, Nan::New("DCAP_RASTER").ToLocalChecked(), Nan::New("YES").ToLocalChecked());
 	#endif
 	info.GetReturnValue().Set(result);
 }

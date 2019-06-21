@@ -28,21 +28,21 @@ int StringList::parse(Local<Value> value)
 		list = new char* [array->Length() + 1];
 		strlist = new std::string [array->Length()];
 		for (i = 0; i < array->Length(); ++i) {
-			strlist[i] = *Nan::Utf8String(array->Get(i));
+			strlist[i] = *Nan::Utf8String(Nan::Get(array, i).ToLocalChecked());
 			list[i] = (char*) strlist[i].c_str();
 		}
 		list[i] = NULL;
 	} else if (value->IsObject()) {
 		Local<Object> obj = value.As<Object>();
-		Local<Array> keys = obj->GetOwnPropertyNames();
+		Local<Array> keys = Nan::GetOwnPropertyNames(obj).ToLocalChecked();
 		if(keys->Length() == 0)
 			return 0;
 
 		list = new char* [keys->Length() + 1];
 		strlist = new std::string [keys->Length()];
 		for (i = 0; i < keys->Length(); ++i) {
-			std::string key = *Nan::Utf8String(keys->Get(i));
-			std::string val = *Nan::Utf8String(obj->Get(keys->Get(i)));
+			std::string key = *Nan::Utf8String(Nan::Get(keys, i).ToLocalChecked());
+			std::string val = *Nan::Utf8String(Nan::Get(obj, Nan::Get(keys, i).ToLocalChecked()).ToLocalChecked());
 			strlist[i] = key+"="+val;
 			list[i] = (char*) strlist[i].c_str();
 		}

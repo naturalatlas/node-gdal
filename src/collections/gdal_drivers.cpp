@@ -24,7 +24,7 @@ void GDALDrivers::Initialize(Local<Object> target)
 	OGRRegisterAll();
 	#endif
 
-	target->Set(Nan::New("GDALDrivers").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("GDALDrivers").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 	
 	constructor.Reset(lcons);
 }
@@ -69,7 +69,7 @@ Local<Value> GDALDrivers::New()
 	GDALDrivers *wrapped = new GDALDrivers();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(GDALDrivers::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(GDALDrivers::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -145,7 +145,7 @@ NAN_METHOD(GDALDrivers::get)
 		}
 
 	} else if(info[0]->IsNumber()) {
-		int i = static_cast<int>(info[0]->IntegerValue());
+		int i = static_cast<int>(Nan::To<int64_t>(info[0]).ToChecked());
 
 		gdal_driver = GetGDALDriverManager()->GetDriver(i);
 		if(gdal_driver) {
@@ -196,7 +196,7 @@ NAN_METHOD(GDALDrivers::getNames)
 		#if GDAL_VERSION_MAJOR < 2
 		if(name == "VRT") name = "VRT:raster";
 		#endif
-		driver_names->Set(i, SafeString::New(name.c_str()));
+		Nan::Set(driver_names, i, SafeString::New(name.c_str()));
 	}
 
 
@@ -205,7 +205,7 @@ NAN_METHOD(GDALDrivers::getNames)
 		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriver(i - gdal_count);
 		name = driver->GetName();
 		if(name == "VRT") name = "VRT:vector";
-		driver_names->Set(i, SafeString::New(name.c_str()));
+		Nan::Set(driver_names, i, SafeString::New(name.c_str()));
 	}
 	#endif
 	

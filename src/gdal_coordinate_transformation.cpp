@@ -19,7 +19,7 @@ void CoordinateTransformation::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "toString", toString);
 	Nan::SetPrototypeMethod(lcons, "transformPoint", transformPoint);
 
-	target->Set(Nan::New("CoordinateTransformation").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("CoordinateTransformation").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -155,7 +155,7 @@ Local<Value> CoordinateTransformation::New(OGRCoordinateTransformation *transfor
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(CoordinateTransformation::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(CoordinateTransformation::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -190,17 +190,17 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 
 	if (info.Length() == 1 && info[0]->IsObject()) {
 		Local<Object> obj = info[0].As<Object>();
-		Local<Value> arg_x = obj->Get(Nan::New("x").ToLocalChecked());
-		Local<Value> arg_y = obj->Get(Nan::New("y").ToLocalChecked());
-		Local<Value> arg_z = obj->Get(Nan::New("z").ToLocalChecked());
+		Local<Value> arg_x = Nan::Get(obj, Nan::New("x").ToLocalChecked()).ToLocalChecked();
+		Local<Value> arg_y = Nan::Get(obj, Nan::New("y").ToLocalChecked()).ToLocalChecked();
+		Local<Value> arg_z = Nan::Get(obj, Nan::New("z").ToLocalChecked()).ToLocalChecked();
 		if (!arg_x->IsNumber() || !arg_y->IsNumber()) {
 			Nan::ThrowError("point must contain numerical properties x and y");
 			return;
 		}
-		x = static_cast<double>(arg_x->NumberValue());
-		y = static_cast<double>(arg_y->NumberValue());
+		x = static_cast<double>(Nan::To<double>(arg_x).ToChecked());
+		y = static_cast<double>(Nan::To<double>(arg_y).ToChecked());
 		if (arg_z->IsNumber()) {
-			z = static_cast<double>(arg_z->NumberValue());
+			z = static_cast<double>(Nan::To<double>(arg_z).ToChecked());
 		}
 	} else {
 		NODE_ARG_DOUBLE(0, "x", x);
@@ -214,9 +214,9 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 	}
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("x").ToLocalChecked(), Nan::New<Number>(x));
-	result->Set(Nan::New("y").ToLocalChecked(), Nan::New<Number>(y));
-	result->Set(Nan::New("z").ToLocalChecked(), Nan::New<Number>(z));
+	Nan::Set(result, Nan::New("x").ToLocalChecked(), Nan::New<Number>(x));
+	Nan::Set(result, Nan::New("y").ToLocalChecked(), Nan::New<Number>(y));
+	Nan::Set(result, Nan::New("z").ToLocalChecked(), Nan::New<Number>(z));
 
 	info.GetReturnValue().Set(result);
 }

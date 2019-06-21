@@ -44,7 +44,7 @@ void Layer::Initialize(Local<Object> target)
 	ATTR(lcons, "geomColumn", geomColumnGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "fidColumn", fidColumnGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("Layer").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Layer").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -148,7 +148,7 @@ Local<Value> Layer::New(OGRLayer *raw, OGRDataSource *raw_parent, bool result_se
 	Layer *wrapped = new Layer(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Layer::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Layer::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	cache.add(raw, obj);
 
@@ -241,10 +241,10 @@ NAN_METHOD(Layer::getExtent)
 	}
 
 	Local<Object> obj = Nan::New<Object>();
-	obj->Set(Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
-	obj->Set(Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
-	obj->Set(Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
-	obj->Set(Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
+	Nan::Set(obj, Nan::New("minX").ToLocalChecked(), Nan::New<Number>(envelope->MinX));
+	Nan::Set(obj, Nan::New("maxX").ToLocalChecked(), Nan::New<Number>(envelope->MaxX));
+	Nan::Set(obj, Nan::New("minY").ToLocalChecked(), Nan::New<Number>(envelope->MinY));
+	Nan::Set(obj, Nan::New("maxY").ToLocalChecked(), Nan::New<Number>(envelope->MaxY));
 
 	delete envelope;
 

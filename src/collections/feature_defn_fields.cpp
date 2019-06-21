@@ -27,7 +27,7 @@ void FeatureDefnFields::Initialize(Local<Object> target)
 
 	ATTR_DONT_ENUM(lcons, "featureDefn", featureDefnGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("FeatureDefnFields").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("FeatureDefnFields").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -72,7 +72,7 @@ Local<Value> FeatureDefnFields::New(Local<Value> feature_defn)
 	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FeatureDefnFields::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FeatureDefnFields::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), feature_defn);
 
 	return scope.Escape(obj);
@@ -179,7 +179,7 @@ NAN_METHOD(FeatureDefnFields::getNames)
 
 	for (int i = 0; i < n;  i++) {
 		OGRFieldDefn *field_def = feature_def->get()->GetFieldDefn(i);
-		result->Set(i, SafeString::New(field_def->GetNameRef()));
+		Nan::Set(result, i, SafeString::New(field_def->GetNameRef()));
 	}
 
 	info.GetReturnValue().Set(result);
@@ -248,7 +248,7 @@ NAN_METHOD(FeatureDefnFields::add)
 		Local<Array> array = info[0].As<Array>();
 		int n = array->Length();
 		for (int i = 0; i < n; i++) {
-			Local<Value> element = array->Get(i);
+			Local<Value> element = Nan::Get(array, i).ToLocalChecked();
 			if (IS_WRAPPED(element, FieldDefn)) {
 				field_def = Nan::ObjectWrap::Unwrap<FieldDefn>(element.As<Object>());
 				feature_def->get()->AddFieldDefn(field_def->get());
@@ -305,14 +305,14 @@ NAN_METHOD(FeatureDefnFields::reorder)
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i < n; i++) {
-		Local<Value> val = field_map->Get(i);
+		Local<Value> val = Nan::Get(field_map, i).ToLocalChecked();
 		if (!val->IsNumber()) {
 			delete [] field_map_array;
 			Nan::ThrowError("Array must only contain integers");
 			return;
 		}
 
-		int key = val->IntegerValue();
+		int key = Nan::To<int64_t>(val).ToChecked();
 		if (key < 0 || key >= n) {
 			delete [] field_map_array;
 			Nan::ThrowError("Values must be between 0 and field count - 1");

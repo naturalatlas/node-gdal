@@ -21,7 +21,7 @@ void GeometryCollectionChildren::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "remove", remove);
 	Nan::SetPrototypeMethod(lcons, "add", add);
 
-	target->Set(Nan::New("GeometryCollectionChildren").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("GeometryCollectionChildren").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -66,7 +66,7 @@ Local<Value> GeometryCollectionChildren::New(Local<Value> geom)
 	GeometryCollectionChildren *wrapped = new GeometryCollectionChildren();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(GeometryCollectionChildren::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(GeometryCollectionChildren::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -174,7 +174,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 		Local<Array> array = info[0].As<Array>();
 		int length = array->Length();
 		for (int i = 0; i < length; i++){
-			Local<Value> element = array->Get(i);
+			Local<Value> element = Nan::Get(array, i).ToLocalChecked();
 			if(IS_WRAPPED(element, Geometry)){
 				child = Nan::ObjectWrap::Unwrap<Geometry>(element.As<Object>());
 				OGRErr err = geom->get()->addGeometry(child->get());

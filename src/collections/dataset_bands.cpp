@@ -23,7 +23,7 @@ void DatasetBands::Initialize(Local<Object> target)
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("DatasetBands").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("DatasetBands").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -71,7 +71,7 @@ Local<Value> DatasetBands::New(Local<Value> ds_obj)
 	DatasetBands *wrapped = new DatasetBands();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(DatasetBands::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(DatasetBands::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), ds_obj);
 
 	return scope.Escape(obj);

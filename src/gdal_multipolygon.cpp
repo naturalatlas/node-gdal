@@ -24,7 +24,7 @@ void MultiPolygon::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "unionCascaded", unionCascaded);
 	Nan::SetPrototypeMethod(lcons, "getArea", getArea);
 
-	target->Set(Nan::New("MultiPolygon").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("MultiPolygon").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -123,7 +123,7 @@ Local<Value> MultiPolygon::New(OGRMultiPolygon *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(MultiPolygon::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(MultiPolygon::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
