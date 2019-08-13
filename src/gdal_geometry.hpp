@@ -85,6 +85,7 @@ public:
 	static NAN_GETTER(coordinateDimensionGetter);
 
 	static NAN_SETTER(srsSetter);
+	static NAN_SETTER(coordinateDimensionSetter);
 
 	static OGRwkbGeometryType getGeometryType_fixed(OGRGeometry* geom);
 	static Local<Value> getConstructor(OGRwkbGeometryType type);

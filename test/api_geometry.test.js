@@ -138,6 +138,19 @@ describe('gdal.Geometry', function() {
 				assert.equal((new gdal.LinearRing()).wkbType, 101);
 			});
 		});
+		describe('"coordinateDimension" property', function() {
+			it('should be set', function() {
+				assert.equal((new gdal.Point(1, 2, 3)).coordinateDimension, 3);
+			});
+			it('should be writable', function() {
+				var point = new gdal.Point(1, 2, 3);
+				assert.equal(point.coordinateDimension, 3);
+				assert.equal(point.z, 3);
+				point.coordinateDimension = 2;
+				assert.equal(point.coordinateDimension, 2);
+				assert.equal(point.z, 0);
+			});
+		});
 		describe('"srs" property', function() {
 			it('should be able to be get', function() {
 				var point = new gdal.Point(0, 0);

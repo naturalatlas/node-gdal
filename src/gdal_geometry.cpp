@@ -79,7 +79,7 @@ void Geometry::Initialize(Local<Object> target)
 	ATTR(lcons, "srs", srsGetter, srsSetter);
 	ATTR(lcons, "wkbSize", wkbSizeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "dimension", dimensionGetter, READ_ONLY_SETTER);
-	ATTR(lcons, "coordinateDimension", coordinateDimensionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, "coordinateDimension", coordinateDimensionGetter, coordinateDimensionSetter);
 	ATTR(lcons, "wkbType", typeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "name", nameGetter, READ_ONLY_SETTER);
 
@@ -984,7 +984,6 @@ NAN_GETTER(Geometry::dimensionGetter)
 }
 
 /**
- * @readOnly
  * @attribute coordinateDimension
  * @type Integer
  */
@@ -994,6 +993,25 @@ NAN_GETTER(Geometry::coordinateDimensionGetter)
 	Geometry *geom = Nan::ObjectWrap::Unwrap<Geometry>(info.This());
 	info.GetReturnValue().Set(Nan::New<Integer>(geom->this_->getCoordinateDimension()));
 }
+
+NAN_SETTER(Geometry::coordinateDimensionSetter)
+{
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap<Geometry>(info.This());
+
+	if (!value->IsInt32()) {
+		Nan::ThrowError("coordinateDimension must be an integer");
+		return;
+	}
+	int dim = value->IntegerValue();
+	if (dim != 2 && dim != 3) {
+		Nan::ThrowError("coordinateDimension must be 2 or 3");
+		return;
+	}
+
+	geom->this_->setCoordinateDimension(dim);
+}
+
 
 Local<Value> Geometry::getConstructor(OGRwkbGeometryType type){
 	Nan::EscapableHandleScope scope;
