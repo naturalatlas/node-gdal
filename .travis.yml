@@ -14,6 +14,21 @@ addons:
 matrix:
   include:
     - os: osx
+      env: NODE_NVM_VERSION="13" TARGET=STATIC
+    - os: linux
+      dist: precise
+      env: NODE_NVM_VERSION="13" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="13" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="13" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="13" TARGET=TRUNK
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="13" TARGET=TRUNK
+    - os: osx
       env: NODE_NVM_VERSION="12" TARGET=STATIC
     - os: linux
       dist: precise
@@ -29,21 +44,6 @@ matrix:
       dist: trusty
       env: NODE_NVM_VERSION="12" TARGET=TRUNK
     - os: osx
-      env: NODE_NVM_VERSION="11" TARGET=STATIC
-    - os: linux
-      dist: precise
-      env: NODE_NVM_VERSION="11" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="11" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="11" TARGET=SHARED
-    - os: osx
-      env: NODE_NVM_VERSION="11" TARGET=TRUNK
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="11" TARGET=TRUNK
-    - os: osx
       env: NODE_NVM_VERSION="10" TARGET=STATIC
     - os: linux
       dist: precise
@@ -58,49 +58,9 @@ matrix:
     - os: linux
       dist: trusty
       env: NODE_NVM_VERSION="10" TARGET=TRUNK
-    - os: osx
-      env: NODE_NVM_VERSION="9" TARGET=STATIC
-    - os: linux
-      dist: precise
-      env: NODE_NVM_VERSION="9" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="9" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="9" TARGET=SHARED
-    - os: osx
-      env: NODE_NVM_VERSION="8" TARGET=STATIC
-    - os: linux
-      dist: precise
-      env: NODE_NVM_VERSION="8" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="8" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="8" TARGET=SHARED
-    - os: osx
-      env: NODE_NVM_VERSION="6" TARGET=STATIC
-    - os: linux
-      dist: precise
-      env: NODE_NVM_VERSION="6" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="6" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="6" TARGET=SHARED
-    - os: osx
-      env: NODE_NVM_VERSION="4" TARGET=STATIC
-    - os: linux
-      dist: precise
-      env: NODE_NVM_VERSION="4" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="4" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="4" TARGET=SHARED
   allow_failures:
+    - env: NODE_NVM_VERSION="13" TARGET=TRUNK
     - env: NODE_NVM_VERSION="12" TARGET=TRUNK
-    - env: NODE_NVM_VERSION="11" TARGET=TRUNK
     - env: NODE_NVM_VERSION="10" TARGET=TRUNK
 
 before_install:
