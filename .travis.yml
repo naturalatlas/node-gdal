@@ -16,7 +16,6 @@ matrix:
     - os: osx
       env: NODE_NVM_VERSION="13" TARGET=STATIC
     - os: linux
-      dist: precise
       env: NODE_NVM_VERSION="13" TARGET=STATIC
     - os: osx
       env: NODE_NVM_VERSION="13" TARGET=SHARED
@@ -31,7 +30,6 @@ matrix:
     - os: osx
       env: NODE_NVM_VERSION="12" TARGET=STATIC
     - os: linux
-      dist: precise
       env: NODE_NVM_VERSION="12" TARGET=STATIC
     - os: osx
       env: NODE_NVM_VERSION="12" TARGET=SHARED
@@ -46,7 +44,6 @@ matrix:
     - os: osx
       env: NODE_NVM_VERSION="10" TARGET=STATIC
     - os: linux
-      dist: precise
       env: NODE_NVM_VERSION="10" TARGET=STATIC
     - os: osx
       env: NODE_NVM_VERSION="10" TARGET=SHARED
