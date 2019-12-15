@@ -145,7 +145,7 @@
 				"gdal/port/cpl_quad_tree.cpp",
 				"gdal/port/cpl_progress.cpp",
 				"gdal/port/cpl_path.cpp",
-				"gdal/port/cpl_odbc.cpp",
+				#"gdal/port/cpl_odbc.cpp",
 				"gdal/port/cpl_multiproc.cpp",
 				"gdal/port/cpl_minizip_zip.cpp",
 				"gdal/port/cpl_minizip_unzip.cpp",
