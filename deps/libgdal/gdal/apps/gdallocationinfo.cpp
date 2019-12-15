@@ -35,7 +35,7 @@
 #include "ogr_spatialref.h"
 #include <vector>
 
-CPL_CVSID("$Id: gdallocationinfo.cpp 1c35871019286e28e58e7a9505e0d660bae25601 2019-03-24 14:39:12 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdallocationinfo.cpp af0ad2ff6d6f6e38e0a7720f5664fa540ed3b836 2019-06-27 11:19:31 +0200 Even Rouault $")
 
 /******************************************************************************/
 /*! \page gdallocationinfo gdallocationinfo
@@ -309,7 +309,8 @@ MAIN_START(argc, argv)
 /*      Open source file.                                               */
 /* -------------------------------------------------------------------- */
     GDALDatasetH hSrcDS
-        = GDALOpenEx( pszSrcFilename, GDAL_OF_RASTER, nullptr,
+        = GDALOpenEx( pszSrcFilename, GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR,
+                      nullptr,
                       papszOpenOptions, nullptr );
     if( hSrcDS == nullptr )
         exit( 1 );

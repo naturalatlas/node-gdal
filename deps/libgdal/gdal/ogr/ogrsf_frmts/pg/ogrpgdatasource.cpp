@@ -36,7 +36,7 @@
 
 #define PQexec this_is_an_error
 
-CPL_CVSID("$Id: ogrpgdatasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrpgdatasource.cpp b868dbe333dd862e72cac89aa9f846a7c030f82c 2019-07-02 11:54:49 +0200 Even Rouault $")
 
 static void OGRPGNoticeProcessor( void *arg, const char * pszMessage );
 
@@ -894,12 +894,15 @@ void OGRPGDataSource::LoadTables()
 /*      See http://trac.osgeo.org/postgis/ticket/3092                   */
 /* -------------------------------------------------------------------- */
         CPLString osCommand;
+        const char* pszConstraintDef =
+            sPostgreSQLVersion.nMajor >= 12 ? "pg_get_constraintdef(s.oid)" :
+                                              "s.consrc";
         osCommand.Printf(
               "SELECT c.relname, n.nspname, c.relkind, a.attname, t.typname, "
               "postgis_typmod_dims(a.atttypmod) dim, "
               "postgis_typmod_srid(a.atttypmod) srid, "
               "postgis_typmod_type(a.atttypmod)::text geomtyp, "
-              "array_agg(s.consrc)::text att_constraints, a.attnotnull, "
+              "array_agg(%s)::text att_constraints, a.attnotnull, "
               "d.description "
               "FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid "
               "JOIN pg_namespace n ON c.relnamespace = n.oid "
@@ -907,11 +910,15 @@ void OGRPGDataSource::LoadTables()
               "JOIN pg_type t ON a.atttypid = t.oid AND (t.typname = 'geometry'::name OR t.typname = 'geography'::name) "
               "LEFT JOIN pg_constraint s ON s.connamespace = n.oid AND s.conrelid = c.oid "
               "AND a.attnum = ANY (s.conkey) "
-              "AND (s.consrc LIKE '%%geometrytype(%% = %%' OR s.consrc LIKE '%%ndims(%% = %%' OR s.consrc LIKE '%%srid(%% = %%') "
+              "AND (%s LIKE '%%geometrytype(%% = %%' OR %s LIKE '%%ndims(%% = %%' OR %s LIKE '%%srid(%% = %%') "
               "LEFT JOIN pg_description d ON d.objoid = c.oid AND d.classoid = 'pg_class'::regclass::oid AND d.objsubid = 0 "
               "GROUP BY c.relname, n.nspname, c.relkind, a.attname, t.typname, dim, srid, geomtyp, a.attnotnull, c.oid, a.attnum, d.description "
               "ORDER BY c.oid, a.attnum",
-              pszAllowedRelations);
+              pszConstraintDef,
+              pszAllowedRelations,
+              pszConstraintDef,
+              pszConstraintDef,
+              pszConstraintDef);
         PGresult *hResult = OGRPG_PQexec(hPGConn, osCommand.c_str());
 
         if( !hResult || PQresultStatus(hResult) != PGRES_TUPLES_OK )

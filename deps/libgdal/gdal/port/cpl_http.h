@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_http.h 4e7ce5fcadef46f94d6a548a04d389224fc9a99c 2019-02-11 11:30:42 +0100 Even Rouault $
+ * $Id: cpl_http.h 78ebfa67fe512cc98e3452fc307a0a17e88d0b68 2019-06-21 00:26:51 +0200 Even Rouault $
  *
  * Project:  Common Portability Library
  * Purpose:  Function wrapper for libcurl HTTP access.
@@ -143,7 +143,8 @@ CPL_C_END
 // Not sure if this belong here, used in cpl_http.cpp, cpl_vsil_curl.cpp and frmts/wms/gdalhttp.cpp
 void* CPLHTTPSetOptions(void *pcurl, const char *pszURL, const char * const* papszOptions);
 char** CPLHTTPGetOptionsFromEnv();
-double CPLHTTPGetNewRetryDelay(int response_code, double dfOldDelay, const char* pszErrBuf);
+double CPLHTTPGetNewRetryDelay(int response_code, double dfOldDelay,
+                               const char* pszErrBuf, const char* pszCurlError);
 void* CPLHTTPIgnoreSigPipe();
 void CPLHTTPRestoreSigPipeHandler(void* old_handler);
 bool CPLMultiPerformWait(void* hCurlMultiHandle, int& repeats);

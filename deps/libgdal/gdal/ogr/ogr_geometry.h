@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geometry.h 29693f999fa9435ffcf1c4bdc2ffa2eeb3011b9c 2018-03-28 16:51:44 +0200 Even Rouault $
+ * $Id: ogr_geometry.h 0ca04053b3a7d0ebc1f0ecdc86e7084162945176 2019-06-13 10:53:23 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Classes for manipulating simple features that is not specific
@@ -2876,7 +2876,7 @@ class CPL_DLL OGRGeometryFactory
     static bool haveGEOS();
 
     /** Opaque class used as argument to transformWithOptions() */
-    class TransformWithOptionsCache
+    class CPL_DLL TransformWithOptionsCache
     {
         friend class OGRGeometryFactory;
         struct Private;

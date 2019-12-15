@@ -48,7 +48,7 @@
 #include "ogr_geojson.h"
 #include "ogrgeojsonreader.h"
 
-CPL_CVSID("$Id: ogrgeojsonlayer.cpp 8b5aa2265f771dc327f6344c13c14ed16895fc29 2019-05-02 11:16:35 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrgeojsonlayer.cpp 07b24f8cd487508a42b6ca5df2e5b96a85e9f204 2019-06-27 22:53:04 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                       STATIC MEMBERS DEFINITION                      */
@@ -128,6 +128,7 @@ void OGRGeoJSONLayer::SetFIDColumn( const char* pszFIDColumn )
 
 void OGRGeoJSONLayer::ResetReading()
 {
+    nFeatureReadSinceReset_ = 0;
     if( poReader_ )
     {
         TerminateAppendSession();
@@ -165,6 +166,7 @@ OGRFeature* OGRGeoJSONLayer::GetNextFeature()
                 && (m_poAttrQuery == nullptr ||
                     m_poAttrQuery->Evaluate(poFeature)) )
             {
+                nFeatureReadSinceReset_ ++;
                 return poFeature;
             }
             delete poFeature;
@@ -172,7 +174,12 @@ OGRFeature* OGRGeoJSONLayer::GetNextFeature()
     }
     else
     {
-        return OGRMemLayer::GetNextFeature();
+        auto ret = OGRMemLayer::GetNextFeature();
+        if( ret )
+        {
+            nFeatureReadSinceReset_ ++;
+        }
+        return ret;
     }
 }
 
@@ -248,8 +255,15 @@ bool OGRGeoJSONLayer::IngestAll()
 
 OGRErr OGRGeoJSONLayer::ISetFeature( OGRFeature *poFeature )
 {
-    if( !IsUpdatable() || !IngestAll() )
+    if( !IsUpdatable() )
         return OGRERR_FAILURE;
+    if( poReader_ )
+    {
+        auto nNextIndex = nFeatureReadSinceReset_;
+        if( !IngestAll() )
+            return OGRERR_FAILURE;
+        SetNextByIndex(nNextIndex);
+    }
     return OGRMemLayer::ISetFeature(poFeature);
 }
 

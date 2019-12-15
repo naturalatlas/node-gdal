@@ -60,7 +60,7 @@
 #include "ogr_srs_api.h"
 #include "vrtdataset.h"
 
-CPL_CVSID("$Id: gdalwarp_lib.cpp c81cd7dc950a3a08ce3f6de3d59eaa9e1d33a021 2019-03-23 10:11:39 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdalwarp_lib.cpp 043b7d514edadd94c0b3712f8ba6d8f0dfb86809 2019-07-16 18:04:44 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                        GDALWarpAppOptions                            */
@@ -1571,10 +1571,15 @@ GDALDatasetH GDALWarp( const char *pszDest, GDALDatasetH hDstDS, int nSrcCount,
                         CPLStringToComplex( papszTokens[i],
                                             psWO->padfSrcNoDataReal + i,
                                             psWO->padfSrcNoDataImag + i );
+                        psWO->padfSrcNoDataReal[i] =
+                            GDALAdjustNoDataCloseToFloatMax(psWO->padfSrcNoDataReal[i]);
+                        psWO->padfSrcNoDataImag[i] =
+                            GDALAdjustNoDataCloseToFloatMax(psWO->padfSrcNoDataImag[i]);
                     }
                     else
                     {
-                        psWO->padfSrcNoDataReal[i] = CPLAtof(papszTokens[i]);
+                        psWO->padfSrcNoDataReal[i] = GDALAdjustNoDataCloseToFloatMax(
+                            CPLAtof(papszTokens[i]));
                     }
                 }
                 else
@@ -1682,6 +1687,10 @@ GDALDatasetH GDALWarp( const char *pszDest, GDALDatasetH hDstDS, int nSrcCount,
                     CPLStringToComplex( papszTokens[i],
                                         psWO->padfDstNoDataReal + i,
                                         psWO->padfDstNoDataImag + i );
+                    psWO->padfDstNoDataReal[i] =
+                        GDALAdjustNoDataCloseToFloatMax(psWO->padfDstNoDataReal[i]);
+                    psWO->padfDstNoDataImag[i] =
+                        GDALAdjustNoDataCloseToFloatMax(psWO->padfDstNoDataImag[i]);
                     bDstNoDataNone = false;
                     CPLDebug( "WARP", "dstnodata of band %d set to %f", i, psWO->padfDstNoDataReal[i] );
                 }
@@ -1903,8 +1912,9 @@ GDALDatasetH GDALWarp( const char *pszDest, GDALDatasetH hDstDS, int nSrcCount,
                     bOKRegardingInitDest = true;
                     for( int i = 0; i < GDALGetRasterCount(hDstDS); i++ )
                     {
-                        double dfInitVal = CPLAtofM(papszTokensInitDest[
-                            std::min(i, nTokenCountInitDest-1)]);
+                        double dfInitVal = GDALAdjustNoDataCloseToFloatMax(
+                            CPLAtofM(papszTokensInitDest[
+                                std::min(i, nTokenCountInitDest-1)]));
                         int bHasNoData = false;
                         double dfDstNoDataVal = GDALGetRasterNoDataValue(
                             GDALGetRasterBand(hDstDS, i+1), &bHasNoData);

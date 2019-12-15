@@ -35,7 +35,7 @@
 #include <map>
 #include <sstream>
 
-CPL_CVSID("$Id: ogrwasplayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrwasplayer.cpp 1bfa8b811d4feaa8c65c9a10076b95c17e1db5cb 2019-05-15 07:42:43 -0500 Even Rouault $")
 
 /************************************************************************/
 /*                            OGRWAsPLayer()                             */
@@ -58,7 +58,6 @@ OGRWAsPLayer::OGRWAsPLayer( const char * pszName,
 {
     SetDescription( poLayerDefn->GetName() );
     poLayerDefn->Reference();
-    poLayerDefn->SetGeomType( wkbLineString25D );
     poLayerDefn->GetGeomFieldDefn(0)->SetType( wkbLineString25D );
     poLayerDefn->GetGeomFieldDefn(0)->SetSpatialRef( poSpatialReference );
     if( poSpatialReference ) poSpatialReference->Reference();
@@ -92,7 +91,10 @@ OGRWAsPLayer::OGRWAsPLayer( const char * pszName,
     pdfAdjacentPointTolerance(pdfAdjacentPointToleranceParam),
     pdfPointToCircleRadius(pdfPointToCircleRadiusParam)
 {
+    SetDescription( poLayerDefn->GetName() );
     poLayerDefn->Reference();
+    poLayerDefn->GetGeomFieldDefn(0)->SetType( wkbLineString25D );
+    poLayerDefn->GetGeomFieldDefn(0)->SetSpatialRef( poSpatialReference );
     if (poSpatialReference) poSpatialReference->Reference();
 }
 

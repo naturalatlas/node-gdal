@@ -33,7 +33,7 @@
 #include "cpl_time.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrgeopackagetablelayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrgeopackagetablelayer.cpp 087e15b179ac43ee1a0cff0f46d68a304848a6eb 2019-05-21 22:10:19 +0200 Even Rouault $")
 
 static const char UNSUPPORTED_OP_READ_ONLY[] =
   "%s : unsupported operation on a read-only datasource.";
@@ -55,8 +55,8 @@ OGRErr OGRGeoPackageTableLayer::SaveExtent()
 
     char *pszSQL = sqlite3_mprintf(
                 "UPDATE gpkg_contents SET "
-                "min_x = %g, min_y = %g, "
-                "max_x = %g, max_y = %g "
+                "min_x = %.18g, min_y = %.18g, "
+                "max_x = %.18g, max_y = %.18g "
                 "WHERE lower(table_name) = lower('%q') AND "
                 "Lower(data_type) = 'features'",
                 m_poExtent->MinX, m_poExtent->MinY,
@@ -1045,8 +1045,8 @@ OGRErr OGRGeoPackageTableLayer::ReadTableDefinition()
                     }
                 }
             }
-            SQLResultFree(&oResultTable);
         }
+        SQLResultFree(&oResultTable);
     }
 
     /* Update the columns string */

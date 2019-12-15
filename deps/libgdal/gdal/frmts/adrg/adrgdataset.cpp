@@ -34,7 +34,7 @@
 #include <limits>
 #include <new>
 
-CPL_CVSID("$Id: adrgdataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: adrgdataset.cpp fc772a7e94b9c97f62a72e3eab60fa20b97b9f92 2019-08-12 01:18:04 +0200 Even Rouault $")
 
 #define N_ELEMENTS(x)  (sizeof(x)/sizeof(x[0]))
 
@@ -1096,7 +1096,7 @@ ADRGDataset* ADRGDataset::OpenDataset(
         {
             TILEINDEX = new int [NFL * NFC];
         }
-        catch( const std::bad_alloc& )
+        catch( const std::exception& )
         {
             return nullptr;
         }

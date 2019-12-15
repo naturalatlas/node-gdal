@@ -41,13 +41,11 @@
 #include "cpl_json_streaming_parser.h"
 #include <ogr_api.h>
 
-CPL_CVSID("$Id: ogrgeojsonreader.cpp 8b5aa2265f771dc327f6344c13c14ed16895fc29 2019-05-02 11:16:35 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrgeojsonreader.cpp 43762b509f8e237ed57689e733e36eb1266e4f0c 2019-10-10 17:54:41 +0200 Momtchil Momtchev $")
 
 static
 OGRGeometry* OGRGeoJSONReadGeometry( json_object* poObj,
                                      OGRSpatialReference* poParentSRS );
-
-const size_t MAX_OBJECT_SIZE = 200 * 1024 * 1024;
 
 #if (!defined(JSON_C_VERSION_NUM)) || (JSON_C_VERSION_NUM < JSON_C_VER_013)
 const size_t ESTIMATE_BASE_OBJECT_SIZE = sizeof(struct json_object);
@@ -98,6 +96,7 @@ class OGRGeoJSONReaderStreamingParser: public CPLJSonStreamingParser
         std::vector<bool> m_abFirstMember;
         bool m_bStoreNativeData;
         CPLString m_osJson;
+        size_t m_nMaxObjectSize;
 
         std::vector<OGRFeature*> m_apoFeatures;
         size_t m_nCurFeatureIdx;
@@ -314,6 +313,8 @@ OGRGeoJSONReaderStreamingParser::OGRGeoJSONReaderStreamingParser(
                 m_bStoreNativeData(bStoreNativeData),
                 m_nCurFeatureIdx(0)
 {
+    m_nMaxObjectSize = atoi(CPLGetConfigOption("OGR_GEOJSON_MAX_OBJ_SIZE", "200"))
+                * 1024 * 1024;
 }
 
 /************************************************************************/
@@ -401,7 +402,7 @@ void OGRGeoJSONReaderStreamingParser::AnalyzeFeature()
 
 void OGRGeoJSONReaderStreamingParser::StartObject()
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -448,7 +449,7 @@ void OGRGeoJSONReaderStreamingParser::StartObject()
 
 void OGRGeoJSONReaderStreamingParser::EndObject()
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -523,7 +524,7 @@ void OGRGeoJSONReaderStreamingParser::EndObject()
 void OGRGeoJSONReaderStreamingParser::StartObjectMember(const char* pszKey,
                                                         size_t nKeyLen)
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -576,7 +577,7 @@ void OGRGeoJSONReaderStreamingParser::StartObjectMember(const char* pszKey,
 
 void OGRGeoJSONReaderStreamingParser::StartArray()
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -628,7 +629,7 @@ void OGRGeoJSONReaderStreamingParser::StartArrayMember()
 
 void OGRGeoJSONReaderStreamingParser::EndArray()
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -657,7 +658,7 @@ void OGRGeoJSONReaderStreamingParser::EndArray()
 
 void OGRGeoJSONReaderStreamingParser::String(const char* pszValue, size_t nLen)
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -692,7 +693,7 @@ void OGRGeoJSONReaderStreamingParser::String(const char* pszValue, size_t nLen)
 
 void OGRGeoJSONReaderStreamingParser::Number(const char* pszValue, size_t nLen)
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -749,7 +750,7 @@ void OGRGeoJSONReaderStreamingParser::Number(const char* pszValue, size_t nLen)
 
 void OGRGeoJSONReaderStreamingParser::Boolean(bool bVal)
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -779,7 +780,7 @@ void OGRGeoJSONReaderStreamingParser::Boolean(bool bVal)
 
 void OGRGeoJSONReaderStreamingParser::Null()
 {
-    if( m_nCurObjMemEstimate > MAX_OBJECT_SIZE )
+    if( m_nCurObjMemEstimate > m_nMaxObjectSize )
     {
         TooComplex();
         return;
@@ -804,7 +805,7 @@ void OGRGeoJSONReaderStreamingParser::Null()
 void OGRGeoJSONReaderStreamingParser::TooComplex()
 {
     if( !ExceptionOccurred() )
-        Exception("GeoJSON object too complex");
+        Exception("GeoJSON object too complex, please see the OGR_GEOJSON_MAX_OBJ_SIZE environment option");
 }
 
 /************************************************************************/

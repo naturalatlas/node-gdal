@@ -33,7 +33,7 @@
 #include "cpl_error.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrlibkmldriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+CPL_CVSID("$Id: ogrlibkmldriver.cpp 59a14714d4e03779006fdac3a977641bccd2447b 2019-07-30 21:41:17 +0200 Even Rouault $")
 
 using kmldom::KmlFactory;
 
@@ -64,9 +64,23 @@ static int OGRLIBKMLDriverIdentify( GDALOpenInfo* poOpenInfo )
     if( poOpenInfo->bIsDirectory )
         return -1;
 
-    return
-        EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "kml") ||
-        EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "kmz");
+    const char* pszExt = CPLGetExtension(poOpenInfo->pszFilename);
+    if( EQUAL(pszExt, "kml") ||
+        EQUAL(pszExt, "kmz") )
+    {
+        return TRUE;
+    }
+
+    if( poOpenInfo->pabyHeader &&
+        ( strstr(reinterpret_cast<char *>(poOpenInfo->pabyHeader),
+                  "<kml") != nullptr ||
+          strstr(reinterpret_cast<char *>(poOpenInfo->pabyHeader),
+                  "<kml:kml") != nullptr) )
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /******************************************************************************

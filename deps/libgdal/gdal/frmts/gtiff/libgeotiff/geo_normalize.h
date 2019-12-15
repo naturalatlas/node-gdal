@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: geo_normalize.h a63e52231cc162328ab48bd8789350fed71a32c6 2019-04-19 19:04:44 +0200 Bas Couwenberg $
+ * $Id: geo_normalize.h ffb0ad0c862cf4ef5d6907d1d83cc76fcf8c305b 2019-07-17 17:40:29 +0200 Even Rouault $
  *
  * Project:  libgeotiff
  * Purpose:  Include file related to geo_normalize.c containing Code to
@@ -143,27 +143,61 @@ typedef struct {
 
 } GTIFDefn;
 
+int GTIF_DLL GTIFGetPCSInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                      int nPCSCode, char **ppszEPSGName,
+                      short *pnProjOp, short *pnUOMLengthCode,
+                      short *pnGeogCS );
 int GTIF_DLL GTIFGetPCSInfo( int nPCSCode, char **ppszEPSGName,
                             short *pnProjOp,
                             short *pnUOMLengthCode, short *pnGeogCS );
+
+int GTIF_DLL GTIFGetProjTRFInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                          int nProjTRFCode,
+                          char **ppszProjTRFName,
+                          short * pnProjMethod,
+                          double * padfProjParms );
 int GTIF_DLL GTIFGetProjTRFInfo( int nProjTRFCode,
                                 char ** ppszProjTRFName,
                                 short * pnProjMethod,
                                 double * padfProjParms );
+
+int GTIF_DLL GTIFGetGCSInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                      int nGCSCode, char ** ppszName,
+                      short * pnDatum, short * pnPM, short *pnUOMAngle );
 int GTIF_DLL GTIFGetGCSInfo( int nGCSCode, char **ppszName,
                             short *pnDatum, short *pnPM, short *pnUOMAngle );
+
+int GTIF_DLL GTIFGetDatumInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                        int nDatumCode, char ** ppszName, short * pnEllipsoid );
 int GTIF_DLL GTIFGetDatumInfo( int nDatumCode, char **ppszName,
                               short * pnEllipsoid );
+
+int GTIF_DLL GTIFGetEllipsoidInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                            int nEllipseCode, char ** ppszName,
+                            double * pdfSemiMajor, double * pdfSemiMinor );
 int GTIF_DLL GTIFGetEllipsoidInfo( int nEllipsoid, char ** ppszName,
                                   double * pdfSemiMajor,
                                   double * pdfSemiMinor );
+
+int GTIF_DLL GTIFGetPMInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                     int nPMCode, char ** ppszName, double *pdfOffset );
 int GTIF_DLL GTIFGetPMInfo( int nPM, char **ppszName,
                            double * pdfLongToGreenwich );
 
 double GTIF_DLL GTIFAngleStringToDD( const char *pszAngle, int nUOMAngle );
+
+int GTIF_DLL GTIFGetUOMLengthInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                            int nUOMLengthCode,
+                            char **ppszUOMName,
+                            double * pdfInMeters );
 int GTIF_DLL GTIFGetUOMLengthInfo( int nUOMLengthCode,
                                   char **ppszUOMName,
                                   double * pdfInMeters );
+
+int GTIF_DLL GTIFGetUOMAngleInfoEx( void* ctx, /* The void* should be a PJ_CONTEXT* */
+                           int nUOMAngleCode,
+                           char **ppszUOMName,
+                           double * pdfInDegrees );
 int GTIF_DLL GTIFGetUOMAngleInfo( int nUOMAngleCode,
                                  char **ppszUOMName,
                                  double * pdfInDegrees );

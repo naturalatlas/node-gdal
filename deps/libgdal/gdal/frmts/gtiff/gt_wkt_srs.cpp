@@ -54,6 +54,7 @@
 #include "ogr_core.h"
 #include "ogr_spatialref.h"
 #include "ogr_srs_api.h"
+#include "ogr_proj_p.h"
 #include "tiff.h"
 #include "tiffio.h"
 #include "tifvsi.h"
@@ -61,7 +62,7 @@
 
 #include "proj.h"
 
-CPL_CVSID("$Id: gt_wkt_srs.cpp a0e1932541cb4edc6d2e254d7af6f64cd0dc0806 2019-02-09 18:23:26 +0100 Even Rouault $")
+CPL_CVSID("$Id: gt_wkt_srs.cpp 7ae16685e0dfae97b89f67385a2c4fbcdd334ac7 2019-10-02 19:04:54 +0200 Even Rouault $")
 
 static const geokey_t ProjLinearUnitsInterpCorrectGeoKey =
     static_cast<geokey_t>(3059);
@@ -314,6 +315,10 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
 
     LibgeotiffOneTimeInit();
 
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+    void* projContext = GTIFGetPROJContext(hGTIF, FALSE, nullptr);
+#endif
+
 /* -------------------------------------------------------------------- */
 /*  Handle non-standard coordinate systems where GTModelTypeGeoKey      */
 /*  is not defined, but ProjectedCSTypeGeoKey is defined (ticket #3019) */
@@ -379,9 +384,17 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
                 oSRS.SetLocalCS( szPCSName );
 
                 // Handle units
-                GTIFGetUOMLengthInfo( psDefn->UOMLength, &pszUnitsName, nullptr );
+                if( psDefn->UOMLength != KvUserDefined )
+                {
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+                    GTIFGetUOMLengthInfoEx( projContext,
+#else
+                    GTIFGetUOMLengthInfo(
+#endif
+                        psDefn->UOMLength, &pszUnitsName, nullptr );
+                }
 
-                if( pszUnitsName != nullptr && psDefn->UOMLength != KvUserDefined )
+                if( pszUnitsName != nullptr )
                 {
                     char szUOMLength[12];
                     snprintf(szUOMLength, sizeof(szUOMLength),
@@ -418,9 +431,17 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
 
         char *pszUnitsName = nullptr;
 
-        GTIFGetUOMLengthInfo( psDefn->UOMLength, &pszUnitsName, nullptr );
+        if( psDefn->UOMLength != KvUserDefined )
+        {
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+            GTIFGetUOMLengthInfoEx( projContext,
+#else
+            GTIFGetUOMLengthInfo(
+#endif
+                psDefn->UOMLength, &pszUnitsName, nullptr );
+        }
 
-        if( pszUnitsName != nullptr && psDefn->UOMLength != KvUserDefined )
+        if( pszUnitsName != nullptr )
         {
             char szUOMLength[12];
                     snprintf(szUOMLength, sizeof(szUOMLength),
@@ -501,7 +522,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
         {
             char *pszPCSName = nullptr;
 
-            GTIFGetPCSInfo( psDefn->PCS, &pszPCSName, nullptr, nullptr, nullptr );
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+            GTIFGetPCSInfoEx( projContext,
+#else
+            GTIFGetPCSInfo(
+#endif
+                psDefn->PCS, &pszPCSName, nullptr, nullptr, nullptr );
 
             oSRS.SetProjCS( pszPCSName ? pszPCSName : "unnamed" );
             if ( pszPCSName )
@@ -580,7 +606,13 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     char *pszAngularUnits = nullptr;
     char szGCSName[512] = { '\0' };
 
-    if( !GTIFGetGCSInfo( psDefn->GCS, &pszGeogName, nullptr, nullptr, nullptr )
+    if( !
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+        GTIFGetGCSInfoEx( projContext,
+#else
+        GTIFGetGCSInfo(
+#endif
+            psDefn->GCS, &pszGeogName, nullptr, nullptr, nullptr )
         && GDALGTIFKeyGetASCII( hGTIF, GeogCitationGeoKey, szGCSName, 0,
                        sizeof(szGCSName)) )
     {
@@ -597,7 +629,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
 
     if( !pszDatumName )
     {
-        GTIFGetDatumInfo( psDefn->Datum, &pszDatumName, nullptr );
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+        GTIFGetDatumInfoEx( projContext,
+#else
+        GTIFGetDatumInfo(
+#endif
+            psDefn->Datum, &pszDatumName, nullptr );
         GTIFToCPLRecycleString( &pszDatumName );
     }
 
@@ -605,7 +642,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     double dfInvFlattening = 0.0;
     if( !pszSpheroidName )
     {
-        GTIFGetEllipsoidInfo( psDefn->Ellipsoid, &pszSpheroidName, nullptr, nullptr );
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+        GTIFGetEllipsoidInfoEx( projContext,
+#else
+        GTIFGetEllipsoidInfo(
+#endif
+            psDefn->Ellipsoid, &pszSpheroidName, nullptr, nullptr );
         GTIFToCPLRecycleString( &pszSpheroidName );
     }
     else
@@ -617,7 +659,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     }
     if( !pszPMName )
     {
-        GTIFGetPMInfo( psDefn->PM, &pszPMName, nullptr );
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+        GTIFGetPMInfoEx( projContext,
+#else
+        GTIFGetPMInfo(
+#endif
+            psDefn->PM, &pszPMName, nullptr );
         GTIFToCPLRecycleString( &pszPMName );
     }
     else
@@ -629,7 +676,12 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     bool aUnitGot = false;
     if( !pszAngularUnits )
     {
-        GTIFGetUOMAngleInfo( psDefn->UOMAngle, &pszAngularUnits, nullptr );
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+        GTIFGetUOMAngleInfoEx( projContext,
+#else
+        GTIFGetUOMAngleInfo(
+#endif
+            psDefn->UOMAngle, &pszAngularUnits, nullptr );
         if( pszAngularUnits == nullptr )
             pszAngularUnits = CPLStrdup("unknown");
         else
@@ -705,9 +757,17 @@ char *GTIFGetOGISDefn( GTIF *hGTIF, GTIFDefn * psDefn )
     {
         char *pszUnitsName = nullptr;
 
-        GTIFGetUOMLengthInfo( psDefn->UOMLength, &pszUnitsName, nullptr );
+        if( psDefn->UOMLength != KvUserDefined )
+        {
+#if LIBGEOTIFF_VERSION >= 1600 || defined(INTERNAL_LIBGEOTIFF)
+            GTIFGetUOMLengthInfoEx( projContext,
+#else
+            GTIFGetUOMLengthInfo(
+#endif
+                psDefn->UOMLength, &pszUnitsName, nullptr );
+        }
 
-        if( pszUnitsName != nullptr && psDefn->UOMLength != KvUserDefined )
+        if( pszUnitsName != nullptr )
         {
             char szUOMLength[12];
             snprintf(szUOMLength, sizeof(szUOMLength),

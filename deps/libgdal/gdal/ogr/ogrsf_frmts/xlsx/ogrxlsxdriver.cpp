@@ -29,7 +29,7 @@
 #include "ogr_xlsx.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrxlsxdriver.cpp c3ea6c641531dab6ecb7dc7bea0ffce71a5d5110 2018-02-03 16:17:41Z Even Rouault $")
+CPL_CVSID("$Id: ogrxlsxdriver.cpp 8ccfbed587f9795b885262e29efad66a261347ed 2019-07-04 17:37:43 +0200 Even Rouault $")
 
 extern "C" void RegisterOGRXLSX();
 
@@ -46,8 +46,9 @@ static const char XLSX_MIMETYPE[] =
 
 static int OGRXLSXDriverIdentify( GDALOpenInfo* poOpenInfo )
 {
-    if (!EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "XLSX") &&
-        !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "XLSX}"))
+    const char* pszExt = CPLGetExtension(poOpenInfo->pszFilename);
+    if (!EQUAL(pszExt, "XLSX") && !EQUAL(pszExt, "XLSM") &&
+        !EQUAL(pszExt, "XLSX}") && !EQUAL(pszExt, "XLSM}"))
         return FALSE;
 
     if( STARTS_WITH(poOpenInfo->pszFilename, "/vsizip/") ||
@@ -185,7 +186,7 @@ void RegisterOGRXLSX()
     poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
                                "MS Office Open XML spreadsheet" );
-    poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "xlsx" );
+    poDriver->SetMetadataItem( GDAL_DMD_EXTENSIONS, "xlsx xlsm" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_xlsx.html" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,

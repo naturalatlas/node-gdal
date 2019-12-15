@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitffile.c cf79f01d31f2de889a3045a3d09f944cb04d7071 2018-03-03 22:40:32Z Even Rouault $
+ * $Id: nitffile.c 256e8f2942ed88aaabd9a40012121ca298e95d0e 2019-05-08 19:35:25 +0200 Even Rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module responsible for opening NITF file, populating NITFFile
@@ -34,7 +34,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: nitffile.c cf79f01d31f2de889a3045a3d09f944cb04d7071 2018-03-03 22:40:32Z Even Rouault $")
+CPL_CVSID("$Id: nitffile.c 256e8f2942ed88aaabd9a40012121ca298e95d0e 2019-05-08 19:35:25 +0200 Even Rouault $")
 
 CPL_INLINE static void CPL_IGNORE_RET_VAL_INT(CPL_UNUSED int unused) {}
 
@@ -2563,8 +2563,36 @@ static char** NITFGenericMetadataReadTREInternal(char **papszMD,
                 pszCondVal = NITFFindValFromEnd(papszMD, *pnMDSize, pszMDItemName, NULL);
                 if (pszCondVal == NULL)
                 {
+                    /* Needed for SENSRB */
+                    /* See https://github.com/OSGeo/gdal/issues/1520 */
+                    /* If the condition variable is not found at this level, */
+                    /* try to research it at upper levels by shortening on _ */
+                    /* separators */
+                    char* pszMDPrefixShortened = CPLStrdup(pszMDPrefix);
+                    char* pszLastUnderscore = strrchr(pszMDPrefixShortened, '_');
+                    if( pszLastUnderscore )
+                    {
+                        *pszLastUnderscore = 0;
+                        pszLastUnderscore = strrchr(pszMDPrefixShortened, '_');
+                    }
+                    while( pszLastUnderscore )
+                    {
+                        pszLastUnderscore[1] = 0;
+                        CPLFree(pszMDItemName);
+                        pszMDItemName = CPLStrdup(
+                            CPLSPrintf("%s%s", pszMDPrefixShortened, pszCondVar));
+                        pszCondVal = NITFFindValFromEnd(papszMD, *pnMDSize, pszMDItemName, NULL);
+                        if( pszCondVal )
+                            break;
+                        *pszLastUnderscore = 0;
+                        pszLastUnderscore = strrchr(pszMDPrefixShortened, '_');
+                    }
+                    CPLFree(pszMDPrefixShortened);
+                }
+                if( pszCondVal == NULL )
+                {
                     CPLDebug("NITF", "Cannot find if cond variable %s",
-                             pszMDItemName);
+                            pszCondVar);
                 }
                 else if ((bTestEqual && strcmp(pszCondVal, pszCondExpectedVal) == 0) ||
                          (!bTestEqual && strcmp(pszCondVal, pszCondExpectedVal) != 0))

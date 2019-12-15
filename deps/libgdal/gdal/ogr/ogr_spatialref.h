@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_spatialref.h 40c401fbce5f562c8910a4c6a268ede769c04a9d 2019-05-02 10:43:09 +0200 Even Rouault $
+ * $Id: ogr_spatialref.h aa2b46947ceef81934fef5a0fd4da1862ce71245 2019-05-23 21:34:37 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Classes for manipulating spatial reference systems in a
@@ -784,6 +784,10 @@ public:
                            double dfNorthLatitudeDeg);
 
     bool SetCoordinateOperation(const char* pszCT, bool bReverseCT);
+/*! @cond Doxygen_Suppress */
+    void SetSourceCenterLong(double dfCenterLong);
+    void SetTargetCenterLong(double dfCenterLong);
+/*! @endcond */
 };
 
 

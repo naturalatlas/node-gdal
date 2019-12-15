@@ -53,7 +53,7 @@
 #  include <wctype.h>      /* iswspace() */
 #endif
 
-CPL_CVSID("$Id: mitab_imapinfofile.cpp 317ae5a1782a7c432ccf90090cc616303b43afcc 2018-05-12 22:32:42 +0200 Even Rouault $")
+CPL_CVSID("$Id: mitab_imapinfofile.cpp 8c59588431f48c4f1ef79dccc134d1fa5ecfbdd4 2019-10-15 10:55:48 +0200 Bojan Bizjak $")
 
 /**********************************************************************
  *                   IMapInfoFile::IMapInfoFile()
@@ -544,7 +544,7 @@ static const char* const apszCharsets[][2] = {
     { "ISO8859_9", "ISO-8859-9" }, //ISO 8859-9 (UNIX)
     { "PackedEUCJapaese", "EUC-JP" }, //UNIX, standard Japanese implementation.
     { "WindowsLatin1", "CP1252" },
-    { "WindowsLatin2", "" },
+    { "WindowsLatin2", "CP1250" },
     { "WindowsArabic", "CP1256" },
     { "WindowsCyrillic", "CP1251" },
     { "WindowsGreek", "CP1253" },

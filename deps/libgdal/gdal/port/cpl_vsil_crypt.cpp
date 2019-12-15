@@ -44,7 +44,7 @@ void CPL_DLL VSIInstallCryptFileHandler();
 void CPL_DLL VSISetCryptKey( const GByte* pabyKey, int nKeySize );
 CPL_C_END
 
-CPL_CVSID("$Id: cpl_vsil_crypt.cpp 1875805422b79db5b442237af4b7ce40a7c47fc4 2019-03-23 14:17:00 +0100 Even Rouault $")
+CPL_CVSID("$Id: cpl_vsil_crypt.cpp 929320a45b5cb4b3ef0005d9b4fcbe514b3b667e 2019-08-01 16:47:59 +0200 Even Rouault $")
 
 constexpr char VSICRYPT_PREFIX[] = "/vsicrypt/";
 
@@ -607,6 +607,7 @@ int VSICryptFileHeader::ReadFromFile( VSIVirtualHandle* fp,
         {
             CPLError(CE_Failure, CPLE_AppDefined,
                     "CryptoPP exception: %s", e.what());
+            delete poEncCipher;
             return FALSE;
         }
 

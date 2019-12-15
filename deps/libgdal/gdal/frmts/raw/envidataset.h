@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: envidataset.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
+ * $Id: envidataset.h fd88de036f9cce2b0db5573a04cf8a8f50b6afb4 2019-05-10 20:50:18 +0200 Even Rouault $
  *
  * Project:  ENVI .hdr Driver
  * Purpose:  Implementation of ENVI .hdr labelled raw raster support.
@@ -80,9 +80,12 @@ class ENVIDataset final: public RawDataset
 
     CPLString   osStaFilename{};
 
+    std::vector<GDAL_GCP> m_asGCPs{};
+
     bool        ReadHeader( VSILFILE * );
     bool        ProcessMapinfo( const char * );
     void        ProcessRPCinfo( const char *, int, int);
+    void        ProcessGeoPoints( const char* );
     void        ProcessStatsFile();
     static int         byteSwapInt(int);
     static float       byteSwapFloat(float);
@@ -130,6 +133,8 @@ class ENVIDataset final: public RawDataset
                             const char *pszDomain = "" ) override;
     CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
                     const OGRSpatialReference* poSRS ) override;
+    int    GetGCPCount() override;
+    const GDAL_GCP *GetGCPs() override;
 
     static GDALDataset *Open( GDALOpenInfo * );
     static GDALDataset *Open( GDALOpenInfo *, bool bFileSizeCheck );

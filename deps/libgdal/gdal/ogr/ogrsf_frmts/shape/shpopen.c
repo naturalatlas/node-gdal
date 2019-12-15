@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shpopen.c 4c86d24f4f400bc03425297f80fa72e62237b715 2019-03-23 23:54:29 +0100 Even Rouault $
+ * $Id: shpopen.c e1b6c7cd2892834378d0b17b9c37a22a3da46ff7 2019-05-09 12:31:42 +0200 Even Rouault $
  *
  * Project:  Shapelib
  * Purpose:  Implementation of core Shapefile read/write functions.
@@ -298,7 +298,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-SHP_CVSID("$Id: shpopen.c 4c86d24f4f400bc03425297f80fa72e62237b715 2019-03-23 23:54:29 +0100 Even Rouault $")
+SHP_CVSID("$Id: shpopen.c e1b6c7cd2892834378d0b17b9c37a22a3da46ff7 2019-05-09 12:31:42 +0200 Even Rouault $")
 
 typedef unsigned char uchar;
 
@@ -1030,7 +1030,16 @@ SHPRestoreSHX ( const char * pszLayer, const char * pszAccess, SAHooks *psHooks 
 /*  Read the file size from the SHP file.                               */
 /* -------------------------------------------------------------------- */
     pabyBuf = STATIC_CAST(uchar *, malloc(100));
-    psHooks->FRead( pabyBuf, 100, 1, fpSHP );
+    if( psHooks->FRead( pabyBuf, 100, 1, fpSHP ) != 1 )
+    {
+        psHooks->Error( ".shp file is unreadable, or corrupt." );
+        psHooks->FClose( fpSHP );
+
+        free( pabyBuf );
+        free( pszFullname );
+
+        return( 0 );
+    }
 
     nSHPFilesize = (STATIC_CAST(unsigned int, pabyBuf[24])<<24)|(pabyBuf[25]<<16)|
                    (pabyBuf[26]<<8)|pabyBuf[27];
@@ -1043,22 +1052,15 @@ SHPRestoreSHX ( const char * pszLayer, const char * pszAccess, SAHooks *psHooks 
     fpSHX = psHooks->FOpen( pszFullname, pszSHXAccess );
     if( fpSHX == SHPLIB_NULLPTR )
     {
-        memcpy(pszFullname + nLenWithoutExtension, ".SHX", 5);
-        fpSHP = psHooks->FOpen(pszFullname, pszAccess );
-    }
-
-    if( fpSHX == SHPLIB_NULLPTR )
-    {
         size_t nMessageLen = strlen( pszFullname ) * 2 + 256;
         char* pszMessage = STATIC_CAST(char *, malloc( nMessageLen ));
         pszFullname[nLenWithoutExtension] = 0;
         snprintf( pszMessage, nMessageLen,
-                  "Error opening file %s.shx or %s.SHX for writing",
-                  pszFullname, pszFullname );
+                  "Error opening file %s.shx for writing", pszFullname );
         psHooks->Error( pszMessage );
         free( pszMessage );
 
-        psHooks->FClose( fpSHX );
+        psHooks->FClose( fpSHP );
 
         free( pabyBuf );
         free( pszFullname );
@@ -1073,6 +1075,7 @@ SHPRestoreSHX ( const char * pszLayer, const char * pszAccess, SAHooks *psHooks 
     pabySHXHeader = STATIC_CAST(char *, malloc ( 100 ));
     memcpy( pabySHXHeader, pabyBuf, 100 );
     psHooks->FWrite( pabySHXHeader, 100, 1, fpSHX );
+    free ( pabyBuf );
 
     while( nCurrentSHPOffset < nSHPFilesize )
     {
@@ -1116,7 +1119,6 @@ SHPRestoreSHX ( const char * pszLayer, const char * pszAccess, SAHooks *psHooks 
     psHooks->FClose( fpSHP );
     psHooks->FClose( fpSHX );
 
-    free ( pabyBuf );
     free ( pszFullname );
     free ( pabySHXHeader );
 

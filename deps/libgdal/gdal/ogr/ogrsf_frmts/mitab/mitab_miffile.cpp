@@ -51,7 +51,7 @@
 #include "ogr_spatialref.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: mitab_miffile.cpp 7355f684f451b09efde7b4c59aae57454fa85541 2019-03-17 12:47:10 +0100 Even Rouault $")
+CPL_CVSID("$Id: mitab_miffile.cpp e66e8869fa1520ca7e823f12a475bca635bfe44a 2019-08-15 21:28:08 +0200 Even Rouault $")
 
 /*=====================================================================
  *                      class MIFFile
@@ -1905,6 +1905,7 @@ int MIFFile::SetSpatialRef( OGRSpatialReference * poSpatialRef )
 
 {
     CPLFree( m_pszCoordSys );
+    m_pszCoordSys = nullptr;
 
     char* pszCoordSys = MITABSpatialRef2CoordSys( poSpatialRef );
     if( pszCoordSys )

@@ -48,7 +48,7 @@
 #include "ogr_spatialref.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrkmllayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrkmllayer.cpp 27b9bf644bcf1208f7d6594bdd104cc8a8bb0646 2019-06-05 19:04:07 +0200 Even Rouault $")
 
 /* Function utility to dump OGRGeometry to KML text. */
 char *OGR_G_ExportToKML( OGRGeometryH hGeometry, const char* pszAltitudeMode );
@@ -79,6 +79,7 @@ OGRKMLLayer::OGRKMLLayer( const char * pszName,
     if( poSRSIn != nullptr )
     {
         poSRS_->SetWellKnownGeogCS( "WGS84" );
+        poSRS_->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
         if( !poSRS_->IsSame(poSRSIn) )
         {
             poCT_ = OGRCreateCoordinateTransformation( poSRSIn, poSRS_ );

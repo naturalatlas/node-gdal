@@ -47,7 +47,7 @@
 #include <vector>
 #include <set>
 
-CPL_CVSID("$Id: ogrmvtdataset.cpp 4660e9774fbb1a670895195c9b1ca91eda44ddf3 2019-04-12 14:49:47 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrmvtdataset.cpp 365cb838c8782afa3cf1e22d7e03712f116aa70d 2019-06-19 12:22:21 +0200 Even Rouault $")
 
 const char* SRS_EPSG_3857 = "PROJCS[\"WGS 84 / Pseudo-Mercator\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Mercator_1SP\"],PARAMETER[\"central_meridian\",0],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"X\",EAST],AXIS[\"Y\",NORTH],EXTENSION[\"PROJ4\",\"+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs\"],AUTHORITY[\"EPSG\",\"3857\"]]";
 
@@ -6071,7 +6071,17 @@ GDALDataset* OGRMVTWriterDataset::Create( const char * pszFilename,
     const char* pszConf = CSLFetchNameValue(papszOptions, "CONF");
     if( pszConf )
     {
-        if( !poDS->m_oConf.LoadMemory(pszConf) )
+        VSIStatBufL sStat;
+        bool bSuccess;
+        if( VSIStatL(pszConf, &sStat) == 0 )
+        {
+            bSuccess = poDS->m_oConf.Load(pszConf);
+        }
+        else
+        {
+            bSuccess = poDS->m_oConf.LoadMemory(pszConf);
+        }
+        if( !bSuccess )
         {
             delete poDS;
             return nullptr;

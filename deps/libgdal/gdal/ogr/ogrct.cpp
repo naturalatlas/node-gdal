@@ -46,7 +46,7 @@
 #include "proj.h"
 #include "proj_experimental.h"
 
-CPL_CVSID("$Id: ogrct.cpp 40c401fbce5f562c8910a4c6a268ede769c04a9d 2019-05-02 10:43:09 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrct.cpp aa2b46947ceef81934fef5a0fd4da1862ce71245 2019-05-23 21:34:37 +0200 Even Rouault $")
 
 /************************************************************************/
 /*             OGRCoordinateTransformationOptions::Private              */
@@ -62,6 +62,12 @@ struct OGRCoordinateTransformationOptions::Private
 
     CPLString osCoordOperation{};
     bool bReverseCO = false;
+
+    bool bHasSourceCenterLong = false;
+    double dfSourceCenterLong = 0.0;
+
+    bool bHasTargetCenterLong = false;
+    double dfTargetCenterLong = 0.0;
 };
 
 /************************************************************************/
@@ -222,6 +228,30 @@ bool OGRCoordinateTransformationOptions::SetCoordinateOperation(const char* pszC
     d->bReverseCO = bReverseCO;
     return true;
 }
+
+/************************************************************************/
+/*                         SetSourceCenterLong()                        */
+/************************************************************************/
+
+/*! @cond Doxygen_Suppress */
+void OGRCoordinateTransformationOptions::SetSourceCenterLong(double dfCenterLong)
+{
+    d->dfSourceCenterLong = dfCenterLong;
+    d->bHasSourceCenterLong = true;
+}
+/*! @endcond */
+
+/************************************************************************/
+/*                         SetTargetCenterLong()                        */
+/************************************************************************/
+
+/*! @cond Doxygen_Suppress */
+void OGRCoordinateTransformationOptions::SetTargetCenterLong(double dfCenterLong)
+{
+    d->dfTargetCenterLong = dfCenterLong;
+    d->bHasTargetCenterLong = true;
+}
+/*! @endcond */
 
 /************************************************************************/
 /*            OCTCoordinateTransformationOptionsSetOperation()          */
@@ -660,11 +690,23 @@ int OGRProjCT::Initialize( const OGRSpatialReference * poSourceIn,
         bSourceWrap = true;
         CPLDebug( "OGRCT", "Wrap source at %g.", dfSourceWrapLong );
     }
+    else if( bSourceLatLong && options.d->bHasSourceCenterLong)
+    {
+        dfSourceWrapLong = options.d->dfSourceCenterLong;
+        bSourceWrap = true;
+        CPLDebug( "OGRCT", "Wrap source at %g.", dfSourceWrapLong );
+    }
 
     pszCENTER_LONG = poSRSTarget ? poSRSTarget->GetExtension( "GEOGCS", "CENTER_LONG" ) : nullptr;
     if( pszCENTER_LONG != nullptr )
     {
         dfTargetWrapLong = CPLAtof(pszCENTER_LONG);
+        bTargetWrap = true;
+        CPLDebug( "OGRCT", "Wrap target at %g.", dfTargetWrapLong );
+    }
+    else if( bTargetLatLong && options.d->bHasTargetCenterLong)
+    {
+        dfTargetWrapLong = options.d->dfTargetCenterLong;
         bTargetWrap = true;
         CPLDebug( "OGRCT", "Wrap target at %g.", dfTargetWrapLong );
     }
@@ -1388,6 +1430,19 @@ int OGRProjCT::Transform( int nCount, double *x, double *y, double *z,
     {
         constexpr double REVERSE_SPHERE_RADIUS = 1.0 / 6378137.0;
 
+        if( poSRSSource )
+        {
+            OGRAxisOrientation orientation;
+            poSRSSource->GetAxis(nullptr, 0, &orientation);
+            if( orientation != OAO_East )
+            {
+                for( int i = 0; i < nCount; i++ )
+                {
+                    std::swap(x[i], y[i]);
+                }
+            }
+        }
+
         double y0 = y[0];
         for( int i = 0; i < nCount; i++ )
         {
@@ -1447,6 +1502,19 @@ int OGRProjCT::Transform( int nCount, double *x, double *y, double *z,
                         M_PI / 2.0 -
                         2.0 * atan(exp(-y[i] * REVERSE_SPHERE_RADIUS));
                     y[i] *= RAD_TO_DEG;
+                }
+            }
+        }
+
+        if( poSRSTarget )
+        {
+            OGRAxisOrientation orientation;
+            poSRSTarget->GetAxis(nullptr, 0, &orientation);
+            if( orientation != OAO_East )
+            {
+                for( int i = 0; i < nCount; i++ )
+                {
+                    std::swap(x[i], y[i]);
                 }
             }
         }
@@ -1705,7 +1773,7 @@ int OGRProjCT::Transform( int nCount, double *x, double *y, double *z,
 /* -------------------------------------------------------------------- */
 /*      Apply data axis to target CRS mapping.                          */
 /* -------------------------------------------------------------------- */
-    if( !bWebMercatorToWGS84LongLat && poSRSTarget )
+    if( poSRSTarget )
     {
         const auto& mapping = poSRSTarget->GetDataAxisToSRSAxisMapping();
         if( mapping.size() >= 2 && (mapping[0] != 1 || mapping[1] != 2) )

@@ -31,7 +31,7 @@
 #include "cpl_string.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrpgdumplayer.cpp 56f9eca9a81a56ab2cf198d5b3288f6eb8df702a 2019-02-27 09:45:00 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrpgdumplayer.cpp 769cc553fd4534277830b8bc277d14a7c5af82b7 2019-05-06 11:38:01 +0200 Even Rouault $")
 
 constexpr int USE_COPY_UNSET = -1;
 
@@ -1218,7 +1218,7 @@ CPLString OGRPGCommonLayerGetType( OGRFieldDefn& oField,
     {
         if (oField.GetSubType() == OFSTJSON )
             pszFieldType = CPLGetConfigOption("OGR_PG_JSON_TYPE", "JSON");
-        else if (oField.GetWidth() > 0 &&  bPreservePrecision )
+        else if (oField.GetWidth() > 0 && oField.GetWidth() < 10485760 && bPreservePrecision )
             pszFieldType = CPLSPrintf( "VARCHAR(%d)",  oField.GetWidth() );
         else
             pszFieldType = CPLGetConfigOption("OGR_PG_STRING_TYPE", "VARCHAR");

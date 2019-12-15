@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_api.h 2ea1f8d371efd5b19b989867b21b5e8a6a070294 2019-02-07 17:23:22 +0100 Even Rouault $
+ * $Id: ogr_srs_api.h 70b1f396c006e30cf25557ad21f4c193e24cd4ff 2019-06-18 20:10:58 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  C API and constant declarations for OGR Spatial References.
@@ -464,6 +464,7 @@ typedef void *OGRCoordinateTransformationH;
 #endif
 
 void CPL_DLL OSRSetPROJSearchPaths( const char* const * papszPaths );
+void CPL_DLL OSRGetPROJVersion( int* pnMajor, int* pnMinor, int* pnPatch );
 
 OGRSpatialReferenceH CPL_DLL CPL_STDCALL
       OSRNewSpatialReference( const char * /* = NULL */);

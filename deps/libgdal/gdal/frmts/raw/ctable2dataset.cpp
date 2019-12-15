@@ -32,7 +32,7 @@
 #include "ogr_srs_api.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: ctable2dataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ctable2dataset.cpp dadb91bf34f59f06ee6627114bb174d1e7d20739 2019-08-14 16:13:25 +0200 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -319,7 +319,7 @@ CPLErr CTable2Dataset::SetGeoTransform( double * padfTransform )
 
     // write grid header.
     CPL_IGNORE_RET_VAL(VSIFSeekL( fpImage, 0, SEEK_SET ));
-    CPL_IGNORE_RET_VAL(VSIFWriteL( achHeader, 11, 16, fpImage ));
+    CPL_IGNORE_RET_VAL(VSIFWriteL( achHeader, 1, sizeof(achHeader), fpImage ));
 
     return CE_None;
 }

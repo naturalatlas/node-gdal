@@ -53,7 +53,7 @@
 #include <cmath>
 #include <vector>
 
-CPL_CVSID("$Id: jp2kakdataset.cpp 52405eb753a449e4ff9384c15863dffdf2d7adb2 2019-02-18 15:51:31 +0100 Even Rouault $")
+CPL_CVSID("$Id: jp2kakdataset.cpp a1d003559346ee7d5f672498550b7d9e01c17485 2019-10-23 16:47:33 +0200 Thomas Bonfort $")
 
 // Before v7.5 Kakadu does not advertise its version well
 // After v7.5 Kakadu has KDU_{MAJOR,MINOR,PATCH}_VERSION defines so it is easier
@@ -1329,11 +1329,11 @@ JP2KAKDataset::DirectRasterIO( GDALRWFlag /* eRWFlag */,
             wrk_jp2_src.open(&wrk_family);
             wrk_jp2_src.read_header();
 
-            oWCodeStream.create(&wrk_jp2_src);
+            oWCodeStream.create(&wrk_jp2_src, poThreadEnv);
         }
         else
         {
-            oWCodeStream.create(&subfile_src);
+            oWCodeStream.create(&subfile_src, poThreadEnv);
         }
 
         if( bFussy )

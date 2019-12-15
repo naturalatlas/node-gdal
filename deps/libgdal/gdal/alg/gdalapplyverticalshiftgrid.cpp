@@ -40,7 +40,7 @@
 
 #include <limits>
 
-CPL_CVSID("$Id: gdalapplyverticalshiftgrid.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdalapplyverticalshiftgrid.cpp aa2b46947ceef81934fef5a0fd4da1862ce71245 2019-05-23 21:34:37 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                        GDALApplyVSGDataset                           */
@@ -392,6 +392,7 @@ GDALDatasetH GDALApplyVerticalShiftGrid( GDALDatasetH hSrcDataset,
     OGRSpatialReference oSrcSRS;
     if( pszSrcProjection != nullptr && pszSrcProjection[0] != '\0' )
     {
+        oSrcSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
         oSrcSRS.SetFromUserInput(pszSrcProjection);
     }
     else

@@ -55,7 +55,7 @@
 #include "ogr_featurestyle.h"
 #include "ogr_geometry.h"
 
-CPL_CVSID("$Id: mitab_feature.cpp 3340eefbe607ca580d4e669819e38eca2b45a82d 2018-12-17 23:32:55 +0300 drons $")
+CPL_CVSID("$Id: mitab_feature.cpp a18fcc078bc59d73d4fc1f7e3150ebea54911e3f 2019-06-27 11:07:36 +0200 Even Rouault $")
 
 /*=====================================================================
  *                      class TABFeature
@@ -507,8 +507,8 @@ int TABFeature::WriteRecordToDATFile(TABDATFile *poDATFile,
 
     poDATFile->MarkRecordAsExisting();
 
-    // int nStatus = 0;
-    for( int iField = 0, nStatus = 0;
+    int nStatus = 0;
+    for( int iField = 0;
          nStatus == 0 && iField < numFields;
          iField++ )
     {
@@ -633,6 +633,9 @@ int TABFeature::WriteRecordToDATFile(TABDATFile *poDATFile,
                      "Unsupported field type!");
         }
     }
+
+    if (nStatus != 0 )
+        return nStatus;
 
     if (poDATFile->CommitRecordToFile() != 0)
         return -1;

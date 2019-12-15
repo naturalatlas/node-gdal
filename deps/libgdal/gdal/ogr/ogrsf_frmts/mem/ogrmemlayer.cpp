@@ -48,7 +48,7 @@
 #include "ogr_spatialref.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrmemlayer.cpp 1cababff23dea05042655377173c70002f68952a 2018-03-10 19:45:14Z Even Rouault $")
+CPL_CVSID("$Id: ogrmemlayer.cpp 07b24f8cd487508a42b6ca5df2e5b96a85e9f204 2019-06-27 22:53:04 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                      IOGRMemLayerFeatureIterator                     */
@@ -244,7 +244,8 @@ OGRErr OGRMemLayer::ISetFeature( OGRFeature *poFeature )
         return OGRERR_FAILURE;
 
     // If we don't have a FID, find one available
-    if( poFeature->GetFID() == OGRNullFID )
+    GIntBig nFID = poFeature->GetFID();
+    if( nFID == OGRNullFID )
     {
         if( m_papoFeatures != nullptr )
         {
@@ -261,19 +262,40 @@ OGRErr OGRMemLayer::ISetFeature( OGRFeature *poFeature )
                    m_oMapFeatures.end() )
                 ++m_iNextCreateFID;
         }
-        poFeature->SetFID(m_iNextCreateFID++);
+        nFID = m_iNextCreateFID++;
+        poFeature->SetFID(nFID);
     }
-    else if( poFeature->GetFID() < OGRNullFID )
+    else if( nFID < OGRNullFID )
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "negative FID are not supported");
         return OGRERR_FAILURE;
     }
+    else
+    {
+        if( !m_bHasHoles )
+        {
+            // If the feature does not exist, set m_bHasHoles
+            if( m_papoFeatures != nullptr )
+            {
+                if( nFID >= m_nMaxFeatureCount ||
+                    m_papoFeatures[nFID] == nullptr )
+                {
+                    m_bHasHoles = true;
+                }
+            }
+            else
+            {
+                FeatureIterator oIter = m_oMapFeatures.find(nFID);
+                if( oIter == m_oMapFeatures.end() )
+                    m_bHasHoles = true;
+            }
+        }
+    }
 
     OGRFeature *poFeatureCloned = poFeature->Clone();
     if( poFeatureCloned == nullptr )
         return OGRERR_FAILURE;
-    const GIntBig nFID = poFeature->GetFID();
 
     if( m_papoFeatures != nullptr && nFID > 100000 &&
         nFID > m_nMaxFeatureCount + 1000 )

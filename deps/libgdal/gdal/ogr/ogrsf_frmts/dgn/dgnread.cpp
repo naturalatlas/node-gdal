@@ -30,7 +30,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: dgnread.cpp 01d97526bd8cf1da723b27dc55ccc73887012973 2018-03-08 20:36:54Z Even Rouault $")
+CPL_CVSID("$Id: dgnread.cpp 83df2e13cd6142bf2108257a98573c7fef45a0dd 2019-08-12 14:29:01 +0200 Even Rouault $")
 
 static DGNElemCore *DGNParseTCB( DGNInfo * );
 static DGNElemCore *DGNParseColorTable( DGNInfo * );
@@ -1049,7 +1049,11 @@ static DGNElemCore *DGNProcessElement( DGNInfo *psDGN, int nType, int nLevel )
           int attr_bytes = psDGN->nElemBytes -
             (psDGN->abyElem[30] + psDGN->abyElem[31]*256)*2 - 32;
           int numelems = (psDGN->nElemBytes - 36 - attr_bytes)/4;
-
+          if( numelems < 1 )
+          {
+              CPLError(CE_Failure, CPLE_AssertionFailed, "numelems < 1");
+              return nullptr;
+          }
           DGNElemKnotWeight *psArray = static_cast<DGNElemKnotWeight *>(
               CPLCalloc(sizeof(DGNElemKnotWeight) + (numelems-1)*sizeof(float),
                         1));

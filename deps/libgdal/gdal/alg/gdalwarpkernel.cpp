@@ -71,7 +71,7 @@
 
 #endif
 
-CPL_CVSID("$Id: gdalwarpkernel.cpp fa2676737e01040b4457b2a637db5e73eb9c744f 2019-03-23 10:08:04 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdalwarpkernel.cpp 483a697e9d0aeb95719053738a6fd7cd30fec4d7 2019-06-18 18:16:34 +0200 Even Rouault $")
 
 constexpr double BAND_DENSITY_THRESHOLD = 0.0000000001;
 constexpr float SRC_DENSITY_THRESHOLD =  0.000000001f;
@@ -1930,7 +1930,7 @@ static bool GWKGetPixelValueReal( GDALWarpKernel *poWK, int iBand,
 
     if( poWK->papanBandSrcValid != nullptr
         && poWK->papanBandSrcValid[iBand] != nullptr
-        && ((poWK->papanBandSrcValid[iBand][iSrcOffset>>5]
+        && !((poWK->papanBandSrcValid[iBand][iSrcOffset>>5]
               & (0x01 << (iSrcOffset & 0x1f)))) )
     {
         *pdfDensity = 0.0;

@@ -56,7 +56,7 @@
 
 /* g++ -fPIC -g -Wall frmts/pdf/pdfdataset.cpp -shared -o gdal_PDF.so -Iport -Igcore -Iogr -L. -lgdal -lpoppler -I/usr/include/poppler */
 
-CPL_CVSID("$Id: pdfdataset.cpp 65388217f11cfbfaba543663f17db14fe3b5aae0 2019-04-25 10:38:53 -0700 Paul Cornett $")
+CPL_CVSID("$Id: pdfdataset.cpp 4e88c92566159cdb72e89a6146a58c9d51bfe319 2019-10-22 13:11:57 +0200 Even Rouault $")
 
 #ifdef HAVE_PDF_READ_SUPPORT
 
@@ -205,7 +205,11 @@ class GDALPDFOutputDev : public SplashOutputDev
         virtual void drawChar(GfxState *state, double x, double y,
                               double dx, double dy,
                               double originX, double originY,
-                              CharCode code, int nBytes, Unicode *u, int uLen) override
+                              CharCode code, int nBytes,
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 82
+                              const
+#endif
+                              Unicode *u, int uLen) override
         {
             if (bEnableText)
                 SplashOutputDev::drawChar(state, x, y, dx, dy,
@@ -265,7 +269,12 @@ class GDALPDFOutputDev : public SplashOutputDev
 
         virtual void drawImage(GfxState *state, Object *ref, Stream *str,
                                int width, int height, GfxImageColorMap *colorMap,
-                               GBool interpolate, int *maskColors, GBool inlineImg) override
+                               GBool interpolate,
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 82
+                               const
+#endif
+                               int *maskColors,
+                               GBool inlineImg) override
         {
             if (bEnableBitmap)
                 SplashOutputDev::drawImage(state, ref, str,
@@ -3340,6 +3349,8 @@ void PDFDataset::ExploreLayersPoppler(GDALPDFArray* poArray,
     for(int i=0;i<nLength;i++)
     {
         GDALPDFObject* poObj = poArray->Get(i);
+        if( poObj == nullptr )
+            continue;
         if (i == 0 && poObj->GetType() == PDFObjectType_String)
         {
             CPLString osName = PDFSanitizeLayerName(poObj->GetString().c_str());
@@ -5016,6 +5027,8 @@ static double Get(GDALPDFObject* poObj, int nIndice)
     {
         const char* pszStr = poObj->GetString().c_str();
         size_t nLen = strlen(pszStr);
+        if( nLen == 0 )
+            return 0;
         /* cf Military_Installations_2008.pdf that has values like "96 0 0.0W" */
         char chLast = pszStr[nLen-1];
         if (chLast == 'W' || chLast == 'E' || chLast == 'N' || chLast == 'S')

@@ -35,7 +35,7 @@
 #include "ogrgeojsonreader.h"
 #include "swq.h"
 
-CPL_CVSID("$Id: ogrelasticdatasource.cpp 234d1a30afeffb8b1d7356bfc185342e4533f9b7 2019-03-20 14:26:30 -0700 Nick Peihl $")
+CPL_CVSID("$Id: ogrelasticdatasource.cpp 0d495f12298b17db8a9527039823210a419bc8c1 2019-06-10 13:39:10Z jbo-ads $")
 
 /************************************************************************/
 /*                        OGRElasticDataSource()                        */
@@ -538,6 +538,8 @@ json_object* OGRElasticDataSource::RunRequest(const char* pszURL,
     {
         papszOptions = CSLSetNameValue(papszOptions, "POSTFIELDS",
                                        pszPostContent);
+        papszOptions = CSLAddNameValue(papszOptions, "HEADERS",
+                "Content-Type: application/json; charset=UTF-8");
     }
 
     CPLPushErrorHandler(CPLQuietErrorHandler);
@@ -723,11 +725,10 @@ bool OGRElasticDataSource::UploadFile( const CPLString &url,
     }
     else
     {
-
         papszOptions = CSLAddNameValue(papszOptions, "POSTFIELDS", data.c_str());
+        papszOptions = CSLAddNameValue(papszOptions, "HEADERS",
+                "Content-Type: application/json; charset=UTF-8");
     }
-    papszOptions = CSLAddNameValue(papszOptions, "HEADERS",
-            "Content-Type: application/json; charset=UTF-8");
 
     CPLHTTPResult* psResult = HTTPFetch(url, papszOptions);
     CSLDestroy(papszOptions);

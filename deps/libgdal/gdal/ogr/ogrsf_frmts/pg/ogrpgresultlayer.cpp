@@ -31,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_pg.h"
 
-CPL_CVSID("$Id: ogrpgresultlayer.cpp c9e5d243e6cf3ed76bb8b4dd1a38f5bd7bf95f49 2018-04-01 22:49:46 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrpgresultlayer.cpp b2447274e34c713aa4873f1561ebd9daa6b2e8ad 2019-07-22 17:29:09 +0200 Even Rouault $")
 
 #define PQexec this_is_an_error
 
@@ -86,7 +86,13 @@ OGRPGResultLayer::OGRPGResultLayer( OGRPGDataSource *poDSIn,
         }
     }
 
-    if( !osRequest.empty() )
+    CPLString osQuery(pszRawQueryIn);
+    // Only a INNER JOIN can guarantee that the non-nullability of source columns
+    // will be valid for the result of the join.
+    if( !osRequest.empty() &&
+        osQuery.ifind("LEFT JOIN") == std::string::npos &&
+        osQuery.ifind("RIGHT JOIN") == std::string::npos &&
+        osQuery.ifind("OUTER JOIN") == std::string::npos )
     {
         osRequest = "SELECT attnum, attrelid FROM pg_attribute WHERE attnotnull = 't' AND (" + osRequest + ")";
         PGresult* hResult = OGRPG_PQexec(poDS->GetPGConn(), osRequest );

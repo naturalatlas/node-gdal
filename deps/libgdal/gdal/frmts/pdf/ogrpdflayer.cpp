@@ -28,7 +28,7 @@
 
 #include "gdal_pdf.h"
 
-CPL_CVSID("$Id: ogrpdflayer.cpp 5a04126b888092d810db40222dce30479b5ff901 2019-04-09 18:05:52 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrpdflayer.cpp d1973d32328ce1cf47efaf4516884b4c6e4101d2 2019-08-20 15:22:01 +0200 Even Rouault $")
 
 #ifdef HAVE_PDF_READ_SUPPORT
 
@@ -55,7 +55,8 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
     for(int i=0;i<poArray->GetLength();i++)
     {
         GDALPDFObject* poFeatureObj = poArray->Get(i);
-        if (poFeatureObj->GetType() != PDFObjectType_Dictionary)
+        if (poFeatureObj == nullptr ||
+            poFeatureObj->GetType() != PDFObjectType_Dictionary)
             continue;
 
         GDALPDFObject* poA = poFeatureObj->GetDictionary()->Get("A");
@@ -76,7 +77,7 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
         for(j = 0;j<poPArray->GetLength();j++)
         {
             GDALPDFObject* poKV = poPArray->Get(j);
-            if (poKV->GetType() == PDFObjectType_Dictionary)
+            if (poKV && poKV->GetType() == PDFObjectType_Dictionary)
             {
                 GDALPDFObject* poN = poKV->GetDictionary()->Get("N");
                 GDALPDFObject* poV = poKV->GetDictionary()->Get("V");
@@ -108,7 +109,7 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
         for(j = 0;j<poPArray->GetLength();j++)
         {
             GDALPDFObject* poKV = poPArray->Get(j);
-            if (poKV->GetType() == PDFObjectType_Dictionary)
+            if (poKV && poKV->GetType() == PDFObjectType_Dictionary)
             {
                 GDALPDFObject* poN = poKV->GetDictionary()->Get("N");
                 GDALPDFObject* poV = poKV->GetDictionary()->Get("V");

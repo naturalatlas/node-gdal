@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrshape.h 41d8da793ee9a5360ad4ec7e3d97ace2913e11c5 2019-03-30 11:16:26 +0100 Even Rouault $
+ * $Id: ogrshape.h d8aff3251680f9138636a44bbd0a9731852866fe 2019-06-26 13:53:27 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions within the Shapefile driver to implement
@@ -214,7 +214,7 @@ class OGRShapeLayer final: public OGRAbstractProxiedLayer
                         OGRShapeLayer( OGRShapeDataSource* poDSIn,
                                        const char * pszName,
                                        SHPHandle hSHP, DBFHandle hDBF,
-                                       OGRSpatialReference *poSRS, bool bSRSSet,
+                                       const OGRSpatialReference *poSRS, bool bSRSSet,
                                        bool bUpdate,
                                        OGRwkbGeometryType eReqType,
                                        char ** papszCreateOptions = nullptr);

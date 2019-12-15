@@ -27,6 +27,7 @@
  ****************************************************************************/
 
 #include "cpl_error.h"
+#include "cpl_multiproc.h"
 #include "cpl_string.h"
 
 #include "ogr_proj_p.h"
@@ -98,12 +99,49 @@ void OSRPJContextHolder::deinit()
     context = nullptr;
 }
 
+#ifdef WIN32
+// Currently thread_local and C++ objects don't work well with DLL on Windows
+static void FreeProjTLSContextHolder( void* pData )
+{
+    delete static_cast<OSRPJContextHolder*>(pData);
+}
 
+static OSRPJContextHolder& GetProjTLSContextHolder()
+{
+    static OSRPJContextHolder dummy;
+    int bMemoryErrorOccurred = false;
+    void* pData = CPLGetTLSEx(CTLS_PROJCONTEXTHOLDER, &bMemoryErrorOccurred);
+    if( bMemoryErrorOccurred )
+    {
+        return dummy;
+    }
+    if( pData == nullptr)
+    {
+        auto pHolder = new OSRPJContextHolder();
+        CPLSetTLSWithFreeFuncEx( CTLS_PROJCONTEXTHOLDER,
+                                 pHolder,
+                                 FreeProjTLSContextHolder, &bMemoryErrorOccurred );
+        if( bMemoryErrorOccurred )
+        {
+            delete pHolder;
+            return dummy;
+        }
+        return *pHolder;
+    }
+    return *static_cast<OSRPJContextHolder*>(pData);
+}
+#else
 static thread_local OSRPJContextHolder g_tls_projContext;
+static OSRPJContextHolder& GetProjTLSContextHolder()
+{
+    return g_tls_projContext;
+}
+#endif
+
 
 PJ_CONTEXT* OSRGetProjTLSContext()
 {
-    auto& l_projContext = g_tls_projContext;
+    auto& l_projContext = GetProjTLSContextHolder();
     l_projContext.init();
     {
         // If OSRSetPROJSearchPaths() has been called since we created the mutex,
@@ -129,7 +167,7 @@ PJ_CONTEXT* OSRGetProjTLSContext()
 
 void OSRCleanupTLSContext()
 {
-    g_tls_projContext.deinit();
+    GetProjTLSContextHolder().deinit();
 }
 
 /*! @endcond */
@@ -148,4 +186,26 @@ void OSRSetPROJSearchPaths( const char* const * papszPaths )
     std::lock_guard<std::mutex> oLock(g_oSearchPathMutex);
     g_searchPathGenerationCounter ++;
     g_aosSearchpaths.Assign(CSLDuplicate(papszPaths), true);
+}
+
+/************************************************************************/
+/*                         OSRGetPROJVersion()                          */
+/************************************************************************/
+
+/** \brief Get the PROJ version
+ *
+ * @param pnMajor Pointer to major version number, or NULL
+ * @param pnMinor Pointer to minor version number, or NULL
+ * @param pnPatch Pointer to patch version number, or NULL
+ * @since GDAL 3.0.1
+ */
+void OSRGetPROJVersion( int* pnMajor, int* pnMinor, int* pnPatch )
+{
+    auto info = proj_info();
+    if (pnMajor)
+        *pnMajor = info.major;
+    if (pnMinor)
+        *pnMinor = info.minor;
+    if (pnPatch)
+        *pnPatch = info.patch;
 }

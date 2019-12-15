@@ -36,7 +36,7 @@
 #include "ogrlibkmlstyle.h"
 #include "ogr_libkml.h"
 
-CPL_CVSID("$Id: ogrlibkmlstyle.cpp 4971449609881d6ffdca70188292293852d12691 2017-12-17 16:48:14Z Even Rouault $")
+CPL_CVSID("$Id: ogrlibkmlstyle.cpp d5cbc880a8a9d0a4cf8c6ba994fd1d8be22cf9c3 2019-08-15 21:19:06 +0200 Even Rouault $")
 
 using kmlbase::Color32;
 using kmldom::BalloonStylePtr;
@@ -649,7 +649,8 @@ void kml2stylestring( StylePtr poKmlStyle, OGRStyleMgr * poOgrSM )
             if( !poOgrST )
                 continue;
 
-            if( poOgrST->GetType() == OGRSTCPen )
+            if( poOgrST->GetType() == OGRSTCPen &&
+                poOgrTmpST == nullptr )
             {
                 poOgrTmpST = poOgrST;
             }
@@ -685,7 +686,8 @@ void kml2stylestring( StylePtr poKmlStyle, OGRStyleMgr * poOgrSM )
             if( !poOgrST )
                 continue;
 
-            if( poOgrST->GetType() == OGRSTCBrush )
+            if( poOgrST->GetType() == OGRSTCBrush &&
+                poOgrTmpST == nullptr )
             {
                 poOgrTmpST = poOgrST;
             }
@@ -721,7 +723,8 @@ void kml2stylestring( StylePtr poKmlStyle, OGRStyleMgr * poOgrSM )
             if( !poOgrST )
                 continue;
 
-            if( poOgrST->GetType() == OGRSTCSymbol )
+            if( poOgrST->GetType() == OGRSTCSymbol &&
+                poOgrTmpST == nullptr )
             {
                 poOgrTmpST = poOgrST;
             }
@@ -757,7 +760,8 @@ void kml2stylestring( StylePtr poKmlStyle, OGRStyleMgr * poOgrSM )
             if( !poOgrST )
                 continue;
 
-            if( poOgrST->GetType() == OGRSTCLabel )
+            if( poOgrST->GetType() == OGRSTCLabel &&
+                poOgrTmpST == nullptr )
             {
                 poOgrTmpST = poOgrST;
             }

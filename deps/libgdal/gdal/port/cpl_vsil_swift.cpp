@@ -40,7 +40,7 @@
 
 #include "cpl_swift.h"
 
-CPL_CVSID("$Id: cpl_vsil_swift.cpp 4e7ce5fcadef46f94d6a548a04d389224fc9a99c 2019-02-11 11:30:42 +0100 Even Rouault $")
+CPL_CVSID("$Id: cpl_vsil_swift.cpp 78ebfa67fe512cc98e3452fc307a0a17e88d0b68 2019-06-21 00:26:51 +0200 Even Rouault $")
 
 #ifndef HAVE_CURL
 
@@ -593,7 +593,7 @@ char** VSISwiftFSHandler::GetFileList( const char *pszDirname,
                 // Look if we should attempt a retry
                 const double dfNewRetryDelay = CPLHTTPGetNewRetryDelay(
                     static_cast<int>(response_code), dfRetryDelay,
-                    sWriteFuncHeaderData.pBuffer);
+                    sWriteFuncHeaderData.pBuffer, szCurlErrBuf);
                 if( dfNewRetryDelay > 0 &&
                     nRetryCount < nMaxRetry )
                 {

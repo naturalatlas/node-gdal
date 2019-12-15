@@ -42,7 +42,7 @@
 #include <cstdlib>
 #include <set>
 
-CPL_CVSID("$Id: ogrelasticlayer.cpp 234d1a30afeffb8b1d7356bfc185342e4533f9b7 2019-03-20 14:26:30 -0700 Nick Peihl $")
+CPL_CVSID("$Id: ogrelasticlayer.cpp 8dd62073c3c99950d394db1b926438ccbc6ab232 2019-06-10 15:16:26 -0700 Nick Peihl $")
 
 /************************************************************************/
 /*                           OGRElasticLayer()                          */
@@ -1674,7 +1674,8 @@ CPLString OGRElasticLayer::BuildMap() {
             if( bAddGeoJSONType )
             {
                 json_object *geometry = AppendGroup(poContainer, pszLastComponent);
-                json_object_object_add(geometry, "type", AddPropertyMap("string"));
+                json_object_object_add(geometry, "type", AddPropertyMap(
+                   m_poDS->m_nMajorVersion >= 5 ? "text" : "string"));
                 json_object_object_add(geometry, "coordinates", geo_point);
             }
             else

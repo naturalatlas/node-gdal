@@ -110,7 +110,7 @@
 
 #include <algorithm>
 
-// CPL_CVSID("$Id: terragendataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+// CPL_CVSID("$Id: terragendataset.cpp 503aa4be7c0496b98a7ed36ce399afd65e155c3a 2019-08-14 14:39:27 +0200 Even Rouault $")
 
 const double kdEarthCircumPolar = 40007849;
 const double kdEarthCircumEquat = 40075004;
@@ -487,7 +487,6 @@ bool TerragenDataset::write_header()
                   "Couldn't write to Terragen file %s.\n"
                   "Is file system full?",
                   m_pszFilename );
-        VSIFCloseL( m_fp );
 
         return false;
     }
@@ -577,7 +576,6 @@ bool TerragenDataset::write_header()
                   "Couldn't write to Terragen file %s.\n"
                   "Is file system full?",
                   m_pszFilename );
-        VSIFCloseL( m_fp );
 
         return false;
     }
@@ -636,7 +634,6 @@ bool TerragenDataset::write_header()
                   "Couldn't write to Terragen file %s.\n"
                   "Cannot find adequate heightscale/baseheight combination.",
                   m_pszFilename );
-        VSIFCloseL( m_fp );
 
         return false;
     }

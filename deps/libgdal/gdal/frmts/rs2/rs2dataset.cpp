@@ -32,7 +32,7 @@
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: rs2dataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: rs2dataset.cpp c629ec11fefeb35d4367c8128f713b6baf35c3d3 2019-06-24 16:49:43 +0300 an-ivanov $")
 
 typedef enum eCalibration_t {
     Sigma0 = 0,
@@ -1313,9 +1313,9 @@ GDALDataset *RS2Dataset::Open( GDALOpenInfo * poOpenInfo )
             psGCP->pszId = CPLStrdup( szID );
             psGCP->pszInfo = CPLStrdup("");
             psGCP->dfGCPPixel =
-                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.pixel","0"));
+                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.pixel","0")) + 0.5;
             psGCP->dfGCPLine =
-                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.line","0"));
+                CPLAtof(CPLGetXMLValue(psNode,"imageCoordinate.line","0")) + 0.5;
             psGCP->dfGCPX =
                 CPLAtof(CPLGetXMLValue(psNode,"geodeticCoordinate.longitude",""));
             psGCP->dfGCPY =

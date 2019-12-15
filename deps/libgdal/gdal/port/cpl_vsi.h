@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_vsi.h 1d0fc606e71f2c1ce61f3fd040b187de71d70f9b 2019-04-17 15:01:54 +0200 Even Rouault $
+ * $Id: cpl_vsi.h 22d95175f375d90d8f598436d1187fd143e00b67 2019-09-17 23:06:11 +0200 Even Rouault $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -186,6 +186,8 @@ int CPL_DLL     VSIIngestFile( VSILFILE* fp,
                                GByte** ppabyRet,
                                vsi_l_offset* pnSize,
                                GIntBig nMaxSize ) CPL_WARN_UNUSED_RESULT;
+
+int CPL_DLL     VSIOverwriteFile( VSILFILE* fpTarget, const char* pszSourceFilename ) CPL_WARN_UNUSED_RESULT;
 
 #if defined(VSI_STAT64_T)
 /** Type for VSIStatL() */

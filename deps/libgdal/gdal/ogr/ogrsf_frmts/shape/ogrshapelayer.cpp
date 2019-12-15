@@ -57,7 +57,7 @@
 #include "shapefil.h"
 #include "shp_vsi.h"
 
-CPL_CVSID("$Id: ogrshapelayer.cpp c7dfc2e4277d00ce2b99b9750d7ecba2573ec248 2019-03-21 14:11:29 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrshapelayer.cpp 1b45a082709e8378f49bcc50fbd4edf00f9996c1 2019-09-18 13:14:30 +0200 Even Rouault $")
 
 static const char UNSUPPORTED_OP_READ_ONLY[] =
     "%s : unsupported operation on a read-only datasource.";
@@ -69,7 +69,7 @@ static const char UNSUPPORTED_OP_READ_ONLY[] =
 OGRShapeLayer::OGRShapeLayer( OGRShapeDataSource* poDSIn,
                               const char * pszFullNameIn,
                               SHPHandle hSHPIn, DBFHandle hDBFIn,
-                              OGRSpatialReference *poSRSIn, bool bSRSSetIn,
+                              const OGRSpatialReference *poSRSIn, bool bSRSSetIn,
                               bool bUpdate,
                               OGRwkbGeometryType eReqType,
                               char ** papszCreateOptions ) :
@@ -240,10 +240,9 @@ OGRShapeLayer::OGRShapeLayer( OGRShapeDataSource* poDSIn,
             eType = eRequestedGeomType;
         }
 
-        OGRSpatialReference* poSRSClone = poSRSIn;
+        OGRSpatialReference* poSRSClone = poSRSIn ? poSRSIn->Clone() : nullptr;
         if( poSRSClone )
         {
-            poSRSClone = poSRSClone->Clone();
             poSRSClone->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
         }
         OGRShapeGeomFieldDefn* poGeomFieldDefn =
@@ -253,10 +252,7 @@ OGRShapeLayer::OGRShapeLayer( OGRShapeDataSource* poDSIn,
         poFeatureDefn->SetGeomType(wkbNone);
         poFeatureDefn->AddGeomFieldDefn(poGeomFieldDefn, FALSE);
     }
-    else if( bSRSSetIn && poSRSIn != nullptr )
-    {
-        poSRSIn->Release();
-    }
+
     SetDescription( poFeatureDefn->GetName() );
     bRewindOnWrite =
         CPLTestBool(CPLGetConfigOption( "SHAPE_REWIND_ON_WRITE", "YES" ));
@@ -2484,43 +2480,7 @@ OGRErr OGRShapeLayer::CreateSpatialIndex( int nMaxDepth )
 
 static bool CopyInPlace( VSILFILE* fpTarget, const CPLString& osSourceFilename )
 {
-    VSILFILE* fpSource = VSIFOpenL(osSourceFilename, "rb");
-    if( fpSource == nullptr )
-    {
-        CPLError(CE_Failure, CPLE_FileIO,
-                 "Cannot open %s", osSourceFilename.c_str());
-        return false;
-    }
-
-    const size_t nBufferSize = 4096;
-    void* pBuffer = CPLMalloc(nBufferSize);
-    VSIFSeekL( fpTarget, 0, SEEK_SET );
-    bool bRet = true;
-    while( true )
-    {
-        size_t nRead = VSIFReadL( pBuffer, 1, nBufferSize, fpSource );
-        size_t nWritten = VSIFWriteL( pBuffer, 1, nRead, fpTarget );
-        if( nWritten != nRead )
-        {
-            bRet = false;
-            break;
-        }
-        if( nRead < nBufferSize )
-            break;
-    }
-
-    if( bRet )
-    {
-        bRet = VSIFTruncateL( fpTarget, VSIFTellL(fpTarget) ) == 0;
-        if( !bRet )
-        {
-            CPLError(CE_Failure, CPLE_FileIO, "Truncation failed");
-        }
-    }
-
-    CPLFree(pBuffer);
-    VSIFCloseL(fpSource);
-    return bRet;
+    return CPL_TO_BOOL(VSIOverwriteFile(fpTarget, osSourceFilename.c_str()));
 }
 
 /************************************************************************/

@@ -39,7 +39,7 @@
 #include "cpl_error.h"
 
 
-CPL_CVSID("$Id: ogr_expat.cpp c8c459f01bd898f6a7cbaea6e08f55cf37faaaa4 2019-02-27 11:24:15 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogr_expat.cpp ddb98717c6ef6a73aaa65601daf4f5baf874025a 2019-08-04 21:00:33 +0200 Even Rouault $")
 
 constexpr size_t OGR_EXPAT_MAX_ALLOWED_ALLOC = 10000000;
 
@@ -89,7 +89,6 @@ static void* OGRExpatRealloc( void *ptr, size_t size )
     if( CanAlloc(size) )
         return realloc(ptr, size);
 
-    free(ptr);
     return nullptr;
 }
 

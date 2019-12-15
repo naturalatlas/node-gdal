@@ -111,7 +111,7 @@
 #include "cpl_vsi_virtual.h"
 #include "cpl_worker_thread_pool.h"
 
-CPL_CVSID("$Id: cpl_vsil_gzip.cpp 3ee58a935b1baef44438364a6019e2ba802412a1 2019-02-20 22:59:47 +0100 Even Rouault $")
+CPL_CVSID("$Id: cpl_vsil_gzip.cpp 8ccfbed587f9795b885262e29efad66a261347ed 2019-07-04 17:37:43 +0200 Even Rouault $")
 
 constexpr int Z_BUFSIZE = 65536;  // Original size is 16384
 constexpr int gz_magic[2] = {0x1f, 0x8b};  // gzip magic header
@@ -2722,6 +2722,7 @@ std::vector<CPLString> VSIZipFilesystemHandler::GetExtensions()
     oList.push_back(".dwf");
     oList.push_back(".ods");
     oList.push_back(".xlsx");
+    oList.push_back(".xlsm");
 
     // Add to zip FS handler extensions array additional extensions
     // listed in CPL_VSIL_ZIP_ALLOWED_EXTENSIONS config option.

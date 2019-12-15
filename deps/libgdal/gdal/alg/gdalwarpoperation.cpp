@@ -53,7 +53,7 @@
 #include "ogr_api.h"
 #include "ogr_core.h"
 
-CPL_CVSID("$Id: gdalwarpoperation.cpp cde29aa7b4807045c418e469b59b60f92af59468 2019-02-18 15:49:24 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdalwarpoperation.cpp fc772a7e94b9c97f62a72e3eab60fa20b97b9f92 2019-08-12 01:18:04 +0200 Even Rouault $")
 
 struct _GDALWarpChunk {
     int dx, dy, dsx, dsy;
@@ -2430,7 +2430,7 @@ void GDALWarpOperation::ComputeSourceWindowStartingFromSource(
             privateData->adfDstY.resize(nSampleMax);
             adfDstZ.resize(nSampleMax);
         }
-        catch( const std::bad_alloc& )
+        catch( const std::exception& )
         {
             return;
         }

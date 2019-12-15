@@ -57,7 +57,7 @@
 #include "ogr_srs_api.h"
 
 
-CPL_CVSID("$Id: gdaltransformer.cpp 1d0fc606e71f2c1ce61f3fd040b187de71d70f9b 2019-04-17 15:01:54 +0200 Even Rouault $")
+CPL_CVSID("$Id: gdaltransformer.cpp 69efc34f98764d1d1c3a66ea92298d10c628b97e 2019-06-17 18:33:13 +0200 Even Rouault $")
 
 CPL_C_START
 void *GDALDeserializeGCPTransformer( CPLXMLNode *psTree );
@@ -1099,7 +1099,8 @@ GDALCreateGenImgProjTransformer( GDALDatasetH hSrcDS, const char *pszSrcWKT,
 /*      the center longitude of the dataset for wrapping purposes.      */
 /************************************************************************/
 
-static void InsertCenterLong( GDALDatasetH hDS, OGRSpatialReference* poSRS )
+static void InsertCenterLong( GDALDatasetH hDS, OGRSpatialReference* poSRS,
+                              CPLStringList& aosOptions )
 
 {
     if( !poSRS->IsGeographic())
@@ -1149,11 +1150,8 @@ static void InsertCenterLong( GDALDatasetH hDS, OGRSpatialReference* poSRS )
 /*      Insert center long.                                             */
 /* -------------------------------------------------------------------- */
     const double dfCenterLong = (dfMaxLong + dfMinLong) / 2.0;
-    OGR_SRSNode *poExt = new OGR_SRSNode( "EXTENSION" );
-    poExt->AddChild( new OGR_SRSNode( "CENTER_LONG" ) );
-    poExt->AddChild( new OGR_SRSNode( CPLString().Printf("%g", dfCenterLong) ));
-
-    poSRS->GetRoot()->AddChild( poExt );
+    aosOptions.SetNameValue("CENTER_LONG",
+                            CPLSPrintf("%g", dfCenterLong));
 }
 
 /************************************************************************/
@@ -1929,12 +1927,12 @@ GDALCreateGenImgProjTransformer2( GDALDatasetH hSrcDS, GDALDatasetH hDstDS,
          (!oSrcSRS.IsSame(&oDstSRS) ||
           (oSrcSRS.IsGeographic() && bMayInsertCenterLong))) || pszCO )
     {
+        CPLStringList aosOptions;
+
         if( bMayInsertCenterLong )
         {
-            InsertCenterLong( hSrcDS, &oSrcSRS );
+            InsertCenterLong( hSrcDS, &oSrcSRS, aosOptions );
         }
-
-        CPLStringList aosOptions;
 
         if( !(dfWestLongitudeDeg == 0.0 && dfSouthLatitudeDeg == 0.0 &&
               dfEastLongitudeDeg == 0.0 && dfNorthLatitudeDeg == 0.0) )
@@ -2818,21 +2816,35 @@ void *GDALCreateReprojectionTransformerEx(
     }
     const char* pszCO = CSLFetchNameValue(papszOptions, "COORDINATE_OPERATION");
 
-    OGRCoordinateTransformationOptions options;
+    OGRCoordinateTransformationOptions optionsFwd;
+    OGRCoordinateTransformationOptions optionsInv;
     if( !(dfWestLongitudeDeg == 0.0 && dfSouthLatitudeDeg == 0.0 &&
           dfEastLongitudeDeg == 0.0 && dfNorthLatitudeDeg == 0.0) )
     {
-        options.SetAreaOfInterest(dfWestLongitudeDeg,
+        optionsFwd.SetAreaOfInterest(dfWestLongitudeDeg,
+                                  dfSouthLatitudeDeg,
+                                  dfEastLongitudeDeg,
+                                  dfNorthLatitudeDeg);
+        optionsInv.SetAreaOfInterest(dfWestLongitudeDeg,
                                   dfSouthLatitudeDeg,
                                   dfEastLongitudeDeg,
                                   dfNorthLatitudeDeg);
     }
     if( pszCO )
     {
-        options.SetCoordinateOperation(pszCO, false);
+        optionsFwd.SetCoordinateOperation(pszCO, false);
+        optionsInv.SetCoordinateOperation(pszCO, true);
     }
+
+    const char* pszCENTER_LONG = CSLFetchNameValue(papszOptions, "CENTER_LONG");
+    if( pszCENTER_LONG )
+    {
+        optionsFwd.SetSourceCenterLong(CPLAtof(pszCENTER_LONG));
+        optionsInv.SetTargetCenterLong(CPLAtof(pszCENTER_LONG));
+    }
+
     OGRCoordinateTransformation *poForwardTransform =
-        OGRCreateCoordinateTransformation(poSrcSRS, poDstSRS, options);
+        OGRCreateCoordinateTransformation(poSrcSRS, poDstSRS, optionsFwd);
 
     if( poForwardTransform == nullptr )
         // OGRCreateCoordinateTransformation() will report errors on its own.
@@ -2847,14 +2859,12 @@ void *GDALCreateReprojectionTransformerEx(
 
     psInfo->papszOptions = CSLDuplicate(papszOptions);
     psInfo->poForwardTransform = poForwardTransform;
-    if( pszCO )
-    {
-        options.SetCoordinateOperation(pszCO, true);
-    }
     psInfo->dfTime = CPLAtof(CSLFetchNameValueDef(papszOptions,
                                                   "COORDINATE_EPOCH", "0"));
+    CPLPushErrorHandler(CPLQuietErrorHandler);
     psInfo->poReverseTransform =
-        OGRCreateCoordinateTransformation(poDstSRS, poSrcSRS, options);
+        OGRCreateCoordinateTransformation(poDstSRS, poSrcSRS, optionsInv);
+    CPLPopErrorHandler();
 
     memcpy( psInfo->sTI.abySignature,
             GDAL_GTI2_SIGNATURE,
@@ -2930,8 +2940,24 @@ int GDALReprojectionTransform( void *pTransformArg, int bDstToSrc,
     }
 
     if( bDstToSrc )
-        bSuccess = psInfo->poReverseTransform->Transform(
-            nPointCount, padfX, padfY, padfZ, padfT, panSuccess );
+    {
+        if( psInfo->poReverseTransform == nullptr )
+        {
+            CPLError(CE_Failure, CPLE_AppDefined,
+                     "Inverse coordinate transformation cannot be instantiated");
+            if( panSuccess )
+            {
+                for( int i = 0; i < nPointCount; i++ )
+                    panSuccess[i] = FALSE;
+            }
+            bSuccess = false;
+        }
+        else
+        {
+            bSuccess = psInfo->poReverseTransform->Transform(
+                nPointCount, padfX, padfY, padfZ, padfT, panSuccess );
+        }
+    }
     else
         bSuccess = psInfo->poForwardTransform->Transform(
             nPointCount, padfX, padfY, padfZ, padfT, panSuccess );
@@ -3786,8 +3812,11 @@ int CPL_STDCALL GDALInvGeoTransform( double *gt_in, double *gt_out )
     // Compute determinate.
 
     const double det = gt_in[1] * gt_in[5] - gt_in[2] * gt_in[4];
+    const double magnitude = std::max(
+            std::max(fabs(gt_in[1]), fabs(gt_in[2])),
+            std::max(fabs(gt_in[4]), fabs(gt_in[5])));
 
-    if( fabs(det) < 0.000000000000001 )
+    if( fabs(det) <= 1e-10 * magnitude * magnitude )
         return 0;
 
     const double inv_det = 1.0 / det;

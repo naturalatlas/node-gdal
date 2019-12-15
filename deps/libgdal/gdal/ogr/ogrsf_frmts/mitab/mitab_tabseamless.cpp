@@ -47,7 +47,7 @@
 #include "ogr_spatialref.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: mitab_tabseamless.cpp 43b6061a355c4bce2283b787b28d5f3ae6b9e2af 2018-05-06 14:19:59 +0200 Even Rouault $")
+CPL_CVSID("$Id: mitab_tabseamless.cpp 2dfeb945e0b7ec8cefff097b92b321e846dd5e73 2019-08-15 21:29:31 +0200 Even Rouault $")
 
 /*=====================================================================
  *                      class TABSeamless
@@ -532,7 +532,7 @@ int TABSeamless::ExtractBaseFeatureId(GIntBig nEncodedFeatureId)
  **********************************************************************/
 GIntBig TABSeamless::GetNextFeatureId(GIntBig nPrevId)
 {
-    if (m_poIndexTable == nullptr)
+    if (m_poIndexTable == nullptr || m_poCurBaseTable == nullptr)
         return -1; // File is not opened yet
 
     if (nPrevId == -1 || m_nCurBaseTableId != ExtractBaseTableId(nPrevId))

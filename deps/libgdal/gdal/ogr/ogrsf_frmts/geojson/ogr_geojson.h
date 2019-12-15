@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geojson.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
+ * $Id: ogr_geojson.h 07b24f8cd487508a42b6ca5df2e5b96a85e9f204 2019-06-27 22:53:04 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions of OGR OGRGeoJSON driver types.
@@ -113,6 +113,7 @@ class OGRGeoJSONLayer final: public OGRMemLayer
     bool bUpdated_;
     bool bOriginalIdModified_;
     GIntBig nTotalFeatureCount_;
+    GIntBig nFeatureReadSinceReset_ = 0;
     GIntBig nNextFID_;
 
     bool IngestAll();

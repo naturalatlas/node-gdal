@@ -69,7 +69,7 @@ CPL_C_END
 #include "memdataset.h"
 #include "vsidataio.h"
 
-CPL_CVSID("$Id: jpgdataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: jpgdataset.cpp 16868463a1363a63fe89542ea7fa2a254838783f 2019-10-23 15:22:40 +0200 Even Rouault $")
 
 constexpr int TIFF_VERSION = 42;
 
@@ -1869,7 +1869,7 @@ CPLErr JPGDatasetCommon::IRasterIO( GDALRWFlag eRWFlag,
                     }
                 }
             }
-            nLoadedScanline = -1;
+            nLoadedScanline = nRasterYSize;
         }
         else
         {

@@ -53,7 +53,7 @@
 
 // #define IMMEDIATE_OPENING 1
 
-CPL_CVSID("$Id: ogrshapedatasource.cpp 391a0c719c83be1c51e92717cc730edcd110062b 2019-03-30 11:43:53 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrshapedatasource.cpp b94cde3ad94c02c2cff5e0be938da5df87bcea11 2019-06-27 23:28:09 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                          DS_SHPOpen()                                */
@@ -345,23 +345,36 @@ bool OGRShapeDataSource::OpenFile( const char *pszNewName, bool bUpdate )
 /*      Care is taken to suppress the error and only reissue it if      */
 /*      we think it is appropriate.                                     */
 /* -------------------------------------------------------------------- */
+    CPLErrorReset();
     CPLPushErrorHandler( CPLQuietErrorHandler );
     SHPHandle hSHP = bUpdate ?
         DS_SHPOpen( pszNewName, "r+" ) :
         DS_SHPOpen( pszNewName, "r" );
     CPLPopErrorHandler();
 
-    if( hSHP == nullptr
-        && (!EQUAL(CPLGetExtension(pszNewName),"dbf")
-            || strstr(CPLGetLastErrorMsg(),".shp") == nullptr) )
+    const bool bRestoreSHX =
+        CPLTestBool( CPLGetConfigOption("SHAPE_RESTORE_SHX", "FALSE") );
+    if( bRestoreSHX && EQUAL(CPLGetExtension(pszNewName),"dbf") &&
+        CPLGetLastErrorMsg()[0] != '\0' )
     {
         CPLString osMsg = CPLGetLastErrorMsg();
 
-        CPLError( CE_Failure, CPLE_OpenFailed, "%s", osMsg.c_str() );
-
-        return false;
+        CPLError( CE_Warning, CPLE_AppDefined, "%s", osMsg.c_str() );
     }
-    CPLErrorReset();
+    else
+    {
+        if( hSHP == nullptr
+            && (!EQUAL(CPLGetExtension(pszNewName),"dbf")
+                || strstr(CPLGetLastErrorMsg(),".shp") == nullptr) )
+        {
+            CPLString osMsg = CPLGetLastErrorMsg();
+
+            CPLError( CE_Failure, CPLE_OpenFailed, "%s", osMsg.c_str() );
+
+            return false;
+        }
+        CPLErrorReset();
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Open the .dbf file, if it exists.  To open a dbf file, the      */
@@ -458,6 +471,31 @@ void OGRShapeDataSource::AddLayer( OGRShapeLayer* poLayer )
         for( int i = 0; i < nLayers; i++ )
             poPool->SetLastUsedLayer(papoLayers[i]);
     }
+}
+
+/************************************************************************/
+/*                        LaunderLayerName()                            */
+/************************************************************************/
+
+static CPLString LaunderLayerName(const char* pszLayerName)
+{
+    std::string osRet(pszLayerName);
+    for( char& ch: osRet )
+    {
+        // https://docs.microsoft.com/en-us/windows/desktop/fileio/naming-a-file
+        if( ch == '<' || ch == '>' || ch == ':' || ch == '"' ||
+            ch == '/' || ch == '\\' || ch== '?' || ch == '*' )
+        {
+            ch = '_';
+        }
+    }
+    if( osRet != pszLayerName )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined,
+                 "Invalid layer name for a shapefile: %s. Laundered to %s.",
+                 pszLayerName, osRet.c_str());
+    }
+    return osRet;
 }
 
 /************************************************************************/
@@ -703,13 +741,13 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
         // datasource ... Ahem ahem.
         char *pszPath = CPLStrdup(CPLGetPath(pszName));
         pszFilenameWithoutExt =
-            CPLStrdup(CPLFormFilename(pszPath, pszLayerName, nullptr));
+            CPLStrdup(CPLFormFilename(pszPath, LaunderLayerName(pszLayerName).c_str(), nullptr));
         CPLFree( pszPath );
     }
     else
     {
         pszFilenameWithoutExt =
-            CPLStrdup(CPLFormFilename(pszName, pszLayerName, nullptr));
+            CPLStrdup(CPLFormFilename(pszName, LaunderLayerName(pszLayerName).c_str(), nullptr));
     }
 
 /* -------------------------------------------------------------------- */

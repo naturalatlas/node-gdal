@@ -65,7 +65,7 @@
 #include "ogr_srs_api.h"
 
 
-CPL_CVSID("$Id: netcdfdataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: netcdfdataset.cpp 5bcd0f76c4086b35e26a61d5fd25dbb01b9f537f 2019-08-26 10:29:22 +0100 magau $")
 
 // Internal function declarations.
 
@@ -3594,7 +3594,7 @@ void netCDFDataset::SetProjectionFromVar( int nGroupId, int nVarId,
                             xMinMax[0] = xMinMax[0] * satelliteHeight * 0.000001;
                             xMinMax[1] = xMinMax[1] * satelliteHeight * 0.000001;
                         }
-                        else if( EQUAL( szUnits, "rad" ) )
+                        else if( EQUAL( szUnits, "rad" ) || EQUAL( szUnits, "radian" ) )
                         {
                             xMinMax[0] = xMinMax[0] * satelliteHeight;
                             xMinMax[1] = xMinMax[1] * satelliteHeight;
@@ -3612,7 +3612,7 @@ void netCDFDataset::SetProjectionFromVar( int nGroupId, int nVarId,
                             yMinMax[0] = yMinMax[0] * satelliteHeight * 0.000001;
                             yMinMax[1] = yMinMax[1] * satelliteHeight * 0.000001;
                         }
-                        else if( EQUAL( szUnits, "rad" ) )
+                        else if( EQUAL( szUnits, "rad" ) || EQUAL( szUnits, "radian" ) )
                         {
                             yMinMax[0] = yMinMax[0] * satelliteHeight;
                             yMinMax[1] = yMinMax[1] * satelliteHeight;
@@ -9327,10 +9327,10 @@ static CPLErr NCDFGetAttr1( int nCdfId, int nVarId, const char *pszAttrName,
         dfValue = 0.0;
         for( m = 0; m < nAttrLen - 1; m++ )
         {
-            NCDFSafeStrcat(&pszAttrValue, ppszTemp[m], &nAttrValueSize);
+            NCDFSafeStrcat(&pszAttrValue, ppszTemp[m] ? ppszTemp[m] : "{NULL}", &nAttrValueSize);
             NCDFSafeStrcat(&pszAttrValue, ",", &nAttrValueSize);
         }
-        NCDFSafeStrcat(&pszAttrValue, ppszTemp[m], &nAttrValueSize);
+        NCDFSafeStrcat(&pszAttrValue, ppszTemp[m] ? ppszTemp[m] : "{NULL}", &nAttrValueSize);
         nc_free_string(nAttrLen, ppszTemp);
         CPLFree(ppszTemp);
         break;

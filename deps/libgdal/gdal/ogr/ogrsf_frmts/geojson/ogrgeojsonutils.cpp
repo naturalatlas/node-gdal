@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <memory>
 
-CPL_CVSID("$Id: ogrgeojsonutils.cpp c3b17f3db1f346b23bbab3000bd3b5e4225b7512 2019-01-03 10:26:12 -0500 alanstewart-terragotech $")
+CPL_CVSID("$Id: ogrgeojsonutils.cpp 0ddce43f6d60098b42ed40c2e9eeb38459758f38 2019-05-18 18:42:43 -0500 Even Rouault $")
 
 const char szESRIJSonPotentialStart1[] =
     "{\"features\":[{\"geometry\":{\"rings\":[";
@@ -172,10 +172,18 @@ static bool IsGeoJSONLikeObject( const char* pszText, bool* pbMightBeSequence )
         return true;
     }
 
-    CPLString osWithoutSpace = GetCompactJSon(pszText,
-                                            strlen(szESRIJSonPotentialStart1));
+    CPLString osWithoutSpace = GetCompactJSon(pszText, strlen(pszText));
     if( osWithoutSpace.find("{\"features\":[") == 0 &&
         osWithoutSpace.find(szESRIJSonPotentialStart1) != 0 )
+    {
+        if( pbMightBeSequence )
+            *pbMightBeSequence = false;
+        return true;
+    }
+
+    // See https://raw.githubusercontent.com/icepack/icepack-data/master/meshes/larsen/larsen_inflow.geojson
+    if( osWithoutSpace.find("{\"crs\":{") == 0 &&
+        osWithoutSpace.find(",\"features\":[") != std::string::npos )
     {
         if( pbMightBeSequence )
             *pbMightBeSequence = false;

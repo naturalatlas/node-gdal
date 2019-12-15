@@ -39,7 +39,7 @@
 // Uncomment to recognize also .gen files in addition to .img files
 // #define OPEN_GEN
 
-CPL_CVSID("$Id: srpdataset.cpp 8ef93c94be1c3ed8d039dff1c9eec112551aa6e1 2018-09-29 14:37:18 +0100 Steve Baker $")
+CPL_CVSID("$Id: srpdataset.cpp fc772a7e94b9c97f62a72e3eab60fa20b97b9f92 2019-08-12 01:18:04 +0200 Even Rouault $")
 
 class SRPDataset : public GDALPamDataset
 {
@@ -580,7 +580,7 @@ bool SRPDataset::GetFromRecord( const char* pszFileName, DDFRecord * record )
         {
             TILEINDEX = new int [NFL * NFC];
         }
-        catch( const std::bad_alloc& )
+        catch( const std::exception& )
         {
             return false;
         }

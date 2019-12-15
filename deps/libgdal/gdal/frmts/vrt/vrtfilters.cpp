@@ -42,7 +42,7 @@
 #include "gdal.h"
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: vrtfilters.cpp 977f2da59e46852f49534361860bb92f9c6ad1fd 2019-03-14 21:46:14 +0100 Even Rouault $")
+CPL_CVSID("$Id: vrtfilters.cpp 64e5d4fba213ab6255a4dddcd09e8cda46848d7d 2019-10-04 13:50:44 +0200 Even Rouault $")
 
 /*! @cond Doxygen_Suppress */
 
@@ -298,13 +298,15 @@ VRTFilteredSource::RasterIO( GDALDataType eBandDataType,
 /*      Load the data.                                                  */
 /* -------------------------------------------------------------------- */
     {
+        GDALRasterIOExtraArg sExtraArgs;
+        INIT_RASTERIO_EXTRA_ARG(sExtraArgs);
         const bool bIsComplex = CPL_TO_BOOL( GDALDataTypeIsComplex(eOperDataType) );
         const CPLErr eErr
             = VRTComplexSource::RasterIOInternal<float>(
                 nFileXOff, nFileYOff, nFileXSize, nFileYSize,
                 pabyWorkData + nLineOffset * nTopFill + nPixelOffset * nLeftFill,
                 nFileXSize, nFileYSize, eOperDataType,
-                nPixelOffset, nLineOffset, psExtraArg,
+                nPixelOffset, nLineOffset, &sExtraArgs,
                 bIsComplex ? GDT_CFloat32 : GDT_Float32 );
 
         if( eErr != CE_None )

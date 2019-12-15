@@ -47,7 +47,7 @@
 #include "ogrsf_frmts.h"
 
 
-CPL_CVSID("$Id: ogrgpxdatasource.cpp 9bae05435e199592be48a2a6c8ef5f649fa5d113 2018-03-26 14:16:35 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrgpxdatasource.cpp a5af54b27f9886af4c4e8a2f8b04b89d8d7e228e 2019-09-06 02:00:10 +0200 Even Rouault $")
 
 constexpr int SPACE_FOR_METADATA = 160;
 
@@ -116,8 +116,8 @@ OGRGPXDataSource::~OGRGPXDataSource()
                     VSIFWriteL(szMetadata, 1, strlen(szMetadata), fpOutput);
                 }
             }
-            VSIFCloseL( fpOutput);
         }
+        VSIFCloseL( fpOutput);
     }
 
     for( int i = 0; i < nLayers; i++ )

@@ -56,7 +56,7 @@
 #include "ogrgeojsonreader.h"
 #include <vector>
 
-CPL_CVSID("$Id: nasakeywordhandler.cpp 55901e50fd8583acecc3d37c9cc2870043fc8bdb 2018-01-11 09:11:21Z Dmitry Baryshnikov $")
+CPL_CVSID("$Id: nasakeywordhandler.cpp 1d1b6d0b14c048a9b8ba7b460410d438920e3cd1 2019-05-06 12:04:39 +0200 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -244,6 +244,9 @@ int NASAKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue,
         std::vector<char> oStackArrayBeginChar;
         CPLString osWord;
 
+        oStackArrayBeginChar.push_back(*pszHeaderNext);
+        osValue += *pszHeaderNext;
+        pszHeaderNext++;
 
         while( ReadWord( osWord, m_bStripSurroundingQuotes,
                          true, &bIsString ) )

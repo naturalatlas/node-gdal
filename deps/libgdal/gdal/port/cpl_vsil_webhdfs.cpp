@@ -39,7 +39,7 @@
 
 #include "cpl_alibaba_oss.h"
 
-CPL_CVSID("$Id: cpl_vsil_webhdfs.cpp 5c8f34cbafa6f1b16efaeb348029a389196bdebd 2019-03-23 14:18:40 +0100 Even Rouault $")
+CPL_CVSID("$Id: cpl_vsil_webhdfs.cpp 78ebfa67fe512cc98e3452fc307a0a17e88d0b68 2019-06-21 00:26:51 +0200 Even Rouault $")
 
 #ifndef HAVE_CURL
 
@@ -1116,7 +1116,7 @@ retry:
         // pause.
         const double dfNewRetryDelay = CPLHTTPGetNewRetryDelay(
             static_cast<int>(response_code), dfRetryDelay,
-            nullptr);
+            nullptr, szCurlErrBuf);
         if( dfNewRetryDelay > 0 &&
             nRetryCount < m_nMaxRetry )
         {

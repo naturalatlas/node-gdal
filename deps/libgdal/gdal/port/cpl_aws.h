@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_aws.h 5318f6d39d2006a10cb6c1410334c56d76a74aa6 2018-06-20 16:38:42 +0200 Even Rouault $
+ * $Id: cpl_aws.h 6df253b7cb1bb04d8fa847106b60ff190f23235b 2019-06-07 20:50:53 +0200 Even Rouault $
  *
  * Name:     cpl_aws.h
  * Project:  CPL - Common Portability Library
@@ -128,9 +128,9 @@ class VSIS3HandleHelper final: public IVSIS3LikeHandleHelper
         CPL_DISALLOW_COPY_ASSIGN(VSIS3HandleHelper)
 
         CPLString m_osURL{};
-        CPLString m_osSecretAccessKey{};
-        CPLString m_osAccessKeyId{};
-        CPLString m_osSessionToken{};
+        mutable CPLString m_osSecretAccessKey{};
+        mutable CPLString m_osAccessKeyId{};
+        mutable CPLString m_osSessionToken{};
         CPLString m_osEndpoint{};
         CPLString m_osRegion{};
         CPLString m_osRequestPayer{};
@@ -138,6 +138,7 @@ class VSIS3HandleHelper final: public IVSIS3LikeHandleHelper
         CPLString m_osObjectKey{};
         bool m_bUseHTTPS = false;
         bool m_bUseVirtualHosting = false;
+        bool m_bFromEC2 = false;
 
         void RebuildURL() override;
 
@@ -156,7 +157,8 @@ class VSIS3HandleHelper final: public IVSIS3LikeHandleHelper
                                      CPLString& osSecretAccessKey,
                                      CPLString& osAccessKeyId,
                                      CPLString& osSessionToken,
-                                     CPLString& osRegion);
+                                     CPLString& osRegion,
+                                     bool& bFromEC2);
   protected:
 
     public:
@@ -168,7 +170,7 @@ class VSIS3HandleHelper final: public IVSIS3LikeHandleHelper
                     const CPLString& osRequestPayer,
                     const CPLString& osBucket,
                     const CPLString& osObjectKey,
-                    bool bUseHTTPS, bool bUseVirtualHosting);
+                    bool bUseHTTPS, bool bUseVirtualHosting, bool bFromEC2);
        ~VSIS3HandleHelper();
 
         static VSIS3HandleHelper* BuildFromURI(const char* pszURI,

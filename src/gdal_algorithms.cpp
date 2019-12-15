@@ -93,7 +93,6 @@ NAN_METHOD(Algorithms::contourGenerate)
 	int use_nodata = 0;
 	double nodata = 0;
 	int id_field = -1, elev_field = -1;
-	char str[80];
 
 	NODE_ARG_OBJECT(0, "options", obj);
 

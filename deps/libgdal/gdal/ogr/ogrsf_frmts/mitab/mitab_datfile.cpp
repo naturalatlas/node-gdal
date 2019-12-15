@@ -52,7 +52,7 @@
 #include "ogr_feature.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: mitab_datfile.cpp fd5a52b3fb25239d417f2daed64aa6f8cbe38da9 2018-09-17 14:19:33 +0200 Even Rouault $")
+CPL_CVSID("$Id: mitab_datfile.cpp a18fcc078bc59d73d4fc1f7e3150ebea54911e3f 2019-06-27 11:07:36 +0200 Even Rouault $")
 
 /*=====================================================================
  *                      class TABDATFile
@@ -2532,7 +2532,12 @@ int TABDATFile::WriteDecimalField(double dValue, int nWidth, int nPrec,
     snprintf(szFormat, sizeof(szFormat), "%%%d.%df", nWidth, nPrec);
     const char *pszVal = CPLSPrintf(szFormat, dValue);
     if (static_cast<int>(strlen(pszVal)) > nWidth)
-        pszVal += strlen(pszVal) - nWidth;
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot format %g as a %d.%d field",
+                 dValue, nWidth, nPrec);
+        return -1;
+    }
 
     // Update Index
     if (poINDFile && nIndexNo > 0)

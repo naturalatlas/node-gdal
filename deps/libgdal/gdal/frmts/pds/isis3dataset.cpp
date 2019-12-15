@@ -107,7 +107,7 @@ static const char* const pszLABEL_BYTES_PLACEHOLDER = "!*^LABEL_BYTES^*!";
 static const char* const pszHISTORY_STARTBYTE_PLACEHOLDER =
                                                     "!*^HISTORY_STARTBYTE^*!";
 
-CPL_CVSID("$Id: isis3dataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: isis3dataset.cpp 1d1b6d0b14c048a9b8ba7b460410d438920e3cd1 2019-05-06 12:04:39 +0200 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -3591,7 +3591,15 @@ void ISIS3Dataset::SerializeAsPDL( VSILFILE* fp, const CPLJSONObject &oObj,
                 {
                     CPLString osVal = oItem.ToString();
                     const char* pszVal = osVal.c_str();
-                    if( nFirstPos < WIDTH && nCurPos + strlen(pszVal) > WIDTH )
+                    if( pszVal[0] == '\0' ||
+                        strchr(pszVal, ' ') || strstr(pszVal, "\\n") ||
+                        strstr(pszVal, "\\r") )
+                    {
+                        osVal.replaceAll("\\n", "\n");
+                        osVal.replaceAll("\\r", "\r");
+                        VSIFPrintfL(fp, "\"%s\"", osVal.c_str());
+                    }
+                    else if( nFirstPos < WIDTH && nCurPos + strlen(pszVal) > WIDTH )
                     {
                         if( idx > 0 )
                         {

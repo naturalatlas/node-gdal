@@ -34,7 +34,7 @@
 
 #include <ctime>
 
-CPL_CVSID("$Id: ogrselafindatasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrselafindatasource.cpp 2b3cb5ac55d9faf0c9c408085c71dd4f3f8d77a3 2019-10-18 18:38:57 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                          Range                                       */
@@ -425,7 +425,7 @@ int OGRSelafinDataSource::OpenTable(const char * pszFilename) {
         SelafinTypeDef eType=(j==0)?POINTS:ELEMENTS;
         for (int i=0;i<poHeader->nSteps;++i) {
             if (poRange.contains(eType,i)) {
-                char szTemp[30];
+                char szTemp[30] = {};
                 double dfTime = 0.0;
                 if( VSIFSeekL(fp, poHeader->getPosition(i)+4, SEEK_SET)!=0 ||
                     Selafin::read_float(fp, dfTime)==0 )

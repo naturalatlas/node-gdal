@@ -55,7 +55,7 @@
 #include "ogr_spatialref.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: envidataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: envidataset.cpp 558f8a7aa15498ac25fb4a8227b220c1d4fecf29 2019-09-14 12:13:43 +0200 Even Rouault $")
 
 // TODO(schwehr): This really should be defined in port/somewhere.h.
 constexpr double kdfDegToRad = M_PI / 180.0;
@@ -305,6 +305,10 @@ ENVIDataset::~ENVIDataset()
             CPLError(CE_Failure, CPLE_FileIO, "I/O error");
         }
     }
+    if( !m_asGCPs.empty() )
+    {
+        GDALDeinitGCPs(static_cast<int>(m_asGCPs.size()), m_asGCPs.data());
+    }
     CPLFree(pszProjection);
     CPLFree(pszHDRFilename);
 }
@@ -333,12 +337,6 @@ void ENVIDataset::FlushCache()
         return;
 
     // Rewrite out the header.
-#ifdef CPL_LSB
-    const int iBigEndian = 0;
-#else
-    const int iBigEndian = 1;
-#endif
-
     bool bOK = VSIFPrintfL(fp, "ENVI\n") >= 0;
     if ("" != sDescription)
         bOK &= VSIFPrintfL(fp, "description = {\n%s}\n",
@@ -373,7 +371,13 @@ void ENVIDataset::FlushCache()
         break;
     }
     bOK &= VSIFPrintfL(fp, "interleave = %s\n", pszInterleaving) >= 0;
-    bOK &= VSIFPrintfL(fp, "byte order = %d\n", iBigEndian) >= 0;
+
+    const char* pszByteOrder = m_aosHeader["byte_order"];
+    if( pszByteOrder )
+    {
+        // Supposed to be required
+        bOK &= VSIFPrintfL(fp, "byte order = %s\n", pszByteOrder) >= 0;
+    }
 
     // Write class and color information.
     catNames = band->GetCategoryNames();
@@ -1106,7 +1110,7 @@ bool ENVIDataset::WritePseudoGcpInfo()
     // Write out gcps into the envi header
     // returns 0 if the gcps are not present.
 
-    const int iNum = GetGCPCount();
+    const int iNum = std::min(GetGCPCount(), 4);
     if (iNum == 0)
         return false;
 
@@ -1120,9 +1124,11 @@ bool ENVIDataset::WritePseudoGcpInfo()
     bool bRet = VSIFPrintfL(fp, "geo points = {\n") >= 0;
     for( int iR = 0; iR < iNum; iR++ )
     {
+        // Add 1 to pixel and line for ENVI convention
         bRet &= VSIFPrintfL(
             fp, " %#0.4f, %#0.4f, %#0.8f, %#0.8f",
-            pGcpStructs[iR].dfGCPPixel, pGcpStructs[iR].dfGCPLine,
+            1 + pGcpStructs[iR].dfGCPPixel,
+            1 + pGcpStructs[iR].dfGCPLine,
             pGcpStructs[iR].dfGCPY, pGcpStructs[iR].dfGCPX) >= 0;
         if( iR < iNum - 1 )
             bRet &= VSIFPrintfL(fp, ",\n") >= 0;
@@ -1756,6 +1762,65 @@ void ENVIDataset::ProcessRPCinfo( const char *pszRPCinfo,
     CSLDestroy(papszFields);
 }
 
+/************************************************************************/
+/*                             GetGCPCount()                            */
+/************************************************************************/
+
+int ENVIDataset::GetGCPCount()
+{
+    int nGCPCount = RawDataset::GetGCPCount();
+    if( nGCPCount )
+        return nGCPCount;
+    return static_cast<int>(m_asGCPs.size());
+}
+
+/************************************************************************/
+/*                              GetGCPs()                               */
+/************************************************************************/
+
+const GDAL_GCP *ENVIDataset::GetGCPs()
+{
+    int nGCPCount = RawDataset::GetGCPCount();
+    if( nGCPCount )
+        return RawDataset::GetGCPs();
+    if( !m_asGCPs.empty() )
+        return m_asGCPs.data();
+    return nullptr;
+}
+
+/************************************************************************/
+/*                         ProcessGeoPoints()                           */
+/*                                                                      */
+/*      Extract GCPs                                                    */
+/************************************************************************/
+
+void ENVIDataset::ProcessGeoPoints( const char *pszGeoPoints )
+{
+    char **papszFields = SplitList(pszGeoPoints);
+    const int nCount = CSLCount(papszFields);
+
+    if( (nCount % 4) != 0 )
+    {
+        CSLDestroy(papszFields);
+        return;
+    }
+    m_asGCPs.resize(nCount / 4);
+    if( !m_asGCPs.empty() )
+    {
+        GDALInitGCPs(static_cast<int>(m_asGCPs.size()), m_asGCPs.data());
+    }
+    for( int i = 0; i < static_cast<int>(m_asGCPs.size()); i++ )
+    {
+        // Subtract 1 to pixel and line for ENVI convention
+        m_asGCPs[i].dfGCPPixel = CPLAtof( papszFields[i * 4 + 0] ) - 1;
+        m_asGCPs[i].dfGCPLine = CPLAtof( papszFields[i * 4 + 1] ) - 1;
+        m_asGCPs[i].dfGCPY = CPLAtof( papszFields[i * 4 + 2] );
+        m_asGCPs[i].dfGCPX = CPLAtof( papszFields[i * 4 + 3] );
+        m_asGCPs[i].dfGCPZ = 0;
+    }
+    CSLDestroy(papszFields);
+}
+
 void ENVIDataset::ProcessStatsFile()
 {
     osStaFilename = CPLResetExtension(pszHDRFilename, "sta");
@@ -1895,9 +1960,12 @@ bool ENVIDataset::ReadHeader( VSILFILE *fpHdr )
 
         if( iEqual != std::string::npos && iEqual > 0 )
         {
-            const char *pszValue = osWorkingLine + iEqual + 1;
-            while( *pszValue == ' ' || *pszValue == '\t' )
-                pszValue++;
+            CPLString osValue(osWorkingLine.substr(iEqual + 1));
+            auto found = osValue.find_first_not_of(" \t");
+            if( found != std::string::npos )
+                osValue = osValue.substr(found);
+            else
+                osValue.clear();
 
             osWorkingLine.resize(iEqual);
             iEqual --;
@@ -1916,7 +1984,7 @@ bool ENVIDataset::ReadHeader( VSILFILE *fpHdr )
                     osWorkingLine[i] = '_';
             }
 
-            m_aosHeader.SetNameValue(osWorkingLine, pszValue);
+            m_aosHeader.SetNameValue(osWorkingLine, osValue);
         }
     }
 
@@ -2502,12 +2570,19 @@ GDALDataset *ENVIDataset::Open( GDALOpenInfo *poOpenInfo, bool bFileSizeCheck )
             pszMapInfo));
     }
 
-    // Look for RPC mapinfo.
+    // Look for RPC.
     const char* pszRPCInfo = poDS->m_aosHeader["rpc_info"];
     if( !poDS->bFoundMapinfo && pszRPCInfo != nullptr )
     {
         poDS->ProcessRPCinfo(pszRPCInfo,
                              poDS->nRasterXSize, poDS->nRasterYSize);
+    }
+
+    // Look for geo_points / GCP
+    const char* pszGeoPoints = poDS->m_aosHeader["geo_points"];
+    if( !poDS->bFoundMapinfo && pszGeoPoints != nullptr )
+    {
+        poDS->ProcessGeoPoints(pszGeoPoints);
     }
 
     // Initialize any PAM information.
