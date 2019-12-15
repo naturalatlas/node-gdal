@@ -30,15 +30,11 @@
 					"include_dirs": ["./arch/unix"]
 				}]
 			],
-			"libraries": ["<!@(geos-config --libs)"],
 			"link_settings": {
 				"ldflags": [
-					"<!@(geos-config --ldflags)",
 					"-lgeos_c"
 				]
 			},
-			"cflags_cc!": ["<!@(geos-config --cflags)"],
-			"cflags!": ["<!@(geos-config --cflags)"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
