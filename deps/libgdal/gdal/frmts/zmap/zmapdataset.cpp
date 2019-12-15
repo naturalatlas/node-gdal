@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: zmapdataset.cpp 32984 2016-01-14 19:08:12Z goatbar $
  *
  * Project:  ZMap driver
  * Purpose:  GDALDataset driver for ZMap dataset.
@@ -34,7 +33,7 @@
 
 #include <cmath>
 
-CPL_CVSID("$Id: zmapdataset.cpp 32984 2016-01-14 19:08:12Z goatbar $");
+CPL_CVSID("$Id: zmapdataset.cpp 6ef13199b493973da285decbfcd5e2a763954b97 2018-06-07 05:46:42 -0400 luzpaz $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -61,7 +60,7 @@ class ZMapDataset : public GDALPamDataset
                  ZMapDataset();
     virtual     ~ZMapDataset();
 
-    virtual CPLErr GetGeoTransform( double * );
+    virtual CPLErr GetGeoTransform( double * ) override;
 
     static GDALDataset *Open( GDALOpenInfo * );
     static int          Identify( GDALOpenInfo * );
@@ -83,10 +82,9 @@ class ZMapRasterBand : public GDALPamRasterBand
   public:
     explicit ZMapRasterBand( ZMapDataset * );
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual double GetNoDataValue( int *pbSuccess = NULL );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual double GetNoDataValue( int *pbSuccess = nullptr ) override;
 };
-
 
 /************************************************************************/
 /*                           ZMapRasterBand()                           */
@@ -114,7 +112,7 @@ CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff,
 {
     ZMapDataset *poGDS = reinterpret_cast<ZMapDataset *>( poDS );
 
-    if (poGDS->fp == NULL)
+    if (poGDS->fp == nullptr)
         return CE_Failure;
 
     if (nBlockXOff < poGDS->nColNum + 1)
@@ -137,7 +135,7 @@ CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff,
     while(i<nRasterYSize)
     {
         char* pszLine = const_cast<char *>( CPLReadLineL(poGDS->fp) );
-        if (pszLine == NULL)
+        if (pszLine == nullptr)
             return CE_Failure;
         int nExpected = nRasterYSize - i;
         if (nExpected > poGDS->nValuesPerLine)
@@ -151,7 +149,7 @@ CPLErr ZMapRasterBand::IReadBlock( int nBlockXOff,
             char* pszValue = pszLine + j * poGDS->nFieldSize;
             const char chSaved = pszValue[poGDS->nFieldSize];
             pszValue[poGDS->nFieldSize] = 0;
-            if (strchr(pszValue, '.') != NULL)
+            if (strchr(pszValue, '.') != nullptr)
                 reinterpret_cast<double *>( pImage )[i+j] = CPLAtofM(pszValue);
             else
                 reinterpret_cast<double *>( pImage )[i+j]
@@ -186,7 +184,7 @@ double ZMapRasterBand::GetNoDataValue( int *pbSuccess )
 /************************************************************************/
 
 ZMapDataset::ZMapDataset() :
-    fp(NULL),
+    fp(nullptr),
     nValuesPerLine(0),
     nFieldSize(0),
     nDecimalCount(0),
@@ -224,7 +222,7 @@ int ZMapDataset::Identify( GDALOpenInfo * poOpenInfo )
         return FALSE;
 
 /* -------------------------------------------------------------------- */
-/*      Chech that it looks roughly as a ZMap dataset                   */
+/*      Check that it looks roughly as a ZMap dataset                   */
 /* -------------------------------------------------------------------- */
     const char* pszData
         = reinterpret_cast<const char *>( poOpenInfo->pabyHeader );
@@ -280,19 +278,26 @@ int ZMapDataset::Identify( GDALOpenInfo * poOpenInfo )
 GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if (!Identify(poOpenInfo))
-        return NULL;
+    if (!Identify(poOpenInfo) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
+/* -------------------------------------------------------------------- */
+/*      Confirm the requested access is supported.                      */
+/* -------------------------------------------------------------------- */
+    if( poOpenInfo->eAccess == GA_Update )
+    {
+        CPLError( CE_Failure, CPLE_NotSupported,
+                  "The ZMAP driver does not support update access to existing"
+                  " datasets." );
+        return nullptr;
+    }
 /* -------------------------------------------------------------------- */
 /*      Find dataset characteristics                                    */
 /* -------------------------------------------------------------------- */
-    VSILFILE* fp = VSIFOpenL(poOpenInfo->pszFilename, "rb");
-    if (fp == NULL)
-        return NULL;
 
     const char* pszLine;
 
-    while((pszLine = CPLReadLine2L(fp, 100, NULL)) != NULL)
+    while((pszLine = CPLReadLine2L(poOpenInfo->fpL, 100, nullptr)) != nullptr)
     {
         if (*pszLine == '!')
         {
@@ -301,10 +306,11 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
         else
             break;
     }
-    if (pszLine == NULL)
+    if (pszLine == nullptr)
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     /* Parse first header line */
@@ -312,34 +318,38 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
     if (CSLCount(papszTokens) != 3)
     {
         CSLDestroy(papszTokens);
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     const int nValuesPerLine = atoi(papszTokens[2]);
     if (nValuesPerLine <= 0)
     {
         CSLDestroy(papszTokens);
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     CSLDestroy(papszTokens);
-    papszTokens = NULL;
+    papszTokens = nullptr;
 
     /* Parse second header line */
-    pszLine = CPLReadLine2L(fp, 100, NULL);
-    if (pszLine == NULL)
+    pszLine = CPLReadLine2L(poOpenInfo->fpL, 100, nullptr);
+    if (pszLine == nullptr)
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
     papszTokens = CSLTokenizeString2( pszLine, ",", 0 );
     if (CSLCount(papszTokens) != 5)
     {
         CSLDestroy(papszTokens);
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     const int nFieldSize = atoi(papszTokens[0]);
@@ -348,7 +358,7 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
     const int nColumnNumber = atoi(papszTokens[4]);
 
     CSLDestroy(papszTokens);
-    papszTokens = NULL;
+    papszTokens = nullptr;
 
     if (nFieldSize <= 0 || nFieldSize >= 40 ||
         nDecimalCount <= 0 || nDecimalCount >= nFieldSize ||
@@ -356,23 +366,26 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLDebug("ZMap", "nFieldSize=%d, nDecimalCount=%d, nColumnNumber=%d",
                  nFieldSize, nDecimalCount, nColumnNumber);
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     /* Parse third header line */
-    pszLine = CPLReadLine2L(fp, 100, NULL);
-    if (pszLine == NULL)
+    pszLine = CPLReadLine2L(poOpenInfo->fpL, 100, nullptr);
+    if (pszLine == nullptr)
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
     papszTokens = CSLTokenizeString2( pszLine, ",", 0 );
     if (CSLCount(papszTokens) != 6)
     {
         CSLDestroy(papszTokens);
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     const int nRows = atoi(papszTokens[0]);
@@ -383,37 +396,41 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
     const double dfMaxY = CPLAtofM(papszTokens[5]);
 
     CSLDestroy(papszTokens);
-    papszTokens = NULL;
+    papszTokens = nullptr;
 
     if (!GDALCheckDatasetDimensions(nCols, nRows) ||
         nCols == 1 || nRows == 1)
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     /* Ignore fourth header line */
-    pszLine = CPLReadLine2L(fp, 100, NULL);
-    if (pszLine == NULL)
+    pszLine = CPLReadLine2L(poOpenInfo->fpL, 100, nullptr);
+    if (pszLine == nullptr)
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
     /* Check fifth header line */
-    pszLine = CPLReadLine2L(fp, 100, NULL);
-    if (pszLine == NULL || pszLine[0] != '@')
+    pszLine = CPLReadLine2L(poOpenInfo->fpL, 100, nullptr);
+    if (pszLine == nullptr || pszLine[0] != '@')
     {
-        VSIFCloseL(fp);
-        return NULL;
+        VSIFCloseL(poOpenInfo->fpL);
+        poOpenInfo->fpL = nullptr;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     ZMapDataset *poDS = new ZMapDataset();
-    poDS->fp = fp;
-    poDS->nDataStartOff = VSIFTellL(fp);
+    poDS->fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
+    poDS->nDataStartOff = VSIFTellL(poDS->fp);
     poDS->nValuesPerLine = nValuesPerLine;
     poDS->nFieldSize = nFieldSize;
     poDS->nDecimalCount = nDecimalCount;
@@ -458,9 +475,8 @@ GDALDataset *ZMapDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Support overviews.                                              */
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
-    return( poDS );
+    return poDS;
 }
-
 
 /************************************************************************/
 /*                       WriteRightJustified()                          */
@@ -526,7 +542,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "ZMap driver does not support source dataset with zero band.\n");
-        return NULL;
+        return nullptr;
     }
 
     if (nBands != 1)
@@ -534,11 +550,11 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
         CPLError( (bStrict) ? CE_Failure : CE_Warning, CPLE_NotSupported,
                   "ZMap driver only uses the first band of the dataset.\n");
         if (bStrict)
-            return NULL;
+            return nullptr;
     }
 
-    if( pfnProgress && !pfnProgress( 0.0, NULL, pProgressData ) )
-        return NULL;
+    if( pfnProgress && !pfnProgress( 0.0, nullptr, pProgressData ) )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Get source dataset info                                         */
@@ -548,7 +564,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
     const int nYSize = poSrcDS->GetRasterYSize();
     if (nXSize == 1 || nYSize == 1)
     {
-        return NULL;
+        return nullptr;
     }
 
     double adfGeoTransform[6];
@@ -558,7 +574,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
         CPLError( CE_Failure, CPLE_NotSupported,
                   "ZMap driver does not support CreateCopy() from skewed or "
                   "rotated dataset.\n");
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -566,11 +582,11 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
 /* -------------------------------------------------------------------- */
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "wb");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Cannot create %s", pszFilename );
-        return NULL;
+        return nullptr;
     }
 
     const int nFieldSize = 20;
@@ -644,7 +660,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
         eErr = poSrcDS->GetRasterBand(1)->RasterIO(
                                             GF_Read, i, 0, 1, nYSize,
                                             padfLineBuffer, 1, nYSize,
-                                            GDT_Float64, 0, 0, NULL);
+                                            GDT_Float64, 0, 0, nullptr);
         if (eErr != CE_None)
             break;
         bool bEOLPrinted = false;
@@ -663,8 +679,8 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
         if (!bEOLPrinted)
             VSIFPrintfL(fp, "\n");
 
-        if (pfnProgress != NULL &&
-            !pfnProgress( (j+1) * 1.0 / nYSize, NULL, pProgressData))
+        if (pfnProgress != nullptr &&
+            !pfnProgress( (j+1) * 1.0 / nYSize, nullptr, pProgressData))
         {
             eErr = CE_Failure;
             break;
@@ -674,7 +690,7 @@ GDALDataset* ZMapDataset::CreateCopy( const char * pszFilename,
     VSIFCloseL(fp);
 
     if (eErr != CE_None)
-        return NULL;
+        return nullptr;
 
     return reinterpret_cast<GDALDataset*>(
         GDALOpen(pszFilename, GA_ReadOnly) );
@@ -689,7 +705,7 @@ CPLErr ZMapDataset::GetGeoTransform( double * padfTransform )
 {
     memcpy(padfTransform, adfGeoTransform, 6 * sizeof(double));
 
-    return( CE_None );
+    return CE_None;
 }
 
 /************************************************************************/
@@ -699,7 +715,7 @@ CPLErr ZMapDataset::GetGeoTransform( double * padfTransform )
 void GDALRegister_ZMap()
 
 {
-    if( GDALGetDriverByName( "ZMap" ) != NULL )
+    if( GDALGetDriverByName( "ZMap" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

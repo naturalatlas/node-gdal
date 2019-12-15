@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -34,28 +34,28 @@ namespace geomgraph { // geos.geomgraph
 vector<SegmentString*>&
 EdgeNodingValidator::toSegmentStrings(vector<Edge*>& edges)
 {
-	// convert Edges to SegmentStrings
-	for(size_t i=0, n=edges.size(); i<n; ++i) {
-		Edge *e=edges[i];
-		CoordinateSequence* cs=e->getCoordinates()->clone();
-		newCoordSeq.push_back(cs);
-		segStr.push_back(new BasicSegmentString(cs, e));
-	}
-	return segStr;
+    // convert Edges to SegmentStrings
+    for(size_t i = 0, n = edges.size(); i < n; ++i) {
+        Edge* e = edges[i];
+        auto cs = e->getCoordinates()->clone();
+        segStr.push_back(new BasicSegmentString(cs.get(), e));
+        newCoordSeq.push_back(cs.release());
+    }
+    return segStr;
 }
 
 EdgeNodingValidator::~EdgeNodingValidator()
 {
-	for (SegmentString::NonConstVect::iterator
-			i=segStr.begin(), e=segStr.end();
-			i != e;
-			++i)
-	{
-		delete *i;
-	}
+    for(SegmentString::NonConstVect::iterator
+            i = segStr.begin(), e = segStr.end();
+            i != e;
+            ++i) {
+        delete *i;
+    }
 
-	for(size_t i=0, n=newCoordSeq.size(); i<n; ++i)
-		delete newCoordSeq[i];
+    for(size_t i = 0, n = newCoordSeq.size(); i < n; ++i) {
+        delete newCoordSeq[i];
+    }
 }
 
 } // namespace geos.geomgraph

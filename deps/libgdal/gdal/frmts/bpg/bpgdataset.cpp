@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL BPG Driver
  * Purpose:  Implement GDAL BPG Support based on libbpg
@@ -38,10 +37,11 @@
 // g++ -fPIC -g -Wall -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -I/home/even/libbpg-0.9.4 frmts/bpg/bpgdataset.cpp -shared -o gdal_BPG.so -L. -lgdal -L/home/even/libbpg-0.9.4/ -lbpg
 
 CPL_C_START
+void CPL_DLL GDALRegister_BPG();
 #include "libbpg.h"
 CPL_C_END
 
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: bpgdataset.cpp 6f51856470aecacbcb25254e6a6e263e5b1a5aae 2017-12-19 05:31:03Z Kurt Schwehr $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -83,21 +83,21 @@ class BPGRasterBand : public GDALPamRasterBand
 
                    BPGRasterBand( BPGDataset *, int nbits );
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual GDALColorInterp GetColorInterpretation();
+    CPLErr IReadBlock( int, int, void * ) override;
+    GDALColorInterp GetColorInterpretation() override;
 };
 
 /************************************************************************/
 /*                          BPGRasterBand()                            */
 /************************************************************************/
 
-BPGRasterBand::BPGRasterBand( BPGDataset *poDS, int nbits )
+BPGRasterBand::BPGRasterBand( BPGDataset *poDSIn, int nbits )
 {
-    this->poDS = poDS;
+    poDS = poDSIn;
 
-    eDataType = (nbits > 8) ? GDT_UInt16 : GDT_Byte;
+    eDataType = nbits > 8 ? GDT_UInt16 : GDT_Byte;
 
-    nBlockXSize = poDS->nRasterXSize;
+    nBlockXSize = poDSIn->nRasterXSize;
     nBlockYSize = 1;
 }
 
@@ -157,19 +157,16 @@ GDALColorInterp BPGRasterBand::GetColorInterpretation()
 /* ==================================================================== */
 /************************************************************************/
 
-
 /************************************************************************/
 /*                            BPGDataset()                              */
 /************************************************************************/
 
-BPGDataset::BPGDataset()
-
-{
-    fpImage = NULL;
-    pabyUncompressed = NULL;
-    bHasBeenUncompressed = FALSE;
-    eUncompressErrRet = CE_None;
-}
+BPGDataset::BPGDataset() :
+    fpImage(NULL),
+    pabyUncompressed(NULL),
+    bHasBeenUncompressed(FALSE),
+    eUncompressErrRet(CE_None)
+{}
 
 /************************************************************************/
 /*                           ~BPGDataset()                              */
@@ -179,7 +176,7 @@ BPGDataset::~BPGDataset()
 
 {
     FlushCache();
-    if (fpImage)
+    if( fpImage )
         VSIFCloseL(fpImage);
     VSIFree(pabyUncompressed);
 }
@@ -293,9 +290,7 @@ GDALDataset *BPGDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
-    BPGDataset  *poDS;
-
-    poDS = new BPGDataset();
+    BPGDataset *poDS = new BPGDataset();
     poDS->nRasterXSize = imageInfo.width;
     poDS->nRasterYSize = imageInfo.height;
     poDS->fpImage = poOpenInfo->fpL;

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdxf_diskio.cpp 20278 2010-08-14 15:11:01Z warmerdam $
  *
  * Project:  DXF Translator
  * Purpose:  Implements low level DXF reading with caching and parsing of
@@ -33,17 +32,18 @@
 #include "cpl_string.h"
 #include "cpl_csv.h"
 
-CPL_CVSID("$Id: ogrdxf_diskio.cpp 20278 2010-08-14 15:11:01Z warmerdam $");
+CPL_CVSID("$Id: ogrdxfreader.cpp 6b6607358c2c280f54ea0922536a27a8e12930b5 2018-07-14 16:23:19 +1000 Alan Thomas $")
 
 /************************************************************************/
 /*                            OGRDXFReader()                            */
 /************************************************************************/
 
 OGRDXFReader::OGRDXFReader() :
-    fp(NULL),
+    fp(nullptr),
     iSrcBufferOffset(0),
     nSrcBufferBytes(0),
     iSrcBufferFileOffset(0),
+    achSrcBuffer{},
     nLastValueSize(0),
     nLineNumber(0)
 {}
@@ -71,14 +71,15 @@ void OGRDXFReader::Initialize( VSILFILE *fpIn )
 /*                          ResetReadPointer()                          */
 /************************************************************************/
 
-void OGRDXFReader::ResetReadPointer( int iNewOffset )
+void OGRDXFReader::ResetReadPointer( int iNewOffset,
+    int nNewLineNumber /* = 0 */ )
 
 {
     nSrcBufferBytes = 0;
     iSrcBufferOffset = 0;
     iSrcBufferFileOffset = iNewOffset;
     nLastValueSize = 0;
-    nLineNumber = 0;
+    nLineNumber = nNewLineNumber;
 
     VSIFSeekL( fp, iNewOffset, SEEK_SET );
 }
@@ -237,6 +238,6 @@ void OGRDXFReader::UnreadValue()
     CPLAssert( nLastValueSize > 0 );
 
     iSrcBufferOffset -= nLastValueSize;
-
+    nLineNumber -= 2;
     nLastValueSize = 0;
 }

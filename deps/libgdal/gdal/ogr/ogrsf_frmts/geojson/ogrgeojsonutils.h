@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonutils.h 32181 2015-12-15 10:41:07Z rouault $
+ * $Id: ogrgeojsonutils.h 287413caabcca722a41a2f74f819e5b03e44ed21 2018-09-16 15:01:08 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private utilities within OGR OGRGeoJSON Driver.
@@ -30,7 +30,8 @@
 #define OGR_GEOJSONUTILS_H_INCLUDED
 
 #include <ogr_core.h>
-#include <json.h> // JSON-C
+
+#include "cpl_json_header.h"
 #include "cpl_vsi.h"
 #include "gdal_priv.h"
 
@@ -49,26 +50,18 @@ enum GeoJSONSourceType
 };
 
 GeoJSONSourceType GeoJSONGetSourceType( GDALOpenInfo* poOpenInfo );
-
-/************************************************************************/
-/*                           GeoJSONProtocolType                        */
-/************************************************************************/
-
-enum GeoJSONProtocolType
-{
-    eGeoJSONProtocolUnknown = 0,
-    eGeoJSONProtocolHTTP,
-    eGeoJSONProtocolHTTPS,
-    eGeoJSONProtocolFTP,
-};
-
-GeoJSONProtocolType GeoJSONGetProtocolType( const char* pszSource );
+GeoJSONSourceType GeoJSONSeqGetSourceType( GDALOpenInfo* poOpenInfo );
+GeoJSONSourceType ESRIJSONDriverGetSourceType( GDALOpenInfo* poOpenInfo );
+GeoJSONSourceType TopoJSONDriverGetSourceType( GDALOpenInfo* poOpenInfo );
 
 /************************************************************************/
 /*                           GeoJSONIsObject                            */
 /************************************************************************/
 
-int GeoJSONIsObject( const char* pszText );
+bool GeoJSONIsObject( const char* pszText );
+bool GeoJSONSeqIsObject( const char* pszText );
+bool ESRIJSONIsObject(const char *pszText);
+bool TopoJSONIsObject(const char *pszText);
 
 /************************************************************************/
 /*                           GeoJSONPropertyToFieldType                 */
@@ -77,7 +70,6 @@ int GeoJSONIsObject( const char* pszText );
 OGRFieldType GeoJSONPropertyToFieldType( json_object* poObject,
                                          OGRFieldSubType& eSubType,
                                          bool bArrayAsString = false );
-
 
 /************************************************************************/
 /*                      GeoJSONStringPropertyToFieldType                */
@@ -91,4 +83,4 @@ OGRFieldType GeoJSONStringPropertyToFieldType( json_object* poObject );
 
 const char* OGRGeoJSONGetGeometryName( OGRGeometry const* poGeometry );
 
-#endif /* OGR_GEOJSONUTILS_H_INCLUDED */
+#endif  // OGR_GEOJSONUTILS_H_INCLUDED

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: IngrTypes.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: IngrTypes.h 6ef13199b493973da285decbfcd5e2a763954b97 2018-06-07 05:46:42 -0400 luzpaz $
  *
  * Project:  Intergraph Raster Format support
  * Purpose:  Types, constants and functions definition
@@ -196,7 +196,6 @@ typedef enum {
     // be decoded to find the end of a raster line.
 } INGR_IndexingMethod;
 
-
 //  ----------------------------------------------------------------------------
 //    Color Table Values ( CTV )
 //  ----------------------------------------------------------------------------
@@ -208,7 +207,7 @@ typedef enum {
 } INGR_ColorTableType;
 
 //  ----------------------------------------------------------------------------
-//    Environ-V Color Tables Entrie
+//    Environ-V Color Tables Entry
 //  ----------------------------------------------------------------------------
 
 struct vlt_slot
@@ -220,7 +219,7 @@ struct vlt_slot
 };
 
 //  ----------------------------------------------------------------------------
-//    IGDS Color Tables Entrie
+//    IGDS Color Tables Entry
 //  ----------------------------------------------------------------------------
 
 struct igds_slot
@@ -547,19 +546,21 @@ typedef     struct {
 //    Struct reading helpers
 //  ------------------------------------------------------------------
 
-#define BUF2STRC(bb, nn, ff)    \
-{                               \
-    int ss = sizeof(ff);        \
-    memcpy( &ff, &bb[nn], ss);  \
-    nn += ss;                   \
+static inline void BUF2STRC_fct( const GByte* bb, unsigned int& nn, void* pDest, size_t nSize )
+{
+    memcpy( pDest, &bb[nn], nSize );
+    nn += static_cast<unsigned int>(nSize);
 }
 
-#define STRC2BUF(bb, nn, ff)    \
-{                               \
-    int ss = sizeof(ff);        \
-    memcpy( &bb[nn], &ff, ss);  \
-    nn += ss;                   \
+#define BUF2STRC(bb, nn, ff)    BUF2STRC_fct(bb, nn, &ff, sizeof(ff))
+
+static inline void STRC2BUF_fct( GByte* bb, unsigned int& nn, const void* pSrc, size_t nSize )
+{
+    memcpy( &bb[nn], pSrc, nSize );
+    nn += static_cast<unsigned int>(nSize);
 }
+
+#define STRC2BUF(bb, nn, ff)    STRC2BUF_fct(bb, nn, &ff, sizeof(ff))
 
 //  ------------------------------------------------------------------
 //    Fix Endianness issues

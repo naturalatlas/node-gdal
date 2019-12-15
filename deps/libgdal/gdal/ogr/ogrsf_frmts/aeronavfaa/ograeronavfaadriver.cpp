@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ograeronavfaadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAADriver.
@@ -30,12 +29,11 @@
 #include "ogr_aeronavfaa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ograeronavfaadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ograeronavfaadriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 // g++ ogr/ogrsf_frmts/aeronavfaa/*.cpp -Wall -g -fPIC -shared -o ogr_AeronavFAA.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/aernovfaa -Iogr/ogrsf_frmts
 
 extern "C" void RegisterOGRAeronavFAA();
-
 
 /************************************************************************/
 /*                                Open()                                */
@@ -45,10 +43,10 @@ static GDALDataset *OGRAeronavFAADriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if (poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL ||
+        poOpenInfo->fpL == nullptr ||
         !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "dat") )
     {
-        return NULL;
+        return nullptr;
     }
 
     OGRAeronavFAADataSource   *poDS = new OGRAeronavFAADataSource();
@@ -56,7 +54,7 @@ static GDALDataset *OGRAeronavFAADriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -69,7 +67,7 @@ static GDALDataset *OGRAeronavFAADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRAeronavFAA()
 
 {
-    if( GDALGetDriverByName( "AeronavFAA" ) != NULL )
+    if( GDALGetDriverByName( "AeronavFAA" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -84,4 +82,3 @@ void RegisterOGRAeronavFAA()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

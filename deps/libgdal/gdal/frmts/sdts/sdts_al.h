@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: sdts_al.h 32067 2015-12-07 15:34:53Z goatbar $
+ * $Id: sdts_al.h 2ace03ec48c36dae8ba74089d85617c095643428 2018-11-02 18:02:33 +0100 Even Rouault $
  *
  * Project:  SDTS Translator
  * Purpose:  Include file for entire SDTS Abstraction Layer functions.
@@ -74,7 +74,7 @@ class SDTS_IREF
 
     char        *pszCoordinateFormat;           /* HFMT */
 
-    int         GetSADRCount( DDFField * );
+    int         GetSADRCount( DDFField * ) const;
     int         GetSADR( DDFField *, int, double *, double *, double * );
 };
 
@@ -142,13 +142,14 @@ class SDTS_CATD
 
     int         Read( const char * pszFilename );
 
-    const char  *GetModuleFilePath( const char * pszModule );
+    const char  *GetModuleFilePath( const char * pszModule ) const;
 
-    int         GetEntryCount() { return nEntries; }
-    const char * GetEntryModule(int);
-    const char * GetEntryTypeDesc(int);
-    const char * GetEntryFilePath(int);
-    SDTSLayerType GetEntryType(int);
+    int         GetEntryCount() const { return nEntries; }
+    const char * GetEntryModule(int) const;
+    const char * GetEntryTypeDesc(int) const;
+    const char * GetEntryFilePath(int) const;
+    SDTSLayerType GetEntryType(int) const;
+    void          SetEntryTypeUnknown(int);
 };
 
 /************************************************************************/
@@ -248,7 +249,7 @@ public:
 
     void                FillIndex();
     void                ClearIndex();
-    int                 IsIndexed();
+    int                 IsIndexed() const;
 
     SDTSFeature        *GetIndexedFeatureRef( int );
     char **             ScanModuleReferences( const char * = "ATID" );
@@ -296,7 +297,7 @@ class SDTSRawLine : public SDTSFeature
         subfield. */
     SDTSModId   oEndNode;               /* ENID */
 
-    void        Dump( FILE * );
+    void        Dump( FILE * ) override;
 };
 
 /************************************************************************/
@@ -322,10 +323,10 @@ class SDTSLineReader : public SDTSIndexedReader
                 ~SDTSLineReader();
 
     int         Open( const char * );
-    SDTSRawLine *GetNextLine( void );
+    SDTSRawLine *GetNextLine();
     void        Close();
 
-    SDTSFeature *GetNextRawFeature( void ) { return GetNextLine(); }
+    SDTSFeature *GetNextRawFeature() override { return GetNextLine(); }
 
     void        AttachToPolygons( SDTSTransfer *, int iPolyLayer  );
 };
@@ -357,7 +358,7 @@ class SDTSAttrRecord : public SDTSFeature
 
     DDFField    *poATTR;
 
-    virtual void Dump( FILE * );
+    virtual void Dump( FILE * ) override;
 };
 
 /************************************************************************/
@@ -378,8 +379,8 @@ class SDTSAttrReader : public SDTSIndexedReader
    virtual     ~SDTSAttrReader();
 
     int         Open( const char * );
-    DDFField    *GetNextRecord( SDTSModId * = NULL,
-                                DDFRecord ** = NULL,
+    DDFField    *GetNextRecord( SDTSModId * = nullptr,
+                                DDFRecord ** = nullptr,
                                 int bDuplicate = FALSE );
     SDTSAttrRecord *GetNextAttrRecord();
     void        Close();
@@ -388,9 +389,9 @@ class SDTSAttrReader : public SDTSIndexedReader
       Returns TRUE if this is a Attribute Secondary layer rather than
       an Attribute Primary layer.
       */
-    int         IsSecondary() { return bIsSecondary; }
+    int         IsSecondary() const { return bIsSecondary; }
 
-    SDTSFeature *GetNextRawFeature( void ) { return GetNextAttrRecord(); }
+    SDTSFeature *GetNextRawFeature() override { return GetNextAttrRecord(); }
 };
 
 /************************************************************************/
@@ -418,7 +419,7 @@ class SDTSRawPoint : public SDTSFeature
     /** Optional identifier of area marked by this point (i.e. PC01:27). */
     SDTSModId   oAreaId;                /* ARID */
 
-    virtual void Dump( FILE * );
+    virtual void Dump( FILE * ) override;
 };
 
 /************************************************************************/
@@ -439,10 +440,10 @@ class SDTSPointReader : public SDTSIndexedReader
     virtual    ~SDTSPointReader();
 
     int         Open( const char * );
-    SDTSRawPoint *GetNextPoint( void );
+    SDTSRawPoint *GetNextPoint();
     void        Close();
 
-    SDTSFeature *GetNextRawFeature( void ) { return GetNextPoint(); }
+    SDTSFeature *GetNextRawFeature() override { return GetNextPoint(); }
 };
 
 /************************************************************************/
@@ -453,7 +454,7 @@ class SDTSPointReader : public SDTSIndexedReader
   Class for holding information about a polygon feature.
 
   When directly read from a polygon module, the polygon has no concept
-  of it's geometry.  Just it's ID, and references to attribute records.
+  of its geometry.  Just its ID, and references to attribute records.
   However, if the SDTSLineReader::AttachToPolygons() method is called on
   the module containing the lines forming the polygon boundaries, then the
   nEdges/papoEdges information on the SDTSRawPolygon will be filled in.
@@ -503,7 +504,7 @@ class SDTSRawPolygon : public SDTSFeature
       rings via panRingStart.  The values are almost always zero. */
     double      *padfZ;
 
-    virtual void Dump( FILE * );
+    virtual void Dump( FILE * ) override;
 };
 
 /************************************************************************/
@@ -521,10 +522,10 @@ class SDTSPolygonReader : public SDTSIndexedReader
     virtual    ~SDTSPolygonReader();
 
     int         Open( const char * );
-    SDTSRawPolygon *GetNextPolygon( void );
+    SDTSRawPolygon *GetNextPolygon();
     void        Close();
 
-    SDTSFeature *GetNextRawFeature( void ) { return GetNextPolygon(); }
+    SDTSFeature *GetNextRawFeature() override { return GetNextPolygon(); }
 
     void        AssembleRings( SDTSTransfer *, int iPolyLayer );
 };
@@ -584,18 +585,18 @@ class SDTSRasterReader
 
       @return the width in pixels.
       */
-    int         GetXSize() { return nXSize; }
+    int         GetXSize() const { return nXSize; }
     /**
       Fetch the raster height.
 
       @return the height in pixels.
       */
-    int         GetYSize() { return nYSize; }
+    int         GetYSize() const { return nYSize; }
 
     /** Fetch the width of a source block (usually same as raster width). */
-    int         GetBlockXSize() { return nXBlockSize; }
+    int         GetBlockXSize() const { return nXBlockSize; }
     /** Fetch the height of a source block (usually one). */
-    int         GetBlockYSize() { return nYBlockSize; }
+    int         GetBlockYSize() const { return nYBlockSize; }
 
     int         GetBlock( int nXOffset, int nYOffset, void * pData );
 };
@@ -622,9 +623,9 @@ class SDTSTransfer
     void        Close();
 
     int         FindLayer( const char * );
-    int         GetLayerCount() { return nLayers; }
-    SDTSLayerType GetLayerType( int );
-    int         GetLayerCATDEntry( int );
+    int         GetLayerCount() const { return nLayers; }
+    SDTSLayerType GetLayerType( int ) const;
+    int         GetLayerCATDEntry( int ) const;
 
     SDTSLineReader *GetLayerLineReader( int );
     SDTSPointReader *GetLayerPointReader( int );
@@ -652,7 +653,7 @@ class SDTSTransfer
     SDTS_XREF   *GetXREF() { return &oXREF; }
 
     SDTSFeature *GetIndexedFeatureRef( SDTSModId *,
-                                       SDTSLayerType *peType = NULL);
+                                       SDTSLayerType *peType = nullptr);
 
     DDFField *GetAttr( SDTSModId * );
 

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalflattenmask.c $
  *
  * Project:  GDAL Utilities
  * Purpose:  GDAL mask flattening utility
@@ -30,6 +29,8 @@
 #include "gdal.h"
 #include "cpl_conv.h"
 #include "cpl_string.h"
+
+CPL_CVSID("$Id: gdalflattenmask.c ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 /************************************************************************/
 /*                               Usage()                                */
@@ -284,7 +285,7 @@ int main(int argc, char* argv[])
                     }
 
                     default:
-                        CPLAssert(0);
+                        CPLAssert(false);
                         break;
                 }
             }
@@ -306,7 +307,8 @@ int main(int argc, char* argv[])
         GDALRasterBandH hMaskBand = GDALGetMaskBand(hSrcBand);
         int nMaskFlag = GDALGetMaskFlags(hSrcBand);
 
-        int iCol, iLine;
+        int iCol;
+        int iLine;
         for(iLine = 0; iLine < nYSize; iLine++)
         {
             GDALRasterIO( hMaskBand, GF_Read, 0, iLine, nXSize, 1,

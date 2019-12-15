@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogredigeolayer.cpp 32011 2015-12-06 10:19:18Z rouault $
  *
  * Project:  EDIGEO Translator
  * Purpose:  Implements OGREDIGEOLayer class.
@@ -33,7 +32,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogredigeolayer.cpp 32011 2015-12-06 10:19:18Z rouault $");
+CPL_CVSID("$Id: ogredigeolayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGREDIGEOLayer()                            */
@@ -41,17 +40,15 @@ CPL_CVSID("$Id: ogredigeolayer.cpp 32011 2015-12-06 10:19:18Z rouault $");
 
 OGREDIGEOLayer::OGREDIGEOLayer( OGREDIGEODataSource* poDSIn,
                                 const char* pszName, OGRwkbGeometryType eType,
-                                OGRSpatialReference* poSRSIn )
-
+                                OGRSpatialReference* poSRSIn ) :
+    poDS(poDSIn),
+    poFeatureDefn(new OGRFeatureDefn( pszName )),
+    poSRS(poSRSIn),
+    nNextFID(0)
 {
-    this->poDS = poDSIn;
-    nNextFID = 0;
-
-    this->poSRS = poSRSIn;
-    if (poSRS)
+    if( poSRS )
         poSRS->Reference();
 
-    poFeatureDefn = new OGRFeatureDefn( pszName );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( eType );
     if( poFeatureDefn->GetGeomFieldCount() != 0 )
@@ -75,7 +72,6 @@ OGREDIGEOLayer::~OGREDIGEOLayer()
         poSRS->Release();
 }
 
-
 /************************************************************************/
 /*                            ResetReading()                            */
 /************************************************************************/
@@ -86,30 +82,28 @@ void OGREDIGEOLayer::ResetReading()
     nNextFID = 0;
 }
 
-
 /************************************************************************/
 /*                           GetNextFeature()                           */
 /************************************************************************/
 
 OGRFeature *OGREDIGEOLayer::GetNextFeature()
 {
-    OGRFeature  *poFeature;
 
     while( true )
     {
-        poFeature = GetNextRawFeature();
-        if (poFeature == NULL)
-            return NULL;
+        OGRFeature *poFeature = GetNextRawFeature();
+        if (poFeature == nullptr)
+            return nullptr;
 
-        if((m_poFilterGeom == NULL
+        if((m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-        && (m_poAttrQuery == NULL
+        && (m_poAttrQuery == nullptr
             || m_poAttrQuery->Evaluate( poFeature )) )
         {
             return poFeature;
         }
-        else
-            delete poFeature;
+
+        delete poFeature;
     }
 }
 
@@ -126,7 +120,7 @@ OGRFeature *OGREDIGEOLayer::GetNextRawFeature()
         return poFeature;
     }
     else
-        return NULL;
+        return nullptr;
 }
 
 /************************************************************************/
@@ -138,7 +132,7 @@ OGRFeature * OGREDIGEOLayer::GetFeature(GIntBig nFID)
     if (nFID >= 0 && nFID < (int)aosFeatures.size())
         return aosFeatures[(int)nFID]->Clone();
     else
-        return NULL;
+        return nullptr;
 }
 
 /************************************************************************/
@@ -149,7 +143,7 @@ int OGREDIGEOLayer::TestCapability( const char * pszCap )
 
 {
     if (EQUAL(pszCap, OLCFastFeatureCount))
-        return m_poFilterGeom == NULL && m_poAttrQuery == NULL;
+        return m_poFilterGeom == nullptr && m_poAttrQuery == nullptr;
 
     else if (EQUAL(pszCap, OLCRandomRead))
         return TRUE;
@@ -184,7 +178,7 @@ OGRErr OGREDIGEOLayer::GetExtent(OGREnvelope *psExtent, int bForce)
 
 GIntBig OGREDIGEOLayer::GetFeatureCount( int bForce )
 {
-    if (m_poFilterGeom != NULL || m_poAttrQuery != NULL)
+    if (m_poFilterGeom != nullptr || m_poAttrQuery != nullptr)
         return OGRLayer::GetFeatureCount(bForce);
 
     return (int)aosFeatures.size();
@@ -222,7 +216,7 @@ void OGREDIGEOLayer::AddFieldDefn(const CPLString& osName,
                                   OGRFieldType eType,
                                   const CPLString& osRID)
 {
-    if (osRID.size() != 0)
+    if (!osRID.empty())
         mapAttributeToIndex[osRID] = poFeatureDefn->GetFieldCount();
 
     OGRFieldDefn oFieldDefn(osName, eType);

@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -20,13 +20,13 @@
 #define GEOS_SIMPLIFY_DOUBGLASPEUCKERSIMPLIFIER_H
 
 #include <geos/export.h>
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Geometry;
-	}
+namespace geom {
+class Geometry;
+}
 }
 
 namespace geos {
@@ -38,7 +38,7 @@ namespace simplify { // geos::simplify
  *
  * Ensures that any polygonal geometries returned are valid.
  * Simple lines are not guaranteed to remain simple after simplification.
- * 
+ *
  * Note that in general D-P does not preserve topology -
  * e.g. polygons can be split, collapse to lines or disappear
  * holes can be created or disappear,
@@ -51,32 +51,32 @@ class GEOS_DLL DouglasPeuckerSimplifier {
 
 public:
 
-	static std::auto_ptr<geom::Geometry> simplify(
-			const geom::Geometry* geom,
-			double tolerance);
+    static std::unique_ptr<geom::Geometry> simplify(
+        const geom::Geometry* geom,
+        double tolerance);
 
-	DouglasPeuckerSimplifier(const geom::Geometry* geom);
+    DouglasPeuckerSimplifier(const geom::Geometry* geom);
 
-	/** \brief
-	 * Sets the distance tolerance for the simplification.
-	 *
-	 * All vertices in the simplified geometry will be within this
-	 * distance of the original geometry.
-	 * The tolerance value must be non-negative.  A tolerance value
-	 * of zero is effectively a no-op.
-	 *
-	 * @param distanceTolerance the approximation tolerance to use
-	 */
-	void setDistanceTolerance(double tolerance);
+    /** \brief
+     * Sets the distance tolerance for the simplification.
+     *
+     * All vertices in the simplified geometry will be within this
+     * distance of the original geometry.
+     * The tolerance value must be non-negative.  A tolerance value
+     * of zero is effectively a no-op.
+     *
+     * @param tolerance the approximation tolerance to use
+     */
+    void setDistanceTolerance(double tolerance);
 
-	std::auto_ptr<geom::Geometry> getResultGeometry();
+    std::unique_ptr<geom::Geometry> getResultGeometry();
 
 
 private:
 
-	const geom::Geometry* inputGeom;
+    const geom::Geometry* inputGeom;
 
-	double distanceTolerance;
+    double distanceTolerance;
 };
 
 

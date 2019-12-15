@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -33,40 +33,40 @@ namespace operation { // geos::operation
 namespace valid { // geos::operation::valid
 
 /** \brief
- * Contains information about the nature and location of a {@link Geometry}
+ * Contains information about the nature and location of a geom::Geometry
  * validation error
  *
  */
 class GEOS_DLL TopologyValidationError {
 public:
 
-	enum errorEnum {
-		eError,
-		eRepeatedPoint,
-		eHoleOutsideShell,
-		eNestedHoles,
-		eDisconnectedInterior,
-		eSelfIntersection,
-		eRingSelfIntersection,
-		eNestedShells,
-		eDuplicatedRings,
-		eTooFewPoints,
-		eInvalidCoordinate,
-		eRingNotClosed
-	};
+    enum errorEnum {
+        eError,
+        eRepeatedPoint,
+        eHoleOutsideShell,
+        eNestedHoles,
+        eDisconnectedInterior,
+        eSelfIntersection,
+        eRingSelfIntersection,
+        eNestedShells,
+        eDuplicatedRings,
+        eTooFewPoints,
+        eInvalidCoordinate,
+        eRingNotClosed
+    };
 
-	TopologyValidationError(int newErrorType, const geom::Coordinate& newPt);
-	TopologyValidationError(int newErrorType);
-	geom::Coordinate& getCoordinate();
-	std::string getMessage();
-	int getErrorType();
-	std::string toString();
+    TopologyValidationError(int newErrorType, const geom::Coordinate& newPt);
+    TopologyValidationError(int newErrorType);
+    geom::Coordinate& getCoordinate();
+    std::string getMessage();
+    int getErrorType();
+    std::string toString();
 
 private:
-	// Used const char* to reduce dynamic allocations
-	static const char* errMsg[];
-	int errorType;
-	geom::Coordinate pt;
+    // Used const char* to reduce dynamic allocations
+    static const char* errMsg[];
+    int errorType;
+    geom::Coordinate pt;
 };
 
 

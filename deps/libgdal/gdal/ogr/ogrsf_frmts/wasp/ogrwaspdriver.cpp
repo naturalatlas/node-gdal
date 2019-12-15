@@ -30,6 +30,8 @@
 #include "cpl_conv.h"
 #include <cassert>
 
+CPL_CVSID("$Id: ogrwaspdriver.cpp 98dfb4b4012c5ae4621e246e8eb393b3c05a3f48 2018-04-02 22:09:55 +0200 Even Rouault $")
+
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
@@ -39,25 +41,25 @@ OGRDataSource *OGRWAsPDriver::Open( const char * pszFilename, int bUpdate )
 {
     if (bUpdate)
     {
-        return NULL;
+        return nullptr;
     }
 
     if (!EQUAL(CPLGetExtension(pszFilename), "map"))
     {
-        return NULL;
+        return nullptr;
     }
 
     VSILFILE * fh = VSIFOpenL( pszFilename, "r" );
     if ( !fh )
     {
         /*CPLError( CE_Failure, CPLE_FileIO, "cannot open file %s", pszFilename );*/
-        return NULL;
+        return nullptr;
     }
-    UNIQUEPTR<OGRWAsPDataSource> pDataSource( new OGRWAsPDataSource( pszFilename, fh ));
+    std::unique_ptr<OGRWAsPDataSource> pDataSource( new OGRWAsPDataSource( pszFilename, fh ));
 
     if ( pDataSource->Load(true) != OGRERR_NONE )
     {
-        return NULL;
+        return nullptr;
     }
     return pDataSource.release();
 }
@@ -84,7 +86,7 @@ OGRDataSource * OGRWAsPDriver::CreateDataSource( const char *pszName, char ** )
     if ( !fh )
     {
         CPLError( CE_Failure, CPLE_FileIO, "cannot open file %s", pszName );
-        return NULL;
+        return nullptr;
     }
     return new OGRWAsPDataSource( pszName, fh );
 }

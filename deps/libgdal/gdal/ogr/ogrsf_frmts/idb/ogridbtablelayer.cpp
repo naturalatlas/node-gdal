@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogridbtablelayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBTableLayer class, access to an existing table
@@ -32,7 +31,7 @@
 #include "cpl_string.h"
 #include "ogr_idb.h"
 
-CPL_CVSID("$Id: ogridbtablelayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogridbtablelayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 /************************************************************************/
 /*                          OGRIDBTableLayer()                         */
 /************************************************************************/
@@ -191,7 +190,6 @@ CPLErr OGRIDBTableLayer::Initialize( const char *pszTableName,
         }*/
     }
 
-
     return CE_None;
 }
 
@@ -280,11 +278,32 @@ OGRErr OGRIDBTableLayer::ResetQuery()
         else
             sql += " AND";
 
-        sql.Printf( "%s XMAX > %.8f AND XMIN < %.8f"
+        CPLString sqlTmp;
+        sqlTmp.Printf( "%s XMAX > %.8f AND XMIN < %.8f"
                     " AND YMAX > %.8f AND YMIN < %.8f",
                     sql.c_str(),
                     m_sFilterEnvelope.MinX, m_sFilterEnvelope.MaxX,
                     m_sFilterEnvelope.MinY, m_sFilterEnvelope.MaxY );
+        sql = sqlTmp;
+    }
+    /* If we have a spatial filter and GeomColumn, query using st_intersects function */
+    else if( m_poFilterGeom != NULL && pszGeomColumn )
+    {
+        if( pszQuery == NULL )
+            sql += " WHERE";
+        else
+            sql += " AND";
+
+        CPLString sqlTmp;
+        sqlTmp.Printf(
+                "%s st_intersects(st_geomfromtext('POLYGON((%.8f %.8f, %.8f %.8f, %.8f %.8f, %.8f %.8f, %.8f %.8f))',0),%s)",
+                sql.c_str(),
+                m_sFilterEnvelope.MinX, m_sFilterEnvelope.MinY,
+                m_sFilterEnvelope.MaxX, m_sFilterEnvelope.MinY,
+                m_sFilterEnvelope.MaxX, m_sFilterEnvelope.MaxY,
+                m_sFilterEnvelope.MinX, m_sFilterEnvelope.MaxY,
+                m_sFilterEnvelope.MinX, m_sFilterEnvelope.MinY, pszGeomColumn );
+        sql = sqlTmp;
     }
 
     CPLDebug( "OGR_IDB", "Exec(%s)", sql.c_str() );
@@ -468,7 +487,8 @@ OGRSpatialReference *OGRIDBTableLayer::GetSpatialRef()
                     delete poSRS;
                 }
                 poSRS = new OGRSpatialReference();
-                if ( poSRS->importFromWkt( (char **)&wkt ) != OGRERR_NONE )
+                poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+                if ( poSRS->importFromWkt( wkt ) != OGRERR_NONE )
                 {
                     CPLError( CE_Warning, CPLE_AppDefined,
                               "Error parse srs wkt: %s", wkt );
@@ -539,7 +559,6 @@ OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
             bUpdateGeom = FALSE;
             CPLDebug("OGR_IDB", "SetFeature(): Unknown geometry type. Geometry will not be updated.");
     }
-
 
     // Create query
     CPLString osSql;
@@ -620,7 +639,7 @@ OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
             return eErr;
         }
 
-        if ( ! poFeature->IsFieldSet( i ) )
+        if ( ! poFeature->IsFieldSetAndNotNull( i ) )
         {
             if ( ! par->SetNull() )
             {
@@ -757,8 +776,9 @@ OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
         }
     }
     else
+    {
         bUpdateGeom = FALSE;
-
+    }
 
     // Create query
     CPLString osSql;
@@ -791,7 +811,7 @@ OGRErr OGRIDBTableLayer::ISetFeature( OGRFeature *poFeature )
         osFields += pszFieldName;
         osFields += "=";
 
-        if ( ! poFeature->IsFieldSet( i ) )
+        if ( ! poFeature->IsFieldSetAndNotNull( i ) )
         {
             osFields += "NULL";
             continue;
@@ -945,7 +965,7 @@ OGRErr OGRIDBTableLayer::ICreateFeature( OGRFeature *poFeature )
         const char * pszFieldName = poFeatureDefn->GetFieldDefn(i)->GetNameRef();
 
         // Skip NULL fields
-        if ( ! poFeature->IsFieldSet( i ) )
+        if ( ! poFeature->IsFieldSetAndNotNull( i ) )
         {
             continue;
         }

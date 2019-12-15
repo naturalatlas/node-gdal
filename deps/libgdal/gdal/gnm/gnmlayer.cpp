@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  GNM layer class.
@@ -31,24 +30,24 @@
 #include "gnm.h"
 #include "gnm_priv.h"
 
+CPL_CVSID("$Id: gnmlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /**
  * GNMGenericLayer
  */
 GNMGenericLayer::GNMGenericLayer(OGRLayer* poLayer,
-                                 GNMGenericNetwork* poNetwork) : OGRLayer()
+                                 GNMGenericNetwork* poNetwork) :
+    OGRLayer(),
+    m_soLayerName( poLayer->GetName() ),
+    m_poLayer( poLayer ),
+    m_poNetwork( poNetwork )
 {
-    m_poLayer = poLayer;
-    m_poNetwork = poNetwork;
-    m_soLayerName = poLayer->GetName();
 }
 
 /**
  * ~GNMGenericLayer
  */
-GNMGenericLayer::~GNMGenericLayer()
-{
-
-}
+GNMGenericLayer::~GNMGenericLayer() {}
 
 const char *GNMGenericLayer::GetFIDColumn()
 {
@@ -133,6 +132,7 @@ int GNMGenericLayer::AttributeFilterEvaluationNeedsGeometry()
     return m_poLayer->AttributeFilterEvaluationNeedsGeometry();
 }
 
+//! @cond Doxygen_Suppress
 OGRErr GNMGenericLayer::InitializeIndexSupport(const char *pszVal)
 {
     return m_poLayer->InitializeIndexSupport(pszVal);
@@ -171,6 +171,7 @@ OGRErr GNMGenericLayer::ICreateFeature(OGRFeature *poFeature)
         return OGRERR_FAILURE;
     return m_poLayer->CreateFeature(poFeature);
 }
+//! @endcond
 
 OGRGeometry *GNMGenericLayer::GetSpatialFilter()
 {
@@ -213,8 +214,8 @@ void GNMGenericLayer::ResetReading()
 OGRFeature *GNMGenericLayer::GetNextFeature()
 {
     OGRFeature* pFeature = m_poLayer->GetNextFeature();
-    if(NULL == pFeature)
-        return NULL;
+    if(nullptr == pFeature)
+        return nullptr;
     GNMGFID nGFID = pFeature->GetFieldAsGNMGFID(GNM_SYSFIELD_GFID);
     m_mnFIDMap[nGFID] = pFeature->GetFID();
     pFeature->SetFID(nGFID);
@@ -229,7 +230,7 @@ OGRErr GNMGenericLayer::SetNextByIndex(GIntBig nIndex)
 OGRErr GNMGenericLayer::DeleteFeature(GIntBig nFID)
 {
     OGRFeature *poFeature = GetFeature(nFID);
-    if(NULL == poFeature)
+    if(nullptr == poFeature)
         return CE_Failure;
 
     nFID = poFeature->GetFID();
@@ -364,4 +365,3 @@ OGRFeatureDefn *GNMGenericLayer::GetLayerDefn()
     //TODO: hide GNM_SYSFIELD_GFID filed
     return m_poLayer->GetLayerDefn();
 }
-

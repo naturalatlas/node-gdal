@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgpxdriver.cpp 32663 2016-01-02 03:39:54Z goatbar $
  *
  * Project:  GPX Translator
  * Purpose:  Implements OGRGPXDriver.
@@ -27,10 +26,19 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogr_gpx.h"
-#include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrgpxdriver.cpp 32663 2016-01-02 03:39:54Z goatbar $");
+#include <cstring>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_vsi.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+
+CPL_CVSID("$Id: ogrgpxdriver.cpp 66622e3a6420f73324c88fe28fc0084031bf6141 2018-02-23 03:45:47Z Kurt Schwehr $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -39,18 +47,18 @@ CPL_CVSID("$Id: ogrgpxdriver.cpp 32663 2016-01-02 03:39:54Z goatbar $");
 static GDALDataset *OGRGPXDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    if( poOpenInfo->eAccess == GA_Update || poOpenInfo->fpL == NULL )
-        return NULL;
+    if( poOpenInfo->eAccess == GA_Update || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
-    if( strstr(reinterpret_cast<const char*>(poOpenInfo->pabyHeader), "<gpx") == NULL )
-        return NULL;
+    if( strstr(reinterpret_cast<const char*>(poOpenInfo->pabyHeader), "<gpx") == nullptr )
+        return nullptr;
 
     OGRGPXDataSource   *poDS = new OGRGPXDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename, FALSE ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -72,7 +80,7 @@ static GDALDataset *OGRGPXDriverCreate( const char * pszName,
     if( !poDS->Create( pszName, papszOptions ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -101,7 +109,7 @@ void RegisterOGRGPX()
     if( !GDAL_CHECK_VERSION("OGR/GPX driver") )
         return;
 
-    if( GDALGetDriverByName( "GPX" ) != NULL )
+    if( GDALGetDriverByName( "GPX" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

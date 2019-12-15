@@ -15,6 +15,9 @@
  */
 
 #define JPEG_INTERNALS
+
+#include <limits.h>
+
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jdhuff.h"		/* Declarations shared with jdhuff.c */
@@ -166,11 +169,15 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
     if (is_DC_band) {
       if (cinfo->Ah == 0) {	/* DC refinement needs no table */
 	tbl = compptr->dc_tbl_no;
+	if (tbl < 0 || tbl >= NUM_HUFF_TBLS)
+		ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tbl);
 	jpeg_make_d_derived_tbl(cinfo, TRUE, tbl,
 				& entropy->derived_tbls[tbl]);
       }
     } else {
       tbl = compptr->ac_tbl_no;
+      if (tbl < 0 || tbl >= NUM_HUFF_TBLS)
+        ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tbl);
       jpeg_make_d_derived_tbl(cinfo, FALSE, tbl,
 			      & entropy->derived_tbls[tbl]);
       /* remember the single active table */
@@ -198,9 +205,12 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
  * On some machines, a shift and add will be faster than a table lookup.
  */
 
+#define NEG_1 ((unsigned)-1)
+
+#define AVOID_TABLES
 #ifdef AVOID_TABLES
 
-#define HUFF_EXTEND(x,s)  ((x) < (1<<((s)-1)) ? (x) + (((-1)<<(s)) + 1) : (x))
+#define HUFF_EXTEND(x,s)  ((x) < (1<<((s)-1)) ? (int)((x) + (((NEG_1)<<(s)) + 1)) : (x))
 
 #else
 
@@ -327,10 +337,14 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
       }
 
       /* Convert DC difference to actual value, update last_dc_val */
+      if( (state.last_dc_val[ci] >= 0 && s > INT_MAX - state.last_dc_val[ci]) ||
+          (state.last_dc_val[ci] < 0 && s < INT_MIN - state.last_dc_val[ci]) ) {
+        ERREXIT(cinfo, JERR_BAD_DCT_COEF);
+      }
       s += state.last_dc_val[ci];
       state.last_dc_val[ci] = s;
       /* Scale and output the coefficient (assumes jpeg_natural_order[0]=0) */
-      (*block)[0] = (JCOEF) (s << Al);
+      (*block)[0] = (JCOEF) LEFT_SHIFT(s, Al);
     }
 
     /* Completed MCU, so update state */
@@ -339,7 +353,10 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   }
 
   /* Account for restart interval (no-op if not using restarts) */
-  entropy->restarts_to_go--;
+  if( entropy->restarts_to_go == 0 )
+      entropy->restarts_to_go = ~0U;
+  else
+      entropy->restarts_to_go--;
 
   return TRUE;
 }
@@ -398,7 +415,7 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	  r = GET_BITS(s);
 	  s = HUFF_EXTEND(r, s);
 	  /* Scale and output coefficient in natural (dezigzagged) order */
-	  (*block)[jpeg_natural_order[k]] = (JCOEF) (s << Al);
+	  (*block)[jpeg_natural_order[k]] = (JCOEF) LEFT_SHIFT(s, Al);
 	} else {
 	  if (r == 15) {	/* ZRL */
 	    k += 15;		/* skip 15 zeroes in band */
@@ -423,7 +440,10 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   }
 
   /* Account for restart interval (no-op if not using restarts) */
-  entropy->restarts_to_go--;
+  if( entropy->restarts_to_go == 0 )
+      entropy->restarts_to_go = ~0U;
+  else
+      entropy->restarts_to_go--;
 
   return TRUE;
 }
@@ -474,7 +494,10 @@ decode_mcu_DC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
 
   /* Account for restart interval (no-op if not using restarts) */
-  entropy->restarts_to_go--;
+  if( entropy->restarts_to_go == 0 )
+      entropy->restarts_to_go = ~0U;
+  else
+      entropy->restarts_to_go--;
 
   return TRUE;
 }
@@ -490,7 +513,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
   int Se = cinfo->Se;
   int p1 = 1 << cinfo->Al;	/* 1 in the bit position being coded */
-  int m1 = (-1) << cinfo->Al;	/* -1 in the bit position being coded */
+  int m1 = (NEG_1) << cinfo->Al;	/* -1 in the bit position being coded */
   register int s, k, r;
   unsigned int EOBRUN;
   JBLOCKROW block;
@@ -617,7 +640,10 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   }
 
   /* Account for restart interval (no-op if not using restarts) */
-  entropy->restarts_to_go--;
+  if( entropy->restarts_to_go == 0 )
+      entropy->restarts_to_go = ~0U;
+  else
+      entropy->restarts_to_go--;
 
   return TRUE;
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_geos.h 33631 2016-03-04 06:28:09Z goatbar $
+ * $Id: ogr_geos.h f0f6012a09a48b0efe43ccc32c51224426a8e73d 2018-03-17 23:07:45Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Definitions related to support for use of GEOS in OGR.
@@ -42,7 +42,7 @@
 
 namespace geos {
     class Geometry;
-};
+}
 
 #endif
 

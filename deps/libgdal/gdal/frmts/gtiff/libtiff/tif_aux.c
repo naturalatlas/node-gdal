@@ -1,5 +1,3 @@
-/* $Id: tif_aux.c,v 1.28 2016-01-23 21:20:34 erouault Exp $ */
-
 /*
  * Copyright (c) 1991-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -32,6 +30,7 @@
 #include "tiffiop.h"
 #include "tif_predict.h"
 #include <math.h>
+#include <float.h>
 
 uint32
 _TIFFMultiply32(TIFF* tif, uint32 first, uint32 second, const char* where)
@@ -212,11 +211,18 @@ TIFFVGetFieldDefaulted(TIFF* tif, uint32 tag, va_list ap)
 		*va_arg(ap, uint16 *) = td->td_resolutionunit;
 		return (1);
 	case TIFFTAG_PREDICTOR:
-                {
-			TIFFPredictorState* sp = (TIFFPredictorState*) tif->tif_data;
-			*va_arg(ap, uint16*) = (uint16) sp->predictor;
-			return 1;
-                }
+    {
+        TIFFPredictorState* sp = (TIFFPredictorState*) tif->tif_data;
+        if( sp == NULL )
+        {
+            TIFFErrorExt(tif->tif_clientdata, tif->tif_name,
+                         "Cannot get \"Predictor\" tag as plugin is not configured");
+            *va_arg(ap, uint16*) = 0;
+            return 0;
+        }
+        *va_arg(ap, uint16*) = (uint16) sp->predictor;
+        return 1;
+    }
 	case TIFFTAG_DOTRANGE:
 		*va_arg(ap, uint16 *) = 0;
 		*va_arg(ap, uint16 *) = (1<<td->td_bitspersample)-1;
@@ -350,6 +356,22 @@ _TIFFUInt64ToDouble(uint64 ui64)
 		df += 18446744073709551616.0; /* adding 2**64 */
 		return (double)df;
 	}
+}
+
+float _TIFFClampDoubleToFloat( double val )
+{
+    if( val > FLT_MAX )
+        return FLT_MAX;
+    if( val < -FLT_MAX )
+        return -FLT_MAX;
+    return (float)val;
+}
+
+int _TIFFSeekOK(TIFF* tif, toff_t off)
+{
+    /* Huge offsets, especially -1 / UINT64_MAX, can cause issues */
+    /* See http://bugzilla.maptools.org/show_bug.cgi?id=2726 */
+    return off <= (~(uint64)0)/2 && TIFFSeekFile(tif,off,SEEK_SET)==off;
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */

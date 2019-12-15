@@ -33,10 +33,7 @@
 * limitations under the License.
 */
 
-
-
 /*
- * $Id$
  * PNG band
  * PNG page compression and decompression functions
  * These functions are not methods, they reside in the global space
@@ -53,6 +50,8 @@ CPL_C_START
 #include <png.h>
 #endif
 CPL_C_END
+
+CPL_CVSID("$Id: PNG_band.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 NAMESPACE_MRF_START
 
@@ -104,19 +103,19 @@ static void write_png(png_structp pngp, png_bytep data, png_size_t length) {
 
 CPLErr PNG_Codec::DecompressPNG(buf_mgr &dst, buf_mgr &src)
 {
-    png_bytep* png_rowp = NULL;
+    png_bytep* png_rowp = nullptr;
     volatile png_bytep *p_volatile_png_rowp = (volatile png_bytep *)&png_rowp;
 
     // pngp=png_create_read_struct(PNG_LIBPNG_VER_STRING,0,pngEH,pngWH);
-    png_structp pngp = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (NULL == pngp) {
+    png_structp pngp = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (nullptr == pngp) {
         CPLError(CE_Failure, CPLE_AppDefined, "MRF: Error creating PNG decompress");
         return CE_Failure;
     }
 
     png_infop infop = png_create_info_struct(pngp);
-    if (NULL == infop) {
-        if (pngp) png_destroy_read_struct(&pngp, &infop, NULL);
+    if (nullptr == infop) {
+        if (pngp) png_destroy_read_struct(&pngp, &infop, nullptr);
         CPLError(CE_Failure, CPLE_AppDefined, "MRF: Error creating PNG info");
         return CE_Failure;
     }
@@ -124,7 +123,7 @@ CPLErr PNG_Codec::DecompressPNG(buf_mgr &dst, buf_mgr &src)
     if (setjmp(png_jmpbuf(pngp))) {
         CPLError(CE_Failure, CPLE_AppDefined, "MRF: Error during PNG decompress");
         CPLFree((void*)(*p_volatile_png_rowp));
-        png_destroy_read_struct(&pngp, &infop, NULL);
+        png_destroy_read_struct(&pngp, &infop, nullptr);
         return CE_Failure;
     }
 
@@ -138,7 +137,7 @@ CPLErr PNG_Codec::DecompressPNG(buf_mgr &dst, buf_mgr &src)
     if (dst.size < (png_get_rowbytes(pngp, infop)*height)) {
         CPLError(CE_Failure, CPLE_AppDefined,
             "MRF: PNG Page data bigger than the buffer provided");
-        png_destroy_read_struct(&pngp, &infop, NULL);
+        png_destroy_read_struct(&pngp, &infop, nullptr);
         return CE_Failure;
     }
 
@@ -169,12 +168,12 @@ CPLErr PNG_Codec::DecompressPNG(buf_mgr &dst, buf_mgr &src)
     // png_read_png(pngp,infop,PNG_TRANSFORM_IDENTITY,0);
 
     CPLFree(png_rowp);
-    png_destroy_read_struct(&pngp, &infop, NULL);
+    png_destroy_read_struct(&pngp, &infop, nullptr);
     return CE_None;
 }
 
 /**
-*\Brief Compress a page in PNG format
+*\brief Compress a page in PNG format
 * Returns the compressed size in dst.size
 *
 */
@@ -186,14 +185,14 @@ CPLErr PNG_Codec::CompressPNG(buf_mgr &dst, buf_mgr &src)
     png_infop infop;
     buf_mgr mgr = dst;
 
-    pngp = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, pngEH, pngWH);
+    pngp = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, pngEH, pngWH);
     if (!pngp) {
         CPLError(CE_Failure, CPLE_AppDefined, "MRF: Error creating png structure");
         return CE_Failure;
     }
     infop = png_create_info_struct(pngp);
     if (!infop) {
-        png_destroy_write_struct(&pngp, NULL);
+        png_destroy_write_struct(&pngp, nullptr);
         CPLError(CE_Failure, CPLE_AppDefined, "MRF: Error creating png info structure");
         return CE_Failure;
     }
@@ -209,7 +208,7 @@ CPLErr PNG_Codec::CompressPNG(buf_mgr &dst, buf_mgr &src)
     int png_ctype;
 
     switch (img.pagesize.c) {
-    case 1: if (PNGColors != NULL) png_ctype = PNG_COLOR_TYPE_PALETTE;
+    case 1: if (PNGColors != nullptr) png_ctype = PNG_COLOR_TYPE_PALETTE;
             else png_ctype = PNG_COLOR_TYPE_GRAY;
             break;
     case 2: png_ctype = PNG_COLOR_TYPE_GRAY_ALPHA; break;
@@ -237,7 +236,7 @@ CPLErr PNG_Codec::CompressPNG(buf_mgr &dst, buf_mgr &src)
     png_set_asm_flags(pngp, flags | mask); // use flags &~mask to disable all
 
     // Test that the MMX is compiled into PNG
-    //	fprintf(stderr,"MMX support is %d\n", png_mmx_support());
+    // fprintf(stderr,"MMX support is %d\n", png_mmx_support());
 
 #endif
 
@@ -250,11 +249,11 @@ CPLErr PNG_Codec::CompressPNG(buf_mgr &dst, buf_mgr &src)
         png_set_compression_strategy(pngp, (deflate_flags & ZFLAG_SMASK) >> 6);
 
     // Write the palette and the transparencies if they exist
-    if (PNGColors != NULL)
+    if (PNGColors != nullptr)
     {
         png_set_PLTE(pngp, infop, (png_colorp)PNGColors, PalSize);
         if (TransSize != 0)
-            png_set_tRNS(pngp, infop, (unsigned char*)PNGAlpha, TransSize, NULL);
+            png_set_tRNS(pngp, infop, (unsigned char*)PNGAlpha, TransSize, nullptr);
     }
 
     png_write_info(pngp, infop);
@@ -327,7 +326,7 @@ CPLErr PNG_Band::Decompress(buf_mgr &dst, buf_mgr &src)
 }
 
 CPLErr PNG_Band::Compress(buf_mgr &dst, buf_mgr &src)
-{   
+{
     if (!codec.PNGColors && img.comp == IL_PPNG) { // Late set PNG palette to conserve memory
         GDALColorTable *poCT = GetColorTable();
         if (!poCT) {
@@ -342,20 +341,25 @@ CPLErr PNG_Band::Compress(buf_mgr &dst, buf_mgr &src)
 }
 
 /**
- * \Brief For PPNG, builds the data structures needed to write the palette
+ * \brief For PPNG, builds the data structures needed to write the palette
  * The presence of the PNGColors and PNGAlpha is used as a flag for PPNG only
  */
 
-PNG_Band::PNG_Band(GDALMRFDataset *pDS, const ILImage &image, int b, int level) :
-GDALMRFRasterBand(pDS, image, b, level), codec(image)
-
+PNG_Band::PNG_Band( GDALMRFDataset *pDS, const ILImage &image,
+                    int b, int level ) :
+    GDALMRFRasterBand(pDS, image, b, level),
+    codec(image)
 {   // Check error conditions
-    if (image.dt != GDT_Byte && image.dt != GDT_Int16 && image.dt != GDT_UInt16) {
-        CPLError(CE_Failure, CPLE_NotSupported, "Data type not supported by MRF PNG");
+    if (image.dt != GDT_Byte && image.dt != GDT_Int16 && image.dt != GDT_UInt16)
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Data type not supported by MRF PNG");
         return;
     }
-    if (image.pagesize.c > 4) {
-        CPLError(CE_Failure, CPLE_NotSupported, "MRF PNG can only handle up to 4 bands per page");
+    if (image.pagesize.c > 4)
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "MRF PNG can only handle up to 4 bands per page");
         return;
     }
     // PNGs can be larger than the source, especially for small page size

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: iscedataset.cpp 34431 2016-06-25 15:07:10Z rouault $
  *
  * Project:  ISCE Raster Reader
  * Purpose:  Implementation of the ISCE raster reader
@@ -28,9 +27,10 @@
  ****************************************************************************/
 
 #include "gdal_frmts.h"
+#include "ogr_spatialref.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: iscedataset.cpp 34431 2016-06-25 15:07:10Z rouault $");
+CPL_CVSID("$Id: iscedataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 static const char * const apszISCE2GDALDatatypes[] = {
     "BYTE:Byte",
@@ -47,7 +47,7 @@ static const char * const apszISCE2GDALDatatypes[] = {
     "CLONG:CInt64",
     "CFLOAT:CFloat32",
     "CDOUBLE:CFloat64",
-    NULL };
+    nullptr };
 
 static const char * const apszGDAL2ISCEDatatypes[] = {
     "Byte:BYTE",
@@ -61,10 +61,10 @@ static const char * const apszGDAL2ISCEDatatypes[] = {
     "CInt64:CLONG",
     "CFloat32:CFLOAT",
     "CFloat64:CDOUBLE",
-    NULL };
+    nullptr };
 
 enum Scheme { BIL = 0, BIP = 1, BSQ = 2 };
-static const char * const apszSchemeNames[] = { "BIL", "BIP", "BSQ", NULL };
+static const char * const apszSchemeNames[] = { "BIL", "BIP", "BSQ", nullptr };
 
 /************************************************************************/
 /* ==================================================================== */
@@ -74,7 +74,7 @@ static const char * const apszSchemeNames[] = { "BIL", "BIP", "BSQ", NULL };
 
 class ISCERasterBand;
 
-class ISCEDataset : public RawDataset
+class ISCEDataset final: public RawDataset
 {
     friend class ISCERasterBand;
 
@@ -84,15 +84,18 @@ class ISCEDataset : public RawDataset
 
     enum Scheme eScheme;
 
-  public:
-                ISCEDataset();
-    virtual ~ISCEDataset();
+    CPL_DISALLOW_COPY_ASSIGN(ISCEDataset)
 
-    virtual void        FlushCache();
-    virtual char      **GetFileList();
+  public:
+    ISCEDataset();
+    ~ISCEDataset() override;
+
+    void FlushCache() override;
+    char **GetFileList() override;
 
     static int          Identify( GDALOpenInfo *poOpenInfo );
     static GDALDataset *Open( GDALOpenInfo *poOpenInfo );
+    static GDALDataset *Open( GDALOpenInfo *poOpenInfo, bool bFileSizeCheck );
     static GDALDataset *Create( const char *pszFilename,
                                 int nXSize, int nYSize, int nBands,
                                 GDALDataType eType, char **papszOptions );
@@ -104,14 +107,15 @@ class ISCEDataset : public RawDataset
 /* ==================================================================== */
 /************************************************************************/
 
-class ISCERasterBand : public RawRasterBand
+class ISCERasterBand final: public RawRasterBand
 {
+        CPL_DISALLOW_COPY_ASSIGN(ISCERasterBand)
+
     public:
-                ISCERasterBand( GDALDataset *poDS, int nBand, void *fpRaw,
+                ISCERasterBand( GDALDataset *poDS, int nBand, VSILFILE *fpRaw,
                                   vsi_l_offset nImgOffset, int nPixelOffset,
                                   int nLineOffset,
-                                  GDALDataType eDataType, int bNativeOrder,
-                                  int bIsVSIL = FALSE, int bOwnsFP = FALSE );
+                                  GDALDataType eDataType, int bNativeOrder );
 };
 
 /************************************************************************/
@@ -122,10 +126,13 @@ static CPLString getXMLFilename( GDALOpenInfo *poOpenInfo )
 {
     CPLString osXMLFilename;
 
+    if( poOpenInfo->fpL == nullptr )
+        return CPLString();
+
     char **papszSiblingFiles = poOpenInfo->GetSiblingFiles();
-    if ( papszSiblingFiles == NULL )
+    if ( papszSiblingFiles == nullptr )
     {
-        osXMLFilename = CPLFormFilename( NULL, poOpenInfo->pszFilename,
+        osXMLFilename = CPLFormFilename( nullptr, poOpenInfo->pszFilename,
                                          "xml" );
         VSIStatBufL psXMLStatBuf;
         if ( VSIStatL( osXMLFilename, &psXMLStatBuf ) != 0 )
@@ -142,13 +149,14 @@ static CPLString getXMLFilename( GDALOpenInfo *poOpenInfo )
         const CPLString osPath = CPLGetPath( poOpenInfo->pszFilename );
         const CPLString osName = CPLGetFilename( poOpenInfo->pszFilename );
 
-        int iFile = CSLFindString( papszSiblingFiles,
-                                   CPLFormFilename( NULL, osName, "xml" ) );
+        const int iFile =
+            CSLFindString( papszSiblingFiles,
+                           CPLFormFilename( nullptr, osName, "xml" ) );
         if( iFile >= 0 )
         {
             osXMLFilename = CPLFormFilename( osPath,
                                              papszSiblingFiles[iFile],
-                                             NULL );
+                                             nullptr );
         }
     }
 
@@ -160,10 +168,10 @@ static CPLString getXMLFilename( GDALOpenInfo *poOpenInfo )
 /************************************************************************/
 
 ISCEDataset::ISCEDataset() :
-    fpImage(NULL),
-    pszXMLFilename(NULL),
+    fpImage(nullptr),
+    pszXMLFilename(nullptr),
     eScheme(BIL)
-{ }
+{}
 
 /************************************************************************/
 /*                            ~ISCEDataset()                          */
@@ -171,8 +179,8 @@ ISCEDataset::ISCEDataset() :
 
 ISCEDataset::~ISCEDataset( void )
 {
-    FlushCache();
-    if ( fpImage != NULL )
+    ISCEDataset::FlushCache();
+    if ( fpImage != nullptr )
     {
         if( VSIFCloseL( fpImage ) != 0 )
         {
@@ -190,45 +198,46 @@ void ISCEDataset::FlushCache( void )
 {
     RawDataset::FlushCache();
 
-    GDALRasterBand *band = (GetRasterCount() > 0) ? GetRasterBand(1) : NULL;
+    GDALRasterBand *band = (GetRasterCount() > 0) ? GetRasterBand(1) : nullptr;
 
-    if ( eAccess == GA_ReadOnly || band == NULL )
+    if ( eAccess == GA_ReadOnly || band == nullptr )
         return;
 
 /* -------------------------------------------------------------------- */
 /*      Recreate a XML doc with the dataset information.                */
 /* -------------------------------------------------------------------- */
-    char sBuf[64];
-    CPLXMLNode *psDocNode = CPLCreateXMLNode( NULL, CXT_Element, "imageFile" );
+    char sBuf[64] = { '\0' };
+    CPLXMLNode *psDocNode = CPLCreateXMLNode( nullptr, CXT_Element, "imageFile" );
 
     CPLXMLNode *psTmpNode
         = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "WIDTH" );
-    snprintf(sBuf, sizeof(sBuf), "%d", nRasterXSize);
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nRasterXSize);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "LENGTH" );
-    snprintf(sBuf, sizeof(sBuf), "%d", nRasterYSize);
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nRasterYSize);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "NUMBER_BANDS" );
-    snprintf(sBuf, sizeof(sBuf), "%d", nBands);
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nBands);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     const char *sType = GDALGetDataTypeName( band->GetRasterDataType() );
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "DATA_TYPE" );
-    CPLCreateXMLElementAndValue( psTmpNode, "value",
-                                 CSLFetchNameValue(
-                                         (char **)apszGDAL2ISCEDatatypes,
-                                         sType ) );
+    CPLCreateXMLElementAndValue(
+        psTmpNode, "value",
+        CSLFetchNameValue(
+            const_cast<char **>(apszGDAL2ISCEDatatypes),
+            sType ) );
 
-    const char *sScheme = apszSchemeNames[eScheme];
+    const char *pszScheme = apszSchemeNames[eScheme];
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "SCHEME" );
-    CPLCreateXMLElementAndValue( psTmpNode, "value", sScheme );
+    CPLCreateXMLElementAndValue( psTmpNode, "value", pszScheme );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "BYTE_ORDER" );
@@ -237,6 +246,15 @@ void ISCEDataset::FlushCache( void )
 #else
     CPLCreateXMLElementAndValue( psTmpNode, "value", "b" );
 #endif
+
+    psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "ACCESS_MODE" );
+    CPLCreateXMLElementAndValue( psTmpNode, "value", "read" );
+
+    const char *pszFilename = CPLGetBasename( pszXMLFilename );
+    psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "FILE_NAME" );
+    CPLCreateXMLElementAndValue( psTmpNode, "value", pszFilename );
 
 /* -------------------------------------------------------------------- */
 /*      Then, add the ISCE domain metadata.                             */
@@ -253,7 +271,7 @@ void ISCEDataset::FlushCache( void )
         {
             CPLDebug( "ISCE",
                       "Line of header file could not be split at = into two"
-                          " elements: %s",
+                      " elements: %s",
                       papszISCEMetadata[i] );
             CSLDestroy( papszTokens );
             continue;
@@ -261,12 +279,12 @@ void ISCEDataset::FlushCache( void )
 
         /* Don't write it out if it is one of the bits of metadata that is
          * written out elsewhere in this routine */
-        if ( strcmp( papszTokens[0], "WIDTH" ) == 0
-              || strcmp( papszTokens[0], "LENGTH" ) == 0
-              || strcmp( papszTokens[0], "NUMBER_BANDS" ) == 0
-              || strcmp( papszTokens[0], "DATA_TYPE" ) == 0
-              || strcmp( papszTokens[0], "SCHEME" ) == 0
-              || strcmp( papszTokens[0], "BYTE_ORDER" ) == 0 )
+        if ( EQUAL( papszTokens[0], "WIDTH" )
+              || EQUAL( papszTokens[0], "LENGTH" )
+              || EQUAL( papszTokens[0], "NUMBER_BANDS" )
+              || EQUAL( papszTokens[0], "DATA_TYPE" )
+              || EQUAL( papszTokens[0], "SCHEME" )
+              || EQUAL( papszTokens[0], "BYTE_ORDER" ) )
         {
             CSLDestroy( papszTokens );
             continue;
@@ -277,6 +295,137 @@ void ISCEDataset::FlushCache( void )
         CPLCreateXMLElementAndValue( psTmpNode, "value", papszTokens[1] );
 
         CSLDestroy( papszTokens );
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Create the "Coordinate" component elements, possibly with       */
+/*      georeferencing.                                                 */
+/* -------------------------------------------------------------------- */
+    CPLXMLNode *psCoordinate1Node, *psCoordinate2Node;
+    double adfGeoTransform[6];
+
+    /* Coordinate 1 */
+    psCoordinate1Node = CPLCreateXMLNode( psDocNode,
+                                          CXT_Element,
+                                          "component" );
+    CPLAddXMLAttributeAndValue( psCoordinate1Node, "name", "Coordinate1" );
+    CPLCreateXMLElementAndValue( psCoordinate1Node,
+                                 "factorymodule",
+                                 "isceobj.Image" );
+    CPLCreateXMLElementAndValue( psCoordinate1Node,
+                                 "factoryname",
+                                 "createCoordinate" );
+    CPLCreateXMLElementAndValue( psCoordinate1Node,
+                                 "doc",
+                                 "First coordinate of a 2D image (witdh)." );
+    /* Property name */
+    psTmpNode = CPLCreateXMLNode( psCoordinate1Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "name" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 "ImageCoordinate_name" );
+    /* Property family */
+    psTmpNode = CPLCreateXMLNode( psCoordinate1Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "family" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 "ImageCoordinate" );
+    /* Property size */
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nRasterXSize);
+    psTmpNode = CPLCreateXMLNode( psCoordinate1Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "size" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 sBuf );
+
+    /* Coordinate 2 */
+    psCoordinate2Node = CPLCreateXMLNode( psDocNode,
+                                          CXT_Element,
+                                          "component" );
+    CPLAddXMLAttributeAndValue( psCoordinate2Node, "name", "Coordinate2" );
+    CPLCreateXMLElementAndValue( psCoordinate2Node,
+                                 "factorymodule",
+                                 "isceobj.Image" );
+    CPLCreateXMLElementAndValue( psCoordinate2Node,
+                                 "factoryname",
+                                 "createCoordinate" );
+    /* Property name */
+    psTmpNode = CPLCreateXMLNode( psCoordinate2Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "name" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 "ImageCoordinate_name" );
+    /* Property family */
+    psTmpNode = CPLCreateXMLNode( psCoordinate2Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "family" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 "ImageCoordinate" );
+    /* Property size */
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nRasterYSize);
+    psTmpNode = CPLCreateXMLNode( psCoordinate2Node,
+                                  CXT_Element,
+                                  "property" );
+    CPLAddXMLAttributeAndValue( psTmpNode, "name", "size" );
+    CPLCreateXMLElementAndValue( psTmpNode,
+                                 "value",
+                                 sBuf );
+
+    if ( GetGeoTransform( adfGeoTransform ) == CE_None )
+    {
+        if ( adfGeoTransform[2] != 0 || adfGeoTransform[4] != 0 )
+        {
+            CPLError( CE_Warning, CPLE_AppDefined,
+                      "ISCE format do not support geotransform with "
+                          "rotation, discarding info.");
+        }
+        else {
+            CPLsnprintf( sBuf, sizeof(sBuf), "%g", adfGeoTransform[0] );
+            psTmpNode = CPLCreateXMLNode( psCoordinate1Node,
+                                          CXT_Element,
+                                          "property" );
+            CPLAddXMLAttributeAndValue( psTmpNode, "name", "startingValue" );
+            CPLCreateXMLElementAndValue( psTmpNode,
+                                         "value",
+                                         sBuf );
+
+            CPLsnprintf( sBuf, sizeof(sBuf), "%g", adfGeoTransform[1] );
+            psTmpNode = CPLCreateXMLNode( psCoordinate1Node,
+                                          CXT_Element,
+                                          "property" );
+            CPLAddXMLAttributeAndValue( psTmpNode, "name", "delta" );
+            CPLCreateXMLElementAndValue( psTmpNode,
+                                         "value",
+                                         sBuf );
+
+            CPLsnprintf( sBuf, sizeof(sBuf), "%g", adfGeoTransform[3] );
+            psTmpNode = CPLCreateXMLNode( psCoordinate2Node,
+                                          CXT_Element,
+                                          "property" );
+            CPLAddXMLAttributeAndValue( psTmpNode, "name", "startingValue" );
+            CPLCreateXMLElementAndValue( psTmpNode,
+                                         "value",
+                                         sBuf );
+
+            CPLsnprintf( sBuf, sizeof(sBuf), "%g", adfGeoTransform[5] );
+            psTmpNode = CPLCreateXMLNode( psCoordinate2Node,
+                                          CXT_Element,
+                                          "property" );
+            CPLAddXMLAttributeAndValue( psTmpNode, "name", "delta" );
+            CPLCreateXMLElementAndValue( psTmpNode,
+                                         "value",
+                                         sBuf );
+        }
     }
 
 /* -------------------------------------------------------------------- */
@@ -314,7 +463,6 @@ int ISCEDataset::Identify( GDALOpenInfo *poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      TODO: This function is unusable now:                            */
 /*          * we can't just check for the presence of a XML file        */
-/*            the presence of a XML file                                */
 /*          * we cannot parse it to check basic tree (Identify() is     */
 /*            supposed to be faster than this                           */
 /*          * we could read only a few bytes and strstr() for           */
@@ -340,12 +488,17 @@ int ISCEDataset::Identify( GDALOpenInfo *poOpenInfo )
 
 GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo )
 {
+    return Open(poOpenInfo, true);
+}
+
+GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo, bool bFileSizeCheck )
+{
 /* -------------------------------------------------------------------- */
 /*      Confirm that the header is compatible with a ISCE dataset.    */
 /* -------------------------------------------------------------------- */
-    if ( !Identify(poOpenInfo) )
+    if ( !Identify(poOpenInfo) || poOpenInfo->fpL == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -353,56 +506,118 @@ GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo )
 /* -------------------------------------------------------------------- */
     const CPLString osXMLFilename = getXMLFilename( poOpenInfo );
     CPLXMLNode *psNode = CPLParseXMLFile( osXMLFilename );
-    if ( psNode == NULL || CPLGetXMLNode( psNode, "=imageFile" ) == NULL )
+    if ( psNode == nullptr || CPLGetXMLNode( psNode, "=imageFile" ) == nullptr )
     {
         CPLDestroyXMLNode( psNode );
-        return NULL;
+        return nullptr;
     }
     CPLXMLNode *psCur  = CPLGetXMLNode( psNode, "=imageFile" )->psChild;
-    char **papszXmlProps = NULL;
-    while ( psCur != NULL ) {
-        const char *name, *value;
-        if ( strcmp(psCur->pszValue, "property") != 0) {
-            psCur = psCur->psNext;
-            continue;
+    char **papszXmlProps = nullptr;
+    while ( psCur != nullptr )
+    {
+        if ( EQUAL( psCur->pszValue, "property" ) )
+        {
+            /* Top-level property */
+            const char *pszName = CPLGetXMLValue( psCur, "name", nullptr );
+            const char *pszValue = CPLGetXMLValue( psCur, "value", nullptr );
+            if ( pszName != nullptr && pszValue != nullptr)
+            {
+                papszXmlProps = CSLSetNameValue( papszXmlProps,
+                                                 pszName, pszValue );
+            }
         }
-        name = CPLGetXMLValue( psCur, "name", NULL );
-        value = CPLGetXMLValue( psCur, "value.", NULL );
-        papszXmlProps = CSLSetNameValue( papszXmlProps,
-                                         name, value );
+        else if ( EQUAL( psCur->pszValue, "component" ) )
+        {
+            /* "components" elements in ISCE store set of properties.   */
+            /* For now, they are avoided as I am not sure the full      */
+            /* scope of these. An exception is made for the ones named  */
+            /* Coordinate1 and Coordinate2, because they may have the   */
+            /* georeferencing information.                              */
+            const char *pszCurName = CPLGetXMLValue( psCur, "name", nullptr );
+            if ( pszCurName != nullptr
+                && ( EQUAL( pszCurName, "Coordinate1" )
+                    || EQUAL( pszCurName, "Coordinate2" ) ) )
+            {
+                /* We need two subproperties: startingValue and delta.  */
+                /* To simplify parsing code, we will store them in      */
+                /* papszXmlProps with the coordinate name prefixed to   */
+                /* the property name.                                   */
+                CPLXMLNode *psCur2 = psCur->psChild;
+                while ( psCur2 != nullptr )
+                {
+                    if ( ! EQUAL( psCur2->pszValue, "property" ) )
+                    {
+                        psCur2 = psCur2->psNext;
+                        continue; /* Skip non property elements */
+                    }
+
+                    const char
+                       *pszCur2Name = CPLGetXMLValue( psCur2, "name", nullptr ),
+                       *pszCur2Value = CPLGetXMLValue( psCur2, "value", nullptr );
+
+                    if ( pszCur2Name == nullptr || pszCur2Value == nullptr )
+                    {
+                        psCur2 = psCur2->psNext;
+                        continue; /* Skip malformatted elements */
+                    }
+
+                    if ( EQUAL( pszCur2Name, "startingValue" )
+                        || EQUAL( pszCur2Name, "delta" ) )
+                    {
+                        char szPropName[32];
+                        snprintf(szPropName, sizeof(szPropName), "%s%s",
+                                 pszCurName, pszCur2Name);
+
+                        papszXmlProps =
+                            CSLSetNameValue( papszXmlProps,
+                                             szPropName,
+                                             pszCur2Value );
+                    }
+                    psCur2 = psCur2->psNext;
+                }
+            }
+        }
         psCur = psCur->psNext;
     }
-    /* TODO: extract <component name=Coordinate[12]> for georeferencing */
+
     CPLDestroyXMLNode( psNode );
 
 /* -------------------------------------------------------------------- */
 /*      Fetch required fields.                                          */
 /* -------------------------------------------------------------------- */
-    if ( CSLFetchNameValue( papszXmlProps, "WIDTH" ) == NULL
-        || CSLFetchNameValue( papszXmlProps, "LENGTH" ) == NULL
-        || CSLFetchNameValue( papszXmlProps, "NUMBER_BANDS" ) == NULL
-        || CSLFetchNameValue( papszXmlProps, "DATA_TYPE" ) == NULL
-        || CSLFetchNameValue( papszXmlProps, "SCHEME" ) == NULL )
+    if ( CSLFetchNameValue( papszXmlProps, "WIDTH" ) == nullptr
+        || CSLFetchNameValue( papszXmlProps, "LENGTH" ) == nullptr
+        || CSLFetchNameValue( papszXmlProps, "NUMBER_BANDS" ) == nullptr
+        || CSLFetchNameValue( papszXmlProps, "DATA_TYPE" ) == nullptr
+        || CSLFetchNameValue( papszXmlProps, "SCHEME" ) == nullptr )
     {
         CSLDestroy( papszXmlProps );
-        return NULL;
+        return nullptr;
     }
     const int nWidth = atoi( CSLFetchNameValue( papszXmlProps, "WIDTH" ) );
-    const int nFileLength = atoi( CSLFetchNameValue( papszXmlProps, "LENGTH" ) );
+    const int nHeight = atoi( CSLFetchNameValue( papszXmlProps, "LENGTH" ) );
+    const int nBands = atoi( CSLFetchNameValue( papszXmlProps, "NUMBER_BANDS" ) );
+
+    if (!GDALCheckDatasetDimensions(nWidth, nHeight) ||
+        !GDALCheckBandCount(nBands, FALSE))
+    {
+        CSLDestroy( papszXmlProps );
+        return nullptr;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Update byte order info if image specify something.              */
 /* -------------------------------------------------------------------- */
     bool bNativeOrder = true;
 
-    if ( CSLFetchNameValue( papszXmlProps, "BYTE_ORDER" ) != NULL )
-    {
-        const char *sByteOrder = CSLFetchNameValue( papszXmlProps,
+    const char *pszByteOrder = CSLFetchNameValue( papszXmlProps,
                                                     "BYTE_ORDER" );
+    if ( pszByteOrder != nullptr )
+    {
 #ifdef CPL_LSB
-        if ( EQUAL( sByteOrder, "b" ) )
+        if ( EQUAL( pszByteOrder, "b" ) )
 #else
-        if ( EQUAL( sByteOrder, "l" ) )
+        if ( EQUAL( pszByteOrder, "l" ) )
 #endif
             bNativeOrder = false;
     }
@@ -412,118 +627,172 @@ GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo )
 /* -------------------------------------------------------------------- */
     ISCEDataset *poDS = new ISCEDataset();
     poDS->nRasterXSize = nWidth;
-    poDS->nRasterYSize = nFileLength;
+    poDS->nRasterYSize = nHeight;
     poDS->eAccess = poOpenInfo->eAccess;
     poDS->pszXMLFilename = CPLStrdup( osXMLFilename.c_str() );
-
-/* -------------------------------------------------------------------- */
-/*      Reopen file in update mode if necessary.                        */
-/* -------------------------------------------------------------------- */
-    if( poOpenInfo->eAccess == GA_Update )
-    {
-        poDS->fpImage = VSIFOpenL( poOpenInfo->pszFilename, "rb+" );
-    }
-    else
-    {
-        poDS->fpImage = VSIFOpenL( poOpenInfo->pszFilename, "rb" );
-    }
-    if( poDS->fpImage == NULL )
-    {
-        CSLDestroy( papszXmlProps );
-        delete poDS;
-        CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Failed to re-open %s within ISCE driver.\n",
-                  poOpenInfo->pszFilename );
-        return NULL;
-    }
+    poDS->fpImage = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create band information objects.                                */
 /* -------------------------------------------------------------------- */
-    const char *sDataType =
-        CSLFetchNameValue( (char **)apszISCE2GDALDatatypes,
+    const char *pszDataType =
+        CSLFetchNameValue( const_cast<char **>(apszISCE2GDALDatatypes),
                            CSLFetchNameValue( papszXmlProps, "DATA_TYPE" ) );
-    const GDALDataType eDataType = GDALGetDataTypeByName( sDataType );
-    const int nBands = atoi( CSLFetchNameValue( papszXmlProps, "NUMBER_BANDS" ) );
-    const char *sScheme = CSLFetchNameValue( papszXmlProps, "SCHEME" );
-    int nPixelOffset, nLineOffset, nBandOffset;
-    if ( EQUAL( sScheme, "BIL" ) )
+    if( pszDataType == nullptr )
     {
-                poDS->eScheme = BIL;
-        nPixelOffset = GDALGetDataTypeSize(eDataType)/8;
-        nLineOffset = nPixelOffset * nWidth * nBands;
-        nBandOffset = GDALGetDataTypeSize(eDataType)/8 * nWidth;
+        delete poDS;
+        CSLDestroy( papszXmlProps );
+        return nullptr;
     }
-    else if ( EQUAL( sScheme, "BIP" ) )
+    const GDALDataType eDataType = GDALGetDataTypeByName( pszDataType );
+    const int nDTSize = GDALGetDataTypeSizeBytes(eDataType);
+    const char *pszScheme = CSLFetchNameValue( papszXmlProps, "SCHEME" );
+    int nPixelOffset = 0;
+    int nLineOffset = 0;
+    vsi_l_offset nBandOffset = 0;
+    bool bIntOverflow = false;
+    if( EQUAL( pszScheme, "BIL" ) )
+    {
+        poDS->eScheme = BIL;
+        nPixelOffset = nDTSize;
+        if( nWidth > INT_MAX / (nPixelOffset * nBands) )
+            bIntOverflow = true;
+        else
+        {
+            nLineOffset = nPixelOffset * nWidth * nBands;
+            nBandOffset = nDTSize * static_cast<vsi_l_offset>(nWidth);
+        }
+    }
+    else if( EQUAL( pszScheme, "BIP" ) )
     {
         poDS->eScheme = BIP;
-        nPixelOffset = GDALGetDataTypeSize(eDataType)/8 * nBands;
-        nLineOffset = nPixelOffset * nWidth;
-        if( nBands > 1 )
+        nPixelOffset = nDTSize * nBands;
+        if( nWidth > INT_MAX / nPixelOffset )
+            bIntOverflow = true;
+        else
         {
-            // GDAL 2.1.0 had a value of nLineOffset that was equal to the theoretical
-            // nLineOffset multiplied by nBands...
-            VSIFSeekL( poDS->fpImage, 0, SEEK_END );
-            const GUIntBig nWrongFileSize = GDALGetDataTypeSizeBytes(eDataType) *
-              nWidth * (static_cast<GUIntBig>(nFileLength - 1) * nBands * nBands + nBands);
-            if( VSIFTellL( poDS->fpImage ) == nWrongFileSize )
+            nLineOffset = nPixelOffset * nWidth;
+            if( nBands > 1 && nLineOffset < INT_MAX / nBands )
             {
-                CPLError(CE_Warning, CPLE_AppDefined,
-                         "This file has been incorrectly generated by an older "
-                         "GDAL version whose line offset computation was erroneous. "
-                         "Taking that into account, but the file should be re-encoded ideally");
-                nLineOffset = nLineOffset * nBands;
+                // GDAL 2.1.0 had a value of nLineOffset that was equal to the theoretical
+                // nLineOffset multiplied by nBands...
+                VSIFSeekL( poDS->fpImage, 0, SEEK_END );
+                const GUIntBig nWrongFileSize = nDTSize *
+                    nWidth * (static_cast<GUIntBig>(nHeight - 1) *
+                    nBands * nBands + nBands);
+                if( VSIFTellL( poDS->fpImage ) == nWrongFileSize )
+                {
+                    CPLError(CE_Warning, CPLE_AppDefined,
+                            "This file has been incorrectly generated by an older "
+                            "GDAL version whose line offset computation was erroneous. "
+                            "Taking that into account, but the file should be re-encoded ideally");
+                    nLineOffset = nLineOffset * nBands;
+                }
             }
+            nBandOffset = nDTSize;
         }
-        nBandOffset = GDALGetDataTypeSize(eDataType)/8;
     }
-    else if ( EQUAL( sScheme, "BSQ" ) )
+    else if ( EQUAL( pszScheme, "BSQ" ) )
     {
         poDS->eScheme = BSQ;
-        nPixelOffset = GDALGetDataTypeSize(eDataType)/8;
-        nLineOffset = nPixelOffset * nWidth;
-        nBandOffset = nLineOffset * nFileLength;
+        nPixelOffset = nDTSize;
+        if( nWidth > INT_MAX / nPixelOffset )
+            bIntOverflow = true;
+        else
+        {
+            nLineOffset = nPixelOffset * nWidth;
+            nBandOffset = nLineOffset * static_cast<vsi_l_offset>(nHeight);
+        }
     }
     else
     {
+        CPLError( CE_Failure, CPLE_OpenFailed,
+                  "Unknown scheme \"%s\" within ISCE raster.",
+                  pszScheme );
         CSLDestroy( papszXmlProps );
         delete poDS;
-        CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Unknown scheme \"%s\" within ISCE raster.\n",
-                  CSLFetchNameValue( papszXmlProps, "SCHEME" ) );
-        return NULL;
+        return nullptr;
     }
+
+    if (bIntOverflow)
+    {
+        delete poDS;
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Int overflow occurred." );
+        CSLDestroy( papszXmlProps );
+        return nullptr;
+    }
+
+    if( bFileSizeCheck &&
+        !RAWDatasetCheckMemoryUsage(
+                        poDS->nRasterXSize, poDS->nRasterYSize, nBands,
+                        nDTSize,
+                        nPixelOffset, nLineOffset, 0, nBandOffset,
+                        poDS->fpImage) )
+    {
+        delete poDS;
+        CSLDestroy( papszXmlProps );
+        return nullptr;
+    }
+
     poDS->nBands = nBands;
     for (int b = 0; b < nBands; b++)
     {
         poDS->SetBand( b + 1,
                        new ISCERasterBand( poDS, b + 1, poDS->fpImage,
-                                             nBandOffset * b,
-                                             nPixelOffset, nLineOffset,
-                                             eDataType, TRUE,
-                                             bNativeOrder, FALSE ) );
+                                           nBandOffset * b,
+                                           nPixelOffset, nLineOffset,
+                                           eDataType, bNativeOrder ) );
     }
 
 /* -------------------------------------------------------------------- */
 /*      Interpret georeferencing, if present.                           */
 /* -------------------------------------------------------------------- */
-   /* TODO */
+    if ( CSLFetchNameValue( papszXmlProps, "Coordinate1startingValue" ) != nullptr
+         && CSLFetchNameValue( papszXmlProps, "Coordinate1delta" ) != nullptr
+         && CSLFetchNameValue( papszXmlProps, "Coordinate2startingValue" ) != nullptr
+         && CSLFetchNameValue( papszXmlProps, "Coordinate2delta" ) != nullptr )
+    {
+        double adfGeoTransform[6];
+        adfGeoTransform[0] = CPLAtof( CSLFetchNameValue( papszXmlProps,
+                                                         "Coordinate1startingValue" ) );
+        adfGeoTransform[1] = CPLAtof( CSLFetchNameValue( papszXmlProps,
+                                                         "Coordinate1delta" ) );
+        adfGeoTransform[2] = 0.0;
+        adfGeoTransform[3] = CPLAtof( CSLFetchNameValue( papszXmlProps,
+                                                         "Coordinate2startingValue" ) );
+        adfGeoTransform[4] = 0.0;
+        adfGeoTransform[5] = CPLAtof( CSLFetchNameValue( papszXmlProps,
+                                                               "Coordinate2delta" ) );
+        poDS->SetGeoTransform( adfGeoTransform );
+
+        /* ISCE format seems not to have a projection field, but uses   */
+        /* WGS84.                                                       */
+        poDS->SetProjection( SRS_WKT_WGS84_LAT_LONG );
+    }
 
 /* -------------------------------------------------------------------- */
-/*      Set all the other header metadata into the ISCE domain       */
+/*      Set all the other header metadata into the ISCE domain          */
 /* -------------------------------------------------------------------- */
-    for (int i = 0; papszXmlProps != NULL && papszXmlProps[i] != NULL; i++)
+    for( int i = 0; papszXmlProps != nullptr && papszXmlProps[i] != nullptr; i++ )
     {
-        char **papszTokens;
-        papszTokens = CSLTokenizeString2( papszXmlProps[i],
-                                          "=",
-                                          CSLT_STRIPLEADSPACES
-                                            | CSLT_STRIPENDSPACES);
-        if ( strcmp( papszTokens[0], "WIDTH" ) == 0
-              || strcmp( papszTokens[0], "LENGTH" ) == 0
-              || strcmp( papszTokens[0], "NUMBER_BANDS" ) == 0
-              || strcmp( papszTokens[0], "DATA_TYPE" ) == 0
-              || strcmp( papszTokens[0], "SCHEME" ) == 0 )
+        char **papszTokens =
+            CSLTokenizeString2( papszXmlProps[i],
+                                "=",
+                                CSLT_STRIPLEADSPACES
+                                | CSLT_STRIPENDSPACES);
+        if ( CSLCount(papszTokens) < 2
+              || EQUAL( papszTokens[0], "WIDTH" )
+              || EQUAL( papszTokens[0], "LENGTH" )
+              || EQUAL( papszTokens[0], "NUMBER_BANDS" )
+              || EQUAL( papszTokens[0], "DATA_TYPE" )
+              || EQUAL( papszTokens[0], "SCHEME" )
+              || EQUAL( papszTokens[0], "BYTE_ORDER" )
+              || EQUAL( papszTokens[0], "Coordinate1startingValue" )
+              || EQUAL( papszTokens[0], "Coordinate1delta" )
+              || EQUAL( papszTokens[0], "Coordinate2startingValue" )
+              || EQUAL( papszTokens[0], "Coordinate2delta" ) )
         {
             CSLDestroy( papszTokens );
             continue;
@@ -548,7 +817,7 @@ GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -556,12 +825,12 @@ GDALDataset *ISCEDataset::Open( GDALOpenInfo *poOpenInfo )
 /************************************************************************/
 
 GDALDataset *ISCEDataset::Create( const char *pszFilename,
-                                    int nXSize, int nYSize, int nBands,
-                                    GDALDataType eType,
-                                    char **papszOptions )
+                                  int nXSize, int nYSize, int nBands,
+                                  GDALDataType eType,
+                                  char **papszOptions )
 {
     const char *sType = GDALGetDataTypeName( eType );
-    const char *sScheme = CSLFetchNameValueDef( papszOptions,
+    const char *pszScheme = CSLFetchNameValueDef( papszOptions,
                                                 "SCHEME",
                                                 "BIP" );
 
@@ -569,53 +838,54 @@ GDALDataset *ISCEDataset::Create( const char *pszFilename,
 /*      Try to create the file.                                         */
 /* -------------------------------------------------------------------- */
     VSILFILE *fp = VSIFOpenL( pszFilename, "wb" );
-    if( fp == NULL )
+    if( fp == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Attempt to create file `%s' failed.\n",
+                  "Attempt to create file `%s' failed.",
                   pszFilename );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Just write out a couple of bytes to establish the binary        */
 /*      file, and then close it.                                        */
 /* -------------------------------------------------------------------- */
-    CPL_IGNORE_RET_VAL(VSIFWriteL( (void *) "\0\0", 2, 1, fp ));
+    CPL_IGNORE_RET_VAL(VSIFWriteL( "\0\0", 2, 1, fp ));
     CPL_IGNORE_RET_VAL(VSIFCloseL( fp ));
 
 /* -------------------------------------------------------------------- */
 /*      Create a minimal XML document.                                  */
 /* -------------------------------------------------------------------- */
-    CPLXMLNode *psDocNode = CPLCreateXMLNode( NULL, CXT_Element, "imageFile" );
+    CPLXMLNode *psDocNode = CPLCreateXMLNode( nullptr, CXT_Element, "imageFile" );
 
     CPLXMLNode *psTmpNode
         = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "WIDTH" );
-    char sBuf[64];
-    snprintf(sBuf, sizeof(sBuf), "%d", nXSize);
+    char sBuf[64] = { '\0' };
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nXSize);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "LENGTH" );
-    snprintf(sBuf, sizeof(sBuf), "%d", nYSize);
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nYSize);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "NUMBER_BANDS" );
-    snprintf(sBuf, sizeof(sBuf), "%d", nBands);
+    CPLsnprintf(sBuf, sizeof(sBuf), "%d", nBands);
     CPLCreateXMLElementAndValue( psTmpNode, "value", sBuf );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "DATA_TYPE" );
-    CPLCreateXMLElementAndValue( psTmpNode, "value",
-                                 CSLFetchNameValue(
-                                         (char **)apszGDAL2ISCEDatatypes,
-                                         sType ));
+    CPLCreateXMLElementAndValue(
+        psTmpNode, "value",
+        CSLFetchNameValue(
+            const_cast<char **>(apszGDAL2ISCEDatatypes),
+            sType ));
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "SCHEME" );
-    CPLCreateXMLElementAndValue( psTmpNode, "value", sScheme );
+    CPLCreateXMLElementAndValue( psTmpNode, "value", pszScheme );
 
     psTmpNode = CPLCreateXMLNode( psDocNode, CXT_Element, "property" );
     CPLAddXMLAttributeAndValue( psTmpNode, "name", "BYTE_ORDER" );
@@ -628,7 +898,7 @@ GDALDataset *ISCEDataset::Create( const char *pszFilename,
 /* -------------------------------------------------------------------- */
 /*      Write the XML file.                                             */
 /* -------------------------------------------------------------------- */
-    const char  *pszXMLFilename = CPLFormFilename( NULL, pszFilename, "xml" );
+    const char  *pszXMLFilename = CPLFormFilename( nullptr, pszFilename, "xml" );
     CPLSerializeXMLTreeToFile( psDocNode, pszXMLFilename );
 
 /* -------------------------------------------------------------------- */
@@ -636,22 +906,22 @@ GDALDataset *ISCEDataset::Create( const char *pszFilename,
 /* -------------------------------------------------------------------- */
     CPLDestroyXMLNode( psDocNode );
 
-    return (GDALDataset *) GDALOpen( pszFilename, GA_Update );
+    GDALOpenInfo oOpenInfo( pszFilename, GA_Update );
+    return Open(&oOpenInfo, false);
 }
 
 /************************************************************************/
 /*                          ISCERasterBand()                            */
 /************************************************************************/
 
-ISCERasterBand::ISCERasterBand( GDALDataset *poDSIn, int nBandIn, void *fpRawIn,
-                                    vsi_l_offset nImgOffsetIn, int nPixelOffsetIn,
-                                    int nLineOffsetIn,
-                                    GDALDataType eDataTypeIn, int bNativeOrderIn,
-                                    int bIsVSILIn, int bOwnsFPIn ) :
-        RawRasterBand(poDSIn, nBandIn, fpRawIn, nImgOffsetIn, nPixelOffsetIn,
-                      nLineOffsetIn, eDataTypeIn, bNativeOrderIn, bIsVSILIn, bOwnsFPIn)
-{
-}
+ISCERasterBand::ISCERasterBand( GDALDataset *poDSIn, int nBandIn, VSILFILE *fpRawIn,
+                                vsi_l_offset nImgOffsetIn, int nPixelOffsetIn,
+                                int nLineOffsetIn,
+                                GDALDataType eDataTypeIn, int bNativeOrderIn ) :
+    RawRasterBand( poDSIn, nBandIn, fpRawIn, nImgOffsetIn, nPixelOffsetIn,
+                   nLineOffsetIn, eDataTypeIn, bNativeOrderIn,
+                   RawRasterBand::OwnFP::NO )
+{}
 
 /************************************************************************/
 /*                         GDALRegister_ISCE()                          */
@@ -659,10 +929,7 @@ ISCERasterBand::ISCERasterBand( GDALDataset *poDSIn, int nBandIn, void *fpRawIn,
 
 void GDALRegister_ISCE()
 {
-    if( !GDAL_CHECK_VERSION( "ISCE" ) )
-        return;
-
-    if( GDALGetDriverByName( "ISCE" ) != NULL )
+    if( GDALGetDriverByName( "ISCE" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -675,13 +942,13 @@ void GDALRegister_ISCE()
                                " Float64 CInt16 CInt64 CFloat32 "
                                " CFloat64" );
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
-"<CreationOptionList>"
-"   <Option name='SCHEME' type='string-select'>"
-"       <Value>BIP</Value>"
-"       <Value>BIL</Value>"
-"       <Value>BSQ</Value>"
-"   </Option>"
-"</CreationOptionList>" );
+                               "<CreationOptionList>"
+                               "   <Option name='SCHEME' type='string-select'>"
+                               "       <Value>BIP</Value>"
+                               "       <Value>BIL</Value>"
+                               "       <Value>BSQ</Value>"
+                               "   </Option>"
+                               "</CreationOptionList>" );
     poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 

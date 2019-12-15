@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xplane_nav_reader.cpp
+ * $Id: ogr_xplane_nav_reader.cpp$
  *
  * Project:  X-Plane nav.dat file reader header
  * Purpose:  Definition of classes for X-Plane nav.dat file reader
@@ -37,8 +37,7 @@
 /*                           OGRXPlaneILSLayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneILSLayer : public OGRXPlaneLayer
+class OGRXPlaneILSLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneILSLayer();
@@ -58,8 +57,7 @@ class OGRXPlaneILSLayer : public OGRXPlaneLayer
 /*                           OGRXPlaneVORLayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneVORLayer : public OGRXPlaneLayer
+class OGRXPlaneVORLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneVORLayer();
@@ -78,8 +76,7 @@ class OGRXPlaneVORLayer : public OGRXPlaneLayer
 /*                           OGRXPlaneNDBLayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneNDBLayer : public OGRXPlaneLayer
+class OGRXPlaneNDBLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneNDBLayer();
@@ -97,8 +94,7 @@ class OGRXPlaneNDBLayer : public OGRXPlaneLayer
 /*                           OGRXPlaneGSLayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneGSLayer : public OGRXPlaneLayer
+class OGRXPlaneGSLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneGSLayer();
@@ -118,8 +114,7 @@ class OGRXPlaneGSLayer : public OGRXPlaneLayer
 /*                          OGRXPlaneMarkerLayer                        */
 /************************************************************************/
 
-
-class OGRXPlaneMarkerLayer : public OGRXPlaneLayer
+class OGRXPlaneMarkerLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneMarkerLayer();
@@ -136,8 +131,7 @@ class OGRXPlaneMarkerLayer : public OGRXPlaneLayer
 /*                         OGRXPlaneDMEILSLayer                         */
 /************************************************************************/
 
-
-class OGRXPlaneDMEILSLayer : public OGRXPlaneLayer
+class OGRXPlaneDMEILSLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneDMEILSLayer();
@@ -152,13 +146,11 @@ class OGRXPlaneDMEILSLayer : public OGRXPlaneLayer
                                    double dfDMEBias);
 };
 
-
 /************************************************************************/
 /*                           OGRXPlaneDMELayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneDMELayer : public OGRXPlaneLayer
+class OGRXPlaneDMELayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneDMELayer();
@@ -172,7 +164,6 @@ class OGRXPlaneDMELayer : public OGRXPlaneLayer
                                    double dfRange,
                                    double dfDMEBias);
 };
-
 
 enum
 {
@@ -188,12 +179,11 @@ enum
     NAVAID_DME_STANDALONE = 13, /* DME (including the DME element of an NDB-DME) */
 };
 
-
 /************************************************************************/
 /*                           OGRXPlaneNavReader                         */
 /************************************************************************/
 
-class OGRXPlaneNavReader : public OGRXPlaneReader
+class OGRXPlaneNavReader final: public OGRXPlaneReader
 {
     private:
         OGRXPlaneILSLayer*    poILSLayer;
@@ -209,12 +199,12 @@ class OGRXPlaneNavReader : public OGRXPlaneReader
         void                     ParseRecord(int nType);
 
     protected:
-        virtual void             Read();
+        virtual void             Read() override;
 
     public:
-                                 OGRXPlaneNavReader( OGRXPlaneDataSource* poDataSource );
-        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer);
-        virtual int              IsRecognizedVersion( const char* pszVersionString);
+        explicit                 OGRXPlaneNavReader( OGRXPlaneDataSource* poDataSource );
+        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer) override;
+        virtual int              IsRecognizedVersion( const char* pszVersionString) override;
 };
 
 #endif

@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: xmlreformat.cpp 33646 2016-03-05 15:54:03Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  XML Reformatting - mostly for testing minixml implementation.
@@ -30,34 +29,40 @@
 #include "cpl_minixml.h"
 #include "cpl_conv.h"
 
+CPL_CVSID("$Id: xmlreformat.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 int main( int argc, char **argv )
 
 {
-    static char  szXML[20000000];
-    FILE       *fp;
+    // TODO(schwehr): Switch to using std::string.
+    static char szXML[20000000] = {};
+    FILE *fp = nullptr;
 
     if( argc == 1 )
+    {
         fp = stdin;
+    }
     else if( argv[1][0] == '-' )
     {
-        printf( "Usage: xmlreformat [filename]\n" );
+        printf( "Usage: xmlreformat [filename]\n" );/*ok*/
         exit( 0 );
     }
     else
     {
         fp = fopen( argv[1], "rt" );
-        if( fp == NULL )
+        if( fp == nullptr )
         {
-            printf( "Failed to open file %s.\n", argv[1] );
+            printf( "Failed to open file %s.\n", argv[1] );/*ok*/
             exit( 1 );
         }
     }
 
-    int nLen = fread( szXML, 1, sizeof(szXML), fp );
-    if( nLen >= (int) sizeof(szXML)-2 ) {
+    const int nLen = static_cast<int>(fread(szXML, 1, sizeof(szXML), fp));
+    if( nLen >= static_cast<int>(sizeof(szXML)) - 2 )
+    {
         fprintf( stderr,
                  "xmlreformat fixed sized buffer (%d bytes) exceeded.\n",
-                 (int) sizeof(szXML) );
+                 static_cast<int>(sizeof(szXML)) );
         exit(1);
     }
 
@@ -67,10 +72,10 @@ int main( int argc, char **argv )
     szXML[nLen] = '\0';
 
     CPLXMLNode *poTree = CPLParseXMLString( szXML );
-    if( poTree != NULL )
+    if( poTree != nullptr )
     {
         char *pszRawXML = CPLSerializeXMLTree( poTree );
-        printf( "%s", pszRawXML );
+        printf( "%s", pszRawXML );/*ok*/
         CPLFree( pszRawXML );
         CPLDestroyXMLNode( poTree );
     }

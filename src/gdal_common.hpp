@@ -91,12 +91,12 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                                 \
   }                                                                                                       \
-  Local<Value> val = obj->Get(sym);                                                                       \
+  Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                 \
   if (!val->IsNumber()){                                                                                  \
     Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
     return;                                                                                               \
   }                                                                                                       \
-  var = val->NumberValue();                                                                               \
+  var = Nan::To<double>(val).ToChecked();                                                                               \
 }
 
 #define NODE_INT_FROM_OBJ(obj, key, var)                                                                  \
@@ -105,12 +105,12 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                                 \
   }                                                                                                       \
-  Local<Value> val = obj->Get(sym);                                                                       \
+  Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                       \
   if (!val->IsNumber()){                                                                                  \
     Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
     return;                                                                                               \
   }                                                                                                       \
-  var = val->Int32Value();                                                                                \
+  var = Nan::To<int32_t>(val).ToChecked();                                                                                \
 }
 
 #define NODE_STR_FROM_OBJ(obj, key, var)                                                                  \
@@ -119,7 +119,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                     \
   }                                                                                                       \
-  Local<Value> val = obj->Get(sym);                                                                       \
+  Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                       \
   if (!val->IsString()){                                                                                  \
       Nan::ThrowTypeError("Property \"" key "\" must be a string");                                         \
       return;                                                                               \
@@ -133,7 +133,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                   \
      Nan::ThrowError("Object must contain property \"" key "\""); return;                     \
   }                                                                                                       \
-  Local<Value> val = obj->Get(sym);                                                                       \
+  Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                       \
   if (!val->IsObject() || val->IsNull() || !Nan::New(type::constructor)->HasInstance(val)) {                     \
       Nan::ThrowTypeError("Property \"" key "\" must be a " #type " object");                               \
       return;                                                                               \
@@ -149,7 +149,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
   if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
-    Local<Value> val = obj->Get(sym);                                                                     \
+    Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                     \
     if(val->IsObject() && Nan::New(type::constructor)->HasInstance(val)){                                        \
       var = Nan::ObjectWrap::Unwrap<type>(val.As<Object>());                                                   \
       if(!var->isAlive()) {                                                                                   \
@@ -167,12 +167,12 @@ NAN_SETTER(READ_ONLY_SETTER);
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
   if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
-    Local<Value> val = obj->Get(sym);                                                                     \
+    Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                     \
     if (!val->IsNumber()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
       return;                                                                               \
     }                                                                                                     \
-    var = val->NumberValue();                                                                             \
+    var = Nan::To<double>(val).ToChecked();                                                                             \
   }                                                                                                       \
 }
 
@@ -180,12 +180,12 @@ NAN_SETTER(READ_ONLY_SETTER);
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
   if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
-    Local<Value> val = obj->Get(sym);                                                                     \
+    Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                     \
     if (!val->IsNumber()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a number");                                         \
       return;                                                                               \
     }                                                                                                     \
-    var = val->Int32Value();                                                                              \
+    var = Nan::To<int32_t>(val).ToChecked();                                                                              \
   }                                                                                                       \
 }
 
@@ -193,7 +193,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 {                                                                                                         \
   Local<String> sym = Nan::New(key).ToLocalChecked();                                                                        \
   if (Nan::HasOwnProperty(obj, sym).FromMaybe(false)){                                                    \
-    Local<Value> val = obj->Get(sym);                                                                     \
+    Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();                                                                     \
     if (!val->IsString()){                                                                                \
       Nan::ThrowTypeError("Property \"" key "\" must be a string");                                         \
       return;                                                                               \
@@ -216,7 +216,7 @@ NAN_SETTER(READ_ONLY_SETTER);
       return;                                            \
     }                                                                  \
   } else if (info[num]->IsInt32()) {                                   \
-    var = info[num]->Int32Value();                                     \
+    var = Nan::To<int32_t>(info[num]).ToChecked();                     \
     if (var < 0 || var >= f->GetFieldCount()) {                        \
       Nan::ThrowRangeError("Invalid field index");                       \
       return;                                            \
@@ -234,7 +234,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!info[num]->IsNumber()) {                                                                                \
     Nan::ThrowTypeError(name " must be an integer"); return;                                       \
   }                                                                                                            \
-  var = static_cast<int>(info[num]->IntegerValue());
+  var = static_cast<int>(Nan::To<int64_t>(info[num]).ToChecked());
 
 
 #define NODE_ARG_ENUM(num, name, enum_type, var)                                                                                       \
@@ -244,7 +244,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!info[num]->IsInt32() && !info[num]->IsUint32()) {                                                                               \
     Nan::ThrowTypeError(name " must be of type " #enum_type); return;                                                      \
   }                                                                                                                                    \
-  var = enum_type(info[num]->Uint32Value());
+  var = enum_type(Nan::To<uint32_t>(info[num]).ToChecked());
 
 
 #define NODE_ARG_BOOL(num, name, var)                                                                          \
@@ -254,7 +254,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!info[num]->IsBoolean()) {                                                                               \
     Nan::ThrowTypeError(name " must be an boolean"); return;                                       \
   }                                                                                                            \
-  var = static_cast<bool>(info[num]->BooleanValue());
+  var = Nan::To<bool>(info[num]).ToChecked();
 
 
 #define NODE_ARG_DOUBLE(num, name, var)                                                                      \
@@ -264,7 +264,7 @@ NAN_SETTER(READ_ONLY_SETTER);
   if (!info[num]->IsNumber()) {                                                                              \
     Nan::ThrowTypeError(name " must be a number"); return;                                       \
   }                                                                                                          \
-  var = static_cast<double>(info[num]->NumberValue());
+  var = Nan::To<double>(info[num]).ToChecked();
 
 
 #define NODE_ARG_ARRAY(num, name, var)                                                                       \
@@ -313,7 +313,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_ARG_INT_OPT(num, name, var)                                                                         \
   if (info.Length() > num) {                                                                                     \
     if (info[num]->IsInt32()) {                                                                                  \
-      var = static_cast<int>(info[num]->IntegerValue());                                                         \
+      var = static_cast<int>(Nan::To<int64_t>(info[num]).ToChecked());                                           \
     } else if(!info[num]->IsNull() && !info[num]->IsUndefined()) {                                               \
       Nan::ThrowTypeError(name " must be an integer"); return;                                       \
     }                                                                                                            \
@@ -323,7 +323,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_ARG_ENUM_OPT(num, name, enum_type, var)                                                             \
   if (info.Length() > num) {                                                                                     \
     if (info[num]->IsInt32() || info[num]->IsUint32()) {                                                         \
-      var = static_cast<enum_type>(info[num]->Uint32Value());                                                    \
+      var = static_cast<enum_type>(Nan::To<uint32_t>(info[num]).ToChecked());                                    \
     } else if(!info[num]->IsNull() && !info[num]->IsUndefined()) {                                               \
       Nan::ThrowTypeError(name " must be an integer"); return;                                       \
     }                                                                                                            \
@@ -333,7 +333,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_ARG_BOOL_OPT(num, name, var)                                                                        \
   if (info.Length() > num) {                                                                                     \
     if (info[num]->IsBoolean()) {                                                                                \
-      var = static_cast<bool>(info[num]->BooleanValue());                                                        \
+      var = Nan::To<bool>(info[num]).ToChecked();                                                               \
     } else if(!info[num]->IsNull() && !info[num]->IsUndefined()) {                                               \
       Nan::ThrowTypeError(name " must be an boolean"); return;                                       \
     }                                                                                                            \
@@ -353,7 +353,7 @@ NAN_SETTER(READ_ONLY_SETTER);
 #define NODE_ARG_DOUBLE_OPT(num, name, var)                                                                    \
   if (info.Length() > num) {                                                                                   \
     if (info[num]->IsNumber()) {                                                                               \
-      var = static_cast<double>(info[num]->NumberValue());                                                     \
+      var = Nan::To<double>(info[num]).ToChecked();                                                            \
     } else if(!info[num]->IsNull() && !info[num]->IsUndefined()) {                                             \
       Nan::ThrowTypeError(name " must be a number"); return;                                       \
     }                                                                                                          \

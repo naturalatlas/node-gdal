@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmemdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGmtDriver class.
@@ -31,75 +30,67 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmemdriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrgmtdriver.cpp 73408e4a938d6fb45b1a01af4812236e464c7159 2019-04-19 22:20:14 +0200 Even Rouault $")
 
 /************************************************************************/
-/*                          ~OGRGmtDriver()                           */
+/*                    OGRGMTDriverIdentify()                            */
 /************************************************************************/
 
-OGRGmtDriver::~OGRGmtDriver() {}
-
-/************************************************************************/
-/*                              GetName()                               */
-/************************************************************************/
-
-const char *OGRGmtDriver::GetName()
+static int OGRGMTDriverIdentify( GDALOpenInfo *poOpenInfo )
 
 {
-    return "OGR_GMT";
+    const char* pszHeader = reinterpret_cast<const char*>(poOpenInfo->pabyHeader);
+    if( poOpenInfo->nHeaderBytes && strstr(pszHeader, "@VGMT") != nullptr )
+        return true;
+
+    if( EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "GMT") )
+        return true;
+
+    return false;
 }
 
 /************************************************************************/
-/*                                Open()                                */
+/*                           OGRGMTDriverOpen()                         */
 /************************************************************************/
 
-OGRDataSource *OGRGmtDriver::Open( const char * pszFilename, int bUpdate )
+static GDALDataset *OGRGMTDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    if( !EQUAL(CPLGetExtension(pszFilename),"gmt") )
-        return NULL;
+    if( !OGRGMTDriverIdentify(poOpenInfo) )
+        return nullptr;
 
     OGRGmtDataSource *poDS = new OGRGmtDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate ) )
+    if( !poDS->Open( poOpenInfo->pszFilename, poOpenInfo->eAccess == GA_Update ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
 }
 
 /************************************************************************/
-/*                          CreateDataSource()                          */
+/*                         OGRGMTDriverCreate()                         */
 /************************************************************************/
 
-OGRDataSource *OGRGmtDriver::CreateDataSource( const char * pszName,
-                                               char **papszOptions )
 
+static GDALDataset *OGRGMTDriverCreate( const char *pszName,
+                                        CPL_UNUSED int nBands,
+                                        CPL_UNUSED int nXSize,
+                                        CPL_UNUSED int nYSize,
+                                        CPL_UNUSED GDALDataType eDT,
+                                        char **papszOptions )
 {
     OGRGmtDataSource *poDS = new OGRGmtDataSource();
 
     if( poDS->Create( pszName, papszOptions ) )
         return poDS;
 
-
     delete poDS;
-    return NULL;
+    return nullptr;
 }
 
-/************************************************************************/
-/*                           TestCapability()                           */
-/************************************************************************/
-
-int OGRGmtDriver::TestCapability( const char * pszCap )
-
-{
-    if( EQUAL(pszCap,ODrCCreateDataSource) )
-        return TRUE;
-
-    return FALSE;
-}
 
 /************************************************************************/
 /*                           RegisterOGRGMT()                           */
@@ -108,9 +99,20 @@ int OGRGmtDriver::TestCapability( const char * pszCap )
 void RegisterOGRGMT()
 
 {
-    OGRSFDriver* poDriver = new OGRGmtDriver;
+    if( GDALGetDriverByName("OGR_GMT") != nullptr )
+        return;
+
+    GDALDriver *poDriver = new GDALDriver();
+    poDriver->SetDescription("OGR_GMT");
+    poDriver->SetMetadataItem(GDAL_DCAP_VECTOR, "YES");
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "GMT ASCII Vectors (.gmt)" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "gmt" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_gmt.html" );
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver(poDriver);
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+
+    poDriver->pfnOpen = OGRGMTDriverOpen;
+    poDriver->pfnIdentify = OGRGMTDriverIdentify;
+    poDriver->pfnCreate = OGRGMTDriverCreate;
+
+    GetGDALDriverManager()->RegisterDriver(poDriver);
 }

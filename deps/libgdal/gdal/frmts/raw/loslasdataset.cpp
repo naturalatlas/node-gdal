@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: loslasdataset.cpp 33864 2016-04-02 11:50:14Z goatbar $
  *
  * Project:  Horizontal Datum Formats
  * Purpose:  Implementation of NOAA/NADCON los/las datum shift format.
@@ -33,7 +32,7 @@
 #include "ogr_srs_api.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: loslasdataset.cpp 33864 2016-04-02 11:50:14Z goatbar $");
+CPL_CVSID("$Id: loslasdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /**
 
@@ -72,21 +71,25 @@ even the header record is this length though it means some waste.
 /* ==================================================================== */
 /************************************************************************/
 
-class LOSLASDataset : public RawDataset
+class LOSLASDataset final: public RawDataset
 {
-  public:
     VSILFILE    *fpImage;  // image data file.
 
     int         nRecordLength;
 
     double      adfGeoTransform[6];
 
-  public:
-                LOSLASDataset();
-    virtual ~LOSLASDataset();
+    CPL_DISALLOW_COPY_ASSIGN(LOSLASDataset)
 
-    virtual CPLErr GetGeoTransform( double * padfTransform );
-    virtual const char *GetProjectionRef();
+  public:
+    LOSLASDataset();
+    ~LOSLASDataset() override;
+
+    CPLErr GetGeoTransform( double * padfTransform ) override;
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 
     static GDALDataset *Open( GDALOpenInfo * );
     static int          Identify( GDALOpenInfo * );
@@ -102,7 +105,10 @@ class LOSLASDataset : public RawDataset
 /*                             LOSLASDataset()                          */
 /************************************************************************/
 
-LOSLASDataset::LOSLASDataset() : fpImage(NULL), nRecordLength(0) { }
+LOSLASDataset::LOSLASDataset() : fpImage(nullptr), nRecordLength(0)
+{
+    memset( adfGeoTransform, 0, sizeof(adfGeoTransform) );
+}
 
 /************************************************************************/
 /*                            ~LOSLASDataset()                          */
@@ -113,7 +119,7 @@ LOSLASDataset::~LOSLASDataset()
 {
     FlushCache();
 
-    if( fpImage != NULL )
+    if( fpImage != nullptr )
         CPL_IGNORE_RET_VAL(VSIFCloseL( fpImage ));
 }
 
@@ -127,9 +133,11 @@ int LOSLASDataset::Identify( GDALOpenInfo *poOpenInfo )
     if( poOpenInfo->nHeaderBytes < 64 )
         return FALSE;
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     if( !EQUAL(CPLGetExtension(poOpenInfo->pszFilename),"las")
         && !EQUAL(CPLGetExtension(poOpenInfo->pszFilename),"los") )
         return FALSE;
+#endif
 
     if( !STARTS_WITH_CI((const char *)poOpenInfo->pabyHeader + 56, "NADGRD") )
         return FALSE;
@@ -144,24 +152,26 @@ int LOSLASDataset::Identify( GDALOpenInfo *poOpenInfo )
 GDALDataset *LOSLASDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if( !Identify( poOpenInfo ) )
-        return NULL;
+    if( !Identify( poOpenInfo ) || poOpenInfo->fpL == nullptr )
+        return nullptr;
+
+/* -------------------------------------------------------------------- */
+/*      Confirm the requested access is supported.                      */
+/* -------------------------------------------------------------------- */
+    if( poOpenInfo->eAccess == GA_Update )
+    {
+        CPLError( CE_Failure, CPLE_NotSupported,
+                  "The LOSLAS driver does not support update access to existing"
+                  " datasets." );
+        return nullptr;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     LOSLASDataset *poDS = new LOSLASDataset();
-
-/* -------------------------------------------------------------------- */
-/*      Open the file.                                                  */
-/* -------------------------------------------------------------------- */
-    poDS->fpImage = VSIFOpenL( poOpenInfo->pszFilename, "rb" );
-
-    if( poDS->fpImage == NULL )
-    {
-        delete poDS;
-        return NULL;
-    }
+    poDS->fpImage = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read the header.                                                */
@@ -174,10 +184,11 @@ GDALDataset *LOSLASDataset::Open( GDALOpenInfo * poOpenInfo )
     CPL_LSBPTR32( &(poDS->nRasterXSize) );
     CPL_LSBPTR32( &(poDS->nRasterYSize) );
 
-    if (!GDALCheckDatasetDimensions(poDS->nRasterXSize, poDS->nRasterYSize))
+    if (!GDALCheckDatasetDimensions(poDS->nRasterXSize, poDS->nRasterYSize) ||
+        poDS->nRasterXSize > (INT_MAX - 4) / 4 )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     CPL_IGNORE_RET_VAL(VSIFSeekL( poDS->fpImage, 76, SEEK_SET ));
@@ -205,10 +216,12 @@ GDALDataset *LOSLASDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->SetBand(
         1, new RawRasterBand( poDS, 1, poDS->fpImage,
-                              poDS->nRasterYSize * poDS->nRecordLength + 4,
+                              static_cast<vsi_l_offset>(poDS->nRasterYSize) *
+                                    poDS->nRecordLength + 4,
                               4, -1 * poDS->nRecordLength,
                               GDT_Float32,
-                              CPL_IS_LSB, TRUE, FALSE ) );
+                              CPL_IS_LSB,
+                              RawRasterBand::OwnFP::NO ) );
 
 /* -------------------------------------------------------------------- */
 /*      Setup georeferencing.                                           */
@@ -231,7 +244,7 @@ GDALDataset *LOSLASDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -249,10 +262,10 @@ CPLErr LOSLASDataset::GetGeoTransform( double * padfTransform )
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *LOSLASDataset::GetProjectionRef()
+const char *LOSLASDataset::_GetProjectionRef()
 
 {
-    return SRS_WKT_WGS84;
+    return SRS_WKT_WGS84_LAT_LONG;
 }
 
 /************************************************************************/
@@ -262,7 +275,7 @@ const char *LOSLASDataset::GetProjectionRef()
 void GDALRegister_LOSLAS()
 
 {
-    if( GDALGetDriverByName( "LOSLAS" ) != NULL )
+    if( GDALGetDriverByName( "LOSLAS" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

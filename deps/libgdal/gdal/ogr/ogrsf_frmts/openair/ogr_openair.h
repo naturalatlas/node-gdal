@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_openair.h 32976 2016-01-14 00:07:34Z goatbar $
+ * $Id: ogr_openair.h 2c3d60220a2d6b41496ded571e231b96435bffa0 2016-11-25 14:09:24Z Even Rouault $
  *
  * Project:  OpenAir Translator
  * Purpose:  Definition of classes for OGR .sua driver.
@@ -64,16 +64,15 @@ class OGROpenAirLayer : public OGRLayer
     OGRFeature *       GetNextRawFeature();
 
   public:
-                        OGROpenAirLayer(VSILFILE* fp);
-                        ~OGROpenAirLayer();
+    explicit            OGROpenAirLayer(VSILFILE* fp);
+                        virtual ~OGROpenAirLayer();
 
+    virtual void                ResetReading() override;
+    virtual OGRFeature *        GetNextFeature() override;
 
-    virtual void                ResetReading();
-    virtual OGRFeature *        GetNextFeature();
+    virtual OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    virtual OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
-
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -98,15 +97,15 @@ class OGROpenAirLabelLayer : public OGRLayer
     CPLString          osCEILING;
 
   public:
-                        OGROpenAirLabelLayer(VSILFILE* fp);
-                        ~OGROpenAirLabelLayer();
+    explicit            OGROpenAirLabelLayer(VSILFILE* fp);
+                        virtual ~OGROpenAirLabelLayer();
 
-    virtual void                ResetReading();
-    virtual OGRFeature *        GetNextFeature();
+    virtual void                ResetReading() override;
+    virtual OGRFeature *        GetNextFeature() override;
 
-    virtual OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    virtual OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -122,16 +121,16 @@ class OGROpenAirDataSource : public OGRDataSource
 
   public:
                         OGROpenAirDataSource();
-                        ~OGROpenAirDataSource();
+                        virtual ~OGROpenAirDataSource();
 
     int                 Open( const char * pszFilename );
 
-    virtual const char*         GetName() { return pszName; }
+    virtual const char*         GetName() override { return pszName; }
 
-    virtual int                 GetLayerCount() { return nLayers; }
-    virtual OGRLayer*           GetLayer( int );
+    virtual int                 GetLayerCount() override { return nLayers; }
+    virtual OGRLayer*           GetLayer( int ) override;
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 };
 
 bool OGROpenAirGetLatLon( const char* pszStr, double& dfLat, double& dfLon );

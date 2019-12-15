@@ -4,7 +4,7 @@
  * Purpose:  Implements PostGIS Raster driver class methods
  * Author:   Jorge Arevalo, jorge.arevalo@deimos-space.com
  *
- * Last changes: $Id: $
+ * Last changes: $Id: postgisrasterdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  ******************************************************************************
  * Copyright (c) 2010, Jorge Arevalo, jorge.arevalo@deimos-space.com
@@ -31,20 +31,21 @@
 #include "postgisraster.h"
 #include "cpl_multiproc.h"
 
+CPL_CVSID("$Id: postgisrasterdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /************************
  * \brief Constructor
  ************************/
-PostGISRasterDriver::PostGISRasterDriver()
-{
-    hMutex = NULL;
-}
+PostGISRasterDriver::PostGISRasterDriver() :
+    hMutex(nullptr)
+{}
 
 /************************
  * \brief Destructor
  ************************/
 PostGISRasterDriver::~PostGISRasterDriver() {
 
-    if( hMutex != NULL )
+    if( hMutex != nullptr )
         CPLDestroyMutex(hMutex);
     std::map<CPLString, PGconn*>::iterator oIter = oMapConnection.begin();
     for(; oIter != oMapConnection.end(); ++oIter )
@@ -70,11 +71,11 @@ PostGISRasterDriver::~PostGISRasterDriver() {
 PGconn* PostGISRasterDriver::GetConnection(const char* pszConnectionString,
         const char * pszDbnameIn, const char * pszHostIn, const char * pszPortIn, const char * pszUserIn)
 {
-    PGconn * poConn = NULL;
+    PGconn * poConn = nullptr;
 
-    if( pszHostIn == NULL ) pszHostIn = "(null)";
-    if( pszPortIn == NULL ) pszPortIn = "(null)";
-    if( pszUserIn == NULL ) pszUserIn = "(null)";
+    if( pszHostIn == nullptr ) pszHostIn = "(null)";
+    if( pszPortIn == nullptr ) pszPortIn = "(null)";
+    if( pszUserIn == nullptr ) pszUserIn = "(null)";
     CPLString osKey = pszDbnameIn;
     osKey += "-";
     osKey += pszHostIn;
@@ -93,17 +94,16 @@ PGconn* PostGISRasterDriver::GetConnection(const char* pszConnectionString,
     if( oIter != oMapConnection.end() )
         return oIter->second;
 
-
     /**
      * There's no existing connection. Create a new one.
      **/
     poConn = PQconnectdb(pszConnectionString);
-    if (poConn == NULL ||
+    if (poConn == nullptr ||
             PQstatus(poConn) == CONNECTION_BAD) {
         CPLError(CE_Failure, CPLE_AppDefined, "PQconnectdb failed: %s\n",
                 PQerrorMessage(poConn));
         PQfinish(poConn);
-        return NULL;
+        return nullptr;
     }
 
     /**

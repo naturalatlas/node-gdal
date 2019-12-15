@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: pdfio.h 33338 2016-02-03 10:24:38Z rouault $
+ * $Id: pdfio.h 5c12d11614a325317ceaa7c0567070b3e4188275 2019-03-26 12:43:59 +0100 Even Rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset.
@@ -38,58 +38,63 @@
 
 #define BUFFER_SIZE 1024
 
-
-#ifdef POPPLER_0_23_OR_LATER
 #define getPos_ret_type Goffset
 #define getStart_ret_type Goffset
 #define makeSubStream_offset_type Goffset
 #define setPos_offset_type Goffset
 #define moveStart_delta_type Goffset
+
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 58
+#define makeSubStream_object_type Object&&
 #else
-#define getPos_ret_type int
-#define getStart_ret_type Guint
-#define makeSubStream_offset_type Guint
-#define setPos_offset_type Guint
-#define moveStart_delta_type int
+#define makeSubStream_object_type Object*
 #endif
 
+// Detect Poppler 0.71 that no longer defines GBool
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 69
+#ifndef initObj
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 71
+#define GBool bool
+#define gFalse false
+#endif
+#endif
+#endif
 
-class VSIPDFFileStream: public BaseStream
+class VSIPDFFileStream final: public BaseStream
 {
     public:
-        VSIPDFFileStream(VSILFILE* f, const char* pszFilename, Object *dictA);
+        VSIPDFFileStream(VSILFILE* f, const char* pszFilename,
+                         makeSubStream_object_type dictA);
         VSIPDFFileStream(VSIPDFFileStream* poParent,
                          vsi_l_offset startA, GBool limitedA,
-                         vsi_l_offset lengthA, Object *dictA);
+                         vsi_l_offset lengthA,
+                         makeSubStream_object_type dictA);
         virtual ~VSIPDFFileStream();
 
-#ifdef POPPLER_0_23_OR_LATER
-        virtual BaseStream* copy();
-#endif
+        virtual BaseStream* copy() override;
 
         virtual Stream *   makeSubStream(makeSubStream_offset_type startA, GBool limitedA,
-                                         makeSubStream_offset_type lengthA, Object *dictA);
-        virtual getPos_ret_type      getPos();
-        virtual getStart_ret_type    getStart();
+                                         makeSubStream_offset_type lengthA, makeSubStream_object_type dictA) override;
+        virtual getPos_ret_type      getPos() override;
+        virtual getStart_ret_type    getStart() override;
 
-        virtual void       setPos(setPos_offset_type pos, int dir = 0);
-        virtual void       moveStart(moveStart_delta_type delta);
+        virtual void       setPos(setPos_offset_type pos, int dir = 0) override;
+        virtual void       moveStart(moveStart_delta_type delta) override;
 
-        virtual StreamKind getKind();
-        virtual GooString *getFileName();
+        virtual StreamKind getKind() override;
+        virtual GooString *getFileName() override;
 
-        virtual int        getChar();
-        virtual int        getUnfilteredChar ();
-        virtual int        lookChar();
+        virtual int        getChar() override;
+        virtual int        getUnfilteredChar () override;
+        virtual int        lookChar() override;
 
-        virtual void       reset();
-        virtual void       unfilteredReset ();
-        virtual void       close();
+        virtual void       reset() override;
+        virtual void       unfilteredReset () override;
+        virtual void       close() override;
 
     private:
-        /* Added in poppler 0.15.0 */
-        virtual GBool hasGetChars();
-        virtual int getChars(int nChars, Guchar *buffer);
+        virtual GBool hasGetChars() override;
+        virtual int getChars(int nChars, Guchar *buffer) override;
 
         VSIPDFFileStream  *poParent;
         GooString         *poFilename;

@@ -37,7 +37,7 @@
     "email": "brandon@naturalatlas.com"
   },
   "scripts": {
-    "test": "mocha test -R tap --timeout 600000 --no-colors -gc --require ./test/_common.js",
+    "test": "mocha test -R tap --timeout 600000 --expose-gc --require ./test/_common.js",
     "test-syntax": "eslint lib test --fix",
     "install": "node-pre-gyp install --fallback-to-build",
     "postpublish": "npm run publish-yuidoc",
@@ -45,20 +45,20 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "nan": "~2.10.0",
-    "node-pre-gyp": "^0.13.0"
+    "nan": "^2.14.0",
+    "node-pre-gyp": "^0.14.0"
   },
   "bundledDependencies": [
     "node-pre-gyp"
   ],
   "devDependencies": {
-    "aws-sdk": "~2.299.0",
-    "chai": "~4.1.2",
-    "eslint": "~4.5.0",
+    "aws-sdk": "^2.477.0",
+    "chai": "^4.2.0",
+    "eslint": "^5.16.0",
     "eslint-config-naturalatlas": "~1.0.1",
     "gh-pages": "~0.2.0",
-    "mocha": "~5.2.0",
-    "node-gyp": "~3.8.0",
+    "mocha": "^6.0.0",
+    "node-gyp": "^6.0.0",
     "yuidoc-lucid-theme": "~0.1.2",
     "yuidocjs": "~0.3.50"
   },

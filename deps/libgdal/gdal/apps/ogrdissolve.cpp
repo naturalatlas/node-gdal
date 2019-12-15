@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdissolve.cpp 11636 2007-06-10 06:02:56Z mloskot $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Allow a user to dissolve geometries based on an attribute.
@@ -32,9 +31,10 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 #include "ogr_api.h"
+#include "commonutils.h"
 #include <map>
 #include <list>
-CPL_CVSID("$Id: ogr2ogr.cpp 11636 2007-06-10 06:02:56Z mloskot $");
+CPL_CVSID("$Id: ogrdissolve.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 static void Usage();
 
@@ -64,7 +64,7 @@ typedef std::list<OGRGeometry*> GeometriesList;
 /*                                main()                                */
 /************************************************************************/
 
-int main( int nArgc, char ** papszArgv )
+MAIN_START(nArgc, papszArgv)
 
 {
     const char  *pszFormat = "ESRI Shapefile";
@@ -101,7 +101,7 @@ int main( int nArgc, char ** papszArgv )
 
     for( int iArg = 1; iArg < nArgc; iArg++ )
     {
-        if( EQUAL(papszArgv[iArg],"-f") && iArg < nArgc-1 )
+        if( (EQUAL(papszArgv[iArg],"-f") || EQUAL(papszArgv[iArg],"-of")) && iArg < nArgc-1 )
         {
             pszFormat = papszArgv[++iArg];
         }
@@ -211,7 +211,7 @@ int main( int nArgc, char ** papszArgv )
             oRing.addPoint( CPLAtof(papszArgv[iArg+1]), CPLAtof(papszArgv[iArg+2]) );
 
             poSpatialFilter = new OGRPolygon();
-            ((OGRPolygon *) poSpatialFilter)->addRing( &oRing );
+            poSpatialFilter->toPolygon()->addRing( &oRing );
             iArg += 4;
         }
         else if( EQUAL(papszArgv[iArg],"-where") && papszArgv[iArg+1] != NULL )
@@ -338,6 +338,7 @@ int main( int nArgc, char ** papszArgv )
     if( pszOutputSRSDef != NULL )
     {
         poOutputSRS = new OGRSpatialReference();
+        poOutputSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
         if( poOutputSRS->SetFromUserInput( pszOutputSRSDef ) != OGRERR_NONE )
         {
             printf( "Failed to process SRS definition: %s\n",
@@ -352,6 +353,7 @@ int main( int nArgc, char ** papszArgv )
     if( pszSourceSRSDef != NULL )
     {
         poSourceSRS = new OGRSpatialReference();
+        poSourceSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
         if( poSourceSRS->SetFromUserInput( pszSourceSRSDef ) != OGRERR_NONE )
         {
             printf( "Failed to process SRS definition: %s\n",
@@ -456,6 +458,7 @@ int main( int nArgc, char ** papszArgv )
 
     return 0;
 }
+MAIN_END
 
 /************************************************************************/
 /*                               Usage()                                */
@@ -513,7 +516,6 @@ static void Usage()
     exit( 1 );
 }
 
-
 StringGeometryMap* CollectGeometries(   OGRLayer* poSrcLayer,
                                         const char** papszFields) {
 
@@ -559,7 +561,6 @@ StringGeometryMap* CollectGeometries(   OGRLayer* poSrcLayer,
         } else {
             CPLDebug("CollectGeometries", "Geometry was invalid not adding!!!!");
         }
-
     }
 
 /* -------------------------------------------------------------------- */
@@ -604,7 +605,6 @@ StringGeometryMap* CollectGeometries(   OGRLayer* poSrcLayer,
               CPLString fid = ipos->first;
               CPLDebug ("CollectGeometries", "First %s Second %d", ipos->first.c_str(), ipos->second);
 
-
              OGRGeometryCollection* geom = new OGRGeometryCollection;
 
              for (pos = poGeometriesMap.lower_bound(fid);
@@ -634,7 +634,6 @@ StringGeometryMap* CollectGeometries(   OGRLayer* poSrcLayer,
                             collections_i->second->getNumGeometries());
                 OGRGeometry* buffer = collections_i->second->Buffer(0);
                 buffers->insert(std::make_pair(collections_i->first, buffer));
-
     }
 
     for (collections_i = poCollections.begin();
@@ -661,39 +660,42 @@ GeometriesList* FlattenGeometries(GeometriesList* input) {
                 OGRwkbGeometryType iGType = buffer->getGeometryType();
 
                 if (iGType == wkbPolygon) {
-                        OGRPolygon* geom = (OGRPolygon*)buffer;
-                        output->push_back((OGRGeometry*)geom);
-                CPLDebug(   "CollectGeometries",
-                            "Collapsing wkbPolygon geometries......"
-                            );
+                    output->push_back(buffer);
+                    CPLDebug(   "CollectGeometries",
+                                "Collapsing wkbPolygon geometries......"
+                                );
                 }
                 if (iGType == wkbMultiPolygon) {
-                        OGRMultiPolygon* geom = (OGRMultiPolygon*)buffer;
-                        for (int i=0; i< geom->getNumGeometries(); i++) {
-                            OGRPolygon* g = (OGRPolygon*)geom->getGeometryRef(i);
-                            output->push_back((OGRGeometry*)g);
-                        }
+                    OGRMultiPolygon* geom = buffer->toMultiPolygon();
+                    for (int i=0; i< geom->getNumGeometries(); i++) {
+                        OGRPolygon* g = geom->getGeometryRef(i)->toPolygon();
+                        output->push_back((OGRGeometry*)g);
+                    }
 
-                CPLDebug(   "CollectGeometries",
-                            "Collapsing wkbMultiPolygon geometries......"
-                            );
+                    CPLDebug(   "CollectGeometries",
+                                "Collapsing wkbMultiPolygon geometries......"
+                                );
                 }
-                if (iGType == wkbGeometryCollection) {
-                        OGRGeometryCollection* geom = (OGRGeometryCollection*)buffer;
-                        GeometriesList* collection = new GeometriesList;
-                            GeometriesList::const_iterator g_i;
-                        for (int i=0; i< geom->getNumGeometries(); i++) {
-                            OGRGeometry* g = (OGRGeometry*)geom->getGeometryRef(i);
-                            collection->push_back(g);
-                        }
-                            GeometriesList* collapsed = FlattenGeometries(collection);
-                            for (g_i=collapsed->begin(); g_i!=collapsed->end(); g_i++){
-                               output->push_back((OGRGeometry*)(*g_i));
-                CPLDebug(   "CollectGeometries",
-                            "Collapsing wkbGeometryCollection geometries......"
-                            );
-
-                            }
+                if (iGType == wkbGeometryCollection)
+                {
+                    OGRGeometryCollection* geom = buffer->toGeometryCollection();
+                    GeometriesList* collection = new GeometriesList;
+                    GeometriesList::const_iterator g_i;
+                    for (int i=0; i< geom->getNumGeometries(); i++)
+                    {
+                        OGRGeometry* g = geom->getGeometryRef(i);
+                        collection->push_back(g);
+                    }
+                    GeometriesList* collapsed = FlattenGeometries(collection);
+                    for( g_i = collapsed->begin();
+                         g_i != collapsed->end();
+                         g_i++ )
+                    {
+                        output->push_back((OGRGeometry*)(*g_i));
+                        CPLDebug(
+                            "CollectGeometries",
+                            "Collapsing wkbGeometryCollection geometries." );
+                    }
                 }
                 // CPLDebug(   "CollectGeometries",
                 //             "Buffered Geometry size %d",
@@ -1145,7 +1147,7 @@ static int DissolveLayer( OGRDataSource *poSrcDS,
 //                     poDstLayer->CommitTransaction();
 //
 //                 printf( "Failed to transform feature %d.\n",
-//                         (int) poFeature->GetFID() );
+//                         static_cast<int>(poFeature->GetFID()) );
 //                 if( !bSkipFailures )
 //                 {
 //                     OGRFeature::DestroyFeature( poFeature );

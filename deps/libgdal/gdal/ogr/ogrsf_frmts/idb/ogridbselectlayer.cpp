@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogridbselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBSelectLayer class, layer access to the results
@@ -32,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_idb.h"
 
-CPL_CVSID("$Id: ogridbselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
+CPL_CVSID("$Id: ogridbselectlayer.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRIDBSelectLayer()                         */

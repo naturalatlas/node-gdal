@@ -19,7 +19,7 @@
 */
 
 #include "marfa.h"
-#include <cassert>
+CPL_CVSID("$Id: JPNG_band.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 CPL_C_START
 #include <jpeglib.h>
@@ -34,13 +34,13 @@ CPL_C_END
 NAMESPACE_MRF_START
 
 // Test that all alpha values are equal to N
-template<int N> bool AllAlpha(const buf_mgr &src, const ILImage &img) {
+template<int N> static bool AllAlpha(const buf_mgr &src, const ILImage &img) {
     int stride = img.pagesize.c;
     char *s = src.buffer + img.pagesize.c - 1;
     char *stop = src.buffer + img.pageSizeBytes;
     while (s < stop && N == static_cast<unsigned char>(*s))
         s += stride;
-    return (s >= stop);
+    return s >= stop;
 }
 
 // Fully opaque
@@ -62,8 +62,7 @@ static void RGBA2RGB(const char *start, const char *stop, char *target) {
 // works from stop to start, the last parameter is the end of the source region
 static void RGB2RGBA(const char *start, char *stop, const char *source_end) {
     while (start < stop) {
-        --stop;
-        *(reinterpret_cast<unsigned char*>(stop)) = 0xff;
+        *--stop = ~static_cast<char>(0);
         *--stop = *--source_end;
         *--stop = *--source_end;
         *--stop = *--source_end;
@@ -82,8 +81,7 @@ static void LA2L(const char *start, const char *stop, char *target) {
 // works from stop to start, the last parameter is the end of the source region
 static void L2LA(const char *start, char *stop, const char *source_end) {
     while (start < stop) {
-        --stop;
-        *(reinterpret_cast<unsigned char*>(stop)) = 0xff;
+        *--stop = ~static_cast<char>(0);
         *--stop = *--source_end;
     }
 }
@@ -91,7 +89,7 @@ static void L2LA(const char *start, char *stop, const char *source_end) {
 static CPLErr initBuffer(buf_mgr &b)
 {
     b.buffer = (char *)(CPLMalloc(b.size));
-    if (b.buffer != NULL)
+    if (b.buffer != nullptr)
         return CE_None;
     CPLError(CE_Failure, CPLE_OutOfMemory, "Allocating temporary JPNG buffer");
     return CE_Failure;
@@ -125,11 +123,15 @@ CPLErr JPNG_Band::Decompress(buf_mgr &dst, buf_mgr &src)
                 L2LA(dst.buffer, dst.buffer + dst.size, temp.buffer + temp.size);
         }
     }
-    else { // Should be PNG
-        assert(PNG_SIG == CPL_LSBWORD32(signature));
+    else if( PNG_SIG == CPL_LSBWORD32(signature) ) { // Should be PNG
         PNG_Codec codec(image);
         // PNG codec expands to 4 bands
         return codec.DecompressPNG(dst, src);
+    }
+    else {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Not a JPEG or PNG tile");
+        retval = CE_Failure;
     }
 
     return retval;
@@ -139,10 +141,9 @@ CPLErr JPNG_Band::Decompress(buf_mgr &dst, buf_mgr &src)
 CPLErr JPNG_Band::Compress(buf_mgr &dst, buf_mgr &src)
 {
     ILImage image(img);
-    CPLErr retval = CE_None;
 
-    buf_mgr temp = { NULL, static_cast<size_t>(img.pageSizeBytes) };
-    retval = initBuffer(temp);
+    buf_mgr temp = { nullptr, static_cast<size_t>(img.pageSizeBytes) };
+    CPLErr retval = initBuffer(temp);
     if (retval != CE_None)
         return retval;
 
@@ -170,7 +171,7 @@ CPLErr JPNG_Band::Compress(buf_mgr &dst, buf_mgr &src)
             retval = codec.CompressPNG(dst, src);
         }
     }
-    catch (CPLErr err) {
+    catch (const CPLErr& err) {
         retval = err;
     }
 
@@ -179,27 +180,36 @@ CPLErr JPNG_Band::Compress(buf_mgr &dst, buf_mgr &src)
 }
 
 /**
-* \Brief For PPNG, builds the data structures needed to write the palette
+* \brief For PPNG, builds the data structures needed to write the palette
 * The presence of the PNGColors and PNGAlpha is used as a flag for PPNG only
 */
 
-JPNG_Band::JPNG_Band(GDALMRFDataset *pDS, const ILImage &image, int b, int level) :
-GDALMRFRasterBand(pDS, image, b, level), 
-rgb(FALSE), sameres(FALSE), optimize(false)
-
+JPNG_Band::JPNG_Band( GDALMRFDataset *pDS, const ILImage &image,
+                      int b, int level ) :
+    GDALMRFRasterBand(pDS, image, b, level),
+    rgb(FALSE),
+    sameres(FALSE),
+    optimize(false)
 {   // Check error conditions
-    if (image.dt != GDT_Byte) {
-	CPLError(CE_Failure, CPLE_NotSupported, "Data type not supported by MRF JPNG");
-	return;
+    if( image.dt != GDT_Byte )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Data type not supported by MRF JPNG");
+        return;
     }
-    if (image.order != IL_Interleaved || (image.pagesize.c != 4 && image.pagesize.c != 2)) {
-	CPLError(CE_Failure, CPLE_NotSupported, "MRF JPNG can only handle 2 or 4 interleaved bands");
-	return;
+    if( image.order != IL_Interleaved ||
+        (image.pagesize.c != 4 && image.pagesize.c != 2) )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "MRF JPNG can only handle 2 or 4 interleaved bands");
+        return;
     }
 
-    if (img.pagesize.c == 4) { // RGBA can have storage flavors
+    if( img.pagesize.c == 4 )
+    { // RGBA can have storage flavors
         CPLString const &pm = pDS->GetPhotometricInterpretation();
-        if (pm == "RGB" || pm == "MULTISPECTRAL") { // Explicit RGB or MS
+        if (pm == "RGB" || pm == "MULTISPECTRAL")
+        { // Explicit RGB or MS
             rgb = TRUE;
             sameres = TRUE;
         }
@@ -209,11 +219,11 @@ rgb(FALSE), sameres(FALSE), optimize(false)
 
     optimize = GetOptlist().FetchBoolean("OPTIMIZE", FALSE) != FALSE;
 
-    // PNGs and JPGs can be larger than the source, especially for small page size
+    // PNGs and JPGs can be larger than the source, especially for
+    // small page size.
     poDS->SetPBufferSize(image.pageSizeBytes + 100);
 }
 
-JPNG_Band::~JPNG_Band() {
-}
+JPNG_Band::~JPNG_Band() {}
 
 NAMESPACE_MRF_END

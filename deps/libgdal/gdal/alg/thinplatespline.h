@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: thinplatespline.h 33715 2016-03-13 08:52:06Z goatbar $
+ * $Id: thinplatespline.h c85c58ac781ef781cd126006d91cb5eed2dd53e2 2018-05-18 18:16:52 +0200 Even Rouault $
  *
  * Project:  GDAL Warp API
  * Purpose:  Declarations for 2D Thin Plate Spline transformer.
@@ -30,20 +30,24 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#ifndef THINPLATESPLINE_H_INCLUDED
+#define THINPLATESPLINE_H_INCLUDED
+
+#ifndef DOXYGEN_SKIP
+
 #include "gdal_alg.h"
 #include "cpl_conv.h"
 
 typedef enum
 {
-	VIZ_GEOREF_SPLINE_ZERO_POINTS,
-	VIZ_GEOREF_SPLINE_ONE_POINT,
-	VIZ_GEOREF_SPLINE_TWO_POINTS,
-	VIZ_GEOREF_SPLINE_ONE_DIMENSIONAL,
-	VIZ_GEOREF_SPLINE_FULL,
+    VIZ_GEOREF_SPLINE_ZERO_POINTS,
+    VIZ_GEOREF_SPLINE_ONE_POINT,
+    VIZ_GEOREF_SPLINE_TWO_POINTS,
+    VIZ_GEOREF_SPLINE_ONE_DIMENSIONAL,
+    VIZ_GEOREF_SPLINE_FULL,
 
-	VIZ_GEOREF_SPLINE_POINT_WAS_ADDED,
-	VIZ_GEOREF_SPLINE_POINT_WAS_DELETED
-
+    VIZ_GEOREF_SPLINE_POINT_WAS_ADDED,
+    VIZ_GEOREF_SPLINE_POINT_WAS_DELETED
 } vizGeorefInterType;
 
 //#define VIZ_GEOREF_SPLINE_MAX_POINTS 40
@@ -55,7 +59,7 @@ class VizGeorefSpline2D
 
   public:
 
-    VizGeorefSpline2D(int nof_vars = 1) :
+    explicit VizGeorefSpline2D(int nof_vars = 1) :
         type(VIZ_GEOREF_SPLINE_ZERO_POINTS),
         _nof_vars(nof_vars),
         _nof_points(0),
@@ -68,16 +72,18 @@ class VizGeorefSpline2D
 #endif
         _dx(0.0),
         _dy(0.0),
-        x(NULL),
-        y(NULL),
-        u(NULL),
-        unused(NULL),
-        index(NULL)
+        x(nullptr),
+        y(nullptr),
+        u(nullptr),
+        unused(nullptr),
+        index(nullptr),
+        x_mean(0),
+        y_mean(0)
     {
         for( int i = 0; i < VIZGEOREF_MAX_VARS; i++ )
         {
-            rhs[i] = NULL;
-            coef[i] = NULL;
+            rhs[i] = nullptr;
+            coef[i] = nullptr;
         }
 
         grow_points();
@@ -116,32 +122,32 @@ class VizGeorefSpline2D
     }
 
     void dump_data_points()
-	{
-            for ( int i = 0; i < _nof_points; i++ )
-            {
-                fprintf(stderr, "X = %f Y = %f Vars = ", x[i], y[i]);
-                for ( int v = 0; v < _nof_vars; v++ )
-                    fprintf(stderr, "%f ", rhs[v][i+3]);
-                fprintf(stderr, "\n");
-            }
-	}
+    {
+        for ( int i = 0; i < _nof_points; i++ )
+        {
+            fprintf(stderr, "X = %f Y = %f Vars = ", x[i], y[i]);
+            for ( int v = 0; v < _nof_vars; v++ )
+                fprintf(stderr, "%f ", rhs[v][i+3]);
+            fprintf(stderr, "\n");
+        }
+    }
 
     int delete_list()
-	{
-            _nof_points = 0;
-            type = VIZ_GEOREF_SPLINE_ZERO_POINTS;
-            if ( _AA )
-            {
-                CPLFree(_AA);
-                _AA = NULL;
-            }
-            if ( _Ainv )
-            {
-                CPLFree(_Ainv);
-                _Ainv = NULL;
-            }
-            return _nof_points;
-	}
+    {
+        _nof_points = 0;
+        type = VIZ_GEOREF_SPLINE_ZERO_POINTS;
+        if ( _AA )
+        {
+            CPLFree(_AA);
+            _AA = NULL;
+        }
+        if ( _Ainv )
+        {
+            CPLFree(_Ainv);
+            _Ainv = NULL;
+        }
+        return _nof_points;
+    }
 #endif
 
     bool add_point( const double Px, const double Py, const double *Pvars );
@@ -183,6 +189,12 @@ class VizGeorefSpline2D
     int *unused; // [VIZ_GEOREF_SPLINE_MAX_POINTS];
     int *index; // [VIZ_GEOREF_SPLINE_MAX_POINTS];
 
+    double x_mean;
+    double y_mean;
   private:
-    CPL_DISALLOW_COPY_ASSIGN(VizGeorefSpline2D);
+    CPL_DISALLOW_COPY_ASSIGN(VizGeorefSpline2D)
 };
+
+#endif /* #ifndef DOXYGEN_SKIP */
+
+#endif /* THINPLATESPLINE_H_INCLUDED */

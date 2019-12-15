@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -28,116 +28,123 @@ namespace geos {
 namespace index { // geos.index
 namespace strtree { // geos.index.strtree
 
-static bool compareSIRBoundables(Boundable *a, Boundable *b){
-	return AbstractSTRtree::compareDoubles(((Interval*)a->getBounds())->getCentre(),((Interval*)b->getBounds())->getCentre());
+static bool
+compareSIRBoundables(Boundable* a, Boundable* b)
+{
+    return AbstractSTRtree::compareDoubles(((Interval*)a->getBounds())->getCentre(),
+                                           ((Interval*)b->getBounds())->getCentre());
 }
 
 /*protected*/
-std::auto_ptr<BoundableList>
-SIRtree::createParentBoundables(BoundableList *childBoundables,int newLevel)
+std::unique_ptr<BoundableList>
+SIRtree::createParentBoundables(BoundableList* childBoundables, int newLevel)
 {
-	assert(!childBoundables->empty());
-	std::auto_ptr<BoundableList> parentBoundables ( new BoundableList() );
-	parentBoundables->push_back(createNode(newLevel));
+    assert(!childBoundables->empty());
+    std::unique_ptr<BoundableList> parentBoundables(new BoundableList());
+    parentBoundables->push_back(createNode(newLevel));
 
-	std::auto_ptr<BoundableList> sortedChildBoundables ( sortBoundables(childBoundables) );
+    std::unique_ptr<BoundableList> sortedChildBoundables(sortBoundables(childBoundables));
 
-	//for(unsigned int i=0;i<sortedChildBoundables->size();i++)
-	for (BoundableList::iterator i=sortedChildBoundables->begin(),
-			e=sortedChildBoundables->end();
-			i!=e; ++i)
-	{
-		//Boundable *childBoundable=(AbstractNode*)(*sortedChildBoundables)[i];
-		Boundable *childBoundable=*i;
-		AbstractNode* lNode = lastNode(parentBoundables.get());
-		if (lNode->getChildBoundables()->size() == nodeCapacity)
-		{
-			parentBoundables->push_back(createNode(newLevel));
-		}
-		lNode->addChildBoundable(childBoundable);
-	}
-	return parentBoundables;
+    //for(unsigned int i=0;i<sortedChildBoundables->size();i++)
+    for(BoundableList::iterator i = sortedChildBoundables->begin(),
+            e = sortedChildBoundables->end();
+            i != e; ++i) {
+        //Boundable *childBoundable=(AbstractNode*)(*sortedChildBoundables)[i];
+        Boundable* childBoundable = *i;
+        AbstractNode* lNode = lastNode(parentBoundables.get());
+        if(lNode->getChildBoundables()->size() == nodeCapacity) {
+            parentBoundables->push_back(createNode(newLevel));
+        }
+        lNode->addChildBoundable(childBoundable);
+    }
+    return parentBoundables;
 }
 
 bool
 SIRtree::SIRIntersectsOp::intersects(const void* aBounds, const void* bBounds)
 {
-	return ((Interval*)aBounds)->intersects((Interval*)bBounds);
+    return ((Interval*)aBounds)->intersects((Interval*)bBounds);
 }
 
 /*public*/
 SIRtree::SIRtree():
-	AbstractSTRtree(10),
-	intersectsOp(new SIRIntersectsOp())
+    AbstractSTRtree(10),
+    intersectsOp(new SIRIntersectsOp())
 {
 }
 
 /*public*/
-SIRtree::SIRtree(size_t nodeCapacity):
-	AbstractSTRtree(nodeCapacity),
-	intersectsOp(new SIRIntersectsOp())
+SIRtree::SIRtree(size_t p_nodeCapacity):
+    AbstractSTRtree(p_nodeCapacity),
+    intersectsOp(new SIRIntersectsOp())
 {
 }
 
-SIRtree::~SIRtree() {
-	delete intersectsOp;
+SIRtree::~SIRtree()
+{
+    delete intersectsOp;
 }
 
 
 class SIRAbstractNode: public AbstractNode {
 public:
-	SIRAbstractNode(int level, int capacity)
-		:
-		AbstractNode(level, capacity)
-	{}
+    SIRAbstractNode(int p_level, size_t capacity)
+        :
+        AbstractNode(p_level, capacity)
+    {}
 
-	~SIRAbstractNode()
-	{
-		delete (Interval *)bounds;
-	}
+    ~SIRAbstractNode() override
+    {
+        delete(Interval*)bounds;
+    }
 
 protected:
 
-	void* computeBounds() const
-	{
-		Interval* bounds=NULL;
-		const BoundableList& b = *getChildBoundables();
-		for(unsigned int i=0; i<b.size(); ++i)
-		{
-			const Boundable* childBoundable=b[i];
-			if (bounds==NULL) {
-				bounds=new Interval((Interval*)childBoundable->getBounds());
-			} else {
-				bounds->expandToInclude((Interval*)childBoundable->getBounds());
-			}
-		}
-		return bounds;
-	}
+    void*
+    computeBounds() const override
+    {
+        Interval* p_bounds = nullptr;
+        const BoundableList& b = *getChildBoundables();
+        for(unsigned int i = 0; i < b.size(); ++i) {
+            const Boundable* childBoundable = b[i];
+            if(p_bounds == nullptr) {
+                p_bounds = new Interval(*((Interval*)childBoundable->getBounds()));
+            }
+            else {
+                p_bounds->expandToInclude((Interval*)childBoundable->getBounds());
+            }
+        }
+        return p_bounds;
+    }
 
 };
 
 AbstractNode*
 SIRtree::createNode(int level)
 {
-	AbstractNode *an = new SIRAbstractNode(level, static_cast<int>(nodeCapacity));
-	nodes->push_back(an);
-	return an;
+    AbstractNode* an = new SIRAbstractNode(level, nodeCapacity);
+    nodes->push_back(an);
+    return an;
 }
 
 /**
 * Inserts an item having the given bounds into the tree.
 */
-void SIRtree::insert(double x1, double x2,void* item) {
-	AbstractSTRtree::insert(new Interval(min(x1,x2),max(x1, x2)),item);
+void
+SIRtree::insert(double x1, double x2, void* item)
+{
+    std::unique_ptr<Interval> i{new Interval(std::min(x1, x2), std::max(x1, x2))};
+    AbstractSTRtree::insert(i.get(), item);
+    intervals.push_back(std::move(i));
 }
 
-std::auto_ptr<BoundableList>
+std::unique_ptr<BoundableList>
 SIRtree::sortBoundables(const BoundableList* input)
 {
-	std::auto_ptr<BoundableList> output ( new BoundableList(*input) );
-	sort(output->begin(), output->end(), compareSIRBoundables);
-	//output->sort(compareSIRBoundables);
-	return output;
+    std::unique_ptr<BoundableList> output(new BoundableList(*input));
+    sort(output->begin(), output->end(), compareSIRBoundables);
+    //output->sort(compareSIRBoundables);
+    return output;
 }
 
 } // namespace geos.index.strtree

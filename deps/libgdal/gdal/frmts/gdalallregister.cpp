@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalallregister.cpp 33546 2016-02-24 21:02:52Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of GDALAllRegister(), primary format registration.
@@ -36,7 +35,7 @@
    #include "gnm_frmts.h"
 #endif
 
-CPL_CVSID("$Id: gdalallregister.cpp 33546 2016-02-24 21:02:52Z goatbar $");
+CPL_CVSID("$Id: gdalallregister.cpp e058f1116d116ef9c8fe039ab7d47493db2913f9 2019-04-24 23:15:43 +0200 Even Rouault $")
 
 #ifdef notdef
 // we may have a use for this some day
@@ -68,6 +67,7 @@ void CPL_STDCALL GDALAllRegister()
 
 #ifdef FRMT_vrt
     GDALRegister_VRT();
+    GDALRegister_Derived();
 #endif
 
 #ifdef FRMT_gtiff
@@ -116,10 +116,6 @@ void CPL_STDCALL GDALAllRegister()
 
 #ifdef FRMT_sdts
     GDALRegister_SDTS();
-#endif
-
-#ifdef FRMT_ogdi
-    GDALRegister_OGDI();
 #endif
 
 #ifdef FRMT_dted
@@ -237,6 +233,7 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_ISIS3();
     GDALRegister_ISIS2();
     GDALRegister_PDS();
+    GDALRegister_PDS4();
     GDALRegister_VICAR();
 #endif
 
@@ -249,13 +246,18 @@ void CPL_STDCALL GDALAllRegister()
 #endif
 
 #ifdef FRMT_jp2kak
-// JPEG2000 support using Kakadu toolkit
+    // JPEG2000 support using Kakadu toolkit
     GDALRegister_JP2KAK();
 #endif
 
 #ifdef FRMT_jpipkak
-// JPEG2000 support using Kakadu toolkit
+    // JPEG2000 support using Kakadu toolkit
     GDALRegister_JPIPKAK();
+#endif
+
+#ifdef FRMT_jp2lura
+    // JPEG2000 support using Lurawave library
+    GDALRegister_JP2Lura();
 #endif
 
 #ifdef FRMT_ecw
@@ -264,7 +266,7 @@ void CPL_STDCALL GDALAllRegister()
 #endif
 
 #ifdef FRMT_openjpeg
-// JPEG2000 support using OpenJPEG library
+    // JPEG2000 support using OpenJPEG library
     GDALRegister_JP2OpenJPEG();
 #endif
 
@@ -285,9 +287,9 @@ void CPL_STDCALL GDALAllRegister()
 #endif
 
 #ifdef FRMT_jpeg2000
-// JPEG2000 support using JasPer toolkit
-// This one should always be placed after other JasPer supported formats,
-// such as BMP or PNM. In other case we will get bad side effects.
+    // JPEG2000 support using JasPer toolkit
+    // This one should always be placed after other JasPer supported formats,
+    // such as BMP or PNM. In other case we will get bad side effects.
     GDALRegister_JPEG2000();
 #endif
 
@@ -397,6 +399,10 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_mrf();
 #endif
 
+#ifdef FRMT_tiledb
+    GDALRegister_TileDB();
+#endif
+
 /* -------------------------------------------------------------------- */
 /*      Put raw formats at the end of the list. These drivers support   */
 /*      various ASCII-header labeled formats, so the driver could be    */
@@ -408,7 +414,6 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_PNM();
     GDALRegister_DOQ1();
     GDALRegister_DOQ2();
-    GDALRegister_GenBin();
     GDALRegister_PAux();
     GDALRegister_MFF();
     GDALRegister_HKV();
@@ -425,17 +430,15 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_LCP();
     GDALRegister_GTX();
     GDALRegister_LOSLAS();
+    GDALRegister_NTv1();
     GDALRegister_NTv2();
     GDALRegister_CTable2();
     GDALRegister_ACE2();
     GDALRegister_SNODAS();
     GDALRegister_KRO();
     GDALRegister_ROIPAC();
-
-    // Those ones need to look for side car files so put them at end
-    GDALRegister_ENVI();
-    GDALRegister_EHdr();
-    GDALRegister_ISCE();
+    GDALRegister_RRASTER();
+    GDALRegister_BYN();
 #endif
 
 #ifdef FRMT_arg
@@ -508,6 +511,12 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_SAGA();
 #endif
 
+#ifdef FRMT_ignfheightasciigrid
+    // IGNFHeightASCIIGrid must come before XYZ, otherwise XYZ might
+    // try and fail opening such files
+    GDALRegister_IGNFHeightASCIIGrid();
+#endif
+
 #ifdef FRMT_xyz
     GDALRegister_XYZ();
 #endif
@@ -544,12 +553,58 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_IRIS();
 #endif
 
+#ifdef FRMT_prf
+    GDALRegister_PRF();
+#endif
+
+#ifdef FRMT_rda
+    GDALRegister_RDA();
+#endif
+
+#ifdef FRMT_eeda
+    GDALRegister_EEDAI();
+    GDALRegister_EEDA();
+#endif
+
+#ifdef FRMT_daas
+    GDALRegister_DAAS();
+#endif
+
+#ifdef FRMT_null
+    GDALRegister_NULL();
+#endif
+
+#ifdef FRMT_sigdem
+    GDALRegister_SIGDEM();
+#endif
+
+    // NOTE: you need to generally your own driver before that line.
+
+/* -------------------------------------------------------------------- */
+/*     GNM and OGR drivers                                              */
+/* -------------------------------------------------------------------- */
 #ifdef GNM_ENABLED
     GNMRegisterAllInternal();
 #endif
 
     OGRRegisterAllInternal();
 
+/* -------------------------------------------------------------------- */
+/*      Put here drivers that absolutely need to look for side car      */
+/*      files in their Identify()/Open() procedure.                     */
+/* -------------------------------------------------------------------- */
+
+#ifdef FRMT_raw
+    GDALRegister_GenBin();
+    GDALRegister_ENVI();
+    GDALRegister_EHdr();
+    GDALRegister_ISCE();
+#endif
+
+/* -------------------------------------------------------------------- */
+/*      Register GDAL HTTP last, to let a chance to other drivers       */
+/*      accepting URL to handle them before.                            */
+/* -------------------------------------------------------------------- */
 #ifdef FRMT_wcs
     GDALRegister_HTTP();
 #endif

@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -31,23 +31,22 @@ namespace io {
  * \class ParseException io.h geos.h
  * \brief Notifies a parsing error
  */
-class GEOS_DLL ParseException : public util::GEOSException
-{
+class GEOS_DLL ParseException : public util::GEOSException {
 
 public:
 
-	ParseException();
+    ParseException();
 
-	ParseException(const std::string& msg);
+    ParseException(const std::string& msg);
 
-	ParseException(const std::string& msg, const std::string& var);
+    ParseException(const std::string& msg, const std::string& var);
 
-	ParseException(const std::string& msg, double num);
+    ParseException(const std::string& msg, double num);
 
-	~ParseException() throw() {}
+    ~ParseException() throw() override {}
 
 private:
-	static std::string stringify(double num);
+    static std::string stringify(double num);
 };
 
 } // namespace io

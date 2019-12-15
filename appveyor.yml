@@ -12,23 +12,11 @@ platform:
 
 environment:
   matrix:
-# Visual Studio 2013 builds
-    - nodejs_version: 4
-      msvs_toolset: 12
-    - nodejs_version: 6
-      msvs_toolset: 12
-    - nodejs_version: 8
-      msvs_toolset: 12
-# Visual Studio 2015 builds
-    - nodejs_version: 4
-      msvs_toolset: 14
-    - nodejs_version: 6
-      msvs_toolset: 14
-    - nodejs_version: 8
-      msvs_toolset: 14
-    - nodejs_version: 9
-      msvs_toolset: 14
     - nodejs_version: 10
+      msvs_toolset: 14
+    - nodejs_version: 12
+      msvs_toolset: 14
+    - nodejs_version: 13
       msvs_toolset: 14
 
 install:

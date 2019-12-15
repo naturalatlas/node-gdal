@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: cpl_http.cpp 33646 2016-03-05 15:54:03Z goatbar $
  *
  * Project:  libcurl based HTTP client
  * Purpose:  libcurl based HTTP client
@@ -28,30 +27,306 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include <map>
+#include "cpl_port.h"
 #include "cpl_http.h"
+
+#include <cstddef>
+#include <cstring>
+
+#include <algorithm>
+#include <array>
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include "cpl_http.h"
+#include "cpl_error.h"
 #include "cpl_multiproc.h"
 
 #ifdef HAVE_CURL
 #  include <curl/curl.h>
-
-void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions);
-
-/* CURLINFO_RESPONSE_CODE was known as CURLINFO_HTTP_CODE in libcurl 7.10.7 and earlier */
+// CURLINFO_RESPONSE_CODE was known as CURLINFO_HTTP_CODE in libcurl 7.10.7 and
+// earlier.
 #if LIBCURL_VERSION_NUM < 0x070a07
 #define CURLINFO_RESPONSE_CODE CURLINFO_HTTP_CODE
 #endif
 
+#ifdef HAVE_OPENSSL_CRYPTO
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <openssl/engine.h>
+#include <openssl/x509v3.h>
+
+#if defined(WIN32)
+#include <wincrypt.h>
 #endif
 
-CPL_CVSID("$Id: cpl_http.cpp 33646 2016-03-05 15:54:03Z goatbar $");
+#endif
+
+#ifdef HAVE_SIGACTION
+#include <signal.h>
+#endif
+
+#endif // HAVE_CURL
+
+CPL_CVSID("$Id: cpl_http.cpp 4d52e6e9fa9e602404796fb02fa2e7a0cb1032c1 2019-01-17 16:51:45Z Robert Coup $")
 
 // list of named persistent http sessions
 
 #ifdef HAVE_CURL
-static std::map<CPLString,CURL*>* poSessionMap = NULL;
-static CPLMutex *hSessionMapMutex = NULL;
+static std::map<CPLString, CURL*>* poSessionMap = nullptr;
+static std::map<CPLString, CURLM*>* poSessionMultiMap = nullptr;
+static CPLMutex *hSessionMapMutex = nullptr;
+static bool bHasCheckVersion = false;
+static bool bSupportGZip = false;
+static bool bSupportHTTP2 = false;
+#if defined(WIN32) && defined(HAVE_OPENSSL_CRYPTO)
+static std::vector<X509*> *poWindowsCertificateList = nullptr;
+
+#if ( OPENSSL_VERSION_NUMBER < 0x10100000L )
+#define EVP_PKEY_get0_RSA(x)            (x->pkey.rsa)
+#define EVP_PKEY_get0_DSA(x)            (x->pkey.dsa)
+#define X509_get_extension_flags(x)     (x->ex_flags)
+#define X509_get_key_usage(x)           (x->ex_kusage)
+#define X509_get_extended_key_usage(x)  (x->ex_xkusage)
 #endif
+
+#endif // defined(WIN32) && defined(HAVE_OPENSSL_CRYPTO)
+
+#if defined(HAVE_OPENSSL_CRYPTO) && OPENSSL_VERSION_NUMBER < 0x10100000
+
+// Ported from https://curl.haxx.se/libcurl/c/opensslthreadlock.html
+static CPLMutex** pahSSLMutex = nullptr;
+
+static void CPLOpenSSLLockingFunction(int mode, int n,
+                                 const char * /*file*/, int /*line*/)
+{
+  if(mode & CRYPTO_LOCK)
+  {
+      CPLAcquireMutex( pahSSLMutex[n], 3600.0 );
+  }
+  else
+  {
+      CPLReleaseMutex( pahSSLMutex[n] );
+  }
+}
+
+static unsigned long CPLOpenSSLIdCallback(void)
+{
+  return static_cast<unsigned long>(CPLGetPID());
+}
+
+static void CPLOpenSSLInit()
+{
+    if( strstr(curl_version(), "OpenSSL") &&
+        CPLTestBool(CPLGetConfigOption("CPL_OPENSSL_INIT_ENABLED", "YES")) &&
+        CRYPTO_get_id_callback() == nullptr )
+    {
+        pahSSLMutex = static_cast<CPLMutex**>(
+                CPLMalloc( CRYPTO_num_locks() * sizeof(CPLMutex*) ) );
+        for(int i = 0;  i < CRYPTO_num_locks();  i++)
+        {
+            pahSSLMutex[i] = CPLCreateMutex();
+            CPLReleaseMutex( pahSSLMutex[i] );
+        }
+        CRYPTO_set_id_callback(CPLOpenSSLIdCallback);
+        CRYPTO_set_locking_callback(CPLOpenSSLLockingFunction);
+    }
+}
+
+static void CPLOpenSSLCleanup()
+{
+    if( pahSSLMutex )
+    {
+        for(int i = 0;  i < CRYPTO_num_locks();  i++)
+        {
+            CPLDestroyMutex(pahSSLMutex[i]);
+        }
+        CPLFree(pahSSLMutex);
+        pahSSLMutex = nullptr;
+        CRYPTO_set_id_callback(nullptr);
+        CRYPTO_set_locking_callback(nullptr);
+    }
+}
+
+#endif
+
+#if defined(WIN32) && defined (HAVE_OPENSSL_CRYPTO)
+
+/************************************************************************/
+/*                    CPLWindowsCertificateListCleanup()                */
+/************************************************************************/
+
+static void CPLWindowsCertificateListCleanup()
+{
+    if( poWindowsCertificateList )
+    {
+        for( auto&& pX509: *poWindowsCertificateList )
+        {
+            X509_free(pX509);
+        }
+        delete poWindowsCertificateList;
+        poWindowsCertificateList = nullptr;
+    }
+}
+
+/************************************************************************/
+/*                       LoadCAPICertificates()                         */
+/************************************************************************/
+
+static
+CPLErr LoadCAPICertificates(const char *pszName,
+                            std::vector<X509*> *poCertificateList)
+{
+    CPLAssert(pszName);
+    CPLAssert(poCertificateList);
+
+    HCERTSTORE pCertStore = CertOpenSystemStore(
+        reinterpret_cast<HCRYPTPROV_LEGACY>(nullptr), pszName);
+    if( pCertStore == nullptr )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "CPLLoadCAPICertificates(): Unable open system "
+                 "certificate store %s.", pszName);
+        return CE_Failure;
+    }
+
+    PCCERT_CONTEXT pCertificate = CertEnumCertificatesInStore( pCertStore, nullptr );
+    while( pCertificate != nullptr )
+    {
+        X509 *pX509 = d2i_X509( nullptr,
+                                const_cast<unsigned char const **>(&pCertificate->pbCertEncoded),
+                                pCertificate->cbCertEncoded );
+        if( pX509 == nullptr )
+        {
+            CPLError(CE_Warning, CPLE_AppDefined,
+                     "CPLLoadCAPICertificates(): CertEnumCertificatesInStore() "
+                     "returned a null certificate, skipping." );
+        }
+        else
+        {
+#ifdef DEBUG_VERBOSE
+            char szSubject[256] = {0};
+            CPLString osSubject;
+            X509_NAME *pName = X509_get_subject_name( pX509 );
+            if( pName )
+            {
+                X509_NAME_oneline(pName, szSubject, sizeof(szSubject));
+                osSubject = szSubject;
+            }
+            if( !osSubject.empty() )
+                 CPLDebug("HTTP", "SSL Certificate: %s", osSubject.c_str());
+#endif
+            poCertificateList->push_back(pX509);
+        }
+        pCertificate = CertEnumCertificatesInStore(pCertStore, pCertificate);
+    }
+    CertCloseStore(pCertStore, 0);
+    return CE_None;
+}
+
+/************************************************************************/
+/*                       CPL_ssl_ctx_callback()                         */
+/************************************************************************/
+
+// Load certificates from Windows Crypto API store.
+static
+CURLcode CPL_ssl_ctx_callback(CURL *pCurl, void *pSSL, void *)
+{
+    SSL_CTX *pSSL_CTX = static_cast<SSL_CTX*>(pSSL);
+    if( pSSL_CTX == nullptr )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                  "CPL_ssl_ctx_callback(): OpenSSL context pointer is NULL.");
+        return CURLE_ABORTED_BY_CALLBACK;
+    }
+
+    static std::mutex goMutex;
+    {
+        std::lock_guard<std::mutex> oLock(goMutex);
+        if( poWindowsCertificateList == nullptr )
+        {
+            poWindowsCertificateList = new std::vector<X509*>();
+            if( !poWindowsCertificateList )
+            {
+                CPLError(CE_Failure, CPLE_AppDefined,
+                         "CPL_ssl_ctx_callback(): Unable to allocate "
+                         "structure to hold certificates.");
+                return CURLE_FAILED_INIT;
+            }
+
+            const std::array<const char*, 3> aszStores
+                                            {{"CA", "AuthRoot", "ROOT"}};
+            for( auto&& pszStore: aszStores )
+            {
+                if( LoadCAPICertificates(pszStore, poWindowsCertificateList)
+                        == CE_Failure )
+                {
+                    CPLError(CE_Failure, CPLE_AppDefined,
+                             "CPL_ssl_ctx_callback(): Unable to load certificates "
+                             "from '%s' store.", pszStore);
+                    return CURLE_FAILED_INIT;
+                }
+            }
+
+            CPLDebug("HTTP",
+                     "Loading %d certificates from Windows store.",
+                     poWindowsCertificateList->size());
+        }
+    }
+
+    X509_STORE *pX509Store = SSL_CTX_get_cert_store(pSSL_CTX);
+    for( X509 *x509 : *poWindowsCertificateList )
+        X509_STORE_add_cert(pX509Store, x509);
+
+    return CURLE_OK;
+}
+
+#endif // defined(WIN32) && defined (HAVE_OPENSSL_CRYPTO)
+
+/************************************************************************/
+/*                       CheckCurlFeatures()                            */
+/************************************************************************/
+
+static void CheckCurlFeatures()
+{
+    CPLMutexHolder oHolder( &hSessionMapMutex );
+    if( !bHasCheckVersion )
+    {
+        const char* pszVersion = curl_version();
+        CPLDebug("HTTP", "%s", pszVersion);
+        bSupportGZip = strstr(pszVersion, "zlib/") != nullptr;
+        bSupportHTTP2 = strstr(curl_version(), "nghttp2/") != nullptr;
+        bHasCheckVersion = true;
+
+        curl_version_info_data* data = curl_version_info(CURLVERSION_NOW);
+        if( data->version_num < LIBCURL_VERSION_NUM )
+        {
+            CPLError(CE_Warning, CPLE_AppDefined,
+                     "GDAL was built against curl %d.%d.%d, but is "
+                     "running against %s. Runtime failure is likely !",
+                     LIBCURL_VERSION_MAJOR,
+                     LIBCURL_VERSION_MINOR,
+                     LIBCURL_VERSION_PATCH,
+                     data->version);
+        }
+        else if( data->version_num > LIBCURL_VERSION_NUM )
+        {
+            CPLDebug("HTTP",
+                     "GDAL was built against curl %d.%d.%d, but is "
+                     "running against %s.",
+                     LIBCURL_VERSION_MAJOR,
+                     LIBCURL_VERSION_MINOR,
+                     LIBCURL_VERSION_PATCH,
+                     data->version);
+        }
+
+#if defined(HAVE_OPENSSL_CRYPTO) && OPENSSL_VERSION_NUMBER < 0x10100000
+        CPLOpenSSLInit();
+#endif
+    }
+}
 
 /************************************************************************/
 /*                            CPLWriteFct()                             */
@@ -60,24 +335,33 @@ static CPLMutex *hSessionMapMutex = NULL;
 /*      it larger as needed.                                            */
 /************************************************************************/
 
-#ifdef HAVE_CURL
+
+class CPLHTTPResultWithLimit
+{
+public:
+    CPLHTTPResult* psResult = nullptr;
+    int            nMaxFileSize = 0;
+};
+
 static size_t
 CPLWriteFct(void *buffer, size_t size, size_t nmemb, void *reqInfo)
 
 {
-    CPLHTTPResult *psResult = (CPLHTTPResult *) reqInfo;
+    CPLHTTPResultWithLimit *psResultWithLimit =
+        static_cast<CPLHTTPResultWithLimit *>(reqInfo);
+    CPLHTTPResult* psResult = psResultWithLimit->psResult;
 
     int nBytesToWrite = static_cast<int>(nmemb)*static_cast<int>(size);
     int nNewSize = psResult->nDataLen + nBytesToWrite + 1;
     if( nNewSize > psResult->nDataAlloc )
     {
-        psResult->nDataAlloc = (int) (nNewSize * 1.25 + 100);
-        GByte* pabyNewData = (GByte *) VSIRealloc(psResult->pabyData,
-                                                  psResult->nDataAlloc);
-        if( pabyNewData == NULL )
+        psResult->nDataAlloc = static_cast<int>(nNewSize * 1.25 + 100);
+        GByte* pabyNewData = static_cast<GByte *>(
+            VSIRealloc(psResult->pabyData, psResult->nDataAlloc));
+        if( pabyNewData == nullptr )
         {
             VSIFree(psResult->pabyData);
-            psResult->pabyData = NULL;
+            psResult->pabyData = nullptr;
             psResult->pszErrBuf = CPLStrdup(CPLString().Printf("Out of memory allocating %d bytes for HTTP data buffer.", psResult->nDataAlloc));
             psResult->nDataAlloc = psResult->nDataLen = 0;
 
@@ -91,27 +375,186 @@ CPLWriteFct(void *buffer, size_t size, size_t nmemb, void *reqInfo)
     psResult->nDataLen += nBytesToWrite;
     psResult->pabyData[psResult->nDataLen] = 0;
 
+    if( psResultWithLimit->nMaxFileSize > 0 &&
+        psResult->nDataLen > psResultWithLimit->nMaxFileSize )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "Maximum file size reached");
+        return 0;
+    }
+
     return nmemb;
 }
 
 /************************************************************************/
 /*                           CPLHdrWriteFct()                           */
 /************************************************************************/
-static size_t CPLHdrWriteFct(void *buffer, size_t size, size_t nmemb, void *reqInfo)
+static size_t CPLHdrWriteFct( void *buffer, size_t size, size_t nmemb,
+                              void *reqInfo )
 {
-    CPLHTTPResult *psResult = (CPLHTTPResult *) reqInfo;
-    // copy the buffer to a char* and initialize with zeros (zero terminate as well)
-    char* pszHdr = (char*)CPLCalloc(nmemb + 1, size);
-    CPLPrintString(pszHdr, (char *)buffer, static_cast<int>(nmemb) * static_cast<int>(size));
-    char *pszKey = NULL;
+    CPLHTTPResult *psResult = static_cast<CPLHTTPResult *>(reqInfo);
+    // Copy the buffer to a char* and initialize with zeros (zero
+    // terminate as well).
+    size_t nBytes = size * nmemb;
+    char* pszHdr = static_cast<char *>(CPLCalloc(1, nBytes+1));
+    memcpy(pszHdr, buffer, nBytes);
+    size_t nIdx = nBytes - 1;
+    // Remove end of line characters
+    while( nIdx > 0 && (pszHdr[nIdx] == '\r' || pszHdr[nIdx] == '\n') )
+    {
+        pszHdr[nIdx] = 0;
+        nIdx --;
+    }
+    char *pszKey = nullptr;
     const char *pszValue = CPLParseNameValue(pszHdr, &pszKey );
-    psResult->papszHeaders = CSLSetNameValue(psResult->papszHeaders, pszKey, pszValue);
+    if( pszKey && pszValue )
+    {
+        psResult->papszHeaders =
+            CSLAddNameValue(psResult->papszHeaders, pszKey, pszValue);
+    }
     CPLFree(pszHdr);
     CPLFree(pszKey);
     return nmemb;
 }
 
+typedef struct {
+    GDALProgressFunc pfnProgress;
+    void *pProgressArg;
+} CurlProcessData, *CurlProcessDataL;
+
+static int NewProcessFunction(void *p,
+                              curl_off_t dltotal, curl_off_t dlnow,
+                              curl_off_t ultotal, curl_off_t ulnow)
+{
+    CurlProcessDataL pData = static_cast<CurlProcessDataL>(p);
+    if( nullptr != pData && pData->pfnProgress ) {
+        double dfDone = 0.0;
+        if( dltotal > 0 )
+        {
+            dfDone = double(dlnow) / dltotal;
+            return pData->pfnProgress(dfDone, "Downloading ...",
+                pData->pProgressArg) == TRUE ? 0 : 1;
+        }
+        else if( ultotal > 0 )
+        {
+            dfDone = double(ulnow) / ultotal;
+            return pData->pfnProgress(dfDone, "Uploading ...",
+                pData->pProgressArg) == TRUE ? 0 : 1;
+        }
+    }
+    return 0;
+}
+
+static int ProcessFunction(void *p, double dltotal, double dlnow,
+                                     double ultotal, double ulnow)
+{
+    return NewProcessFunction(p, static_cast<curl_off_t>(dltotal),
+                              static_cast<curl_off_t>(dlnow),
+                              static_cast<curl_off_t>(ultotal),
+                              static_cast<curl_off_t>(ulnow));
+}
+
 #endif /* def HAVE_CURL */
+
+/************************************************************************/
+/*                       CPLHTTPGetOptionsFromEnv()                     */
+/************************************************************************/
+
+typedef struct
+{
+    const char* pszEnvVar;
+    const char* pszOptionName;
+} TupleEnvVarOptionName;
+
+constexpr TupleEnvVarOptionName asAssocEnvVarOptionName[] =
+{
+    { "GDAL_HTTP_VERSION", "HTTP_VERSION" },
+    { "GDAL_HTTP_CONNECTTIMEOUT", "CONNECTTIMEOUT" },
+    { "GDAL_HTTP_TIMEOUT", "TIMEOUT" },
+    { "GDAL_HTTP_LOW_SPEED_TIME", "LOW_SPEED_TIME" },
+    { "GDAL_HTTP_LOW_SPEED_LIMIT", "LOW_SPEED_LIMIT" },
+    { "GDAL_HTTP_USERPWD", "USERPWD" },
+    { "GDAL_HTTP_PROXY", "PROXY" },
+    { "GDAL_HTTPS_PROXY", "HTTPS_PROXY" },
+    { "GDAL_HTTP_PROXYUSERPWD", "PROXYUSERPWD" },
+    { "GDAL_PROXY_AUTH", "PROXYAUTH" },
+    { "GDAL_HTTP_NETRC", "NETRC" },
+    { "GDAL_HTTP_MAX_RETRY", "MAX_RETRY" },
+    { "GDAL_HTTP_RETRY_DELAY", "RETRY_DELAY" },
+    { "CURL_CA_BUNDLE", "CAINFO" },
+    { "SSL_CERT_FILE", "CAINFO" },
+    { "GDAL_HTTP_HEADER_FILE", "HEADER_FILE" },
+    { "GDAL_HTTP_CAPATH", "CAPATH" },
+    { "GDAL_HTTP_SSL_VERIFYSTATUS", "SSL_VERIFYSTATUS" },
+    { "GDAL_HTTP_USE_CAPI_STORE", "USE_CAPI_STORE" },
+};
+
+char** CPLHTTPGetOptionsFromEnv()
+{
+    char** papszOptions = nullptr;
+    for( size_t i = 0; i < CPL_ARRAYSIZE(asAssocEnvVarOptionName); ++i )
+    {
+        const char* pszVal = CPLGetConfigOption(
+            asAssocEnvVarOptionName[i].pszEnvVar, nullptr);
+        if( pszVal != nullptr )
+        {
+            papszOptions = CSLSetNameValue(papszOptions,
+                asAssocEnvVarOptionName[i].pszOptionName, pszVal);
+        }
+    }
+    return papszOptions;
+}
+
+/************************************************************************/
+/*                      CPLHTTPGetNewRetryDelay()                       */
+/************************************************************************/
+
+double CPLHTTPGetNewRetryDelay(int response_code, double dfOldDelay,
+                               const char* pszErrBuf)
+{
+    if( response_code == 429 || response_code == 500 ||
+        (response_code >= 502 && response_code <= 504) ||
+        // S3 sends some client timeout errors as 400 Client Error
+        (response_code == 400 && pszErrBuf && strstr(pszErrBuf, "RequestTimeout")) )
+    {
+        // Use an exponential backoff factor of 2 plus some random jitter
+        // We don't care about cryptographic quality randomness, hence:
+        // coverity[dont_call]
+        return dfOldDelay * (2 + rand() * 0.5 / RAND_MAX);
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+#ifdef HAVE_CURL
+
+/************************************************************************/
+/*                      CPLHTTPEmitFetchDebug()                         */
+/************************************************************************/
+
+static void CPLHTTPEmitFetchDebug(const char* pszURL,
+                                  const char* pszExtraDebug = "")
+{
+    const char* pszArobase = strchr(pszURL, '@');
+    const char* pszSlash = strchr(pszURL, '/');
+    const char* pszColon = (pszSlash) ? strchr(pszSlash, ':') : nullptr;
+    if( pszArobase != nullptr && pszColon != nullptr && pszArobase - pszColon > 0 )
+    {
+        /* http://user:password@www.example.com */
+        char* pszSanitizedURL = CPLStrdup(pszURL);
+        pszSanitizedURL[pszColon-pszURL] = 0;
+        CPLDebug( "HTTP", "Fetch(%s:#password#%s%s)",
+                  pszSanitizedURL, pszArobase, pszExtraDebug );
+        CPLFree(pszSanitizedURL);
+    }
+    else
+    {
+        CPLDebug( "HTTP", "Fetch(%s%s)", pszURL, pszExtraDebug );
+    }
+}
+
+#endif
 
 /************************************************************************/
 /*                           CPLHTTPFetch()                             */
@@ -124,6 +567,9 @@ static size_t CPLHdrWriteFct(void *buffer, size_t size, size_t nmemb, void *reqI
  * @param papszOptions option list as a NULL-terminated array of strings. May be NULL.
  *                     The following options are handled :
  * <ul>
+ * <li>CONNECTTIMEOUT=val, where val is in seconds (possibly with decimals).
+ *     This is the maximum delay for the connection to be established before
+ *     being aborted (GDAL >= 2.2).</li>
  * <li>TIMEOUT=val, where val is in seconds. This is the maximum delay for the whole
  *     request to complete before being aborted.</li>
  * <li>LOW_SPEED_TIME=val, where val is in seconds. This is the maximum time where the
@@ -132,83 +578,155 @@ static size_t CPLHdrWriteFct(void *buffer, size_t size, size_t nmemb, void *reqI
  * <li>LOW_SPEED_LIMIT=val, where val is in bytes/second. See LOW_SPEED_TIME. Has only
  *     effect if LOW_SPEED_TIME is specified too. (GDAL >= 2.1)</li>
  * <li>HEADERS=val, where val is an extra header to use when getting a web page.
- *                  For example "Accept: application/x-ogcwkt"
- * <li>HTTPAUTH=[BASIC/NTLM/GSSNEGOTIATE/ANY] to specify an authentication scheme to use.
- * <li>USERPWD=userid:password to specify a user and password for authentication
+ *                  For example "Accept: application/x-ogcwkt"</li>
+ * <li>HEADER_FILE=filename: filename of a text file with "key: value" headers.
+ *     (GDAL >= 2.2)</li>
+ * <li>HTTPAUTH=[BASIC/NTLM/GSSNEGOTIATE/ANY] to specify an authentication scheme to use.</li>
+ * <li>USERPWD=userid:password to specify a user and password for authentication</li>
  * <li>POSTFIELDS=val, where val is a nul-terminated string to be passed to the server
- *                     with a POST request.
+ *                     with a POST request.</li>
  * <li>PROXY=val, to make requests go through a proxy server, where val is of the
- *                form proxy.server.com:port_number
- * <li>PROXYUSERPWD=val, where val is of the form username:password
- * <li>PROXYAUTH=[BASIC/NTLM/DIGEST/ANY] to specify an proxy authentication scheme to use.
- * <li>NETRC=[YES/NO] to enable or disable use of $HOME/.netrc, default YES.
- * <li>CUSTOMREQUEST=val, where val is GET, PUT, POST, DELETE, etc.. (GDAL >= 1.9.0)
- * <li>COOKIE=val, where val is formatted as COOKIE1=VALUE1; COOKIE2=VALUE2; ...
- * <li>MAX_RETRY=val, where val is the maximum number of retry attempts if a 503 or
- *               504 HTTP error occurs. Default is 0. (GDAL >= 2.0)
+ *                form proxy.server.com:port_number. This option affects both HTTP and HTTPS
+ *                URLs.</li>
+ * <li>HTTPS_PROXY=val (GDAL >= 2.4), the same meaning as PROXY, but this option is taken into account only
+ *                 for HTTPS URLs.</li>
+ * <li>PROXYUSERPWD=val, where val is of the form username:password</li>
+ * <li>PROXYAUTH=[BASIC/NTLM/DIGEST/ANY] to specify an proxy authentication scheme to use.</li>
+ * <li>NETRC=[YES/NO] to enable or disable use of $HOME/.netrc, default YES.</li>
+ * <li>CUSTOMREQUEST=val, where val is GET, PUT, POST, DELETE, etc.. (GDAL >= 1.9.0)</li>
+ * <li>FORM_FILE_NAME=val, where val is upload file name. If this option and
+ *          FORM_FILE_PATH present, request type will set to POST.</li>
+ * <li>FORM_FILE_PATH=val, where val is upload file path.</li>
+ * <li>FORM_KEY_0=val...FORM_KEY_N, where val is name of form item.</li>
+ * <li>FORM_VALUE_0=val...FORM_VALUE_N, where val is value of the form item.</li>
+ * <li>FORM_ITEM_COUNT=val, where val is count of form items.</li>
+ * <li>COOKIE=val, where val is formatted as COOKIE1=VALUE1; COOKIE2=VALUE2; ...</li>
+ * <li>COOKIEFILE=val, where val is file name to read cookies from (GDAL >= 2.4)</li>
+ * <li>COOKIEJAR=val, where val is file name to store cookies to (GDAL >= 2.4)</li>
+ * <li>MAX_RETRY=val, where val is the maximum number of retry attempts if a 429, 502, 503 or
+ *               504 HTTP error occurs. Default is 0. (GDAL >= 2.0)</li>
  * <li>RETRY_DELAY=val, where val is the number of seconds between retry attempts.
- *                 Default is 30. (GDAL >= 2.0)
+ *                 Default is 30. (GDAL >= 2.0)</li>
+ * <li>MAX_FILE_SIZE=val, where val is a number of bytes (GDAL >= 2.2)</li>
+ * <li>CAINFO=/path/to/bundle.crt. This is path to Certificate Authority (CA)
+ *     bundle file. By default, it will be looked in a system location. If
+ *     the CAINFO options is not defined, GDAL will also look if the CURL_CA_BUNDLE
+ *     environment variable is defined to use it as the CAINFO value, and as a
+ *     fallback to the SSL_CERT_FILE environment variable. (GDAL >= 2.1.3)</li>
+ * <li>HTTP_VERSION=1.0/1.1/2/2TLS (GDAL >= 2.3). Specify HTTP version to use.
+ *     Will default to 1.1 generally (except on some controlled environments,
+ *     like Google Compute Engine VMs, where 2TLS will be the default).
+ *     Support for HTTP/2 requires curl 7.33 or later, built against nghttp2.
+ *     "2TLS" means that HTTP/2 will be attempted for HTTPS connections only. Whereas
+ *     "2" means that HTTP/2 will be attempted for HTTP or HTTPS.</li>
+ * <li>SSL_VERIFYSTATUS=YES/NO (GDAL >= 2.3, and curl >= 7.41): determines whether
+ *     the status of the server cert using the "Certificate Status Request" TLS
+ *     extension (aka. OCSP stapling) should be checked. If this option is enabled
+ *     but the server does not support the TLS extension, the verification will fail.
+ *     Default to NO.</li>
+ * <li>USE_CAPI_STORE=YES/NO (GDAL >= 2.3, Windows only): whether CA certificates from
+ *     the Windows certificate store. Defaults to NO.</li>
  * </ul>
  *
- * Alternatively, if not defined in the papszOptions arguments, the TIMEOUT,
- * LOW_SPEED_TIME, LOW_SPEED_LIMIT, PROXY, PROXYUSERPWD, PROXYAUTH, NETRC,
- * MAX_RETRY and RETRY_DELAY values are searched in the configuration
- * options named GDAL_HTTP_TIMEOUT, GDAL_HTTP_LOW_SPEED_TIME, GDAL_HTTP_LOW_SPEED_LIMIT,
- * GDAL_HTTP_PROXY, GDAL_HTTP_PROXYUSERPWD, GDAL_PROXY_AUTH,
- * GDAL_HTTP_NETRC, GDAL_HTTP_MAX_RETRY and GDAL_HTTP_RETRY_DELAY.
+ * Alternatively, if not defined in the papszOptions arguments, the
+ * CONNECTTIMEOUT, TIMEOUT,
+ * LOW_SPEED_TIME, LOW_SPEED_LIMIT, USERPWD, PROXY, HTTPS_PROXY, PROXYUSERPWD, PROXYAUTH, NETRC,
+ * MAX_RETRY and RETRY_DELAY, HEADER_FILE, HTTP_VERSION, SSL_VERIFYSTATUS, USE_CAPI_STORE
+ * values are searched in the configuration
+ * options respectively named GDAL_HTTP_CONNECTTIMEOUT, GDAL_HTTP_TIMEOUT,
+ * GDAL_HTTP_LOW_SPEED_TIME, GDAL_HTTP_LOW_SPEED_LIMIT, GDAL_HTTP_USERPWD,
+ * GDAL_HTTP_PROXY, GDAL_HTTPS_PROXY, GDAL_HTTP_PROXYUSERPWD, GDAL_PROXY_AUTH,
+ * GDAL_HTTP_NETRC, GDAL_HTTP_MAX_RETRY, GDAL_HTTP_RETRY_DELAY,
+ * GDAL_HTTP_HEADER_FILE, GDAL_HTTP_VERSION, GDAL_HTTP_SSL_VERIFYSTATUS,
+ * GDAL_HTTP_USE_CAPI_STORE
  *
  * @return a CPLHTTPResult* structure that must be freed by
  * CPLHTTPDestroyResult(), or NULL if libcurl support is disabled
  */
-CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
+CPLHTTPResult *CPLHTTPFetch( const char *pszURL, CSLConstList papszOptions )
+{
+    return CPLHTTPFetchEx( pszURL, papszOptions, nullptr, nullptr, nullptr, nullptr);
+}
+
+/**
+ * Fetch a document from an url and return in a string.
+ * @param  pszURL       Url to fetch document from web.
+ * @param  papszOptions Option list as a NULL-terminated array of strings. Available keys see in CPLHTTPFetch.
+ * @param  pfnProgress  Callback for reporting algorithm progress matching the GDALProgressFunc() semantics. May be NULL.
+ * @param  pProgressArg Callback argument passed to pfnProgress.
+ * @param  pfnWrite     Write function pointer matching the CPLHTTPWriteFunc() semantics. May be NULL.
+ * @param  pWriteArg    Argument which will pass to a write function.
+ * @return              A CPLHTTPResult* structure that must be freed by
+ * CPLHTTPDestroyResult(), or NULL if libcurl support is disabled.
+ */
+CPLHTTPResult *CPLHTTPFetchEx( const char *pszURL, CSLConstList papszOptions,
+                             GDALProgressFunc pfnProgress, void *pProgressArg,
+                             CPLHTTPFetchWriteFunc pfnWrite, void *pWriteArg )
 
 {
     if( STARTS_WITH(pszURL, "/vsimem/") &&
-        /* Disabled by default for potential security issues */
-        CSLTestBoolean(CPLGetConfigOption("CPL_CURL_ENABLE_VSIMEM", "FALSE")) )
+        // Disabled by default for potential security issues.
+        CPLTestBool(CPLGetConfigOption("CPL_CURL_ENABLE_VSIMEM", "FALSE")) )
     {
         CPLString osURL(pszURL);
-        const char* pszCustomRequest = CSLFetchNameValue( papszOptions, "CUSTOMREQUEST" );
-        if( pszCustomRequest != NULL )
+        const char* pszCustomRequest =
+            CSLFetchNameValue( papszOptions, "CUSTOMREQUEST" );
+        if( pszCustomRequest != nullptr )
         {
             osURL += "&CUSTOMREQUEST=";
             osURL += pszCustomRequest;
         }
+        const char* pszUserPwd = CSLFetchNameValue( papszOptions, "USERPWD" );
+        if( pszUserPwd != nullptr )
+        {
+            osURL += "&USERPWD=";
+            osURL += pszUserPwd;
+        }
         const char* pszPost = CSLFetchNameValue( papszOptions, "POSTFIELDS" );
-        if( pszPost != NULL ) /* Hack: we append post content to filename */
+        if( pszPost != nullptr ) // Hack: We append post content to filename.
         {
             osURL += "&POSTFIELDS=";
             osURL += pszPost;
         }
         vsi_l_offset nLength = 0;
-        CPLHTTPResult* psResult = (CPLHTTPResult* )CPLCalloc(1, sizeof(CPLHTTPResult));
+        CPLHTTPResult* psResult =
+            static_cast<CPLHTTPResult *>(CPLCalloc(1, sizeof(CPLHTTPResult)));
         GByte* pabyData = VSIGetMemFileBuffer( osURL, &nLength, FALSE );
-        if( pabyData == NULL )
+        if( pabyData == nullptr )
         {
             CPLDebug("HTTP", "Cannot find %s", osURL.c_str());
             psResult->nStatus = 1;
-            psResult->pszErrBuf = CPLStrdup(CPLSPrintf("HTTP error code : %d", 404));
+            psResult->pszErrBuf =
+                CPLStrdup(CPLSPrintf("HTTP error code : %d", 404));
             CPLError( CE_Failure, CPLE_AppDefined, "%s", psResult->pszErrBuf );
         }
         else if( nLength != 0 )
         {
             psResult->nDataLen = static_cast<int>(nLength);
-            psResult->pabyData = (GByte*) CPLMalloc((size_t)nLength + 1);
-            memcpy(psResult->pabyData, pabyData, (size_t)nLength);
-            psResult->pabyData[(size_t)nLength] = 0;
+            psResult->pabyData = static_cast<GByte *>(
+                CPLMalloc(static_cast<size_t>(nLength) + 1));
+            memcpy(psResult->pabyData, pabyData, static_cast<size_t>(nLength));
+            psResult->pabyData[static_cast<size_t>(nLength)] = 0;
         }
 
-        if( psResult->pabyData != NULL &&
-            STARTS_WITH((const char*)psResult->pabyData, "Content-Type: ") )        {
-            const char* pszContentType = (const char*)psResult->pabyData + strlen("Content-type: ");
+        if( psResult->pabyData != nullptr &&
+            STARTS_WITH(reinterpret_cast<char *>(psResult->pabyData),
+                        "Content-Type: ") )
+        {
+            const char* pszContentType =
+                reinterpret_cast<char *>(psResult->pabyData) +
+                strlen("Content-type: ");
             const char* pszEOL = strchr(pszContentType, '\r');
             if( pszEOL )
                 pszEOL = strchr(pszContentType, '\n');
             if( pszEOL )
             {
                 size_t nContentLength = pszEOL - pszContentType;
-                psResult->pszContentType = (char*)CPLMalloc(nContentLength + 1);
-                memcpy(psResult->pszContentType, pszContentType, nContentLength);
+                psResult->pszContentType =
+                    static_cast<char *>(CPLMalloc(nContentLength + 1));
+                memcpy(psResult->pszContentType,
+                       pszContentType,
+                       nContentLength);
                 psResult->pszContentType[nContentLength] = 0;
             }
         }
@@ -219,10 +737,15 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
 #ifndef HAVE_CURL
     (void) papszOptions;
     (void) pszURL;
+    (void) pfnProgress;
+    (void) pProgressArg;
+    (void) pfnWrite;
+    (void) pWriteArg;
 
     CPLError( CE_Failure, CPLE_NotSupported,
-              "GDAL/OGR not compiled with libcurl support, remote requests not supported." );
-    return NULL;
+              "GDAL/OGR not compiled with libcurl support, "
+              "remote requests not supported." );
+    return nullptr;
 #else
 
 /* -------------------------------------------------------------------- */
@@ -231,21 +754,21 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
 /*                                                                      */
 /*      Currently this code does not attempt to protect against         */
 /*      multiple threads asking for the same named session.  If that    */
-/*      occurs it will be in use in multiple threads at once which      */
-/*      might have bad consequences depending on what guarantees        */
-/*      libcurl gives - which I have not investigated.                  */
+/*      occurs it will be in use in multiple threads at once, which     */
+/*      will lead to potential crashes in libcurl.                      */
 /* -------------------------------------------------------------------- */
-    CURL *http_handle = NULL;
+    CURL *http_handle = nullptr;
 
     const char *pszPersistent = CSLFetchNameValue( papszOptions, "PERSISTENT" );
-    const char *pszClosePersistent = CSLFetchNameValue( papszOptions, "CLOSE_PERSISTENT" );
-    if (pszPersistent)
+    const char *pszClosePersistent =
+        CSLFetchNameValue( papszOptions, "CLOSE_PERSISTENT" );
+    if( pszPersistent )
     {
         CPLString osSessionName = pszPersistent;
         CPLMutexHolder oHolder( &hSessionMapMutex );
 
-        if( poSessionMap == NULL )
-            poSessionMap = new std::map<CPLString,CURL*>;
+        if( poSessionMap == nullptr )
+            poSessionMap = new std::map<CPLString, CURL *>;
         if( poSessionMap->count( osSessionName ) == 0 )
         {
             (*poSessionMap)[osSessionName] = curl_easy_init();
@@ -256,36 +779,38 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
         http_handle = (*poSessionMap)[osSessionName];
     }
 /* -------------------------------------------------------------------- */
-/*      Are we requested to close a persistent named session?          */
+/*      Are we requested to close a persistent named session?           */
 /* -------------------------------------------------------------------- */
-    else if (pszClosePersistent)
+    else if( pszClosePersistent )
     {
         CPLString osSessionName = pszClosePersistent;
         CPLMutexHolder oHolder( &hSessionMapMutex );
 
         if( poSessionMap )
         {
-            std::map<CPLString,CURL*>::iterator oIter = poSessionMap->find( osSessionName );
+            std::map<CPLString, CURL *>::iterator oIter =
+                poSessionMap->find( osSessionName );
             if( oIter != poSessionMap->end() )
             {
                 curl_easy_cleanup(oIter->second);
                 poSessionMap->erase(oIter);
-                if( poSessionMap->size() == 0 )
+                if( poSessionMap->empty() )
                 {
                     delete poSessionMap;
-                    poSessionMap = NULL;
+                    poSessionMap = nullptr;
                 }
                 CPLDebug( "HTTP", "Ended persistent session named '%s'.",
                         osSessionName.c_str() );
             }
             else
             {
-                CPLDebug( "HTTP", "Could not find persistent session named '%s'.",
-                        osSessionName.c_str() );
+                CPLDebug(
+                    "HTTP", "Could not find persistent session named '%s'.",
+                    osSessionName.c_str() );
             }
         }
 
-        return NULL;
+        return nullptr;
     }
     else
         http_handle = curl_easy_init();
@@ -293,90 +818,181 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Setup the request.                                              */
 /* -------------------------------------------------------------------- */
-    char szCurlErrBuf[CURL_ERROR_SIZE+1];
-    CPLHTTPResult *psResult;
-    struct curl_slist *headers=NULL;
+    char szCurlErrBuf[CURL_ERROR_SIZE+1] = {};
 
-    const char* pszArobase = strchr(pszURL, '@');
-    const char* pszSlash = strchr(pszURL, '/');
-    const char* pszColon = (pszSlash) ? strchr(pszSlash, ':') : NULL;
-    if (pszArobase != NULL && pszColon != NULL && pszArobase - pszColon > 0)
-    {
-        /* http://user:password@www.example.com */
-        char* pszSanitizedURL = CPLStrdup(pszURL);
-        pszSanitizedURL[pszColon-pszURL] = 0;
-        CPLDebug( "HTTP", "Fetch(%s:#password#%s)", pszSanitizedURL, pszArobase );
-        CPLFree(pszSanitizedURL);
-    }
-    else
-    {
-        CPLDebug( "HTTP", "Fetch(%s)", pszURL );
-    }
+    CPLHTTPEmitFetchDebug(pszURL);
 
-    psResult = (CPLHTTPResult *) CPLCalloc(1,sizeof(CPLHTTPResult));
+    CPLHTTPResult *psResult =
+        static_cast<CPLHTTPResult *>(CPLCalloc(1, sizeof(CPLHTTPResult)));
 
-    curl_easy_setopt(http_handle, CURLOPT_URL, pszURL );
+    struct curl_slist* headers= reinterpret_cast<struct curl_slist*>(
+                            CPLHTTPSetOptions(http_handle, pszURL, papszOptions));
 
-    CPLHTTPSetOptions(http_handle, papszOptions);
-
-    // turn off SSL verification, accept all servers with ssl
-    curl_easy_setopt(http_handle, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-    /* Set Headers.*/
+    // Set Headers.
     const char *pszHeaders = CSLFetchNameValue( papszOptions, "HEADERS" );
-    if( pszHeaders != NULL ) {
+    if( pszHeaders != nullptr ) {
         CPLDebug ("HTTP", "These HTTP headers were set: %s", pszHeaders);
-        headers = curl_slist_append(headers, pszHeaders);
-        curl_easy_setopt(http_handle, CURLOPT_HTTPHEADER, headers);
+        char** papszTokensHeaders = CSLTokenizeString2(pszHeaders, "\r\n", 0);
+        for( int i=0; papszTokensHeaders[i] != nullptr; ++i )
+            headers = curl_slist_append(headers, papszTokensHeaders[i]);
+        CSLDestroy(papszTokensHeaders);
     }
 
-    // are we making a head request
-    const char* pszNoBody = NULL;
-    if ((pszNoBody = CSLFetchNameValue( papszOptions, "NO_BODY" )) != NULL)
+    if( headers != nullptr )
+        curl_easy_setopt(http_handle, CURLOPT_HTTPHEADER, headers);
+
+    // Are we making a head request.
+    const char* pszNoBody = nullptr;
+    if( (pszNoBody = CSLFetchNameValue( papszOptions, "NO_BODY" )) != nullptr )
     {
-        if (CSLTestBoolean(pszNoBody))
+        if( CPLTestBool(pszNoBody) )
         {
             CPLDebug ("HTTP", "HEAD Request: %s", pszURL);
             curl_easy_setopt(http_handle, CURLOPT_NOBODY, 1L);
         }
     }
 
-    // capture response headers
+    // Capture response headers.
     curl_easy_setopt(http_handle, CURLOPT_HEADERDATA, psResult);
     curl_easy_setopt(http_handle, CURLOPT_HEADERFUNCTION, CPLHdrWriteFct);
 
-    curl_easy_setopt(http_handle, CURLOPT_WRITEDATA, psResult );
-    curl_easy_setopt(http_handle, CURLOPT_WRITEFUNCTION, CPLWriteFct );
+    CPLHTTPResultWithLimit sResultWithLimit;
+    if( nullptr == pfnWrite )
+    {
+        pfnWrite = CPLWriteFct;
+
+        sResultWithLimit.psResult = psResult;
+        sResultWithLimit.nMaxFileSize = 0;
+        const char* pszMaxFileSize = CSLFetchNameValue(papszOptions,
+                                                       "MAX_FILE_SIZE");
+        if( pszMaxFileSize != nullptr )
+        {
+            sResultWithLimit.nMaxFileSize = atoi(pszMaxFileSize);
+            // Only useful if size is returned by server before actual download.
+            curl_easy_setopt(http_handle, CURLOPT_MAXFILESIZE,
+                             sResultWithLimit.nMaxFileSize);
+        }
+        pWriteArg = &sResultWithLimit;
+    }
+
+    curl_easy_setopt(http_handle, CURLOPT_WRITEDATA, pWriteArg );
+    curl_easy_setopt(http_handle, CURLOPT_WRITEFUNCTION, pfnWrite );
+
+    CurlProcessData stProcessData = { pfnProgress, pProgressArg };
+    if( nullptr != pfnProgress)
+    {
+        curl_easy_setopt(http_handle, CURLOPT_PROGRESSFUNCTION, ProcessFunction);
+        curl_easy_setopt(http_handle, CURLOPT_PROGRESSDATA, &stProcessData);
+
+    #if LIBCURL_VERSION_NUM >= 0x072000
+        curl_easy_setopt(http_handle, CURLOPT_XFERINFOFUNCTION, NewProcessFunction);
+        curl_easy_setopt(http_handle, CURLOPT_XFERINFODATA, &stProcessData);
+    #endif
+        curl_easy_setopt(http_handle, CURLOPT_NOPROGRESS, 0L);
+    }
 
     szCurlErrBuf[0] = '\0';
 
     curl_easy_setopt(http_handle, CURLOPT_ERRORBUFFER, szCurlErrBuf );
 
-    static bool bHasCheckVersion = false;
-    static bool bSupportGZip = false;
-    if (!bHasCheckVersion)
-    {
-        bSupportGZip = strstr(curl_version(), "zlib/") != NULL;
-        bHasCheckVersion = true;
-    }
-    int bGZipRequested = false;
-    if (bSupportGZip && CSLTestBoolean(CPLGetConfigOption("CPL_CURL_GZIP", "YES")))
+    bool bGZipRequested = false;
+    if( bSupportGZip &&
+        CPLTestBool(CPLGetConfigOption("CPL_CURL_GZIP", "YES")) )
     {
         bGZipRequested = true;
         curl_easy_setopt(http_handle, CURLOPT_ENCODING, "gzip");
     }
 
+    // Fill POST form if present
+    const char* pszFormFilePath = CSLFetchNameValue( papszOptions,
+        "FORM_FILE_PATH" );
+    const char* pszParametersCount = CSLFetchNameValue( papszOptions,
+        "FORM_ITEM_COUNT" );
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+    curl_mime *mime = nullptr;
+#else // LIBCURL_VERSION_NUM >= 0x073800
+    struct curl_httppost *formpost = nullptr;
+#endif // LIBCURL_VERSION_NUM >= 0x073800
+
+    if( pszFormFilePath != nullptr || pszParametersCount != nullptr )
+    {
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+        mime = curl_mime_init(http_handle);
+        curl_mimepart *mimepart = curl_mime_addpart(mime);
+#else // LIBCURL_VERSION_NUM >= 0x073800
+        struct curl_httppost *lastptr = nullptr;
+#endif // LIBCURL_VERSION_NUM >= 0x073800
+        if( pszFormFilePath != nullptr )
+        {
+            const char* pszFormFileName = CSLFetchNameValue( papszOptions,
+                "FORM_FILE_NAME" );
+            if( pszFormFileName == nullptr )
+            {
+                pszFormFileName = CPLGetFilename( pszFormFilePath );
+            }
+
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+            curl_mime_name(mimepart, pszFormFileName);
+            curl_mime_filedata(mimepart, pszFormFilePath);
+#else // LIBCURL_VERSION_NUM >= 0x073800
+            curl_formadd(&formpost, &lastptr,
+                CURLFORM_COPYNAME, pszFormFileName,
+                CURLFORM_FILE, pszFormFilePath,
+                CURLFORM_END);
+#endif // LIBCURL_VERSION_NUM >= 0x073800
+
+            CPLDebug("HTTP", "Send file: %s, COPYNAME: %s", pszFormFilePath,
+                pszFormFileName);
+        }
+
+        int nParametersCount = 0;
+        if( pszParametersCount != nullptr )
+        {
+            nParametersCount = atoi( pszParametersCount );
+        }
+
+        for(int i = 0; i < nParametersCount; ++i)
+        {
+            const char *pszKey = CSLFetchNameValue( papszOptions,
+                CPLSPrintf("FORM_KEY_%d", i) );
+            const char *pszValue = CSLFetchNameValue( papszOptions,
+                CPLSPrintf("FORM_VALUE_%d", i) );
+
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+            mimepart = curl_mime_addpart(mime);
+            curl_mime_name(mimepart, pszKey);
+            curl_mime_data(mimepart, pszValue, CURL_ZERO_TERMINATED);
+#else // LIBCURL_VERSION_NUM >= 0x073800
+            curl_formadd(&formpost, &lastptr,
+                CURLFORM_COPYNAME, pszKey,
+                CURLFORM_COPYCONTENTS, pszValue,
+                CURLFORM_END);
+#endif // LIBCURL_VERSION_NUM >= 0x073800
+
+            CPLDebug("HTTP", "COPYNAME: %s, COPYCONTENTS: %s", pszKey, pszValue);
+        }
+
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+        curl_easy_setopt(http_handle, CURLOPT_MIMEPOST, mime);
+#else // LIBCURL_VERSION_NUM >= 0x073800
+        curl_easy_setopt(http_handle, CURLOPT_HTTPPOST, formpost);
+#endif // LIBCURL_VERSION_NUM >= 0x073800
+    }
+
 /* -------------------------------------------------------------------- */
-/*      If 502, 503 or 504 status code retry this HTTP call until max   */
+/*      If 429, 502, 503 or 504 status code retry this HTTP call until max   */
 /*      retry has been reached                                          */
 /* -------------------------------------------------------------------- */
-    const char *pszRetryDelay = CSLFetchNameValue( papszOptions, "RETRY_DELAY" );
-    if( pszRetryDelay == NULL )
-        pszRetryDelay = CPLGetConfigOption( "GDAL_HTTP_RETRY_DELAY", "30" );
+    const char *pszRetryDelay =
+        CSLFetchNameValue( papszOptions, "RETRY_DELAY" );
+    if( pszRetryDelay == nullptr )
+        pszRetryDelay = CPLGetConfigOption( "GDAL_HTTP_RETRY_DELAY",
+                                    CPLSPrintf("%f", CPL_HTTP_RETRY_DELAY) );
     const char *pszMaxRetries = CSLFetchNameValue( papszOptions, "MAX_RETRY" );
-    if( pszMaxRetries == NULL )
-        pszMaxRetries = CPLGetConfigOption( "GDAL_HTTP_MAX_RETRY", "0" );
-    int nRetryDelaySecs = atoi(pszRetryDelay);
+    if( pszMaxRetries == nullptr )
+        pszMaxRetries = CPLGetConfigOption( "GDAL_HTTP_MAX_RETRY",
+                                    CPLSPrintf("%d",CPL_HTTP_MAX_RETRY) );
+    double dfRetryDelaySecs = CPLAtof(pszRetryDelay);
     int nMaxRetries = atoi(pszMaxRetries);
     int nRetryCount = 0;
     bool bRequestRetry;
@@ -388,15 +1004,17 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Execute the request, waiting for results.                       */
 /* -------------------------------------------------------------------- */
-        psResult->nStatus = (int) curl_easy_perform( http_handle );
+        void* old_handler = CPLHTTPIgnoreSigPipe();
+        psResult->nStatus = static_cast<int>(curl_easy_perform(http_handle));
+        CPLHTTPRestoreSigPipeHandler(old_handler);
 
 /* -------------------------------------------------------------------- */
 /*      Fetch content-type if possible.                                 */
 /* -------------------------------------------------------------------- */
-        psResult->pszContentType = NULL;
+        psResult->pszContentType = nullptr;
         curl_easy_getinfo( http_handle, CURLINFO_CONTENT_TYPE,
                            &(psResult->pszContentType) );
-        if( psResult->pszContentType != NULL )
+        if( psResult->pszContentType != nullptr )
             psResult->pszContentType = CPLStrdup(psResult->pszContentType);
 
 /* -------------------------------------------------------------------- */
@@ -406,31 +1024,36 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
         {
             bool bSkipError = false;
 
-            /* Some servers such as http://115.113.193.14/cgi-bin/world/qgis_mapserv.fcgi?VERSION=1.1.1&SERVICE=WMS&REQUEST=GetCapabilities */
-            /* invalidly return Content-Length as the uncompressed size, with makes curl to wait for more data */
-            /* and time-out finally. If we got the expected data size, then we don't emit an error */
-            /* but turn off GZip requests */
-            if (bGZipRequested &&
+            // Some servers such as
+            // http://115.113.193.14/cgi-bin/world/qgis_mapserv.fcgi?VERSION=1.1.1&SERVICE=WMS&REQUEST=GetCapabilities
+            // invalidly return Content-Length as the uncompressed size, with
+            // makes curl to wait for more data and time-out finally. If we got
+            // the expected data size, then we don't emit an error but turn off
+            // GZip requests.
+            if( bGZipRequested &&
                 strstr(szCurlErrBuf, "transfer closed with") &&
-                strstr(szCurlErrBuf, "bytes remaining to read"))
+                strstr(szCurlErrBuf, "bytes remaining to read") )
             {
                 const char* pszContentLength =
                     CSLFetchNameValue(psResult->papszHeaders, "Content-Length");
-                if (pszContentLength && psResult->nDataLen != 0 &&
-                    atoi(pszContentLength) == psResult->nDataLen)
+                if( pszContentLength && psResult->nDataLen != 0 &&
+                    atoi(pszContentLength) == psResult->nDataLen )
                 {
-                    const char* pszCurlGZIPOption = CPLGetConfigOption("CPL_CURL_GZIP", NULL);
-                    if (pszCurlGZIPOption == NULL)
+                    const char* pszCurlGZIPOption =
+                        CPLGetConfigOption("CPL_CURL_GZIP", nullptr);
+                    if( pszCurlGZIPOption == nullptr )
                     {
                         CPLSetConfigOption("CPL_CURL_GZIP", "NO");
-                        CPLDebug("HTTP", "Disabling CPL_CURL_GZIP, because %s doesn't support it properly",
+                        CPLDebug("HTTP",
+                                 "Disabling CPL_CURL_GZIP, "
+                                 "because %s doesn't support it properly",
                                  pszURL);
                     }
                     psResult->nStatus = 0;
                     bSkipError = true;
                 }
             }
-            if (!bSkipError)
+            if( !bSkipError )
             {
                 psResult->pszErrBuf = CPLStrdup(szCurlErrBuf);
                 CPLError( CE_Failure, CPLE_AppDefined,
@@ -439,28 +1062,35 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
         }
         else
         {
-            /* HTTP errors do not trigger curl errors. But we need to */
-            /* propagate them to the caller though */
+            // HTTP errors do not trigger curl errors. But we need to
+            // propagate them to the caller though.
             long response_code = 0;
-            curl_easy_getinfo(http_handle, CURLINFO_RESPONSE_CODE, &response_code);
+            curl_easy_getinfo(http_handle, CURLINFO_RESPONSE_CODE,
+                              &response_code);
 
-            if (response_code >= 400 && response_code < 600)
+            if( response_code >= 400 && response_code < 600 )
             {
-                /* If HTTP 502, 503 or 504 gateway timeout error retry after a pause */
-                if ((response_code >= 502 && response_code <= 504) && nRetryCount < nMaxRetries)
+                const double dfNewRetryDelay = CPLHTTPGetNewRetryDelay(
+                    static_cast<int>(response_code),
+                    dfRetryDelaySecs,
+                    reinterpret_cast<const char*>(psResult->pabyData));
+                if( dfNewRetryDelay > 0 && nRetryCount < nMaxRetries )
                 {
                     CPLError(CE_Warning, CPLE_AppDefined,
-                             "HTTP error code: %d - %s. Retrying again in %d secs",
-                             (int)response_code, pszURL, nRetryDelaySecs);
-                    CPLSleep(nRetryDelaySecs);
+                             "HTTP error code: %d - %s. "
+                             "Retrying again in %.1f secs",
+                             static_cast<int>(response_code), pszURL,
+                             dfRetryDelaySecs);
+                    CPLSleep(dfRetryDelaySecs);
+                    dfRetryDelaySecs = dfNewRetryDelay;
                     nRetryCount++;
 
                     CPLFree(psResult->pszContentType);
-                    psResult->pszContentType = NULL;
+                    psResult->pszContentType = nullptr;
                     CSLDestroy(psResult->papszHeaders);
-                    psResult->papszHeaders = NULL;
+                    psResult->papszHeaders = nullptr;
                     CPLFree(psResult->pabyData);
-                    psResult->pabyData = NULL;
+                    psResult->pabyData = nullptr;
                     psResult->nDataLen = 0;
                     psResult->nDataAlloc = 0;
 
@@ -468,16 +1098,31 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
                 }
                 else
                 {
-                    psResult->pszErrBuf = CPLStrdup(CPLSPrintf("HTTP error code : %d", (int)response_code));
-                    CPLError( CE_Failure, CPLE_AppDefined, "%s", psResult->pszErrBuf );
+                    psResult->pszErrBuf =
+                        CPLStrdup(CPLSPrintf("HTTP error code : %d",
+                                             static_cast<int>(response_code)));
+                    CPLError(CE_Failure, CPLE_AppDefined,
+                             "%s", psResult->pszErrBuf);
                 }
             }
         }
     }
-    while (bRequestRetry);
+    while( bRequestRetry );
 
-    if (!pszPersistent)
+    if( !pszPersistent )
         curl_easy_cleanup( http_handle );
+
+#if LIBCURL_VERSION_NUM >= 0x073800 /* 7.56.0 */
+    if( mime != nullptr )
+    {
+        curl_mime_free(mime);
+    }
+#else // LIBCURL_VERSION_NUM >= 0x073800
+    if( formpost != nullptr)
+    {
+        curl_formfree(formpost);
+    }
+#endif // LIBCURL_VERSION_NUM >= 0x073800
 
     curl_slist_free_all(headers);
 
@@ -487,35 +1132,523 @@ CPLHTTPResult *CPLHTTPFetch( const char *pszURL, char **papszOptions )
 
 #ifdef HAVE_CURL
 /************************************************************************/
+/*                       CPLMultiPerformWait()                          */
+/************************************************************************/
+
+bool CPLMultiPerformWait(void* hCurlMultiHandleIn, int& repeats)
+{
+    CURLM* hCurlMultiHandle = static_cast<CURLM*>(hCurlMultiHandleIn);
+
+    // Wait for events on the sockets
+    // Using curl_multi_wait() is preferred to avoid hitting the 1024 file
+    // descriptor limit
+    // 7.28.0
+#if LIBCURL_VERSION_NUM >= 0x071C00
+    int numfds = 0;
+    if( curl_multi_wait(hCurlMultiHandle, nullptr, 0, 1000, &numfds) != CURLM_OK )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "curl_multi_wait() failed");
+        return false;
+    }
+    /* 'numfds' being zero means either a timeout or no file descriptors to
+        wait for. Try timeout on first occurrence, then assume no file
+        descriptors and no file descriptors to wait for 100
+        milliseconds. */
+    if(!numfds)
+    {
+        repeats++; /* count number of repeated zero numfds */
+        if(repeats > 1)
+        {
+            CPLSleep(0.1); /* sleep 100 milliseconds */
+        }
+    }
+    else
+    {
+        repeats = 0;
+    }
+#else
+    (void)repeats;
+
+    struct timeval timeout;
+    fd_set fdread, fdwrite, fdexcep;
+    int maxfd;
+    FD_ZERO(&fdread);
+    FD_ZERO(&fdwrite);
+    FD_ZERO(&fdexcep);
+    curl_multi_fdset(hCurlMultiHandle, &fdread, &fdwrite, &fdexcep, &maxfd);
+    if( maxfd >= 0 )
+    {
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
+        if( select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout) < 0 )
+        {
+            CPLError(CE_Failure, CPLE_AppDefined, "select() failed");
+            return false;
+        }
+    }
+#endif
+    return true;
+}
+
+class CPLHTTPErrorBuffer
+{
+    public:
+        char szBuffer[CURL_ERROR_SIZE+1];
+
+        CPLHTTPErrorBuffer() { szBuffer[0] = '\0'; }
+};
+
+#endif // HAVE_CURL
+
+/************************************************************************/
+/*                           CPLHTTPMultiFetch()                        */
+/************************************************************************/
+
+/**
+ * \brief Fetch several documents at once
+ *
+ * @param papszURL array of valid URLs recognized by underlying download library (libcurl)
+ * @param nURLCount number of URLs of papszURL
+ * @param nMaxSimultaneous maximum number of downloads to issue simultaneously.
+ *                         Any negative or zer value means unlimited.
+ * @param papszOptions option list as a NULL-terminated array of strings. May be NULL.
+ *                     Refer to CPLHTTPFetch() for valid options.
+ * @return an array of CPLHTTPResult* structures that must be freed by
+ * CPLHTTPDestroyMultiResult() or NULL if libcurl support is disabled
+ *
+ * @since GDAL 2.3
+ */
+CPLHTTPResult **CPLHTTPMultiFetch( const char * const * papszURL,
+                                   int nURLCount,
+                                   int nMaxSimultaneous,
+                                   CSLConstList papszOptions)
+{
+#ifndef HAVE_CURL
+    (void) papszURL;
+    (void) nURLCount;
+    (void) nMaxSimultaneous;
+    (void) papszOptions;
+
+    CPLError( CE_Failure, CPLE_NotSupported,
+              "GDAL/OGR not compiled with libcurl support, "
+              "remote requests not supported." );
+    return nullptr;
+#else /* def HAVE_CURL */
+
+/* -------------------------------------------------------------------- */
+/*      Are we using a persistent named session?  If so, search for     */
+/*      or create it.                                                   */
+/*                                                                      */
+/*      Currently this code does not attempt to protect against         */
+/*      multiple threads asking for the same named session.  If that    */
+/*      occurs it will be in use in multiple threads at once, which     */
+/*      will lead to potential crashes in libcurl.                      */
+/* -------------------------------------------------------------------- */
+    CURLM *hCurlMultiHandle = nullptr;
+
+    const char *pszPersistent = CSLFetchNameValue( papszOptions, "PERSISTENT" );
+    const char *pszClosePersistent =
+        CSLFetchNameValue( papszOptions, "CLOSE_PERSISTENT" );
+    if( pszPersistent )
+    {
+        CPLString osSessionName = pszPersistent;
+        CPLMutexHolder oHolder( &hSessionMapMutex );
+
+        if( poSessionMultiMap == nullptr )
+            poSessionMultiMap = new std::map<CPLString, CURLM *>;
+        if( poSessionMultiMap->count( osSessionName ) == 0 )
+        {
+            (*poSessionMultiMap)[osSessionName] = curl_multi_init();
+            CPLDebug( "HTTP", "Establish persistent session named '%s'.",
+                      osSessionName.c_str() );
+        }
+
+        hCurlMultiHandle = (*poSessionMultiMap)[osSessionName];
+    }
+/* -------------------------------------------------------------------- */
+/*      Are we requested to close a persistent named session?           */
+/* -------------------------------------------------------------------- */
+    else if( pszClosePersistent )
+    {
+        CPLString osSessionName = pszClosePersistent;
+        CPLMutexHolder oHolder( &hSessionMapMutex );
+
+        if( poSessionMultiMap )
+        {
+            auto oIter = poSessionMultiMap->find( osSessionName );
+            if( oIter != poSessionMultiMap->end() )
+            {
+                curl_multi_cleanup(oIter->second);
+                poSessionMultiMap->erase(oIter);
+                if( poSessionMultiMap->empty() )
+                {
+                    delete poSessionMultiMap;
+                    poSessionMultiMap = nullptr;
+                }
+                CPLDebug( "HTTP", "Ended persistent session named '%s'.",
+                        osSessionName.c_str() );
+            }
+            else
+            {
+                CPLDebug(
+                    "HTTP", "Could not find persistent session named '%s'.",
+                    osSessionName.c_str() );
+            }
+        }
+
+        return nullptr;
+    }
+    else
+    {
+        hCurlMultiHandle = curl_multi_init();
+    }
+
+    CPLHTTPResult** papsResults = static_cast<CPLHTTPResult**>(
+        CPLCalloc(nURLCount, sizeof(CPLHTTPResult*)));
+    std::vector<CURL*> asHandles;
+    std::vector<CPLHTTPResultWithLimit> asResults;
+    asResults.resize(nURLCount);
+    std::vector<struct curl_slist*> aHeaders;
+    aHeaders.resize(nURLCount);
+    std::vector<CPLHTTPErrorBuffer> asErrorBuffers;
+    asErrorBuffers.resize(nURLCount);
+
+    for( int i = 0; i < nURLCount; i++ )
+    {
+        papsResults[i] = static_cast<CPLHTTPResult*>(
+                                CPLCalloc(1, sizeof(CPLHTTPResult)));
+
+        const char* pszURL = papszURL[i];
+        CURL* http_handle = curl_easy_init();
+
+        aHeaders[i] = reinterpret_cast<struct curl_slist*>(
+                            CPLHTTPSetOptions(http_handle, pszURL, papszOptions));
+
+        // Set Headers.
+        const char *pszHeaders = CSLFetchNameValue( papszOptions, "HEADERS" );
+        if( pszHeaders != nullptr )
+        {
+            char** papszTokensHeaders = CSLTokenizeString2(pszHeaders, "\r\n", 0);
+            for( int j=0; papszTokensHeaders[j] != nullptr; ++j )
+                aHeaders[i] = curl_slist_append(aHeaders[i], papszTokensHeaders[j]);
+            CSLDestroy(papszTokensHeaders);
+        }
+
+        if( aHeaders[i] != nullptr )
+            curl_easy_setopt(http_handle, CURLOPT_HTTPHEADER, aHeaders[i]);
+
+        // Capture response headers.
+        curl_easy_setopt(http_handle, CURLOPT_HEADERDATA, papsResults[i]);
+        curl_easy_setopt(http_handle, CURLOPT_HEADERFUNCTION, CPLHdrWriteFct);
+
+        asResults[i].psResult = papsResults[i];
+        const char* pszMaxFileSize = CSLFetchNameValue(papszOptions,
+                                                    "MAX_FILE_SIZE");
+        if( pszMaxFileSize != nullptr )
+        {
+            asResults[i].nMaxFileSize = atoi(pszMaxFileSize);
+            // Only useful if size is returned by server before actual download.
+            curl_easy_setopt(http_handle, CURLOPT_MAXFILESIZE,
+                            asResults[i].nMaxFileSize);
+        }
+
+        curl_easy_setopt(http_handle, CURLOPT_WRITEDATA, &asResults[i] );
+        curl_easy_setopt(http_handle, CURLOPT_WRITEFUNCTION, CPLWriteFct );
+
+
+        curl_easy_setopt(http_handle, CURLOPT_ERRORBUFFER,
+                         asErrorBuffers[i].szBuffer );
+
+        if( bSupportGZip &&
+            CPLTestBool(CPLGetConfigOption("CPL_CURL_GZIP", "YES")) )
+        {
+            curl_easy_setopt(http_handle, CURLOPT_ENCODING, "gzip");
+        }
+
+        asHandles.push_back(http_handle);
+    }
+
+    int iCurRequest = 0;
+    for( ; iCurRequest < std::min(nURLCount,
+                    nMaxSimultaneous > 0 ? nMaxSimultaneous : INT_MAX); iCurRequest++ )
+    {
+        CPLHTTPEmitFetchDebug(papszURL[iCurRequest],
+                              CPLSPrintf(" %d/%d",iCurRequest+1, nURLCount));
+        curl_multi_add_handle(hCurlMultiHandle, asHandles[iCurRequest]);
+    }
+
+    int repeats = 0;
+    void* old_handler = CPLHTTPIgnoreSigPipe();
+    while( true )
+    {
+        int still_running = 0;
+        while (curl_multi_perform(hCurlMultiHandle, &still_running) ==
+                                        CURLM_CALL_MULTI_PERFORM )
+        {
+            // loop
+        }
+        if( !still_running && iCurRequest == nURLCount )
+        {
+            break;
+        }
+
+        bool bRequestsAdded = false;
+        CURLMsg *msg;
+        do
+        {
+            int msgq = 0;
+            msg = curl_multi_info_read(hCurlMultiHandle, &msgq);
+            if(msg && (msg->msg == CURLMSG_DONE))
+            {
+                if( iCurRequest < nURLCount )
+                {
+                    CPLHTTPEmitFetchDebug(papszURL[iCurRequest],
+                              CPLSPrintf(" %d/%d",iCurRequest+1, nURLCount));
+                    curl_multi_add_handle(hCurlMultiHandle,
+                                          asHandles[iCurRequest]);
+                    iCurRequest ++;
+                    bRequestsAdded = true;
+                }
+            }
+        }
+        while(msg);
+
+        if( !bRequestsAdded )
+            CPLMultiPerformWait(hCurlMultiHandle, repeats);
+    }
+    CPLHTTPRestoreSigPipeHandler(old_handler);
+
+    for( int i = 0; i < nURLCount; i++ )
+    {
+        if( asErrorBuffers[i].szBuffer[0] != '\0' )
+            papsResults[i]->pszErrBuf = CPLStrdup(asErrorBuffers[i].szBuffer);
+        else
+        {
+            long response_code = 0;
+            curl_easy_getinfo(asHandles[i], CURLINFO_RESPONSE_CODE,
+                              &response_code);
+
+            if( response_code >= 400 && response_code < 600 )
+            {
+                papsResults[i]->pszErrBuf =
+                        CPLStrdup(CPLSPrintf("HTTP error code : %d",
+                                             static_cast<int>(response_code)));
+            }
+        }
+
+        curl_easy_getinfo( asHandles[i], CURLINFO_CONTENT_TYPE,
+                           &(papsResults[i]->pszContentType) );
+        if( papsResults[i]->pszContentType != nullptr )
+            papsResults[i]->pszContentType = CPLStrdup(papsResults[i]->pszContentType);
+
+        curl_multi_remove_handle(hCurlMultiHandle, asHandles[i]);
+        curl_easy_cleanup(asHandles[i]);
+    }
+
+    if( !pszPersistent )
+        curl_multi_cleanup(hCurlMultiHandle);
+
+    for( size_t i = 0; i < aHeaders.size(); i++ )
+        curl_slist_free_all(aHeaders[i]);
+
+    return papsResults;
+#endif /* def HAVE_CURL */
+}
+
+/************************************************************************/
+/*                      CPLHTTPDestroyMultiResult()                     */
+/************************************************************************/
+/**
+ * \brief Clean the memory associated with the return value of CPLHTTPMultiFetch()
+ *
+ * @param papsResults pointer to the return value of CPLHTTPMultiFetch()
+ * @param nCount value of the nURLCount parameter passed to CPLHTTPMultiFetch()
+ * @since GDAL 2.3
+ */
+void CPLHTTPDestroyMultiResult( CPLHTTPResult **papsResults, int nCount )
+{
+    if( papsResults )
+    {
+        for(int i=0;i<nCount;i++)
+        {
+            CPLHTTPDestroyResult(papsResults[i]);
+        }
+        CPLFree(papsResults);
+    }
+}
+
+#ifdef HAVE_CURL
+
+#ifdef WIN32
+
+#include <windows.h>
+
+/************************************************************************/
+/*                     CPLFindWin32CurlCaBundleCrt()                    */
+/************************************************************************/
+
+static const char* CPLFindWin32CurlCaBundleCrt()
+{
+    DWORD nResLen;
+    const DWORD nBufSize = MAX_PATH + 1;
+    char *pszFilePart = nullptr;
+
+    char *pszPath = static_cast<char*>(CPLCalloc(1, nBufSize));
+
+    nResLen = SearchPathA(nullptr, "curl-ca-bundle.crt", nullptr,
+                          nBufSize, pszPath, &pszFilePart);
+    if (nResLen > 0)
+    {
+        const char* pszRet = CPLSPrintf("%s", pszPath);
+        CPLFree(pszPath);
+        return pszRet;
+    }
+    CPLFree(pszPath);
+    return nullptr;
+}
+
+#endif // WIN32
+
+/************************************************************************/
 /*                         CPLHTTPSetOptions()                          */
 /************************************************************************/
 
-void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions)
+// Note: papszOptions must be kept alive until curl_easy/multi_perform()
+// has completed, and we must be careful not to set short lived strings
+// with curl_easy_setopt(), as long as we need to support curl < 7.17
+// see https://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+// caution: if we remove that assumption, we'll needto use CURLOPT_COPYPOSTFIELDS
+
+void *CPLHTTPSetOptions(void *pcurl, const char* pszURL,
+                       const char * const* papszOptions)
 {
-    if (CSLTestBoolean(CPLGetConfigOption("CPL_CURL_VERBOSE", "NO")))
+    CheckCurlFeatures();
+
+    CURL *http_handle = reinterpret_cast<CURL *>(pcurl);
+
+    curl_easy_setopt(http_handle, CURLOPT_URL, pszURL);
+
+    if( CPLTestBool(CPLGetConfigOption("CPL_CURL_VERBOSE", "NO")) )
         curl_easy_setopt(http_handle, CURLOPT_VERBOSE, 1);
 
-    const char *pszHttpVersion = CSLFetchNameValue( papszOptions, "HTTP_VERSION");
+    const char *pszHttpVersion =
+        CSLFetchNameValue( papszOptions, "HTTP_VERSION");
+    if( pszHttpVersion == nullptr )
+        pszHttpVersion = CPLGetConfigOption( "GDAL_HTTP_VERSION", nullptr );
     if( pszHttpVersion && strcmp(pszHttpVersion, "1.0") == 0 )
-        curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0 );
+        curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION,
+                         CURL_HTTP_VERSION_1_0);
+    else if( pszHttpVersion && strcmp(pszHttpVersion, "1.1") == 0 )
+        curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION,
+                         CURL_HTTP_VERSION_1_1);
+    else if( pszHttpVersion &&
+             (strcmp(pszHttpVersion, "2") == 0 ||
+              strcmp(pszHttpVersion, "2.0") == 0) )
+    {
+        // 7.33.0
+#if LIBCURL_VERSION_NUM >= 0x72100
+        if( bSupportHTTP2 )
+        {
+            // Try HTTP/2 both for HTTP and HTTPS. With fallback to HTTP/1.1
+            curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION,
+                             CURL_HTTP_VERSION_2_0);
+        }
+        else
+#endif
+        {
+            static bool bHasWarned = false;
+            if( !bHasWarned )
+            {
+#if LIBCURL_VERSION_NUM >= 0x72100
+                CPLError(CE_Warning, CPLE_NotSupported,
+                        "HTTP/2 not available in this build of Curl. "
+                        "It needs to be built against nghttp2");
+#else
+                CPLError(CE_Warning, CPLE_NotSupported,
+                          "HTTP/2 not supported by this version of Curl. "
+                          "You need curl 7.33 or later, with nghttp2 support");
+
+#endif
+                bHasWarned = true;
+            }
+        }
+    }
+    else if( pszHttpVersion == nullptr ||
+             strcmp(pszHttpVersion, "2TLS") == 0 )
+    {
+        // 7.47.0
+#if LIBCURL_VERSION_NUM >= 0x72F00
+        if( bSupportHTTP2 )
+        {
+            // Only enable this mode if explicitly required, or if the
+            // machine is a GCE instance. On other networks, requesting a
+            // file in HTTP/2 is found to be significantly slower than HTTP/1.1
+            // for unknown reasons.
+            if( pszHttpVersion != nullptr || CPLIsMachineForSureGCEInstance() )
+            {
+                static bool bDebugEmitted = false;
+                if( !bDebugEmitted )
+                {
+                    CPLDebug("HTTP", "Using HTTP/2 for HTTPS when possible");
+                    bDebugEmitted = true;
+                }
+
+                // CURL_HTTP_VERSION_2TLS means for HTTPS connection, try to
+                // negotiate HTTP/2 with the server (and fallback to HTTP/1.1
+                // otherwise), and for HTTP connection do HTTP/1
+                curl_easy_setopt(http_handle, CURLOPT_HTTP_VERSION,
+                                CURL_HTTP_VERSION_2TLS);
+            }
+        }
+        else
+#endif
+        if( pszHttpVersion != nullptr )
+        {
+            static bool bHasWarned = false;
+            if( !bHasWarned )
+            {
+#if LIBCURL_VERSION_NUM >= 0x72F00
+                CPLError(CE_Warning, CPLE_NotSupported,
+                        "HTTP/2 not available in this build of Curl. "
+                        "It needs to be built against nghttp2");
+#else
+                CPLError(CE_Warning, CPLE_NotSupported,
+                         "HTTP_VERSION=2TLS not available in this version "
+                         "of Curl. You need curl 7.47 or later");
+#endif
+                bHasWarned = true;
+            }
+        }
+    }
+    else
+    {
+        CPLError(CE_Warning, CPLE_NotSupported,
+                 "HTTP_VERSION=%s not supported", pszHttpVersion);
+    }
+
+    // Default value is 1 since curl 7.50.2. But worth applying it on
+    // previous versions as well.
+    const char* pszTCPNoDelay = CSLFetchNameValueDef( papszOptions,
+                                                      "TCP_NODELAY", "1");
+    curl_easy_setopt(http_handle, CURLOPT_TCP_NODELAY, atoi(pszTCPNoDelay));
 
     /* Support control over HTTPAUTH */
     const char *pszHttpAuth = CSLFetchNameValue( papszOptions, "HTTPAUTH" );
-    if( pszHttpAuth == NULL )
-        pszHttpAuth = CPLGetConfigOption( "GDAL_HTTP_AUTH", NULL );
-    if( pszHttpAuth == NULL )
+    if( pszHttpAuth == nullptr )
+        pszHttpAuth = CPLGetConfigOption( "GDAL_HTTP_AUTH", nullptr );
+    if( pszHttpAuth == nullptr )
         /* do nothing */;
 
     /* CURLOPT_HTTPAUTH is defined in curl 7.11.0 or newer */
 #if LIBCURL_VERSION_NUM >= 0x70B00
-    else if( EQUAL(pszHttpAuth,"BASIC") )
+    else if( EQUAL(pszHttpAuth, "BASIC") )
         curl_easy_setopt(http_handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
-    else if( EQUAL(pszHttpAuth,"NTLM") )
+    else if( EQUAL(pszHttpAuth, "NTLM") )
         curl_easy_setopt(http_handle, CURLOPT_HTTPAUTH, CURLAUTH_NTLM );
-    else if( EQUAL(pszHttpAuth,"ANY") )
+    else if( EQUAL(pszHttpAuth, "ANY") )
         curl_easy_setopt(http_handle, CURLOPT_HTTPAUTH, CURLAUTH_ANY );
 #ifdef CURLAUTH_GSSNEGOTIATE
-    else if( EQUAL(pszHttpAuth,"NEGOTIATE") )
+    else if( EQUAL(pszHttpAuth, "NEGOTIATE") )
         curl_easy_setopt(http_handle, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE );
 #endif
     else
@@ -532,48 +1665,57 @@ void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions)
     }
 #endif
 
-    /* Support use of .netrc - default enabled */
+    // Support use of .netrc - default enabled.
     const char *pszHttpNetrc = CSLFetchNameValue( papszOptions, "NETRC" );
-    if( pszHttpNetrc == NULL )
+    if( pszHttpNetrc == nullptr )
         pszHttpNetrc = CPLGetConfigOption( "GDAL_HTTP_NETRC", "YES" );
-    if( pszHttpNetrc == NULL || CSLTestBoolean(pszHttpNetrc) )
+    if( pszHttpNetrc == nullptr || CPLTestBool(pszHttpNetrc) )
         curl_easy_setopt(http_handle, CURLOPT_NETRC, 1L);
 
-    /* Support setting userid:password */
+    // Support setting userid:password.
     const char *pszUserPwd = CSLFetchNameValue( papszOptions, "USERPWD" );
-    if (pszUserPwd == NULL)
-        pszUserPwd = CPLGetConfigOption("GDAL_HTTP_USERPWD", NULL);
-    if( pszUserPwd != NULL )
+    if( pszUserPwd == nullptr )
+        pszUserPwd = CPLGetConfigOption("GDAL_HTTP_USERPWD", nullptr);
+    if( pszUserPwd != nullptr )
         curl_easy_setopt(http_handle, CURLOPT_USERPWD, pszUserPwd );
 
-    /* Set Proxy parameters */
+    // Set Proxy parameters.
     const char* pszProxy = CSLFetchNameValue( papszOptions, "PROXY" );
-    if (pszProxy == NULL)
-        pszProxy = CPLGetConfigOption("GDAL_HTTP_PROXY", NULL);
-    if (pszProxy)
-        curl_easy_setopt(http_handle,CURLOPT_PROXY,pszProxy);
+    if( pszProxy == nullptr )
+        pszProxy = CPLGetConfigOption("GDAL_HTTP_PROXY", nullptr);
+    if( pszProxy )
+        curl_easy_setopt(http_handle, CURLOPT_PROXY, pszProxy);
 
-    const char* pszProxyUserPwd = CSLFetchNameValue( papszOptions, "PROXYUSERPWD" );
-    if (pszProxyUserPwd == NULL)
-        pszProxyUserPwd = CPLGetConfigOption("GDAL_HTTP_PROXYUSERPWD", NULL);
-    if (pszProxyUserPwd)
-        curl_easy_setopt(http_handle,CURLOPT_PROXYUSERPWD,pszProxyUserPwd);
+    const char* pszHttpsProxy = CSLFetchNameValue( papszOptions, "HTTPS_PROXY" );
+    if ( pszHttpsProxy == nullptr )
+        pszHttpsProxy = CPLGetConfigOption("GDAL_HTTPS_PROXY", nullptr);
+    if ( pszHttpsProxy && (STARTS_WITH(pszURL, "https")) )
+        curl_easy_setopt(http_handle, CURLOPT_PROXY, pszHttpsProxy);
 
-    /* Support control over PROXYAUTH */
+    const char* pszProxyUserPwd =
+        CSLFetchNameValue( papszOptions, "PROXYUSERPWD" );
+    if( pszProxyUserPwd == nullptr )
+        pszProxyUserPwd = CPLGetConfigOption("GDAL_HTTP_PROXYUSERPWD", nullptr);
+    if( pszProxyUserPwd )
+        curl_easy_setopt(http_handle, CURLOPT_PROXYUSERPWD, pszProxyUserPwd);
+
+    // Support control over PROXYAUTH.
     const char *pszProxyAuth = CSLFetchNameValue( papszOptions, "PROXYAUTH" );
-    if( pszProxyAuth == NULL )
-        pszProxyAuth = CPLGetConfigOption( "GDAL_PROXY_AUTH", NULL );
-    if( pszProxyAuth == NULL )
-        /* do nothing */;
-    /* CURLOPT_PROXYAUTH is defined in curl 7.11.0 or newer */
+    if( pszProxyAuth == nullptr )
+        pszProxyAuth = CPLGetConfigOption( "GDAL_PROXY_AUTH", nullptr );
+    if( pszProxyAuth == nullptr )
+    {
+        // Do nothing.
+    }
+    // CURLOPT_PROXYAUTH is defined in curl 7.11.0 or newer.
 #if LIBCURL_VERSION_NUM >= 0x70B00
-    else if( EQUAL(pszProxyAuth,"BASIC") )
+    else if( EQUAL(pszProxyAuth, "BASIC") )
         curl_easy_setopt(http_handle, CURLOPT_PROXYAUTH, CURLAUTH_BASIC );
-    else if( EQUAL(pszProxyAuth,"NTLM") )
+    else if( EQUAL(pszProxyAuth, "NTLM") )
         curl_easy_setopt(http_handle, CURLOPT_PROXYAUTH, CURLAUTH_NTLM );
-    else if( EQUAL(pszProxyAuth,"DIGEST") )
+    else if( EQUAL(pszProxyAuth, "DIGEST") )
         curl_easy_setopt(http_handle, CURLOPT_PROXYAUTH, CURLAUTH_DIGEST );
-    else if( EQUAL(pszProxyAuth,"ANY") )
+    else if( EQUAL(pszProxyAuth, "ANY") )
         curl_easy_setopt(http_handle, CURLOPT_PROXYAUTH, CURLAUTH_ANY );
     else
     {
@@ -589,51 +1731,130 @@ void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions)
     }
 #endif
 
-    /* Enable following redirections.  Requires libcurl 7.10.1 at least */
+    // CURLOPT_SUPPRESS_CONNECT_HEADERS is defined in curl 7.54.0 or newer.
+#if LIBCURL_VERSION_NUM >= 0x073600
+    curl_easy_setopt(http_handle, CURLOPT_SUPPRESS_CONNECT_HEADERS, 1L);
+#endif
+
+    // Enable following redirections.  Requires libcurl 7.10.1 at least.
     curl_easy_setopt(http_handle, CURLOPT_FOLLOWLOCATION, 1 );
     curl_easy_setopt(http_handle, CURLOPT_MAXREDIRS, 10 );
+    curl_easy_setopt(http_handle, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL );
 
-    /* Set timeout.*/
+    // Set connect timeout.
+    const char *pszConnectTimeout =
+        CSLFetchNameValue( papszOptions, "CONNECTTIMEOUT" );
+    if( pszConnectTimeout == nullptr )
+        pszConnectTimeout = CPLGetConfigOption("GDAL_HTTP_CONNECTTIMEOUT", nullptr);
+    if( pszConnectTimeout != nullptr )
+        curl_easy_setopt(http_handle, CURLOPT_CONNECTTIMEOUT_MS,
+                         static_cast<int>(1000 * CPLAtof(pszConnectTimeout)) );
+
+    // Set timeout.
     const char *pszTimeout = CSLFetchNameValue( papszOptions, "TIMEOUT" );
-    if (pszTimeout == NULL)
-        pszTimeout = CPLGetConfigOption("GDAL_HTTP_TIMEOUT", NULL);
-    if( pszTimeout != NULL )
-        curl_easy_setopt(http_handle, CURLOPT_TIMEOUT, atoi(pszTimeout) );
+    if( pszTimeout == nullptr )
+        pszTimeout = CPLGetConfigOption("GDAL_HTTP_TIMEOUT", nullptr);
+    if( pszTimeout != nullptr )
+        curl_easy_setopt(http_handle, CURLOPT_TIMEOUT_MS,
+                         static_cast<int>(1000 * CPLAtof(pszTimeout)) );
 
-    /* Set low speed time and limit.*/
-    const char *pszLowSpeedTime = CSLFetchNameValue( papszOptions, "LOW_SPEED_TIME" );
-    if (pszLowSpeedTime == NULL)
-        pszLowSpeedTime = CPLGetConfigOption("GDAL_HTTP_LOW_SPEED_TIME", NULL);
-    if( pszLowSpeedTime != NULL )
+    // Set low speed time and limit.
+    const char *pszLowSpeedTime =
+        CSLFetchNameValue( papszOptions, "LOW_SPEED_TIME" );
+    if( pszLowSpeedTime == nullptr )
+        pszLowSpeedTime = CPLGetConfigOption("GDAL_HTTP_LOW_SPEED_TIME", nullptr);
+    if( pszLowSpeedTime != nullptr )
     {
-        curl_easy_setopt(http_handle, CURLOPT_LOW_SPEED_TIME, atoi(pszLowSpeedTime) );
+        curl_easy_setopt(http_handle, CURLOPT_LOW_SPEED_TIME,
+                         atoi(pszLowSpeedTime) );
 
-        const char *pszLowSpeedLimit = CSLFetchNameValue( papszOptions, "LOW_SPEED_LIMIT" );
-        if (pszLowSpeedLimit == NULL)
-            pszLowSpeedLimit = CPLGetConfigOption("GDAL_HTTP_LOW_SPEED_LIMIT", "1");
-        curl_easy_setopt(http_handle, CURLOPT_LOW_SPEED_LIMIT, atoi(pszLowSpeedLimit) );
+        const char *pszLowSpeedLimit =
+            CSLFetchNameValue( papszOptions, "LOW_SPEED_LIMIT" );
+        if( pszLowSpeedLimit == nullptr )
+            pszLowSpeedLimit =
+                CPLGetConfigOption("GDAL_HTTP_LOW_SPEED_LIMIT", "1");
+        curl_easy_setopt(http_handle, CURLOPT_LOW_SPEED_LIMIT,
+                         atoi(pszLowSpeedLimit) );
     }
 
     /* Disable some SSL verification */
     const char *pszUnsafeSSL = CSLFetchNameValue( papszOptions, "UNSAFESSL" );
-    if (pszUnsafeSSL == NULL)
-        pszUnsafeSSL = CPLGetConfigOption("GDAL_HTTP_UNSAFESSL", NULL);
-    if (pszUnsafeSSL != NULL && CSLTestBoolean(pszUnsafeSSL))
+    if( pszUnsafeSSL == nullptr )
+        pszUnsafeSSL = CPLGetConfigOption("GDAL_HTTP_UNSAFESSL", nullptr);
+    if( pszUnsafeSSL != nullptr && CPLTestBool(pszUnsafeSSL) )
     {
         curl_easy_setopt(http_handle, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(http_handle, CURLOPT_SSL_VERIFYHOST, 0L);
     }
 
+    const char* pszUseCAPIStore = CSLFetchNameValue( papszOptions, "USE_CAPI_STORE" );
+    if( pszUseCAPIStore == nullptr )
+         pszUseCAPIStore = CPLGetConfigOption("GDAL_HTTP_USE_CAPI_STORE", "NO");
+    if( CPLTestBool( pszUseCAPIStore ) )
+    {
+#if defined(WIN32) && defined(HAVE_OPENSSL_CRYPTO) && LIBCURL_VERSION_NUM >= 0x70B00
+        // Use certificates from Windows certificate store; requires crypt32.lib, OpenSSL crypto and ssl libraries.
+        curl_easy_setopt(http_handle, CURLOPT_SSL_CTX_FUNCTION, *CPL_ssl_ctx_callback);
+#else
+        CPLError(CE_Warning, CPLE_NotSupported,
+                 "GDAL_HTTP_USE_CAPI_STORE requested, but libcurl too old, "
+                 "non-Windows platform or OpenSSL missing.");
+#endif
+    }
+
+    // Enable OCSP stapling if requested.
+    const char *pszSSLVerifyStatus =
+                    CSLFetchNameValue( papszOptions, "SSL_VERIFYSTATUS" );
+    if( pszSSLVerifyStatus == nullptr )
+        pszSSLVerifyStatus = CPLGetConfigOption("GDAL_HTTP_SSL_VERIFYSTATUS", "NO");
+    if( CPLTestBool( pszSSLVerifyStatus) )
+    {
+    // 7.41.0
+#if LIBCURL_VERSION_NUM >= 0x72900
+        curl_easy_setopt(http_handle, CURLOPT_SSL_VERIFYSTATUS, 1L);
+#else
+        CPLError(CE_Warning, CPLE_NotSupported,
+                 "GDAL_HTTP_SSL_VERIFYSTATUS requested, but libcurl too old "
+                 "to support it.");
+#endif
+    }
+
+    // Custom path to SSL certificates.
+    const char* pszCAInfo = CSLFetchNameValue( papszOptions, "CAINFO" );
+    if( pszCAInfo == nullptr )
+        // Name of environment variable used by the curl binary
+        pszCAInfo = CPLGetConfigOption("CURL_CA_BUNDLE", nullptr);
+    if( pszCAInfo == nullptr )
+        // Name of environment variable used by the curl binary (tested
+        // after CURL_CA_BUNDLE
+        pszCAInfo = CPLGetConfigOption("SSL_CERT_FILE", nullptr);
+#ifdef WIN32
+    if( pszCAInfo == nullptr )
+    {
+        pszCAInfo = CPLFindWin32CurlCaBundleCrt();
+    }
+#endif
+    if( pszCAInfo != nullptr )
+    {
+        curl_easy_setopt(http_handle, CURLOPT_CAINFO, pszCAInfo);
+    }
+
+    const char* pszCAPath = CSLFetchNameValue( papszOptions, "CAPATH" );
+    if( pszCAPath != nullptr )
+    {
+        curl_easy_setopt(http_handle, CURLOPT_CAPATH, pszCAPath);
+    }
+
     /* Set Referer */
     const char *pszReferer = CSLFetchNameValue(papszOptions, "REFERER");
-    if (pszReferer != NULL)
+    if( pszReferer != nullptr )
         curl_easy_setopt(http_handle, CURLOPT_REFERER, pszReferer);
 
     /* Set User-Agent */
     const char *pszUserAgent = CSLFetchNameValue(papszOptions, "USERAGENT");
-    if (pszUserAgent == NULL)
-        pszUserAgent = CPLGetConfigOption("GDAL_HTTP_USERAGENT", NULL);
-    if (pszUserAgent != NULL)
+    if( pszUserAgent == nullptr )
+        pszUserAgent = CPLGetConfigOption("GDAL_HTTP_USERAGENT", nullptr);
+    if( pszUserAgent != nullptr )
         curl_easy_setopt(http_handle, CURLOPT_USERAGENT, pszUserAgent);
 
     /* NOSIGNAL should be set to true for timeout to work in multithread
@@ -644,28 +1865,129 @@ void CPLHTTPSetOptions(CURL *http_handle, char** papszOptions)
     curl_easy_setopt(http_handle, CURLOPT_NOSIGNAL, 1 );
 #endif
 
-    /* Set POST mode */
-    const char* pszPost = CSLFetchNameValue( papszOptions, "POSTFIELDS" );
-    if( pszPost != NULL )
+    const char* pszFormFilePath = CSLFetchNameValue( papszOptions, "FORM_FILE_PATH" );
+    const char* pszParametersCount = CSLFetchNameValue( papszOptions, "FORM_ITEM_COUNT" );
+    if( pszFormFilePath == nullptr && pszParametersCount == nullptr )
     {
-        CPLDebug("HTTP", "These POSTFIELDS were sent:%.4000s", pszPost);
-        curl_easy_setopt(http_handle, CURLOPT_POST, 1 );
-        curl_easy_setopt(http_handle, CURLOPT_POSTFIELDS, pszPost );
-    }
+        /* Set POST mode */
+        const char* pszPost = CSLFetchNameValue( papszOptions, "POSTFIELDS" );
+        if( pszPost != nullptr )
+        {
+            CPLDebug("HTTP", "These POSTFIELDS were sent:%.4000s", pszPost);
+            curl_easy_setopt(http_handle, CURLOPT_POST, 1 );
+            curl_easy_setopt(http_handle, CURLOPT_POSTFIELDS, pszPost );
+        }
 
-    const char* pszCustomRequest = CSLFetchNameValue( papszOptions, "CUSTOMREQUEST" );
-    if( pszCustomRequest != NULL )
-    {
-        curl_easy_setopt(http_handle, CURLOPT_CUSTOMREQUEST, pszCustomRequest );
+        const char* pszCustomRequest =
+            CSLFetchNameValue( papszOptions, "CUSTOMREQUEST" );
+        if( pszCustomRequest != nullptr )
+        {
+            curl_easy_setopt(http_handle, CURLOPT_CUSTOMREQUEST, pszCustomRequest );
+        }
     }
 
     const char* pszCookie = CSLFetchNameValue(papszOptions, "COOKIE");
-    if (pszCookie == NULL)
-        pszCookie = CPLGetConfigOption("GDAL_HTTP_COOKIE", NULL);
-    if (pszCookie != NULL)
+    if( pszCookie == nullptr )
+        pszCookie = CPLGetConfigOption("GDAL_HTTP_COOKIE", nullptr);
+    if( pszCookie != nullptr )
         curl_easy_setopt(http_handle, CURLOPT_COOKIE, pszCookie);
+
+    const char* pszCookieFile = CSLFetchNameValue(papszOptions, "COOKIEFILE");
+    if( pszCookieFile == nullptr )
+        pszCookieFile = CPLGetConfigOption("GDAL_HTTP_COOKIEFILE", nullptr);
+    if( pszCookieFile != nullptr )
+        curl_easy_setopt(http_handle, CURLOPT_COOKIEFILE, pszCookieFile);
+
+    const char* pszCookieJar = CSLFetchNameValue(papszOptions, "COOKIEJAR");
+    if( pszCookieJar == nullptr )
+        pszCookieJar = CPLGetConfigOption("GDAL_HTTP_COOKIEJAR", nullptr);
+    if( pszCookieJar != nullptr )
+        curl_easy_setopt(http_handle, CURLOPT_COOKIEJAR, pszCookieJar);
+
+
+    struct curl_slist* headers = nullptr;
+    const char *pszHeaderFile = CSLFetchNameValue( papszOptions, "HEADER_FILE" );
+    if( pszHeaderFile == nullptr )
+        pszHeaderFile = CPLGetConfigOption( "GDAL_HTTP_HEADER_FILE", nullptr );
+    if( pszHeaderFile != nullptr )
+    {
+        VSILFILE *fp = nullptr;
+        // Do not allow /vsicurl/ access from /vsicurl because of GetCurlHandleFor()
+        // e.g. "/vsicurl/,HEADER_FILE=/vsicurl/,url= " would cause use of
+        // memory after free
+        if( strstr(pszHeaderFile, "/vsicurl/") == nullptr &&
+            strstr(pszHeaderFile, "/vsicurl?") == nullptr &&
+            strstr(pszHeaderFile, "/vsis3/") == nullptr &&
+            strstr(pszHeaderFile, "/vsigs/") == nullptr &&
+            strstr(pszHeaderFile, "/vsiaz/") == nullptr &&
+            strstr(pszHeaderFile, "/vsioss/") == nullptr &&
+            strstr(pszHeaderFile, "/vsiswift/") == nullptr )
+        {
+            fp = VSIFOpenL( pszHeaderFile, "rb" );
+        }
+        if( fp == nullptr )
+        {
+            CPLError(CE_Failure, CPLE_FileIO,
+                     "Cannot read %s", pszHeaderFile);
+        }
+        else
+        {
+            const char* pszLine = nullptr;
+            while( (pszLine = CPLReadLineL(fp)) != nullptr )
+            {
+                headers = curl_slist_append(headers, pszLine);
+            }
+            VSIFCloseL(fp);
+        }
+    }
+
+    return headers;
 }
-#endif /* def HAVE_CURL */
+
+/************************************************************************/
+/*                         CPLHTTPIgnoreSigPipe()                       */
+/************************************************************************/
+
+/* If using OpenSSL with Curl, openssl can cause SIGPIPE to be triggered */
+/* As we set CURLOPT_NOSIGNAL = 1, we must manually handle this situation */
+
+void* CPLHTTPIgnoreSigPipe()
+{
+#if defined(SIGPIPE) && defined(HAVE_SIGACTION)
+    struct sigaction old_pipe_act;
+    struct sigaction action;
+    /* Get previous handler */
+    memset(&old_pipe_act, 0, sizeof(struct sigaction));
+    sigaction(SIGPIPE, nullptr, &old_pipe_act);
+
+    /* Install new handler */
+    action = old_pipe_act;
+    action.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &action, nullptr);
+
+    void* ret = CPLMalloc(sizeof(old_pipe_act));
+    memcpy(ret, &old_pipe_act, sizeof(old_pipe_act));
+    return ret;
+#else
+    return nullptr;
+#endif
+}
+
+/************************************************************************/
+/*                     CPLHTTPRestoreSigPipeHandler()                   */
+/************************************************************************/
+
+void CPLHTTPRestoreSigPipeHandler(void* old_handler)
+{
+#if defined(SIGPIPE) && defined(HAVE_SIGACTION)
+    sigaction(SIGPIPE, static_cast<struct sigaction*>(old_handler), nullptr);
+    CPLFree(old_handler);
+#else
+    (void)old_handler;
+#endif
+}
+
+#endif  // def HAVE_CURL
 
 /************************************************************************/
 /*                           CPLHTTPEnabled()                           */
@@ -704,19 +2026,47 @@ void CPLHTTPCleanup()
 
     {
         CPLMutexHolder oHolder( &hSessionMapMutex );
-        std::map<CPLString,CURL*>::iterator oIt;
         if( poSessionMap )
         {
-            for( oIt=poSessionMap->begin(); oIt != poSessionMap->end(); oIt++ )
+            for( std::map<CPLString, CURL *>::iterator oIt =
+                     poSessionMap->begin();
+                 oIt != poSessionMap->end();
+                 oIt++ )
+            {
                 curl_easy_cleanup( oIt->second );
+            }
             delete poSessionMap;
-            poSessionMap = NULL;
+            poSessionMap = nullptr;
+        }
+        if( poSessionMultiMap )
+        {
+            for( std::map<CPLString, CURLM *>::iterator oIt =
+                     poSessionMultiMap->begin();
+                 oIt != poSessionMultiMap->end();
+                 oIt++ )
+            {
+                curl_multi_cleanup( oIt->second );
+            }
+            delete poSessionMultiMap;
+            poSessionMultiMap = nullptr;
         }
     }
 
-    // not quite a safe sequence.
+    // Not quite a safe sequence.
     CPLDestroyMutex( hSessionMapMutex );
-    hSessionMapMutex = NULL;
+    hSessionMapMutex = nullptr;
+
+#if defined(WIN32) && defined(HAVE_OPENSSL_CRYPTO)
+    // This cleanup must be absolutely done before CPLOpenSSLCleanup()
+    // for some unknown reason, but otherwise X509_free() in
+    // CPLWindowsCertificateListCleanup() will crash.
+    CPLWindowsCertificateListCleanup();
+#endif
+
+#if defined(HAVE_OPENSSL_CRYPTO) && OPENSSL_VERSION_NUMBER < 0x10100000
+    CPLOpenSSLCleanup();
+#endif
+
 #endif
 }
 
@@ -739,7 +2089,7 @@ void CPLHTTPDestroyResult( CPLHTTPResult *psResult )
         CPLFree( psResult->pszContentType );
         CSLDestroy( psResult->papszHeaders );
 
-        for(int i=0;i<psResult->nMimePartCount;i++)
+        for( int i = 0; i < psResult->nMimePartCount; i++ )
         {
             CSLDestroy( psResult->pasMimePart[i].papszHeaders );
         }
@@ -774,12 +2124,12 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
 /* -------------------------------------------------------------------- */
 /*      Find the boundary setting in the content type.                  */
 /* -------------------------------------------------------------------- */
-    const char *pszBound = NULL;
+    const char *pszBound = nullptr;
 
-    if( psResult->pszContentType != NULL )
-        pszBound = strstr(psResult->pszContentType,"boundary=");
+    if( psResult->pszContentType != nullptr )
+        pszBound = strstr(psResult->pszContentType, "boundary=");
 
-    if( pszBound == NULL )
+    if( pszBound == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Unable to parse multi-part mime, no boundary setting." );
@@ -806,16 +2156,18 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
 /* -------------------------------------------------------------------- */
 /*      Find the start of the first chunk.                              */
 /* -------------------------------------------------------------------- */
-    char *pszNext = (char *)
-        strstr((const char *) psResult->pabyData,osBoundary.c_str());
+    char *pszNext =
+        psResult->pabyData ?
+            strstr(reinterpret_cast<char *>(psResult->pabyData),
+               osBoundary.c_str()) : nullptr;
 
-    if( pszNext == NULL )
+    if( pszNext == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined, "No parts found." );
         return FALSE;
     }
 
-    pszNext += strlen(osBoundary);
+    pszNext += osBoundary.size();
     while( *pszNext != '\n' && *pszNext != '\r' && *pszNext != '\0' )
         pszNext++;
     if( *pszNext == '\r' )
@@ -829,9 +2181,9 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
     while( true )
     {
         psResult->nMimePartCount++;
-        psResult->pasMimePart = (CPLMimePart *)
+        psResult->pasMimePart = static_cast<CPLMimePart *>(
             CPLRealloc(psResult->pasMimePart,
-                       sizeof(CPLMimePart) * psResult->nMimePartCount );
+                       sizeof(CPLMimePart) * psResult->nMimePartCount));
 
         CPLMimePart *psPart = psResult->pasMimePart+psResult->nMimePartCount-1;
 
@@ -842,25 +2194,35 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
 /* -------------------------------------------------------------------- */
         while( *pszNext != '\n' && *pszNext != '\r' && *pszNext != '\0' )
         {
-            char *pszEOL = strstr(pszNext,"\n");
+            if( !STARTS_WITH(pszNext, "Content-") ) {
+                break;
+            }
+            char *pszEOL = strstr(pszNext, "\n");
 
-            if( pszEOL == NULL )
+            if( pszEOL == nullptr )
             {
                 CPLError(CE_Failure, CPLE_AppDefined,
-                         "Error while parsing multipart content (at line %d)", __LINE__);
+                         "Error while parsing multipart content (at line %d)",
+                         __LINE__);
                 return FALSE;
             }
 
             *pszEOL = '\0';
             bool bRestoreAntislashR = false;
-            if (pszEOL - pszNext > 1 && pszEOL[-1] == '\r')
+            if( pszEOL - pszNext > 1 && pszEOL[-1] == '\r' )
             {
                 bRestoreAntislashR = true;
                 pszEOL[-1] = '\0';
             }
-            psPart->papszHeaders =
-                CSLAddString( psPart->papszHeaders, pszNext );
-            if (bRestoreAntislashR)
+            char *pszKey = nullptr;
+            const char *pszValue = CPLParseNameValue(pszNext, &pszKey );
+            if( pszKey && pszValue )
+            {
+                psPart->papszHeaders =
+                    CSLSetNameValue(psPart->papszHeaders, pszKey, pszValue);
+            }
+            CPLFree(pszKey);
+            if( bRestoreAntislashR )
                 pszEOL[-1] = '\r';
             *pszEOL = '\n';
 
@@ -875,14 +2237,16 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
 /* -------------------------------------------------------------------- */
 /*      Work out the data block size.                                   */
 /* -------------------------------------------------------------------- */
-        psPart->pabyData = (GByte *) pszNext;
+        psPart->pabyData = reinterpret_cast<GByte *>(pszNext);
 
-        int nBytesAvail = psResult->nDataLen -
-            static_cast<int>(pszNext - (const char *) psResult->pabyData);
+        int nBytesAvail =
+            psResult->nDataLen -
+            static_cast<int>(
+                pszNext - reinterpret_cast<char *>(psResult->pabyData));
 
         while( nBytesAvail > 0
                && (*pszNext != '-'
-                   || strncmp(pszNext,osBoundary,strlen(osBoundary)) != 0) )
+                   || strncmp(pszNext, osBoundary, osBoundary.size()) != 0) )
         {
             pszNext++;
             nBytesAvail--;
@@ -891,12 +2255,22 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
         if( nBytesAvail == 0 )
         {
             CPLError(CE_Failure, CPLE_AppDefined,
-                        "Error while parsing multipart content (at line %d)", __LINE__);
+                     "Error while parsing multipart content (at line %d)",
+                     __LINE__);
             return FALSE;
         }
 
-        psPart->nDataLen = static_cast<int>(pszNext - (const char *) psPart->pabyData);
-        pszNext += strlen(osBoundary);
+        psPart->nDataLen =
+            static_cast<int>(
+                pszNext - reinterpret_cast<char *>(psPart->pabyData));
+        // Normally the part should end with "\r\n--boundary_marker"
+        if( psPart->nDataLen >= 2 && pszNext[-2] == '\r' &&
+            pszNext[-1] == '\n' )
+        {
+            psPart->nDataLen -= 2;
+        }
+
+        pszNext += osBoundary.size();
 
         if( STARTS_WITH(pszNext, "--") )
         {
@@ -910,7 +2284,8 @@ int CPLHTTPParseMultipartMime( CPLHTTPResult *psResult )
         else
         {
             CPLError(CE_Failure, CPLE_AppDefined,
-                        "Error while parsing multipart content (at line %d)", __LINE__);
+                     "Error while parsing multipart content (at line %d)",
+                     __LINE__);
             return FALSE;
         }
     }

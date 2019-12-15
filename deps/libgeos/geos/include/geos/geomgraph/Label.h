@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,7 +22,8 @@
 #define GEOS_GEOMGRAPH_LABEL_H
 
 #include <geos/export.h>
-#include <geos/geomgraph/TopologyLocation.h> 
+#include <geos/geom/Location.h>
+#include <geos/geomgraph/TopologyLocation.h>
 
 #include <geos/inline.h>
 
@@ -36,7 +37,7 @@ namespace geomgraph { // geos.geomgraph
  * of a topology graph to a given <code>Geometry</code>.
  * This class supports labels for relationships to two <code>Geometry</code>s,
  * which is sufficient for algorithms for binary operations.
- * 
+ *
  * Topology graphs support the concept of labeling nodes and edges in the graph.
  * The label of a node or edge specifies its topological relationship to one or
  * more geometries.  (In fact, since JTS operations have only two arguments labels
@@ -58,108 +59,108 @@ class GEOS_DLL Label {
 
 public:
 
-	friend std::ostream& operator<< (std::ostream&, const Label&);
+    friend std::ostream& operator<< (std::ostream&, const Label&);
 
-	/** \brief
-	 * Converts a Label to a Line label
-	 * (that is, one with no side Locations)
-	 *
-	 */
-	static Label toLineLabel(const Label& label);
+    /** \brief
+     * Converts a Label to a Line label
+     * (that is, one with no side Locations)
+     *
+     */
+    static Label toLineLabel(const Label& label);
 
-	/** \brief
-	 * Construct a Label with a single location for both Geometries.
-	 */
-	Label(int onLoc);
+    /** \brief
+     * Construct a Label with a single location for both Geometries.
+     */
+    Label(geom::Location onLoc);
 
-	/** \brief
-	 * Construct a Label with the location specified
-	 * for the given Geometry.
-	 * 
-	 * Other geometry location will be set to
-	 * Location::UNDEF.
-	 */
-	Label(int geomIndex, int onLoc);
+    /** \brief
+     * Construct a Label with the location specified
+     * for the given Geometry.
+     *
+     * Other geometry location will be set to
+     * Location::UNDEF.
+     */
+    Label(int geomIndex, geom::Location onLoc);
 
-	/** \brief
-	 * Construct a Label with On, Left and Right locations for both Geometries.
-	 *
-	 * Initialize the locations for both Geometries to the given values.
-	 */
-	Label(int onLoc, int leftLoc, int rightLoc);
+    /** \brief
+     * Construct a Label with On, Left and Right locations for both Geometries.
+     *
+     * Initialize the locations for both Geometries to the given values.
+     */
+    Label(geom::Location onLoc, geom::Location leftLoc, geom::Location rightLoc);
 
-	/// Copy ctor
-	Label(const Label &l);
+    /// Copy ctor
+    Label(const Label& l);
 
-	Label& operator= (const Label& l);
+    Label& operator= (const Label& l);
 
-	/** \brief
-	 * Initialize both locations to Location::UNDEF
-	 * 
-	 * isNull() should return true after this kind of construction
-	 */
-	Label();
+    /** \brief
+     * Initialize both locations to Location::UNDEF
+     *
+     * isNull() should return true after this kind of construction
+     */
+    Label();
 
-	/** \brief
-	 * Construct a Label with On, Left and Right locations for the
-	 * given Geometries.
-	 * Initialize the locations for the other Geometry to
-	 * Location::UNDEF
-	 */
-	Label(int geomIndex, int onLoc, int leftLoc, int rightLoc);
+    /** \brief
+     * Construct a Label with On, Left and Right locations for the
+     * given Geometries.
+     * Initialize the locations for the other Geometry to
+     * Location::UNDEF
+     */
+    Label(int geomIndex, geom::Location onLoc, geom::Location leftLoc, geom::Location rightLoc);
 
-	void flip();
+    void flip();
 
-	int getLocation(int geomIndex, int posIndex) const;
+    geom::Location getLocation(int geomIndex, int posIndex) const;
 
-	int getLocation(int geomIndex) const;
+    geom::Location getLocation(int geomIndex) const;
 
-	void setLocation(int geomIndex, int posIndex, int location);
+    void setLocation(int geomIndex, int posIndex, geom::Location location);
 
-	void setLocation(int geomIndex, int location);
+    void setLocation(int geomIndex, geom::Location location);
 
-	void setAllLocations(int geomIndex, int location);
+    void setAllLocations(int geomIndex, geom::Location location);
 
-	void setAllLocationsIfNull(int geomIndex, int location);
+    void setAllLocationsIfNull(int geomIndex, geom::Location location);
 
-	void setAllLocationsIfNull(int location);
+    void setAllLocationsIfNull(geom::Location location);
 
-	/** \brief
-	 * Merge this label with another one.
-	 *
-	 * Merging updates any null attributes of this label with the attributes
-	 * from lbl
-	 */
-	void merge(const Label &lbl);
+    /** \brief
+     * Merge this label with another one.
+     *
+     * Merging updates any null attributes of this label with the attributes
+     * from lbl
+     */
+    void merge(const Label& lbl);
 
-	int getGeometryCount() const;
+    int getGeometryCount() const;
 
-	bool isNull() const;
+    bool isNull() const;
 
-	bool isNull(int geomIndex) const;
+    bool isNull(int geomIndex) const;
 
-	bool isAnyNull(int geomIndex) const;
+    bool isAnyNull(int geomIndex) const;
 
-	bool isArea() const;
+    bool isArea() const;
 
-	bool isArea(int geomIndex) const;
+    bool isArea(int geomIndex) const;
 
-	bool isLine(int geomIndex) const;
+    bool isLine(int geomIndex) const;
 
-	bool isEqualOnSide(const Label &lbl, int side) const;
+    bool isEqualOnSide(const Label& lbl, int side) const;
 
-	bool allPositionsEqual(int geomIndex, int loc) const;
+    bool allPositionsEqual(int geomIndex, geom::Location loc) const;
 
-	/** \brief
-	 * Converts one GeometryLocation to a Line location
-	 */
-	void toLine(int geomIndex);
+    /** \brief
+     * Converts one GeometryLocation to a Line location
+     */
+    void toLine(int geomIndex);
 
-	std::string toString() const;
+    std::string toString() const;
 
 private:
 
-	TopologyLocation elt[2];
+    TopologyLocation elt[2];
 };
 
 std::ostream& operator<< (std::ostream&, const Label&);
@@ -168,9 +169,9 @@ std::ostream& operator<< (std::ostream&, const Label&);
 } // namespace geos
 
 
-//#ifdef GEOS_INLINE
-//# include "geos/geomgraph/Label.inl"
-//#endif
+#ifdef GEOS_INLINE
+# include "geos/geomgraph/Label.inl"
+#endif
 
 #endif // ifndef GEOS_GEOMGRAPH_LABEL_H
 

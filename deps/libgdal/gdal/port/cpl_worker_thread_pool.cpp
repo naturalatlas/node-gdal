@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: cpl_worker_thread_pool.cpp 32171 2015-12-13 20:39:43Z goatbar $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  CPL worker thread pool
@@ -27,8 +26,18 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "cpl_worker_thread_pool.h"
+
+#include <cstddef>
+#include <memory>
+
 #include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_vsi.h"
+
+
+CPL_CVSID("$Id: cpl_worker_thread_pool.cpp 9b93d5aaef0e512d52da849390cb72856db540b6 2018-07-01 22:10:36 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                         CPLWorkerThreadPool()                        */
@@ -40,14 +49,8 @@
  * must be called.
  */
 CPLWorkerThreadPool::CPLWorkerThreadPool() :
-    hCond(NULL),
-    eState(CPLWTS_OK),
-    psJobQueue(NULL),
-    nPendingJobs(0),
-    psWaitingWorkerThreadsList(NULL),
-    nWaitingWorkerThreads(0)
+    hMutex( CPLCreateMutexEx(CPL_MUTEX_REGULAR) )
 {
-    hMutex = CPLCreateMutexEx(CPL_MUTEX_REGULAR);
     CPLReleaseMutex(hMutex);
 }
 
@@ -65,7 +68,9 @@ CPLWorkerThreadPool::~CPLWorkerThreadPool()
     {
         WaitCompletion();
 
+        CPLAcquireMutex(hMutex, 1000.0);
         eState = CPLWTS_STOP;
+        CPLReleaseMutex(hMutex);
 
         for(size_t i=0;i<aWT.size();i++)
         {
@@ -90,7 +95,7 @@ CPLWorkerThreadPool::~CPLWorkerThreadPool()
 
 void CPLWorkerThreadPool::WorkerThreadFunction(void* user_data)
 {
-    CPLWorkerThread* psWT = (CPLWorkerThread* ) user_data;
+    CPLWorkerThread* psWT = static_cast<CPLWorkerThread*>(user_data);
     CPLWorkerThreadPool* poTP = psWT->poTP;
 
     if( psWT->pfnInitFunc )
@@ -99,7 +104,7 @@ void CPLWorkerThreadPool::WorkerThreadFunction(void* user_data)
     while( true )
     {
         CPLWorkerThreadJob* psJob = poTP->GetNextJob(psWT);
-        if( psJob == NULL )
+        if( psJob == nullptr )
             break;
 
         if( psJob->pfnFunc )
@@ -107,7 +112,9 @@ void CPLWorkerThreadPool::WorkerThreadFunction(void* user_data)
             psJob->pfnFunc(psJob->pData);
         }
         CPLFree(psJob);
-        //CPLDebug("JOB", "%p finished a job", psWT);
+#if DEBUG_VERBOSE
+        CPLDebug("JOB", "%p finished a job", psWT);
+#endif
         poTP->DeclareJobFinished();
     }
 }
@@ -122,18 +129,20 @@ void CPLWorkerThreadPool::WorkerThreadFunction(void* user_data)
  * @param pData User data to pass to the job function.
  * @return true in case of success.
  */
-bool CPLWorkerThreadPool::SubmitJob(CPLThreadFunc pfnFunc, void* pData)
+bool CPLWorkerThreadPool::SubmitJob( CPLThreadFunc pfnFunc, void* pData )
 {
-    CPLAssert( aWT.size() > 0 );
+    CPLAssert( !aWT.empty() );
 
-    CPLWorkerThreadJob* psJob = (CPLWorkerThreadJob*)VSI_MALLOC_VERBOSE(sizeof(CPLWorkerThreadJob));
-    if( psJob == NULL )
+    CPLWorkerThreadJob* psJob = static_cast<CPLWorkerThreadJob *>(
+        VSI_MALLOC_VERBOSE(sizeof(CPLWorkerThreadJob)));
+    if( psJob == nullptr )
         return false;
     psJob->pfnFunc = pfnFunc;
     psJob->pData = pData;
 
-    CPLList* psItem = (CPLList*) VSI_MALLOC_VERBOSE(sizeof(CPLList));
-    if( psItem == NULL )
+    CPLList* psItem =
+        static_cast<CPLList *>(VSI_MALLOC_VERBOSE(sizeof(CPLList)));
+    if( psItem == nullptr )
     {
         VSIFree(psJob);
         return false;
@@ -144,13 +153,12 @@ bool CPLWorkerThreadPool::SubmitJob(CPLThreadFunc pfnFunc, void* pData)
 
     psItem->psNext = psJobQueue;
     psJobQueue = psItem;
-    nPendingJobs ++;
+    nPendingJobs++;
 
     if( psWaitingWorkerThreadsList )
     {
-        CPLWorkerThread* psWorkerThread;
-
-        psWorkerThread = (CPLWorkerThread*)psWaitingWorkerThreadsList->pData;
+        CPLWorkerThread* psWorkerThread =
+            static_cast<CPLWorkerThread *>(psWaitingWorkerThreadsList->pData);
 
         CPLAssert( psWorkerThread->bMarkedAsWaiting );
         psWorkerThread->bMarkedAsWaiting = FALSE;
@@ -158,11 +166,14 @@ bool CPLWorkerThreadPool::SubmitJob(CPLThreadFunc pfnFunc, void* pData)
         CPLList* psNext = psWaitingWorkerThreadsList->psNext;
         CPLList* psToFree = psWaitingWorkerThreadsList;
         psWaitingWorkerThreadsList = psNext;
-        nWaitingWorkerThreads --;
+        nWaitingWorkerThreads--;
 
-        //CPLAssert( CPLListCount(psWaitingWorkerThreadsList) == nWaitingWorkerThreads);
+        // CPLAssert(
+        //   CPLListCount(psWaitingWorkerThreadsList) == nWaitingWorkerThreads);
 
-        //CPLDebug("JOB", "Waking up %p", psWorkerThread);
+#if DEBUG_VERBOSE
+        CPLDebug("JOB", "Waking up %p", psWorkerThread);
+#endif
         CPLAcquireMutex(psWorkerThread->hMutex, 1000.0);
         CPLReleaseMutex(hMutex);
         CPLCondSignal(psWorkerThread->hCond);
@@ -171,7 +182,9 @@ bool CPLWorkerThreadPool::SubmitJob(CPLThreadFunc pfnFunc, void* pData)
         CPLFree(psToFree);
     }
     else
+    {
         CPLReleaseMutex(hMutex);
+    }
 
     return true;
 }
@@ -186,9 +199,10 @@ bool CPLWorkerThreadPool::SubmitJob(CPLThreadFunc pfnFunc, void* pData)
  * @param apData User data instances to pass to the job function.
  * @return true in case of success.
  */
-bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<void*>& apData)
+bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc,
+                                     const std::vector<void*>& apData)
 {
-    CPLAssert( aWT.size() > 0 );
+    CPLAssert( !aWT.empty() );
 
     CPLAcquireMutex(hMutex, 1000.0);
 
@@ -197,8 +211,9 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
 
     for(size_t i=0;i<apData.size();i++)
     {
-        CPLWorkerThreadJob* psJob = (CPLWorkerThreadJob*)VSI_MALLOC_VERBOSE(sizeof(CPLWorkerThreadJob));
-        if( psJob == NULL )
+        CPLWorkerThreadJob* psJob = static_cast<CPLWorkerThreadJob*>(
+            VSI_MALLOC_VERBOSE(sizeof(CPLWorkerThreadJob)));
+        if( psJob == nullptr )
         {
             bRet = false;
             break;
@@ -206,8 +221,9 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
         psJob->pfnFunc = pfnFunc;
         psJob->pData = apData[i];
 
-        CPLList* psItem = (CPLList*) VSI_MALLOC_VERBOSE(sizeof(CPLList));
-        if( psItem == NULL )
+        CPLList* psItem =
+            static_cast<CPLList *>(VSI_MALLOC_VERBOSE(sizeof(CPLList)));
+        if( psItem == nullptr )
         {
             VSIFree(psJob);
             bRet = false;
@@ -217,7 +233,7 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
 
         psItem->psNext = psJobQueue;
         psJobQueue = psItem;
-        nPendingJobs ++;
+        nPendingJobs++;
     }
 
     if( !bRet )
@@ -227,7 +243,7 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
             CPLList* psNext = psIter->psNext;
             VSIFree(psIter->pData);
             VSIFree(psIter);
-            nPendingJobs --;
+            nPendingJobs--;
             psIter = psNext;
         }
     }
@@ -245,7 +261,7 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
         {
             CPLWorkerThread* psWorkerThread;
 
-            psWorkerThread = (CPLWorkerThread*)psWaitingWorkerThreadsList->pData;
+            psWorkerThread = static_cast<CPLWorkerThread*>(psWaitingWorkerThreadsList->pData);
 
             CPLAssert( psWorkerThread->bMarkedAsWaiting );
             psWorkerThread->bMarkedAsWaiting = FALSE;
@@ -253,18 +269,23 @@ bool CPLWorkerThreadPool::SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<vo
             CPLList* psNext = psWaitingWorkerThreadsList->psNext;
             CPLList* psToFree = psWaitingWorkerThreadsList;
             psWaitingWorkerThreadsList = psNext;
-            nWaitingWorkerThreads --;
+            nWaitingWorkerThreads--;
 
-            //CPLAssert( CPLListCount(psWaitingWorkerThreadsList) == nWaitingWorkerThreads);
+            // CPLAssert(
+            //    CPLListCount(psWaitingWorkerThreadsList) ==
+            //    nWaitingWorkerThreads);
 
-            //CPLDebug("JOB", "Waking up %p", psWorkerThread);
+#if DEBUG_VERBOSE
+            CPLDebug("JOB", "Waking up %p", psWorkerThread);
+#endif
             CPLAcquireMutex(psWorkerThread->hMutex, 1000.0);
 
-            //CPLAssert(psWorkerThread->psNextJob == NULL);
-            //psWorkerThread->psNextJob = (CPLWorkerThreadJob*)psJobQueue->pData;
-            //psNext = psJobQueue->psNext;
-            //CPLFree(psJobQueue);
-            //psJobQueue = psNext;
+            // CPLAssert(psWorkerThread->psNextJob == nullptr);
+            // psWorkerThread->psNextJob =
+            //     (CPLWorkerThreadJob*)psJobQueue->pData;
+            // psNext = psJobQueue->psNext;
+            // CPLFree(psJobQueue);
+            // psJobQueue = psNext;
 
             CPLReleaseMutex(hMutex);
             CPLCondSignal(psWorkerThread->hCond);
@@ -296,16 +317,41 @@ void CPLWorkerThreadPool::WaitCompletion(int nMaxRemainingJobs)
 {
     if( nMaxRemainingJobs < 0 )
         nMaxRemainingJobs = 0;
+    CPLAcquireMutex(hMutex, 1000.0);
     while( true )
     {
-        CPLAcquireMutex(hMutex, 1000.0);
         int nPendingJobsLocal = nPendingJobs;
         if( nPendingJobsLocal > nMaxRemainingJobs )
             CPLCondWait(hCond, hMutex);
-        CPLReleaseMutex(hMutex);
         if( nPendingJobsLocal <= nMaxRemainingJobs )
             break;
     }
+    CPLReleaseMutex(hMutex);
+}
+
+/************************************************************************/
+/*                            WaitEvent()                               */
+/************************************************************************/
+
+/** Wait for completion of at least one job, if there are any remaining
+ */
+void CPLWorkerThreadPool::WaitEvent()
+{
+    CPLAcquireMutex(hMutex, 1000.0);
+    while( true )
+    {
+        int nPendingJobsLocal = nPendingJobs;
+        if( nPendingJobsLocal == 0 )
+        {
+            break;
+        }
+        CPLCondWait(hCond, hMutex);
+        if( nPendingJobs < nPendingJobsLocal )
+        {
+            break;
+        }
+    }
+    CPLReleaseMutex(hMutex);
 }
 
 /************************************************************************/
@@ -324,10 +370,27 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
                             CPLThreadFunc pfnInitFunc,
                             void** pasInitData)
 {
+    return Setup(nThreads, pfnInitFunc, pasInitData, true);
+}
+
+/** Setup the pool.
+ *
+ * @param nThreads Number of threads to launch
+ * @param pfnInitFunc Initialization function to run in each thread. May be NULL
+ * @param pasInitData Array of initialization data. Its length must be nThreads,
+ *                    or it should be NULL.
+ * @param bWaitallStarted Whether to wait for all threads to be fully started.
+ * @return true if initialization was successful.
+ */
+bool CPLWorkerThreadPool::Setup(int nThreads,
+                            CPLThreadFunc pfnInitFunc,
+                            void** pasInitData,
+                            bool bWaitallStarted)
+{
     CPLAssert( nThreads > 0 );
 
     hCond = CPLCreateCond();
-    if( hCond == NULL )
+    if( hCond == nullptr )
         return false;
 
     bool bRet = true;
@@ -335,11 +398,11 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
     for(int i=0;i<nThreads;i++)
     {
         aWT[i].pfnInitFunc = pfnInitFunc;
-        aWT[i].pInitData = pasInitData ? pasInitData[i] : NULL;
+        aWT[i].pInitData = pasInitData ? pasInitData[i] : nullptr;
         aWT[i].poTP = this;
 
         aWT[i].hMutex = CPLCreateMutexEx(CPL_MUTEX_REGULAR);
-        if( aWT[i].hMutex == NULL )
+        if( aWT[i].hMutex == nullptr )
         {
             nThreads = i;
             aWT.resize(nThreads);
@@ -348,7 +411,7 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
         }
         CPLReleaseMutex(aWT[i].hMutex);
         aWT[i].hCond = CPLCreateCond();
-        if( aWT[i].hCond == NULL )
+        if( aWT[i].hCond == nullptr )
         {
             CPLDestroyMutex(aWT[i].hMutex);
             nThreads = i;
@@ -358,10 +421,11 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
         }
 
         aWT[i].bMarkedAsWaiting = FALSE;
-        //aWT[i].psNextJob = NULL;
+        // aWT[i].psNextJob = nullptr;
 
-        aWT[i].hThread = CPLCreateJoinableThread(WorkerThreadFunction, &(aWT[i]));
-        if( aWT[i].hThread == NULL )
+        aWT[i].hThread =
+            CPLCreateJoinableThread(WorkerThreadFunction, &(aWT[i]));
+        if( aWT[i].hThread == nullptr )
         {
             nThreads = i;
             aWT.resize(nThreads);
@@ -370,16 +434,19 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
         }
     }
 
-    // Wait all threads to be started
-    while( true )
+    if( bWaitallStarted )
     {
-        CPLAcquireMutex(hMutex, 1000.0);
-        int nWaitingWorkerThreadsLocal = nWaitingWorkerThreads;
-        if( nWaitingWorkerThreadsLocal < nThreads )
-            CPLCondWait(hCond, hMutex);
-        CPLReleaseMutex(hMutex);
-        if( nWaitingWorkerThreadsLocal == nThreads )
-            break;
+        // Wait all threads to be started
+        while( true )
+        {
+            CPLAcquireMutex(hMutex, 1000.0);
+            int nWaitingWorkerThreadsLocal = nWaitingWorkerThreads;
+            if( nWaitingWorkerThreadsLocal < nThreads )
+                CPLCondWait(hCond, hMutex);
+            CPLReleaseMutex(hMutex);
+            if( nWaitingWorkerThreadsLocal == nThreads )
+                break;
+        }
     }
 
     if( eState == CPLWTS_ERROR )
@@ -395,7 +462,7 @@ bool CPLWorkerThreadPool::Setup(int nThreads,
 void CPLWorkerThreadPool::DeclareJobFinished()
 {
     CPLAcquireMutex(hMutex, 1000.0);
-    nPendingJobs --;
+    nPendingJobs--;
     CPLCondSignal(hCond);
     CPLReleaseMutex(hMutex);
 }
@@ -404,7 +471,8 @@ void CPLWorkerThreadPool::DeclareJobFinished()
 /*                             GetNextJob()                             */
 /************************************************************************/
 
-CPLWorkerThreadJob* CPLWorkerThreadPool::GetNextJob(CPLWorkerThread* psWorkerThread)
+CPLWorkerThreadJob *
+CPLWorkerThreadPool::GetNextJob( CPLWorkerThread* psWorkerThread )
 {
     while(true)
     {
@@ -412,15 +480,18 @@ CPLWorkerThreadJob* CPLWorkerThreadPool::GetNextJob(CPLWorkerThread* psWorkerThr
         if( eState == CPLWTS_STOP )
         {
             CPLReleaseMutex(hMutex);
-            return NULL;
+            return nullptr;
         }
         CPLList* psTopJobIter = psJobQueue;
         if( psTopJobIter )
         {
             psJobQueue = psTopJobIter->psNext;
 
-            //CPLDebug("JOB", "%p got a job", psWorkerThread);
-            CPLWorkerThreadJob* psJob = (CPLWorkerThreadJob*)psTopJobIter->pData;
+#if DEBUG_VERBOSE
+            CPLDebug("JOB", "%p got a job", psWorkerThread);
+#endif
+            CPLWorkerThreadJob* psJob =
+                static_cast<CPLWorkerThreadJob*>(psTopJobIter->pData);
             CPLReleaseMutex(hMutex);
             CPLFree(psTopJobIter);
             return psJob;
@@ -429,40 +500,48 @@ CPLWorkerThreadJob* CPLWorkerThreadPool::GetNextJob(CPLWorkerThread* psWorkerThr
         if( !psWorkerThread->bMarkedAsWaiting )
         {
             psWorkerThread->bMarkedAsWaiting = TRUE;
-            nWaitingWorkerThreads ++;
-            CPLAssert(nWaitingWorkerThreads <= (int)aWT.size());
+            nWaitingWorkerThreads++;
+            CPLAssert(nWaitingWorkerThreads <= static_cast<int>(aWT.size()));
 
-            CPLList* psItem = (CPLList*) VSI_MALLOC_VERBOSE(sizeof(CPLList));
-            if( psItem == NULL )
+            CPLList* psItem =
+                static_cast<CPLList *>(VSI_MALLOC_VERBOSE(sizeof(CPLList)));
+            if( psItem == nullptr )
             {
                 eState = CPLWTS_ERROR;
                 CPLCondSignal(hCond);
 
                 CPLReleaseMutex(hMutex);
-                return NULL;
+                return nullptr;
             }
 
             psItem->pData = psWorkerThread;
             psItem->psNext = psWaitingWorkerThreadsList;
             psWaitingWorkerThreadsList = psItem;
 
-            //CPLAssert( CPLListCount(psWaitingWorkerThreadsList) == nWaitingWorkerThreads);
+#if DEBUG_VERBOSE
+            CPLAssert(CPLListCount(psWaitingWorkerThreadsList) ==
+                      nWaitingWorkerThreads);
+#endif
         }
 
         CPLCondSignal(hCond);
 
         CPLAcquireMutex(psWorkerThread->hMutex, 1000.0);
-        //CPLDebug("JOB", "%p sleeping", psWorkerThread);
+#if DEBUG_VERBOSE
+        CPLDebug("JOB", "%p sleeping", psWorkerThread);
+#endif
         CPLReleaseMutex(hMutex);
 
         CPLCondWait( psWorkerThread->hCond, psWorkerThread->hMutex );
 
-        //CPLWorkerThreadJob* psJob = psWorkerThread->psNextJob;
-        //psWorkerThread->psNextJob = NULL;
+        // TODO(rouault): Explain or delete.
+        // CPLWorkerThreadJob* psJob = psWorkerThread->psNextJob;
+        // psWorkerThread->psNextJob = nullptr;
 
         CPLReleaseMutex(psWorkerThread->hMutex);
 
-        //if( psJob )
+        // TODO(rouault): Explain or delete.
+        // if( psJob )
         //    return psJob;
     }
 }

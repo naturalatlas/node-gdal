@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: tigerfeatureids.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerFeatureIds, providing access to .RT5 files.
@@ -30,9 +29,9 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerfeatureids.cpp 27745 2014-09-27 16:38:57Z goatbar $");
+CPL_CVSID("$Id: tigerfeatureids.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
-#define FILE_CODE "5"
+static const char FILE_CODE[] = "5";
 
 static const TigerFieldInfo rt5_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -77,7 +76,7 @@ static const TigerRecordInfo rt5_info =
 
 TigerFeatureIds::TigerFeatureIds( OGRTigerDataSource * poDSIn,
                                   CPL_UNUSED const char * pszPrototypeModule ) :
-    TigerFileBase(NULL, FILE_CODE)
+    TigerFileBase(nullptr, FILE_CODE)
 {
   poDS = poDSIn;
   poFeatureDefn = new OGRFeatureDefn( "FeatureIds" );

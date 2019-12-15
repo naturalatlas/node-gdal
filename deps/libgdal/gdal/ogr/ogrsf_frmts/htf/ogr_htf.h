@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_htf.h 32744 2016-01-04 22:26:42Z goatbar $
+ * $Id: ogr_htf.h 22f8ae3bf7bc3cccd970992655c63fc5254d3206 2018-04-08 20:13:05 +0200 Even Rouault $
  *
  * Project:  HTF Translator
  * Purpose:  Definition of classes for OGR .htf driver.
@@ -59,17 +59,17 @@ protected:
 
   public:
                         OGRHTFLayer(const char* pszFilename, int nZone, int bIsNorth);
-                        ~OGRHTFLayer();
+                        virtual ~OGRHTFLayer();
 
-    virtual void                ResetReading();
-    virtual OGRFeature *        GetNextFeature();
+    virtual void                ResetReading() override;
+    virtual OGRFeature *        GetNextFeature() override;
 
-    virtual OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    virtual OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 
-    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
-    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce)
+    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE) override;
+    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce) override
                 { return OGRLayer::GetExtent(iGeomField, psExtent, bForce); }
     void    SetExtent(double dfMinX, double dfMinY, double dfMaxX, double dfMaxY);
 };
@@ -78,22 +78,22 @@ protected:
 /*                      OGRHTFPolygonLayer                              */
 /************************************************************************/
 
-class OGRHTFPolygonLayer : public OGRHTFLayer
+class OGRHTFPolygonLayer final: public OGRHTFLayer
 {
 protected:
-    virtual OGRFeature *       GetNextRawFeature();
+    virtual OGRFeature *       GetNextRawFeature() override;
 
   public:
                         OGRHTFPolygonLayer(const char* pszFilename, int nZone, int bIsNorth);
 
-    virtual void                ResetReading();
+    virtual void                ResetReading() override;
 };
 
 /************************************************************************/
 /*                      OGRHTFSoundingLayer                             */
 /************************************************************************/
 
-class OGRHTFSoundingLayer : public OGRHTFLayer
+class OGRHTFSoundingLayer final: public OGRHTFLayer
 {
 private:
     bool                       bHasFPK;
@@ -104,24 +104,24 @@ private:
     int                        nTotalSoundings;
 
 protected:
-    virtual OGRFeature *       GetNextRawFeature();
+    virtual OGRFeature *       GetNextRawFeature() override;
 
   public:
                         OGRHTFSoundingLayer(const char* pszFilename, int nZone, int bIsNorth, int nTotalSoundings);
-                       ~OGRHTFSoundingLayer();
+                       virtual ~OGRHTFSoundingLayer();
 
-    virtual void                ResetReading();
+    virtual void                ResetReading() override;
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 
-    virtual GIntBig             GetFeatureCount(int bForce = TRUE);
+    virtual GIntBig             GetFeatureCount(int bForce = TRUE) override;
 };
 
 /************************************************************************/
 /*                          OGRHTFMetadataLayer                         */
 /************************************************************************/
 
-class OGRHTFMetadataLayer : public OGRLayer
+class OGRHTFMetadataLayer final: public OGRLayer
 {
 protected:
     OGRFeatureDefn        *poFeatureDefn;
@@ -131,22 +131,22 @@ protected:
     int                nNextFID;
 
   public:
-                        OGRHTFMetadataLayer(std::vector<CPLString> aosMD);
-                        ~OGRHTFMetadataLayer();
+    explicit            OGRHTFMetadataLayer(const std::vector<CPLString>& aosMD);
+                        virtual ~OGRHTFMetadataLayer();
 
-    virtual void                ResetReading() { nNextFID = 0; }
-    virtual OGRFeature *        GetNextFeature();
+    virtual void                ResetReading() override { nNextFID = 0; }
+    virtual OGRFeature *        GetNextFeature() override;
 
-    virtual OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    virtual OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    virtual int                 TestCapability( const char * ) { return FALSE; }
+    virtual int                 TestCapability( const char * ) override { return FALSE; }
 };
 
 /************************************************************************/
 /*                           OGRHTFDataSource                           */
 /************************************************************************/
 
-class OGRHTFDataSource : public OGRDataSource
+class OGRHTFDataSource final: public OGRDataSource
 {
     char*               pszName;
 
@@ -156,17 +156,17 @@ class OGRHTFDataSource : public OGRDataSource
 
   public:
                         OGRHTFDataSource();
-                        ~OGRHTFDataSource();
+                        virtual ~OGRHTFDataSource();
 
     int                 Open( const char * pszFilename );
 
-    virtual const char*         GetName() { return pszName; }
+    virtual const char*         GetName() override { return pszName; }
 
-    virtual int                 GetLayerCount() { return nLayers; }
-    virtual OGRLayer*           GetLayer( int );
-    virtual OGRLayer*           GetLayerByName( const char* pszLayerName );
+    virtual int                 GetLayerCount() override { return nLayers; }
+    virtual OGRLayer*           GetLayer( int ) override;
+    virtual OGRLayer*           GetLayerByName( const char* pszLayerName ) override;
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 };
 
 #endif /* ndef OGR_HTF_H_INCLUDED */

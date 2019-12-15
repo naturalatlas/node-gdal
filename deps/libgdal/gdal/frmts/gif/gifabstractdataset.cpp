@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gifabstractdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  GIF Driver
  * Purpose:  GIF Abstract Dataset
@@ -29,10 +28,10 @@
 
 #include "gifabstractdataset.h"
 
-CPL_CVSID("$Id: gifabstractdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: gifabstractdataset.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
 
-static const int InterlacedOffset[] = { 0, 4, 2, 1 };
-static const int InterlacedJumps[] = { 8, 8, 4, 2 };
+constexpr int InterlacedOffset[] = { 0, 4, 2, 1 };
+constexpr int InterlacedJumps[] = { 8, 8, 4, 2 };
 
 /************************************************************************/
 /* ==================================================================== */
@@ -40,18 +39,17 @@ static const int InterlacedJumps[] = { 8, 8, 4, 2 };
 /* ==================================================================== */
 /************************************************************************/
 
-
 /************************************************************************/
 /*                         GIFAbstractDataset()                         */
 /************************************************************************/
 
 GIFAbstractDataset::GIFAbstractDataset() :
-    fp(NULL),
-    hGifFile(NULL),
-    pszProjection(NULL),
+    fp(nullptr),
+    hGifFile(nullptr),
+    pszProjection(nullptr),
     bGeoTransformValid(FALSE),
     nGCPCount(0),
-    pasGCPList(NULL),
+    pasGCPList(nullptr),
     bHasReadXMPMetadata(FALSE)
 {
     adfGeoTransform[0] = 0.0;
@@ -83,7 +81,7 @@ GIFAbstractDataset::~GIFAbstractDataset()
     if( hGifFile )
         myDGifCloseFile( hGifFile );
 
-    if( fp != NULL )
+    if( fp != nullptr )
         VSIFCloseL( fp );
 }
 
@@ -131,7 +129,7 @@ static CPLString GIFCollectXMPMetadata(VSILFILE* fp)
         {
             int nSize = 1024 + nRead - iFoundOffset;
             char* pszXMP = (char*)VSIMalloc(nSize + 1);
-            if (pszXMP == NULL)
+            if (pszXMP == nullptr)
                 break;
 
             pszXMP[nSize] = 0;
@@ -142,7 +140,7 @@ static CPLString GIFCollectXMPMetadata(VSILFILE* fp)
             while(nLen == nSize)
             {
                 char* pszNewXMP = (char*)VSIRealloc(pszXMP, nSize + 1024 + 1);
-                if (pszNewXMP == NULL)
+                if (pszNewXMP == nullptr)
                     break;
                 pszXMP = pszNewXMP;
 
@@ -187,18 +185,18 @@ static CPLString GIFCollectXMPMetadata(VSILFILE* fp)
 void GIFAbstractDataset::CollectXMPMetadata()
 
 {
-    if (fp == NULL || bHasReadXMPMetadata)
+    if (fp == nullptr || bHasReadXMPMetadata)
         return;
 
     CPLString osXMP = GIFCollectXMPMetadata(fp);
-    if (osXMP.size())
+    if (!osXMP.empty() )
     {
         /* Avoid setting the PAM dirty bit just for that */
         int nOldPamFlags = nPamFlags;
 
         char *apszMDList[2];
         apszMDList[0] = (char*) osXMP.c_str();
-        apszMDList[1] = NULL;
+        apszMDList[1] = nullptr;
         SetMetadata(apszMDList, "xml:XMP");
 
         nPamFlags = nOldPamFlags;
@@ -215,7 +213,7 @@ char **GIFAbstractDataset::GetMetadataDomainList()
 {
     return BuildMetadataDomainList(GDALPamDataset::GetMetadataDomainList(),
                                    TRUE,
-                                   "xml:XMP", NULL);
+                                   "xml:XMP", nullptr);
 }
 
 /************************************************************************/
@@ -224,10 +222,10 @@ char **GIFAbstractDataset::GetMetadataDomainList()
 
 char  **GIFAbstractDataset::GetMetadata( const char * pszDomain )
 {
-    if (fp == NULL)
-        return NULL;
+    if (fp == nullptr)
+        return nullptr;
     if (eAccess == GA_ReadOnly && !bHasReadXMPMetadata &&
-        (pszDomain != NULL && EQUAL(pszDomain, "xml:XMP")))
+        (pszDomain != nullptr && EQUAL(pszDomain, "xml:XMP")))
         CollectXMPMetadata();
     return GDALPamDataset::GetMetadata(pszDomain);
 }
@@ -236,13 +234,13 @@ char  **GIFAbstractDataset::GetMetadata( const char * pszDomain )
 /*                        GetProjectionRef()                            */
 /************************************************************************/
 
-const char *GIFAbstractDataset::GetProjectionRef()
+const char *GIFAbstractDataset::_GetProjectionRef()
 
 {
     if ( pszProjection && bGeoTransformValid )
         return pszProjection;
 
-    return GDALPamDataset::GetProjectionRef();
+    return GDALPamDataset::_GetProjectionRef();
 }
 
 /************************************************************************/
@@ -278,13 +276,13 @@ int GIFAbstractDataset::GetGCPCount()
 /*                          GetGCPProjection()                          */
 /************************************************************************/
 
-const char *GIFAbstractDataset::GetGCPProjection()
+const char *GIFAbstractDataset::_GetGCPProjection()
 
 {
     if ( pszProjection && nGCPCount > 0 )
         return pszProjection;
 
-    return GDALPamDataset::GetGCPProjection();
+    return GDALPamDataset::_GetGCPProjection();
 }
 
 /************************************************************************/
@@ -326,7 +324,7 @@ char **GIFAbstractDataset::GetFileList()
 {
     char **papszFileList = GDALPamDataset::GetFileList();
 
-    if (osWldFilename.size() != 0 &&
+    if (!osWldFilename.empty() &&
         CSLFindString(papszFileList, osWldFilename) == -1)
     {
         papszFileList = CSLAddString( papszFileList, osWldFilename );
@@ -341,10 +339,10 @@ char **GIFAbstractDataset::GetFileList()
 
 void GIFAbstractDataset::DetectGeoreferencing( GDALOpenInfo * poOpenInfo )
 {
-    char* pszWldFilename = NULL;
+    char* pszWldFilename = nullptr;
 
     bGeoTransformValid =
-        GDALReadWorldFile2( poOpenInfo->pszFilename, NULL,
+        GDALReadWorldFile2( poOpenInfo->pszFilename, nullptr,
                             adfGeoTransform, poOpenInfo->GetSiblingFiles(),
                             &pszWldFilename );
     if ( !bGeoTransformValid )
@@ -434,10 +432,10 @@ GifRecordType GIFAbstractDataset::FindFirstImage( GifFileType* hGifFile )
         if (RecordType == EXTENSION_RECORD_TYPE)
         {
             int nFunction;
-            GifByteType *pExtData;
+            GifByteType *pExtData = nullptr;
             if (DGifGetExtension(hGifFile, &nFunction, &pExtData) == GIF_ERROR)
                 break;
-            while (pExtData != NULL)
+            while (pExtData != nullptr)
             {
                 if (DGifGetExtensionNext(hGifFile, &pExtData) == GIF_ERROR)
                     break;
@@ -453,30 +451,29 @@ GifRecordType GIFAbstractDataset::FindFirstImage( GifFileType* hGifFile )
 /************************************************************************/
 
 GIFAbstractRasterBand::GIFAbstractRasterBand(
-                              GIFAbstractDataset *poDSIn, int nBandIn,
-                              SavedImage *psSavedImage, int nBackground,
-                              int bAdvertizeInterlacedMDI ) :
-    panInterlaceMap(NULL),
-    poColorTable(NULL),
+    GIFAbstractDataset *poDSIn, int nBandIn,
+    SavedImage *psSavedImage, int nBackground,
+    int bAdvertizeInterlacedMDI ) :
+    psImage(psSavedImage),
+    panInterlaceMap(nullptr),
+    poColorTable(nullptr),
     nTransparentColor(0)
 {
-    this->poDS = poDSIn;
-    this->nBand = nBandIn;
+    poDS = poDSIn;
+    nBand = nBandIn;
 
     eDataType = GDT_Byte;
 
     nBlockXSize = poDS->GetRasterXSize();
     nBlockYSize = 1;
 
-    psImage = psSavedImage;
-
-    if (psImage == NULL)
+    if( psImage == nullptr )
         return;
 
 /* -------------------------------------------------------------------- */
 /*      Setup interlacing map if required.                              */
 /* -------------------------------------------------------------------- */
-    panInterlaceMap = NULL;
+    panInterlaceMap = nullptr;
     if( psImage->ImageDesc.Interlace )
     {
         int iLine = 0;
@@ -495,7 +492,9 @@ GIFAbstractRasterBand::GIFAbstractRasterBand(
         }
     }
     else if( bAdvertizeInterlacedMDI )
+    {
         poDS->SetMetadataItem( "INTERLACED", "NO", "IMAGE_STRUCTURE" );
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Check for transparency.  We just take the first graphic         */
@@ -504,13 +503,12 @@ GIFAbstractRasterBand::GIFAbstractRasterBand(
     nTransparentColor = -1;
     for( int iExtBlock = 0; iExtBlock < psImage->ExtensionBlockCount; iExtBlock++ )
     {
-        unsigned char *pExtData;
-
         if( psImage->ExtensionBlocks[iExtBlock].Function != 0xf9 ||
             psImage->ExtensionBlocks[iExtBlock].ByteCount < 4 )
             continue;
 
-        pExtData = (unsigned char *) psImage->ExtensionBlocks[iExtBlock].Bytes;
+        unsigned char *pExtData = reinterpret_cast<unsigned char *>(
+            psImage->ExtensionBlocks[iExtBlock].Bytes);
 
         /* check if transparent color flag is set */
         if( !(pExtData[0] & 0x1) )
@@ -522,8 +520,8 @@ GIFAbstractRasterBand::GIFAbstractRasterBand(
 /* -------------------------------------------------------------------- */
 /*      Setup colormap.                                                 */
 /* -------------------------------------------------------------------- */
-    ColorMapObject      *psGifCT = psImage->ImageDesc.ColorMap;
-    if( psGifCT == NULL )
+    ColorMapObject  *psGifCT = psImage->ImageDesc.ColorMap;
+    if( psGifCT == nullptr )
         psGifCT = poDSIn->hGifFile->SColorMap;
 
     poColorTable = new GDALColorTable();
@@ -565,7 +563,7 @@ GIFAbstractRasterBand::GIFAbstractRasterBand(
 GIFAbstractRasterBand::~GIFAbstractRasterBand()
 
 {
-    if( poColorTable != NULL )
+    if( poColorTable != nullptr )
         delete poColorTable;
 
     CPLFree( panInterlaceMap );
@@ -598,7 +596,7 @@ GDALColorTable *GIFAbstractRasterBand::GetColorTable()
 double GIFAbstractRasterBand::GetNoDataValue( int *pbSuccess )
 
 {
-    if( pbSuccess != NULL )
+    if( pbSuccess != nullptr )
         *pbSuccess = nTransparentColor != -1;
 
     return nTransparentColor;

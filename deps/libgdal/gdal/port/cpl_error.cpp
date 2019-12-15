@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: cpl_error.cpp 34109 2016-04-25 17:28:36Z rouault $
  *
  * Name:     cpl_error.cpp
  * Project:  CPL - Common Portability Library
@@ -30,28 +29,41 @@
  ****************************************************************************/
 
 #include "cpl_error.h"
-#include "cpl_string.h"
-#include "cpl_vsi.h"
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include <algorithm>
+
+#include "cpl_config.h"
 #include "cpl_conv.h"
 #include "cpl_multiproc.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+
+#if !defined(va_copy) && defined(__va_copy)
+#define va_copy __va_copy
+#endif
 
 #define TIMESTAMP_DEBUG
-//#define MEMORY_DEBUG
+// #define MEMORY_DEBUG
 
-CPL_CVSID("$Id: cpl_error.cpp 34109 2016-04-25 17:28:36Z rouault $");
+CPL_CVSID("$Id: cpl_error.cpp e3511844a11959bd81f5956a1e7e2de96900e7ac 2019-04-25 11:53:15 +0200 Even Rouault $")
 
-static CPLMutex *hErrorMutex = NULL;
-static void *pErrorHandlerUserData = NULL;
+static CPLMutex *hErrorMutex = nullptr;
+static void *pErrorHandlerUserData = nullptr;
 static CPLErrorHandler pfnErrorHandler = CPLDefaultErrorHandler;
 static bool gbCatchDebug = true;
 
-static const int DEFAULT_LAST_ERR_MSG_SIZE =
+constexpr int DEFAULT_LAST_ERR_MSG_SIZE =
 #if !defined(HAVE_VSNPRINTF)
-  20000
+    20000
 #else
-  500
+    500
 #endif
-  ;
+    ;
 
 typedef struct errHandler
 {
@@ -67,41 +79,61 @@ typedef struct {
     CPLErrorHandlerNode *psHandlerStack;
     int     nLastErrMsgMax;
     int     nFailureIntoWarning;
+    GUInt32 nErrorCounter;
     char    szLastErrMsg[DEFAULT_LAST_ERR_MSG_SIZE];
-    /* Do not add anything here. szLastErrMsg must be the last field. See CPLRealloc() below */
+    // Do not add anything here. szLastErrMsg must be the last field.
+    // See CPLRealloc() below.
 } CPLErrorContext;
 
-static const CPLErrorContext sNoErrorContext =
+constexpr CPLErrorContext sNoErrorContext =
 {
     0,
     CE_None,
-    NULL,
+    nullptr,
+    0,
     0,
     0,
     ""
 };
 
-static const CPLErrorContext sWarningContext =
+constexpr CPLErrorContext sWarningContext =
 {
     0,
     CE_Warning,
-    NULL,
+    nullptr,
+    0,
     0,
     0,
     "A warning was emitted"
 };
 
-static const CPLErrorContext sFailureContext =
+constexpr CPLErrorContext sFailureContext =
 {
     0,
     CE_Warning,
-    NULL,
+    nullptr,
+    0,
     0,
     0,
     "A failure was emitted"
 };
 
-#define IS_PREFEFINED_ERROR_CTX(psCtxt) ( psCtx == &sNoErrorContext || psCtx == &sWarningContext || psCtxt == &sFailureContext )
+#define IS_PREFEFINED_ERROR_CTX(psCtxt) ( psCtx == &sNoErrorContext || \
+                                          psCtx == &sWarningContext || \
+                                          psCtxt == &sFailureContext )
+
+
+/************************************************************************/
+/*                     CPLErrorContextGetString()                       */
+/************************************************************************/
+
+// Makes clang -fsanitize=undefined happy since it doesn't like
+// dereferencing szLastErrMsg[i>=DEFAULT_LAST_ERR_MSG_SIZE]
+
+static char* CPLErrorContextGetString(CPLErrorContext* psCtxt)
+{
+    return psCtxt->szLastErrMsg;
+}
 
 /************************************************************************/
 /*                         CPLGetErrorContext()                         */
@@ -115,15 +147,16 @@ static CPLErrorContext *CPLGetErrorContext()
         reinterpret_cast<CPLErrorContext *>(
             CPLGetTLSEx( CTLS_ERRORCONTEXT, &bError ) );
     if( bError )
-        return NULL;
+        return nullptr;
 
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
     {
-      psCtx = reinterpret_cast<CPLErrorContext *>(
-          VSICalloc( sizeof(CPLErrorContext), 1) );
-        if (psCtx == NULL) {
+        psCtx = static_cast<CPLErrorContext *>(
+            VSICalloc( sizeof(CPLErrorContext), 1) );
+        if( psCtx == nullptr )
+        {
             fprintf(stderr, "Out of memory attempting to report error.\n");
-            return NULL;
+            return nullptr;
         }
         psCtx->eLastErrType = CE_None;
         psCtx->nLastErrMsgMax = sizeof(psCtx->szLastErrMsg);
@@ -152,12 +185,88 @@ static CPLErrorContext *CPLGetErrorContext()
 
 void* CPL_STDCALL CPLGetErrorHandlerUserData(void)
 {
+    int bError = FALSE;
+
+    // check if there is an active error being propagated through the handlers
+    void **pActiveUserData = reinterpret_cast<void **>(
+            CPLGetTLSEx( CTLS_ERRORHANDLERACTIVEDATA, &bError ) );
+    if( bError )
+        return nullptr;
+
+    if ( pActiveUserData != nullptr)
+    {
+        return *pActiveUserData;
+    }
+
+    // get the current threadlocal or global error context user data
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
         abort();
     return reinterpret_cast<void*>(
         psCtx->psHandlerStack ?
         psCtx->psHandlerStack->pUserData : pErrorHandlerUserData );
+}
+
+static void ApplyErrorHandler( CPLErrorContext *psCtx, CPLErr eErrClass,
+                        CPLErrorNum err_no, const char *pszMessage)
+{
+    void **pActiveUserData;
+    bool bProcessed = false;
+
+    // CTLS_ERRORHANDLERACTIVEDATA holds the active error handler userData
+
+    if( psCtx->psHandlerStack != nullptr )
+    {
+        // iterate through the threadlocal handler stack
+        if( (eErrClass != CE_Debug) || psCtx->psHandlerStack->bCatchDebug )
+        {
+            // call the error handler
+            pActiveUserData = &(psCtx->psHandlerStack->pUserData);
+            CPLSetTLS( CTLS_ERRORHANDLERACTIVEDATA, pActiveUserData, false );
+            psCtx->psHandlerStack->pfnHandler(eErrClass, err_no, pszMessage);
+            bProcessed = true;
+        }
+        else
+        {
+            // need to iterate to a parent handler for debug messages
+            CPLErrorHandlerNode *psNode = psCtx->psHandlerStack->psNext;
+            while( psNode != nullptr )
+            {
+                if( psNode->bCatchDebug )
+                {
+                    pActiveUserData = &(psNode->pUserData);
+                    CPLSetTLS( CTLS_ERRORHANDLERACTIVEDATA, pActiveUserData, false );
+                    psNode->pfnHandler( eErrClass, err_no, pszMessage );
+                    bProcessed = true;
+                    break;
+                }
+                psNode = psNode->psNext;
+            }
+        }
+    }
+
+    if( !bProcessed )
+    {
+        // hit the global error handler
+        CPLMutexHolderD( &hErrorMutex );
+        if( (eErrClass != CE_Debug) || gbCatchDebug )
+        {
+            if( pfnErrorHandler != nullptr )
+            {
+                pActiveUserData = &pErrorHandlerUserData;
+                CPLSetTLS( CTLS_ERRORHANDLERACTIVEDATA, pActiveUserData, false );
+                pfnErrorHandler(eErrClass, err_no, pszMessage);
+            }
+        }
+        else if( eErrClass == CE_Debug )
+        {
+            // for CPLDebug messages we propagate to the default error handler
+            pActiveUserData = nullptr;
+            CPLSetTLS( CTLS_ERRORHANDLERACTIVEDATA, pActiveUserData, false );
+            CPLDefaultErrorHandler(eErrClass, err_no, pszMessage);
+        }
+    }
+    CPLSetTLS( CTLS_ERRORHANDLERACTIVEDATA, nullptr, false );
 }
 
 /**********************************************************************
@@ -196,11 +305,12 @@ void* CPL_STDCALL CPLGetErrorHandlerUserData(void)
  * similar to printf().
  */
 
-void    CPLError(CPLErr eErrClass, CPLErrorNum err_no, const char *fmt, ...)
+void CPLError( CPLErr eErrClass, CPLErrorNum err_no,
+               CPL_FORMAT_STRING(const char *fmt), ... )
 {
     va_list args;
 
-    // Expand the error message
+    // Expand the error message.
     va_start(args, fmt);
     CPLErrorV( eErrClass, err_no, fmt, args );
     va_end(args);
@@ -210,11 +320,12 @@ void    CPLError(CPLErr eErrClass, CPLErrorNum err_no, const char *fmt, ...)
 /*                             CPLErrorV()                              */
 /************************************************************************/
 
-void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
-                   va_list args )
+/** Same as CPLError() but with a va_list */
+void CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
+                va_list args )
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         int bMemoryError = FALSE;
         if( eErrClass == CE_Warning )
@@ -223,7 +334,7 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
                 CTLS_ERRORCONTEXT,
                 reinterpret_cast<void*>(
                     const_cast<CPLErrorContext *>( &sWarningContext ) ),
-                NULL, &bMemoryError );
+                nullptr, &bMemoryError );
         }
         else if( eErrClass == CE_Failure )
         {
@@ -231,22 +342,21 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
                 CTLS_ERRORCONTEXT,
                 reinterpret_cast<void*>(
                     const_cast<CPLErrorContext *>( &sFailureContext ) ),
-                NULL, &bMemoryError );
+                nullptr, &bMemoryError );
         }
 
         // TODO: Is it possible to move the entire szShortMessage under the if
         // pfnErrorHandler?
-        char szShortMessage[80];
-        szShortMessage[0] = '\0';
+        char szShortMessage[80] = {};
         CPLvsnprintf( szShortMessage, sizeof(szShortMessage), fmt, args );
 
         CPLMutexHolderD( &hErrorMutex );
-        if( pfnErrorHandler != NULL )
+        if( pfnErrorHandler != nullptr )
             pfnErrorHandler(eErrClass, err_no, szShortMessage);
         return;
     }
 
-    if (psCtx->nFailureIntoWarning > 0 && eErrClass == CE_Failure)
+    if( psCtx->nFailureIntoWarning > 0 && eErrClass == CE_Failure )
         eErrClass = CE_Warning;
 
 /* -------------------------------------------------------------------- */
@@ -267,25 +377,26 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
 /*      rather than just replacing the last error message.              */
 /* -------------------------------------------------------------------- */
         int nPreviousSize = 0;
-        if ( psCtx->psHandlerStack != NULL &&
-             EQUAL(CPLGetConfigOption( "CPL_ACCUM_ERROR_MSG", "" ), "ON"))
+        if( psCtx->psHandlerStack != nullptr &&
+            EQUAL(CPLGetConfigOption( "CPL_ACCUM_ERROR_MSG", "" ), "ON"))
         {
             nPreviousSize = static_cast<int>(strlen(psCtx->szLastErrMsg));
-            if (nPreviousSize)
+            if( nPreviousSize )
             {
-                if (nPreviousSize + 1 + 1 >= psCtx->nLastErrMsgMax)
+                if( nPreviousSize + 1 + 1 >= psCtx->nLastErrMsgMax )
                 {
                     psCtx->nLastErrMsgMax *= 3;
                     psCtx = static_cast<CPLErrorContext *> (
-                        CPLRealloc( psCtx,
-                                    sizeof(CPLErrorContext)
-                                    - DEFAULT_LAST_ERR_MSG_SIZE
-                                    + psCtx->nLastErrMsgMax + 1));
+                        CPLRealloc(psCtx,
+                                   sizeof(CPLErrorContext)
+                                   - DEFAULT_LAST_ERR_MSG_SIZE
+                                   + psCtx->nLastErrMsgMax + 1));
                     CPLSetTLS( CTLS_ERRORCONTEXT, psCtx, TRUE );
                 }
-                psCtx->szLastErrMsg[nPreviousSize] = '\n';
-                psCtx->szLastErrMsg[nPreviousSize+1] = '0';
-                nPreviousSize ++;
+                char* pszLastErrMsg = CPLErrorContextGetString(psCtx);
+                pszLastErrMsg[nPreviousSize] = '\n';
+                pszLastErrMsg[nPreviousSize+1] = '\0';
+                nPreviousSize++;
             }
         }
 
@@ -304,10 +415,10 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
 #endif
             psCtx->nLastErrMsgMax *= 3;
             psCtx = static_cast<CPLErrorContext *> (
-                CPLRealloc( psCtx,
-                            sizeof(CPLErrorContext)
-                            - DEFAULT_LAST_ERR_MSG_SIZE
-                            + psCtx->nLastErrMsgMax + 1) );
+                CPLRealloc(psCtx,
+                           sizeof(CPLErrorContext)
+                           - DEFAULT_LAST_ERR_MSG_SIZE
+                           + psCtx->nLastErrMsgMax + 1));
             CPLSetTLS( CTLS_ERRORCONTEXT, psCtx, TRUE );
         }
 
@@ -321,15 +432,14 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
 /* -------------------------------------------------------------------- */
 /*      Obfuscate any password in error message                         */
 /* -------------------------------------------------------------------- */
-
     char* pszPassword = strstr(psCtx->szLastErrMsg, "password=");
-    if( pszPassword != NULL )
+    if( pszPassword != nullptr )
     {
         char* pszIter = pszPassword + strlen("password=");
         while( *pszIter != ' ' && *pszIter != '\0' )
         {
             *pszIter = 'X';
-            pszIter ++;
+            pszIter++;
         }
     }
 
@@ -339,24 +449,18 @@ void    CPLErrorV( CPLErr eErrClass, CPLErrorNum err_no, const char *fmt,
 /* -------------------------------------------------------------------- */
     psCtx->nLastErrNo = err_no;
     psCtx->eLastErrType = eErrClass;
+    if( psCtx->nErrorCounter == ~(0U) )
+        psCtx->nErrorCounter = 0;
+    else
+        psCtx->nErrorCounter ++;
 
-    if( CPLGetConfigOption("CPL_LOG_ERRORS",NULL) != NULL )
+    if( CPLGetConfigOption("CPL_LOG_ERRORS", nullptr) != nullptr )
         CPLDebug( "CPLError", "%s", psCtx->szLastErrMsg );
 
 /* -------------------------------------------------------------------- */
 /*      Invoke the current error handler.                               */
 /* -------------------------------------------------------------------- */
-    if( psCtx->psHandlerStack != NULL )
-    {
-        psCtx->psHandlerStack->pfnHandler(eErrClass, err_no,
-                                          psCtx->szLastErrMsg);
-    }
-    else
-    {
-        CPLMutexHolderD( &hErrorMutex );
-        if( pfnErrorHandler != NULL )
-            pfnErrorHandler(eErrClass, err_no, psCtx->szLastErrMsg);
-    }
+    ApplyErrorHandler(psCtx, eErrClass, err_no, psCtx->szLastErrMsg);
 
     if( eErrClass == CE_Fatal )
         abort();
@@ -391,18 +495,10 @@ void CPLEmergencyError( const char *pszMessage )
     if( !bInEmergencyError )
     {
         bInEmergencyError = true;
-        CPLErrorContext *psCtx
-            = static_cast<CPLErrorContext *>( CPLGetTLS( CTLS_ERRORCONTEXT ) );
+        CPLErrorContext *psCtx =
+            static_cast<CPLErrorContext *>(CPLGetTLS( CTLS_ERRORCONTEXT ));
 
-        if( psCtx != NULL && psCtx->psHandlerStack != NULL )
-        {
-            psCtx->psHandlerStack->pfnHandler( CE_Fatal, CPLE_AppDefined,
-                                               pszMessage );
-        }
-        else if( pfnErrorHandler != NULL )
-        {
-            pfnErrorHandler( CE_Fatal, CPLE_AppDefined, pszMessage );
-        }
+        ApplyErrorHandler(psCtx, CE_Fatal, CPLE_AppDefined, pszMessage);
     }
 
     // Ultimate fallback.
@@ -421,17 +517,17 @@ void CPLEmergencyError( const char *pszMessage )
 static int CPLGetProcessMemorySize()
 {
     FILE* fp = fopen("/proc/self/status", "r");
-    if( fp == NULL )
+    if( fp == nullptr )
         return -1;
     int nRet = -1;
-    char szLine[128];
-    while (fgets(szLine, sizeof(szLine), fp) != NULL)
+    char szLine[128] = {};
+    while( fgets(szLine, sizeof(szLine), fp) != nullptr )
     {
-        if (STARTS_WITH(szLine, "VmSize:"))
+        if( STARTS_WITH(szLine, "VmSize:") )
         {
             const char* pszPtr = szLine;
             while( !(*pszPtr == '\0' || (*pszPtr >= '0' && *pszPtr <= '9')) )
-                 pszPtr ++;
+                 pszPtr++;
             nRet = atoi(pszPtr);
             break;
         }
@@ -445,6 +541,36 @@ static int CPLGetProcessMemorySize()
 
 #endif // def MEMORY_DEBUG
 
+
+
+/************************************************************************/
+/*                        CPLGettimeofday()                             */
+/************************************************************************/
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#  include <sys/timeb.h>
+
+struct CPLTimeVal
+{
+  time_t  tv_sec;         /* seconds */
+  long    tv_usec;        /* and microseconds */
+};
+
+static void CPLGettimeofday(struct CPLTimeVal* tp, void* /* timezonep*/ )
+{
+  struct _timeb theTime;
+
+  _ftime(&theTime);
+  tp->tv_sec = static_cast<time_t>(theTime.time);
+  tp->tv_usec = theTime.millitm * 1000;
+}
+#else
+#  include <sys/time.h>     /* for gettimeofday() */
+#  define  CPLTimeVal timeval
+#  define  CPLGettimeofday(t,u) gettimeofday(t,u)
+#endif
+
+
 /************************************************************************/
 /*                              CPLDebug()                              */
 /************************************************************************/
@@ -455,7 +581,7 @@ static int CPLGetProcessMemorySize()
  * The category argument is used in conjunction with the CPL_DEBUG
  * environment variable to establish if the message should be displayed.
  * If the CPL_DEBUG environment variable is not set, no debug messages
- * are emitted (use CPLError(CE_Warning,...) to ensure messages are displayed).
+ * are emitted (use CPLError(CE_Warning, ...) to ensure messages are displayed).
  * If CPL_DEBUG is set, but is an empty string or the word "ON" then all
  * debug messages are shown.  Otherwise only messages whose category appears
  * somewhere within the CPL_DEBUG value are displayed (as determined by
@@ -470,27 +596,32 @@ static int CPLGetProcessMemorySize()
  *        Remaining arguments are assumed to be for format.
  */
 
-void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
+#ifdef WITHOUT_CPLDEBUG
+// Do not include CPLDebug.  Only available in custom builds.
+#else
+void CPLDebug( const char * pszCategory,
+               CPL_FORMAT_STRING(const char * pszFormat), ... )
 
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
         return;
-    const char  *pszDebug = CPLGetConfigOption("CPL_DEBUG",NULL);
+    const char *pszDebug = CPLGetConfigOption("CPL_DEBUG", nullptr);
 
 /* -------------------------------------------------------------------- */
 /*      Does this message pass our current criteria?                    */
 /* -------------------------------------------------------------------- */
-    if( pszDebug == NULL )
+    if( pszDebug == nullptr )
         return;
 
-    if( !EQUAL(pszDebug,"ON") && !EQUAL(pszDebug,"") )
+    if( !EQUAL(pszDebug, "ON") && !EQUAL(pszDebug, "") )
     {
-        size_t  i, nLen = strlen(pszCategory);
+        const size_t nLen = strlen(pszCategory);
 
+        size_t i = 0;
         for( i = 0; pszDebug[i] != '\0'; i++ )
         {
-            if( EQUALN(pszCategory,pszDebug+i,nLen) )
+            if( EQUALN(pszCategory, pszDebug+i, nLen) )
                 break;
         }
 
@@ -503,7 +634,7 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /* -------------------------------------------------------------------- */
     const int ERROR_MAX = 25000;
     char *pszMessage = static_cast<char *>( VSIMalloc( ERROR_MAX ) );
-    if( pszMessage == NULL )
+    if( pszMessage == nullptr )
         return;
 
 /* -------------------------------------------------------------------- */
@@ -513,19 +644,24 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 
     pszMessage[0] = '\0';
 #ifdef TIMESTAMP_DEBUG
-    if( CPLGetConfigOption( "CPL_TIMESTAMP", NULL ) != NULL )
+    if( CPLGetConfigOption( "CPL_TIMESTAMP", nullptr ) != nullptr )
     {
-        strcpy( pszMessage, VSICTime( VSITime(NULL) ) );
+        struct CPLTimeVal tv;
+        CPLGettimeofday(&tv, nullptr);
+        strcpy( pszMessage, "[" );
+        strcat( pszMessage, VSICTime( static_cast<unsigned long>(tv.tv_sec) ) );
 
         // On windows anyway, ctime puts a \n at the end, but I'm not
         // convinced this is standard behaviour, so we'll get rid of it
         // carefully
 
-        if (pszMessage[strlen(pszMessage) -1 ] == '\n')
+        if( pszMessage[strlen(pszMessage) -1 ] == '\n' )
         {
             pszMessage[strlen(pszMessage) - 1] = 0; // blow it out
         }
-        strcat( pszMessage, ": " );
+        CPLsnprintf(pszMessage+strlen(pszMessage),
+                    ERROR_MAX - strlen(pszMessage),
+                    "].%06d: ", static_cast<int>(tv.tv_usec));
     }
 #endif
 
@@ -533,12 +669,10 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /*      Add the process memory size.                                    */
 /* -------------------------------------------------------------------- */
 #ifdef MEMORY_DEBUG
-    char szVmSize[32];
+    char szVmSize[32] = {};
     CPLsprintf( szVmSize, "[VmSize: %d] ", CPLGetProcessMemorySize());
     strcat( pszMessage, szVmSize );
 #endif
-
-    //sprintf(pszMessage,"[%d] ", (int)getpid());
 
 /* -------------------------------------------------------------------- */
 /*      Add the category.                                               */
@@ -549,11 +683,11 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /* -------------------------------------------------------------------- */
 /*      Format the application provided portion of the debug message.   */
 /* -------------------------------------------------------------------- */
-    va_list     args;
+    va_list args;
     va_start(args, pszFormat);
 
     CPLvsnprintf(pszMessage+strlen(pszMessage), ERROR_MAX - strlen(pszMessage),
-              pszFormat, args);
+                 pszFormat, args);
 
     va_end(args);
 
@@ -562,61 +696,24 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 /* -------------------------------------------------------------------- */
 
     char* pszPassword = strstr(pszMessage, "password=");
-    if( pszPassword != NULL )
+    if( pszPassword != nullptr )
     {
         char* pszIter = pszPassword + strlen("password=");
         while( *pszIter != ' ' && *pszIter != '\0' )
         {
             *pszIter = 'X';
-            pszIter ++;
+            pszIter++;
         }
     }
 
 /* -------------------------------------------------------------------- */
 /*      Invoke the current error handler.                               */
 /* -------------------------------------------------------------------- */
-    if( psCtx->psHandlerStack != NULL )
-    {
-        if( psCtx->psHandlerStack->bCatchDebug )
-        {
-            psCtx->psHandlerStack->pfnHandler( CE_Debug, CPLE_None, pszMessage );
-        }
-        else
-        {
-            CPLErrorHandlerNode *psNode = psCtx->psHandlerStack->psNext;
-            while( psNode != NULL )
-            {
-                if( psNode->bCatchDebug )
-                {
-                    psNode->pfnHandler( CE_Debug, CPLE_None, pszMessage );
-                    break;
-                }
-                psNode = psNode->psNext;
-            }
-            if( psNode == NULL )
-            {
-                CPLMutexHolderD( &hErrorMutex );
-                if( gbCatchDebug )
-                    pfnErrorHandler( CE_Debug, CPLE_None, pszMessage );
-                else
-                    CPLDefaultErrorHandler( CE_Debug, CPLE_None, pszMessage );
-            }
-        }
-    }
-    else
-    {
-        CPLMutexHolderD( &hErrorMutex );
-        if( pfnErrorHandler != NULL )
-        {
-            if( gbCatchDebug )
-                pfnErrorHandler( CE_Debug, CPLE_None, pszMessage );
-            else
-                CPLDefaultErrorHandler( CE_Debug, CPLE_None, pszMessage );
-        }
-    }
+    ApplyErrorHandler(psCtx, CE_Debug, CPLE_None, pszMessage);
 
     VSIFree( pszMessage );
 }
+#endif  // !WITHOUT_CPLDEBUG
 
 /**********************************************************************
  *                          CPLErrorReset()
@@ -632,7 +729,7 @@ void CPLDebug( const char * pszCategory, const char * pszFormat, ... )
 void CPL_STDCALL CPLErrorReset()
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
         return;
     if( IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
@@ -641,13 +738,14 @@ void CPL_STDCALL CPLErrorReset()
             CTLS_ERRORCONTEXT,
             reinterpret_cast<void*>(
                 const_cast<CPLErrorContext *>( &sNoErrorContext ) ),
-            NULL, &bMemoryError );
+            nullptr, &bMemoryError );
         return;
     }
 
     psCtx->nLastErrNo = CPLE_None;
     psCtx->szLastErrMsg[0] = '\0';
     psCtx->eLastErrType = CE_None;
+    psCtx->nErrorCounter = 0;
 }
 
 /**********************************************************************
@@ -667,7 +765,7 @@ void CPL_DLL CPLErrorSetState( CPLErr eErrClass, CPLErrorNum err_no,
                                const char* pszMsg )
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
         return;
     if( IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
@@ -677,27 +775,28 @@ void CPL_DLL CPLErrorSetState( CPLErr eErrClass, CPLErrorNum err_no,
                 CTLS_ERRORCONTEXT,
                 reinterpret_cast<void*>(
                     const_cast<CPLErrorContext *>( &sNoErrorContext ) ),
-                NULL, &bMemoryError );
+                nullptr, &bMemoryError );
         else if( eErrClass == CE_Warning )
             CPLSetTLSWithFreeFuncEx(
                 CTLS_ERRORCONTEXT,
                 reinterpret_cast<void*>(
                     const_cast<CPLErrorContext *>( &sWarningContext ) ),
-                NULL, &bMemoryError );
+                nullptr, &bMemoryError );
         else if( eErrClass == CE_Failure )
             CPLSetTLSWithFreeFuncEx(
                 CTLS_ERRORCONTEXT,
                 reinterpret_cast<void*>(
                     const_cast<CPLErrorContext *>( &sFailureContext ) ),
-                NULL, &bMemoryError );
+                nullptr, &bMemoryError );
         return;
     }
 
     psCtx->nLastErrNo = err_no;
-    strncpy(psCtx->szLastErrMsg, pszMsg, psCtx->nLastErrMsgMax);
-    psCtx->szLastErrMsg[
-        MAX(psCtx->nLastErrMsgMax-1,
-            static_cast<int>( strlen(pszMsg) ))] = '\0';
+    const size_t size = std::min(
+        static_cast<size_t>(psCtx->nLastErrMsgMax-1), strlen(pszMsg) );
+    char* pszLastErrMsg = CPLErrorContextGetString(psCtx);
+    memcpy( pszLastErrMsg, pszMsg, size );
+    pszLastErrMsg[size] = '\0';
     psCtx->eLastErrType = eErrClass;
 }
 
@@ -719,7 +818,7 @@ void CPL_DLL CPLErrorSetState( CPLErr eErrClass, CPLErrorNum err_no,
 CPLErrorNum CPL_STDCALL CPLGetLastErrorNo()
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
         return 0;
 
     return psCtx->nLastErrNo;
@@ -743,7 +842,7 @@ CPLErrorNum CPL_STDCALL CPLGetLastErrorNo()
 CPLErr CPL_STDCALL CPLGetLastErrorType()
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
         return CE_None;
 
     return psCtx->eLastErrType;
@@ -767,24 +866,48 @@ CPLErr CPL_STDCALL CPLGetLastErrorType()
 const char* CPL_STDCALL CPLGetLastErrorMsg()
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL )
+    if( psCtx == nullptr )
         return "";
 
     return psCtx->szLastErrMsg;
+}
+
+/**********************************************************************
+ *                          CPLGetErrorCounter()
+ **********************************************************************/
+
+/**
+ * Get the error counter
+ *
+ * Fetches the number of errors emitted in the current error context,
+ * since the last call to CPLErrorReset()
+ *
+ * @return the error counter.
+ * @since GDAL 2.3
+ */
+
+GUInt32 CPL_STDCALL CPLGetErrorCounter()
+{
+    CPLErrorContext *psCtx = CPLGetErrorContext();
+    if( psCtx == nullptr )
+        return 0;
+
+    return psCtx->nErrorCounter;
 }
 
 /************************************************************************/
 /*                       CPLDefaultErrorHandler()                       */
 /************************************************************************/
 
+/** Default error handler. */
 void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
-                             const char * pszErrorMsg )
+                                         const char * pszErrorMsg )
 
 {
-    static int       nCount = 0;
-    static int       nMaxErrors = -1;
+    static int nCount = 0;
+    static int nMaxErrors = -1;
 
-    if (eErrClass != CE_Debug)
+    if( eErrClass != CE_Debug )
     {
         if( nMaxErrors == -1 )
         {
@@ -793,7 +916,7 @@ void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
         }
 
         nCount++;
-        if (nCount > nMaxErrors && nMaxErrors > 0 )
+        if( nCount > nMaxErrors && nMaxErrors > 0 )
             return;
     }
 
@@ -805,13 +928,13 @@ void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
         bLogInit = true;
 
         fpLog = stderr;
-        if( CPLGetConfigOption( "CPL_LOG", NULL ) != NULL )
+        if( CPLGetConfigOption( "CPL_LOG", nullptr ) != nullptr )
         {
             const char* pszAccess = "wt";
-            if( CPLGetConfigOption( "CPL_LOG_APPEND", NULL ) != NULL )
+            if( CPLGetConfigOption( "CPL_LOG_APPEND", nullptr ) != nullptr )
                 pszAccess = "at";
-            fpLog = fopen( CPLGetConfigOption("CPL_LOG",""), pszAccess );
-            if( fpLog == NULL )
+            fpLog = fopen( CPLGetConfigOption("CPL_LOG", ""), pszAccess );
+            if( fpLog == nullptr )
                 fpLog = stderr;
         }
     }
@@ -823,7 +946,7 @@ void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
     else
         fprintf( fpLog, "ERROR %d: %s\n", nError, pszErrorMsg );
 
-    if (eErrClass != CE_Debug
+    if( eErrClass != CE_Debug
         && nMaxErrors > 0
         && nCount == nMaxErrors )
     {
@@ -840,8 +963,9 @@ void CPL_STDCALL CPLDefaultErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
 /*                        CPLQuietErrorHandler()                        */
 /************************************************************************/
 
+/** Error handler that does not do anything, except for debug messages. */
 void CPL_STDCALL CPLQuietErrorHandler( CPLErr eErrClass , CPLErrorNum nError,
-                           const char * pszErrorMsg )
+                                       const char * pszErrorMsg )
 
 {
     if( eErrClass == CE_Debug )
@@ -852,12 +976,15 @@ void CPL_STDCALL CPLQuietErrorHandler( CPLErr eErrClass , CPLErrorNum nError,
 /*                       CPLLoggingErrorHandler()                       */
 /************************************************************************/
 
+/** Error handler that logs into the file defined by the CPL_LOG configuration
+ * option, or stderr otherwise.
+ */
 void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
-                             const char * pszErrorMsg )
+                                         const char * pszErrorMsg )
 
 {
-    static bool      bLogInit = false;
-    static FILE *    fpLog = stderr;
+    static bool bLogInit = false;
+    static FILE *fpLog = stderr;
 
     if( !bLogInit )
     {
@@ -865,27 +992,26 @@ void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
 
         CPLSetConfigOption( "CPL_TIMESTAMP", "ON" );
 
-        const char *cpl_log = CPLGetConfigOption("CPL_LOG", NULL );
+        const char *cpl_log = CPLGetConfigOption("CPL_LOG", nullptr );
 
         fpLog = stderr;
-        if( cpl_log != NULL && EQUAL(cpl_log,"OFF") )
+        if( cpl_log != nullptr && EQUAL(cpl_log, "OFF") )
         {
-            fpLog = NULL;
+            fpLog = nullptr;
         }
-        else if( cpl_log != NULL )
+        else if( cpl_log != nullptr )
         {
             size_t nPathLen = strlen(cpl_log) + 20;
-            char* pszPath
-                = static_cast<char *>( CPLMalloc(nPathLen) );
+            char* pszPath = static_cast<char *>(CPLMalloc(nPathLen));
             strcpy(pszPath, cpl_log);
 
             int i = 0;
-            while( (fpLog = fopen( pszPath, "rt" )) != NULL )
+            while( (fpLog = fopen( pszPath, "rt" )) != nullptr )
             {
                 fclose( fpLog );
 
-                /* generate sequenced log file names, inserting # before ext.*/
-                if (strrchr(cpl_log, '.') == NULL)
+                // Generate sequenced log file names, inserting # before ext.
+                if( strrchr(cpl_log, '.') == nullptr )
                 {
                     snprintf( pszPath, nPathLen, "%s_%d%s", cpl_log, i++,
                              ".log" );
@@ -895,7 +1021,7 @@ void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
                     size_t pos = 0;
                     char *cpl_log_base = CPLStrdup(cpl_log);
                     pos = strcspn(cpl_log_base, ".");
-                    if (pos > 0)
+                    if( pos > 0 )
                     {
                         cpl_log_base[pos] = '\0';
                     }
@@ -910,7 +1036,7 @@ void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
         }
     }
 
-    if( fpLog == NULL )
+    if( fpLog == nullptr )
         return;
 
     if( eErrClass == CE_Debug )
@@ -927,16 +1053,18 @@ void CPL_STDCALL CPLLoggingErrorHandler( CPLErr eErrClass, CPLErrorNum nError,
  *                      CPLTurnFailureIntoWarning()                   *
  **********************************************************************/
 
+/** Whether failures should be turned into warnings.
+ */
 void CPLTurnFailureIntoWarning( int bOn )
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         fprintf(stderr, "CPLTurnFailureIntoWarning() failed.\n");
         return;
     }
     psCtx->nFailureIntoWarning += (bOn) ? 1 : -1;
-    if (psCtx->nFailureIntoWarning < 0)
+    if( psCtx->nFailureIntoWarning < 0 )
     {
         CPLDebug( "CPL", "Wrong nesting of CPLTurnFailureIntoWarning(TRUE) / "
                   "CPLTurnFailureIntoWarning(FALSE)" );
@@ -951,7 +1079,7 @@ void CPLTurnFailureIntoWarning( int bOn )
  * Install custom error handle with user's data. This method is
  * essentially CPLSetErrorHandler with an added pointer to pUserData.
  * The pUserData is not returned in the CPLErrorHandler, however, and
- * must be fetched via CPLGetLastErrorUserData
+ * must be fetched via CPLGetErrorHandlerUserData.
  *
  * @param pfnErrorHandlerNew new error handler function.
  * @param pUserData User data to carry along with the error context.
@@ -959,41 +1087,36 @@ void CPLTurnFailureIntoWarning( int bOn )
  */
 
 CPLErrorHandler CPL_STDCALL
-CPLSetErrorHandlerEx( CPLErrorHandler pfnErrorHandlerNew,
-                      void* pUserData )
+CPLSetErrorHandlerEx( CPLErrorHandler pfnErrorHandlerNew, void* pUserData )
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         fprintf(stderr, "CPLSetErrorHandlerEx() failed.\n");
-        return NULL;
+        return nullptr;
     }
 
-    if( psCtx->psHandlerStack != NULL )
+    if( psCtx->psHandlerStack != nullptr )
     {
         CPLDebug( "CPL",
-                  "CPLSetErrorHandler() called with an error handler on\n"
+                  "CPLSetErrorHandler() called with an error handler on "
                   "the local stack.  New error handler will not be used "
-                  "immediately.\n" );
+                  "immediately." );
     }
 
-    CPLErrorHandler pfnOldHandler;
+    CPLErrorHandler pfnOldHandler = nullptr;
     {
         CPLMutexHolderD( &hErrorMutex );
 
         pfnOldHandler = pfnErrorHandler;
 
-        if( pfnErrorHandler == NULL )
-            pfnErrorHandler = CPLDefaultErrorHandler;
-        else
-            pfnErrorHandler = pfnErrorHandlerNew;
+        pfnErrorHandler = pfnErrorHandlerNew;
 
         pErrorHandlerUserData = pUserData;
     }
 
     return pfnOldHandler;
 }
-
 
 /**********************************************************************
  *                          CPLSetErrorHandler()                      *
@@ -1040,7 +1163,7 @@ CPLSetErrorHandlerEx( CPLErrorHandler pfnErrorHandlerNew,
 CPLErrorHandler CPL_STDCALL
 CPLSetErrorHandler( CPLErrorHandler pfnErrorHandlerNew )
 {
-    return CPLSetErrorHandlerEx(pfnErrorHandlerNew, NULL);
+    return CPLSetErrorHandlerEx(pfnErrorHandlerNew, nullptr);
 }
 
 /************************************************************************/
@@ -1062,9 +1185,8 @@ CPLSetErrorHandler( CPLErrorHandler pfnErrorHandlerNew )
 void CPL_STDCALL CPLPushErrorHandler( CPLErrorHandler pfnErrorHandlerNew )
 
 {
-    CPLPushErrorHandlerEx(pfnErrorHandlerNew, NULL);
+    CPLPushErrorHandlerEx(pfnErrorHandlerNew, nullptr);
 }
-
 
 /************************************************************************/
 /*                        CPLPushErrorHandlerEx()                       */
@@ -1089,7 +1211,7 @@ void CPL_STDCALL CPLPushErrorHandlerEx( CPLErrorHandler pfnErrorHandlerNew,
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
 
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         fprintf(stderr, "CPLPushErrorHandlerEx() failed.\n");
         return;
@@ -1122,13 +1244,13 @@ void CPL_STDCALL CPLPopErrorHandler()
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
 
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         fprintf(stderr, "CPLPopErrorHandler() failed.\n");
         return;
     }
 
-    if( psCtx->psHandlerStack != NULL )
+    if( psCtx->psHandlerStack != nullptr )
     {
         CPLErrorHandlerNode     *psNode = psCtx->psHandlerStack;
 
@@ -1149,9 +1271,10 @@ void CPL_STDCALL CPLPopErrorHandler()
  * debug messages. In some cases, this might not be desirable and the user
  * would prefer that the previous installed handler (or the default one if no
  * previous installed handler exists in the stack) deal with it. In which
- * case, this function should be called with bCatchDebug.
+ * case, this function should be called with bCatchDebug = FALSE.
  *
- * @param bCatchDebug FALSE if the current error handler should not intercept debug messages
+ * @param bCatchDebug FALSE if the current error handler should not intercept
+ * debug messages
  * @since GDAL 2.1
  */
 
@@ -1159,13 +1282,13 @@ void CPL_STDCALL CPLSetCurrentErrorHandlerCatchDebug( int bCatchDebug )
 {
     CPLErrorContext *psCtx = CPLGetErrorContext();
 
-    if( psCtx == NULL || IS_PREFEFINED_ERROR_CTX(psCtx) )
+    if( psCtx == nullptr || IS_PREFEFINED_ERROR_CTX(psCtx) )
     {
         fprintf(stderr, "CPLSetCurrentErrorHandlerCatchDebug() failed.\n");
         return;
     }
 
-    if( psCtx->psHandlerStack != NULL )
+    if( psCtx->psHandlerStack != nullptr )
         psCtx->psHandlerStack->bCatchDebug = CPL_TO_BOOL(bCatchDebug);
     else
         gbCatchDebug = CPL_TO_BOOL(bCatchDebug);
@@ -1190,18 +1313,17 @@ void CPL_STDCALL CPLSetCurrentErrorHandlerCatchDebug( int bCatchDebug )
  */
 
 void CPL_STDCALL _CPLAssert( const char * pszExpression, const char * pszFile,
-                 int iLine )
+                             int iLine )
 
 {
     CPLError( CE_Fatal, CPLE_AssertionFailed,
-              "Assertion `%s' failed\n"
-              "in file `%s', line %d\n",
+              "Assertion `%s' failed "
+              "in file `%s', line %d",
               pszExpression, pszFile, iLine );
 
     // Just to please compiler so it is aware the function does not return.
     abort();
 }
-
 
 /************************************************************************/
 /*                       CPLCleanupErrorMutex()                         */
@@ -1209,9 +1331,17 @@ void CPL_STDCALL _CPLAssert( const char * pszExpression, const char * pszFile,
 
 void CPLCleanupErrorMutex()
 {
-    if( hErrorMutex != NULL )
+    if( hErrorMutex != nullptr )
     {
         CPLDestroyMutex(hErrorMutex);
-        hErrorMutex = NULL;
+        hErrorMutex = nullptr;
     }
+}
+
+bool CPLIsDefaultErrorHandlerAndCatchDebug()
+{
+    CPLErrorContext *psCtx = CPLGetErrorContext();
+    return (psCtx == nullptr || psCtx->psHandlerStack == nullptr) &&
+            gbCatchDebug &&
+           pfnErrorHandler == CPLDefaultErrorHandler;
 }

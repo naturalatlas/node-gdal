@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ll_recio.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  EPIInfo .REC Reader
  * Purpose:  Implements low level REC reading API.
@@ -31,7 +30,7 @@
 #include "cpl_string.h"
 #include "ogr_rec.h"
 
-CPL_CVSID("$Id: ll_recio.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ll_recio.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 static int nNextRecLine = 0;
 
@@ -43,7 +42,7 @@ int RECGetFieldCount( FILE * fp )
 
 {
     const char *pszLine = CPLReadLine( fp );
-    if( pszLine == NULL )
+    if( pszLine == nullptr )
         return -1;
     if( atoi(pszLine) < 1 )
         return -1;
@@ -63,7 +62,7 @@ int RECGetFieldDefinition( FILE *fp, char *pszFieldname,
 {
     const char *pszLine = CPLReadLine( fp );
 
-    if( pszLine == NULL )
+    if( pszLine == nullptr )
         return FALSE;
 
     if( strlen(pszLine) < 44 )
@@ -77,7 +76,9 @@ int RECGetFieldDefinition( FILE *fp, char *pszFieldname,
     // Is this an real, integer or string field?  Default to string.
     int nTypeCode = atoi(RECGetField(pszLine,33,4));
     if( nTypeCode == 0 )
+    {
         eFType = OFTInteger;
+    }
     else if( nTypeCode > 100 && nTypeCode < 120 )
     {
         eFType = OFTReal;
@@ -90,15 +91,19 @@ int RECGetFieldDefinition( FILE *fp, char *pszFieldname,
             eFType = OFTReal;
     }
     else
-        eFType = OFTString;
+    {
+      eFType = OFTString;
+    }
 
-    *pnType = (int) eFType;
+    *pnType = static_cast<int>(eFType);
 
     strcpy( pszFieldname, RECGetField( pszLine, 2, 10 ) );
     *pnPrecision = 0;
 
     if( nTypeCode > 100 && nTypeCode < 120 )
-        *pnPrecision = nTypeCode - 100;
+    {
+      *pnPrecision = nTypeCode - 100;
+    }
     else if( eFType == OFTReal )
     {
         *pnPrecision = *pnWidth - 1;
@@ -116,13 +121,15 @@ int RECGetFieldDefinition( FILE *fp, char *pszFieldname,
 const char *RECGetField( const char *pszSrc, int nStart, int nWidth )
 
 {
-    static char szWorkField[128];
-    int         i;
+    // FIXME non thread safe
+    static char szWorkField[128] = {};
 
-    strncpy( szWorkField, pszSrc+nStart-1, nWidth );
+    if( nWidth >= static_cast<int>(sizeof(szWorkField)) )
+        nWidth = sizeof(szWorkField)-1;
+    strncpy( szWorkField, pszSrc + nStart - 1, nWidth );
     szWorkField[nWidth] = '\0';
 
-    i = (int)strlen(szWorkField)-1;
+    int i = static_cast<int>(strlen(szWorkField)) - 1;
 
     while( i >= 0 && szWorkField[i] == ' ' )
         szWorkField[i--] = '\0';
@@ -137,23 +144,22 @@ const char *RECGetField( const char *pszSrc, int nStart, int nWidth )
 int RECReadRecord( FILE *fp, char *pszRecord, int nRecordLength )
 
 {
-    int        nDataLen = 0;
+    int nDataLen = 0;
 
     while( nDataLen < nRecordLength )
     {
         const char *pszLine = CPLReadLine( fp );
-        int         iSegLen;
 
         nNextRecLine++;
 
-        if( pszLine == NULL )
+        if( pszLine == nullptr )
             return FALSE;
 
         if( *pszLine == 0 || *pszLine == 26 /* Cntl-Z - DOS EOF */ )
             return FALSE;
 
         // If the end-of-line markers is '?' the record is deleted.
-        iSegLen = (int)strlen(pszLine);
+        int iSegLen = (int)strlen(pszLine);
         if( pszLine[iSegLen-1] == '?' )
         {
             pszRecord[0] = '\0';
@@ -180,7 +186,7 @@ int RECReadRecord( FILE *fp, char *pszRecord, int nRecordLength )
             return FALSE;
         }
 
-        strncpy( pszRecord+nDataLen, pszLine, iSegLen );
+        memcpy( pszRecord+nDataLen, pszLine, iSegLen );
         pszRecord[nDataLen+iSegLen] = '\0';
         nDataLen += iSegLen;
     }

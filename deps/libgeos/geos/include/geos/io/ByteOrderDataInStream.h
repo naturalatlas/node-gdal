@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,7 +22,6 @@
 
 #include <geos/export.h>
 
-//#include <geos/platform.h>
 //#include <geos/io/ParseException.h>
 //#include <geos/io/ByteOrderValues.h>
 #include <geos/inline.h>
@@ -34,7 +33,7 @@ namespace io {
 
 /*
  * \class ByteOrderDataInStream io.h geos.h
- * 
+ *
  * Allows reading an stream of primitive datatypes from an underlying
  * istream, with the representation being in either common byte ordering.
  *
@@ -43,32 +42,32 @@ class GEOS_DLL ByteOrderDataInStream {
 
 public:
 
-	ByteOrderDataInStream(std::istream *s=NULL);
+    ByteOrderDataInStream(std::istream* s = nullptr);
 
-	~ByteOrderDataInStream();
+    ~ByteOrderDataInStream();
 
-	/**
-	 * Allows a single ByteOrderDataInStream to be reused
-	 * on multiple istream.
-	 */
-	void setInStream(std::istream *s);
+    /**
+     * Allows a single ByteOrderDataInStream to be reused
+     * on multiple istream.
+     */
+    void setInStream(std::istream* s);
 
-	void setOrder(int order);
+    void setOrder(int order);
 
-	unsigned char readByte(); // throws ParseException
+    unsigned char readByte(); // throws ParseException
 
-	int readInt(); // throws ParseException
+    int readInt(); // throws ParseException
 
-	long readLong(); // throws ParseException
+    long readLong(); // throws ParseException
 
-	double readDouble(); // throws ParseException
+    double readDouble(); // throws ParseException
 
 private:
-	int byteOrder;
-	std::istream *stream;
+    int byteOrder;
+    std::istream* stream;
 
-	// buffers to hold primitive datatypes
-	unsigned char buf[8];
+    // buffers to hold primitive datatypes
+    unsigned char buf[8];
 
 };
 

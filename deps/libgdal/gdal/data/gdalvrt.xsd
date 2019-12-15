@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /******************************************************************************
- * $Id: gdalvrt.xsd 30648 2015-09-22 15:16:23Z rouault $
+ * $Id: gdalvrt.xsd 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  GDAL/OGR
  * Purpose:  XML Schema for GDAL VRT files.
@@ -34,7 +34,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:element name="SRS" type="xs:string"/>
+                    <xs:element name="SRS" type="SRSType"/>
                     <xs:element name="GeoTransform" type="xs:string"/>
                     <xs:element name="GCPList" type="GCPListType"/>
                     <xs:element name="BlockXSize" type="nonNegativeInteger32"/>
@@ -51,6 +51,14 @@
             <xs:attribute name="rasterYSize" type="nonNegativeInteger32" use="required"/>
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="SRSType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="dataAxisToSRSAxisMapping" type="xs:string"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
 
     <xs:simpleType name="nonNegativeInteger32">
         <xs:restriction base="xs:nonNegativeInteger">
@@ -149,6 +157,7 @@
                 <xs:element name="Scale" type="xs:double"/>
                 <xs:element name="CategoryNames" type="CategoryNamesType"/>
                 <xs:element name="ColorTable" type="ColorTableType"/>
+                <xs:element name="GDALRasterAttributeTable" type="GDALRasterAttributeTableType"/>
                 <xs:element name="NoDataValue" type="DoubleOrNanType"/>
                 <xs:element name="NodataValue" type="xs:double"/> <!-- typo: deprecated -->
                 <xs:element name="HideNoDataValue" type="ZeroOrOne"/>
@@ -167,6 +176,14 @@
                 <!-- for a VRTDerivedRasterBand -->
                 <xs:element name="PixelFunctionType" type="xs:string"/>
                 <xs:element name="SourceTransferType" type="DataTypeType"/>
+                <xs:element name="PixelFunctionLanguage" type="xs:string"/>
+                <xs:element name="PixelFunctionCode" type="xs:string"/>
+                <xs:element name="PixelFunctionArguments">
+                    <xs:complexType>
+                        <xs:anyAttribute processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="BufferRadius" type="xs:nonNegativeInteger"/>
 
                 <!-- for a VRTRawRasterBand -->
                 <xs:element name="SourceFilename" type="SourceFilenameType"/>
@@ -235,6 +252,29 @@
         <xs:sequence minOccurs="0" maxOccurs="unbounded">
             <xs:element name="Entry" type="ColorTableEntryType"/>
         </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="GDALRasterAttributeTableType">
+        <xs:sequence>
+            <xs:element name="FieldDefn" type="FieldDefnType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="Row" type="RowType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="FieldDefnType">
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string"/>
+            <xs:element name="Type" type="xs:unsignedInt"/>
+            <xs:element name="Usage" type="xs:unsignedInt"/>
+        </xs:sequence>
+        <xs:attribute name="index" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="RowType">
+        <xs:sequence>
+            <xs:element name="F" type="xs:anyType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="index" type="xs:unsignedInt" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="OverviewType">

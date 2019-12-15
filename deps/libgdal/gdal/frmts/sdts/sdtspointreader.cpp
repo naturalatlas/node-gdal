@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtspointreader.cpp 31332 2015-11-03 17:34:39Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTSPointReader and SDTSRawPoint classes.
@@ -29,7 +28,7 @@
 
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtspointreader.cpp 31332 2015-11-03 17:34:39Z goatbar $");
+CPL_CVSID("$Id: sdtspointreader.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -76,10 +75,13 @@ int SDTSRawPoint::Read( SDTS_IREF * poIREF, DDFRecord * poRecord )
     for( int iField = 0; iField < poRecord->GetFieldCount(); iField++ )
     {
         DDFField        *poField = poRecord->GetField( iField );
+        if( poField == nullptr )
+            return FALSE;
+        DDFFieldDefn* poFieldDefn = poField->GetFieldDefn();
+        if( poFieldDefn == nullptr )
+            return FALSE;
 
-        CPLAssert( poField != NULL );
-
-        const char *pszFieldName = poField->GetFieldDefn()->GetName();
+        const char *pszFieldName = poFieldDefn->GetName();
 
         if( EQUAL(pszFieldName,"PNTS") )
             oModId.Set( poField );
@@ -117,7 +119,6 @@ void SDTSRawPoint::Dump( FILE * fp )
 
     fprintf( fp, "  Vertex = (%.2f,%.2f,%.2f)\n", dfX, dfY, dfZ );
 }
-
 
 /************************************************************************/
 /* ==================================================================== */
@@ -161,7 +162,7 @@ void SDTSPointReader::Close()
 int SDTSPointReader::Open( const char * pszFilename )
 
 {
-    return( oDDFModule.Open( pszFilename ) );
+    return oDDFModule.Open( pszFilename );
 }
 
 /************************************************************************/
@@ -176,13 +177,13 @@ SDTSRawPoint * SDTSPointReader::GetNextPoint()
 /* -------------------------------------------------------------------- */
 /*      Read a record.                                                  */
 /* -------------------------------------------------------------------- */
-    if( oDDFModule.GetFP() == NULL )
-        return NULL;
+    if( oDDFModule.GetFP() == nullptr )
+        return nullptr;
 
     DDFRecord *poRecord = oDDFModule.ReadRecord();
 
-    if( poRecord == NULL )
-        return NULL;
+    if( poRecord == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Transform into a point feature.                                 */
@@ -191,9 +192,9 @@ SDTSRawPoint * SDTSPointReader::GetNextPoint()
 
     if( poRawPoint->Read( poIREF, poRecord ) )
     {
-        return( poRawPoint );
+        return poRawPoint;
     }
 
     delete poRawPoint;
-    return NULL;
+    return nullptr;
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgdataset.h 32190 2015-12-16 13:50:27Z goatbar $
+ * $Id: msgdataset.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  MSG Driver
  * Purpose:  GDALDataset driver for MSG translator for read support.
@@ -35,10 +35,6 @@
 #include <string>
 #include <fstream>
 
-CPL_C_START
-void GDALRegister_MSG();
-CPL_C_END
-
 /************************************************************************/
 /*                            MSGRasterBand                             */
 /************************************************************************/
@@ -53,10 +49,10 @@ class MSGRasterBand : public GDALRasterBand
   public:
     MSGRasterBand( MSGDataset *, int );
     virtual ~MSGRasterBand();
-    virtual CPLErr IReadBlock( int, int, void * );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
 
   private:
-    double rRadiometricCorrection(unsigned int iDN, int iChannel, int iRow, int iCol, MSGDataset* poGDS);
+    double rRadiometricCorrection(unsigned int iDN, int iChannel, int iRow, int iCol, MSGDataset* poGDS) const;
     bool fScanNorth;
     int iLowerShift; // nr of pixels that lower HRV image is shifted compared to upper
     int iSplitLine; // line from top where the HRV image splits
@@ -75,12 +71,19 @@ class MSGDataset : public GDALDataset
 
   public:
     MSGDataset();
-    ~MSGDataset();
+    virtual ~MSGDataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
-    virtual const char *GetProjectionRef(void);
-    virtual CPLErr SetProjection( const char * );
-    virtual CPLErr GetGeoTransform( double * padfTransform );
+    virtual const char *_GetProjectionRef() override;
+    virtual CPLErr _SetProjection( const char * ) override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
+    CPLErr SetSpatialRef(const OGRSpatialReference* poSRS) override {
+        return OldSetProjectionFromSetSpatialRef(poSRS);
+    }
+
+    virtual CPLErr GetGeoTransform( double * padfTransform ) override;
 
   private:
     MSGCommand command;
@@ -96,5 +99,7 @@ class MSGDataset : public GDALDataset
     static const double rVc[12];
     static const double rA[12];
     static const double rB[12];
+    static const int iCentralPixelVIS_IR;
+    static const int iCentralPixelHRV;
+    static const char *metadataDomain;
 };
-

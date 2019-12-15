@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011      Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011      Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,9 +28,9 @@
 
 // Forward declarations
 namespace geos {
-	namespace algorithm {
-		class LineIntersector;
-	}
+namespace algorithm {
+class LineIntersector;
+}
 }
 
 namespace geos {
@@ -45,61 +45,70 @@ namespace noding { // geos.noding
  */
 class GEOS_DLL SegmentString {
 public:
-	typedef std::vector<const SegmentString*> ConstVect;
-	typedef std::vector<SegmentString *> NonConstVect;
+    typedef std::vector<const SegmentString*> ConstVect;
+    typedef std::vector<SegmentString*> NonConstVect;
 
-	friend std::ostream& operator<< (std::ostream& os,
-			const SegmentString& ss);
+    friend std::ostream& operator<< (std::ostream& os,
+                                     const SegmentString& ss);
 
-	/// Construct a SegmentString.
-	//
-	/// @param newContext the context associated to this SegmentString
-	///
-	SegmentString(const void* newContext)
-		:
-		context(newContext)
-	{}
+    /// \brief Construct a SegmentString.
+    ///
+    /// @param newContext the context associated to this SegmentString
+    ///
+    SegmentString(const void* newContext)
+        :
+        context(newContext)
+    {}
 
-	virtual ~SegmentString() {}
+    virtual
+    ~SegmentString() {}
 
-	/**
-	 * Gets the user-defined data for this segment string.
-	 *
-	 * @return the user-defined data
-	 */
-	const void* getData() const { return context; }
+    /** \brief
+     * Gets the user-defined data for this segment string.
+     *
+     * @return the user-defined data
+     */
+    const void*
+    getData() const
+    {
+        return context;
+    }
 
-	/**
-	 * Sets the user-defined data for this segment string.
-	 *
-	 * @param data an Object containing user-defined data
-	 */
-	void setData(const void* data) { context=data; }
+    /** \brief
+     * Sets the user-defined data for this segment string.
+     *
+     * @param data an Object containing user-defined data
+     */
+    void
+    setData(const void* data)
+    {
+        context = data;
+    }
 
 
-	virtual unsigned int size() const=0;
+    virtual size_t size() const = 0;
 
-	virtual const geom::Coordinate& getCoordinate(unsigned int i) const=0;
+    virtual const geom::Coordinate& getCoordinate(size_t i) const = 0;
 
-	/// \brief
-	/// Return a pointer to the CoordinateSequence associated
-	/// with this SegmentString.
-	//
-	/// Note that the CoordinateSequence is owned by this SegmentString!
-	///
-	virtual geom::CoordinateSequence* getCoordinates() const=0;
+    /// \brief
+    /// Return a pointer to the CoordinateSequence associated
+    /// with this SegmentString.
+    //
+    /// @note The CoordinateSequence is owned by this SegmentString!
+    ///
+    virtual geom::CoordinateSequence* getCoordinates() const = 0;
 
-	virtual bool isClosed() const=0;
+    virtual bool isClosed() const = 0;
 
-	virtual std::ostream& print(std::ostream& os) const;
+    virtual std::ostream& print(std::ostream& os) const;
 
 private:
 
-	const void* context;
+    const void* context;
 
     // Declare type as noncopyable
-    SegmentString(const SegmentString& other);
-    SegmentString& operator=(const SegmentString& rhs);
+    SegmentString(const SegmentString& other) = delete;
+    SegmentString& operator=(const SegmentString& rhs) = delete;
 };
 
 std::ostream& operator<< (std::ostream& os, const SegmentString& ss);

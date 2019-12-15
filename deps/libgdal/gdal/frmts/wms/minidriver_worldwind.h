@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver_worldwind.h 18020 2009-11-14 14:33:20Z rouault $
+ * $Id: minidriver_worldwind.h be6f8002d1253901a0ec7357a01e6c72f8e99210 2017-02-26 02:16:35Z Kurt Schwehr $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -28,22 +28,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-H_GDALWMSMiniDriverFactory(WorldWind)
-
-class GDALWMSMiniDriver_WorldWind : public GDALWMSMiniDriver {
+class WMSMiniDriver_WorldWind : public WMSMiniDriver {
 public:
-    GDALWMSMiniDriver_WorldWind();
-    virtual ~GDALWMSMiniDriver_WorldWind();
+    WMSMiniDriver_WorldWind();
+    virtual ~WMSMiniDriver_WorldWind();
 
 public:
-    virtual CPLErr Initialize(CPLXMLNode *config);
-    virtual void GetCapabilities(GDALWMSMiniDriverCapabilities *caps);
-    virtual void ImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri);
-    virtual void TiledImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri, const GDALWMSTiledImageRequestInfo &tiri);
-    virtual const char *GetProjectionInWKT();
-
-protected:
-    CPLString m_base_url;
-    CPLString m_dataset;
-    CPLString m_projection_wkt;
+    virtual CPLErr Initialize(CPLXMLNode *config, char **papszOpenOptions) override;
+    virtual CPLErr TiledImageRequest(WMSHTTPRequest &request,
+                                     const GDALWMSImageRequestInfo &iri,
+                                     const GDALWMSTiledImageRequestInfo &tiri) override;
 };

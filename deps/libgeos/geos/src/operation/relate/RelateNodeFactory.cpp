@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,16 +29,16 @@ namespace operation { // geos.operation
 namespace relate { // geos.operation.relate
 
 Node*
-RelateNodeFactory::createNode(const Coordinate &coord) const
+RelateNodeFactory::createNode(const Coordinate& coord) const
 {
-	return new RelateNode(coord, new EdgeEndBundleStar());
+    return new RelateNode(coord, new EdgeEndBundleStar());
 }
 
-const NodeFactory &
-RelateNodeFactory::instance() 
+const NodeFactory&
+RelateNodeFactory::instance()
 {
-	static const RelateNodeFactory rnf;
-	return rnf;
+    static const RelateNodeFactory rnf;
+    return rnf;
 }
 
 

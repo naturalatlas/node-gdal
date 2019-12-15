@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrrecdriver.cpp 33089 2016-01-22 15:02:53Z goatbar $
  *
  * Project:  REC Translator
  * Purpose:  Implements EpiInfo .REC driver.
@@ -30,7 +29,7 @@
 #include "ogr_rec.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrrecdriver.cpp 33089 2016-01-22 15:02:53Z goatbar $");
+CPL_CVSID("$Id: ogrrecdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -39,25 +38,25 @@ CPL_CVSID("$Id: ogrrecdriver.cpp 33089 2016-01-22 15:02:53Z goatbar $");
 static GDALDataset *OGRRECDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL ||
+    if( poOpenInfo->fpL == nullptr ||
         !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "REC") )
     {
-        return NULL;
+        return nullptr;
     }
 
     OGRRECDataSource *poDS = new OGRRECDataSource();
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
-    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
+    if( poDS != nullptr && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "REC Driver doesn't support update." );
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -70,7 +69,7 @@ static GDALDataset *OGRRECDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRREC()
 
 {
-    if( GDALGetDriverByName( "REC" ) != NULL )
+    if( GDALGetDriverByName( "REC" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -79,9 +78,9 @@ void RegisterOGRREC()
     poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "rec" );
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "EPIInfo .REC " );
+    poDriver->SetMetadataItem( GDAL_DCAP_NONSPATIAL, "YES" );
 
     poDriver->pfnOpen = OGRRECDriverOpen;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

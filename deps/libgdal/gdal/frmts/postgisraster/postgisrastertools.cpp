@@ -5,9 +5,9 @@
  * Author:   Jorge Arevalo, jorge.arevalo@deimos-space.com
  *                          jorgearevalo@libregis.org
  *
- * Author:	 David Zwarg, dzwarg@azavea.com
+ * Author:       David Zwarg, dzwarg@azavea.com
  *
- * Last changes: $Id: $
+ * Last changes: $Id: postgisrastertools.cpp 3f1104ba8bc923329abf3cd3a5b17211e2818c47 2018-05-07 20:12:57 +0200 Even Rouault $
  *
  ***********************************************************************
  * Copyright (c) 2009 - 2013, Jorge Arevalo, David Zwarg
@@ -34,6 +34,8 @@
  **********************************************************************/
  #include "postgisraster.h"
 
+CPL_CVSID("$Id: postgisrastertools.cpp 3f1104ba8bc923329abf3cd3a5b17211e2818c47 2018-05-07 20:12:57 +0200 Even Rouault $")
+
  /**********************************************************************
  * \brief Replace the quotes by single quotes in the input string
  *
@@ -41,12 +43,12 @@
  **********************************************************************/
 char * ReplaceQuotes(const char * pszInput, int nLength) {
     int i;
-    char * pszOutput = NULL;
+    char * pszOutput = nullptr;
 
     if (nLength == -1)
         nLength = static_cast<int>(strlen(pszInput));
 
-    pszOutput = (char*) CPLCalloc(nLength + 1, sizeof (char));
+    pszOutput = static_cast<char*>(CPLCalloc(nLength + 1, sizeof (char)));
 
     for (i = 0; i < nLength; i++) {
         if (pszInput[i] == '"')
@@ -65,24 +67,23 @@ char * ReplaceQuotes(const char * pszInput, int nLength) {
  *************************************************************/
 char * ReplaceSingleQuotes(const char * pszInput, int nLength) {
     int i;
-    char* pszOutput = NULL;
+    char* pszOutput = nullptr;
 
     if (nLength == -1)
         nLength = static_cast<int>(strlen(pszInput));
 
-    pszOutput = (char*) CPLCalloc(nLength + 1, sizeof (char));
+    pszOutput = static_cast<char*>(CPLCalloc(nLength + 1, sizeof (char)));
 
-    for (i = 0; i < nLength; i++) {
+    for (i = 0; i < nLength; i++)
+    {
         if (pszInput[i] == '\'')
             pszOutput[i] = '"';
         else
             pszOutput[i] = pszInput[i];
-
     }
 
     return pszOutput;
 }
-
 
 /***********************************************************************
  * \brief Split connection string into user, password, host, database...
@@ -93,15 +94,13 @@ char * ReplaceSingleQuotes(const char * pszInput, int nLength) {
  * The returned list must be freed with CSLDestroy when no longer needed
  **********************************************************************/
 char** ParseConnectionString(const char * pszConnectionString) {
-    char * pszEscapedConnectionString = NULL;
 
     /* Escape string following SQL scheme */
-    pszEscapedConnectionString =
+    char* pszEscapedConnectionString =
         ReplaceSingleQuotes(pszConnectionString, -1);
 
     /* Avoid PG: part */
-    char* pszStartPos = (char*)
-        strstr(pszEscapedConnectionString, ":") + 1;
+    char* pszStartPos = strstr(pszEscapedConnectionString, ":") + 1;
 
     /* Tokenize */
     char** papszParams =
@@ -118,8 +117,8 @@ char** ParseConnectionString(const char * pszConnectionString) {
  * GDALDataType object.
  **********************************************************************/
 GBool TranslateDataType(const char * pszDataType,
-        GDALDataType * poDataType = NULL, int * pnBitsDepth = NULL,
-        GBool * pbSignedByte = NULL)
+        GDALDataType * poDataType = nullptr, int * pnBitsDepth = nullptr,
+        GBool * pbSignedByte = nullptr)
 {
     if (!pszDataType)
         return false;

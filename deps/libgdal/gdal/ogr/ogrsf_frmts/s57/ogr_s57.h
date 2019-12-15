@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_s57.h 32433 2015-12-23 23:48:56Z goatbar $
+ * $Id: ogr_s57.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Declarations for classes binding S57 support onto OGRLayer,
@@ -60,20 +60,20 @@ class OGRS57Layer : public OGRLayer
                                      int nOBJL = -1 );
     virtual             ~OGRS57Layer();
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
     OGRFeature *        GetNextUnfilteredFeature();
-    virtual OGRFeature *GetFeature( GIntBig nFeatureId );
+    virtual OGRFeature *GetFeature( GIntBig nFeatureId ) override;
 
-    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
-    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
-    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce)
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE ) override;
+    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE) override;
+    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce) override
                 { return OGRLayer::GetExtent(iGeomField, psExtent, bForce); }
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
-    int                 TestCapability( const char * );
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature ) override;
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -101,8 +101,10 @@ class OGRS57DataSource : public OGRDataSource
     bool                bExtentsSet;
     OGREnvelope         oExtents;
 
+    CPL_DISALLOW_COPY_ASSIGN(OGRS57DataSource)
+
   public:
-                        OGRS57DataSource(char** papszOpenOptions = NULL);
+    explicit            OGRS57DataSource(char** papszOpenOptions = nullptr);
                         ~OGRS57DataSource();
 
     void                SetOptionList( char ** );
@@ -111,13 +113,13 @@ class OGRS57DataSource : public OGRDataSource
     int                 Open( const char * pszName );
     int                 Create( const char *pszName, char **papszOptions );
 
-    const char          *GetName() { return pszName; }
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer            *GetLayer( int );
+    const char          *GetName() override { return pszName; }
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer            *GetLayer( int ) override;
     void                AddLayer( OGRS57Layer * );
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
-    OGRSpatialReference *GetSpatialRef() { return poSpatialRef; }
+    OGRSpatialReference *DSGetSpatialRef() { return poSpatialRef; }
 
     int                 GetModuleCount() { return nModules; }
     S57Reader          *GetModule( int );

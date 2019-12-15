@@ -35,7 +35,6 @@
 #pragma GCC system_header
 #endif
 
-
 // The following is needed on 4.x+ to enable rw support.
 #if defined(HAVE_COMPRESS)
 # ifndef ECW_COMPRESS_RW_SDK_VERSION
@@ -98,5 +97,10 @@
 /* Trick to avoid warnings with SDK 3.3 when assigning a NCSError code */
 /* to a CNCSError object */
 static inline CNCSError GetCNCSError(NCSError nCode) { return CNCSError(nCode); }
+
+#if ECWSDK_VERSION<50
+/* For NCSStrDup */
+#include "NCSUtil.h"
+#endif
 
 #endif

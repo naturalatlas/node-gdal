@@ -30,7 +30,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ntfstroke.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogrocistroke.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 /************************************************************************/
 /*                   OGROCIArcCenterFromEdgePoints()                    */
@@ -174,7 +174,6 @@ OGROCIStrokeArcToOGRGeometry_Angles( double dfCenterX, double dfCenterY,
 
     return TRUE;
 }
-
 
 /************************************************************************/
 /*                OGROCIStrokeArcToOGRGeometry_Points()                 */

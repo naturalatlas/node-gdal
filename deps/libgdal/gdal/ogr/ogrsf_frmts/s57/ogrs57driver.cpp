@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrs57driver.cpp 32433 2015-12-23 23:48:56Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements OGRS57Driver
@@ -32,10 +31,10 @@
 #include "cpl_conv.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrs57driver.cpp 32433 2015-12-23 23:48:56Z goatbar $");
+CPL_CVSID("$Id: ogrs57driver.cpp d4f24139fa19c874881af67308722ed71533bb74 2018-07-29 19:08:34 +0200 Even Rouault $")
 
-S57ClassRegistrar *OGRS57Driver::poRegistrar = NULL;
-static CPLMutex* hS57RegistrarMutex = NULL;
+S57ClassRegistrar *OGRS57Driver::poRegistrar = nullptr;
+static CPLMutex* hS57RegistrarMutex = nullptr;
 
 /************************************************************************/
 /*                            OGRS57Driver()                            */
@@ -50,16 +49,16 @@ OGRS57Driver::OGRS57Driver() {}
 OGRS57Driver::~OGRS57Driver()
 
 {
-    if( poRegistrar != NULL )
+    if( poRegistrar != nullptr )
     {
         delete poRegistrar;
-        poRegistrar = NULL;
+        poRegistrar = nullptr;
     }
 
-    if( hS57RegistrarMutex != NULL )
+    if( hS57RegistrarMutex != nullptr )
     {
         CPLDestroyMutex(hS57RegistrarMutex);
-        hS57RegistrarMutex = NULL;
+        hS57RegistrarMutex = nullptr;
     }
 }
 
@@ -80,7 +79,7 @@ static int OGRS57DriverIdentify( GDALOpenInfo* poOpenInfo )
     {
         return false;
     }
-    return strstr( pachLeader, "DSID") != NULL;
+    return strstr( pachLeader, "DSID") != nullptr;
 }
 
 /************************************************************************/
@@ -91,13 +90,13 @@ GDALDataset *OGRS57Driver::Open( GDALOpenInfo* poOpenInfo )
 
 {
     if( !OGRS57DriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     OGRS57DataSource *poDS = new OGRS57DataSource(poOpenInfo->papszOpenOptions);
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     if( poDS && poOpenInfo->eAccess == GA_Update )
@@ -105,7 +104,7 @@ GDALDataset *OGRS57Driver::Open( GDALOpenInfo* poOpenInfo )
         delete poDS;
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "S57 Driver doesn't support update." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -128,7 +127,7 @@ GDALDataset *OGRS57Driver::Create( const char * pszName,
         return poDS;
 
     delete poDS;
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -143,14 +142,14 @@ S57ClassRegistrar *OGRS57Driver::GetS57Registrar()
 /* -------------------------------------------------------------------- */
     CPLMutexHolderD(&hS57RegistrarMutex);
 
-    if( poRegistrar == NULL )
+    if( poRegistrar == nullptr )
     {
         poRegistrar = new S57ClassRegistrar();
 
-        if( !poRegistrar->LoadInfo( NULL, NULL, FALSE ) )
+        if( !poRegistrar->LoadInfo( nullptr, nullptr, false ) )
         {
             delete poRegistrar;
-            poRegistrar = NULL;
+            poRegistrar = nullptr;
         }
     }
 
@@ -164,7 +163,7 @@ S57ClassRegistrar *OGRS57Driver::GetS57Registrar()
 void RegisterOGRS57()
 
 {
-    if( GDALGetDriverByName( "S57" ) != NULL )
+    if( GDALGetDriverByName( "S57" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new OGRS57Driver();
@@ -202,6 +201,8 @@ void RegisterOGRS57()
         "   <Option name='S57_STED' type='string' description='Edition number of S-57' default='03.1'/>"
         "   <Option name='S57_AGEN' type='int' description='Producing agency' default='540'/>"
         "   <Option name='S57_COMT' type='string' description='Comment' default=''/>"
+        "   <Option name='S57_AALL' type='int' description='Lexical level used for the ATTF fields' default='0'/>"
+        "   <Option name='S57_NALL' type='int' description='Lexical level used for the NATF fields' default='0'/>"
         "   <Option name='S57_NOMR' type='int' description='Number of meta records (objects with acronym starting with \"M_\")' default='0'/>"
         "   <Option name='S57_NOGR' type='int' description='Number of geo records' default='0'/>"
         "   <Option name='S57_NOLR' type='int' description='Number of collection records' default='0'/>"
@@ -212,6 +213,8 @@ void RegisterOGRS57()
         "   <Option name='S57_VDAT' type='int' description='Vertical datum' default='17'/>"
         "   <Option name='S57_SDAT' type='int' description='Sounding datum' default='23'/>"
         "   <Option name='S57_CSCL' type='int' description='Compilation scale of data (1:X)' default='52000'/>"
+        "   <Option name='S57_COMF' type='int' description='Floating-point to integer multiplication factor for coordinate values' default='10000000'/>"
+        "   <Option name='S57_SOMF' type='int' description='Floating point to integer multiplication factor for 3-D (sounding) values' default='10'/>"
         "</CreationOptionList>" );
 
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );

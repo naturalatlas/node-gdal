@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gifabstractdataset.h 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: gifabstractdataset.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  GIF Driver
  * Purpose:  GIF Abstract Dataset
@@ -66,19 +66,25 @@ class GIFAbstractDataset : public GDALPamDataset
     void        DetectGeoreferencing( GDALOpenInfo * poOpenInfo );
 
   public:
-                 GIFAbstractDataset();
-                 ~GIFAbstractDataset();
+    GIFAbstractDataset();
+    ~GIFAbstractDataset() override;
 
-    virtual const char *GetProjectionRef();
-    virtual CPLErr GetGeoTransform( double * );
-    virtual int    GetGCPCount();
-    virtual const char *GetGCPProjection();
-    virtual const GDAL_GCP *GetGCPs();
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
+    CPLErr GetGeoTransform( double * ) override;
+    int GetGCPCount() override;
+    const char *_GetGCPProjection() override;
+    const OGRSpatialReference* GetGCPSpatialRef() const override {
+        return GetGCPSpatialRefFromOldGetGCPProjection();
+    }
+    const GDAL_GCP *GetGCPs() override;
 
-    virtual char      **GetMetadataDomainList();
-    virtual char  **GetMetadata( const char * pszDomain = "" );
+    char **GetMetadataDomainList() override;
+    char **GetMetadata( const char * pszDomain = "" ) override;
 
-    virtual char **GetFileList(void);
+    char **GetFileList() override;
 
     static int          Identify( GDALOpenInfo * );
 
@@ -108,16 +114,14 @@ class GIFAbstractRasterBand : public GDALPamRasterBand
     int         nTransparentColor;
 
   public:
+    GIFAbstractRasterBand(GIFAbstractDataset *poDS, int nBand,
+                          SavedImage *psSavedImage, int nBackground,
+                          int bAdvertizeInterlacedMDI );
+    ~GIFAbstractRasterBand() override;
 
-                   GIFAbstractRasterBand(GIFAbstractDataset *poDS, int nBand,
-                                         SavedImage *psSavedImage, int nBackground,
-                                         int bAdvertizeInterlacedMDI );
-    virtual       ~GIFAbstractRasterBand();
-
-    virtual double GetNoDataValue( int *pbSuccess = NULL );
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual GDALColorTable *GetColorTable();
+    double GetNoDataValue( int *pbSuccess = nullptr ) override;
+    GDALColorInterp GetColorInterpretation() override;
+    GDALColorTable *GetColorTable() override;
 };
-
 
 #endif

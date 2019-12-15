@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nasreaderp.h 34462 2016-06-28 18:51:52Z jef $
+ * $Id: nasreaderp.h 365a72f2b5a94946e92323060b68f9963cd2dbd5 2018-05-06 22:14:36 +0200 Even Rouault $
  *
  * Project:  NAS Reader
  * Purpose:  Private Declarations for OGR NAS Reader code.
@@ -31,6 +31,10 @@
 #ifndef CPL_NASREADERP_H_INCLUDED
 #define CPL_NASREADERP_H_INCLUDED
 
+// Must be first for DEBUG_BOOL case
+#include "xercesc_headers.h"
+#include "ogr_xerces.h"
+
 #include "gmlreader.h"
 #include "gmlreaderp.h"
 #include "ogr_api.h"
@@ -50,7 +54,7 @@ CPL_C_END
 /************************************************************************/
 /*                              NASHandler                              */
 /************************************************************************/
-class NASHandler : public DefaultHandler
+class NASHandler final: public DefaultHandler
 {
     NASReader  *m_poReader;
 
@@ -61,6 +65,7 @@ class NASHandler : public DefaultHandler
     int        m_nGeomLen;
 
     int        m_nGeometryDepth;
+    int        m_nGeometryPropertyIndex;
     bool       IsGeometryElement( const char * );
 
     int        m_nDepth;
@@ -68,8 +73,9 @@ class NASHandler : public DefaultHandler
     bool       m_bIgnoreFeature;
     bool       m_bInUpdate;
     bool       m_bInUpdateProperty;
-    int        m_nDepthElement;
-    CPLString  m_osIgnoredElement;
+    int        m_nUpdateOrDeleteDepth;
+    int        m_nUpdatePropertyDepth;
+    int        m_nNameOrValueDepth;
 
     CPLString  m_osLastTypeName;
     CPLString  m_osLastReplacingFID;
@@ -80,8 +86,13 @@ class NASHandler : public DefaultHandler
 
     std::list<CPLString> m_LastOccasions;
 
+    CPLString  m_osElementName;
+    CPLString  m_osAttrName;
+    CPLString  m_osAttrValue;
+    CPLString  m_osCharacters;
+
 public:
-    NASHandler( NASReader *poReader );
+    explicit NASHandler( NASReader *poReader );
     virtual ~NASHandler();
 
     void startElement(
@@ -89,21 +100,21 @@ public:
         const   XMLCh* const    localname,
         const   XMLCh* const    qname,
         const   Attributes& attrs
-    );
+    ) override;
     void endElement(
         const   XMLCh* const    uri,
         const   XMLCh* const    localname,
         const   XMLCh* const    qname
-    );
+    ) override;
 #if XERCES_VERSION_MAJOR >= 3
     void characters( const XMLCh *const chars,
-                     const XMLSize_t length );
+                     const XMLSize_t length ) override;
 #else
     void characters( const XMLCh *const chars,
                      const unsigned int length );
 #endif
 
-    void fatalError(const SAXParseException&);
+    void fatalError(const SAXParseException&) override;
 
     CPLString GetAttributes( const Attributes* attr );
 };
@@ -143,7 +154,7 @@ public:
 /*                              NASReader                               */
 /************************************************************************/
 
-class NASReader : public IGMLReader
+class NASReader final: public IGMLReader
 {
 private:
     bool         m_bClassListLocked;
@@ -156,11 +167,14 @@ private:
     NASHandler    *m_poNASHandler;
     SAX2XMLReader *m_poSAXReader;
     bool          m_bReadStarted;
+    bool          m_bXercesInitialized;
     XMLPScanToken m_oToFill;
 
     GMLReadState *m_poState;
 
     GMLFeature   *m_poCompleteFeature;
+    VSILFILE     *m_fp;
+    InputSource  *m_GMLInputSource;
 
     bool          SetupParser();
     void          CleanupParser();
@@ -171,41 +185,41 @@ public:
                 NASReader();
     virtual     ~NASReader();
 
-    bool            IsClassListLocked() const { return m_bClassListLocked; }
-    void             SetClassListLocked( bool bFlag )
+    bool            IsClassListLocked() const override { return m_bClassListLocked; }
+    void             SetClassListLocked( bool bFlag ) override
         { m_bClassListLocked = bFlag; }
 
-    void             SetSourceFile( const char *pszFilename );
-    const char      *GetSourceFileName();
+    void             SetSourceFile( const char *pszFilename ) override;
+    const char      *GetSourceFileName() override;
 
-    int              GetClassCount() const { return m_nClassCount; }
-    GMLFeatureClass *GetClass( int i ) const;
-    GMLFeatureClass *GetClass( const char *pszName ) const;
+    int              GetClassCount() const override { return m_nClassCount; }
+    GMLFeatureClass *GetClass( int i ) const override;
+    GMLFeatureClass *GetClass( const char *pszName ) const override;
 
-    int              AddClass( GMLFeatureClass *poClass );
-    void             ClearClasses();
+    int              AddClass( GMLFeatureClass *poClass ) override;
+    void             ClearClasses() override;
 
-    GMLFeature       *NextFeature();
+    GMLFeature       *NextFeature() override;
 
-    bool             LoadClasses( const char *pszFile = NULL );
-    bool             SaveClasses( const char *pszFile = NULL );
+    bool             LoadClasses( const char *pszFile = nullptr ) override;
+    bool             SaveClasses( const char *pszFile = nullptr ) override;
 
     bool             PrescanForSchema(bool bGetExtents = true,
                                       bool bAnalyzeSRSPerFeature = true,
-                                      bool bOnlyDetectSRS = false);
-    bool             PrescanForTemplate( void );
-    void             ResetReading();
+                                      bool bOnlyDetectSRS = false) override;
+    bool             PrescanForTemplate() override;
+    void             ResetReading() override;
 
     bool             ParseXSD( const char * /* pszFile */ ) { return false; }
 
     bool             ResolveXlinks( const char *pszFile,
                                     bool* pbOutIsTempFile,
-                                    char **papszSkip = NULL,
-                                    const bool bStrict = false );
+                                    char **papszSkip = nullptr,
+                                    const bool bStrict = false ) override;
 
     bool             HugeFileResolver( const char *pszFile,
                                        bool bSqliteIsTempFile,
-                                       int iSqliteCacheMB );
+                                       int iSqliteCacheMB ) override;
 
 // ---
 
@@ -222,21 +236,19 @@ public:
     void        SetFeaturePropertyDirectly( const char *pszElement,
                                     char *pszValue );
 
-    bool        HasStoppedParsing() { return false; }
+    bool        HasStoppedParsing() override { return false; }
 
     void        CheckForFID( const Attributes &attrs, char **ppszCurField );
     void        CheckForRelations( const char *pszElement,
                                    const Attributes &attrs,
                                    char **ppszCurField );
 
-    virtual const char* GetGlobalSRSName() { return NULL; }
+    virtual const char* GetGlobalSRSName() override { return nullptr; }
 
-    virtual bool        CanUseGlobalSRSName() { return false; }
+    virtual bool        CanUseGlobalSRSName() override { return false; }
 
-    bool        SetFilteredClassName(const char* pszClassName);
-    const char* GetFilteredClassName() { return m_pszFilteredClassName; }
-
-    static CPLMutex* hMutex;
+    bool        SetFilteredClassName(const char* pszClassName) override;
+    const char* GetFilteredClassName() override { return m_pszFilteredClassName; }
 
     static      OGRGeometry* ConvertGeometry(OGRGeometry*);
 };

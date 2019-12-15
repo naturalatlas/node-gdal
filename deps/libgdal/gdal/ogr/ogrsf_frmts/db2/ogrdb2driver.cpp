@@ -29,6 +29,8 @@
 #include "ogr_db2.h"
 #include "cpl_conv.h"
 
+CPL_CVSID("$Id: ogrdb2driver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /************************************************************************/
 /*                       OGRDB2DriverIdentify()                  */
 /************************************************************************/
@@ -48,7 +50,7 @@ static int OGRDB2DriverIdentify( GDALOpenInfo* poOpenInfo )
 static GDALDataset *OGRDB2DriverOpen( GDALOpenInfo* poOpenInfo )
 {
     if( !OGRDB2DriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     CPLDebug( "OGRDB2DriverOpen", "pszFilename: '%s'",
               poOpenInfo->pszFilename);
@@ -59,7 +61,7 @@ static GDALDataset *OGRDB2DriverOpen( GDALOpenInfo* poOpenInfo )
     {
         CPLDebug( "OGRDB2DriverOpen", "open error");
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
     CPLDebug( "OGRDB2DriverOpen", "Exit");
     return poDS;
@@ -83,7 +85,7 @@ static GDALDataset* OGRDB2DriverCreate( const char * pszFilename,
                        nBands, eDT, papszOptions ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
     return poDS;
 }
@@ -104,14 +106,13 @@ static CPLErr OGRDB2DriverDelete( const char *pszFilename )
         return CE_Failure;
 }
 
-
 /************************************************************************/
 /*                           RegisterOGRDB2()                  */
 /************************************************************************/
 
 void RegisterOGRDB2()
 {
-    if( GDALGetDriverByName("DB2ODBC") != NULL )
+    if( GDALGetDriverByName("DB2ODBC") != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -131,7 +132,6 @@ void RegisterOGRDB2()
 "  <Option name='QUALITY' type='int' min='1' max='100' description='Quality for JPEG and WEBP tiles' default='75'/>" \
 "  <Option name='ZLEVEL' type='int' min='1' max='9' description='DEFLATE compression level for PNG tiles' default='6'/>" \
 "  <Option name='DITHER' type='boolean' description='Whether to apply Floyd-Steinberg dithering (for TILE_FORMAT=PNG8)' default='NO'/>"
-
 
     poDriver->SetMetadataItem( GDAL_DMD_OPENOPTIONLIST, "<OpenOptionList>"
                                "  <Option name='TABLE' type='string' description='Name of tile user-table'/>"

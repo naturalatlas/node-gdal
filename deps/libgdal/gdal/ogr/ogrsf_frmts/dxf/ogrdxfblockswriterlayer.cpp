@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdxfwriterlayer.cpp 20670 2010-09-22 00:21:17Z warmerdam $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFBlocksWriterLayer used for capturing block
@@ -33,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_featurestyle.h"
 
-CPL_CVSID("$Id: ogrdxfwriterlayer.cpp 20670 2010-09-22 00:21:17Z warmerdam $");
+CPL_CVSID("$Id: ogrdxfblockswriterlayer.cpp b561097a376b4c9510f834f0d2338a93acaf1cf2 2018-03-04 10:46:23Z Alan Thomas $")
 
 /************************************************************************/
 /*                      OGRDXFBlocksWriterLayer()                       */
@@ -44,27 +43,9 @@ OGRDXFBlocksWriterLayer::OGRDXFBlocksWriterLayer(
     poFeatureDefn(new OGRFeatureDefn( "blocks" ))
 {
     poFeatureDefn->Reference();
-
-    OGRFieldDefn  oLayerField( "Layer", OFTString );
-    poFeatureDefn->AddFieldDefn( &oLayerField );
-
-    OGRFieldDefn  oClassField( "SubClasses", OFTString );
-    poFeatureDefn->AddFieldDefn( &oClassField );
-
-    OGRFieldDefn  oExtendedField( "ExtendedEntity", OFTString );
-    poFeatureDefn->AddFieldDefn( &oExtendedField );
-
-    OGRFieldDefn  oLinetypeField( "Linetype", OFTString );
-    poFeatureDefn->AddFieldDefn( &oLinetypeField );
-
-    OGRFieldDefn  oEntityHandleField( "EntityHandle", OFTString );
-    poFeatureDefn->AddFieldDefn( &oEntityHandleField );
-
-    OGRFieldDefn  oTextField( "Text", OFTString );
-    poFeatureDefn->AddFieldDefn( &oTextField );
-
-    OGRFieldDefn  oBlockField( "BlockName", OFTString );
-    poFeatureDefn->AddFieldDefn( &oBlockField );
+    
+    OGRDXFDataSource::AddStandardFields( poFeatureDefn,
+        ODFM_IncludeBlockFields );
 }
 
 /************************************************************************/
@@ -88,10 +69,7 @@ OGRDXFBlocksWriterLayer::~OGRDXFBlocksWriterLayer()
 int OGRDXFBlocksWriterLayer::TestCapability( const char * pszCap )
 
 {
-    if( EQUAL(pszCap,OLCSequentialWrite) )
-        return TRUE;
-    else
-        return FALSE;
+    return EQUAL(pszCap,OLCSequentialWrite);
 }
 
 /************************************************************************/
@@ -139,11 +117,11 @@ OGRFeature *OGRDXFBlocksWriterLayer::FindBlock( const char *pszBlockName )
 {
     for( size_t i=0; i < apoBlocks.size(); i++ )
     {
-        const char *pszThisName = apoBlocks[i]->GetFieldAsString("BlockName");
+        const char *pszThisName = apoBlocks[i]->GetFieldAsString("Block");
 
-        if( pszThisName != NULL && strcmp(pszBlockName,pszThisName) == 0 )
+        if( pszThisName != nullptr && strcmp(pszBlockName,pszThisName) == 0 )
             return apoBlocks[i];
     }
 
-    return NULL;
+    return nullptr;
 }

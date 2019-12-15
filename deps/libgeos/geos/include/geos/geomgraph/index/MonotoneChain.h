@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -24,14 +24,15 @@
 #include <geos/export.h>
 #include <geos/geomgraph/index/SweepLineEventObj.h> // for inheritance
 #include <geos/geomgraph/index/MonotoneChainEdge.h> // for inline
+#include <geos/geomgraph/index/MonotoneChain.h>
 
 // Forward declarations
 namespace geos {
-	namespace geomgraph {
-		namespace index {
-			class SegmentIntersector;
-		}
-	}
+namespace geomgraph {
+namespace index {
+class SegmentIntersector;
+}
+}
 }
 
 namespace geos {
@@ -43,24 +44,27 @@ namespace index { // geos::geomgraph::index
  */
 class GEOS_DLL MonotoneChain: public SweepLineEventOBJ {
 private:
-	MonotoneChainEdge *mce;
-	int chainIndex;
+    MonotoneChainEdge* mce;
+    size_t chainIndex;
+
+    MonotoneChain(const MonotoneChain& other) = delete;
+    MonotoneChain& operator=(const MonotoneChain& rhs) = delete;
 
 public:
 
-	MonotoneChain(MonotoneChainEdge *newMce, int newChainIndex):
-		mce(newMce),
-		chainIndex(newChainIndex)
-	{}
+    MonotoneChain(MonotoneChainEdge* newMce, size_t newChainIndex):
+        mce(newMce),
+        chainIndex(newChainIndex)
+    {}
 
-	~MonotoneChain() {}
+    ~MonotoneChain() override {}
 
-	void computeIntersections(MonotoneChain *mc,SegmentIntersector *si) {
-		mce->computeIntersectsForChain(chainIndex,*(mc->mce),mc->chainIndex,*si);
-	}
+    void
+    computeIntersections(MonotoneChain* mc, SegmentIntersector* si)
+    {
+        mce->computeIntersectsForChain(chainIndex, *(mc->mce), mc->chainIndex, *si);
+    }
 };
-
-
 
 
 } // namespace geos.geomgraph.index

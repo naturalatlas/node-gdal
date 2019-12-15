@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -19,10 +19,10 @@
 #ifndef GEOS_OP_OVERLAY_SNAP_SNAPOVERLAYOP_H
 #define GEOS_OP_OVERLAY_SNAP_SNAPOVERLAYOP_H
 
-#include <geos/operation/overlay/OverlayOp.h> // for enums 
-#include <geos/precision/CommonBitsRemover.h> // for dtor visibility by auto_ptr
+#include <geos/operation/overlay/OverlayOp.h> // for enums
+#include <geos/precision/CommonBitsRemover.h> // for dtor visibility by unique_ptr
 
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -31,10 +31,10 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Geometry;
-		struct GeomPtrPair;
-	}
+namespace geom {
+class Geometry;
+struct GeomPtrPair;
+}
 }
 
 namespace geos {
@@ -53,82 +53,81 @@ namespace snap { // geos::operation::overlay::snap
  * if the standard overlay code fails to produce a correct result.
  *
  */
-class GEOS_DLL SnapOverlayOp
-{
+class GEOS_DLL SnapOverlayOp {
 
 public:
 
-	static std::auto_ptr<geom::Geometry>
-	overlayOp(const geom::Geometry& g0, const geom::Geometry& g1,
-	          OverlayOp::OpCode opCode)
-	{
-		SnapOverlayOp op(g0, g1);
-		return op.getResultGeometry(opCode);
-	}
+    static std::unique_ptr<geom::Geometry>
+    overlayOp(const geom::Geometry& g0, const geom::Geometry& g1,
+              OverlayOp::OpCode opCode)
+    {
+        SnapOverlayOp op(g0, g1);
+        return op.getResultGeometry(opCode);
+    }
 
-	static std::auto_ptr<geom::Geometry>
-	intersection(const geom::Geometry& g0, const geom::Geometry& g1)
-	{
-		return overlayOp(g0, g1, OverlayOp::opINTERSECTION);
-	}
+    static std::unique_ptr<geom::Geometry>
+    intersection(const geom::Geometry& g0, const geom::Geometry& g1)
+    {
+        return overlayOp(g0, g1, OverlayOp::opINTERSECTION);
+    }
 
-	static std::auto_ptr<geom::Geometry>
-	Union(const geom::Geometry& g0, const geom::Geometry& g1)
-	{
-		return overlayOp(g0, g1, OverlayOp::opUNION);
-	}
+    static std::unique_ptr<geom::Geometry>
+    Union(const geom::Geometry& g0, const geom::Geometry& g1)
+    {
+        return overlayOp(g0, g1, OverlayOp::opUNION);
+    }
 
-	static std::auto_ptr<geom::Geometry>
-	difference(const geom::Geometry& g0, const geom::Geometry& g1)
-	{
-		return overlayOp(g0, g1, OverlayOp::opDIFFERENCE);
-	}
+    static std::unique_ptr<geom::Geometry>
+    difference(const geom::Geometry& g0, const geom::Geometry& g1)
+    {
+        return overlayOp(g0, g1, OverlayOp::opDIFFERENCE);
+    }
 
-	static std::auto_ptr<geom::Geometry>
-	symDifference(const geom::Geometry& g0, const geom::Geometry& g1)
-	{
-		return overlayOp(g0, g1, OverlayOp::opSYMDIFFERENCE);
-	}
+    static std::unique_ptr<geom::Geometry>
+    symDifference(const geom::Geometry& g0, const geom::Geometry& g1)
+    {
+        return overlayOp(g0, g1, OverlayOp::opSYMDIFFERENCE);
+    }
 
-	SnapOverlayOp(const geom::Geometry& g1, const geom::Geometry& g2)
-		:
-		geom0(g1),
-		geom1(g2)
-	{
-		computeSnapTolerance();
-	}
+    SnapOverlayOp(const geom::Geometry& g1, const geom::Geometry& g2)
+        :
+        geom0(g1),
+        geom1(g2)
+    {
+        computeSnapTolerance();
+    }
 
-	
-	typedef std::auto_ptr<geom::Geometry> GeomPtr;
 
-	GeomPtr getResultGeometry(OverlayOp::OpCode opCode);
+    typedef std::unique_ptr<geom::Geometry> GeomPtr;
+
+    GeomPtr getResultGeometry(OverlayOp::OpCode opCode);
 
 private:
 
-	void computeSnapTolerance();
+    void computeSnapTolerance();
 
-	void snap(geom::GeomPtrPair& ret);
+    void snap(geom::GeomPtrPair& ret);
 
-	void removeCommonBits(const geom::Geometry& geom0,
-	                      const geom::Geometry& geom1,
-	                      geom::GeomPtrPair& ret);
+    void removeCommonBits(const geom::Geometry& geom0,
+                          const geom::Geometry& geom1,
+                          geom::GeomPtrPair& ret);
 
-	// re-adds common bits to the given geom
-	void prepareResult(geom::Geometry& geom);
+    // re-adds common bits to the given geom
+    void prepareResult(geom::Geometry& geom);
 
 
-	const geom::Geometry& geom0;
-	const geom::Geometry& geom1;
+    const geom::Geometry& geom0;
+    const geom::Geometry& geom1;
 
-	double snapTolerance;
+    double snapTolerance;
 
-	std::auto_ptr<precision::CommonBitsRemover> cbr;
+    std::unique_ptr<precision::CommonBitsRemover> cbr;
 
     // Declare type as noncopyable
-    SnapOverlayOp(const SnapOverlayOp& other);
-    SnapOverlayOp& operator=(const SnapOverlayOp& rhs);
+    SnapOverlayOp(const SnapOverlayOp& other) = delete;
+    SnapOverlayOp& operator=(const SnapOverlayOp& rhs) = delete;
 };
- 
+
 } // namespace geos::operation::overlay::snap
 } // namespace geos::operation::overlay
 } // namespace geos::operation

@@ -1,10 +1,8 @@
 /******************************************************************************
- * $Id: ogrgtmdatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  GTM Driver
  * Purpose:  Implementation of OGRGTMDataSource class.
  * Author:   Leonardo de Paula Rosa Piga; http://lampiao.lsc.ic.unicamp.br/~piga
- *
  *
  ******************************************************************************
  * Copyright (c) 2009, Leonardo de Paula Rosa Piga
@@ -27,21 +25,26 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
+
 #include "ogr_gtm.h"
+
+#include <algorithm>
+
+CPL_CVSID("$Id: ogrgtmdatasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                         OGRGTMDataSource()                           */
 /************************************************************************/
 
 OGRGTMDataSource::OGRGTMDataSource() :
-    fpOutput(NULL),
-    fpTmpTrackpoints(NULL),
-    pszTmpTrackpoints(NULL),
-    fpTmpTracks(NULL),
-    pszTmpTracks(NULL),
-    poGTMFile(NULL),
-    pszName(NULL),
-    papoLayers(NULL),
+    fpOutput(nullptr),
+    fpTmpTrackpoints(nullptr),
+    pszTmpTrackpoints(nullptr),
+    fpTmpTracks(nullptr),
+    pszTmpTracks(nullptr),
+    poGTMFile(nullptr),
+    pszName(nullptr),
+    papoLayers(nullptr),
     nLayers(0),
     bIssuedCTError(false),
     minlat(0),
@@ -58,7 +61,7 @@ OGRGTMDataSource::OGRGTMDataSource() :
 /************************************************************************/
 void OGRGTMDataSource::AppendTemporaryFiles()
 {
-    if( fpOutput == NULL )
+    if( fpOutput == nullptr )
         return;
 
     if (numTrackpoints == 0 && numTracks == 0)
@@ -68,7 +71,7 @@ void OGRGTMDataSource::AppendTemporaryFiles()
 
     // Append Trackpoints to the output file
     fpTmpTrackpoints = VSIFOpenL( pszTmpTrackpoints, "r" );
-    if (fpTmpTrackpoints != NULL)
+    if (fpTmpTrackpoints != nullptr)
     {
         while ( !VSIFEofL(fpTmpTrackpoints) )
         {
@@ -76,12 +79,12 @@ void OGRGTMDataSource::AppendTemporaryFiles()
             VSIFWriteL(pBuffer, bytes, 1, fpOutput);
         }
         VSIFCloseL( fpTmpTrackpoints );
-        fpTmpTrackpoints = NULL;
+        fpTmpTrackpoints = nullptr;
     }
 
     // Append Tracks to the output file
     fpTmpTracks = VSIFOpenL( pszTmpTracks, "r" );
-    if (fpTmpTracks != NULL)
+    if (fpTmpTracks != nullptr)
     {
         while ( !VSIFEofL(fpTmpTracks) )
         {
@@ -89,7 +92,7 @@ void OGRGTMDataSource::AppendTemporaryFiles()
             VSIFWriteL(pBuffer, bytes, 1, fpOutput);
         }
         VSIFCloseL( fpTmpTracks );
-        fpTmpTracks = NULL;
+        fpTmpTracks = nullptr;
     }
     CPLFree(pBuffer);
 }
@@ -99,7 +102,7 @@ void OGRGTMDataSource::AppendTemporaryFiles()
 /************************************************************************/
 void OGRGTMDataSource::WriteWaypointStyles()
 {
-    if( fpOutput != NULL )
+    if( fpOutput != nullptr )
     {
         // We have waypoints, thus we need to write the default
         // waypoint style as defined by the specification
@@ -116,7 +119,7 @@ void OGRGTMDataSource::WriteWaypointStyles()
                 appendUShort(pBufferAux, 5);
                 pBufferAux = ((char*)pBufferAux) + 2;
                 // facename
-                strncpy((char*)pBufferAux, "Arial", 5);
+                memcpy((char*)pBufferAux, "Arial", 5);
                 pBufferAux = ((char*)pBufferAux) + 5;
                 // dspl
                 appendUChar(pBufferAux, (unsigned char) i);
@@ -152,23 +155,22 @@ void OGRGTMDataSource::WriteWaypointStyles()
     }
 }
 
-
 /************************************************************************/
 /*                        ~OGRGTMDataSource()                           */
 /************************************************************************/
 
 OGRGTMDataSource::~OGRGTMDataSource()
 {
-    if (fpTmpTrackpoints != NULL)
+    if (fpTmpTrackpoints != nullptr)
         VSIFCloseL( fpTmpTrackpoints );
 
-    if (fpTmpTracks != NULL)
+    if (fpTmpTracks != nullptr)
         VSIFCloseL( fpTmpTracks );
 
     WriteWaypointStyles();
     AppendTemporaryFiles();
 
-    if( fpOutput != NULL )
+    if( fpOutput != nullptr )
     {
         /* Adjust header counters */
         VSIFSeekL(fpOutput, NWPTS_OFFSET, SEEK_SET);
@@ -193,23 +195,21 @@ OGRGTMDataSource::~OGRGTMDataSource()
 
     CPLFree( pszName );
 
-    if (pszTmpTracks != NULL)
+    if (pszTmpTracks != nullptr)
     {
         VSIUnlink( pszTmpTracks );
         CPLFree( pszTmpTracks );
     }
 
-    if (pszTmpTrackpoints != NULL)
+    if (pszTmpTrackpoints != nullptr)
     {
         VSIUnlink( pszTmpTrackpoints );
         CPLFree( pszTmpTrackpoints );
     }
 
-    if (poGTMFile != NULL)
+    if (poGTMFile != nullptr)
         delete poGTMFile;
 }
-
-
 
 /************************************************************************/
 /*                                Open()                                */
@@ -217,7 +217,7 @@ OGRGTMDataSource::~OGRGTMDataSource()
 
 int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
 {
-    CPLAssert( pszFilename != NULL );
+    CPLAssert( pszFilename != nullptr );
 
     /* Should not happen as the driver already returned if bUpdate == NULL */
     if (bUpdate)
@@ -235,7 +235,7 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
     if ( !poGTMFile->Open( pszFilename ) )
     {
         delete poGTMFile;
-        poGTMFile = NULL;
+        poGTMFile = nullptr;
         return FALSE;
     }
 
@@ -245,7 +245,7 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
     if( !poGTMFile->isValid() )
     {
         delete poGTMFile;
-        poGTMFile = NULL;
+        poGTMFile = nullptr;
         return FALSE;
     }
 
@@ -267,9 +267,9 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
     papoLayers = (OGRGTMLayer **) CPLMalloc(sizeof(void*) * 2);
 
     /* Create a spatial reference for WGS8*/
-    OGRSpatialReference* poSRS = new OGRSpatialReference(NULL);
+    OGRSpatialReference* poSRS = new OGRSpatialReference(nullptr);
+    poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
     poSRS->SetWellKnownGeogCS( "WGS84" );
-
 
     /* Waypoint layer */
     size_t layerNameSize = strlen(pszBaseFileName) + sizeof("_waypoints");
@@ -305,9 +305,7 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
 
     poSRS->Release();
     return TRUE;
-
 }
-
 
 /************************************************************************/
 /*                               Create()                               */
@@ -316,14 +314,13 @@ int OGRGTMDataSource::Open(const char* pszFilename, int bUpdate)
 int OGRGTMDataSource::Create( const char* pszFilename,
                               CPL_UNUSED char** papszOptions )
 {
-    CPLAssert( NULL != pszFilename );
+    CPLAssert( nullptr != pszFilename );
 
-    if( fpOutput != NULL )
+    if( fpOutput != nullptr )
     {
-        CPLAssert( FALSE );
+        CPLAssert( false );
         return FALSE;
     }
-
 
 /* -------------------------------------------------------------------- */
 /*     Do not override exiting file.                                    */
@@ -338,14 +335,13 @@ int OGRGTMDataSource::Create( const char* pszFilename,
         return FALSE;
     }
 
-
 /* -------------------------------------------------------------------- */
 /*      Create the output file.                                         */
 /* -------------------------------------------------------------------- */
     pszName = CPLStrdup( pszFilename );
 
     fpOutput = VSIFOpenL( pszFilename, "w" );
-    if( fpOutput == NULL )
+    if( fpOutput == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to create GTM file %s.",
@@ -354,10 +350,10 @@ int OGRGTMDataSource::Create( const char* pszFilename,
     }
 
     // Generate a temporary file for Trackpoints
-    const char* pszTmpName = CPLGenerateTempFilename(NULL);
+    const char* pszTmpName = CPLGenerateTempFilename(nullptr);
     pszTmpTrackpoints = CPLStrdup( pszTmpName );
     fpTmpTrackpoints = VSIFOpenL(pszTmpName , "w" );
-    if( fpTmpTrackpoints == NULL )
+    if( fpTmpTrackpoints == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to create temporary file %s.",
@@ -365,10 +361,10 @@ int OGRGTMDataSource::Create( const char* pszFilename,
         return FALSE;
     }
     // Generate a temporary file for Tracks
-    pszTmpName = CPLGenerateTempFilename(NULL);
+    pszTmpName = CPLGenerateTempFilename(nullptr);
     pszTmpTracks = CPLStrdup( pszTmpName );
     fpTmpTracks = VSIFOpenL(pszTmpName , "w" );
-    if( fpTmpTracks == NULL )
+    if( fpTmpTracks == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to create temporary file %s.",
@@ -423,7 +419,6 @@ int OGRGTMDataSource::Create( const char* pszFilename,
     return TRUE;
 }
 
-
 /************************************************************************/
 /*                            GetLayer()                                */
 /************************************************************************/
@@ -431,11 +426,10 @@ int OGRGTMDataSource::Create( const char* pszFilename,
 OGRLayer* OGRGTMDataSource::GetLayer( int iLayer )
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
-
 
 /************************************************************************/
 /*                           ICreateLayer()                             */
@@ -444,7 +438,7 @@ OGRLayer* OGRGTMDataSource::GetLayer( int iLayer )
 OGRLayer * OGRGTMDataSource::ICreateLayer( const char * pszLayerName,
                                            OGRSpatialReference *poSRS,
                                            OGRwkbGeometryType eType,
-                                           CPL_UNUSED char ** papszOptions )
+                                           char ** /* papszOptions */ )
 {
     if (eType == wkbPoint || eType == wkbPoint25D)
     {
@@ -453,7 +447,6 @@ OGRLayer * OGRGTMDataSource::ICreateLayer( const char * pszLayerName,
         papoLayers = (OGRGTMLayer **) CPLRealloc(papoLayers, nLayers * sizeof(OGRGTMLayer*));
         papoLayers[nLayers-1] = new GTMWaypointLayer( pszName, poSRS, TRUE, this );
         return papoLayers[nLayers-1];
-
     }
     else if (eType == wkbLineString || eType == wkbLineString25D ||
              eType == wkbMultiLineString || eType == wkbMultiLineString25D)
@@ -468,18 +461,16 @@ OGRLayer * OGRGTMDataSource::ICreateLayer( const char * pszLayerName,
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "Cannot create GTM layer %s with unknown geometry type", pszLayerName);
-        return NULL;
+        return nullptr;
     }
     else
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Geometry type of `%s' not supported in GTM.\n",
                   OGRGeometryTypeToName(eType) );
-        return NULL;
+        return nullptr;
     }
-
 }
-
 
 /************************************************************************/
 /*                           TestCapability()                           */
@@ -510,24 +501,20 @@ void OGRGTMDataSource::checkBounds(float newLat,
     }
     else
     {
-        minlat = MIN(newLat, minlat);
-        maxlat = MAX(newLat, maxlat);
-        minlon = MIN(newLon, minlon);
-        maxlon = MAX(newLon, maxlon);
+        minlat = std::min(newLat, minlat);
+        maxlat = std::max(newLat, maxlat);
+        minlon = std::min(newLon, minlon);
+        maxlon = std::max(newLon, maxlon);
     }
 }
-
-
 
 /************************************************************************/
 /*               Methods for reading existent file                      */
 /************************************************************************/
 
-
 /*======================================================================*/
 /*                           Waypoint Methods                           */
 /*======================================================================*/
-
 
 /*----------------------------------------------------------------------*/
 /*                              getNWpts()                              */
@@ -535,54 +522,48 @@ void OGRGTMDataSource::checkBounds(float newLat,
 
 int OGRGTMDataSource::getNWpts()
 {
-    if (poGTMFile == NULL)
+    if (poGTMFile == nullptr)
         return 0;
 
     return poGTMFile->getNWpts();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                         hasNextWaypoint()                            */
 /*----------------------------------------------------------------------*/
 bool OGRGTMDataSource::hasNextWaypoint()
 {
-    if (poGTMFile == NULL)
-        return FALSE;
+    if (poGTMFile == nullptr)
+        return false;
 
     return poGTMFile->hasNextWaypoint();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                       fetchNextWaypoint()                            */
 /*----------------------------------------------------------------------*/
 Waypoint* OGRGTMDataSource::fetchNextWaypoint()
 {
-    if (poGTMFile == NULL)
-        return NULL;
+    if (poGTMFile == nullptr)
+        return nullptr;
 
     return poGTMFile->fetchNextWaypoint();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                         rewindWaypoint()                            */
 /*----------------------------------------------------------------------*/
 void OGRGTMDataSource::rewindWaypoint()
 {
-    if (poGTMFile == NULL)
+    if (poGTMFile == nullptr)
         return;
 
     poGTMFile->rewindWaypoint();
 }
 
-
-
 /*======================================================================*/
 /*                             Tracks Methods                           */
 /*======================================================================*/
-
 
 /*----------------------------------------------------------------------*/
 /*                              getNTracks()                            */
@@ -590,43 +571,40 @@ void OGRGTMDataSource::rewindWaypoint()
 
 int OGRGTMDataSource::getNTracks()
 {
-    if (poGTMFile == NULL)
+    if (poGTMFile == nullptr)
         return 0;
 
     return poGTMFile->getNTracks();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                             hasNextTrack()                           */
 /*----------------------------------------------------------------------*/
 bool OGRGTMDataSource::hasNextTrack()
 {
-    if (poGTMFile == NULL)
-        return FALSE;
+    if (poGTMFile == nullptr)
+        return false;
 
     return poGTMFile->hasNextTrack();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                            fetchNextTrack()                          */
 /*----------------------------------------------------------------------*/
 Track* OGRGTMDataSource::fetchNextTrack()
 {
-    if (poGTMFile == NULL)
-        return NULL;
+    if (poGTMFile == nullptr)
+        return nullptr;
 
     return poGTMFile->fetchNextTrack();
 }
-
 
 /*----------------------------------------------------------------------*/
 /*                           rewindTrack()                              */
 /*----------------------------------------------------------------------*/
 void OGRGTMDataSource::rewindTrack()
 {
-    if (poGTMFile == NULL)
+    if (poGTMFile == nullptr)
         return;
 
     poGTMFile->rewindTrack();

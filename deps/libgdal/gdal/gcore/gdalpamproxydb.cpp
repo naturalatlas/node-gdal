@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalpamproxydb.cpp 33766 2016-03-21 19:51:16Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Implementation of the GDAL PAM Proxy database interface.
@@ -30,12 +29,31 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
+#include "gdal_pam.h"
+
+#include <cerrno>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#if HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
 #include "cpl_multiproc.h"
 #include "cpl_string.h"
+#include "cpl_vsi.h"
 #include "gdal_pam.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: gdalpamproxydb.cpp 33766 2016-03-21 19:51:16Z goatbar $");
+CPL_CVSID("$Id: gdalpamproxydb.cpp e37e476c4cf8f4b0df8995e0d95d5d672fca1a9b 2018-05-05 16:54:18 +0200 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -46,14 +64,12 @@ CPL_CVSID("$Id: gdalpamproxydb.cpp 33766 2016-03-21 19:51:16Z goatbar $");
 class GDALPamProxyDB
 {
   public:
-    GDALPamProxyDB() { nUpdateCounter = -1; }
+    CPLString   osProxyDBDir{};
 
-    CPLString   osProxyDBDir;
+    int         nUpdateCounter = -1;
 
-    int         nUpdateCounter;
-
-    std::vector<CPLString> aosOriginalFiles;
-    std::vector<CPLString> aosProxyFiles;
+    std::vector<CPLString> aosOriginalFiles{};
+    std::vector<CPLString> aosProxyFiles{};
 
     void        CheckLoadDB();
     void        LoadDB();
@@ -61,8 +77,8 @@ class GDALPamProxyDB
 };
 
 static bool bProxyDBInitialized = FALSE;
-static GDALPamProxyDB *poProxyDB = NULL;
-static CPLMutex *hProxyDBLock = NULL;
+static GDALPamProxyDB *poProxyDB = nullptr;
+static CPLMutex *hProxyDBLock = nullptr;
 
 /************************************************************************/
 /*                            CheckLoadDB()                             */
@@ -96,7 +112,7 @@ void GDALPamProxyDB::LoadDB()
     VSILFILE *fpDB = VSIFOpenL( osDBName, "r" );
 
     nUpdateCounter = 0;
-    if( fpDB == NULL )
+    if( fpDB == nullptr )
         return;
 
 /* -------------------------------------------------------------------- */
@@ -190,7 +206,7 @@ void GDALPamProxyDB::SaveDB()
     void *hLock = CPLLockFile( osDBName, 1.0 );
 
     // proceed even if lock fails - we need CPLBreakLockFile()!
-    if( hLock == NULL )
+    if( hLock == nullptr )
     {
         CPLError( CE_Warning, CPLE_AppDefined,
                   "GDALPamProxyDB::SaveDB() - "
@@ -199,7 +215,7 @@ void GDALPamProxyDB::SaveDB()
     }
 
     VSILFILE *fpDB = VSIFOpenL( osDBName, "w" );
-    if( fpDB == NULL )
+    if( fpDB == nullptr )
     {
         if( hLock )
             CPLUnlockFile( hLock );
@@ -269,7 +285,6 @@ void GDALPamProxyDB::SaveDB()
         CPLUnlockFile( hLock );
 }
 
-
 /************************************************************************/
 /*                            InitProxyDB()                             */
 /*                                                                      */
@@ -282,11 +297,11 @@ static void InitProxyDB()
     if( !bProxyDBInitialized )
     {
         CPLMutexHolderD( &hProxyDBLock );
-
+        // cppcheck-suppress identicalInnerCondition
         if( !bProxyDBInitialized )
         {
             const char *pszProxyDir =
-                CPLGetConfigOption( "GDAL_PAM_PROXY_DIR", NULL );
+                CPLGetConfigOption( "GDAL_PAM_PROXY_DIR", nullptr );
 
             if( pszProxyDir )
             {
@@ -312,11 +327,11 @@ void PamCleanProxyDB()
         bProxyDBInitialized = false;
 
         delete poProxyDB;
-        poProxyDB = NULL;
+        poProxyDB = nullptr;
     }
 
     CPLDestroyMutex( hProxyDBLock );
-    hProxyDBLock = NULL;
+    hProxyDBLock = nullptr;
 }
 
 /************************************************************************/
@@ -328,8 +343,8 @@ const char *PamGetProxy( const char *pszOriginal )
 {
     InitProxyDB();
 
-    if( poProxyDB == NULL )
-        return NULL;
+    if( poProxyDB == nullptr )
+        return nullptr;
 
     CPLMutexHolderD( &hProxyDBLock );
 
@@ -341,7 +356,7 @@ const char *PamGetProxy( const char *pszOriginal )
             return poProxyDB->aosProxyFiles[i];
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -353,8 +368,8 @@ const char *PamAllocateProxy( const char *pszOriginal )
 {
     InitProxyDB();
 
-    if( poProxyDB == NULL )
-        return NULL;
+    if( poProxyDB == nullptr )
+        return nullptr;
 
     CPLMutexHolderD( &hProxyDBLock );
 

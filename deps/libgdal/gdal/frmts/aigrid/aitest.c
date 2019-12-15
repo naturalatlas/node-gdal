@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: aitest.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: aitest.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  Arc/Info Binary Grid Translator
  * Purpose:  Test mainline for examining AIGrid files.
@@ -29,7 +29,7 @@
 
 #include "aigrid.h"
 
-CPL_CVSID("$Id: aitest.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: aitest.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 /************************************************************************/
 /*                             DumpMagic()                              */
@@ -96,7 +96,7 @@ static void DumpMagic( AIGInfo_t * psInfo, int bVerbose )
 
         if( bReport )
         {
-            printf( " %02x %5d %5d @ %d %s\n", byMagic, i,
+            printf( " %02x %5d %5d @ %u %s\n", byMagic, i,
                     psTInfo->panBlockSize[i],
                     psTInfo->panBlockOffset[i],
                     pszMessage );
@@ -188,7 +188,7 @@ int main( int argc, char ** argv )
         DumpMagic( psInfo, bMagic );
 
 /* -------------------------------------------------------------------- */
-/*      Read a block, and report it's contents.                         */
+/*      Read a block, and report its contents.                          */
 /* -------------------------------------------------------------------- */
     panRaster = (GInt32 *)
         CPLMalloc(psInfo->nBlockXSize * psInfo->nBlockYSize * 4);

@@ -28,9 +28,9 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-static const int NULL1 = 0;
-static const int NULL2 = -32768;
-static const double NULL3 = -32768.0;
+constexpr int NULL1 = 0;
+constexpr int NULL2 = -32768;
+constexpr double NULL3 = -32768.0;
 
 #include "cpl_string.h"
 #include "gdal_frmts.h"
@@ -40,19 +40,19 @@ static const double NULL3 = -32768.0;
 
 #include <string>
 
-CPL_CVSID("$Id: vicardataset.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: vicardataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
-/*			       VICARDataset		                */
+/*                             VICARDataset                             */
 /* ==================================================================== */
 /************************************************************************/
 
 class VICARDataset : public RawDataset
 {
-    VSILFILE	*fpImage;
+    VSILFILE    *fpImage;
 
-    GByte	abyHeader[10000];
+    GByte       abyHeader[10000];
     CPLString   osExternalCube;
 
     VICARKeywordHandler  oKeywords;
@@ -67,19 +67,21 @@ class VICARDataset : public RawDataset
 
 public:
     VICARDataset();
-    ~VICARDataset();
+    virtual ~VICARDataset();
 
-    virtual CPLErr GetGeoTransform( double * padfTransform );
-    virtual const char *GetProjectionRef(void);
+    virtual CPLErr GetGeoTransform( double * padfTransform ) override;
+    virtual const char *_GetProjectionRef(void) override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 
-    virtual char **GetFileList();
+    virtual char **GetFileList() override;
 
     static int          Identify( GDALOpenInfo * );
     static GDALDataset *Open( GDALOpenInfo * );
     static GDALDataset *Create( const char * pszFilename,
                                 int nXSize, int nYSize, int nBands,
                                 GDALDataType eType, char ** papszParmList );
-
 };
 
 /************************************************************************/
@@ -87,7 +89,7 @@ public:
 /************************************************************************/
 
 VICARDataset::VICARDataset() :
-    fpImage(NULL),
+    fpImage(nullptr),
     bGotTransform(FALSE)
 {
     adfGeoTransform[0] = 0.0;
@@ -96,6 +98,7 @@ VICARDataset::VICARDataset() :
     adfGeoTransform[3] = 0.0;
     adfGeoTransform[4] = 0.0;
     adfGeoTransform[5] = 1.0;
+    memset( abyHeader, 0, sizeof(abyHeader) );
 }
 
 /************************************************************************/
@@ -106,7 +109,7 @@ VICARDataset::~VICARDataset()
 
 {
     FlushCache();
-    if( fpImage != NULL )
+    if( fpImage != nullptr )
         VSIFCloseL( fpImage );
 }
 
@@ -119,7 +122,7 @@ char **VICARDataset::GetFileList()
 {
     char **papszFileList = GDALPamDataset::GetFileList();
 
-    if( strlen(osExternalCube) > 0 )
+    if( !osExternalCube.empty() )
         papszFileList = CSLAddString( papszFileList, osExternalCube );
 
     return papszFileList;
@@ -129,13 +132,13 @@ char **VICARDataset::GetFileList()
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *VICARDataset::GetProjectionRef()
+const char *VICARDataset::_GetProjectionRef()
 
 {
-    if( strlen(osProjection) > 0 )
+    if( !osProjection.empty() )
         return osProjection;
 
-    return GDALPamDataset::GetProjectionRef();
+    return GDALPamDataset::_GetProjectionRef();
 }
 
 /************************************************************************/
@@ -161,15 +164,16 @@ CPLErr VICARDataset::GetGeoTransform( double * padfTransform )
 int VICARDataset::Identify( GDALOpenInfo * poOpenInfo )
 
 {
-    if( poOpenInfo->pabyHeader == NULL )
+    if( poOpenInfo->pabyHeader == nullptr )
         return FALSE;
 
+    char *pszHeader = reinterpret_cast<char *>(poOpenInfo->pabyHeader);
     return
-        strstr(reinterpret_cast<char *>( poOpenInfo->pabyHeader ), "LBLSIZE" ) != NULL &&
-        strstr(reinterpret_cast<char *>( poOpenInfo->pabyHeader ), "FORMAT" ) != NULL &&
-        strstr(reinterpret_cast<char *>( poOpenInfo->pabyHeader ), "NL" ) != NULL &&
-        strstr(reinterpret_cast<char *>( poOpenInfo->pabyHeader ), "NS" ) != NULL &&
-        strstr(reinterpret_cast<char *>( poOpenInfo->pabyHeader ), "NB" ) != NULL;
+        strstr(pszHeader, "LBLSIZE") != nullptr &&
+        strstr(pszHeader, "FORMAT") != nullptr &&
+        strstr(pszHeader, "NL") != nullptr &&
+        strstr(pszHeader, "NS") != nullptr &&
+        strstr(pszHeader, "NB") != nullptr;
 }
 
 /************************************************************************/
@@ -179,24 +183,19 @@ int VICARDataset::Identify( GDALOpenInfo * poOpenInfo )
 GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
 {
 /* -------------------------------------------------------------------- */
-/*      Does this look like a VICAR dataset?                             */
+/*      Does this look like a VICAR dataset?                            */
 /* -------------------------------------------------------------------- */
-    if( !Identify( poOpenInfo ) )
-        return NULL;
+    if( !Identify( poOpenInfo ) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
-/* -------------------------------------------------------------------- */
-/*      Open the file using the large file API.                         */
-/* -------------------------------------------------------------------- */
-    VSILFILE *fpQube = VSIFOpenL( poOpenInfo->pszFilename, "rb" );
-
-    if( fpQube == NULL )
-        return NULL;
+    VSILFILE *fpQube = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
     VICARDataset *poDS = new VICARDataset();
     if( ! poDS->oKeywords.Ingest( fpQube, poOpenInfo->pabyHeader ) ) {
         VSIFCloseL( fpQube );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     VSIFCloseL( fpQube );
@@ -208,14 +207,14 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "%s layout not supported. Abort\n\n", value);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     value = poDS->GetKeyword( "REALFMT" );
     if (!EQUAL(value,"RIEEE") ) {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "%s layout not supported. Abort\n\n", value);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     char chByteOrder = 'M';
@@ -224,8 +223,7 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         chByteOrder = 'I';
     }
 
-    /************ CHECK INSTRUMENT *****************/
-    /************ ONLY HRSC TESTED *****************/
+    /************ CHECK INSTRUMENT/DATA *****************/
 
     bool bIsDTM = false;
     value = poDS->GetKeyword( "DTM.DTM_OFFSET" );
@@ -233,11 +231,13 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         bIsDTM = true;
     }
 
-    value = poDS->GetKeyword( "BLTYPE" );
-    if (!EQUAL(value,"M94_HRSC") && !bIsDTM ) {
-        CPLError( CE_Failure, CPLE_OpenFailed,
-                  "%s instrument not tested. Continue with caution!\n\n", value);
-    }
+    bool bInstKnown = false;
+    // Check for HRSC
+    if ( EQUAL(poDS->GetKeyword("BLTYPE"),"M94_HRSC") )
+        bInstKnown = true;
+    // Check for Framing Camera on Dawn
+    else if ( EQUAL(poDS->GetKeyword("INSTRUMENT_ID"),"FC2") )
+        bInstKnown = true;
 
     /***********   Grab layout type (BSQ, BIP, BIL) ************/
 
@@ -248,7 +248,7 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "%s layout not supported. Abort\n\n", value);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     strcpy(szLayout,"BSQ");
@@ -281,17 +281,18 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Could not find known VICAR label entries!\n");
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
-    if( nRows < 1 || nCols < 1 || nBands < 1 )
+    if( !GDALCheckDatasetDimensions(nCols, nRows) ||
+        !GDALCheckBandCount(nBands, false) )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "File %s appears to be a VICAR file, but failed to find some "
                   "required keywords.",
                   poDS->GetDescription() );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 /* -------------------------------------------------------------------- */
 /*      Capture some information from the file that is of interest.     */
@@ -424,7 +425,11 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
     } else if (EQUAL( map_proj_name, "MERCATOR" )) {
         oSRS.SetMercator ( center_lat, center_lon, 1, 0, 0 );
     } else if (EQUAL( map_proj_name, "STEREOGRAPHIC" )) {
-        oSRS.SetStereographic ( center_lat, center_lon, 1, 0, 0 );
+        if ((fabs(center_lat)-90) < 0.0000001) {
+            oSRS.SetPS ( center_lat, center_lon, 1, 0, 0 );
+        } else {
+            oSRS.SetStereographic ( center_lat, center_lon, 1, 0, 0 );
+        }
     } else if (EQUAL( map_proj_name, "POLAR_STEREOGRAPHIC")) {
         oSRS.SetPS ( center_lat, center_lon, 1, 0, 0 );
     } else if (EQUAL( map_proj_name, "TRANSVERSE_MERCATOR" )) {
@@ -531,7 +536,7 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         }
 
         // translate back into a projection string.
-        char *pszResult = NULL;
+        char *pszResult = nullptr;
         oSRS.exportToWkt( &pszResult );
         poDS->osProjection = pszResult;
         CPLFree( pszResult );
@@ -565,14 +570,14 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
     else
         poDS->fpImage = VSIFOpenL( osQubeFile, "r+" );
 
-    if( poDS->fpImage == NULL )
+    if( poDS->fpImage == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to open %s with write permission.\n%s",
                   osQubeFile.c_str(),
                   VSIStrerror( errno ) );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     poDS->eAccess = poOpenInfo->eAccess;
@@ -581,10 +586,17 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Compute the line offsets.                                        */
 /* -------------------------------------------------------------------- */
 
-    const long int nItemSize = GDALGetDataTypeSize(eDataType)/8;
-    const long int nPixelOffset = nItemSize;
-    const long int nLineOffset = nPixelOffset * nCols + atoi(poDS->GetKeyword("NBB")) ;
-    const long int nBandOffset = nLineOffset * nRows;
+    const int nItemSize = GDALGetDataTypeSizeBytes(eDataType);
+    const int nPixelOffset = nItemSize;
+    const int nNBB = atoi(poDS->GetKeyword("NBB"));
+    if( nPixelOffset > INT_MAX / nCols || nNBB < 0 ||
+        nPixelOffset * nCols > INT_MAX - nNBB )
+    {
+        delete poDS;
+        return nullptr;
+    }
+    const int nLineOffset = nPixelOffset * nCols + nNBB;
+    const vsi_l_offset nBandOffset = static_cast<vsi_l_offset>(nLineOffset) * nRows;
 
     int nSkipBytes = atoi(poDS->GetKeyword("LBLSIZE"));
 
@@ -593,29 +605,31 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     for( int i = 0; i < nBands; i++ )
     {
-        GDALRasterBand	*poBand
+        GDALRasterBand *poBand
             = new RawRasterBand( poDS, i+1, poDS->fpImage, nSkipBytes + nBandOffset * i,
-                                 static_cast<int>(nPixelOffset), static_cast<int>(nLineOffset), eDataType,
+                                 nPixelOffset, nLineOffset, eDataType,
 #ifdef CPL_LSB
                                    chByteOrder == 'I' || chByteOrder == 'L',
 #else
                                    chByteOrder == 'M',
 #endif
-                                   TRUE );
+                                   RawRasterBand::OwnFP::NO );
 
         poDS->SetBand( i+1, poBand );
-        poBand->SetNoDataValue( dfNoData );
+        //only set NoData if instrument is supported
+        if (bInstKnown)
+            poBand->SetNoDataValue( dfNoData );
         if (bIsDTM) {
             poBand->SetScale( static_cast<double>(
                 CPLAtof(poDS->GetKeyword( "DTM.DTM_SCALING_FACTOR") ) ) );
             poBand->SetOffset( static_cast<double>(
                 CPLAtof(poDS->GetKeyword( "DTM.DTM_OFFSET") ) ) );
-            const char* pszMin = poDS->GetKeyword( "DTM.DTM_MINIMUM_DN", NULL );
-            const char* pszMax = poDS->GetKeyword( "DTM.DTM_MAXIMUM_DN", NULL );
-            if (pszMin != NULL && pszMax != NULL )
+            const char* pszMin = poDS->GetKeyword( "DTM.DTM_MINIMUM_DN", nullptr );
+            const char* pszMax = poDS->GetKeyword( "DTM.DTM_MAXIMUM_DN", nullptr );
+            if (pszMin != nullptr && pszMax != nullptr )
                 poBand->SetStatistics(CPLAtofM(pszMin),CPLAtofM(pszMax),0,0);
-            const char* pszNoData = poDS->GetKeyword( "DTM.DTM_MISSING_DN", NULL );
-            if (pszNoData != NULL )
+            const char* pszNoData = poDS->GetKeyword( "DTM.DTM_MISSING_DN", nullptr );
+            if (pszNoData != nullptr )
                 poBand->SetNoDataValue( CPLAtofM(pszNoData) );
         } else if (EQUAL( poDS->GetKeyword( "BLTYPE"), "M94_HRSC" )) {
             double scale=CPLAtof(poDS->GetKeyword("DLRTO8.REFLECTANCE_SCALING_FACTOR","-1."));
@@ -629,14 +643,13 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
             }
             poBand->SetOffset( offset );
         }
-        const char* pszMin = poDS->GetKeyword( "STATISTICS.MINIMUM", NULL );
-        const char* pszMax = poDS->GetKeyword( "STATISTICS.MAXIMUM", NULL );
-        const char* pszMean = poDS->GetKeyword( "STATISTICS.MEAN", NULL );
-        const char* pszStdDev = poDS->GetKeyword( "STATISTICS.STANDARD_DEVIATION", NULL );
-        if (pszMin != NULL && pszMax != NULL && pszMean != NULL && pszStdDev != NULL )
+        const char* pszMin = poDS->GetKeyword( "STATISTICS.MINIMUM", nullptr );
+        const char* pszMax = poDS->GetKeyword( "STATISTICS.MAXIMUM", nullptr );
+        const char* pszMean = poDS->GetKeyword( "STATISTICS.MEAN", nullptr );
+        const char* pszStdDev = poDS->GetKeyword( "STATISTICS.STANDARD_DEVIATION", nullptr );
+        if (pszMin != nullptr && pszMax != nullptr && pszMean != nullptr && pszStdDev != nullptr )
                 poBand->SetStatistics(CPLAtofM(pszMin),CPLAtofM(pszMax),CPLAtofM(pszMean),CPLAtofM(pszStdDev));
     }
-
 
 /* -------------------------------------------------------------------- */
 /*      Instrument-specific keywords as metadata.                       */
@@ -655,11 +668,11 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
                         "FILE.PROCESSING_LEVEL_ID",
                         "M94_INSTRUMENT.DETECTOR_ID",
                         "M94_CAMERAS.EXPOSURE_DURATION",
-                        "HRCONVER.INSTRUMENT_TEMPERATURE", NULL
+                        "HRCONVER.INSTRUMENT_TEMPERATURE", nullptr
                     };
-            for( int i = 0; apszKeywords[i] != NULL; i++ ) {
+            for( int i = 0; apszKeywords[i] != nullptr; i++ ) {
                 const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i] );
-                if( pszKeywordValue != NULL )
+                if( pszKeywordValue != nullptr )
                     poDS->SetMetadataItem( apszKeywords[i], pszKeywordValue );
             }
         } else {
@@ -677,11 +690,11 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
                 "HRCAL.RADIANCE_SCALING_FACTOR", "HRCAL.RADIANCE_OFFSET",
                 "HRCAL.REFLECTANCE_SCALING_FACTOR", "HRCAL.REFLECTANCE_OFFSET",
                 "HRORTHO.DTM_NAME", "HRORTHO.EXTORI_FILE_NAME", "HRORTHO.GEOMETRIC_CALIB_FILE_NAME",
-                NULL
+                nullptr
             };
-            for( int i = 0; apszKeywords[i] != NULL; i++ ) {
-                const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i], NULL );
-                if( pszKeywordValue != NULL )
+            for( int i = 0; apszKeywords[i] != nullptr; i++ ) {
+                const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i], nullptr );
+                if( pszKeywordValue != nullptr )
                     poDS->SetMetadataItem( apszKeywords[i], pszKeywordValue );
             }
         }
@@ -692,14 +705,13 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         static const char * const apszKeywords[] = {
             "DTM.DTM_MISSING_DN", "DTM.DTM_OFFSET", "DTM.DTM_SCALING_FACTOR", "DTM.DTM_A_AXIS_RADIUS",
             "DTM.DTM_B_AXIS_RADIUS", "DTM.DTM_C_AXIS_RADIUS", "DTM.DTM_DESC", "DTM.DTM_MINIMUM_DN",
-            "DTM.DTM_MAXIMUM_DN", NULL };
-        for( int i = 0; apszKeywords[i] != NULL; i++ ) {
+            "DTM.DTM_MAXIMUM_DN", nullptr };
+        for( int i = 0; apszKeywords[i] != nullptr; i++ ) {
             const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i] );
-            if( pszKeywordValue != NULL )
+            if( pszKeywordValue != nullptr )
                 poDS->SetMetadataItem( apszKeywords[i], pszKeywordValue );
         }
     }
-
 
 /******************   DAWN   ******************************/
     else if (EQUAL( poDS->GetKeyword( "INSTRUMENT_ID"), "FC2" )) {
@@ -719,15 +731,15 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
         "SPACECRAFT_CENTRIC_LATITUDE",
         "SPACECRAFT_EASTERN_LONGITUDE",
         "FOOTPRINT_POSITIVE_LONGITUDE",
-            NULL };
-        for( int i = 0; apszKeywords[i] != NULL; i++ ) {
+            nullptr };
+        for( int i = 0; apszKeywords[i] != nullptr; i++ ) {
             const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i] );
-            if( pszKeywordValue != NULL )
+            if( pszKeywordValue != nullptr )
                 poDS->SetMetadataItem( apszKeywords[i], pszKeywordValue );
         }
-
     }
-    else if (bIsDTM && EQUAL( poDS->GetKeyword( "TARGET_NAME"), "VESTA" )) {
+    else if (bIsDTM && ( EQUAL( poDS->GetKeyword( "TARGET_NAME"), "VESTA" ) || EQUAL( poDS->GetKeyword( "TARGET_NAME"), "CERES" )))
+    {
         poDS->SetMetadataItem( "SPACECRAFT_NAME", "DAWN" );
         poDS->SetMetadataItem( "PRODUCT_TYPE", "DTM");
         static const char * const apszKeywords[] = {
@@ -736,14 +748,14 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
             "DTM_MAXIMUM_DN", "MAP_PROJECTION_TYPE", "COORDINATE_SYSTEM_NAME",
             "POSITIVE_LONGITUDE_DIRECTION", "MAP_SCALE",
             "CENTER_LONGITUDE", "LINE_PROJECTION_OFFSET", "SAMPLE_PROJECTION_OFFSET",
-            NULL };
-        for( int i = 0; apszKeywords[i] != NULL; i++ ) {
+            nullptr };
+        for( int i = 0; apszKeywords[i] != nullptr; i++ )
+        {
             const char *pszKeywordValue = poDS->GetKeyword( apszKeywords[i] );
-            if( pszKeywordValue != NULL )
+            if( pszKeywordValue != nullptr )
                 poDS->SetMetadataItem( apszKeywords[i], pszKeywordValue );
         }
     }
-
 
 /* -------------------------------------------------------------------- */
 /*      END Instrument-specific keywords as metadata.                   */
@@ -764,7 +776,7 @@ GDALDataset *VICARDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -785,7 +797,7 @@ const char *VICARDataset::GetKeyword( const char *pszPath,
 void GDALRegister_VICAR()
 
 {
-    if( GDALGetDriverByName( "VICAR" ) != NULL )
+    if( GDALGetDriverByName( "VICAR" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

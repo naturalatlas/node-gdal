@@ -38,7 +38,7 @@ void Feature::Initialize(Local<Object> target)
 	ATTR(lcons, "defn", defnGetter, READ_ONLY_SETTER);
 	ATTR(lcons, "fid", fidGetter, fidSetter);
 
-	target->Set(Nan::New("Feature").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Feature").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -166,7 +166,7 @@ Local<Value> Feature::New(OGRFeature *feature, bool owned)
 	Feature *wrapped = new Feature(feature);
 	wrapped->owned_ = owned;
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Feature::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Feature::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	return scope.Escape(obj);
 }
 
@@ -353,7 +353,7 @@ NAN_METHOD(Feature::setFrom)
 		int *index_map_ptr = new int[index_map->Length()];
 
 		for (unsigned index = 0; index < index_map->Length(); index++) {
-			Local<Value> field_index(index_map->Get(Nan::New<Integer>(index)));
+			Local<Value> field_index(Nan::Get(index_map, Nan::New<Integer>(index)).ToLocalChecked());
 
 			if (!field_index->IsUint32()) {
 				delete [] index_map_ptr;
@@ -361,7 +361,7 @@ NAN_METHOD(Feature::setFrom)
 				return;
 			}
 
-			int val = (int)field_index->Uint32Value(); //todo: validate index? perhaps ogr already does this and throws an error
+			int val = (int)Nan::To<uint32_t>(field_index).ToChecked(); //todo: validate index? perhaps ogr already does this and throws an error
 
 			index_map_ptr[index] = val;
 		}
@@ -432,7 +432,7 @@ NAN_SETTER(Feature::fidSetter)
 		Nan::ThrowError("fid must be an integer");
 		return;
 	}
-	feature->this_->SetFID(value->IntegerValue());
+	feature->this_->SetFID(Nan::To<int64_t>(value).ToChecked());
 }
 
 } // namespace node_gdal

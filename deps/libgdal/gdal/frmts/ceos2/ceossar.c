@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ceossar.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: ceossar.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  Functions related to CeosSARVolume_t.
@@ -29,13 +29,13 @@
 
 #include "ceos.h"
 
-CPL_CVSID("$Id: ceossar.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: ceossar.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 extern Link_t *RecipeFunctions;
 
 void InitCeosSARVolume(CeosSARVolume_t *volume, int32 file_name_convention)
 {
-    volume->Flavour = \
+    volume->Flavor = \
 	volume->Sensor = \
 	volume->ProductType = 0;
 

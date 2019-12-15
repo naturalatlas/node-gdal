@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -21,13 +21,10 @@
 #define GEOS_GEOM_PREP_PREPAREDLINESTRING_H
 
 #include <geos/geom/prep/BasicPreparedGeometry.h> // for inheritance
-#include <geos/noding/SegmentString.h> 
+#include <geos/noding/SegmentString.h>
+#include <geos/noding/FastSegmentSetIntersectionFinder.h>
 
-namespace geos {
-	namespace noding {
-		class FastSegmentSetIntersectionFinder;
-	}
-}
+#include <memory>
 
 namespace geos {
 namespace geom { // geos::geom
@@ -36,29 +33,28 @@ namespace prep { // geos::geom::prep
 /**
  * \brief
  * A prepared version of {@link LinearRing}, {@link LineString} or {@link MultiLineString} geometries.
- * 
+ *
  * @author mbdavis
  *
  */
-class PreparedLineString : public BasicPreparedGeometry 
-{
+class PreparedLineString : public BasicPreparedGeometry {
 private:
-	noding::FastSegmentSetIntersectionFinder * segIntFinder;
-	mutable noding::SegmentString::ConstVect segStrings;
+    std::unique_ptr<noding::FastSegmentSetIntersectionFinder> segIntFinder;
+    mutable noding::SegmentString::ConstVect segStrings;
 
 protected:
 public:
-	PreparedLineString(const Geometry * geom) 
-		: 
-		BasicPreparedGeometry( geom),
-		segIntFinder( NULL)
-	{ }
+    PreparedLineString(const Geometry* geom)
+        :
+        BasicPreparedGeometry(geom),
+        segIntFinder(nullptr)
+    { }
 
-	~PreparedLineString();
+    ~PreparedLineString() override;
 
-	noding::FastSegmentSetIntersectionFinder * getIntersectionFinder();
+    noding::FastSegmentSetIntersectionFinder* getIntersectionFinder();
 
-	bool intersects(const geom::Geometry * g) const;
+    bool intersects(const geom::Geometry* g) const override;
 
 };
 

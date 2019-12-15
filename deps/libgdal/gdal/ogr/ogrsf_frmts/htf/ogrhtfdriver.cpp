@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrhtfdriver.cpp 32744 2016-01-04 22:26:42Z goatbar $
  *
  * Project:  HTF Translator
  * Purpose:  Implements OGRHTFDriver.
@@ -31,7 +30,7 @@
 #include "ogr_htf.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrhtfdriver.cpp 32744 2016-01-04 22:26:42Z goatbar $");
+CPL_CVSID("$Id: ogrhtfdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -41,19 +40,19 @@ static GDALDataset *OGRHTFDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL )
-        return NULL;
+        poOpenInfo->fpL == nullptr )
+        return nullptr;
 
     if( !STARTS_WITH( reinterpret_cast<char *>(poOpenInfo->pabyHeader),
                       "HTF HEADER") )
-        return NULL;
+        return nullptr;
 
     OGRHTFDataSource *poDS = new OGRHTFDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -66,7 +65,7 @@ static GDALDataset *OGRHTFDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRHTF()
 
 {
-    if( GDALGetDriverByName( "HTF" ) != NULL )
+    if( GDALGetDriverByName( "HTF" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -82,4 +81,3 @@ void RegisterOGRHTF()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

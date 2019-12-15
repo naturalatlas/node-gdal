@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: vsi_pcidsk_io.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  PCIDSK Database File
  * Purpose:  PCIDSK SDK compatible IO interface built on VSI.
@@ -37,21 +36,21 @@ using PCIDSK::PCIDSKInterfaces;
 using PCIDSK::ThrowPCIDSKException;
 using PCIDSK::uint64;
 
-CPL_CVSID("$Id: vsi_pcidsk_io.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: vsi_pcidsk_io.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
-PCIDSK::EDBFile *GDAL_EDBOpen( std::string osFilename, std::string osAccess );
+PCIDSK::EDBFile *GDAL_EDBOpen( const std::string& osFilename, const std::string& osAccess );
 const PCIDSK::PCIDSKInterfaces *PCIDSK2GetInterfaces();
 
 class VSI_IOInterface : public IOInterfaces
 {
-    virtual void   *Open( std::string filename, std::string access ) const;
-    virtual uint64  Seek( void *io_handle, uint64 offset, int whence ) const;
-    virtual uint64  Tell( void *io_handle ) const;
-    virtual uint64  Read( void *buffer, uint64 size, uint64 nmemb, void *io_hanle ) const;
-    virtual uint64  Write( const void *buffer, uint64 size, uint64 nmemb, void *io_handle ) const;
-    virtual int     Eof( void *io_handle ) const;
-    virtual int     Flush( void *io_handle ) const;
-    virtual int     Close( void *io_handle ) const;
+    virtual void   *Open( std::string filename, std::string access ) const override;
+    virtual uint64  Seek( void *io_handle, uint64 offset, int whence ) const override;
+    virtual uint64  Tell( void *io_handle ) const override;
+    virtual uint64  Read( void *buffer, uint64 size, uint64 nmemb, void *io_hanle ) const override;
+    virtual uint64  Write( const void *buffer, uint64 size, uint64 nmemb, void *io_handle ) const override;
+    virtual int     Eof( void *io_handle ) const override;
+    virtual int     Flush( void *io_handle ) const override;
+    virtual int     Close( void *io_handle ) const override;
 
     const char     *LastError() const;
 };
@@ -81,7 +80,7 @@ VSI_IOInterface::Open( std::string filename, std::string access ) const
 {
     VSILFILE *fp = VSIFOpenL( filename.c_str(), access.c_str() );
 
-    if( fp == NULL )
+    if( fp == nullptr )
         ThrowPCIDSKException( "Failed to open %s: %s",
                               filename.c_str(), LastError() );
 
@@ -236,8 +235,8 @@ public:
     CPLThreadMutex();
     ~CPLThreadMutex();
 
-    int Acquire(void);
-    int Release(void);
+    int Acquire(void) override;
+    int Release(void) override;
 };
 
 /************************************************************************/

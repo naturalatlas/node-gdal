@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: usgsdemdataset.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  USGS DEM Driver
  * Purpose:  All reader for USGS DEM Reader
@@ -37,14 +36,14 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: usgsdemdataset.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: usgsdemdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 typedef struct {
-    double	x;
-    double	y;
+    double      x;
+    double      y;
 } DPoint2;
 
-static const int USGSDEM_NODATA = -32767;
+constexpr int USGSDEM_NODATA = -32767;
 
 GDALDataset *USGSDEMCreateCopy( const char *, GDALDataset *, int, char **,
                                 GDALProgressFunc pfnProgress,
@@ -85,9 +84,8 @@ static int ReadInt( VSILFILE *fp )
                 szBuffer[nRead] = c;
             nRead ++;
         }
-
     }
-    szBuffer[MIN(nRead, 11)] = 0;
+    szBuffer[std::min(nRead, 11)] = 0;
     return atoi(szBuffer);
 }
 
@@ -117,10 +115,39 @@ static void USGSDEMRefillBuffer( Buffer* psBuffer )
 }
 
 /************************************************************************/
+/*                      USGSDEMGetCurrentFilePos()                      */
+/************************************************************************/
+
+static vsi_l_offset USGSDEMGetCurrentFilePos( const Buffer* psBuffer )
+{
+    return VSIFTellL(psBuffer->fp) - psBuffer->buffer_size + psBuffer->cur_index;
+}
+
+/************************************************************************/
+/*                      USGSDEMSetCurrentFilePos()                      */
+/************************************************************************/
+
+static void USGSDEMSetCurrentFilePos( Buffer* psBuffer, vsi_l_offset nNewPos )
+{
+    vsi_l_offset nCurPosFP = VSIFTellL(psBuffer->fp);
+    if( nNewPos >= nCurPosFP - psBuffer->buffer_size && nNewPos < nCurPosFP )
+    {
+        psBuffer->cur_index =
+            static_cast<int>(nNewPos - (nCurPosFP - psBuffer->buffer_size));
+    }
+    else
+    {
+        CPL_IGNORE_RET_VAL( VSIFSeekL(psBuffer->fp, nNewPos, SEEK_SET) );
+        psBuffer->buffer_size = 0;
+        psBuffer->cur_index = 0;
+    }
+}
+
+/************************************************************************/
 /*               USGSDEMReadIntFromBuffer()                             */
 /************************************************************************/
 
-static int USGSDEMReadIntFromBuffer( Buffer* psBuffer, int* pbSuccess = NULL )
+static int USGSDEMReadIntFromBuffer( Buffer* psBuffer, int* pbSuccess = nullptr )
 {
     char c;
 
@@ -199,7 +226,7 @@ static int USGSDEMReadIntFromBuffer( Buffer* psBuffer, int* pbSuccess = NULL )
 /*                USGSDEMReadDoubleFromBuffer()                         */
 /************************************************************************/
 
-static double USGSDEMReadDoubleFromBuffer( Buffer* psBuffer, int nCharCount, int *pbSuccess = NULL)
+static double USGSDEMReadDoubleFromBuffer( Buffer* psBuffer, int nCharCount, int *pbSuccess = nullptr)
 
 {
     if (psBuffer->cur_index + nCharCount > psBuffer->buffer_size)
@@ -236,7 +263,7 @@ static double USGSDEMReadDoubleFromBuffer( Buffer* psBuffer, int nCharCount, int
 static double DConvert( VSILFILE *fp, int nCharCount )
 
 {
-    char	szBuffer[100];
+    char szBuffer[100];
 
     CPL_IGNORE_RET_VAL(VSIFReadL( szBuffer, nCharCount, 1, fp ));
     szBuffer[nCharCount] = '\0';
@@ -252,7 +279,7 @@ static double DConvert( VSILFILE *fp, int nCharCount )
 
 /************************************************************************/
 /* ==================================================================== */
-/*				USGSDEMDataset				*/
+/*                              USGSDEMDataset                          */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -274,16 +301,19 @@ class USGSDEMDataset : public GDALPamDataset
 
     int         LoadFromFile( VSILFILE * );
 
-    VSILFILE	*fp;
+    VSILFILE    *fp;
 
   public:
                 USGSDEMDataset();
-		~USGSDEMDataset();
+                ~USGSDEMDataset();
 
     static int  Identify( GDALOpenInfo * );
     static GDALDataset *Open( GDALOpenInfo * );
-    CPLErr 	GetGeoTransform( double * padfTransform );
-    const char *GetProjectionRef();
+    CPLErr GetGeoTransform( double * padfTransform ) override;
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 };
 
 /************************************************************************/
@@ -299,11 +329,10 @@ class USGSDEMRasterBand : public GDALPamRasterBand
   public:
                 explicit USGSDEMRasterBand( USGSDEMDataset * );
 
-    virtual const char *GetUnitType();
-    virtual double GetNoDataValue( int *pbSuccess = NULL );
-    virtual CPLErr IReadBlock( int, int, void * );
+    virtual const char *GetUnitType() override;
+    virtual double GetNoDataValue( int *pbSuccess = nullptr ) override;
+    virtual CPLErr IReadBlock( int, int, void * ) override;
 };
-
 
 /************************************************************************/
 /*                           USGSDEMRasterBand()                            */
@@ -319,7 +348,6 @@ USGSDEMRasterBand::USGSDEMRasterBand( USGSDEMDataset *poDSIn )
 
     nBlockXSize = poDSIn->GetRasterXSize();
     nBlockYSize = poDSIn->GetRasterYSize();
-
 }
 
 /************************************************************************/
@@ -331,19 +359,16 @@ CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
                                       void * pImage )
 
 {
-    /* int		bad = FALSE; */
+    /* int bad = FALSE; */
     USGSDEMDataset *poGDS = reinterpret_cast<USGSDEMDataset *>( poDS );
 
 /* -------------------------------------------------------------------- */
 /*      Initialize image buffer to nodata value.                        */
 /* -------------------------------------------------------------------- */
-    for( int k = GetXSize() * GetYSize() - 1; k >= 0; k-- )
-    {
-        if( GetRasterDataType() == GDT_Int16 )
-            reinterpret_cast<GInt16 *>( pImage )[k] = USGSDEM_NODATA;
-        else
-            reinterpret_cast<float *>( pImage )[k] = USGSDEM_NODATA;
-    }
+    GDALCopyWords(&USGSDEM_NODATA, GDT_Int32, 0,
+                  pImage, GetRasterDataType(),
+                  GDALGetDataTypeSizeBytes(GetRasterDataType()),
+                  GetXSize() * GetYSize());
 
 /* -------------------------------------------------------------------- */
 /*      Seek to data.                                                   */
@@ -368,18 +393,43 @@ CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
     for( int i = 0; i < GetXSize(); i++)
     {
         int bSuccess;
-        /* njunk = */ USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+        const int nRowNumber = USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+        if( nRowNumber != 1 )
+            CPLDebug("USGSDEM", "i = %d, nRowNumber = %d", i, nRowNumber);
         if( bSuccess )
-        /* njunk = */ USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+        {
+            const int nColNumber = USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+            if( nColNumber != i + 1 )
+            {
+                CPLDebug("USGSDEM", "i = %d, nColNumber = %d", i, nColNumber);
+            }
+        }
         const int nCPoints = (bSuccess) ? USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess) : 0;
-        /* njunk = */ USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+#ifdef DEBUG_VERBOSE
+        CPLDebug("USGSDEM", "i = %d, nCPoints = %d", i, nCPoints);
+#endif
 
         if( bSuccess )
+        {
+            const int nNumberOfCols = USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+            if( nNumberOfCols != 1 )
+            {
+                CPLDebug("USGSDEM", "i = %d, nNumberOfCols = %d", i, nNumberOfCols);
+            }
+        }
+
+        // x-start
+        if( bSuccess )
         /* dxStart = */ USGSDEMReadDoubleFromBuffer(&sBuffer, 24, &bSuccess);
+
         double dyStart = (bSuccess) ? USGSDEMReadDoubleFromBuffer(&sBuffer, 24, &bSuccess) : 0;
         const double dfElevOffset = (bSuccess) ? USGSDEMReadDoubleFromBuffer(&sBuffer, 24, &bSuccess) : 0;
+
+        // min z value
         if( bSuccess )
         /* djunk = */ USGSDEMReadDoubleFromBuffer(&sBuffer, 24, &bSuccess);
+
+        // max z value
         if( bSuccess )
         /* djunk = */ USGSDEMReadDoubleFromBuffer(&sBuffer, 24, &bSuccess);
         if( !bSuccess )
@@ -402,12 +452,21 @@ CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
             continue;
         if( lygap > INT_MAX - nCPoints )
             lygap = INT_MAX - nCPoints;
+        if( lygap < 0 && GetYSize() > INT_MAX + lygap )
+        {
+            CPLFree(sBuffer.buffer);
+            return CE_Failure;
+        }
 
         for (int j=lygap; j < (nCPoints + lygap); j++)
         {
             const int iY = GetYSize() - j - 1;
 
             const int nElev = USGSDEMReadIntFromBuffer(&sBuffer, &bSuccess);
+#ifdef DEBUG_VERBOSE
+            CPLDebug("USGSDEM", "  j - lygap = %d, nElev = %d", j - lygap, nElev);
+#endif
+
             if( !bSuccess )
             {
                 CPLFree(sBuffer.buffer);
@@ -438,6 +497,18 @@ CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
                 }
             }
         }
+
+        if( poGDS->nDataStartOffset == 1024 )
+        {
+            // Seek to the next 1024 byte boundary.
+            // Some files have 'junk' profile values after the valid/declared ones
+            vsi_l_offset nCurPos = USGSDEMGetCurrentFilePos(&sBuffer);
+            vsi_l_offset nNewPos = (nCurPos + 1023) / 1024 * 1024;
+            if( nNewPos > nCurPos )
+            {
+                USGSDEMSetCurrentFilePos(&sBuffer, nNewPos);
+            }
+        }
     }
     CPLFree(sBuffer.buffer);
 
@@ -451,7 +522,7 @@ CPLErr USGSDEMRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
 double USGSDEMRasterBand::GetNoDataValue( int *pbSuccess )
 
 {
-    if( pbSuccess != NULL )
+    if( pbSuccess != nullptr )
         *pbSuccess = TRUE;
 
     return USGSDEM_NODATA;
@@ -469,7 +540,7 @@ const char *USGSDEMRasterBand::GetUnitType()
 
 /************************************************************************/
 /* ==================================================================== */
-/*				USGSDEMDataset				*/
+/*                              USGSDEMDataset                          */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -480,11 +551,13 @@ const char *USGSDEMRasterBand::GetUnitType()
 USGSDEMDataset::USGSDEMDataset() :
     nDataStartOffset(0),
     eNaturalDataFormat(GDT_Unknown),
-    pszProjection(NULL),
+    pszProjection(nullptr),
     fVRes(0.0),
-    pszUnits(NULL),
-    fp(NULL)
-{ }
+    pszUnits(nullptr),
+    fp(nullptr)
+{
+    memset( adfGeoTransform, 0, sizeof(adfGeoTransform) );
+}
 
 /************************************************************************/
 /*                            ~USGSDEMDataset()                         */
@@ -496,7 +569,7 @@ USGSDEMDataset::~USGSDEMDataset()
     FlushCache();
 
     CPLFree( pszProjection );
-    if( fp != NULL )
+    if( fp != nullptr )
         CPL_IGNORE_RET_VAL(VSIFCloseL( fp ));
 }
 
@@ -518,15 +591,15 @@ int USGSDEMDataset::LoadFromFile(VSILFILE *InDem)
     // Read DEM into matrix
     const int nRow = ReadInt(InDem);
     const int nColumn = ReadInt(InDem);
-    const bool bNewFormat = nRow != 1 || nColumn != 1;
+    const bool bNewFormat = VSIFTellL(InDem) >= 1024 || nRow != 1 || nColumn != 1;
     if (bNewFormat)
     {
-        CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 1024, 0)); 	// New Format
+        CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 1024, 0));  // New Format
         int i = ReadInt(InDem);
         int j = ReadInt(InDem);
-        if ( i != 1 || ( j != 1 && j != 0 ) )	// File OK?
+        if ( i != 1 || ( j != 1 && j != 0 ) )  // File OK?
         {
-            CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 893, 0)); 	// Undocumented Format (39109h1.dem)
+            CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 893, 0));  // Undocumented Format (39109h1.dem)
             i = ReadInt(InDem);
             j = ReadInt(InDem);
             if ( i != 1 || j != 1 )  // File OK?
@@ -561,6 +634,8 @@ int USGSDEMDataset::LoadFromFile(VSILFILE *InDem)
     CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 816, 0));
     const double dxdelta = DConvert(InDem, 12);
     const double dydelta = DConvert(InDem, 12);
+    if( dydelta == 0 )
+        return FALSE;
     fVRes = DConvert(InDem, 12);
 
 /* -------------------------------------------------------------------- */
@@ -608,7 +683,7 @@ int USGSDEMDataset::LoadFromFile(VSILFILE *InDem)
         CPL_IGNORE_RET_VAL(VSIFSeekL(InDem, 876, 0));
         char szDateBuffer[5];
         CPL_IGNORE_RET_VAL(VSIFReadL(szDateBuffer, 4, 1, InDem));
-        szDateBuffer[4] = 0;
+        /* szDateBuffer[4] = 0; */
 
         // Horizontal datum
         // 1=North American Datum 1927 (NAD 27)
@@ -656,19 +731,21 @@ int USGSDEMDataset::LoadFromFile(VSILFILE *InDem)
         bNAD83 = false;
     }
 
-    if (nCoordSystem == 1)	// UTM
+    if (nCoordSystem == 1)  // UTM
     {
-        sr.SetUTM( iUTMZone, TRUE );
-        if( nGUnit == 1 )
+        if( iUTMZone >= -60 && iUTMZone <= 60 )
         {
-            sr.SetLinearUnitsAndUpdateParameters( SRS_UL_US_FOOT, CPLAtof(SRS_UL_US_FOOT_CONV) );
-            char    szUTMName[128];
-            snprintf( szUTMName, sizeof(szUTMName), "UTM Zone %d, Northern Hemisphere, us-ft", iUTMZone );
-            sr.SetNode( "PROJCS", szUTMName );
+            sr.SetUTM( abs(iUTMZone), iUTMZone >= 0 );
+            if( nGUnit == 1 )
+            {
+                sr.SetLinearUnitsAndUpdateParameters( SRS_UL_US_FOOT, CPLAtof(SRS_UL_US_FOOT_CONV) );
+                char    szUTMName[128];
+                snprintf( szUTMName, sizeof(szUTMName), "UTM Zone %d, Northern Hemisphere, us-ft", iUTMZone );
+                sr.SetNode( "PROJCS", szUTMName );
+            }
         }
     }
-
-    else if (nCoordSystem == 2)	// state plane
+    else if (nCoordSystem == 2)  // state plane
     {
         if( nGUnit == 1 )
             sr.SetStatePlane( iUTMZone, bNAD83,
@@ -753,12 +830,11 @@ CPLErr USGSDEMDataset::GetGeoTransform( double * padfTransform )
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *USGSDEMDataset::GetProjectionRef()
+const char *USGSDEMDataset::_GetProjectionRef()
 
 {
     return pszProjection;
 }
-
 
 /************************************************************************/
 /*                              Identify()                              */
@@ -791,27 +867,24 @@ int USGSDEMDataset::Identify( GDALOpenInfo * poOpenInfo )
 GDALDataset *USGSDEMDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if( !Identify( poOpenInfo ) )
-        return NULL;
-
-    VSILFILE* fp = VSIFOpenL(poOpenInfo->pszFilename, "rb");
-    if (fp == NULL)
-        return NULL;
+    if( !Identify( poOpenInfo ) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     USGSDEMDataset *poDS = new USGSDEMDataset();
 
-    poDS->fp = fp;
+    poDS->fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
-/*	Read the file.							*/
+/*      Read the file.                                                  */
 /* -------------------------------------------------------------------- */
     if( !poDS->LoadFromFile( poDS->fp ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -823,7 +896,7 @@ GDALDataset *USGSDEMDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The USGSDEM driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -844,7 +917,7 @@ GDALDataset *USGSDEMDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -854,7 +927,7 @@ GDALDataset *USGSDEMDataset::Open( GDALOpenInfo * poOpenInfo )
 void GDALRegister_USGSDEM()
 
 {
-    if( GDALGetDriverByName( "USGSDEM" ) != NULL )
+    if( GDALGetDriverByName( "USGSDEM" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

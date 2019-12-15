@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -22,24 +22,25 @@
 #define GEOS_GEOM_PREP_PREPAREDPOLYGONPREDICATE_H
 
 #include <geos/geom/Coordinate.h>
+#include <geos/geom/Location.h>
 
 // forward declarations
 namespace geos {
-	namespace algorithm {
-		namespace locate {
-			class PointOnGeometryLocator;
-		}
-	}
-	namespace geom { 
-		class Geometry;
+namespace algorithm {
+namespace locate {
+class PointOnGeometryLocator;
+}
+}
+namespace geom {
+class Geometry;
 
-		namespace prep { 
-			class PreparedPolygon;
-		}
-	}
-	namespace noding {
-		class FastSegmentSetIntersectionFinder;
-	}
+namespace prep {
+class PreparedPolygon;
+}
+}
+namespace noding {
+class FastSegmentSetIntersectionFinder;
+}
 }
 
 
@@ -50,90 +51,88 @@ namespace prep { // geos::geom::prep
 /**
  * \brief
  * A base class for predicate operations on {@link PreparedPolygon}s.
- * 
+ *
  * @author mbdavis
  *
  */
-class PreparedPolygonPredicate 
-{
+class PreparedPolygonPredicate {
 private:
     // Declare type as noncopyable
-    PreparedPolygonPredicate(const PreparedPolygonPredicate& other);
-    PreparedPolygonPredicate& operator=(const PreparedPolygonPredicate& rhs);
+    PreparedPolygonPredicate(const PreparedPolygonPredicate& other) = delete;
+    PreparedPolygonPredicate& operator=(const PreparedPolygonPredicate& rhs) = delete;
 
 protected:
-	const PreparedPolygon * const prepPoly;
+    const PreparedPolygon* const prepPoly;
 
-	/** \brief
-	 * Tests whether all components of the test Geometry 
-	 * are contained in the target geometry.
-	 *
-	 * Handles both linear and point components.
-	 * 
-	 * @param geom a geometry to test
-	 * @return true if all components of the argument are contained
-	 *              in the target geometry
-	 */
-	bool isAllTestComponentsInTarget(const geom::Geometry * testGeom) const;
+    /** \brief
+     * Returns the outermost Location among a test point from each
+     * components of the test geometry.
+     *
+     * @param testGeom a geometry to test
+     * @return the outermost Location
+     */
+    geom::Location getOutermostTestComponentLocation(const geom::Geometry* testGeom) const;
 
-	/** \brief
-	 * Tests whether all components of the test Geometry 
-	 * are contained in the interior of the target geometry.
-	 *
-	 * Handles both linear and point components.
-	 * 
-	 * @param geom a geometry to test
-	 * @return true if all componenta of the argument are contained in
-	 *              the target geometry interior
-	 */
-	bool isAllTestComponentsInTargetInterior( const geom::Geometry * testGeom) const;
+    /** \brief
+     * Tests whether all components of the test Geometry
+     * are contained in the interior of the target geometry.
+     *
+     * Handles both linear and point components.
+     *
+     * @param testGeom a geometry to test
+     * @return true if all componenta of the argument are contained in
+     *              the target geometry interior
+     */
+    bool isAllTestComponentsInTargetInterior(const geom::Geometry* testGeom) const;
 
-	/** \brief
-	 * Tests whether any component of the test Geometry intersects
-	 * the area of the target geometry.
-	 *
-	 * Handles test geometries with both linear and point components.
-	 * 
-	 * @param geom a geometry to test
-	 * @return true if any component of the argument intersects the
-	 *              prepared geometry
-	 */
-	bool isAnyTestComponentInTarget( const geom::Geometry * testGeom) const;
+    /** \brief
+     * Tests whether any component of the test Geometry intersects
+     * the area of the target geometry.
+     *
+     * Handles test geometries with both linear and point components.
+     *
+     * @param testGeom a geometry to test
+     * @return true if any component of the argument intersects the
+     *              prepared geometry
+     */
+    bool isAnyTestComponentInTarget(const geom::Geometry* testGeom) const;
 
-	/** \brief
-	 * Tests whether any component of the test Geometry intersects
-	 * the interior of the target geometry.
-	 *
-	 * Handles test geometries with both linear and point components.
-	 * 
-	 * @param geom a geometry to test
-	 * @return true if any component of the argument intersects the
-	 *              prepared area geometry interior
-	 */
-	bool isAnyTestComponentInTargetInterior( const geom::Geometry * testGeom) const;
+    /** \brief
+     * Tests whether any component of the test Geometry intersects
+     * the interior of the target geometry.
+     *
+     * Handles test geometries with both linear and point components.
+     *
+     * @param testGeom a geometry to test
+     * @return true if any component of the argument intersects the
+     *              prepared area geometry interior
+     */
+    bool isAnyTestComponentInTargetInterior(const geom::Geometry* testGeom) const;
 
-	/**
-	 * Tests whether any component of the target geometry 
-	 * intersects the test geometry (which must be an areal geometry)
-	 * 
-	 * @param geom the test geometry
-	 * @param repPts the representative points of the target geometry
-	 * @return true if any component intersects the areal test geometry
-	 */
-	bool isAnyTargetComponentInAreaTest( const geom::Geometry * testGeom, const geom::Coordinate::ConstVect * targetRepPts) const;
+    /**
+     * Tests whether any component of the target geometry
+     * intersects the test geometry (which must be an areal geometry)
+     *
+     * @param testGeom the test geometry
+     * @param targetRepPts the representative points of the target geometry
+     * @return true if any component intersects the areal test geometry
+     */
+    bool isAnyTargetComponentInAreaTest(const geom::Geometry* testGeom,
+                                        const geom::Coordinate::ConstVect* targetRepPts) const;
 
 public:
-	/**
-	 * Creates an instance of this operation.
-	 * 
-	 * @param prepPoly the PreparedPolygon to evaluate
-	 */
-	PreparedPolygonPredicate( const PreparedPolygon * const prepPoly)
-	:	prepPoly( prepPoly)
-	{ }
+    /**
+     * Creates an instance of this operation.
+     *
+     * @param p_prepPoly the PreparedPolygon to evaluate
+     */
+    PreparedPolygonPredicate(const PreparedPolygon* const p_prepPoly)
+        :	prepPoly(p_prepPoly)
+    { }
 
-	virtual ~PreparedPolygonPredicate()
-	{ }
+    virtual
+    ~PreparedPolygonPredicate()
+    { }
 
 };
 

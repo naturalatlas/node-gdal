@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -32,11 +32,11 @@ namespace prep { // geos.geom.prep
 //
 // protected:
 //
-bool 
-PreparedPolygonCovers::fullTopologicalPredicate( const geom::Geometry * geom)
+bool
+PreparedPolygonCovers::fullTopologicalPredicate(const geom::Geometry* geom)
 {
-	bool result = prepPoly->getGeometry().covers( geom);
-	return result;
+    bool result = prepPoly->getGeometry().covers(geom);
+    return result;
 }
 
 //

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlreader.h 33702 2016-03-11 06:20:16Z goatbar $
+ * $Id: gmlreader.h 6c215be4458b32ab4278c9f64ed7e31099a5021c 2018-06-23 13:09:29 +0200 Even Rouault $
  *
  * Project:  GML Reader
  * Purpose:  Public Declarations for OGR free GML Reader code.
@@ -34,8 +34,13 @@
 #include "cpl_port.h"
 #include "cpl_vsi.h"
 #include "cpl_minixml.h"
+#include "gmlutils.h"
 
+#include <map>
 #include <vector>
+
+// Special value to map to a NULL field
+#define OGR_GML_NULL "___OGR_GML_NULL___"
 
 typedef enum {
     GMLPT_Untyped = 0,
@@ -80,7 +85,7 @@ class CPL_DLL GMLPropertyDefn
 
 public:
 
-        GMLPropertyDefn( const char *pszName, const char *pszSrcElement=NULL );
+        GMLPropertyDefn( const char *pszName, const char *pszSrcElement=nullptr );
        ~GMLPropertyDefn();
 
     const char *GetName() const { return m_pszName; }
@@ -148,6 +153,8 @@ class CPL_DLL GMLFeatureClass
     int          n_nElementNameLen;
     int         m_nPropertyCount;
     GMLPropertyDefn **m_papoProperty;
+    std::map<CPLString, int> m_oMapPropertyNameToIndex;
+    std::map<CPLString, int> m_oMapPropertySrcElementToIndex;
 
     int         m_nGeometryPropertyCount;
     GMLGeometryPropertyDefn **m_papoGeometryProperty;
@@ -167,9 +174,9 @@ class CPL_DLL GMLFeatureClass
     char       *m_pszSRSName;
     bool        m_bSRSNameConsistent;
 
-public:
-            GMLFeatureClass( const char *pszName = "" );
-           ~GMLFeatureClass();
+  public:
+    explicit  GMLFeatureClass( const char *pszName = "" );
+             ~GMLFeatureClass();
 
     const char *GetElementName() const;
     size_t      GetElementNameLen() const;
@@ -239,7 +246,7 @@ class CPL_DLL GMLFeature
     char           **m_papszOBProperties;
 
 public:
-                    GMLFeature( GMLFeatureClass * );
+    explicit        GMLFeature( GMLFeatureClass * );
                    ~GMLFeature();
 
     GMLFeatureClass*GetClass() const { return m_poClass; }
@@ -247,12 +254,13 @@ public:
     void            SetGeometryDirectly( CPLXMLNode* psGeom );
     void            SetGeometryDirectly( int nIdx, CPLXMLNode* psGeom );
     void            AddGeometry( CPLXMLNode* psGeom );
+    int             GetGeometryCount() const { return m_nGeometryCount; }
     const CPLXMLNode* const * GetGeometryList() const { return m_papsGeometry; }
     const CPLXMLNode* GetGeometryRef( int nIdx ) const;
 
     void            SetPropertyDirectly( int i, char *pszValue );
 
-    const GMLProperty*GetProperty( int i ) const { return (i < m_nPropertyCount) ? &m_pasProperties[i] : NULL; }
+    const GMLProperty*GetProperty( int i ) const { return (i >= 0 && i < m_nPropertyCount) ? &m_pasProperties[i] : nullptr; }
 
     const char      *GetFID() const { return m_pszFID; }
     void             SetFID( const char *pszFID );
@@ -270,7 +278,7 @@ public:
 /************************************************************************/
 class CPL_DLL IGMLReader
 {
-public:
+  public:
     virtual     ~IGMLReader();
 
     virtual bool IsClassListLocked() const = 0;
@@ -290,12 +298,12 @@ public:
     virtual GMLFeature *NextFeature() = 0;
     virtual void       ResetReading() = 0;
 
-    virtual bool LoadClasses( const char *pszFile = NULL ) = 0;
-    virtual bool SaveClasses( const char *pszFile = NULL ) = 0;
+    virtual bool LoadClasses( const char *pszFile = nullptr ) = 0;
+    virtual bool SaveClasses( const char *pszFile = nullptr ) = 0;
 
     virtual bool ResolveXlinks( const char *pszFile,
                                 bool* pbOutIsTempFile,
-                                char **papszSkip = NULL,
+                                char **papszSkip = nullptr,
                                 const bool bStrict = false ) = 0;
 
     virtual bool HugeFileResolver( const char *pszFile,
@@ -305,7 +313,7 @@ public:
     virtual bool PrescanForSchema( bool bGetExtents = true,
                                   bool bAnalyzeSRSPerFeature = true,
                                   bool bOnlyDetectSRS = false ) = 0;
-    virtual bool PrescanForTemplate( void ) = 0;
+    virtual bool PrescanForTemplate() = 0;
 
     virtual bool HasStoppedParsing() = 0;
 
@@ -322,7 +330,7 @@ public:
 IGMLReader *CreateGMLReader(bool bUseExpatParserPreferably,
                             bool bInvertAxisOrderIfLatLong,
                             bool bConsiderEPSGAsURN,
+                            GMLSwapCoordinatesEnum eSwapCoordinates,
                             bool bGetSecondaryGeometryOption);
-
 
 #endif /* GMLREADER_H_INCLUDED */

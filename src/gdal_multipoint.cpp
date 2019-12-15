@@ -23,7 +23,7 @@ void MultiPoint::Initialize(Local<Object> target)
 
 	Nan::SetPrototypeMethod(lcons, "toString", toString);
 
-	target->Set(Nan::New("MultiPoint").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("MultiPoint").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -123,7 +123,7 @@ Local<Value> MultiPoint::New(OGRMultiPoint *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(MultiPoint::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(MultiPoint::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

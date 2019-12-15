@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsegukooadatasource.cpp 31122 2015-10-25 09:28:57Z rouault $
  *
  * Project:  SEG-P1 / UKOOA P1-90 Translator
  * Purpose:  Implements OGRSEGUKOOADataSource class
@@ -31,20 +30,17 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsegukooadatasource.cpp 31122 2015-10-25 09:28:57Z rouault $");
+CPL_CVSID("$Id: ogrsegukooadatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                        OGRSEGUKOOADataSource()                       */
 /************************************************************************/
 
-OGRSEGUKOOADataSource::OGRSEGUKOOADataSource()
-
-{
-    papoLayers = NULL;
-    nLayers = 0;
-
-    pszName = NULL;
-}
+OGRSEGUKOOADataSource::OGRSEGUKOOADataSource() :
+    pszName(nullptr),
+    papoLayers(nullptr),
+    nLayers(0)
+{}
 
 /************************************************************************/
 /*                       ~OGRSEGUKOOADataSource()                       */
@@ -77,7 +73,7 @@ OGRLayer *OGRSEGUKOOADataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
     else
         return papoLayers[iLayer];
 }
@@ -92,17 +88,16 @@ int OGRSEGUKOOADataSource::Open( const char * pszFilename )
     pszName = CPLStrdup( pszFilename );
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
-    if (fp == NULL)
+    if (fp == nullptr)
         return FALSE;
 
-    const char* pszLine;
     CPLPushErrorHandler(CPLQuietErrorHandler);
-    pszLine = CPLReadLine2L(fp,81,NULL);
+    const char* pszLine = CPLReadLine2L(fp,81,nullptr);
     CPLPopErrorHandler();
     CPLErrorReset();
 
     /* Both UKOOA P1/90 and SEG-P1 begins by a H character */
-    if (pszLine == NULL || pszLine[0] != 'H')
+    if (pszLine == nullptr || pszLine[0] != 'H')
     {
         VSIFCloseL(fp);
         return FALSE;
@@ -117,7 +112,7 @@ int OGRSEGUKOOADataSource::Open( const char * pszFilename )
         VSIFSeekL( fp, 0, SEEK_SET );
 
         VSILFILE* fp2 = VSIFOpenL(pszFilename, "rb");
-        if (fp2 == NULL)
+        if (fp2 == nullptr)
         {
             VSIFCloseL(fp);
             return FALSE;
@@ -153,10 +148,10 @@ int OGRSEGUKOOADataSource::Open( const char * pszFilename )
             break;
 
         CPLPushErrorHandler(CPLQuietErrorHandler);
-        pszLine = CPLReadLine2L(fp,81,NULL);
+        pszLine = CPLReadLine2L(fp,81,nullptr);
         CPLPopErrorHandler();
         CPLErrorReset();
-        if (pszLine == NULL)
+        if (pszLine == nullptr)
         {
             VSIFCloseL(fp);
             return FALSE;
@@ -172,7 +167,7 @@ int OGRSEGUKOOADataSource::Open( const char * pszFilename )
         VSIFSeekL( fp, 0, SEEK_SET );
 
         VSILFILE* fp2 = VSIFOpenL(pszFilename, "rb");
-        if (fp2 == NULL)
+        if (fp2 == nullptr)
         {
             VSIFCloseL(fp);
             return FALSE;

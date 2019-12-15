@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sdts.h 32177 2015-12-14 07:25:30Z goatbar $
+ * $Id: ogr_sdts.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  STS Translator
  * Purpose:  Definition of classes finding SDTS support into OGRDriver
@@ -52,23 +52,16 @@ class OGRSDTSLayer : public OGRLayer
 
     OGRFeature         *GetNextUnfilteredFeature();
 
-    void                BuildPolygons();
-    int                 bPolygonsBuilt;
-
   public:
                         OGRSDTSLayer( SDTSTransfer *, int, OGRSDTSDataSource*);
                         ~OGRSDTSLayer();
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
 
-//    OGRFeature         *GetFeature( GIntBig nFeatureId );
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
-
-//    GIntBig             GetFeatureCount( int );
-
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -91,12 +84,12 @@ class OGRSDTSDataSource : public OGRDataSource
 
     int                 Open( const char * pszFilename, int bTestOpen );
 
-    const char          *GetName() { return pszName; }
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer            *GetLayer( int );
-    int                 TestCapability( const char * );
+    const char          *GetName() override { return pszName; }
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer            *GetLayer( int ) override;
+    int                 TestCapability( const char * ) override;
 
-    OGRSpatialReference *GetSpatialRef() { return poSRS; }
+    OGRSpatialReference *DSGetSpatialRef() { return poSRS; }
 };
 
 #endif /* ndef OGR_SDTS_H_INCLUDED */

@@ -8,12 +8,13 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
 
-#include <geos/algorithm/CGAlgorithms.h>
+#include <geos/algorithm/PointLocation.h>
+#include <geos/algorithm/RayCrossingCounter.h>
 #include <geos/algorithm/locate/SimplePointInAreaLocator.h>
 #include <geos/geom/Geometry.h>
 #include <geos/geom/Polygon.h>
@@ -36,59 +37,84 @@ namespace locate { // geos.algorithm
  * and multi-element Geometries.  The algorithm for multi-element Geometries
  * is more complex, since it has to take into account the boundaryDetermination rule
  */
-int
-SimplePointInAreaLocator::locate(const Coordinate& p, const Geometry *geom)
+geom::Location
+SimplePointInAreaLocator::locate(const Coordinate& p, const Geometry* geom)
 {
-	if (geom->isEmpty()) return Location::EXTERIOR;
-	if (containsPoint(p,geom))
-		return Location::INTERIOR;
-	return Location::EXTERIOR;
+    if(geom->isEmpty()) {
+        return Location::EXTERIOR;
+    }
+
+    /**
+     * Do a fast check against the geometry envelope first
+     */
+    if (! geom->getEnvelopeInternal()->intersects(p))
+        return Location::EXTERIOR;
+
+    return locateInGeometry(p, geom);
 }
 
 bool
-SimplePointInAreaLocator::containsPoint(const Coordinate& p,const Geometry *geom)
+SimplePointInAreaLocator::isContained(const Coordinate& p, const Geometry* geom)
 {
-	if (const Polygon *poly = dynamic_cast<const Polygon*>(geom))
-	{
-		return containsPointInPolygon(p, poly);
-	}
-	
-	if (const GeometryCollection *col = dynamic_cast<const GeometryCollection*>(geom))
-	{
-		for (GeometryCollection::const_iterator
-				it=col->begin(), endIt=col->end();
-				it != endIt;
-				++it)
-		{
-			const Geometry *g2=*it;
-			assert (g2!=geom); 
-			if (containsPoint(p,g2)) return true;
-		}
-	}
-	return false;
+    return Location::EXTERIOR != locate(p, geom);
 }
 
-bool
-SimplePointInAreaLocator::containsPointInPolygon(const Coordinate& p, const Polygon *poly)
+geom::Location
+SimplePointInAreaLocator::locateInGeometry(const Coordinate& p, const Geometry* geom)
 {
-	if (poly->isEmpty()) return false;
-	const LineString *shell=poly->getExteriorRing();
-	const CoordinateSequence *cl;
-	cl = shell->getCoordinatesRO();
-	if (!CGAlgorithms::isPointInRing(p,cl)) {
-		return false;
-	}
+    if (geom->getDimension() < 2) {
+        return Location::EXTERIOR;
+    }
 
-	// now test if the point lies in or on the holes
-	for(size_t i=0, n=poly->getNumInteriorRing(); i<n; i++)
-	{
-		const LineString *hole = poly->getInteriorRingN(i);
-		cl = hole->getCoordinatesRO();
-		if (CGAlgorithms::isPointInRing(p,cl)) {
-			return false;
-		}
-	}
-	return true;
+    if (geom->getNumGeometries() == 1) {
+        return locatePointInPolygon(p, dynamic_cast<const Polygon*>(geom->getGeometryN(0)));
+    } else {
+        for (size_t i = 0; i < geom->getNumGeometries(); i++) {
+            const Geometry* gi = geom->getGeometryN(i);
+
+            auto loc = locateInGeometry(p, gi);
+            if(loc != Location::EXTERIOR) {
+                return loc;
+            }
+        }
+    }
+
+    return Location::EXTERIOR;
+}
+
+geom::Location
+SimplePointInAreaLocator::locatePointInPolygon(const Coordinate& p, const Polygon* poly)
+{
+    if(poly->isEmpty()) {
+        return Location::EXTERIOR;
+    }
+    if(!poly->getEnvelopeInternal()->contains(p)) {
+        return Location::EXTERIOR;
+    }
+    const LineString* shell = poly->getExteriorRing();
+    const CoordinateSequence* cl;
+    cl = shell->getCoordinatesRO();
+    Location shellLoc = PointLocation::locateInRing(p, *cl);
+    if(shellLoc != Location::INTERIOR) {
+        return shellLoc;
+    }
+
+    // now test if the point lies in or on the holes
+    for(size_t i = 0, n = poly->getNumInteriorRing(); i < n; i++) {
+        const LineString* hole = poly->getInteriorRingN(i);
+        if(hole->getEnvelopeInternal()->contains(p)) {
+            cl = hole->getCoordinatesRO();
+            Location holeLoc = RayCrossingCounter::locatePointInRing(p, *cl);
+            if(holeLoc == Location::BOUNDARY) {
+                return Location::BOUNDARY;
+            }
+            if(holeLoc == Location::INTERIOR) {
+                return Location::EXTERIOR;
+            }
+            // if in EXTERIOR of this hole, keep checking other holes
+        }
+    }
+    return Location::INTERIOR;
 }
 
 } // namespace geos.algorithm.locate

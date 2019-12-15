@@ -93,6 +93,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	int use_nodata = 0;
 	double nodata = 0;
 	int id_field = -1, elev_field = -1;
+	char str[80];
 
 	NODE_ARG_OBJECT(0, "options", obj);
 
@@ -103,7 +104,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "interval", interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, "offset", base);
 	if(Nan::HasOwnProperty(obj, Nan::New("fixedLevels").ToLocalChecked()).FromMaybe(false)){
-		if(fixed_level_array.parse(obj->Get(Nan::New("fixedLevels").ToLocalChecked()))){
+		if(fixed_level_array.parse(Nan::Get(obj, Nan::New("fixedLevels").ToLocalChecked()).ToLocalChecked())){
 			return; //error parsing double list
 		} else {
 			fixed_levels = fixed_level_array.get();
@@ -111,10 +112,10 @@ NAN_METHOD(Algorithms::contourGenerate)
 		}
 	}
 	if(Nan::HasOwnProperty(obj, Nan::New("nodata").ToLocalChecked()).FromMaybe(false)){
-		prop = obj->Get(Nan::New("nodata").ToLocalChecked());
+		prop = Nan::Get(obj, Nan::New("nodata").ToLocalChecked()).ToLocalChecked();
 		if(prop->IsNumber()){
 			use_nodata = 1;
-			nodata = prop->NumberValue();
+			nodata = Nan::To<double>(prop).ToChecked();
 		} else if(!prop->IsNull() && !prop->IsUndefined()){
 			Nan::ThrowTypeError("nodata property must be a number");
 		}
@@ -273,7 +274,7 @@ NAN_METHOD(Algorithms::polygonize)
 	}
 
 	CPLErr err;
-	if(Nan::HasOwnProperty(obj, Nan::New("useFloats").ToLocalChecked()).FromMaybe(false) && obj->Get(Nan::New("useFloats").ToLocalChecked())->BooleanValue()){
+	if(Nan::HasOwnProperty(obj, Nan::New("useFloats").ToLocalChecked()).FromMaybe(false) && Nan::To<bool>(Nan::Get(obj, Nan::New("useFloats").ToLocalChecked()).ToLocalChecked()).ToChecked()){
 		err = GDALFPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src->get(), mask ? mask->get() : NULL, reinterpret_cast<OGRLayerH>(dst->get()), pix_val_field, papszOptions, NULL, NULL);

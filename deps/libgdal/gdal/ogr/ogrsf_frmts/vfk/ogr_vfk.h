@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_vfk.h 32177 2015-12-14 07:25:30Z goatbar $
+ * $Id: ogr_vfk.h 50160f53a51f265d57b3bd4628a509dcbb6373ae 2017-03-18 14:03:33Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/VFK driver.
@@ -53,9 +53,6 @@ private:
     /* feature definition */
     OGRFeatureDefn      *poFeatureDefn;
 
-    /* OGR data source */
-    OGRVFKDataSource    *poDS;
-
     /* VFK data block */
     IVFKDataBlock       *poDataBlock;
 
@@ -71,16 +68,16 @@ public:
                 OGRwkbGeometryType, OGRVFKDataSource *);
     ~OGRVFKLayer();
 
-    OGRFeature          *GetNextFeature();
-    OGRFeature          *GetFeature(GIntBig);
+    OGRFeature          *GetNextFeature() override;
+    OGRFeature          *GetFeature(GIntBig) override;
 
-    OGRFeatureDefn      *GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn      *GetLayerDefn() override { return poFeatureDefn; }
 
-    void                 ResetReading();
+    void                 ResetReading() override;
 
-    int                  TestCapability(const char *);
+    int                  TestCapability(const char *) override;
 
-    GIntBig              GetFeatureCount(int = TRUE);
+    GIntBig              GetFeatureCount(int = TRUE) override;
 };
 
 /************************************************************************/
@@ -105,14 +102,14 @@ public:
     OGRVFKDataSource();
     ~OGRVFKDataSource();
 
-    int            Open(const char *, int);
+    int            Open(GDALOpenInfo* poOpenInfo);
 
-    const char    *GetName() { return pszName; }
+    const char    *GetName() override { return pszName; }
 
-    int            GetLayerCount() { return nLayers; }
-    OGRLayer      *GetLayer(int);
+    int            GetLayerCount() override { return nLayers; }
+    OGRLayer      *GetLayer(int) override;
 
-    int            TestCapability(const char *);
+    int            TestCapability(const char *) override;
 
     IVFKReader    *GetReader() const { return poReader; }
 };

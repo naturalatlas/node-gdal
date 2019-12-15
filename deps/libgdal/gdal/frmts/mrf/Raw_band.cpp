@@ -34,7 +34,6 @@
 */
 
 /*
- * $Id$
  * raw band
  * raw page compression and decompression functions
  * Simple copy of data
@@ -42,6 +41,8 @@
  */
 
 #include "marfa.h"
+
+CPL_CVSID("$Id: Raw_band.cpp 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 NAMESPACE_MRF_START
 
@@ -54,6 +55,8 @@ inline CPLErr NONE(buf_mgr &dst, buf_mgr &src)
 
 CPLErr Raw_Band::Decompress(buf_mgr &dst, buf_mgr &src)
 {
+    if( src.size > dst.size )
+        return CE_Failure;
     return NONE(dst,src);
 }
 

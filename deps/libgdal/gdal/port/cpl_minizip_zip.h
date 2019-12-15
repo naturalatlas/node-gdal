@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_minizip_zip.h 31826 2015-11-29 15:39:57Z goatbar $
+ * $Id: cpl_minizip_zip.h 105d437a91a1a110bdeaba3bab046cd235701173 2018-07-02 12:01:26 +0200 Even Rouault $
  *
  * Project:  CPL - Common Portability Library
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -28,7 +28,6 @@
 
   For uncompress .zip file, look at unzip.h
 
-
    I WAIT FEEDBACK at mail info@winimage.com
    Visit also http://www.winimage.com/zLibDll/unzip.html for evolution
 
@@ -49,8 +48,6 @@
   2. Altered source versions must be plainly marked as such, and must not be
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
-
-
 */
 
 /* for more info about .ZIP format, see
@@ -63,8 +60,11 @@
 #ifndef CPL_MINIZIP_ZIP_H_INCLUDED
 #define CPL_MINIZIP_ZIP_H_INCLUDED
 
+#ifndef DOXYGEN_SKIP
+
 #include "cpl_vsi.h"
 #define uLong64 vsi_l_offset
+typedef vsi_l_offset ZPOS64_T;
 
 #ifdef __cplusplus
 extern "C" {
@@ -130,7 +130,6 @@ typedef struct
 
 typedef const char* zipcharpc;
 
-
 #define APPEND_STATUS_CREATE        (0)
 #define APPEND_STATUS_CREATEAFTER   (1)
 #define APPEND_STATUS_ADDINZIP      (2)
@@ -183,7 +182,6 @@ extern int ZEXPORT cpl_zipOpenNewFileInZip (zipFile file,
   level contain the level of compression (can be Z_DEFAULT_COMPRESSION)
 */
 
-
 extern int ZEXPORT cpl_zipOpenNewFileInZip2 (zipFile file,
                                              const char* filename,
                                              const zip_fileinfo* zipfi,
@@ -224,7 +222,6 @@ extern int ZEXPORT cpl_zipOpenNewFileInZip3 (zipFile file,
     crcForCtypting : crc of file to compress (needed for crypting)
  */
 
-
 extern int ZEXPORT cpl_zipWriteInFileInZip (zipFile file,
                                             const void* buf,
                                             unsigned len);
@@ -238,7 +235,7 @@ extern int ZEXPORT cpl_zipCloseFileInZip (zipFile file);
 */
 
 extern int ZEXPORT cpl_zipCloseFileInZipRaw (zipFile file,
-                                             uLong uncompressed_size,
+                                             ZPOS64_T uncompressed_size,
                                              uLong crc32);
 /*
   Close the current file in the zipfile, for file opened with
@@ -255,5 +252,7 @@ extern int ZEXPORT cpl_zipClose (zipFile file,
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* #ifndef DOXYGEN_SKIP */
 
 #endif /* _zip_H */

@@ -1,5 +1,3 @@
-/* $Id: tif_dir.c,v 1.125 2016-01-23 21:20:34 erouault Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -43,8 +41,10 @@
 static void
 setByteArray(void** vpp, void* vp, size_t nmemb, size_t elem_size)
 {
-	if (*vpp)
-		_TIFFfree(*vpp), *vpp = 0;
+	if (*vpp) {
+		_TIFFfree(*vpp);
+		*vpp = 0;
+	}
 	if (vp) {
 		tmsize_t bytes = (tmsize_t)(nmemb * elem_size);
 		if (elem_size && bytes / elem_size == nmemb)
@@ -87,13 +87,15 @@ setDoubleArrayOneValue(double** vpp, double value, size_t nmemb)
  * Install extra samples information.
  */
 static int
-setExtraSamples(TIFFDirectory* td, va_list ap, uint32* v)
+setExtraSamples(TIFF* tif, va_list ap, uint32* v)
 {
 /* XXX: Unassociated alpha data == 999 is a known Corel Draw bug, see below */
 #define EXTRASAMPLE_COREL_UNASSALPHA 999 
 
 	uint16* va;
 	uint32 i;
+        TIFFDirectory* td = &tif->tif_dir;
+        static const char module[] = "setExtraSamples";
 
 	*v = (uint16) va_arg(ap, uint16_vap);
 	if ((uint16) *v > td->td_samplesperpixel)
@@ -115,6 +117,18 @@ setExtraSamples(TIFFDirectory* td, va_list ap, uint32* v)
 				return 0;
 		}
 	}
+
+        if ( td->td_transferfunction[0] != NULL && (td->td_samplesperpixel - *v > 1) &&
+                !(td->td_samplesperpixel - td->td_extrasamples > 1))
+        {
+                TIFFWarningExt(tif->tif_clientdata,module,
+                    "ExtraSamples tag value is changing, "
+                    "but TransferFunction was read with a different value. Cancelling it");
+                TIFFClrFieldBit(tif,FIELD_TRANSFERFUNCTION);
+                _TIFFfree(td->td_transferfunction[0]);
+                td->td_transferfunction[0] = NULL;
+        }
+
 	td->td_extrasamples = (uint16) *v;
 	_TIFFsetShortArray(&td->td_sampleinfo, va, td->td_extrasamples);
 	return 1;
@@ -254,6 +268,40 @@ _TIFFVSetField(TIFF* tif, uint32 tag, va_list ap)
 		v = (uint16) va_arg(ap, uint16_vap);
 		if (v == 0)
 			goto badvalue;
+        if( v != td->td_samplesperpixel )
+        {
+            /* See http://bugzilla.maptools.org/show_bug.cgi?id=2500 */
+            if( td->td_sminsamplevalue != NULL )
+            {
+                TIFFWarningExt(tif->tif_clientdata,module,
+                    "SamplesPerPixel tag value is changing, "
+                    "but SMinSampleValue tag was read with a different value. Cancelling it");
+                TIFFClrFieldBit(tif,FIELD_SMINSAMPLEVALUE);
+                _TIFFfree(td->td_sminsamplevalue);
+                td->td_sminsamplevalue = NULL;
+            }
+            if( td->td_smaxsamplevalue != NULL )
+            {
+                TIFFWarningExt(tif->tif_clientdata,module,
+                    "SamplesPerPixel tag value is changing, "
+                    "but SMaxSampleValue tag was read with a different value. Cancelling it");
+                TIFFClrFieldBit(tif,FIELD_SMAXSAMPLEVALUE);
+                _TIFFfree(td->td_smaxsamplevalue);
+                td->td_smaxsamplevalue = NULL;
+            }
+            /* Test if 3 transfer functions instead of just one are now needed
+               See http://bugzilla.maptools.org/show_bug.cgi?id=2820 */
+            if( td->td_transferfunction[0] != NULL && (v - td->td_extrasamples > 1) &&
+                !(td->td_samplesperpixel - td->td_extrasamples > 1))
+            {
+                    TIFFWarningExt(tif->tif_clientdata,module,
+                        "SamplesPerPixel tag value is changing, "
+                        "but TransferFunction was read with a different value. Cancelling it");
+                    TIFFClrFieldBit(tif,FIELD_TRANSFERFUNCTION);
+                    _TIFFfree(td->td_transferfunction[0]);
+                    td->td_transferfunction[0] = NULL;
+            }
+        }
 		td->td_samplesperpixel = (uint16) v;
 		break;
 	case TIFFTAG_ROWSPERSTRIP:
@@ -288,13 +336,13 @@ _TIFFVSetField(TIFF* tif, uint32 tag, va_list ap)
         dblval = va_arg(ap, double);
         if( dblval < 0 )
             goto badvaluedouble;
-		td->td_xresolution = (float) dblval;
+		td->td_xresolution = _TIFFClampDoubleToFloat( dblval );
 		break;
 	case TIFFTAG_YRESOLUTION:
         dblval = va_arg(ap, double);
         if( dblval < 0 )
             goto badvaluedouble;
-		td->td_yresolution = (float) dblval;
+		td->td_yresolution = _TIFFClampDoubleToFloat( dblval );
 		break;
 	case TIFFTAG_PLANARCONFIG:
 		v = (uint16) va_arg(ap, uint16_vap);
@@ -303,10 +351,10 @@ _TIFFVSetField(TIFF* tif, uint32 tag, va_list ap)
 		td->td_planarconfig = (uint16) v;
 		break;
 	case TIFFTAG_XPOSITION:
-		td->td_xposition = (float) va_arg(ap, double);
+		td->td_xposition = _TIFFClampDoubleToFloat( va_arg(ap, double) );
 		break;
 	case TIFFTAG_YPOSITION:
-		td->td_yposition = (float) va_arg(ap, double);
+		td->td_yposition = _TIFFClampDoubleToFloat( va_arg(ap, double) );
 		break;
 	case TIFFTAG_RESOLUTIONUNIT:
 		v = (uint16) va_arg(ap, uint16_vap);
@@ -329,7 +377,7 @@ _TIFFVSetField(TIFF* tif, uint32 tag, va_list ap)
 		_TIFFsetShortArray(&td->td_colormap[2], va_arg(ap, uint16*), v32);
 		break;
 	case TIFFTAG_EXTRASAMPLES:
-		if (!setExtraSamples(td, ap, &v))
+		if (!setExtraSamples(tif, ap, &v))
 			goto badvalue;
 		break;
 	case TIFFTAG_MATTEING:
@@ -652,7 +700,7 @@ _TIFFVSetField(TIFF* tif, uint32 tag, va_list ap)
 				case TIFF_SRATIONAL:
 				case TIFF_FLOAT:
 					{
-						float v2 = (float)va_arg(ap, double);
+						float v2 = _TIFFClampDoubleToFloat(va_arg(ap, double));
 						_TIFFmemcpy(val, &v2, tv_size);
 					}
 					break;
@@ -829,7 +877,7 @@ _TIFFVGetField(TIFF* tif, uint32 tag, va_list ap)
 	const TIFFField* fip = TIFFFindField(tif, tag, TIFF_ANY);
 	if( fip == NULL ) /* cannot happen since TIFFGetField() already checks it */
 	    return 0;
-	
+
 	/*
 	 * We want to force the custom code to be used for custom
 	 * fields even if the tag happens to match a well known 
@@ -839,6 +887,34 @@ _TIFFVGetField(TIFF* tif, uint32 tag, va_list ap)
 	if (fip->field_bit == FIELD_CUSTOM) {
 		standard_tag = 0;
 	}
+	
+        if( standard_tag == TIFFTAG_NUMBEROFINKS )
+        {
+            int i;
+            for (i = 0; i < td->td_customValueCount; i++) {
+                uint16 val;
+                TIFFTagValue *tv = td->td_customValues + i;
+                if (tv->info->field_tag != standard_tag)
+                    continue;
+                if( tv->value == NULL )
+                    return 0;
+                val = *(uint16 *)tv->value;
+                /* Truncate to SamplesPerPixel, since the */
+                /* setting code for INKNAMES assume that there are SamplesPerPixel */
+                /* inknames. */
+                /* Fixes http://bugzilla.maptools.org/show_bug.cgi?id=2599 */
+                if( val > td->td_samplesperpixel )
+                {
+                    TIFFWarningExt(tif->tif_clientdata,"_TIFFVGetField",
+                                   "Truncating NumberOfInks from %u to %u",
+                                   val, td->td_samplesperpixel);
+                    val = td->td_samplesperpixel;
+                }
+                *va_arg(ap, uint16*) = val;
+                return 1;
+            }
+            return 0;
+        }
 
 	switch (standard_tag) {
 		case TIFFTAG_SUBFILETYPE:
@@ -1005,6 +1081,9 @@ _TIFFVGetField(TIFF* tif, uint32 tag, va_list ap)
 			if (td->td_samplesperpixel - td->td_extrasamples > 1) {
 				*va_arg(ap, uint16**) = td->td_transferfunction[1];
 				*va_arg(ap, uint16**) = td->td_transferfunction[2];
+			} else {
+				*va_arg(ap, uint16**) = NULL;
+				*va_arg(ap, uint16**) = NULL;
 			}
 			break;
 		case TIFFTAG_REFERENCEBLACKWHITE:

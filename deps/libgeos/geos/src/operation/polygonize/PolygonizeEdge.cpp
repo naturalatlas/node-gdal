@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -26,13 +26,15 @@ namespace geos {
 namespace operation { // geos.operation
 namespace polygonize { // geos.operation.polygonize
 
-PolygonizeEdge::PolygonizeEdge(const LineString *newLine) {
-	line=newLine;
+PolygonizeEdge::PolygonizeEdge(const LineString* newLine)
+{
+    line = newLine;
 }
 
-const LineString *
-PolygonizeEdge::getLine() {
-	return line;
+const LineString*
+PolygonizeEdge::getLine()
+{
+    return line;
 }
 
 } // namespace geos.operation.polygonize

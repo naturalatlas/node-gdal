@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: hfatest.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  Erdas Imagine (.img) Translator
  * Purpose:  Testing mainline for HFA services - transitory.
@@ -31,7 +30,7 @@
 #include "hfa_p.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: hfatest.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: hfatest.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                               Usage()                                */
@@ -54,7 +53,7 @@ HFAPCSStructToWKT( const Eprj_Datum *,
                    const Eprj_MapInfo *,
                    HFAEntry * )
 {
-    return NULL;
+    return nullptr;
 }
 #endif
 
@@ -68,21 +67,29 @@ int main( int argc, char ** argv )
 /* -------------------------------------------------------------------- */
 /*      Handle arguments.                                               */
 /* -------------------------------------------------------------------- */
-    const char *pszFilename = NULL;
+    const char *pszFilename = nullptr;
     bool bDumpTree = false;
     bool bDumpDict = false;
     bool bRastReport = false;
 
     for( int i = 1; i < argc; i++ )
     {
-        if( EQUAL(argv[i],"-dd") )
-            bDumpDict = TRUE;
-        else if( EQUAL(argv[i],"-dt") )
-            bDumpTree = TRUE;
-        else if( EQUAL(argv[i],"-dr") )
-            bRastReport = TRUE;
-        else if( pszFilename == NULL )
+        if( EQUAL(argv[i], "-dd") )
+        {
+            bDumpDict = true;
+        }
+        else if( EQUAL(argv[i], "-dt") )
+        {
+            bDumpTree = true;
+        }
+        else if( EQUAL(argv[i], "-dr") )
+        {
+            bRastReport = true;
+        }
+        else if( pszFilename == nullptr )
+        {
             pszFilename = argv[i];
+        }
         else
         {
             Usage();
@@ -90,7 +97,7 @@ int main( int argc, char ** argv )
         }
     }
 
-    if( pszFilename == NULL )
+    if( pszFilename == nullptr )
     {
         Usage();
         exit( 1 );
@@ -101,7 +108,7 @@ int main( int argc, char ** argv )
 /* -------------------------------------------------------------------- */
     HFAHandle hHFA = HFAOpen( pszFilename, "r" );
 
-    if( hHFA == NULL )
+    if( hHFA == nullptr )
     {
         printf( "HFAOpen() failed.\n" );
         exit( 100 );
@@ -126,7 +133,9 @@ int main( int argc, char ** argv )
 /* -------------------------------------------------------------------- */
 /*      Dump indirectly collected data about bands.                     */
 /* -------------------------------------------------------------------- */
-    int nXSize, nYSize, nBands;
+    int nXSize = 0;
+    int nYSize = 0;
+    int nBands = 0;
     HFAGetRasterInfo( hHFA, &nXSize, &nYSize, &nBands );
 
     if( bRastReport )
@@ -136,13 +145,13 @@ int main( int argc, char ** argv )
         for( int i = 1; i <= nBands; i++ )
         {
             EPTType eDataType;
-            int nBlockXSize;
-            int nBlockYSize;
-            int nCompressionType;
+            int nBlockXSize = 0;
+            int nBlockYSize = 0;
+            int nCompressionType = 0;
 
             HFAGetBandInfo( hHFA, i, &eDataType, &nBlockXSize, &nBlockYSize,
                             &nCompressionType );
-            int nOverviews = HFAGetOverviewCount( hHFA, i );
+            const int nOverviews = HFAGetOverviewCount( hHFA, i );
 
             printf( "Band %d: %dx%d tiles, type = %d\n",
                     i, nBlockXSize, nBlockYSize, eDataType );
@@ -151,23 +160,29 @@ int main( int argc, char ** argv )
             {
                 HFAGetOverviewInfo( hHFA, i, iOverview,
                                     &nXSize, &nYSize,
-                                    &nBlockXSize, &nBlockYSize, NULL );
+                                    &nBlockXSize, &nBlockYSize, nullptr );
                 printf( "  Overview: %dx%d (blocksize %dx%d)\n",
                         nXSize, nYSize, nBlockXSize, nBlockYSize );
             }
 
-            int nColors;
-            double *padfRed, *padfGreen, *padfBlue, *padfAlpha, *padfBins;
+            int nColors = 0;
+            double *padfRed = nullptr;
+            double *padfGreen = nullptr;
+            double *padfBlue = nullptr;
+            double *padfAlpha = nullptr;
+            double *padfBins = nullptr;
             if( HFAGetPCT( hHFA, i, &nColors, &padfRed, &padfGreen,
-			   &padfBlue, &padfAlpha, &padfBins )
+                           &padfBlue, &padfAlpha, &padfBins )
                 == CE_None )
             {
                 for( int j = 0; j < nColors; j++ )
                 {
                     printf( "PCT[%d] = %f,%f,%f %f\n",
-                            (padfBins != NULL) ? (int) padfBins[j] : j,
+                            (padfBins != nullptr)
+                            ? static_cast<int>(padfBins[j])
+                            : j,
                             padfRed[j], padfGreen[j],
-			    padfBlue[j], padfAlpha[j]);
+                            padfBlue[j], padfAlpha[j]);
                 }
             }
 
@@ -177,7 +192,7 @@ int main( int argc, char ** argv )
             HFABand *poBand = hHFA->papoBand[i-1];
             HFAEntry *poStats = poBand->poNode->GetNamedChild( "Statistics" );
 
-            if( poStats != NULL )
+            if( poStats != nullptr )
             {
                 printf( "  Min: %g   Max: %g   Mean: %g\n",
                         poStats->GetDoubleField( "minimum" ),
@@ -189,7 +204,9 @@ int main( int argc, char ** argv )
                         poStats->GetDoubleField( "stddev" ) );
             }
             else
+            {
                 printf( "   No Statistics found.\n" );
+            }
         }
 
 /* -------------------------------------------------------------------- */
@@ -197,7 +214,7 @@ int main( int argc, char ** argv )
 /* -------------------------------------------------------------------- */
         const Eprj_MapInfo *psMapInfo = HFAGetMapInfo( hHFA );
 
-        if( psMapInfo != NULL )
+        if( psMapInfo != nullptr )
         {
             printf( "MapInfo.proName = %s\n", psMapInfo->proName );
             printf( "MapInfo.upperLeftCenter.x = %.2f\n",
@@ -209,9 +226,7 @@ int main( int argc, char ** argv )
         {
             printf( "No Map Info found\n" );
         }
-
     }
-
 
     // const Eprj_ProParameters *psProParameters;
     // psProParameters =

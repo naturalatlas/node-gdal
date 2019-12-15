@@ -40,11 +40,11 @@ namespace PCIDSK {
         CPCIDSKEphemerisSegment(PCIDSKFile *file, int segment,const char *segment_pointer,bool bLoad=true);
         ~CPCIDSKEphemerisSegment();
 
-        const EphemerisSeg_t& GetEphemeris() const
+        const EphemerisSeg_t& GetEphemeris() const override
         {
             return *mpoEphemeris;
-        };
-        void SetEphemeris(const EphemerisSeg_t& oEph)
+        }
+        void SetEphemeris(const EphemerisSeg_t& oEph) override
         {
             if(mpoEphemeris)
             {
@@ -52,10 +52,10 @@ namespace PCIDSK {
             }
             mpoEphemeris = new EphemerisSeg_t(oEph);
             mbModified = true;
-        };
+        }
 
         //synchronize the segment on disk.
-        void Synchronize();
+        void Synchronize() override;
     private:
         
         // Helper housekeeping functions

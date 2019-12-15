@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: grcdataset.cpp 33757 2016-03-20 20:22:33Z goatbar $
  *
  * Project:  GRC Reader
  * Purpose:  GDAL driver for Northwood Classified Format
@@ -38,6 +37,8 @@
 #include "../../ogr/ogrsf_frmts/mitab/mitab.h"
 #endif
 
+CPL_CVSID("$Id: grcdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+
 /************************************************************************/
 /* ==================================================================== */
 /*                             NWT_GRCDataset                           */
@@ -66,8 +67,11 @@ class NWT_GRCDataset : public GDALPamDataset
     static GDALDataset *Open( GDALOpenInfo * );
     static int Identify( GDALOpenInfo * poOpenInfo );
 
-    CPLErr GetGeoTransform( double *padfTransform );
-    const char *GetProjectionRef();
+    CPLErr GetGeoTransform( double *padfTransform ) override;
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 };
 
 /************************************************************************/
@@ -85,14 +89,13 @@ class NWT_GRCRasterBand : public GDALPamRasterBand
     NWT_GRCRasterBand( NWT_GRCDataset *, int );
     virtual ~NWT_GRCRasterBand();
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual double GetNoDataValue( int *pbSuccess );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual double GetNoDataValue( int *pbSuccess ) override;
 
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual char **GetCategoryNames();
-    virtual GDALColorTable *GetColorTable();
+    virtual GDALColorInterp GetColorInterpretation() override;
+    virtual char **GetCategoryNames() override;
+    virtual GDALColorTable *GetColorTable() override;
 };
-
 
 /************************************************************************/
 /*                           NWT_GRCRasterBand()                        */
@@ -100,8 +103,8 @@ class NWT_GRCRasterBand : public GDALPamRasterBand
 
 NWT_GRCRasterBand::NWT_GRCRasterBand( NWT_GRCDataset * poDSIn, int nBandIn )
 {
-    this->poDS = poDSIn;
-    this->nBand = nBandIn;
+    poDS = poDSIn;
+    nBand = nBandIn;
     NWT_GRCDataset *poGDS = reinterpret_cast<NWT_GRCDataset *>( poDS );
 
     if( poGDS->pGrd->nBitsPerPixel == 8 )
@@ -117,12 +120,9 @@ NWT_GRCRasterBand::NWT_GRCRasterBand( NWT_GRCDataset * poDSIn, int nBandIn )
     // load the color table and might as well to the ClassNames
     poGDS->poColorTable = new GDALColorTable();
 
-    GDALColorEntry oEntry;
+    GDALColorEntry oEntry = { 255, 255, 255, 0 };
     // null value = 0 is transparent
-    oEntry.c1 = 255;
-    oEntry.c2 = 255;
-    oEntry.c3 = 255;
-    oEntry.c4 = 255;                // alpha 255 = transparent
+    // alpha 0 = transparent
 
     poGDS->poColorTable->SetColorEntry( 0, &oEntry );
 
@@ -133,7 +133,7 @@ NWT_GRCRasterBand::NWT_GRCRasterBand( NWT_GRCDataset * poDSIn, int nBandIn )
         oEntry.c1 = poGDS->pGrd->stClassDict->stClassifedItem[i]->r;
         oEntry.c2 = poGDS->pGrd->stClassDict->stClassifedItem[i]->g;
         oEntry.c3 = poGDS->pGrd->stClassDict->stClassifedItem[i]->b;
-        oEntry.c4 = 0;            // alpha 0 = solid
+        oEntry.c4 = 255;            // alpha 255 = solid
 
         poGDS->poColorTable->SetColorEntry( poGDS->pGrd->
                                           stClassDict->stClassifedItem[i]->
@@ -173,7 +173,6 @@ NWT_GRCRasterBand::NWT_GRCRasterBand( NWT_GRCDataset * poDSIn, int nBandIn )
         }
         if( i >= static_cast<int>( poGDS->pGrd->stClassDict->nNumClassifiedItems ) )
             poGDS->papszCategories = CSLAddString( poGDS->papszCategories, "" );
-
     }
 }
 
@@ -181,7 +180,7 @@ NWT_GRCRasterBand::~NWT_GRCRasterBand() {}
 
 double NWT_GRCRasterBand::GetNoDataValue( int *pbSuccess )
 {
-    if( pbSuccess != NULL )
+    if( pbSuccess != nullptr )
         *pbSuccess = TRUE;
 
     return 0.0;  // Northwood grid 0 is always null.
@@ -246,10 +245,14 @@ CPLErr NWT_GRCRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff,
 /* ==================================================================== */
 /************************************************************************/
 NWT_GRCDataset::NWT_GRCDataset() :
-    fp(NULL), pGrd(NULL), papszCategories(NULL), pszProjection(NULL),
-    poColorTable(NULL)
-{ }
-
+    fp(nullptr),
+    pGrd(nullptr),
+    papszCategories(nullptr),
+    pszProjection(nullptr),
+    poColorTable(nullptr)
+{
+    memset(abyHeader, 0, sizeof(abyHeader) );
+}
 
 /************************************************************************/
 /*                            ~NWT_GRCDataset()                         */
@@ -260,10 +263,10 @@ NWT_GRCDataset::~NWT_GRCDataset()
     CSLDestroy( papszCategories );
 
     FlushCache();
-    pGrd->fp = NULL;       // this prevents nwtCloseGrid from closing the fp
+    pGrd->fp = nullptr;       // this prevents nwtCloseGrid from closing the fp
     nwtCloseGrid( pGrd );
 
-    if( fp != NULL )
+    if( fp != nullptr )
         VSIFCloseL( fp );
 
     CPLFree( pszProjection );
@@ -288,9 +291,9 @@ CPLErr NWT_GRCDataset::GetGeoTransform( double *padfTransform )
 /************************************************************************/
 /*                          GetProjectionRef()                          */
 /************************************************************************/
-const char *NWT_GRCDataset::GetProjectionRef()
+const char *NWT_GRCDataset::_GetProjectionRef()
 {
-    if (pszProjection == NULL)
+    if (pszProjection == nullptr)
     {
         OGRSpatialReference *poSpatialRef
           = MITABCoordSys2SpatialRef( pGrd->cMICoordSys );
@@ -300,7 +303,7 @@ const char *NWT_GRCDataset::GetProjectionRef()
             poSpatialRef->Release();
         }
     }
-    return ( (const char *) pszProjection );
+    return (const char *) pszProjection;
 }
 
 /************************************************************************/
@@ -331,20 +334,16 @@ int NWT_GRCDataset::Identify( GDALOpenInfo * poOpenInfo )
 
 GDALDataset *NWT_GRCDataset::Open( GDALOpenInfo * poOpenInfo )
 {
-    if( !Identify(poOpenInfo) )
-        return NULL;
+    if( !Identify(poOpenInfo) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     NWT_GRCDataset *poDS = new NWT_GRCDataset();
 
-    poDS->fp = VSIFOpenL(poOpenInfo->pszFilename, "rb");
-    if (poDS->fp == NULL)
-    {
-        delete poDS;
-        return NULL;
-    }
+    poDS->fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read the header.                                                */
@@ -357,10 +356,10 @@ GDALDataset *NWT_GRCDataset::Open( GDALOpenInfo * poOpenInfo )
 
     if (!nwt_ParseHeader( poDS->pGrd, reinterpret_cast<char *>( poDS->abyHeader ) ) ||
         !GDALCheckDatasetDimensions(poDS->pGrd->nXSide, poDS->pGrd->nYSide) ||
-        poDS->pGrd->stClassDict == NULL)
+        poDS->pGrd->stClassDict == nullptr)
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     if( poDS->pGrd->nBitsPerPixel != 8 &&
@@ -368,7 +367,7 @@ GDALDataset *NWT_GRCDataset::Open( GDALOpenInfo * poOpenInfo )
         poDS->pGrd->nBitsPerPixel != 32 )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     poDS->nRasterXSize = poDS->pGrd->nXSide;
@@ -392,9 +391,8 @@ GDALDataset *NWT_GRCDataset::Open( GDALOpenInfo * poOpenInfo )
                                  poOpenInfo->pszFilename,
                                  poOpenInfo->GetSiblingFiles() );
 
-    return (poDS);
+    return poDS;
 }
-
 
 /************************************************************************/
 /*                          GDALRegister_GRC()                          */
@@ -403,7 +401,7 @@ GDALDataset *NWT_GRCDataset::Open( GDALOpenInfo * poOpenInfo )
 void GDALRegister_NWT_GRC()
 
 {
-    if( GDALGetDriverByName( "NWT_GRC" ) != NULL )
+    if( GDALGetDriverByName( "NWT_GRC" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

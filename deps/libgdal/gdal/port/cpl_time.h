@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_time.h 33783 2016-03-24 13:45:22Z goatbar $
+ * $Id: cpl_time.h 66be9d67448bf852a32b5473508a75f26569a2e1 2017-09-26 18:35:09Z Even Rouault $
  *
  * Name:     cpl_time.h
  * Project:  CPL - Common Portability Library
@@ -38,4 +38,13 @@
 struct tm CPL_DLL * CPLUnixTimeToYMDHMS(GIntBig unixTime, struct tm* pRet);
 GIntBig CPL_DLL CPLYMDHMSToUnixTime(const struct tm *brokendowntime);
 
+int CPL_DLL CPLParseRFC822DateTime( const char* pszRFC822DateTime,
+                                    int* pnYear,
+                                    int* pnMonth,
+                                    int* pnDay,
+                                    int* pnHour,
+                                    int* pnMinute,
+                                    int* pnSecond,
+                                    int* pnTZFlag,
+                                    int* pnWeekDay );
 #endif // CPL_TIME_H_INCLUDED

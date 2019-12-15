@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrshapedatasource.cpp 34069 2016-04-23 17:59:00Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRShapeDataSource class.
@@ -28,31 +27,54 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogrshape.h"
-#include "cpl_conv.h"
-#include "cpl_string.h"
+
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
 #include <set>
+#include <vector>
 
-//#define IMMEDIATE_OPENING 1
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+#include "ogr_geometry.h"
+#include "ogr_spatialref.h"
+#include "ogrlayerpool.h"
+#include "ogrsf_frmts.h"
+#include "shapefil.h"
+#include "shp_vsi.h"
 
-CPL_CVSID("$Id: ogrshapedatasource.cpp 34069 2016-04-23 17:59:00Z rouault $");
+// #define IMMEDIATE_OPENING 1
+
+CPL_CVSID("$Id: ogrshapedatasource.cpp 391a0c719c83be1c51e92717cc730edcd110062b 2019-03-30 11:43:53 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                          DS_SHPOpen()                                */
 /************************************************************************/
 
-SHPHandle OGRShapeDataSource::DS_SHPOpen( const char * pszShapeFile, const char * pszAccess )
+SHPHandle OGRShapeDataSource::DS_SHPOpen( const char * pszShapeFile,
+                                          const char * pszAccess )
 {
-    /* Do lazy shx loading for /vsicurl/ */
+    // Do lazy shx loading for /vsicurl/
     if( STARTS_WITH(pszShapeFile, "/vsicurl/") &&
         strcmp(pszAccess, "r") == 0 )
         pszAccess = "rl";
 
-    int bRestoreSHX = CPLTestBool( CPLGetConfigOption("SHAPE_RESTORE_SHX", "FALSE") );
-    SHPHandle hSHP = SHPOpenLLEx( pszShapeFile, pszAccess, (SAHooks*) VSI_SHP_GetHook(b2GBLimit),
-                                  bRestoreSHX );
-    
-    if( hSHP != NULL )
+    const bool bRestoreSHX =
+        CPLTestBool( CPLGetConfigOption("SHAPE_RESTORE_SHX", "FALSE") );
+    SHPHandle hSHP =
+        SHPOpenLLEx( pszShapeFile, pszAccess,
+                     const_cast<SAHooks *>(VSI_SHP_GetHook(b2GBLimit)),
+                     bRestoreSHX );
+
+    if( hSHP != nullptr )
         SHPSetFastModeReadObject( hSHP, TRUE );
     return hSHP;
 }
@@ -61,9 +83,12 @@ SHPHandle OGRShapeDataSource::DS_SHPOpen( const char * pszShapeFile, const char 
 /*                           DS_DBFOpen()                               */
 /************************************************************************/
 
-DBFHandle OGRShapeDataSource::DS_DBFOpen( const char * pszDBFFile, const char * pszAccess )
+DBFHandle OGRShapeDataSource::DS_DBFOpen( const char * pszDBFFile,
+                                          const char * pszAccess )
 {
-    DBFHandle hDBF = DBFOpenLL( pszDBFFile, pszAccess, (SAHooks*) VSI_SHP_GetHook(b2GBLimit) );
+    DBFHandle hDBF =
+        DBFOpenLL( pszDBFFile, pszAccess,
+                   const_cast<SAHooks *>(VSI_SHP_GetHook(b2GBLimit)) );
     return hDBF;
 }
 
@@ -72,17 +97,15 @@ DBFHandle OGRShapeDataSource::DS_DBFOpen( const char * pszDBFFile, const char * 
 /************************************************************************/
 
 OGRShapeDataSource::OGRShapeDataSource() :
-    papoLayers(NULL),
+    papoLayers(nullptr),
     nLayers(0),
-    pszName(NULL),
-    bDSUpdate(FALSE),
-    bSingleFileDataSource(FALSE),
-    papszOpenOptions(NULL)
-{
-    poPool = new OGRLayerPool();
-    b2GBLimit = CPLTestBool(CPLGetConfigOption("SHAPE_2GB_LIMIT", "FALSE"));
-}
-
+    pszName(nullptr),
+    bDSUpdate(false),
+    bSingleFileDataSource(false),
+    poPool(new OGRLayerPool()),
+    b2GBLimit(CPLTestBool(CPLGetConfigOption("SHAPE_2GB_LIMIT", "FALSE"))),
+    papszOpenOptions(nullptr)
+{}
 
 /************************************************************************/
 /*                        ~OGRShapeDataSource()                         */
@@ -95,7 +118,7 @@ OGRShapeDataSource::~OGRShapeDataSource()
 
     for( int i = 0; i < nLayers; i++ )
     {
-        CPLAssert( NULL != papoLayers[i] );
+        CPLAssert( nullptr != papoLayers[i] );
 
         delete papoLayers[i];
     }
@@ -110,21 +133,21 @@ OGRShapeDataSource::~OGRShapeDataSource()
 /*                                Open()                                */
 /************************************************************************/
 
-int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
-                              int bTestOpen, int bForceSingleFileDataSource )
+bool OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
+                              bool bTestOpen, bool bForceSingleFileDataSource )
 
 {
     CPLAssert( nLayers == 0 );
 
     const char * pszNewName = poOpenInfo->pszFilename;
-    int bUpdate = poOpenInfo->eAccess == GA_Update;
+    const bool bUpdate = poOpenInfo->eAccess == GA_Update;
     papszOpenOptions = CSLDuplicate( poOpenInfo->papszOpenOptions );
 
     pszName = CPLStrdup( pszNewName );
 
     bDSUpdate = bUpdate;
 
-    bSingleFileDataSource = bForceSingleFileDataSource;
+    bSingleFileDataSource = CPL_TO_BOOL(bForceSingleFileDataSource);
 
 /* -------------------------------------------------------------------- */
 /*      If bSingleFileDataSource is TRUE we don't try to do anything    */
@@ -135,7 +158,7 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
 /*      file by calling ICreateLayer().                                 */
 /* -------------------------------------------------------------------- */
     if( bSingleFileDataSource )
-        return TRUE;
+        return true;
 
 /* -------------------------------------------------------------------- */
 /*      Is the given path a directory or a regular file?                */
@@ -144,10 +167,10 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
     {
         if( !bTestOpen )
             CPLError( CE_Failure, CPLE_AppDefined,
-                   "%s is neither a file or directory, Shape access failed.\n",
+                      "%s is neither a file or directory, Shape access failed.",
                       pszNewName );
 
-        return FALSE;
+        return false;
     }
 
 /* -------------------------------------------------------------------- */
@@ -155,63 +178,66 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
 /* -------------------------------------------------------------------- */
     if( !poOpenInfo->bIsDirectory )
     {
-        if( !OpenFile( pszNewName, bUpdate, bTestOpen ) )
+        if( !OpenFile( pszNewName, bUpdate ) )
         {
             if( !bTestOpen )
-                CPLError( CE_Failure, CPLE_OpenFailed,
-                          "Failed to open shapefile %s.\n"
-                          "It may be corrupt or read-only file accessed in update mode.\n",
-                          pszNewName );
+                CPLError(
+                    CE_Failure, CPLE_OpenFailed,
+                    "Failed to open shapefile %s.  "
+                    "It may be corrupt or read-only file accessed in "
+                    "update mode.",
+                    pszNewName );
 
-            return FALSE;
+            return false;
         }
 
-        bSingleFileDataSource = TRUE;
+        bSingleFileDataSource = true;
 
-        return TRUE;
+        return true;
     }
     else
     {
-        char      **papszCandidates = VSIReadDir( pszNewName );
-        int       iCan, nCandidateCount = CSLCount( papszCandidates );
-        int       bMightBeOldCoverage = FALSE;
+        char **papszCandidates = VSIReadDir( pszNewName );
+        const int nCandidateCount = CSLCount( papszCandidates );
+        bool bMightBeOldCoverage = false;
         std::set<CPLString> osLayerNameSet;
 
-        for( iCan = 0; iCan < nCandidateCount; iCan++ )
+        for( int iCan = 0; iCan < nCandidateCount; iCan++ )
         {
-            char        *pszFilename;
-            const char  *pszCandidate = papszCandidates[iCan];
-            const char  *pszLayerName = CPLGetBasename(pszCandidate);
+            const char *pszCandidate = papszCandidates[iCan];
+            const char *pszLayerName = CPLGetBasename(pszCandidate);
             CPLString osLayerName(pszLayerName);
 #ifdef WIN32
-            /* On Windows, as filenames are case insensitive, a shapefile layer can be made of */
-            /* foo.shp and FOO.DBF, so to detect unique layer names, put them */
-            /* upper case in the unique set used for detection */
+            // On Windows, as filenames are case insensitive, a shapefile layer
+            // can be made of foo.shp and FOO.DBF, so to detect unique layer
+            // names, put them upper case in the unique set used for detection.
             osLayerName.toupper();
 #endif
 
             if( EQUAL(pszCandidate,"ARC") )
-                bMightBeOldCoverage = TRUE;
+                bMightBeOldCoverage = true;
 
             if( strlen(pszCandidate) < 4
                 || !EQUAL(pszCandidate+strlen(pszCandidate)-4,".shp") )
                 continue;
 
-            pszFilename =
-                CPLStrdup(CPLFormFilename(pszNewName, pszCandidate, NULL));
+            char *pszFilename =
+                CPLStrdup(CPLFormFilename(pszNewName, pszCandidate, nullptr));
 
             osLayerNameSet.insert(osLayerName);
 #ifdef IMMEDIATE_OPENING
-            if( !OpenFile( pszFilename, bUpdate, bTestOpen )
+            if( !OpenFile( pszFilename, bUpdate )
                 && !bTestOpen )
             {
-                CPLError( CE_Failure, CPLE_OpenFailed,
-                          "Failed to open shapefile %s.\n"
-                          "It may be corrupt or read-only file accessed in update mode.\n",
-                          pszFilename );
+                CPLError(
+                    CE_Failure, CPLE_OpenFailed,
+                    "Failed to open shapefile %s.  "
+                    "It may be corrupt or read-only file accessed in "
+                    "update mode.",
+                    pszFilename );
                 CPLFree( pszFilename );
                 CSLDestroy( papszCandidates );
-                return FALSE;
+                return false;
             }
 #else
             oVectorLayerName.push_back(pszFilename);
@@ -220,9 +246,8 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
         }
 
         // Try and .dbf files without apparent associated shapefiles.
-        for( iCan = 0; iCan < nCandidateCount; iCan++ )
+        for( int iCan = 0; iCan < nCandidateCount; iCan++ )
         {
-            char        *pszFilename;
             const char  *pszCandidate = papszCandidates[iCan];
             const char  *pszLayerName = CPLGetBasename(pszCandidate);
             CPLString osLayerName(pszLayerName);
@@ -233,11 +258,11 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
             // We don't consume .dbf files in a directory that looks like
             // an old style Arc/Info (for PC?) that unless we found at least
             // some shapefiles.  See Bug 493.
-            if( bMightBeOldCoverage && osLayerNameSet.size() == 0 )
+            if( bMightBeOldCoverage && osLayerNameSet.empty() )
                 continue;
 
             if( strlen(pszCandidate) < 4
-                || !EQUAL(pszCandidate+strlen(pszCandidate)-4,".dbf") )
+                || !EQUAL(pszCandidate+strlen(pszCandidate)-4, ".dbf") )
                 continue;
 
             if( osLayerNameSet.find(osLayerName) != osLayerNameSet.end() )
@@ -245,35 +270,37 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
 
             // We don't want to access .dbf files with an associated .tab
             // file, or it will never get recognised as a mapinfo dataset.
-            int  iCan2, bFoundTAB = FALSE;
-            for( iCan2 = 0; iCan2 < nCandidateCount; iCan2++ )
+            bool bFoundTAB = false;
+            for( int iCan2 = 0; iCan2 < nCandidateCount; iCan2++ )
             {
                 const char *pszCandidate2 = papszCandidates[iCan2];
 
-                if( EQUALN(pszCandidate2,pszLayerName,strlen(pszLayerName))
+                if( EQUALN(pszCandidate2, pszLayerName, strlen(pszLayerName))
                     && EQUAL(pszCandidate2 + strlen(pszLayerName), ".tab") )
-                    bFoundTAB = TRUE;
+                    bFoundTAB = true;
             }
 
             if( bFoundTAB )
                 continue;
 
-            pszFilename =
-                CPLStrdup(CPLFormFilename(pszNewName, pszCandidate, NULL));
+            char *pszFilename =
+                CPLStrdup(CPLFormFilename(pszNewName, pszCandidate, nullptr));
 
             osLayerNameSet.insert(osLayerName);
 
 #ifdef IMMEDIATE_OPENING
-            if( !OpenFile( pszFilename, bUpdate, bTestOpen )
+            if( !OpenFile( pszFilename, bUpdate )
                 && !bTestOpen )
             {
-                CPLError( CE_Failure, CPLE_OpenFailed,
-                          "Failed to open dbf file %s.\n"
-                          "It may be corrupt or read-only file accessed in update mode.\n",
-                          pszFilename );
+                CPLError(
+                    CE_Failure, CPLE_OpenFailed,
+                    "Failed to open dbf file %s.  "
+                    "It may be corrupt or read-only file accessed in "
+                    "update mode.",
+                    pszFilename );
                 CPLFree( pszFilename );
                 CSLDestroy( papszCandidates );
-                return FALSE;
+                return false;
             }
 #else
             oVectorLayerName.push_back(pszFilename);
@@ -284,9 +311,9 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
         CSLDestroy( papszCandidates );
 
 #ifdef IMMEDIATE_OPENING
-        int nDirLayers = nLayers;
+        const int nDirLayers = nLayers;
 #else
-        int nDirLayers = static_cast<int>(oVectorLayerName.size());
+        const int nDirLayers = static_cast<int>(oVectorLayerName.size());
 #endif
 
         CPLErrorReset();
@@ -299,19 +326,14 @@ int OGRShapeDataSource::Open( GDALOpenInfo* poOpenInfo,
 /*                              OpenFile()                              */
 /************************************************************************/
 
-int OGRShapeDataSource::OpenFile( const char *pszNewName, int bUpdate,
-                                  int bTestOpen )
+bool OGRShapeDataSource::OpenFile( const char *pszNewName, bool bUpdate )
 
 {
-    SHPHandle   hSHP;
-    DBFHandle   hDBF;
     const char *pszExtension = CPLGetExtension( pszNewName );
-
-    (void) bTestOpen;
 
     if( !EQUAL(pszExtension,"shp") && !EQUAL(pszExtension,"shx")
         && !EQUAL(pszExtension,"dbf") )
-        return FALSE;
+        return false;
 
 /* -------------------------------------------------------------------- */
 /*      SHPOpen() should include better (CPL based) error reporting,    */
@@ -324,21 +346,20 @@ int OGRShapeDataSource::OpenFile( const char *pszNewName, int bUpdate,
 /*      we think it is appropriate.                                     */
 /* -------------------------------------------------------------------- */
     CPLPushErrorHandler( CPLQuietErrorHandler );
-    if( bUpdate )
-        hSHP = DS_SHPOpen( pszNewName, "r+" );
-    else
-        hSHP = DS_SHPOpen( pszNewName, "r" );
+    SHPHandle hSHP = bUpdate ?
+        DS_SHPOpen( pszNewName, "r+" ) :
+        DS_SHPOpen( pszNewName, "r" );
     CPLPopErrorHandler();
 
-    if( hSHP == NULL
+    if( hSHP == nullptr
         && (!EQUAL(CPLGetExtension(pszNewName),"dbf")
-            || strstr(CPLGetLastErrorMsg(),".shp") == NULL) )
+            || strstr(CPLGetLastErrorMsg(),".shp") == nullptr) )
     {
         CPLString osMsg = CPLGetLastErrorMsg();
 
         CPLError( CE_Failure, CPLE_OpenFailed, "%s", osMsg.c_str() );
 
-        return FALSE;
+        return false;
     }
     CPLErrorReset();
 
@@ -347,29 +368,34 @@ int OGRShapeDataSource::OpenFile( const char *pszNewName, int bUpdate,
 /*      filename has to either refer to a successfully opened shp       */
 /*      file or has to refer to the actual .dbf file.                   */
 /* -------------------------------------------------------------------- */
-    if( hSHP != NULL || EQUAL(CPLGetExtension(pszNewName),"dbf") )
+    DBFHandle hDBF = nullptr;
+    if( hSHP != nullptr || EQUAL(CPLGetExtension(pszNewName), "dbf") )
     {
         if( bUpdate )
         {
             hDBF = DS_DBFOpen( pszNewName, "r+" );
-            if( hSHP != NULL && hDBF == NULL )
+            if( hSHP != nullptr && hDBF == nullptr )
             {
-                for(int i=0;i<2;i++)
+                for( int i = 0; i < 2; i++ )
                 {
                     VSIStatBufL sStat;
-                    const char* pszDBFName = CPLResetExtension(pszNewName,
-                                                    (i == 0 ) ? "dbf" : "DBF");
-                    VSILFILE* fp = NULL;
-                    if( VSIStatExL( pszDBFName, &sStat, VSI_STAT_EXISTS_FLAG) == 0 )
+                    const char* pszDBFName =
+                        CPLResetExtension(pszNewName,
+                                          (i == 0 ) ? "dbf" : "DBF");
+                    VSILFILE* fp = nullptr;
+                    if( VSIStatExL( pszDBFName, &sStat,
+                                    VSI_STAT_EXISTS_FLAG) == 0 )
                     {
                         fp = VSIFOpenL(pszDBFName, "r+");
-                        if (fp == NULL)
+                        if( fp == nullptr )
                         {
-                            CPLError( CE_Failure, CPLE_OpenFailed,
-                                    "%s exists, but cannot be opened in update mode",
-                                    pszDBFName );
+                            CPLError(
+                                CE_Failure, CPLE_OpenFailed,
+                                "%s exists, "
+                                "but cannot be opened in update mode",
+                                pszDBFName );
                             SHPClose(hSHP);
-                            return FALSE;
+                            return false;
                         }
                         VSIFCloseL(fp);
                         break;
@@ -378,51 +404,58 @@ int OGRShapeDataSource::OpenFile( const char *pszNewName, int bUpdate,
             }
         }
         else
+        {
             hDBF = DS_DBFOpen( pszNewName, "r" );
+        }
     }
     else
-        hDBF = NULL;
+    {
+        hDBF = nullptr;
+    }
 
-    if( hDBF == NULL && hSHP == NULL )
-        return FALSE;
+    if( hDBF == nullptr && hSHP == nullptr )
+        return false;
 
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
 /* -------------------------------------------------------------------- */
-    OGRShapeLayer       *poLayer;
-
-    poLayer = new OGRShapeLayer( this, pszNewName, hSHP, hDBF, NULL, FALSE, bUpdate,
-                                 wkbNone );
+    OGRShapeLayer *poLayer =
+        new OGRShapeLayer( this, pszNewName, hSHP, hDBF, nullptr, false, bUpdate,
+                           wkbNone );
     poLayer->SetModificationDate(
-            CSLFetchNameValue( papszOpenOptions, "DBF_DATE_LAST_UPDATE" ) );
+        CSLFetchNameValue( papszOpenOptions, "DBF_DATE_LAST_UPDATE" ) );
+    poLayer->SetAutoRepack(
+        CPLFetchBool( papszOpenOptions, "AUTO_REPACK", true ) );
+    poLayer->SetWriteDBFEOFChar(
+        CPLFetchBool( papszOpenOptions, "DBF_EOF_CHAR", true ) );
 
 /* -------------------------------------------------------------------- */
 /*      Add layer to data source layer list.                            */
 /* -------------------------------------------------------------------- */
     AddLayer(poLayer);
 
-    return TRUE;
+    return true;
 }
-
 
 /************************************************************************/
 /*                             AddLayer()                               */
 /************************************************************************/
 
-void OGRShapeDataSource::AddLayer(OGRShapeLayer* poLayer)
+void OGRShapeDataSource::AddLayer( OGRShapeLayer* poLayer )
 {
-    papoLayers = (OGRShapeLayer **)
-        CPLRealloc( papoLayers,  sizeof(OGRShapeLayer *) * (nLayers+1) );
+    papoLayers = reinterpret_cast<OGRShapeLayer **>(
+        CPLRealloc( papoLayers,  sizeof(OGRShapeLayer *) * (nLayers+1) ) );
     papoLayers[nLayers++] = poLayer;
 
-    /* If we reach the limit, then register all the already opened layers */
-    /* Technically this code would not be necessary if there was not the */
-    /* following initial test in SetLastUsedLayer() : */
-    /*      if (nLayers < MAX_SIMULTANEOUSLY_OPENED_LAYERS) */
-    /*         return; */
-    if (nLayers == poPool->GetMaxSimultaneouslyOpened() && poPool->GetSize() == 0)
+    // If we reach the limit, then register all the already opened layers
+    // Technically this code would not be necessary if there was not the
+    // following initial test in SetLastUsedLayer() :
+    //      if (nLayers < MAX_SIMULTANEOUSLY_OPENED_LAYERS)
+    //         return;
+    if( nLayers == poPool->GetMaxSimultaneouslyOpened() &&
+        poPool->GetSize() == 0 )
     {
-        for(int i=0;i<nLayers;i++)
+        for( int i = 0; i < nLayers; i++ )
             poPool->SetLastUsedLayer(papoLayers[i]);
     }
 }
@@ -433,26 +466,22 @@ void OGRShapeDataSource::AddLayer(OGRShapeLayer* poLayer)
 
 OGRLayer *
 OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
-                                 OGRSpatialReference *poSRS,
-                                 OGRwkbGeometryType eType,
-                                 char ** papszOptions )
+                                  OGRSpatialReference *poSRS,
+                                  OGRwkbGeometryType eType,
+                                  char ** papszOptions )
 
 {
-    SHPHandle   hSHP;
-    DBFHandle   hDBF;
-    int         nShapeType;
-
-    /* To ensure that existing layers are created */
+    // To ensure that existing layers are created.
     GetLayerCount();
 
 /* -------------------------------------------------------------------- */
 /*      Check that the layer doesn't already exist.                     */
 /* -------------------------------------------------------------------- */
-    if (GetLayerByName(pszLayerName) != NULL)
+    if (GetLayerByName(pszLayerName) != nullptr)
     {
         CPLError( CE_Failure, CPLE_AppDefined, "Layer '%s' already exists",
-                    pszLayerName);
-        return NULL;
+                  pszLayerName);
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -461,21 +490,23 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
     if( !bDSUpdate )
     {
         CPLError( CE_Failure, CPLE_NoWriteAccess,
-                  "Data source %s opened read-only.\n"
-                  "New layer %s cannot be created.\n",
+                  "Data source %s opened read-only.  "
+                  "New layer %s cannot be created.",
                   pszName, pszLayerName );
 
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Figure out what type of layer we need.                          */
 /* -------------------------------------------------------------------- */
+    int nShapeType = -1;
+
     if( wkbFlatten(eType) == wkbUnknown || eType == wkbLineString )
         nShapeType = SHPT_ARC;
     else if( eType == wkbPoint )
         nShapeType = SHPT_POINT;
-    else if( eType == wkbPolygon )
+    else if( eType == wkbPolygon || eType == wkbTriangle )
         nShapeType = SHPT_POLYGON;
     else if( eType == wkbMultiPoint )
         nShapeType = SHPT_MULTIPOINT;
@@ -499,11 +530,11 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
         nShapeType = SHPT_ARCM;
     else if( eType == wkbMultiLineStringZM )
         nShapeType = SHPT_ARCZ;
-    else if( eType == wkbPolygon25D )
+    else if( eType == wkbPolygon25D || eType == wkbTriangleZ )
         nShapeType = SHPT_POLYGONZ;
-    else if( eType == wkbPolygonM )
+    else if( eType == wkbPolygonM || eType == wkbTriangleM )
         nShapeType = SHPT_POLYGONM;
-    else if( eType == wkbPolygonZM )
+    else if( eType == wkbPolygonZM || eType == wkbTriangleZM )
         nShapeType = SHPT_POLYGONZ;
     else if( eType == wkbMultiPolygon )
         nShapeType = SHPT_POLYGON;
@@ -519,10 +550,11 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
         nShapeType = SHPT_MULTIPOINTM;
     else if( eType == wkbMultiPointZM )
         nShapeType = SHPT_MULTIPOINTZ;
+    else if( wkbFlatten(eType) == wkbTIN ||
+             wkbFlatten(eType) == wkbPolyhedralSurface )
+        nShapeType = SHPT_MULTIPATCH;
     else if( eType == wkbNone )
         nShapeType = SHPT_NULL;
-    else
-        nShapeType = -1;
 
 /* -------------------------------------------------------------------- */
 /*      Has the application overridden this with a special creation     */
@@ -530,8 +562,10 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
 /* -------------------------------------------------------------------- */
     const char *pszOverride = CSLFetchNameValue( papszOptions, "SHPT" );
 
-    if( pszOverride == NULL )
+    if( pszOverride == nullptr )
+    {
         /* ignore */;
+    }
     else if( EQUAL(pszOverride,"POINT") )
     {
         nShapeType = SHPT_POINT;
@@ -612,6 +646,11 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
         nShapeType = SHPT_MULTIPOINTZ;
         eType = wkbMultiPointZM;
     }
+    else if( EQUAL(pszOverride,"MULTIPATCH") )
+    {
+        nShapeType = SHPT_MULTIPATCH;
+        eType = wkbUnknown; // not ideal...
+    }
     else if( EQUAL(pszOverride,"NONE") || EQUAL(pszOverride,"NULL") )
     {
         nShapeType = SHPT_NULL;
@@ -620,82 +659,87 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
     else
     {
         CPLError( CE_Failure, CPLE_NotSupported,
-                  "Unknown SHPT value of `%s' passed to Shapefile layer\n"
-                  "creation.  Creation aborted.\n",
+                  "Unknown SHPT value of `%s' passed to Shapefile layer"
+                  "creation.  Creation aborted.",
                   pszOverride );
 
-        return NULL;
+        return nullptr;
     }
 
     if( nShapeType == -1 )
     {
         CPLError( CE_Failure, CPLE_NotSupported,
-                  "Geometry type of `%s' not supported in shapefiles.\n"
-                  "Type can be overridden with a layer creation option\n"
-                  "of SHPT=POINT/ARC/POLYGON/MULTIPOINT/POINTZ/ARCZ/POLYGONZ/MULTIPOINTZ.\n",
+                  "Geometry type of `%s' not supported in shapefiles.  "
+                  "Type can be overridden with a layer creation option "
+                  "of SHPT=POINT/ARC/POLYGON/MULTIPOINT/POINTZ/ARCZ/POLYGONZ/"
+                  "MULTIPOINTZ/MULTIPATCH.",
                   OGRGeometryTypeToName(eType) );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      What filename do we use, excluding the extension?               */
 /* -------------------------------------------------------------------- */
-    char *pszFilenameWithoutExt;
+    char *pszFilenameWithoutExt = nullptr;
 
-    if(  bSingleFileDataSource && nLayers == 0 )
+    if( bSingleFileDataSource && nLayers == 0 )
     {
         char *pszPath = CPLStrdup(CPLGetPath(pszName));
         char *pszFBasename = CPLStrdup(CPLGetBasename(pszName));
 
-        pszFilenameWithoutExt = CPLStrdup(CPLFormFilename(pszPath, pszFBasename, NULL));
+        pszFilenameWithoutExt =
+            CPLStrdup(CPLFormFilename(pszPath, pszFBasename, nullptr));
 
         CPLFree( pszFBasename );
         CPLFree( pszPath );
     }
-    else if(  bSingleFileDataSource )
+    else if( bSingleFileDataSource )
     {
-        /* This is a very weird use case : the user creates/open a datasource */
-        /* made of a single shapefile 'foo.shp' and wants to add a new layer */
-        /* to it, 'bar'. So we create a new shapefile 'bar.shp' in the same */
-        /* directory as 'foo.shp' */
-        /* So technically, we will not be any longer a single file */
-        /* datasource ... Ahem ahem */
+        // This is a very weird use case : the user creates/open a datasource
+        // made of a single shapefile 'foo.shp' and wants to add a new layer
+        // to it, 'bar'. So we create a new shapefile 'bar.shp' in the same
+        // directory as 'foo.shp'
+        // So technically, we will not be any longer a single file
+        // datasource ... Ahem ahem.
         char *pszPath = CPLStrdup(CPLGetPath(pszName));
-        pszFilenameWithoutExt = CPLStrdup(CPLFormFilename(pszPath,pszLayerName,NULL));
+        pszFilenameWithoutExt =
+            CPLStrdup(CPLFormFilename(pszPath, pszLayerName, nullptr));
         CPLFree( pszPath );
     }
     else
-        pszFilenameWithoutExt = CPLStrdup(CPLFormFilename(pszName,pszLayerName,NULL));
+    {
+        pszFilenameWithoutExt =
+            CPLStrdup(CPLFormFilename(pszName, pszLayerName, nullptr));
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Create the shapefile.                                           */
 /* -------------------------------------------------------------------- */
-    char        *pszFilename;
+    const bool l_b2GBLimit =
+        CPLTestBool(CSLFetchNameValueDef( papszOptions, "2GB_LIMIT", "FALSE" ));
 
-    int l_b2GBLimit = CPLTestBool(CSLFetchNameValueDef( papszOptions, "2GB_LIMIT", "FALSE" ));
+    SHPHandle hSHP = nullptr;
 
     if( nShapeType != SHPT_NULL )
     {
-        pszFilename = CPLStrdup(CPLFormFilename( NULL, pszFilenameWithoutExt, "shp" ));
+        char *pszFilename =
+            CPLStrdup(CPLFormFilename( nullptr, pszFilenameWithoutExt, "shp" ));
 
-        hSHP = SHPCreateLL( pszFilename, nShapeType, (SAHooks*) VSI_SHP_GetHook(l_b2GBLimit) );
+        hSHP = SHPCreateLL(
+            pszFilename, nShapeType,
+            const_cast<SAHooks *>(VSI_SHP_GetHook(l_b2GBLimit)) );
 
-        if( hSHP == NULL )
+        if( hSHP == nullptr )
         {
-            CPLError( CE_Failure, CPLE_OpenFailed,
-                      "Failed to open Shapefile `%s'.\n",
-                      pszFilename );
             CPLFree( pszFilename );
             CPLFree( pszFilenameWithoutExt );
-            return NULL;
+            return nullptr;
         }
 
         SHPSetFastModeReadObject( hSHP, TRUE );
 
         CPLFree( pszFilename );
     }
-    else
-        hSHP = NULL;
 
 /* -------------------------------------------------------------------- */
 /*      Has a specific LDID been specified by the caller?               */
@@ -705,22 +749,22 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
 /* -------------------------------------------------------------------- */
 /*      Create a DBF file.                                              */
 /* -------------------------------------------------------------------- */
-    pszFilename = CPLStrdup(CPLFormFilename( NULL, pszFilenameWithoutExt, "dbf" ));
+    char *pszFilename =
+        CPLStrdup(CPLFormFilename( nullptr, pszFilenameWithoutExt, "dbf" ));
 
-    if( pszLDID != NULL )
-        hDBF = DBFCreateLL( pszFilename, pszLDID, (SAHooks*) VSI_SHP_GetHook(b2GBLimit) );
-    else
-        hDBF = DBFCreateLL( pszFilename, "LDID/87",(SAHooks*) VSI_SHP_GetHook(b2GBLimit) );
+    DBFHandle hDBF =
+        DBFCreateLL( pszFilename, (pszLDID != nullptr) ? pszLDID : "LDID/87",
+                     const_cast<SAHooks *>(VSI_SHP_GetHook(b2GBLimit)) );
 
-    if( hDBF == NULL )
+    if( hDBF == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Failed to open Shape DBF file `%s'.\n",
+                  "Failed to open Shape DBF file `%s'.",
                   pszFilename );
         CPLFree( pszFilename );
         CPLFree( pszFilenameWithoutExt );
         SHPClose(hSHP);
-        return NULL;
+        return nullptr;
     }
 
     CPLFree( pszFilename );
@@ -728,18 +772,18 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
 /* -------------------------------------------------------------------- */
 /*      Create the .prj file, if required.                              */
 /* -------------------------------------------------------------------- */
-    if( poSRS != NULL )
+    if( poSRS != nullptr )
     {
-        char    *pszWKT = NULL;
-        CPLString osPrjFile = CPLFormFilename( NULL, pszFilenameWithoutExt, "prj");
-        VSILFILE    *fp;
+        CPLString osPrjFile =
+            CPLFormFilename( nullptr, pszFilenameWithoutExt, "prj");
 
-        /* the shape layer needs it's own copy */
         poSRS = poSRS->Clone();
         poSRS->morphToESRI();
 
+        char *pszWKT = nullptr;
+        VSILFILE *fp = nullptr;
         if( poSRS->exportToWkt( &pszWKT ) == OGRERR_NONE
-            && (fp = VSIFOpenL( osPrjFile, "wt" )) != NULL )
+            && (fp = VSIFOpenL( osPrjFile, "wt" )) != nullptr )
         {
             VSIFWriteL( pszWKT, strlen(pszWKT), 1, fp );
             VSIFCloseL( fp );
@@ -753,23 +797,33 @@ OGRShapeDataSource::ICreateLayer( const char * pszLayerName,
 /* -------------------------------------------------------------------- */
 /*      Create the layer object.                                        */
 /* -------------------------------------------------------------------- */
-    OGRShapeLayer       *poLayer;
+    // OGRShapeLayer constructor expects a filename with an extension (that
+    // could be random actually), otherwise this is going to cause problems with
+    // layer names that have a dot (not speaking about the one before the shp)
+    pszFilename =
+        CPLStrdup(CPLFormFilename( nullptr, pszFilenameWithoutExt, "shp" ));
 
-    /* OGRShapeLayer constructor expects a filename with an extension (that could be */
-    /* random actually), otherwise this is going to cause problems with layer */
-    /* names that have a dot (not speaking about the one before the shp) */
-    pszFilename = CPLStrdup(CPLFormFilename( NULL, pszFilenameWithoutExt, "shp" ));
-
-    poLayer = new OGRShapeLayer( this, pszFilename, hSHP, hDBF, poSRS, TRUE, TRUE,
-                                 eType );
+    OGRShapeLayer *poLayer =
+        new OGRShapeLayer( this, pszFilename, hSHP, hDBF, poSRS,
+                           true, true, eType );
+    if( poSRS != nullptr )
+    {
+        poSRS->Release();
+    }
 
     CPLFree( pszFilenameWithoutExt );
     CPLFree( pszFilename );
 
-    poLayer->SetResizeAtClose( CSLFetchBoolean( papszOptions, "RESIZE", FALSE ) );
-    poLayer->CreateSpatialIndexAtClose( CSLFetchBoolean( papszOptions, "SPATIAL_INDEX", FALSE ) );
+    poLayer->SetResizeAtClose(
+        CPLFetchBool( papszOptions, "RESIZE", false ) );
+    poLayer->CreateSpatialIndexAtClose(
+        CPLFetchBool( papszOptions, "SPATIAL_INDEX", false ) );
     poLayer->SetModificationDate(
         CSLFetchNameValue( papszOptions, "DBF_DATE_LAST_UPDATE" ) );
+    poLayer->SetAutoRepack(
+        CPLFetchBool( papszOptions, "AUTO_REPACK", true ) );
+    poLayer->SetWriteDBFEOFChar(
+        CPLFetchBool( papszOptions, "DBF_EOF_CHAR", true ) );
 
 /* -------------------------------------------------------------------- */
 /*      Add layer to data source layer list.                            */
@@ -788,12 +842,14 @@ int OGRShapeDataSource::TestCapability( const char * pszCap )
 {
     if( EQUAL(pszCap,ODsCCreateLayer) )
         return bDSUpdate;
-    else if( EQUAL(pszCap,ODsCDeleteLayer) )
+    if( EQUAL(pszCap,ODsCDeleteLayer) )
         return bDSUpdate;
-    else if( EQUAL(pszCap,ODsCMeasuredGeometries) )
+    if( EQUAL(pszCap,ODsCMeasuredGeometries) )
         return TRUE;
-    else
-        return FALSE;
+    if( EQUAL(pszCap,ODsCRandomLayerWrite) )
+        return bDSUpdate;
+
+    return FALSE;
 }
 
 /************************************************************************/
@@ -804,27 +860,28 @@ int OGRShapeDataSource::GetLayerCount()
 
 {
 #ifndef IMMEDIATE_OPENING
-    if (oVectorLayerName.size() != 0)
+    if( !oVectorLayerName.empty() )
     {
-        for(size_t i = 0; i < oVectorLayerName.size(); i++)
+        for( size_t i = 0; i < oVectorLayerName.size(); i++ )
         {
             const char* pszFilename = oVectorLayerName[i].c_str();
             const char* pszLayerName = CPLGetBasename(pszFilename);
 
-            int j;
-            for(j=0;j<nLayers;j++)
+            int j = 0;  // Used after for.
+            for( ; j < nLayers; j++ )
             {
-                if (strcmp(papoLayers[j]->GetName(), pszLayerName) == 0)
+                if( strcmp(papoLayers[j]->GetName(), pszLayerName) == 0 )
                     break;
             }
-            if (j < nLayers)
+            if( j < nLayers )
                 continue;
 
-            if( !OpenFile( pszFilename, bDSUpdate, TRUE ) )
+            if( !OpenFile( pszFilename, bDSUpdate ) )
             {
                 CPLError( CE_Failure, CPLE_OpenFailed,
-                          "Failed to open file %s.\n"
-                          "It may be corrupt or read-only file accessed in update mode.\n",
+                          "Failed to open file %s."
+                          "It may be corrupt or read-only file accessed in "
+                          "update mode.",
                           pszFilename );
             }
         }
@@ -842,26 +899,25 @@ int OGRShapeDataSource::GetLayerCount()
 OGRLayer *OGRShapeDataSource::GetLayer( int iLayer )
 
 {
-    /* To ensure that existing layers are created */
+    // To ensure that existing layers are created.
     GetLayerCount();
 
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
-    else
-        return papoLayers[iLayer];
+        return nullptr;
+
+    return papoLayers[iLayer];
 }
 
 /************************************************************************/
 /*                           GetLayerByName()                           */
 /************************************************************************/
 
-OGRLayer *OGRShapeDataSource::GetLayerByName(const char * pszLayerNameIn)
+OGRLayer *OGRShapeDataSource::GetLayerByName( const char * pszLayerNameIn )
 {
 #ifndef IMMEDIATE_OPENING
-    if (oVectorLayerName.size() != 0)
+    if( !oVectorLayerName.empty() )
     {
-        int j;
-        for(j=0;j<nLayers;j++)
+        for( int j = 0; j < nLayers; j++ )
         {
             if (strcmp(papoLayers[j]->GetName(), pszLayerNameIn) == 0)
             {
@@ -869,41 +925,39 @@ OGRLayer *OGRShapeDataSource::GetLayerByName(const char * pszLayerNameIn)
             }
         }
 
-        size_t i;
-        for(j = 0; j < 2; j++)
+        for( int j = 0; j < 2; j++ )
         {
-            for(i = 0; i < oVectorLayerName.size(); i++)
+            for( size_t i = 0; i < oVectorLayerName.size(); i++ )
             {
                 const char* pszFilename = oVectorLayerName[i].c_str();
                 const char* pszLayerName = CPLGetBasename(pszFilename);
 
-                if (j == 0)
+                if( j == 0 )
                 {
-                    if (strcmp(pszLayerName, pszLayerNameIn) != 0)
+                    if(strcmp(pszLayerName, pszLayerNameIn) != 0)
                         continue;
                 }
                 else
                 {
-                    if ( !EQUAL(pszLayerName, pszLayerNameIn) )
+                    if( !EQUAL(pszLayerName, pszLayerNameIn) )
                         continue;
                 }
 
-                if( !OpenFile( pszFilename, bDSUpdate, TRUE ) )
+                if( !OpenFile( pszFilename, bDSUpdate ) )
                 {
                     CPLError( CE_Failure, CPLE_OpenFailed,
-                            "Failed to open file %s.\n"
-                            "It may be corrupt or read-only file accessed in update mode.\n",
-                            pszFilename );
-                    return NULL;
+                              "Failed to open file %s.  "
+                              "It may be corrupt or read-only file accessed in "
+                              "update mode.",
+                              pszFilename );
+                    return nullptr;
                 }
-                else
-                {
-                    return papoLayers[nLayers - 1];
-                }
+
+                return papoLayers[nLayers - 1];
             }
         }
 
-        return NULL;
+        return nullptr;
     }
 #endif
 
@@ -932,10 +986,10 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
 /* ==================================================================== */
     if( STARTS_WITH_CI(pszStatement, "REPACK ") )
     {
-        OGRShapeLayer *poLayer = (OGRShapeLayer *)
-            GetLayerByName( pszStatement + 7 );
+        OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+            GetLayerByName( pszStatement + 7 ));
 
-        if( poLayer != NULL )
+        if( poLayer != nullptr )
         {
             if( poLayer->Repack() != OGRERR_NONE )
             {
@@ -950,7 +1004,7 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
                       "No such layer as '%s' in REPACK.",
                       pszStatement + 7 );
         }
-        return NULL;
+        return nullptr;
     }
 
 /* ==================================================================== */
@@ -958,18 +1012,20 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
 /* ==================================================================== */
     if( STARTS_WITH_CI(pszStatement, "RESIZE ") )
     {
-        OGRShapeLayer *poLayer = (OGRShapeLayer *)
-            GetLayerByName( pszStatement + 7 );
+        OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+            GetLayerByName( pszStatement + 7 ));
 
-        if( poLayer != NULL )
+        if( poLayer != nullptr )
+        {
             poLayer->ResizeDBF();
+        }
         else
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "No such layer as '%s' in RESIZE.",
                       pszStatement + 7 );
         }
-        return NULL;
+        return nullptr;
     }
 
 /* ==================================================================== */
@@ -977,18 +1033,20 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
 /* ==================================================================== */
     if( STARTS_WITH_CI(pszStatement, "RECOMPUTE EXTENT ON ") )
     {
-        OGRShapeLayer *poLayer = (OGRShapeLayer *)
-            GetLayerByName( pszStatement + 20 );
+        OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+            GetLayerByName( pszStatement + 20 ));
 
-        if( poLayer != NULL )
+        if( poLayer != nullptr )
+        {
             poLayer->RecomputeExtent();
+        }
         else
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "No such layer as '%s' in RECOMPUTE EXTENT.",
                       pszStatement + 20 );
         }
-        return NULL;
+        return nullptr;
     }
 
 /* ==================================================================== */
@@ -996,18 +1054,20 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
 /* ==================================================================== */
     if( STARTS_WITH_CI(pszStatement, "DROP SPATIAL INDEX ON ") )
     {
-        OGRShapeLayer *poLayer = (OGRShapeLayer *)
-            GetLayerByName( pszStatement + 22 );
+        OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+            GetLayerByName( pszStatement + 22 ));
 
-        if( poLayer != NULL )
+        if( poLayer != nullptr )
+        {
             poLayer->DropSpatialIndex();
+        }
         else
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "No such layer as '%s' in DROP SPATIAL INDEX.",
                       pszStatement + 22 );
         }
-        return NULL;
+        return nullptr;
     }
 
 /* ==================================================================== */
@@ -1021,8 +1081,9 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
             && EQUAL(papszTokens[1],"INDEX")
             && EQUAL(papszTokens[2],"ON") )
         {
-            OGRShapeLayer *poLayer = (OGRShapeLayer *) GetLayerByName(papszTokens[3]);
-            if (poLayer != NULL)
+            OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+                GetLayerByName(papszTokens[3]));
+            if( poLayer != nullptr )
                 poLayer->InitializeIndexSupport( poLayer->GetFullName() );
         }
         CSLDestroy( papszTokens );
@@ -1051,36 +1112,49 @@ OGRLayer * OGRShapeDataSource::ExecuteSQL( const char *pszStatement,
                   "Should be of form 'CREATE SPATIAL INDEX ON <table> "
                   "[DEPTH <n>]'",
                   pszStatement );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Get depth if provided.                                          */
 /* -------------------------------------------------------------------- */
-    int nDepth = 0;
-    if( CSLCount(papszTokens) == 7 )
-        nDepth = atoi(papszTokens[6]);
+    const int nDepth =
+        CSLCount(papszTokens) == 7 ? atoi(papszTokens[6]) : 0;
 
 /* -------------------------------------------------------------------- */
 /*      What layer are we operating on.                                 */
 /* -------------------------------------------------------------------- */
-    OGRShapeLayer *poLayer = (OGRShapeLayer *) GetLayerByName(papszTokens[4]);
+    OGRShapeLayer *poLayer = cpl::down_cast<OGRShapeLayer *>(
+        GetLayerByName(papszTokens[4]));
 
-    if( poLayer == NULL )
+    if( poLayer == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Layer %s not recognised.",
                   papszTokens[4] );
         CSLDestroy( papszTokens );
-        return NULL;
+        return nullptr;
     }
 
     CSLDestroy( papszTokens );
 
     poLayer->CreateSpatialIndex( nDepth );
-    return NULL;
+    return nullptr;
 }
 
+/************************************************************************/
+/*                     GetExtensionsForDeletion()                       */
+/************************************************************************/
+
+const char* const* OGRShapeDataSource::GetExtensionsForDeletion()
+{
+    static const char * const apszExtensions[] =
+        { "shp", "shx", "dbf", "sbn", "sbx", "prj", "idm", "ind",
+          "qix", "cpg",
+          "qpj", // QGIS projection file
+          nullptr };
+    return apszExtensions;
+}
 
 /************************************************************************/
 /*                            DeleteLayer()                             */
@@ -1095,12 +1169,15 @@ OGRErr OGRShapeDataSource::DeleteLayer( int iLayer )
     if( !bDSUpdate )
     {
         CPLError( CE_Failure, CPLE_NoWriteAccess,
-                  "Data source %s opened read-only.\n"
+                  "Data source %s opened read-only.  "
                   "Layer %d cannot be deleted.",
                   pszName, iLayer );
 
         return OGRERR_FAILURE;
     }
+
+    // To ensure that existing layers are created.
+    GetLayerCount();
 
     if( iLayer < 0 || iLayer >= nLayers )
     {
@@ -1110,9 +1187,9 @@ OGRErr OGRShapeDataSource::DeleteLayer( int iLayer )
         return OGRERR_FAILURE;
     }
 
-    OGRShapeLayer* poLayerToDelete = (OGRShapeLayer*) papoLayers[iLayer];
+    OGRShapeLayer* poLayerToDelete = papoLayers[iLayer];
 
-    char *pszFilename = CPLStrdup(poLayerToDelete->GetFullName());
+    char * const pszFilename = CPLStrdup(poLayerToDelete->GetFullName());
 
     delete poLayerToDelete;
 
@@ -1124,11 +1201,16 @@ OGRErr OGRShapeDataSource::DeleteLayer( int iLayer )
 
     nLayers--;
 
-    VSIUnlink( CPLResetExtension(pszFilename, "shp") );
-    VSIUnlink( CPLResetExtension(pszFilename, "shx") );
-    VSIUnlink( CPLResetExtension(pszFilename, "dbf") );
-    VSIUnlink( CPLResetExtension(pszFilename, "prj") );
-    VSIUnlink( CPLResetExtension(pszFilename, "qix") );
+    const char * const* papszExtensions =
+        OGRShapeDataSource::GetExtensionsForDeletion();
+    for( int iExt = 0; papszExtensions[iExt] != nullptr; iExt++ )
+    {
+        const char *pszFile = CPLResetExtension(pszFilename,
+                                                papszExtensions[iExt]);
+        VSIStatBufL sStatBuf;
+        if( VSIStatL( pszFile, &sStatBuf ) == 0 )
+            VSIUnlink( pszFile );
+    }
 
     CPLFree( pszFilename );
 
@@ -1141,20 +1223,20 @@ OGRErr OGRShapeDataSource::DeleteLayer( int iLayer )
 
 void OGRShapeDataSource::SetLastUsedLayer( OGRShapeLayer* poLayer )
 {
-    /* We could remove that check and things would still work in */
-    /* 99.99% cases */
-    /* The only rationale for that test is to avoid breaking applications */
-    /* that would deal with layers of the same datasource in different */
-    /* threads. In GDAL < 1.9.0, this would work in most cases I can */
-    /* imagine as shapefile layers are pretty much independent from each */
-    /* others (although it has never been guaranteed to be a valid use case, */
-    /* and the shape driver is likely more the exception than the rule in */
-    /* permitting accessing layers from different threads !) */
-    /* Anyway the LRU list mechanism leaves the door open to concurrent accesses to it */
-    /* so when the datasource has not many layers, we don't try to build the */
-    /* LRU list to avoid concurrency issues. I haven't bothered making the analysis */
-    /* of how a mutex could be used to protect that (my intuition is that it would */
-    /* need to be placed at the beginning of OGRShapeLayer::TouchLayer() ) */
+    // We could remove that check and things would still work in
+    // 99.99% cases.
+    // The only rationale for that test is to avoid breaking applications that
+    // would deal with layers of the same datasource in different threads. In
+    // GDAL < 1.9.0, this would work in most cases I can imagine as shapefile
+    // layers are pretty much independent from each others (although it has
+    // never been guaranteed to be a valid use case, and the shape driver is
+    // likely more the exception than the rule in permitting accessing layers
+    // from different threads !)  Anyway the LRU list mechanism leaves the door
+    // open to concurrent accesses to it so when the datasource has not many
+    // layers, we don't try to build the LRU list to avoid concurrency issues. I
+    // haven't bothered making the analysis of how a mutex could be used to
+    // protect that (my intuition is that it would need to be placed at the
+    // beginning of OGRShapeLayer::TouchLayer() ).
     if (nLayers < poPool->GetMaxSimultaneouslyOpened())
         return;
 
@@ -1162,14 +1244,14 @@ void OGRShapeDataSource::SetLastUsedLayer( OGRShapeLayer* poLayer )
 }
 
 /************************************************************************/
-/*                            GetFileList()                             */
+//                            GetFileList()                             */
 /************************************************************************/
 
 char** OGRShapeDataSource::GetFileList()
 {
-    CPLStringList       oFileList;
+    CPLStringList oFileList;
     GetLayerCount();
-    for(int i=0;i<nLayers;i++)
+    for( int i = 0; i < nLayers; i++ )
     {
         OGRShapeLayer* poLayer = papoLayers[i];
         poLayer->AddToFileList(oFileList);

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Spot imagery.
@@ -28,7 +27,18 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_spot.h"
+
+#include <ctime>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_string.h"
+#include "gdal_mdreader.h"
+
+CPL_CVSID("$Id: reader_spot.cpp ec7b85e6bb8f9737693a31f0bf7166e31e10992e 2018-04-16 00:08:36 +0200 Even Rouault $")
 
 /**
  * GDALMDReaderSpot()
@@ -36,23 +46,22 @@
 GDALMDReaderSpot::GDALMDReaderSpot(const char *pszPath,
         char **papszSiblingFiles) : GDALMDReaderPleiades(pszPath, papszSiblingFiles)
 {
-    const char* pszIMDSourceFilename;
     const char* pszDirName = CPLGetDirname(pszPath);
 
     if(m_osIMDSourceFilename.empty())
     {
-        pszIMDSourceFilename = CPLFormFilename( pszDirName, "METADATA.DIM", NULL );
+        CPLString osIMDSourceFilename = CPLFormFilename( pszDirName, "METADATA.DIM", nullptr );
 
-        if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+        if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
         {
-            m_osIMDSourceFilename = pszIMDSourceFilename;
+            m_osIMDSourceFilename = osIMDSourceFilename;
         }
         else
         {
-            pszIMDSourceFilename = CPLFormFilename( pszDirName, "metadata.dim", NULL );
-            if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+            osIMDSourceFilename = CPLFormFilename( pszDirName, "metadata.dim", nullptr );
+            if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
             {
-                m_osIMDSourceFilename = pszIMDSourceFilename;
+                m_osIMDSourceFilename = osIMDSourceFilename;
             }
         }
     }
@@ -64,26 +73,26 @@ GDALMDReaderSpot::GDALMDReaderSpot(const char *pszPath,
     {
         if(EQUAL(CPLGetFilename(pszPath), "IMAGERY.TIF"))
         {
-            pszIMDSourceFilename = CPLSPrintf( "%s\\METADATA.DIM",
+            CPLString osIMDSourceFilename = CPLSPrintf( "%s\\METADATA.DIM",
                                                            CPLGetPath(pszPath));
 
-            if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+            if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
             {
-                m_osIMDSourceFilename = pszIMDSourceFilename;
+                m_osIMDSourceFilename = osIMDSourceFilename;
             }
             else
             {
-                pszIMDSourceFilename = CPLSPrintf( "%s\\metadata.dim",
+                osIMDSourceFilename = CPLSPrintf( "%s\\metadata.dim",
                                                            CPLGetPath(pszPath));
-                if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+                if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
                 {
-                    m_osIMDSourceFilename = pszIMDSourceFilename;
+                    m_osIMDSourceFilename = osIMDSourceFilename;
                 }
             }
         }
     }
 
-    if(m_osIMDSourceFilename.size())
+    if(!m_osIMDSourceFilename.empty() )
         CPLDebug( "MDReaderSpot", "IMD Filename: %s",
               m_osIMDSourceFilename.c_str() );
 }
@@ -107,11 +116,11 @@ void GDALMDReaderSpot::LoadMetadata()
     {
         CPLXMLNode* psNode = CPLParseXMLFile(m_osIMDSourceFilename);
 
-        if(psNode != NULL)
+        if(psNode != nullptr)
         {
             CPLXMLNode* psisdNode = CPLSearchXMLNode(psNode, "=Dimap_Document");
 
-            if(psisdNode != NULL)
+            if(psisdNode != nullptr)
             {
                 m_papszIMDMD = ReadXMLToList(psisdNode->psChild, m_papszIMDMD);
             }
@@ -123,7 +132,7 @@ void GDALMDReaderSpot::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
@@ -132,7 +141,7 @@ void GDALMDReaderSpot::LoadMetadata()
     int nCounter = -1;
     const char* pszSatId1 = CSLFetchNameValue(m_papszIMDMD,
                   "Dataset_Sources.Source_Information.Scene_Source.MISSION");
-    if(NULL == pszSatId1)
+    if(nullptr == pszSatId1)
     {
         nCounter = 1;
         for(int i = 0; i < 5; i++)
@@ -140,12 +149,11 @@ void GDALMDReaderSpot::LoadMetadata()
             pszSatId1 = CSLFetchNameValue(m_papszIMDMD,
             CPLSPrintf("Dataset_Sources.Source_Information_%d.Scene_Source.MISSION",
                        nCounter));
-            if(NULL != pszSatId1)
+            if(nullptr != pszSatId1)
                 break;
             nCounter++;
         }
     }
-
 
     const char* pszSatId2;
     if(nCounter == -1)
@@ -156,24 +164,23 @@ void GDALMDReaderSpot::LoadMetadata()
             "Dataset_Sources.Source_Information_%d.Scene_Source.MISSION_INDEX",
             nCounter));
 
-    if(NULL != pszSatId1 && NULL != pszSatId2)
+    if(nullptr != pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                            MD_NAME_SATELLITE, CPLSPrintf( "%s %s",
                            CPLStripQuotes(pszSatId1).c_str(),
                            CPLStripQuotes(pszSatId2).c_str()));
     }
-    else if(NULL != pszSatId1 && NULL == pszSatId2)
+    else if(nullptr != pszSatId1 && nullptr == pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId1));
     }
-    else if(NULL == pszSatId1 && NULL != pszSatId2)
+    else if(nullptr == pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId2));
     }
-
 
     const char* pszDate;
     if(nCounter == -1)
@@ -184,7 +191,7 @@ void GDALMDReaderSpot::LoadMetadata()
              "Dataset_Sources.Source_Information_%d.Scene_Source.IMAGING_DATE",
              nCounter));
 
-    if(NULL != pszDate)
+    if(nullptr != pszDate)
     {
         const char* pszTime;
         if(nCounter == -1)
@@ -195,7 +202,7 @@ void GDALMDReaderSpot::LoadMetadata()
              "Dataset_Sources.Source_Information_%d.Scene_Source.IMAGING_TIME",
              nCounter));
 
-        if(NULL == pszTime)
+        if(nullptr == pszTime)
             pszTime = "00:00:00.0Z";
 
         char buffer[80];
@@ -210,14 +217,13 @@ void GDALMDReaderSpot::LoadMetadata()
                                        MD_CLOUDCOVER_NA);
 }
 
-
 /**
  * ReadXMLToList()
  */
 char** GDALMDReaderSpot::ReadXMLToList(CPLXMLNode* psNode, char** papszList,
                                           const char* pszName)
 {
-    if(NULL == psNode)
+    if(nullptr == psNode)
         return papszList;
 
     if (psNode->eType == CXT_Text)
@@ -230,13 +236,13 @@ char** GDALMDReaderSpot::ReadXMLToList(CPLXMLNode* psNode, char** papszList,
     {
         int nAddIndex = 0;
         bool bReset = false;
-        for(CPLXMLNode* psChildNode = psNode->psChild; NULL != psChildNode;
+        for(CPLXMLNode* psChildNode = psNode->psChild; nullptr != psChildNode;
             psChildNode = psChildNode->psNext)
         {
             if (psChildNode->eType == CXT_Element)
             {
                 // check name duplicates
-                if(NULL != psChildNode->psNext)
+                if(nullptr != psChildNode->psNext)
                 {
                     if(bReset)
                     {
@@ -306,7 +312,7 @@ char** GDALMDReaderSpot::ReadXMLToList(CPLXMLNode* psNode, char** papszList,
 
     // proceed next only on top level
 
-    if(NULL != psNode->psNext && EQUAL(pszName, ""))
+    if(nullptr != psNode->psNext && EQUAL(pszName, ""))
     {
          papszList = ReadXMLToList(psNode->psNext, papszList, pszName);
     }

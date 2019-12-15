@@ -12,7 +12,7 @@ Local<Value> FastBuffer::New(unsigned char *data, int length)
 	memcpy(node::Buffer::Data(slowBuffer), data, length);
 
 	Local<Object> globalObj = Nan::GetCurrentContext()->Global();
-	Local<Function> bufferConstructor = globalObj->Get(Nan::New("Buffer").ToLocalChecked()).As<Function>();
+	Local<Function> bufferConstructor = Nan::Get(globalObj, Nan::New("Buffer").ToLocalChecked()).ToLocalChecked().As<Function>();
 	Local<Value> constructorArgs[3] = { slowBuffer, Nan::New<Integer>(length), Nan::New<Integer>(0) };
 	
 	Local<Object> actualBuffer = Nan::NewInstance(bufferConstructor, 3, constructorArgs).ToLocalChecked();

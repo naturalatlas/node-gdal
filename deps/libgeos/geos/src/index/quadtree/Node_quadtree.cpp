@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -17,13 +17,14 @@
  *
  **********************************************************************/
 
-#include <geos/index/quadtree/Node.h> 
-#include <geos/index/quadtree/Key.h> 
+#include <geos/index/quadtree/Node.h>
+#include <geos/index/quadtree/Key.h>
 #include <geos/geom/Envelope.h>
 
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <memory>
 
 #ifndef GEOS_DEBUG
 #define GEOS_DEBUG 0
@@ -41,165 +42,158 @@ namespace index { // geos.index
 namespace quadtree { // geos.index.quadtree
 
 /* public static */
-std::auto_ptr<Node>
+std::unique_ptr<Node>
 Node::createNode(const Envelope& env)
 {
-	Key key(env);
-
-	std::auto_ptr<Envelope> nenv ( new Envelope(key.getEnvelope()) );
-	std::auto_ptr<Node> node (
-		new Node(nenv, key.getLevel())
-	);
-	return node;
+    Key key(env);
+    std::unique_ptr<Envelope> envelope(new Envelope(key.getEnvelope()));
+    std::unique_ptr<Node> node(
+        new Node(std::move(envelope), key.getLevel())
+    );
+    return node;
 }
 
 /* static public */
-std::auto_ptr<Node>
-Node::createExpanded(std::auto_ptr<Node> node, const Envelope& addEnv)
+std::unique_ptr<Node>
+Node::createExpanded(std::unique_ptr<Node> node, const Envelope& addEnv)
 {
-	Envelope expandEnv(addEnv);
-	if ( node.get() ) // should this be asserted ?
-	{
-		expandEnv.expandToInclude(node->getEnvelope());
-	}
+    Envelope expandEnv(addEnv);
+    if(node.get()) {  // should this be asserted ?
+        expandEnv.expandToInclude(node->getEnvelope());
+    }
 
 #if GEOS_DEBUG
-	cerr<<"Node::createExpanded computed "<<expandEnv.toString()<<endl;
+    cerr << "Node::createExpanded computed " << expandEnv.toString() << endl;
 #endif
 
-	std::auto_ptr<Node> largerNode = createNode(expandEnv);
-	if ( node.get() ) // should this be asserted ?
-	{
-		largerNode->insertNode(node);
-	}
+    std::unique_ptr<Node> largerNode = createNode(expandEnv);
+    if(node.get()) {  // should this be asserted ?
+        largerNode->insertNode(std::move(node));
+    }
 
-	return largerNode;
+    return largerNode;
 }
 
 /*public*/
 Node*
-Node::getNode(const Envelope *searchEnv)
+Node::getNode(const Envelope* searchEnv)
 {
-	int subnodeIndex = getSubnodeIndex(searchEnv, centre);
-	// if subquadIndex is -1 searchEnv is not contained in a subquad
-	if (subnodeIndex != -1)
-	{
-		// create the quad if it does not exist
-		Node *node = getSubnode(subnodeIndex);
-		// recursively search the found/created quad
-		return node->getNode(searchEnv);
-	}
-	else
-	{
-		return this;
-	}
+    int subnodeIndex = getSubnodeIndex(searchEnv, centre);
+    // if subquadIndex is -1 searchEnv is not contained in a subquad
+    if(subnodeIndex != -1) {
+        // create the quad if it does not exist
+        Node* node = getSubnode(subnodeIndex);
+        // recursively search the found/created quad
+        return node->getNode(searchEnv);
+    }
+    else {
+        return this;
+    }
 }
 
 /*public*/
 NodeBase*
-Node::find(const Envelope *searchEnv)
+Node::find(const Envelope* searchEnv)
 {
-	int subnodeIndex=getSubnodeIndex(searchEnv, centre);
-	if (subnodeIndex==-1)
-		return this;
-	if (subnode[subnodeIndex]!=NULL) {
-		// query lies in subquad, so search it
-		Node *node=subnode[subnodeIndex];
-		return node->find(searchEnv);
-	}
-	// no existing subquad, so return this one anyway
-	return this;
+    int subnodeIndex = getSubnodeIndex(searchEnv, centre);
+    if(subnodeIndex == -1) {
+        return this;
+    }
+    if(subnodes[subnodeIndex] != nullptr) {
+        // query lies in subquad, so search it
+        Node* node = subnodes[subnodeIndex];
+        return node->find(searchEnv);
+    }
+    // no existing subquad, so return this one anyway
+    return this;
 }
 
 void
-Node::insertNode(std::auto_ptr<Node> node)
+Node::insertNode(std::unique_ptr<Node> node)
 {
-	assert( env->contains(node->getEnvelope()) );
+    assert(env->contains(node->getEnvelope()));
 
-	int index = getSubnodeIndex(node->getEnvelope(), centre);
-	assert(index >= 0);
+    int index = getSubnodeIndex(node->getEnvelope(), centre);
+    assert(index >= 0);
 
-	if (node->level == level-1)
-	{
-		// We take ownership of node 
-		delete subnode[index];
-		subnode[index] = node.release();
+    if(node->level == level - 1) {
+        // We take ownership of node
+        delete subnodes[index];
+        subnodes[index] = node.release();
 
-		//System.out.println("inserted");
-	}
-	else
-	{
-		// the quad is not a direct child, so make a new child
-		// quad to contain it and recursively insert the quad
-		std::auto_ptr<Node> childNode ( createSubnode(index) );
+        //System.out.println("inserted");
+    }
+    else {
+        // the quad is not a direct child, so make a new child
+        // quad to contain it and recursively insert the quad
+        std::unique_ptr<Node> childNode(createSubnode(index));
 
-		// childNode takes ownership of node
-		childNode->insertNode(node);
+        // childNode takes ownership of node
+        childNode->insertNode(std::move(node));
 
-		// We take ownership of childNode 
-		delete subnode[index];
-		subnode[index] = childNode.release();
-	}
+        // We take ownership of childNode
+        delete subnodes[index];
+        subnodes[index] = childNode.release();
+    }
 }
 
 Node*
 Node::getSubnode(int index)
 {
-	assert(index >=0 && index < 4);
-	if (subnode[index] == NULL)
-	{
-		subnode[index] = createSubnode(index).release();
-	}
-	return subnode[index];
+    assert(index >= 0 && index < 4);
+    if(subnodes[index] == nullptr) {
+        subnodes[index] = createSubnode(index).release();
+    }
+    return subnodes[index];
 }
 
-std::auto_ptr<Node>
+std::unique_ptr<Node>
 Node::createSubnode(int index)
 {
-	// create a new subquad in the appropriate quadrant
-	double minx=0.0;
-	double maxx=0.0;
-	double miny=0.0;
-	double maxy=0.0;
+    // create a new subquad in the appropriate quadrant
+    double minx = 0.0;
+    double maxx = 0.0;
+    double miny = 0.0;
+    double maxy = 0.0;
 
-	switch (index) {
-		case 0:
-			minx=env->getMinX();
-			maxx=centre.x;
-			miny=env->getMinY();
-			maxy=centre.y;
-			break;
-		case 1:
-			minx=centre.x;
-			maxx=env->getMaxX();
-			miny=env->getMinY();
-			maxy=centre.y;
-			break;
-		case 2:
-			minx=env->getMinX();
-			maxx=centre.x;
-			miny=centre.y;
-			maxy=env->getMaxY();
-			break;
-		case 3:
-			minx=centre.x;
-			maxx=env->getMaxX();
-			miny=centre.y;
-			maxy=env->getMaxY();
-			break;
-	}
-	std::auto_ptr<Envelope> sqEnv ( new Envelope(minx,maxx,miny,maxy) );
-	std::auto_ptr<Node> node ( new Node(sqEnv, level-1) );
-	return node;
+    switch(index) {
+    case 0:
+        minx = env->getMinX();
+        maxx = centre.x;
+        miny = env->getMinY();
+        maxy = centre.y;
+        break;
+    case 1:
+        minx = centre.x;
+        maxx = env->getMaxX();
+        miny = env->getMinY();
+        maxy = centre.y;
+        break;
+    case 2:
+        minx = env->getMinX();
+        maxx = centre.x;
+        miny = centre.y;
+        maxy = env->getMaxY();
+        break;
+    case 3:
+        minx = centre.x;
+        maxx = env->getMaxX();
+        miny = centre.y;
+        maxy = env->getMaxY();
+        break;
+    }
+    std::unique_ptr<Envelope> sqEnv(new Envelope(minx, maxx, miny, maxy));
+    std::unique_ptr<Node> node(new Node(std::move(sqEnv), level - 1));
+    return node;
 }
 
 string
 Node::toString() const
 {
-	ostringstream os;
-	os <<"L"<<level<<" "<<env->toString()<<" Ctr["<<centre.toString()<<"]";
-	os <<" "+NodeBase::toString();
-	return os.str();
+    ostringstream os;
+    os << "L" << level << " " << env->toString() << " Ctr[" << centre.toString() << "]";
+    os << " " + NodeBase::toString();
+    return os.str();
 }
 
 

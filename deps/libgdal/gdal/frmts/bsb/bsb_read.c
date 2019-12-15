@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsb_read.c 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: bsb_read.c ae217f74475a65895ddfbf279d7c019eddac6222 2018-01-17 08:15:37Z Even Rouault $
  *
  * Project:  BSB Reader
  * Purpose:  Low level BSB Access API Implementation (non-GDAL).
@@ -37,7 +37,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: bsb_read.c 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: bsb_read.c ae217f74475a65895ddfbf279d7c019eddac6222 2018-01-17 08:15:37Z Even Rouault $")
 
 static int BSBReadHeaderLine( BSBInfo *psInfo, char* pszLine, int nLineMaxLen, int bNO1 );
 static int BSBSeekAndCheckScanlineNumber ( BSBInfo *psInfo, int nScanline,
@@ -437,7 +437,7 @@ BSBInfo *BSBOpen( const char *pszFilename )
         && psInfo->nColorSize >= 0x31 && psInfo->nColorSize <= 0x38 )
         psInfo->nColorSize -= 0x30;
 
-    if( ! (psInfo->nColorSize > 0 && psInfo->nColorSize < 9) )
+    if( ! (psInfo->nColorSize > 0 && psInfo->nColorSize <=7) )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "BSBOpen : Bad value for nColorSize (%d). Probably due to corrupted BSB file",
@@ -449,6 +449,20 @@ BSBInfo *BSBOpen( const char *pszFilename )
 /* -------------------------------------------------------------------- */
 /*      Initialize memory for line offset list.                         */
 /* -------------------------------------------------------------------- */
+    if( psInfo->nYSize > 10000000 )
+    {
+        vsi_l_offset nCurOffset = VSIFTellL(fp);
+        vsi_l_offset nFileSize;
+        VSIFSeekL(fp, 0, SEEK_END);
+        nFileSize = VSIFTellL(fp);
+        if( nFileSize < (vsi_l_offset)(psInfo->nYSize) )
+        {
+            CPLError( CE_Failure, CPLE_AppDefined, "Truncated file" );
+            BSBClose( psInfo );
+            return NULL;
+        }
+        VSIFSeekL(fp, nCurOffset, SEEK_SET);
+    }
     psInfo->panLineOffset = (int *)
         VSI_MALLOC2_VERBOSE(sizeof(int), psInfo->nYSize);
     if (psInfo->panLineOffset == NULL)
@@ -471,12 +485,20 @@ BSBInfo *BSBOpen( const char *pszFilename )
         int nVal;
         int listIsOK = 1;
         int nOffsetIndexTable;
+        vsi_l_offset nFileLenLarge;
         int nFileLen;
 
         /* Seek fp to point the last 4 byte integer which points
         * the offset of the first line */
         VSIFSeekL( fp, 0, SEEK_END );
-        nFileLen = (int)VSIFTellL( fp );
+        nFileLenLarge = VSIFTellL( fp );
+        if( nFileLenLarge > INT_MAX )
+        {
+            // Potentially the format could support up to 32 bit unsigned ?
+            BSBClose( psInfo );
+            return NULL;
+        }
+        nFileLen = (int)nFileLenLarge;
         VSIFSeekL( fp, nFileLen - 4, SEEK_SET );
 
         VSIFReadL(&nVal, 1, 4, fp);//last 4 bytes
@@ -489,6 +511,14 @@ BSBInfo *BSBOpen( const char *pszFilename )
         /* If we look into the file closely, there is no data for */
         /* that last row (the end of line psInfo->nYSize - 1 is the start */
         /* of the index table), so we can decrement psInfo->nYSize. */
+        if( nOffsetIndexTable <= 0 ||
+            psInfo->nYSize > INT_MAX / 4 ||
+            4 * psInfo->nYSize > INT_MAX - nOffsetIndexTable )
+        {
+            /* int32 overflow */
+            BSBClose( psInfo );
+            return NULL;
+        }
         if (nOffsetIndexTable + 4 * (psInfo->nYSize - 1) == nFileLen - 4)
         {
             CPLDebug("BSB", "Index size is one row shorter than declared image height. Correct this");
@@ -673,7 +703,8 @@ static int BSBSeekAndCheckScanlineNumber ( BSBInfo *psInfo, int nScanline,
         while( nScanline != 0 && nLineMarker == 0 && byNext == 0 && !bErrorFlag )
             byNext = BSBGetc( psInfo, psInfo->bNO1, &bErrorFlag );
 
-        nLineMarker = nLineMarker * 128 + (byNext & 0x7f);
+        /* Avoid int32 overflow. The unsigned overflow is OK */
+        nLineMarker = (int)((unsigned)nLineMarker * 128U + (unsigned)(byNext & 0x7f));
     } while( (byNext & 0x80) != 0 );
 
     if ( bErrorFlag )
@@ -788,7 +819,9 @@ int BSBReadScanline( BSBInfo *psInfo, int nScanline,
             while( (byNext & 0x80) != 0 && !bErrorFlag)
             {
                 byNext = BSBGetc( psInfo, psInfo->bNO1, &bErrorFlag );
-                nRunCount = nRunCount * 128 + (byNext & 0x7f);
+                /* Cast to unsigned to avoid int overflow. Even if the */
+                /* value is crazy, we validate it afterwards */
+                nRunCount = (int)((unsigned)nRunCount * 128 + (byNext & 0x7f));
             }
 
             /* Prevent over-run of line data */

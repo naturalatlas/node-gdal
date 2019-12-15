@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrcouchdblayer.cpp 32247 2015-12-19 07:05:52Z goatbar $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBLayer class.
@@ -31,7 +30,7 @@
 #include "ogrgeojsonreader.h"
 #include "ogrgeojsonutils.h"
 
-CPL_CVSID("$Id: ogrcouchdblayer.cpp 32247 2015-12-19 07:05:52Z goatbar $");
+CPL_CVSID("$Id: ogrcouchdblayer.cpp c3b17f3db1f346b23bbab3000bd3b5e4225b7512 2019-01-03 10:26:12 -0500 alanstewart-terragotech $")
 
 /************************************************************************/
 /*                            OGRCouchDBLayer()                             */
@@ -39,13 +38,13 @@ CPL_CVSID("$Id: ogrcouchdblayer.cpp 32247 2015-12-19 07:05:52Z goatbar $");
 
 OGRCouchDBLayer::OGRCouchDBLayer(OGRCouchDBDataSource* poDSIn) :
     poDS(poDSIn),
-    poFeatureDefn(NULL),
-    poSRS(NULL),
+    poFeatureDefn(nullptr),
+    poSRS(nullptr),
     nNextInSeq(0),
     nOffset(0),
-    bEOF(FALSE),
-    poFeatures(NULL),
-    bGeoJSONDocument(TRUE)
+    bEOF(false),
+    poFeatures(nullptr),
+    bGeoJSONDocument(true)
 {}
 
 /************************************************************************/
@@ -55,10 +54,10 @@ OGRCouchDBLayer::OGRCouchDBLayer(OGRCouchDBDataSource* poDSIn) :
 OGRCouchDBLayer::~OGRCouchDBLayer()
 
 {
-    if( poSRS != NULL )
+    if( poSRS != nullptr )
         poSRS->Release();
 
-    if( poFeatureDefn != NULL )
+    if( poFeatureDefn != nullptr )
         poFeatureDefn->Release();
 
     json_object_put(poFeatures);
@@ -73,7 +72,7 @@ void OGRCouchDBLayer::ResetReading()
 {
     nNextInSeq = 0;
     nOffset = 0;
-    bEOF = FALSE;
+    bEOF = false;
 }
 
 /************************************************************************/
@@ -101,21 +100,21 @@ OGRFeature *OGRCouchDBLayer::GetNextFeature()
         if (nNextInSeq < nOffset ||
             nNextInSeq >= nOffset + static_cast<int>(aoFeatures.size()))
         {
-            if (bEOF)
-                return NULL;
+            if( bEOF )
+                return nullptr;
 
             nOffset += static_cast<int>(aoFeatures.size());
-            if (!FetchNextRows())
-                return NULL;
+            if( !FetchNextRows() )
+                return nullptr;
         }
 
         poFeature = GetNextRawFeature();
-        if (poFeature == NULL)
-            return NULL;
+        if (poFeature == nullptr)
+            return nullptr;
 
-        if((m_poFilterGeom == NULL
+        if((m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-        && (m_poAttrQuery == NULL
+        && (m_poAttrQuery == nullptr
             || m_poAttrQuery->Evaluate( poFeature )) )
         {
             return poFeature;
@@ -133,10 +132,10 @@ OGRFeature *OGRCouchDBLayer::GetNextRawFeature()
 {
     if (nNextInSeq < nOffset ||
         nNextInSeq - nOffset >= (int)aoFeatures.size())
-        return NULL;
+        return nullptr;
 
     OGRFeature* poFeature = TranslateFeature(aoFeatures[nNextInSeq - nOffset]);
-    if (poFeature != NULL && poFeature->GetFID() == OGRNullFID)
+    if (poFeature != nullptr && poFeature->GetFID() == OGRNullFID)
         poFeature->SetFID(nNextInSeq);
 
     nNextInSeq ++;
@@ -152,7 +151,7 @@ OGRErr OGRCouchDBLayer::SetNextByIndex( GIntBig nIndex )
 {
     if (nIndex < 0 || nIndex >= INT_MAX )
         return OGRERR_FAILURE;
-    bEOF = FALSE;
+    bEOF = false;
     nNextInSeq = (int)nIndex;
     return OGRERR_NONE;
 }
@@ -177,10 +176,9 @@ int OGRCouchDBLayer::TestCapability( const char * pszCap )
 
 OGRFeature* OGRCouchDBLayer::TranslateFeature( json_object* poObj )
 {
-    OGRFeature* poFeature = NULL;
-    poFeature = new OGRFeature( GetLayerDefn() );
+    OGRFeature* poFeature = new OGRFeature( GetLayerDefn() );
 
-    json_object* poId = json_object_object_get(poObj, "_id");
+    json_object* poId = CPL_json_object_object_get(poObj, "_id");
     const char* pszId = json_object_get_string(poId);
     if (pszId)
     {
@@ -192,7 +190,7 @@ OGRFeature* OGRCouchDBLayer::TranslateFeature( json_object* poObj )
             poFeature->SetFID(nFID);
     }
 
-    json_object* poRev = json_object_object_get(poObj, "_rev");
+    json_object* poRev = CPL_json_object_object_get(poObj, "_rev");
     const char* pszRev = json_object_get_string(poRev);
     if (pszRev)
         poFeature->SetField(COUCHDB_REV_FIELD, pszRev);
@@ -202,13 +200,13 @@ OGRFeature* OGRCouchDBLayer::TranslateFeature( json_object* poObj )
 /* -------------------------------------------------------------------- */
 
     json_object_iter it;
-    it.key = NULL;
-    it.val = NULL;
-    it.entry = NULL;
+    it.key = nullptr;
+    it.val = nullptr;
+    it.entry = nullptr;
     if( bGeoJSONDocument )
     {
-        json_object* poObjProps = json_object_object_get( poObj, "properties" );
-        if ( NULL != poObjProps &&
+        json_object* poObjProps = CPL_json_object_object_get( poObj, "properties" );
+        if ( nullptr != poObjProps &&
              json_object_get_type(poObjProps ) == json_type_object )
         {
             json_object_object_foreachC( poObjProps, it )
@@ -234,11 +232,11 @@ OGRFeature* OGRCouchDBLayer::TranslateFeature( json_object* poObj )
 /*      Translate geometry sub-object of GeoJSON Feature.               */
 /* -------------------------------------------------------------------- */
 
-    json_object* poObjGeom = json_object_object_get( poObj, "geometry" );
-    if (poObjGeom != NULL)
+    json_object* poObjGeom = CPL_json_object_object_get( poObj, "geometry" );
+    if (poObjGeom != nullptr)
     {
         OGRGeometry* poGeometry = OGRGeoJSONReadGeometry( poObjGeom );
-        if( NULL != poGeometry )
+        if( nullptr != poGeometry )
         {
             if (poSRS)
                 poGeometry->assignSpatialReference(poSRS);
@@ -265,10 +263,14 @@ void OGRCouchDBLayer::ParseFieldValue(OGRFeature* poFeature,
                     "Ignoring its value",
                     pszKey);
     }
-    else if (poValue != NULL)
+    else if (poValue == nullptr)
+    {
+        poFeature->SetFieldNull( nField );
+    }
+    else
     {
         OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(nField);
-        CPLAssert(poFieldDefn != NULL);
+        CPLAssert(poFieldDefn != nullptr);
         OGRFieldType eType = poFieldDefn->GetType();
 
         if( OFTInteger == eType )
@@ -283,14 +285,15 @@ void OGRCouchDBLayer::ParseFieldValue(OGRFeature* poFeature,
         {
             if ( json_object_get_type(poValue) == json_type_array )
             {
-                int nLength = json_object_array_length(poValue);
-                int* panVal = (int*)CPLMalloc(sizeof(int) * nLength);
-                for(int i=0;i<nLength;i++)
+                const auto nLength = json_object_array_length(poValue);
+                int* panVal = static_cast<int *>(
+                    CPLMalloc(sizeof(int) * nLength));
+                for( auto i = decltype(nLength){0}; i < nLength; i++ )
                 {
                     json_object* poRow = json_object_array_get_idx(poValue, i);
                     panVal[i] = json_object_get_int(poRow);
                 }
-                poFeature->SetField( nField, nLength, panVal );
+                poFeature->SetField( nField, static_cast<int>(nLength), panVal );
                 CPLFree(panVal);
             }
         }
@@ -298,14 +301,15 @@ void OGRCouchDBLayer::ParseFieldValue(OGRFeature* poFeature,
         {
             if ( json_object_get_type(poValue) == json_type_array )
             {
-                int nLength = json_object_array_length(poValue);
-                double* padfVal = (double*)CPLMalloc(sizeof(double) * nLength);
-                for(int i=0;i<nLength;i++)
+                const auto nLength = json_object_array_length(poValue);
+                double* padfVal = static_cast<double *>(
+                    CPLMalloc(sizeof(double) * nLength));
+                for( auto i = decltype(nLength){0}; i < nLength; i++ )
                 {
                     json_object* poRow = json_object_array_get_idx(poValue, i);
                     padfVal[i] = json_object_get_double(poRow);
                 }
-                poFeature->SetField( nField, nLength, padfVal );
+                poFeature->SetField( nField, static_cast<int>(nLength), padfVal );
                 CPLFree(padfVal);
             }
         }
@@ -313,18 +317,19 @@ void OGRCouchDBLayer::ParseFieldValue(OGRFeature* poFeature,
         {
             if ( json_object_get_type(poValue) == json_type_array )
             {
-                int nLength = json_object_array_length(poValue);
-                char** papszVal = (char**)CPLMalloc(sizeof(char*) * (nLength+1));
-                int i;
-                for(i=0;i<nLength;i++)
+                const auto nLength = json_object_array_length(poValue);
+                char** papszVal = static_cast<char **>(
+                    CPLMalloc(sizeof(char*) * (nLength+1)));
+                auto i = decltype(nLength){0};  // Used after for.
+                for( ; i < nLength; i++ )
                 {
                     json_object* poRow = json_object_array_get_idx(poValue, i);
                     const char* pszVal = json_object_get_string(poRow);
-                    if (pszVal == NULL)
+                    if (pszVal == nullptr)
                         break;
                     papszVal[i] = CPLStrdup(pszVal);
                 }
-                papszVal[i] = NULL;
+                papszVal[i] = nullptr;
                 poFeature->SetField( nField, papszVal );
                 CSLDestroy(papszVal);
             }
@@ -336,7 +341,6 @@ void OGRCouchDBLayer::ParseFieldValue(OGRFeature* poFeature,
     }
 }
 
-
 /************************************************************************/
 /*                      BuildFeatureDefnFromDoc()                       */
 /************************************************************************/
@@ -346,13 +350,13 @@ void OGRCouchDBLayer::BuildFeatureDefnFromDoc(json_object* poDoc)
 /* -------------------------------------------------------------------- */
 /*      Read collection of properties.                                  */
 /* -------------------------------------------------------------------- */
-    json_object* poObjProps = json_object_object_get( poDoc,
+    json_object* poObjProps = CPL_json_object_object_get( poDoc,
                                                         "properties" );
     json_object_iter it;
-    it.key = NULL;
-    it.val = NULL;
-    it.entry = NULL;
-    if( NULL != poObjProps && json_object_get_type(poObjProps) == json_type_object )
+    it.key = nullptr;
+    it.val = nullptr;
+    it.entry = nullptr;
+    if( nullptr != poObjProps && json_object_get_type(poObjProps) == json_type_object )
     {
         json_object_object_foreachC( poObjProps, it )
         {
@@ -367,7 +371,7 @@ void OGRCouchDBLayer::BuildFeatureDefnFromDoc(json_object* poDoc)
     }
     else
     {
-        bGeoJSONDocument = FALSE;
+        bGeoJSONDocument = false;
 
         json_object_object_foreachC( poDoc, it )
         {
@@ -384,52 +388,51 @@ void OGRCouchDBLayer::BuildFeatureDefnFromDoc(json_object* poDoc)
         }
     }
 
-    if( json_object_object_get( poDoc, "geometry" ) == NULL )
+    if( CPL_json_object_object_get( poDoc, "geometry" ) == nullptr )
     {
         poFeatureDefn->SetGeomType(wkbNone);
     }
 }
 
-
 /************************************************************************/
 /*                      BuildFeatureDefnFromRows()                      */
 /************************************************************************/
 
-int OGRCouchDBLayer::BuildFeatureDefnFromRows(json_object* poAnswerObj)
+bool OGRCouchDBLayer::BuildFeatureDefnFromRows( json_object* poAnswerObj )
 {
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                     "Layer definition creation failed");
-        return FALSE;
+        return false;
     }
 
     if (poDS->IsError(poAnswerObj, "Layer definition creation failed"))
     {
-        return FALSE;
+        return false;
     }
 
-    json_object* poRows = json_object_object_get(poAnswerObj, "rows");
-    if (poRows == NULL ||
+    json_object* poRows = CPL_json_object_object_get(poAnswerObj, "rows");
+    if (poRows == nullptr ||
         !json_object_is_type(poRows, json_type_array))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                     "Layer definition creation failed");
-        return FALSE;
+        return false;
     }
 
-    int nRows = json_object_array_length(poRows);
+    const auto nRows = json_object_array_length(poRows);
 
-    json_object* poRow = NULL;
-    for(int i=0;i<nRows;i++)
+    json_object* poRow = nullptr;
+    for(auto i=decltype(nRows){0};i<nRows;i++)
     {
         json_object* poTmpRow = json_object_array_get_idx(poRows, i);
-        if (poTmpRow != NULL &&
+        if (poTmpRow != nullptr &&
             json_object_is_type(poTmpRow, json_type_object))
         {
-            json_object* poId = json_object_object_get(poTmpRow, "id");
+            json_object* poId = CPL_json_object_object_get(poTmpRow, "id");
             const char* pszId = json_object_get_string(poId);
-            if (pszId != NULL && pszId[0] != '_')
+            if (pszId != nullptr && pszId[0] != '_')
             {
                 poRow = poTmpRow;
                 break;
@@ -437,102 +440,102 @@ int OGRCouchDBLayer::BuildFeatureDefnFromRows(json_object* poAnswerObj)
         }
     }
 
-    if ( poRow == NULL )
+    if ( poRow == nullptr )
     {
-        return FALSE;
+        return false;
     }
 
-    json_object* poDoc = json_object_object_get(poRow, "doc");
-    if ( poDoc == NULL )
-        poDoc = json_object_object_get(poRow, "value");
-    if ( poDoc == NULL ||
+    json_object* poDoc = CPL_json_object_object_get(poRow, "doc");
+    if ( poDoc == nullptr )
+        poDoc = CPL_json_object_object_get(poRow, "value");
+    if ( poDoc == nullptr ||
             !json_object_is_type(poDoc, json_type_object) )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                     "Layer definition creation failed");
-        return FALSE;
+        return false;
     }
 
     BuildFeatureDefnFromDoc(poDoc);
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                   FetchNextRowsAnalyseDocs()                         */
 /************************************************************************/
 
-int OGRCouchDBLayer::FetchNextRowsAnalyseDocs(json_object* poAnswerObj)
+bool OGRCouchDBLayer::FetchNextRowsAnalyseDocs( json_object* poAnswerObj )
 {
-    if (poAnswerObj == NULL)
-        return FALSE;
+    if (poAnswerObj == nullptr)
+        return false;
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "FetchNextRowsAnalyseDocs() failed");
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
     if (poDS->IsError(poAnswerObj, "FetchNextRowsAnalyseDocs() failed"))
     {
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
-    json_object* poRows = json_object_object_get(poAnswerObj, "rows");
-    if (poRows == NULL ||
+    json_object* poRows = CPL_json_object_object_get(poAnswerObj, "rows");
+    if (poRows == nullptr ||
         !json_object_is_type(poRows, json_type_array))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "FetchNextRowsAnalyseDocs() failed");
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
-    int nRows = json_object_array_length(poRows);
-    for(int i=0;i<nRows;i++)
+    const auto nRows = json_object_array_length(poRows);
+    for(auto i=decltype(nRows){0};i<nRows;i++)
     {
         json_object* poRow = json_object_array_get_idx(poRows, i);
-        if ( poRow == NULL ||
+        if ( poRow == nullptr ||
              !json_object_is_type(poRow, json_type_object) )
         {
             CPLError(CE_Failure, CPLE_AppDefined,
                      "FetchNextRowsAnalyseDocs() failed");
             json_object_put(poAnswerObj);
-            return FALSE;
+            return false;
         }
 
-        json_object* poDoc = json_object_object_get(poRow, "doc");
-        if ( poDoc == NULL )
-            poDoc = json_object_object_get(poRow, "value");
-        if ( poDoc == NULL ||
+        json_object* poDoc = CPL_json_object_object_get(poRow, "doc");
+        if ( poDoc == nullptr )
+            poDoc = CPL_json_object_object_get(poRow, "value");
+        if ( poDoc == nullptr ||
              !json_object_is_type(poDoc, json_type_object) )
         {
             CPLError(CE_Failure, CPLE_AppDefined,
                      "FetchNextRowsAnalyseDocs() failed");
             json_object_put(poAnswerObj);
-            return FALSE;
+            return false;
         }
 
-        json_object* poId = json_object_object_get(poDoc, "_id");
+        json_object* poId = CPL_json_object_object_get(poDoc, "_id");
         const char* pszId = json_object_get_string(poId);
-        if (pszId != NULL && !STARTS_WITH(pszId, "_design/"))
+        if (pszId != nullptr && !STARTS_WITH(pszId, "_design/"))
         {
             aoFeatures.push_back(poDoc);
         }
     }
 
-    bEOF = nRows < GetFeaturesToFetch();
+    bEOF = static_cast<int>(nRows) < GetFeaturesToFetch();
 
     poFeatures = poAnswerObj;
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
-/*              	     GetSpatialRef()                            */
+/*                           GetSpatialRef()                            */
 /************************************************************************/
 
 OGRSpatialReference* OGRCouchDBLayer::GetSpatialRef()

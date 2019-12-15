@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -16,7 +16,7 @@
 #define GEOS_PRECISION_COMMONBITSOP_H
 
 #include <geos/export.h>
-#include <geos/precision/CommonBitsRemover.h> // for auto_ptr composition
+#include <geos/precision/CommonBitsRemover.h> // for unique_ptr composition
 
 #include <vector>
 #include <memory>
@@ -27,12 +27,12 @@
 #endif
 
 namespace geos {
-	namespace geom {
-		class Geometry;
-	}
-	namespace precision {
-		//class CommonBitsRemover;
-	}
+namespace geom {
+class Geometry;
+}
+namespace precision {
+//class CommonBitsRemover;
+}
 }
 
 namespace geos {
@@ -41,7 +41,7 @@ namespace precision { // geos.precision
 /** \brief
  * Provides versions of Geometry spatial functions which use
  * common bit removal to reduce the likelihood of robustness problems.
- * 
+ *
  * In the current implementation no rounding is performed on the
  * reshifted result geometry, which means that it is possible
  * that the returned Geometry is invalid.
@@ -51,117 +51,117 @@ class GEOS_DLL CommonBitsOp {
 
 private:
 
-	bool returnToOriginalPrecision;
+    bool returnToOriginalPrecision;
 
-	std::auto_ptr<CommonBitsRemover> cbr;
+    std::unique_ptr<CommonBitsRemover> cbr;
 
-	/** \brief
-	 * Computes a copy of the input Geometry with the calculated
-	 * common bits removed from each coordinate.
-	 *
-	 * @param geom0 the Geometry to remove common bits from
-	 * @return a copy of the input Geometry with common bits removed
-	 *         (caller takes responsibility of its deletion)
-	 */
-	geom::Geometry* removeCommonBits(const geom::Geometry *geom0);
+    /** \brief
+     * Computes a copy of the input Geometry with the calculated
+     * common bits removed from each coordinate.
+     *
+     * @param geom0 the Geometry to remove common bits from
+     * @return a copy of the input Geometry with common bits removed
+     *         (caller takes responsibility of its deletion)
+     */
+    std::unique_ptr<geom::Geometry> removeCommonBits(const geom::Geometry* geom0);
 
-	/** \brief
-	 *
-	 */
-	void removeCommonBits(
-			const geom::Geometry* geom0,
-			const geom::Geometry* geom1,
-			std::auto_ptr<geom::Geometry>& rgeom0,
-			std::auto_ptr<geom::Geometry>& rgeom1);
+    /** \brief
+     *
+     */
+    void removeCommonBits(
+        const geom::Geometry* geom0,
+        const geom::Geometry* geom1,
+        std::unique_ptr<geom::Geometry>& rgeom0,
+        std::unique_ptr<geom::Geometry>& rgeom1);
 
 
 public:
 
-	/**
-	 * Creates a new instance of class, which reshifts result Geometry
-	 */
-	CommonBitsOp();
+    /** \brief
+     * Creates a new instance of class, which reshifts result Geometry
+     */
+    CommonBitsOp();
 
-	/**
-	 * Creates a new instance of class, specifying whether
-	 * the result {@link Geometry}s should be reshifted.
-	 *
-	 * @param returnToOriginalPrecision
-	 */
-	CommonBitsOp(bool nReturnToOriginalPrecision);
+    /** \brief
+     * Creates a new instance of class, specifying whether
+     * the result {@link geom::Geometry}s should be reshifted.
+     *
+     * @param nReturnToOriginalPrecision
+     */
+    CommonBitsOp(bool nReturnToOriginalPrecision);
 
-	/**
-	 * Computes the set-theoretic intersection of two Geometry,
-	 * using enhanced precision.
-	 * @param geom0 the first Geometry
-	 * @param geom1 the second Geometry
-	 * @return the Geometry representing the set-theoretic
-	 *  intersection of the input Geometries.
-	 */
-	geom::Geometry* intersection(
-			const geom::Geometry *geom0,
-			const geom::Geometry *geom1);
+    /** \brief
+     * Computes the set-theoretic intersection of two Geometry,
+     * using enhanced precision.
+     * @param geom0 the first Geometry
+     * @param geom1 the second Geometry
+     * @return the Geometry representing the set-theoretic
+     *  intersection of the input Geometries.
+     */
+    std::unique_ptr<geom::Geometry> intersection(
+        const geom::Geometry* geom0,
+        const geom::Geometry* geom1);
 
-	/**
-	 * Computes the set-theoretic union of two Geometry,
-	 * using enhanced precision.
-	 * @param geom0 the first Geometry
-	 * @param geom1 the second Geometry
-	 * @return the Geometry representing the set-theoretic union
-	 * of the input Geometries.
-	 */
-	geom::Geometry* Union(
-			const geom::Geometry *geom0,
-			const geom::Geometry *geom1);
+    /** \brief
+     * Computes the set-theoretic union of two Geometry,
+     * using enhanced precision.
+     * @param geom0 the first Geometry
+     * @param geom1 the second Geometry
+     * @return the Geometry representing the set-theoretic union
+     * of the input Geometries.
+     */
+    std::unique_ptr<geom::Geometry> Union(
+        const geom::Geometry* geom0,
+        const geom::Geometry* geom1);
 
-	/**
-	 * Computes the set-theoretic difference of two Geometry,
-	 * using enhanced precision.
-	 * @param geom0 the first Geometry
-	 * @param geom1 the second Geometry, to be subtracted from the first
-	 * @return the Geometry representing the set-theoretic difference
-	 * of the input Geometries.
-	 */
-	geom::Geometry* difference(
-			const geom::Geometry *geom0,
-			const geom::Geometry *geom1);
+    /** \brief
+     * Computes the set-theoretic difference of two Geometry,
+     * using enhanced precision.
+     * @param geom0 the first Geometry
+     * @param geom1 the second Geometry, to be subtracted from the first
+     * @return the Geometry representing the set-theoretic difference
+     * of the input Geometries.
+     */
+    std::unique_ptr<geom::Geometry> difference(
+        const geom::Geometry* geom0,
+        const geom::Geometry* geom1);
 
-	/**
-	 * Computes the set-theoretic symmetric difference of two geometries,
-	 * using enhanced precision.
-	 * @param geom0 the first Geometry
-	 * @param geom1 the second Geometry
-	 * @return the Geometry representing the set-theoretic symmetric
-	 * difference of the input Geometries.
-	 */
-	geom::Geometry* symDifference(
-			const geom::Geometry *geom0,
-			const geom::Geometry *geom1);
+    /** \brief
+     * Computes the set-theoretic symmetric difference of two geometries,
+     * using enhanced precision.
+     * @param geom0 the first Geometry
+     * @param geom1 the second Geometry
+     * @return the Geometry representing the set-theoretic symmetric
+     * difference of the input Geometries.
+     */
+    std::unique_ptr<geom::Geometry> symDifference(
+        const geom::Geometry* geom0,
+        const geom::Geometry* geom1);
 
-	/**
-	 * Computes the buffer a geometry,
-	 * using enhanced precision.
-	 * @param geom0 the Geometry to buffer
-	 * @param distance the buffer distance
-	 * @return the Geometry representing the buffer of the input Geometry.
-	 */
-	geom::Geometry* buffer(
-			const geom::Geometry *geom0,
-			double distance);
+    /** \brief
+     * Computes the buffer a geometry,
+     * using enhanced precision.
+     * @param geom0 the Geometry to buffer
+     * @param distance the buffer distance
+     * @return the Geometry representing the buffer of the input Geometry.
+     */
+    std::unique_ptr<geom::Geometry> buffer(
+        const geom::Geometry* geom0,
+        double distance);
 
-	/**
-	 * If required, returning the result to the orginal precision
-	 * if required.
-	 * 
-	 * In this current implementation, no rounding is performed on the
-	 * reshifted result geometry, which means that it is possible
-	 * that the returned Geometry is invalid.
-	 *
-	 * @param result the result Geometry to modify
-	 * @return the result Geometry with the required precision
-	 */
-	geom::Geometry* computeResultPrecision(
-			geom::Geometry *result);
+    /** \brief
+     * If required, returning the result to the orginal precision
+     * if required.
+     *
+     * In this current implementation, no rounding is performed on the
+     * reshifted result geometry, which means that it is possible
+     * that the returned Geometry is invalid.
+     *
+     * @param result the result Geometry to modify
+     * @return the result Geometry with the required precision
+     */
+    std::unique_ptr<geom::Geometry> computeResultPrecision(
+        std::unique_ptr<geom::Geometry> result);
 };
 
 } // namespace geos.precision

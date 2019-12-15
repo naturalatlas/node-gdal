@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrpdsdriver.cpp 33047 2016-01-19 14:47:32Z goatbar $
  *
  * Project:  PDS Translator
  * Purpose:  Implements OGRPDSDriver.
@@ -30,7 +29,7 @@
 #include "cpl_conv.h"
 #include "ogr_pds.h"
 
-CPL_CVSID("$Id: ogrpdsdriver.cpp 33047 2016-01-19 14:47:32Z goatbar $");
+CPL_CVSID("$Id: ogrpdsdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 extern "C" void RegisterOGRPDS();
 
@@ -44,23 +43,22 @@ static GDALDataset *OGRPDSDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL )
-        return NULL;
+        poOpenInfo->fpL == nullptr )
+        return nullptr;
 
-    if( strstr((const char*)poOpenInfo->pabyHeader, "PDS_VERSION_ID") == NULL )
-        return NULL;
+    if( strstr((const char*)poOpenInfo->pabyHeader, "PDS_VERSION_ID") == nullptr )
+        return nullptr;
 
     OGRPDSDataSource *poDS = new OGRPDSDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
 }
-
 
 /************************************************************************/
 /*                           RegisterOGRPDS()                           */
@@ -69,7 +67,7 @@ static GDALDataset *OGRPDSDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRPDS()
 
 {
-    if( GDALGetDriverByName( "OGR_PDS" ) != NULL )
+    if( GDALGetDriverByName( "OGR_PDS" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -85,4 +83,3 @@ void RegisterOGRPDS()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

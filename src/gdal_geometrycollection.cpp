@@ -25,7 +25,7 @@ void GeometryCollection::Initialize(Local<Object> target)
 
 	ATTR(lcons, "children", childrenGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("GeometryCollection").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("GeometryCollection").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -127,7 +127,7 @@ Local<Value> GeometryCollection::New(OGRGeometryCollection *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(GeometryCollection::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(GeometryCollection::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

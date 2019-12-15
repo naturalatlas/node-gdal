@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009  Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -43,85 +43,81 @@ namespace quadtree { // geos.index.quadtree
 int
 Key::computeQuadLevel(const Envelope& env)
 {
-	double dx = env.getWidth();
-	double dy = env.getHeight();
-	double dMax = dx > dy ? dx : dy;
-	int level=DoubleBits::exponent(dMax)+1;
+    double dx = env.getWidth();
+    double dy = env.getHeight();
+    double dMax = dx > dy ? dx : dy;
+    int level = DoubleBits::exponent(dMax) + 1;
 #if GEOS_DEBUG
-	std::cerr<<"Maxdelta:"<<dMax<<" exponent:"<<(level-1)<<std::endl;
+    std::cerr << "Maxdelta:" << dMax << " exponent:" << (level - 1) << std::endl;
 #endif
-	return level;
+    return level;
 }
 
 Key::Key(const Envelope& itemEnv)
-	:
-	pt(),
-	level(0),
-	env()
+    :
+    pt(),
+    level(0),
+    env()
 {
-	computeKey(itemEnv);
-}
-
-Key::~Key()
-{
+    computeKey(itemEnv);
 }
 
 const Coordinate&
 Key::getPoint() const
 {
-	return pt;
+    return pt;
 }
 
 int
 Key::getLevel() const
 {
-	return level;
+    return level;
 }
 
 const Envelope&
 Key::getEnvelope() const
 {
-	return env;
+    return env;
 }
 
 Coordinate*
 Key::getCentre() const
 {
-	return new Coordinate(
-			( env.getMinX() + env.getMaxX() ) / 2,
-			( env.getMinY() + env.getMaxY() ) / 2
-		);
+    return new Coordinate(
+               (env.getMinX() + env.getMaxX()) / 2,
+               (env.getMinY() + env.getMaxY()) / 2
+           );
 }
 
 /*public*/
 void
 Key::computeKey(const Envelope& itemEnv)
 {
-	level=computeQuadLevel(itemEnv);
-	env.init(); // reset to null 
-	computeKey(level, itemEnv);
-	// MD - would be nice to have a non-iterative form of this algorithm
-	while (!env.contains(itemEnv)) {
-		level+=1;
-		computeKey(level, itemEnv);
-	}
+    level = computeQuadLevel(itemEnv);
+    env.init(); // reset to null
+    computeKey(level, itemEnv);
+    // MD - would be nice to have a non-iterative form of this algorithm
+    while(!env.contains(itemEnv)) {
+        level += 1;
+        computeKey(level, itemEnv);
+    }
 #if GEOS_DEBUG
-	std::cerr<<"Key::computeKey:"<<std::endl;
-	std::cerr<<" itemEnv: "<<itemEnv.toString()<<std::endl;
-	std::cerr<<"  keyEnv: "<<env.toString()<<std::endl;
-	std::cerr<<"  keyLvl: "<<level<<std::endl;
+    std::cerr << "Key::computeKey:" << std::endl;
+    std::cerr << " itemEnv: " << itemEnv.toString() << std::endl;
+    std::cerr << "  keyEnv: " << env.toString() << std::endl;
+    std::cerr << "  keyLvl: " << level << std::endl;
 
 #endif
 }
 
 void
-Key::computeKey(int level, const Envelope& itemEnv)
+Key::computeKey(int p_level, const Envelope& itemEnv)
 {
-	double quadSize=DoubleBits::powerOf2(level);
-	//double quadSize=pow2.power(level);
-	pt.x = std::floor(itemEnv.getMinX()/quadSize)*quadSize;
-	pt.y = std::floor(itemEnv.getMinY()/quadSize)*quadSize;
-	env.init(pt.x, pt.x + quadSize, pt.y, pt.y + quadSize);
+    double quadSize = DoubleBits::powerOf2(p_level);
+    //double quadSize=pow2.power(level);
+    pt.x = std::floor(itemEnv.getMinX() / quadSize) * quadSize;
+    pt.y = std::floor(itemEnv.getMinY() / quadSize) * quadSize;
+    env.init(pt.x, pt.x + quadSize, pt.y, pt.y + quadSize);
 }
 
 } // namespace geos.index.quadtree

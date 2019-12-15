@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -18,10 +18,11 @@
  * Check endianness of current machine.
  * @return 0 for big_endian | xdr; 1 == little_endian | ndr
  */
-inline int getMachineByteOrder()
+inline int
+getMachineByteOrder()
 {
-	static int endian_check = 1; // don't modify !!
-	return *((char *)&endian_check);
+    static int endian_check = 1; // don't modify !!
+    return *((char*)&endian_check);
 }
 
 #endif

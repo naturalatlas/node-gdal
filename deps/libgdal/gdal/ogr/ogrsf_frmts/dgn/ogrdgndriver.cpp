@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdgndriver.cpp 32154 2015-12-13 05:34:45Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRDGNDriver class.
@@ -30,7 +29,7 @@
 #include "ogr_dgn.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdgndriver.cpp 32154 2015-12-13 05:34:45Z goatbar $");
+CPL_CVSID("$Id: ogrdgndriver.cpp 4971449609881d6ffdca70188292293852d12691 2017-12-17 16:48:14Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -39,7 +38,7 @@ CPL_CVSID("$Id: ogrdgndriver.cpp 32154 2015-12-13 05:34:45Z goatbar $");
 static int OGRDGNDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    return poOpenInfo->fpL != NULL &&
+    return poOpenInfo->fpL != nullptr &&
            poOpenInfo->nHeaderBytes >= 512 &&
            DGNTestOpen(poOpenInfo->pabyHeader, poOpenInfo->nHeaderBytes);
 }
@@ -52,7 +51,7 @@ static GDALDataset *OGRDGNDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !OGRDGNDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     OGRDGNDataSource *poDS = new OGRDGNDataSource();
 
@@ -61,7 +60,7 @@ static GDALDataset *OGRDGNDriverOpen( GDALOpenInfo* poOpenInfo )
         || poDS->GetLayerCount() == 0 )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -81,14 +80,12 @@ static GDALDataset *OGRDGNDriverCreate( const char * pszName,
 /* -------------------------------------------------------------------- */
 /*      Return a new OGRDataSource()                                    */
 /* -------------------------------------------------------------------- */
-    OGRDGNDataSource    *poDS = NULL;
-
-    poDS = new OGRDGNDataSource();
+    OGRDGNDataSource* poDS = new OGRDGNDataSource();
 
     if( !poDS->PreCreate( pszName, papszOptions ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -101,7 +98,7 @@ static GDALDataset *OGRDGNDriverCreate( const char * pszName,
 void RegisterOGRDGN()
 
 {
-    if( GDALGetDriverByName( "DGN" ) != NULL )
+    if( GDALGetDriverByName( "DGN" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -129,6 +126,8 @@ void RegisterOGRDGN()
 
     poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
                                "<LayerCreationOptionList/>" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_FEATURE_STYLES, "YES" );
 
     poDriver->pfnOpen = OGRDGNDriverOpen;
     poDriver->pfnIdentify = OGRDGNDriverIdentify;

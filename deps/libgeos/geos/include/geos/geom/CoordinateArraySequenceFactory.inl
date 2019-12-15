@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -22,31 +22,42 @@
 namespace geos {
 namespace geom { // geos::geom
 
-INLINE CoordinateSequence*
-CoordinateArraySequenceFactory::create(std::vector<Coordinate> *coords) const
+INLINE std::unique_ptr<CoordinateSequence>
+CoordinateArraySequenceFactory::create() const
 {
-	return new CoordinateArraySequence(coords,3);
+    return std::unique_ptr<CoordinateSequence>(
+            new CoordinateArraySequence(
+                    reinterpret_cast<std::vector<Coordinate>*>(0), 0));
 }
 
-INLINE CoordinateSequence *
-CoordinateArraySequenceFactory::create(std::vector<Coordinate> *coords,
-		size_t dimension ) const
+INLINE std::unique_ptr<CoordinateSequence>
+CoordinateArraySequenceFactory::create(std::vector<Coordinate>* coords,
+                                       size_t dimension) const
 {
-	return new CoordinateArraySequence(coords,dimension);
+    return std::unique_ptr<CoordinateSequence>(
+            new CoordinateArraySequence(coords, dimension));
 }
 
-INLINE CoordinateSequence *
+INLINE std::unique_ptr<CoordinateSequence>
+CoordinateArraySequenceFactory::create(std::vector<Coordinate> && coords,
+        size_t dimension) const {
+    return std::unique_ptr<CoordinateSequence>(new CoordinateArraySequence(std::move(coords), dimension));
+}
+
+INLINE std::unique_ptr<CoordinateSequence>
 CoordinateArraySequenceFactory::create(std::size_t size, std::size_t dimension)
-		const
+const
 {
-	return new CoordinateArraySequence(size,dimension);
+    return std::unique_ptr<CoordinateSequence>(
+            new CoordinateArraySequence(size, dimension));
 }
 
-INLINE CoordinateSequence *
+INLINE std::unique_ptr<CoordinateSequence>
 CoordinateArraySequenceFactory::create(const CoordinateSequence& seq)
-		const
+const
 {
-	return new CoordinateArraySequence(seq);
+    return std::unique_ptr<CoordinateSequence>(
+            new CoordinateArraySequence(seq));
 }
 
 

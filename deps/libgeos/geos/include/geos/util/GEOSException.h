@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -23,6 +23,7 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4251) // warning C4251: needs to have dll-interface to be used by clients of class
+#pragma warning(disable: 4275) // warning C4275: non-DLL-interface std::exception used as base for DLL-interface GEOSException
 #endif
 
 namespace geos {
@@ -32,37 +33,26 @@ namespace util { // geos.util
  *
  * \brief Base class for all GEOS exceptions.
  *
- * Exceptions are thrown as pointers to this type.
- * Use toString() to get a readable message.
+ * Use what() to get a readable message.
  */
-class GEOS_DLL GEOSException: public std::exception {
-
-	std::string _msg;
+class GEOS_DLL GEOSException: public std::runtime_error {
 
 public:
 
-	GEOSException()
-		:
-		_msg("Unknown error")
-	{}
+    GEOSException()
+        :
+        std::runtime_error("Unknown error")
+    {}
 
-	GEOSException(std::string const& msg)
-		:
-		_msg(msg)
-	{}
+    GEOSException(std::string const& msg)
+        :
+        std::runtime_error(msg)
+    {}
 
-	GEOSException(std::string const& name, std::string const& msg)
-		:
-		_msg(name+": "+msg)
-	{}
-
-	virtual ~GEOSException() throw()
-	{}
-
-	const char* what() const throw()
-	{
-		return _msg.c_str();
-	}
+    GEOSException(std::string const& name, std::string const& msg)
+        :
+        std::runtime_error(name + ": " + msg)
+    {}
 
 };
 

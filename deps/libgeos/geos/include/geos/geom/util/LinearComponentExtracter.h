@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -23,7 +23,6 @@
 #include <geos/geom/GeometryComponentFilter.h>
 #include <geos/geom/Geometry.h> // to be removed when we have the .inl
 #include <geos/geom/LineString.h> // to be removed when we have the .inl
-//#include <geos/platform.h>
 
 namespace geos {
 namespace geom { // geos.geom
@@ -36,46 +35,30 @@ class GEOS_DLL LinearComponentExtracter: public GeometryComponentFilter {
 
 private:
 
-	LineString::ConstVect &comps;
+    LineString::ConstVect& comps;
 
     // Declare type as noncopyable
-    LinearComponentExtracter(const LinearComponentExtracter& other);
-    LinearComponentExtracter& operator=(const LinearComponentExtracter& rhs);
+    LinearComponentExtracter(const LinearComponentExtracter& other) = delete;
+    LinearComponentExtracter& operator=(const LinearComponentExtracter& rhs) = delete;
 
 public:
-	/**
-	 * Push the linear components from a single geometry into
-	 * the provided vector.
-	 * If more than one geometry is to be processed, it is more
-	 * efficient to create a single LinearComponentExtracterFilter instance
-	 * and pass it to multiple geometries.
-	 */
-	static void getLines(const Geometry &geom, std::vector<const LineString*> &ret)
-	{
-		LinearComponentExtracter lce(ret);
-		geom.apply_ro(&lce);
-	}
+    /**
+     * Push the linear components from a single geometry into
+     * the provided vector.
+     * If more than one geometry is to be processed, it is more
+     * efficient to create a single LinearComponentExtracterFilter instance
+     * and pass it to multiple geometries.
+     */
+    static void getLines(const Geometry& geom, std::vector<const LineString*>& ret);
+    /**
+     * Constructs a LinearComponentExtracterFilter with a list in which
+     * to store LineStrings found.
+     */
+    LinearComponentExtracter(std::vector<const LineString*>& newComps);
 
-	/**
-	 * Constructs a LinearComponentExtracterFilter with a list in which
-	 * to store LineStrings found.
-	 */
-	LinearComponentExtracter(std::vector<const LineString*> &newComps)
-		:
-		comps(newComps)
-		{}
+    void filter_rw(Geometry* geom) override;
 
-	void filter_rw(Geometry *geom)
-	{
-if ( const LineString *ls=dynamic_cast<const LineString *>(geom) )
-		comps.push_back(ls);
-	}
-
-	void filter_ro(const Geometry *geom)
-	{
-if ( const LineString *ls=dynamic_cast<const LineString *>(geom) )
-		comps.push_back(ls);
-	}
+    void filter_ro(const Geometry* geom) override;
 
 };
 

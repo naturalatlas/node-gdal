@@ -59,7 +59,7 @@ void SpatialReference::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "autoIdentifyEPSG", autoIdentifyEPSG);
 	Nan::SetPrototypeMethod(lcons, "validate", validate);
 
-	target->Set(Nan::New("SpatialReference").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("SpatialReference").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -173,7 +173,7 @@ Local<Value> SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	SpatialReference *wrapped = new SpatialReference(cloned_srs);
 	wrapped->owned_ = true;
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(SpatialReference::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(SpatialReference::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	cache.add(cloned_srs, raw, obj);
 
@@ -892,8 +892,8 @@ NAN_METHOD(SpatialReference::getLinearUnits)
 	double units = srs->this_->GetLinearUnits(&unit_name);
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("value").ToLocalChecked(), Nan::New<Number>(units));
-	result->Set(Nan::New("units").ToLocalChecked(), SafeString::New(unit_name));
+	Nan::Set(result, Nan::New("value").ToLocalChecked(), Nan::New<Number>(units));
+	Nan::Set(result, Nan::New("units").ToLocalChecked(), SafeString::New(unit_name));
 
 	info.GetReturnValue().Set(result);
 }
@@ -914,8 +914,8 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 	double units = srs->this_->GetAngularUnits(&unit_name);
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("value").ToLocalChecked(), Nan::New<Number>(units));
-	result->Set(Nan::New("units").ToLocalChecked(), SafeString::New(unit_name));
+	Nan::Set(result, Nan::New("value").ToLocalChecked(), Nan::New<Number>(units));
+	Nan::Set(result, Nan::New("units").ToLocalChecked(), SafeString::New(unit_name));
 
 	info.GetReturnValue().Set(result);
 }

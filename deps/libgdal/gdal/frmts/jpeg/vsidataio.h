@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vsidataio.h 32062 2015-12-07 11:02:56Z rouault $
+ * $Id: vsidataio.h 08a84765130073fba6fe0d7d3ae5f8fe8a7ea43c 2015-12-07 11:02:56Z Even Rouault $
  *
  * Project:  JPEG JFIF Driver
  * Purpose:  Implement JPEG read/write io indirection through VSI.

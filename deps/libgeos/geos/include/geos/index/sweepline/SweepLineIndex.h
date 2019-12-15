@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -15,9 +15,9 @@
 #ifndef GEOS_INDEX_SWEEPLINE_SWEEPLINEINDEX_H
 #define GEOS_INDEX_SWEEPLINE_SWEEPLINEINDEX_H
 
+#include <vector>
 #include <geos/export.h>
 
-#include <vector>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -26,13 +26,13 @@
 
 // Forward declarations
 namespace geos {
-	namespace index { 
-		namespace sweepline {
-			class SweepLineInterval;
-			class SweepLineEvent;
-			class SweepLineOverlapAction;
-		}
-	}
+namespace index {
+namespace sweepline {
+class SweepLineInterval;
+class SweepLineEvent;
+class SweepLineOverlapAction;
+}
+}
 }
 
 namespace geos {
@@ -48,34 +48,34 @@ class GEOS_DLL SweepLineIndex {
 
 public:
 
-	SweepLineIndex();
+    SweepLineIndex();
 
-	~SweepLineIndex();
+    ~SweepLineIndex();
 
-	void add(SweepLineInterval *sweepInt);
+    void add(SweepLineInterval* sweepInt);
 
-	void computeOverlaps(SweepLineOverlapAction *action);
+    void computeOverlaps(SweepLineOverlapAction* action);
 
 private:
 
-	// FIXME: make it a real vector rather then a pointer
-	std::vector<SweepLineEvent*> events;
+    // FIXME: make it a real vector rather then a pointer
+    std::vector<SweepLineEvent*> events;
 
-	bool indexBuilt;
+    bool indexBuilt;
 
-	// statistics information
-	int nOverlaps;
+    // statistics information
+    int nOverlaps;
 
-	/**
-	 * Because Delete Events have a link to their corresponding Insert event,
-	 * it is possible to compute exactly the range of events which must be
-	 * compared to a given Insert event object.
-	 */
-	void buildIndex();
+    /**
+     * Because Delete Events have a link to their corresponding Insert event,
+     * it is possible to compute exactly the range of events which must be
+     * compared to a given Insert event object.
+     */
+    void buildIndex();
 
-	void processOverlaps(int start, int end,
-			SweepLineInterval *s0,
-			SweepLineOverlapAction *action);
+    void processOverlaps(std::size_t start, std::size_t end,
+                         SweepLineInterval* s0,
+                         SweepLineOverlapAction* action);
 };
 
 } // namespace geos:index:sweepline

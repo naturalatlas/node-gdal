@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: commonutils.h 31778 2015-11-26 14:15:36Z rouault $
+ * $Id: commonutils.h a0d71bfef1ef5d11e3ea2a4d1df27ac992f06c26 2017-11-20 14:22:39Z Even Rouault $
  *
  * Project:  GDAL Utilities
  * Purpose:  Common utility routines
@@ -32,13 +32,64 @@
 
 #include "cpl_port.h"
 
-CPL_C_START
+#ifdef __cplusplus
 
-void CPL_DLL CheckExtensionConsistency(const char* pszDestFilename,
-                               const char* pszDriverName);
+#if defined(WIN32) && (defined(_MSC_VER) || defined(SUPPORTS_WMAIN))
+
+#include <wchar.h>
+#include <stdlib.h>
+#include "cpl_conv.h"
+#include "cpl_string.h"
+
+class ARGVDestroyer
+{
+        char** m_papszList;
+    public:
+        explicit ARGVDestroyer(char** papszList) : m_papszList(papszList) {}
+        ~ARGVDestroyer() { CSLDestroy(m_papszList); }
+};
+
+extern "C" int wmain( int argc, wchar_t ** argv_w, wchar_t ** /* envp */ );
+
+#define MAIN_START(argc, argv) \
+  extern "C" \
+  int wmain( int argc, wchar_t ** argv_w, wchar_t ** /* envp */ ) \
+  { \
+    char **argv = static_cast<char**>(CPLCalloc(argc + 1, sizeof(char*))); \
+    for( int i = 0; i < argc; i++ ) \
+    { \
+        argv[i] = CPLRecodeFromWChar( argv_w[i], CPL_ENC_UCS2, CPL_ENC_UTF8 ); \
+    } \
+    ARGVDestroyer argvDestroyer(argv);
+
+#define MAIN_END }
+
+#else // defined(WIN32)
+
+#define MAIN_START(argc, argv) \
+    int main( int argc, char ** argv )
+
+#define MAIN_END
+
+#endif // defined(WIN32)
+#endif // defined(__cplusplus)
+
+
+CPL_C_START
 
 void CPL_DLL EarlySetConfigOptions( int argc, char ** argv );
 
 CPL_C_END
+
+#ifdef __cplusplus
+
+#include "cpl_string.h"
+#include <vector>
+
+std::vector<CPLString> CPL_DLL GetOutputDriversFor(const char* pszDestFilename,
+                                                   int nFlagRasterVector);
+CPLString CPL_DLL GetOutputDriverForRaster(const char* pszDestFilename);
+
+#endif /* __cplusplus */
 
 #endif /* COMMONUTILS_H_INCLUDED */

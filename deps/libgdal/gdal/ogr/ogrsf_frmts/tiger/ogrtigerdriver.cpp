@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrtigerdriver.cpp 33105 2016-01-23 15:27:32Z rouault $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements OGRTigerDriver
@@ -30,7 +29,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrtigerdriver.cpp 33105 2016-01-23 15:27:32Z rouault $");
+CPL_CVSID("$Id: ogrtigerdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -40,25 +39,24 @@ static GDALDataset *OGRTigerDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !poOpenInfo->bStatOK )
-        return NULL;
+        return nullptr;
     char** papszSiblingFiles = poOpenInfo->GetSiblingFiles();
-    if( papszSiblingFiles != NULL )
+    if( papszSiblingFiles != nullptr )
     {
-        int i;
-        int bFoundCompatibleFile = FALSE;
-        for( i = 0; papszSiblingFiles[i] != NULL; i++ )
+        bool bFoundCompatibleFile = false;
+        for( int i = 0; papszSiblingFiles[i] != nullptr; i++ )
         {
             int nLen = (int)strlen(papszSiblingFiles[i]);
             if( nLen > 4 &&
                 papszSiblingFiles[i][nLen-4] == '.' &&
                 papszSiblingFiles[i][nLen-1] == '1' )
             {
-                bFoundCompatibleFile = TRUE;
+                bFoundCompatibleFile = true;
                 break;
             }
         }
         if( !bFoundCompatibleFile )
-            return NULL;
+            return nullptr;
     }
 
     OGRTigerDataSource  *poDS = new OGRTigerDataSource;
@@ -66,15 +64,15 @@ static GDALDataset *OGRTigerDriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename, TRUE ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
-    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
+    if( poDS != nullptr && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Tiger Driver doesn't support update." );
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -91,16 +89,14 @@ static GDALDataset *OGRTigerDriverCreate( const char * pszName,
                                           CPL_UNUSED GDALDataType eDT,
                                           char **papszOptions )
 {
-    OGRTigerDataSource *poDS;
-
-    poDS = new OGRTigerDataSource();
+    OGRTigerDataSource *poDS = new OGRTigerDataSource();
 
     if( poDS->Create( pszName, papszOptions ) )
         return poDS;
     else
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -111,7 +107,7 @@ static GDALDataset *OGRTigerDriverCreate( const char * pszName,
 void RegisterOGRTiger()
 
 {
-    if( GDALGetDriverByName( "TIGER" ) != NULL )
+    if( GDALGetDriverByName( "TIGER" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

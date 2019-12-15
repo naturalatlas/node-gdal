@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -42,44 +42,46 @@ namespace prep { // geos.geom.prep
 //
 // public:
 //
-bool 
-PreparedPolygonContainsProperly::containsProperly( const geom::Geometry * geom)
+bool
+PreparedPolygonContainsProperly::containsProperly(const geom::Geometry* geom)
 {
-	// Do point-in-poly tests first, since they are cheaper and may result
-	// in a quick negative result.
-	// If a point of any test components does not lie in target,
-	// result is false
-	bool isAllInPrepGeomArea = isAllTestComponentsInTargetInterior( geom);
-	if ( !isAllInPrepGeomArea ) 
-		return false;
-	
-	// If any segments intersect, result is false
-	noding::SegmentString::ConstVect lineSegStr;
-	noding::SegmentStringUtil::extractSegmentStrings( geom, lineSegStr);
-	bool segsIntersect = prepPoly->getIntersectionFinder()->intersects( &lineSegStr);
+    // Do point-in-poly tests first, since they are cheaper and may result
+    // in a quick negative result.
+    // If a point of any test components does not lie in target,
+    // result is false
+    bool isAllInPrepGeomArea = isAllTestComponentsInTargetInterior(geom);
+    if(!isAllInPrepGeomArea) {
+        return false;
+    }
 
-	for ( size_t i = 0, ni = lineSegStr.size(); i < ni; i++ ) {
-		delete lineSegStr[ i ];
-	}
+    // If any segments intersect, result is false
+    noding::SegmentString::ConstVect lineSegStr;
+    noding::SegmentStringUtil::extractSegmentStrings(geom, lineSegStr);
+    bool segsIntersect = prepPoly->getIntersectionFinder()->intersects(&lineSegStr);
 
-	if (segsIntersect) 
-		return false;
-	
-	/**
-	 * Given that no segments intersect, if any vertex of the target
-	 * is contained in some test component.
-	 * the test is NOT properly contained.
-	 */
-	if (	geom->getGeometryTypeId() == geos::geom::GEOS_MULTIPOLYGON  
-		||	geom->getGeometryTypeId() == geos::geom::GEOS_POLYGON )
-	{
-		// TODO: generalize this to handle GeometryCollections
-		bool isTargetGeomInTestArea = isAnyTargetComponentInAreaTest( geom, prepPoly->getRepresentativePoints());
-		if (isTargetGeomInTestArea) 
-			return false;
-	}
-	
-	return true;
+    for(size_t i = 0, ni = lineSegStr.size(); i < ni; i++) {
+        delete lineSegStr[ i ];
+    }
+
+    if(segsIntersect) {
+        return false;
+    }
+
+    /**
+     * Given that no segments intersect, if any vertex of the target
+     * is contained in some test component.
+     * the test is NOT properly contained.
+     */
+    if(geom->getGeometryTypeId() == geos::geom::GEOS_MULTIPOLYGON
+            ||	geom->getGeometryTypeId() == geos::geom::GEOS_POLYGON) {
+        // TODO: generalize this to handle GeometryCollections
+        bool isTargetGeomInTestArea = isAnyTargetComponentInAreaTest(geom, prepPoly->getRepresentativePoints());
+        if(isTargetGeomInTestArea) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace geos.geom.prep

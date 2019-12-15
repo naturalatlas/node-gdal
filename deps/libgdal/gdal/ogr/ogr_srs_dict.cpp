@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogr_srs_dict.cpp 33632 2016-03-04 06:51:02Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implement importFromDict() method to read a WKT SRS from a
@@ -28,11 +27,19 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "cpl_conv.h"
-#include "cpl_vsi.h"
+#include "cpl_port.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ogr_srs_dict.cpp 33632 2016-03-04 06:51:02Z goatbar $");
+#include <cstring>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "ogr_core.h"
+#include "ogr_srs_api.h"
+
+CPL_CVSID("$Id: ogr_srs_dict.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           importFromDict()                           */
@@ -64,24 +71,46 @@ OGRErr OGRSpatialReference::importFromDict( const char *pszDictFile,
                                             const char *pszCode )
 
 {
+    CPLString osWKT(lookupInDict(pszDictFile, pszCode));
+    if( osWKT.empty() )
+        return OGRERR_UNSUPPORTED_SRS;
+
+    OGRErr eErr = importFromWkt( osWKT );
+    if( eErr == OGRERR_NONE && strstr(pszDictFile, "esri_") == nullptr )
+    {
+        morphFromESRI();
+    }
+
+    return eErr;
+}
+
+/************************************************************************/
+/*                          lookupInDict()                              */
+/************************************************************************/
+
+CPLString OGRSpatialReference::lookupInDict( const char *pszDictFile,
+                                             const char *pszCode )
+
+{
 /* -------------------------------------------------------------------- */
 /*      Find and open file.                                             */
 /* -------------------------------------------------------------------- */
+    CPLString osDictFile(pszDictFile);
     const char *pszFilename = CPLFindFile( "gdal", pszDictFile );
-    if( pszFilename == NULL )
-        return OGRERR_UNSUPPORTED_SRS;
+    if( pszFilename == nullptr )
+        return CPLString();
 
     VSILFILE *fp = VSIFOpenL( pszFilename, "rb" );
-    if( fp == NULL )
-        return OGRERR_UNSUPPORTED_SRS;
+    if( fp == nullptr )
+        return CPLString();
 
 /* -------------------------------------------------------------------- */
 /*      Process lines.                                                  */
 /* -------------------------------------------------------------------- */
-    OGRErr eErr = OGRERR_UNSUPPORTED_SRS;
-    const char *pszLine = NULL;
+    CPLString osWKT;
+    const char *pszLine = nullptr;
 
-    while( (pszLine = CPLReadLineL(fp)) != NULL )
+    while( (pszLine = CPLReadLineL(fp)) != nullptr )
 
     {
         if( pszLine[0] == '#' )
@@ -89,21 +118,19 @@ OGRErr OGRSpatialReference::importFromDict( const char *pszDictFile,
 
         if( STARTS_WITH_CI(pszLine, "include ") )
         {
-            eErr = importFromDict( pszLine + 8, pszCode );
-            if( eErr != OGRERR_UNSUPPORTED_SRS )
+            osWKT = lookupInDict( pszLine + 8, pszCode );
+            if( !osWKT.empty() )
                 break;
             continue;
         }
 
-        if( strstr(pszLine,",") == NULL )
+        if( strstr(pszLine, ",") == nullptr )
             continue;
 
-        if( EQUALN(pszLine,pszCode,strlen(pszCode))
+        if( EQUALN(pszLine, pszCode, strlen(pszCode))
             && pszLine[strlen(pszCode)] == ',' )
         {
-            char *pszWKT = const_cast<char *>(pszLine) + strlen(pszCode)+1;
-
-            eErr = importFromWkt( &pszWKT );
+            osWKT = pszLine + strlen(pszCode)+1;
             break;
         }
     }
@@ -113,12 +140,37 @@ OGRErr OGRSpatialReference::importFromDict( const char *pszDictFile,
 /* -------------------------------------------------------------------- */
     VSIFCloseL( fp );
 
-    return eErr;
+    return osWKT;
 }
 
 /************************************************************************/
 /*                         OSRImportFromDict()                          */
 /************************************************************************/
+
+/**
+ * Read SRS from WKT dictionary.
+ *
+ * This method will attempt to find the indicated coordinate system identity
+ * in the indicated dictionary file.  If found, the WKT representation is
+ * imported and used to initialize this OGRSpatialReference.
+ *
+ * More complete information on the format of the dictionary files can
+ * be found in the epsg.wkt file in the GDAL data tree.  The dictionary
+ * files are searched for in the "GDAL" domain using CPLFindFile().  Normally
+ * this results in searching /usr/local/share/gdal or somewhere similar.
+ *
+ * This method is the same as the C++ method
+ * OGRSpatialReference::importFromDict().
+ *
+ * @param hSRS spatial reference system handle.
+ *
+ * @param pszDictFile the name of the dictionary file to load.
+ *
+ * @param pszCode the code to lookup in the dictionary.
+ *
+ * @return OGRERR_NONE on success, or OGRERR_SRS_UNSUPPORTED if the code isn't
+ * found, and OGRERR_SRS_FAILURE if something more dramatic goes wrong.
+ */
 
 OGRErr OSRImportFromDict( OGRSpatialReferenceH hSRS,
                           const char *pszDictFile,

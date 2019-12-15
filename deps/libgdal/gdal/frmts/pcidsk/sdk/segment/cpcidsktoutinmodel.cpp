@@ -63,7 +63,7 @@ CPCIDSKToutinModelSegment::CPCIDSKToutinModelSegment(PCIDSKFile *fileIn,
 {
     loaded_ = false;
     mbModified = false;
-    mpoInfo = NULL;
+    mpoInfo = nullptr;
     Load();
 }
 
@@ -167,19 +167,19 @@ void CPCIDSKToutinModelSegment::Synchronize()
 SRITInfo_t *
 CPCIDSKToutinModelSegment::BinaryToSRITInfo()
 {
-    int		i,j,k,l;
-    SRITInfo_t 	*SRITModel;
-    bool	bVersion9;
+    int             i,j,k,l;
+    SRITInfo_t     *SRITModel;
+    bool            bVersion9;
 
 /* -------------------------------------------------------------------- */
-/*	Read the header block						*/
-/* -------------------------------------------------------------------- */    
+/*      Read the header block                                           */
+/* -------------------------------------------------------------------- */
     // We test the name of the binary segment before starting to read 
     // the buffer.
     if (!STARTS_WITH(seg_data.buffer, "MODEL   ")) 
     {
         seg_data.Put("MODEL   ",0,8);
-        return NULL;
+        return nullptr;
         // Something has gone terribly wrong!
         /*throw PCIDSKException("A segment that was previously "
             "identified as an RFMODEL "
@@ -191,165 +191,173 @@ CPCIDSKToutinModelSegment::BinaryToSRITInfo()
     int nVersion = seg_data.GetInt(8,1);
     if (nVersion == 9)
     {
-	bVersion9 = true;
+        bVersion9 = true;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Allocate the SRITModel.                                         */
 /* -------------------------------------------------------------------- */
     SRITModel = new SRITInfo_t();
-
-    SRITModel->GCPMeanHtFlag = 0;
-    SRITModel->nDownSample = 1;
-    if(STARTS_WITH(seg_data.Get(22,2) , "DS"))
+    try
     {
-	SRITModel->nDownSample = seg_data.GetInt(24,3); 
-    }
+        SRITModel->GCPMeanHtFlag = 0;
+        SRITModel->nDownSample = 1;
+        if(STARTS_WITH(seg_data.Get(22,2) , "DS"))
+        {
+            SRITModel->nDownSample = seg_data.GetInt(24,3); 
+        }
 
 /* -------------------------------------------------------------------- */
 /*      Read the Block 1                                                */
 /* -------------------------------------------------------------------- */
 
-    SRITModel->N0x2        = seg_data.GetDouble(512,22);
-    SRITModel->aa          = seg_data.GetDouble(512+22,22);
-    SRITModel->SmALPHA     = seg_data.GetDouble(512+44,22);
-    SRITModel->bb          = seg_data.GetDouble(512+66,22);
-    SRITModel->C0          = seg_data.GetDouble(512+88,22);
-    SRITModel->cc          = seg_data.GetDouble(512+110,22);
-    SRITModel->COS_KHI     = seg_data.GetDouble(512+132,22);
-    SRITModel->DELTA_GAMMA = seg_data.GetDouble(512+154,22);
-    SRITModel->GAMMA       = seg_data.GetDouble(512+176,22);
-    SRITModel->K_1         = seg_data.GetDouble(512+198,22);
-    SRITModel->L0          = seg_data.GetDouble(512+220,22);
-    SRITModel->P           = seg_data.GetDouble(512+242,22);
-    SRITModel->Q           = seg_data.GetDouble(512+264,22);
-    SRITModel->TAU         = seg_data.GetDouble(512+286,22);
-    SRITModel->THETA       = seg_data.GetDouble(512+308,22);
-    SRITModel->THETA_SEC   = seg_data.GetDouble(512+330,22);
-    SRITModel->X0          = seg_data.GetDouble(512+352,22);
-    SRITModel->Y0          = seg_data.GetDouble(512+374,22);
-    SRITModel->delh        = seg_data.GetDouble(512+396,22);
-    SRITModel->COEF_Y2     = seg_data.GetDouble(512+418,22);
+        SRITModel->N0x2        = seg_data.GetDouble(512,22);
+        SRITModel->aa          = seg_data.GetDouble(512+22,22);
+        SRITModel->SmALPHA     = seg_data.GetDouble(512+44,22);
+        SRITModel->bb          = seg_data.GetDouble(512+66,22);
+        SRITModel->C0          = seg_data.GetDouble(512+88,22);
+        SRITModel->cc          = seg_data.GetDouble(512+110,22);
+        SRITModel->COS_KHI     = seg_data.GetDouble(512+132,22);
+        SRITModel->DELTA_GAMMA = seg_data.GetDouble(512+154,22);
+        SRITModel->GAMMA       = seg_data.GetDouble(512+176,22);
+        SRITModel->K_1         = seg_data.GetDouble(512+198,22);
+        SRITModel->L0          = seg_data.GetDouble(512+220,22);
+        SRITModel->P           = seg_data.GetDouble(512+242,22);
+        SRITModel->Q           = seg_data.GetDouble(512+264,22);
+        SRITModel->TAU         = seg_data.GetDouble(512+286,22);
+        SRITModel->THETA       = seg_data.GetDouble(512+308,22);
+        SRITModel->THETA_SEC   = seg_data.GetDouble(512+330,22);
+        SRITModel->X0          = seg_data.GetDouble(512+352,22);
+        SRITModel->Y0          = seg_data.GetDouble(512+374,22);
+        SRITModel->delh        = seg_data.GetDouble(512+396,22);
+        SRITModel->COEF_Y2     = seg_data.GetDouble(512+418,22);
 
-    if (bVersion9)
-    {
-        SRITModel->delT        = seg_data.GetDouble(512+440,22);
-        SRITModel->delL        = seg_data.GetDouble(512+462,22);
-        SRITModel->delTau      = seg_data.GetDouble(512+484,22);
-    }
-    else
-    {
-        SRITModel->delT   = 0.0;
-        SRITModel->delL   = 0.0;
-        SRITModel->delTau = 0.0;
-    }
+        if (bVersion9)
+        {
+            SRITModel->delT        = seg_data.GetDouble(512+440,22);
+            SRITModel->delL        = seg_data.GetDouble(512+462,22);
+            SRITModel->delTau      = seg_data.GetDouble(512+484,22);
+        }
+        else
+        {
+            SRITModel->delT   = 0.0;
+            SRITModel->delL   = 0.0;
+            SRITModel->delTau = 0.0;
+        }
 
 /* -------------------------------------------------------------------- */
 /*      Read the GCP information in Block 2                             */
 /* -------------------------------------------------------------------- */
 
-    SRITModel->nGCPCount       = seg_data.GetInt(2*512,10); 
-    SRITModel->nEphemerisSegNo = seg_data.GetInt(2*512+10,10); 
-    SRITModel->nAttitudeFlag   = seg_data.GetInt(2*512+20,10); 
-    SRITModel->GCPUnit = seg_data.Get(2*512+30,16);
+        SRITModel->nGCPCount       = seg_data.GetInt(2*512,10); 
+        SRITModel->nEphemerisSegNo = seg_data.GetInt(2*512+10,10); 
+        SRITModel->nAttitudeFlag   = seg_data.GetInt(2*512+20,10); 
+        SRITModel->GCPUnit = seg_data.Get(2*512+30,16);
 
-    SRITModel->dfGCPMeanHt = seg_data.GetDouble(2*512+50,22); 
-    SRITModel->dfGCPMinHt  = seg_data.GetDouble(2*512+72,22);
-    SRITModel->dfGCPMaxHt  = seg_data.GetDouble(2*512+94,22);
+        SRITModel->dfGCPMeanHt = seg_data.GetDouble(2*512+50,22); 
+        SRITModel->dfGCPMinHt  = seg_data.GetDouble(2*512+72,22);
+        SRITModel->dfGCPMaxHt  = seg_data.GetDouble(2*512+94,22);
 
 /* -------------------------------------------------------------------- */
 /*      Initialize a simple GeoTransform.                               */
 /* -------------------------------------------------------------------- */
 
-    SRITModel->utmunit = seg_data.Get(2*512+225,16);
+        SRITModel->utmunit = seg_data.Get(2*512+225,16);
 
-    if (std::strcmp(seg_data.Get(2*512+245,8),"ProjInfo")==0)
-    {
-        SRITModel->oProjectionInfo = seg_data.Get(2*512+255,256);
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Read the GCPs							*/
-/* -------------------------------------------------------------------- */
-    l = 0;
-    k = 4;
-    for (j=0; j<SRITModel->nGCPCount; j++)
-    {
-        SRITModel->nGCPIds[j] = 
-            seg_data.GetInt((k-1)*512+10*l,5);  
-        SRITModel->nPixel[j]  = 
-            seg_data.GetInt((k-1)*512+10*(l+1),5);  
-        SRITModel->nLine[j]   = 
-            seg_data.GetInt((k-1)*512+10*(l+1)+5,5);  
-        SRITModel->dfElev[j]  = 
-            seg_data.GetInt((k-1)*512+10*(l+2),10);  
-        l+=3;
-     
-        if (l<50)
-            continue;
-     
-        k++;
-        l = 0;
-    }
-     
-/* -------------------------------------------------------------------- */
-/*      Call BinaryToEphemeris to get the orbital data		        */
-/* -------------------------------------------------------------------- */
-    SRITModel->OrbitPtr =
-        BinaryToEphemeris( 512*21 );
-    
-/* -------------------------------------------------------------------- */
-/*      Pass the sensor back to SRITModel				*/
-/* -------------------------------------------------------------------- */
-    SRITModel->Sensor = SRITModel->OrbitPtr->SatelliteSensor;
-
-/* -------------------------------------------------------------------- */
-/*      Assign nSensor value						*/
-/* -------------------------------------------------------------------- */
-
-    SRITModel->nSensor = GetSensor (SRITModel->OrbitPtr);
-    SRITModel->nModel  = GetModel (SRITModel->nSensor);
-
-    if( SRITModel->nSensor == -999)
-    {
-        return (SRITInfo_t*)ThrowPCIDSKExceptionPtr("Invalid Sensor : %s.",
-                              SRITModel->OrbitPtr->SatelliteSensor.c_str());
-    }
-    if( SRITModel->nModel == -999)
-    {
-        return (SRITInfo_t*)ThrowPCIDSKExceptionPtr("Invalid Model from sensor number: %d.",
-                              SRITModel->nSensor);
-    }
-
-/* -------------------------------------------------------------------- */
-/*      Get the attitude data for SPOT					*/
-/* -------------------------------------------------------------------- */
-    if (SRITModel->OrbitPtr->AttitudeSeg != NULL ||
-        SRITModel->OrbitPtr->RadarSeg != NULL)
-    {
-        AttitudeSeg_t *attitudeSeg
-            = SRITModel->OrbitPtr->AttitudeSeg;
-
-        if (SRITModel->OrbitPtr->Type == OrbAttitude &&
-            attitudeSeg != NULL)
+        if (std::strcmp(seg_data.Get(2*512+245,8),"ProjInfo")==0)
         {
-            int  ndata;
+            SRITModel->oProjectionInfo = seg_data.Get(2*512+255,256);
+        }
 
-            ndata = attitudeSeg->NumberOfLine;
+/* -------------------------------------------------------------------- */
+/*      Read the GCPs                                                   */
+/* -------------------------------------------------------------------- */
+        l = 0;
+        k = 4;
+        for (j=0; j<SRITModel->nGCPCount; j++)
+        {
+            SRITModel->nGCPIds[j] = 
+                seg_data.GetInt((k-1)*512+10*l,5);  
+            SRITModel->nPixel[j]  = 
+                seg_data.GetInt((k-1)*512+10*(l+1),5);  
+            SRITModel->nLine[j]   = 
+                seg_data.GetInt((k-1)*512+10*(l+1)+5,5);  
+            SRITModel->dfElev[j]  = 
+                seg_data.GetInt((k-1)*512+10*(l+2),10);  
+            l+=3;
 
-            for (i=0; i<ndata; i++)
+            if (l<50)
+                continue;
+
+            k++;
+            l = 0;
+        }
+
+/* -------------------------------------------------------------------- */
+/*      Call BinaryToEphemeris to get the orbital data                  */
+/* -------------------------------------------------------------------- */
+        SRITModel->OrbitPtr =
+            BinaryToEphemeris( 512*21 );
+
+/* -------------------------------------------------------------------- */
+/*      Pass the sensor back to SRITModel                               */
+/* -------------------------------------------------------------------- */
+        SRITModel->Sensor = SRITModel->OrbitPtr->SatelliteSensor;
+
+/* -------------------------------------------------------------------- */
+/*      Assign nSensor value                                            */
+/* -------------------------------------------------------------------- */
+
+        SRITModel->nSensor = GetSensor (SRITModel->OrbitPtr);
+        SRITModel->nModel  = GetModel (SRITModel->nSensor);
+
+        if( SRITModel->nSensor == -999)
+        {
+            return (SRITInfo_t*)ThrowPCIDSKExceptionPtr("Invalid Sensor : %s.",
+                                SRITModel->OrbitPtr->SatelliteSensor.c_str());
+        }
+        if( SRITModel->nModel == -999)
+        {
+            return (SRITInfo_t*)ThrowPCIDSKExceptionPtr("Invalid Model from sensor number: %d.",
+                                SRITModel->nSensor);
+        }
+
+/* -------------------------------------------------------------------- */
+/*      Get the attitude data for SPOT                                  */
+/* -------------------------------------------------------------------- */
+        if (SRITModel->OrbitPtr->AttitudeSeg != nullptr ||
+            SRITModel->OrbitPtr->RadarSeg != nullptr)
+        {
+            AttitudeSeg_t *attitudeSeg
+                = SRITModel->OrbitPtr->AttitudeSeg;
+
+            if (SRITModel->OrbitPtr->Type == OrbAttitude &&
+                attitudeSeg != nullptr)
             {
-                SRITModel->Hdeltat.push_back(
-                    attitudeSeg->Line[i].ChangeInAttitude);
-                SRITModel->Qdeltar.push_back(
-                    attitudeSeg->Line[i].ChangeEarthSatelliteDist);
+                int  ndata;
+
+                ndata = attitudeSeg->NumberOfLine;
+
+                for (i=0; i<ndata; i++)
+                {
+                    SRITModel->Hdeltat.push_back(
+                        attitudeSeg->Line[i].ChangeInAttitude);
+                    SRITModel->Qdeltar.push_back(
+                        attitudeSeg->Line[i].ChangeEarthSatelliteDist);
+                }
             }
         }
+        else
+        {
+            SRITModel->Qdeltar.clear();
+            SRITModel->Hdeltat.clear();
+        }
+
     }
-    else
+    catch( const PCIDSKException& )
     {
-        SRITModel->Qdeltar.clear();
-        SRITModel->Hdeltat.clear();
+        delete SRITModel;
+        throw;
     }
 
     return SRITModel;
@@ -367,16 +375,14 @@ CPCIDSKToutinModelSegment::BinaryToSRITInfo()
   * Translate a RFInfo_t into the corresponding block of binary data.
   *
   * @param  SRITModel        Satellite Model structure.
-  * @param  pnBinaryLength   Length of binary data.
-  * @return Binary data for a  Satellite Model structure.
   */
 void
 CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
 
 {
-    int		i,j,k,l;
-    double	dfminht,dfmaxht,dfmeanht;
-    int nPos = 0;
+    int         i,j,k,l;
+    double      dfminht,dfmaxht,dfmeanht;
+    int         nPos = 0;
 
 /* -------------------------------------------------------------------- */
 /*      Create the data array.                                          */
@@ -387,7 +393,7 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     memset( seg_data.buffer , ' ', 512 * 21 );
 
 /* -------------------------------------------------------------------- */
-/*	Initialize the header.						*/
+/*      Initialize the header.                                          */
 /* -------------------------------------------------------------------- */
     nPos = 512*0;
     seg_data.Put("MODEL   9.0",0,nPos+11);
@@ -443,8 +449,8 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     }
     else
     {
-	dfminht = SRITModel->dfGCPMinHt;
-	dfmaxht = 0;
+        dfminht = SRITModel->dfGCPMinHt;
+        dfmaxht = 0;
     }
 
     dfmeanht = (dfminht + dfmaxht)/2.;
@@ -453,18 +459,18 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     seg_data.Put("2",nPos+10,1);
     seg_data.Put("0",nPos+20,1);
 
-    if (SRITModel->OrbitPtr->AttitudeSeg != NULL ||
-        SRITModel->OrbitPtr->RadarSeg != NULL ||
-        SRITModel->OrbitPtr->AvhrrSeg != NULL )
+    if (SRITModel->OrbitPtr->AttitudeSeg != nullptr ||
+        SRITModel->OrbitPtr->RadarSeg != nullptr ||
+        SRITModel->OrbitPtr->AvhrrSeg != nullptr )
     {
         if (SRITModel->OrbitPtr->Type == OrbAttitude &&
-            SRITModel->OrbitPtr->AttitudeSeg != NULL) 
-	{
-	    if (SRITModel->OrbitPtr->AttitudeSeg->NumberOfLine != 0)
+            SRITModel->OrbitPtr->AttitudeSeg != nullptr) 
+        {
+            if (SRITModel->OrbitPtr->AttitudeSeg->NumberOfLine != 0)
                 seg_data.Put("3",nPos+20,1);
-	}
+        }
     }
-	
+
     seg_data.Put(SRITModel->GCPUnit.c_str(),nPos+30,16);
     seg_data.Put("M",nPos+49,1);
 
@@ -475,12 +481,12 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     seg_data.Put("NEWGCP",nPos+116,6);
 
 /* -------------------------------------------------------------------- */
-/*      Write the projection parameter if necessary			*/
+/*      Write the projection parameter if necessary                     */
 /* -------------------------------------------------------------------- */
 
     seg_data.Put(SRITModel->utmunit.c_str(),nPos+225,16);
 
-    if(SRITModel->oProjectionInfo.size() > 0)
+    if(!SRITModel->oProjectionInfo.empty())
     {
         seg_data.Put("ProjInfo: ",nPos+245,10);
         seg_data.Put(SRITModel->oProjectionInfo.c_str(),
@@ -497,7 +503,7 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     for (j=0; j<SRITModel->nGCPCount; j++)
     {
         if (j > 255)
-	    break;
+            break;
 
         seg_data.Put(SRITModel->nGCPIds[j],nPos+10*l,5);
         seg_data.Put((int)(SRITModel->nPixel[j]+0.5),
@@ -517,7 +523,7 @@ CPCIDSKToutinModelSegment::SRITInfoToBinary( SRITInfo_t *SRITModel )
     }
 
 /* -------------------------------------------------------------------- */
-/*	Add the serialized form of the EphemerisSeg_t.			*/
+/*      Add the serialized form of the EphemerisSeg_t.                  */
 /* -------------------------------------------------------------------- */
     EphemerisToBinary( SRITModel->OrbitPtr , 512*21 );
 }
@@ -619,20 +625,20 @@ int  CPCIDSKToutinModelSegment::GetSensor( EphemerisSeg_t *OrbitPtr)
             nSensor = OV5_MULTI_GEO;
     }
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_PAN_STD"))
-        nSensor = QBIRD_PAN_STD; 	// this checking must go first
+        nSensor = QBIRD_PAN_STD;    // this checking must go first
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_PAN_STH"))
         nSensor = QBIRD_PAN_STH;
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_PAN"))
         nSensor = QBIRD_PAN;
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_MULTI_STD"))
-        nSensor = QBIRD_MULTI_STD;	// this checking must go first
+        nSensor = QBIRD_MULTI_STD;  // this checking must go first
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_MULTI_STH"))
         nSensor = QBIRD_MULTI_STH;
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "QBIRD_MULTI"))
         nSensor = QBIRD_MULTI;
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "WVIEW1_PAN_STD") ||
         STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "WVIEW_PAN_STD"))
-        nSensor = WVIEW_PAN_STD; 	// this checking must go first
+        nSensor = WVIEW_PAN_STD;    // this checking must go first
     else if (STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "WVIEW1_PAN") ||
         STARTS_WITH_CI(OrbitPtr->SatelliteSensor.c_str(), "WVIEW_PAN"))
         nSensor = WVIEW_PAN;

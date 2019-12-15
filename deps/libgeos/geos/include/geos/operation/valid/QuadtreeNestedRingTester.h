@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -33,18 +33,18 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class LinearRing;
-		class Coordinate;
-	}
-	namespace index {
-		namespace quadtree {
-			class Quadtree;
-		}
-	}
-	namespace geomgraph {
-		class GeometryGraph;
-	}
+namespace geom {
+class LinearRing;
+class Coordinate;
+}
+namespace index {
+namespace quadtree {
+class Quadtree;
+}
+}
+namespace geomgraph {
+class GeometryGraph;
+}
 }
 
 namespace geos {
@@ -52,44 +52,44 @@ namespace operation { // geos::operation
 namespace valid { // geos::operation::valid
 
 /** \brief
- * Tests whether any of a set of {@link LinearRing}s are
- * nested inside another ring in the set, using a {@link Quadtree}
+ * Tests whether any of a set of [LinearRings](@ref geom::LinearRing) are nested
+ * inside another ring in the set, using a [Quadtree](@ref index::quadtree::Quadtree)
  * index to speed up the comparisons.
  *
  */
 class GEOS_DLL QuadtreeNestedRingTester {
 public:
 
-	/// Caller retains ownership of GeometryGraph
-	QuadtreeNestedRingTester(geomgraph::GeometryGraph* newGraph);
+    /// Caller retains ownership of GeometryGraph
+    QuadtreeNestedRingTester(geomgraph::GeometryGraph* newGraph);
 
-	~QuadtreeNestedRingTester();
+    ~QuadtreeNestedRingTester();
 
-	/*
-	 * Be aware that the returned Coordinate (if != NULL)
-	 * will point to storage owned by one of the LinearRing
-	 * previously added. If you destroy them, this
-	 * will point to an invalid memory address.
-	 */
-	geom::Coordinate* getNestedPoint();
+    /*
+     * Be aware that the returned Coordinate (if != NULL)
+     * will point to storage owned by one of the LinearRing
+     * previously added. If you destroy them, this
+     * will point to an invalid memory address.
+     */
+    geom::Coordinate* getNestedPoint();
 
-	void add(const geom::LinearRing* ring);
+    void add(const geom::LinearRing* ring);
 
-	bool isNonNested();
+    bool isNonNested();
 
 private:
 
-	geomgraph::GeometryGraph* graph;  // used to find non-node vertices
+    geomgraph::GeometryGraph* graph;  // used to find non-node vertices
 
-	std::vector<const geom::LinearRing*> rings;
+    std::vector<const geom::LinearRing*> rings;
 
-	geom::Envelope totalEnv;
+    geom::Envelope totalEnv;
 
-	index::quadtree::Quadtree* qt;
+    index::quadtree::Quadtree* qt;
 
-	geom::Coordinate* nestedPt;
+    geom::Coordinate* nestedPt;
 
-	void buildQuadtree();
+    void buildQuadtree();
 };
 
 } // namespace geos::operation::valid

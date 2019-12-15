@@ -4,7 +4,6 @@
 	],
 	"variables": {
 		"shared_geos%": "false",
-		"deps_dir": "../",
 		"endianness": "<!(python -c \"import sys;print(sys.byteorder.upper())\")",
 	},
 	"target_defaults": {
@@ -23,9 +22,9 @@
 			"./gdal/ogr/ogrsf_frmts/generic",
 			"./gdal/ogr/ogrsf_frmts/shape",
 			"./gdal/ogr/ogrsf_frmts/avc",
+			"./gdal/ogr/ogrsf_frmts/vrt",
 			"./gdal/ogr/ogrsf_frmts/geojson",
-			"./gdal/ogr/ogrsf_frmts/geojson/libjson",
-			"./gdal/frmts/jpeg/libjpeg"
+			"./gdal/ogr/ogrsf_frmts/geojson/libjson"
 		],
 		"defines": [
 			"_LARGEFILE_SOURCE",
@@ -45,10 +44,9 @@
 		],
 		"dependencies": [
 			"<(deps_dir)/libexpat/libexpat.gyp:libexpat",
-			"<(deps_dir)/libproj/libproj.gyp:libproj"
+			"<(deps_dir)/libproj/libproj.gyp:libproj",
+			"<(deps_dir)/libsqlite/libsqlite.gyp:libsqlite"
 		],
-		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
-		"cflags!": ["-fno-rtti", "-fno-exceptions"],
 		"conditions": [
 			["OS == 'win'", {
 				"include_dirs": ["./arch/win"],
@@ -75,14 +73,6 @@
 				"dependencies": [
 					"<(deps_dir)/libgeos/libgeos.gyp:libgeos"
 				]
-			}, {
-				"libraries": ["<!@(geos-config --libs)"],
-				"cflags_cc": ["<!@(geos-config --cflags)"],
-				"xcode_settings": {
-					"OTHER_CPLUSPLUSFLAGS":[
-						"<!@(geos-config --cflags)"
-					]
-				}
 			}]
 		],
 	}

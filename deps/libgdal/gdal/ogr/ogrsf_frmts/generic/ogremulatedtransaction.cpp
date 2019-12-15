@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implement OGRDataSourceWithTransaction class
@@ -32,12 +31,14 @@
 #include <map>
 #include <set>
 
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: ogremulatedtransaction.cpp 10e54d45fee8229428eb8ab22949aa46eb9da150 2018-05-06 11:07:25 +0200 Even Rouault $")
 
 class OGRDataSourceWithTransaction;
 
-class OGRLayerWithTransaction: public OGRLayerDecorator
+class OGRLayerWithTransaction final: public OGRLayerDecorator
 {
+        CPL_DISALLOW_COPY_ASSIGN(OGRLayerWithTransaction)
+
     protected:
         friend class OGRDataSourceWithTransaction;
 
@@ -48,30 +49,30 @@ class OGRLayerWithTransaction: public OGRLayerDecorator
 
         OGRLayerWithTransaction(OGRDataSourceWithTransaction* poDS,
                                 OGRLayer* poBaseLayer);
-       ~OGRLayerWithTransaction();
+    virtual ~OGRLayerWithTransaction();
 
-    virtual const char *GetName() { return GetDescription(); }
-    virtual OGRFeatureDefn *GetLayerDefn();
+    virtual const char *GetName() override { return GetDescription(); }
+    virtual OGRFeatureDefn *GetLayerDefn() override;
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
-                                     int bApproxOK = TRUE );
-    virtual OGRErr      DeleteField( int iField );
-    virtual OGRErr      ReorderFields( int* panMap );
-    virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags );
+                                     int bApproxOK = TRUE ) override;
+    virtual OGRErr      DeleteField( int iField ) override;
+    virtual OGRErr      ReorderFields( int* panMap ) override;
+    virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags ) override;
 
     virtual OGRErr      CreateGeomField( OGRGeomFieldDefn *poField,
-                                     int bApproxOK = TRUE );
+                                     int bApproxOK = TRUE ) override;
 
-    virtual OGRFeature *GetNextFeature();
-    virtual OGRFeature *GetFeature( GIntBig nFID );
-    virtual OGRErr      ISetFeature( OGRFeature *poFeature );
-    virtual OGRErr      ICreateFeature( OGRFeature *poFeature );
-
+    virtual OGRFeature *GetNextFeature() override;
+    virtual OGRFeature *GetFeature( GIntBig nFID ) override;
+    virtual OGRErr      ISetFeature( OGRFeature *poFeature ) override;
+    virtual OGRErr      ICreateFeature( OGRFeature *poFeature ) override;
 };
 
-
-class OGRDataSourceWithTransaction : public OGRDataSource
+class OGRDataSourceWithTransaction final: public OGRDataSource
 {
+        CPL_DISALLOW_COPY_ASSIGN(OGRDataSourceWithTransaction)
+
   protected:
     OGRDataSource *m_poBaseDataSource;
     IOGRTransactionBehaviour* m_poTransactionBehaviour;
@@ -79,9 +80,9 @@ class OGRDataSourceWithTransaction : public OGRDataSource
     int            m_bHasOwnershipTransactionBehaviour;
     int            m_bInTransaction;
 
-    std::map<CPLString, OGRLayerWithTransaction* > m_oMapLayers;
-    std::set<OGRLayerWithTransaction*> m_oSetLayers;
-    std::set<OGRLayer*> m_oSetExecuteSQLLayers;
+    std::map<CPLString, OGRLayerWithTransaction* > m_oMapLayers{};
+    std::set<OGRLayerWithTransaction*> m_oSetLayers{};
+    std::set<OGRLayer*> m_oSetExecuteSQLLayers{};
 
     OGRLayer*     WrapLayer(OGRLayer* poLayer);
     void          RemapLayers();
@@ -97,47 +98,47 @@ class OGRDataSourceWithTransaction : public OGRDataSource
 
     int                 IsInTransaction() const { return m_bInTransaction; }
 
-    virtual const char  *GetName();
+    virtual const char  *GetName() override;
 
-    virtual int         GetLayerCount() ;
-    virtual OGRLayer    *GetLayer(int);
-    virtual OGRLayer    *GetLayerByName(const char *);
-    virtual OGRErr      DeleteLayer(int);
+    virtual int         GetLayerCount() override ;
+    virtual OGRLayer    *GetLayer(int) override;
+    virtual OGRLayer    *GetLayerByName(const char *) override;
+    virtual OGRErr      DeleteLayer(int) override;
 
-    virtual int         TestCapability( const char * );
+    virtual int         TestCapability( const char * ) override;
 
     virtual OGRLayer   *ICreateLayer( const char *pszName,
-                                     OGRSpatialReference *poSpatialRef = NULL,
+                                     OGRSpatialReference *poSpatialRef = nullptr,
                                      OGRwkbGeometryType eGType = wkbUnknown,
-                                     char ** papszOptions = NULL );
+                                     char ** papszOptions = nullptr ) override;
     virtual OGRLayer   *CopyLayer( OGRLayer *poSrcLayer,
                                    const char *pszNewName,
-                                   char **papszOptions = NULL );
+                                   char **papszOptions = nullptr ) override;
 
-    virtual OGRStyleTable *GetStyleTable();
-    virtual void        SetStyleTableDirectly( OGRStyleTable *poStyleTable );
+    virtual OGRStyleTable *GetStyleTable() override;
+    virtual void        SetStyleTableDirectly( OGRStyleTable *poStyleTable ) override;
 
-    virtual void        SetStyleTable(OGRStyleTable *poStyleTable);
+    virtual void        SetStyleTable(OGRStyleTable *poStyleTable) override;
 
     virtual OGRLayer *  ExecuteSQL( const char *pszStatement,
                                     OGRGeometry *poSpatialFilter,
-                                    const char *pszDialect );
-    virtual void        ReleaseResultSet( OGRLayer * poResultsSet );
+                                    const char *pszDialect ) override;
+    virtual void        ReleaseResultSet( OGRLayer * poResultsSet ) override;
 
-    virtual void        FlushCache();
+    virtual void        FlushCache() override;
 
-    virtual OGRErr      StartTransaction(int bForce=FALSE);
-    virtual OGRErr      CommitTransaction();
-    virtual OGRErr      RollbackTransaction();
+    virtual OGRErr      StartTransaction(int bForce=FALSE) override;
+    virtual OGRErr      CommitTransaction() override;
+    virtual OGRErr      RollbackTransaction() override;
 
-    virtual char      **GetMetadata( const char * pszDomain = "" );
+    virtual char      **GetMetadata( const char * pszDomain = "" ) override;
     virtual CPLErr      SetMetadata( char ** papszMetadata,
-                                     const char * pszDomain = "" );
+                                     const char * pszDomain = "" ) override;
     virtual const char *GetMetadataItem( const char * pszName,
-                                         const char * pszDomain = "" );
+                                         const char * pszDomain = "" ) override;
     virtual CPLErr      SetMetadataItem( const char * pszName,
                                          const char * pszValue,
-                                         const char * pszDomain = "" );
+                                         const char * pszDomain = "" ) override;
 };
 
 /************************************************************************/
@@ -164,23 +165,21 @@ OGRDataSource* OGRCreateEmulatedTransactionDataSourceWrapper(
                                             bTakeOwnershipTransactionBehaviour);
 }
 
-
 /************************************************************************/
 /*                      OGRDataSourceWithTransaction                    */
 /************************************************************************/
 
 OGRDataSourceWithTransaction::OGRDataSourceWithTransaction(
-                                OGRDataSource* poBaseDataSource,
-                                IOGRTransactionBehaviour* poTransactionBehaviour,
-                                int bTakeOwnershipDataSource,
-                                int bTakeOwnershipTransactionBehaviour) :
-            m_poBaseDataSource(poBaseDataSource),
-            m_poTransactionBehaviour(poTransactionBehaviour),
-            m_bHasOwnershipDataSource(bTakeOwnershipDataSource),
-            m_bHasOwnershipTransactionBehaviour(bTakeOwnershipTransactionBehaviour),
-            m_bInTransaction(FALSE)
-{
-}
+    OGRDataSource* poBaseDataSource,
+    IOGRTransactionBehaviour* poTransactionBehaviour,
+    int bTakeOwnershipDataSource,
+    int bTakeOwnershipTransactionBehaviour) :
+    m_poBaseDataSource(poBaseDataSource),
+    m_poTransactionBehaviour(poTransactionBehaviour),
+    m_bHasOwnershipDataSource(bTakeOwnershipDataSource),
+    m_bHasOwnershipTransactionBehaviour(bTakeOwnershipTransactionBehaviour),
+    m_bInTransaction(FALSE)
+{}
 
 OGRDataSourceWithTransaction::~OGRDataSourceWithTransaction()
 {
@@ -193,7 +192,6 @@ OGRDataSourceWithTransaction::~OGRDataSourceWithTransaction()
     if( m_bHasOwnershipTransactionBehaviour )
         delete m_poTransactionBehaviour;
 }
-
 
 OGRLayer* OGRDataSourceWithTransaction::WrapLayer(OGRLayer* poLayer)
 {
@@ -219,8 +217,8 @@ void OGRDataSourceWithTransaction::RemapLayers()
     for(; oIter != m_oSetLayers.end(); ++oIter )
     {
         OGRLayerWithTransaction* poWrappedLayer = *oIter;
-        if( m_poBaseDataSource == NULL )
-            poWrappedLayer->m_poDecoratedLayer = NULL;
+        if( m_poBaseDataSource == nullptr )
+            poWrappedLayer->m_poDecoratedLayer = nullptr;
         else
         {
             poWrappedLayer->m_poDecoratedLayer =
@@ -244,14 +242,13 @@ int         OGRDataSourceWithTransaction::GetLayerCount()
 
 OGRLayer    *OGRDataSourceWithTransaction::GetLayer(int iIndex)
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return WrapLayer(m_poBaseDataSource->GetLayer(iIndex));
-
 }
 
 OGRLayer    *OGRDataSourceWithTransaction::GetLayerByName(const char *pszName)
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return WrapLayer(m_poBaseDataSource->GetLayerByName(pszName));
 }
 
@@ -263,7 +260,7 @@ OGRErr      OGRDataSourceWithTransaction::DeleteLayer(int iIndex)
     if( poLayer )
         osName = poLayer->GetName();
     OGRErr eErr = m_poBaseDataSource->DeleteLayer(iIndex);
-    if( eErr == OGRERR_NONE && osName.size())
+    if( eErr == OGRERR_NONE && !osName.empty() )
     {
         std::map<CPLString, OGRLayerWithTransaction*>::iterator oIter = m_oMapLayers.find(osName);
         if(oIter != m_oMapLayers.end())
@@ -291,7 +288,7 @@ OGRLayer   *OGRDataSourceWithTransaction::ICreateLayer( const char *pszName,
                                      OGRwkbGeometryType eGType,
                                      char ** papszOptions)
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return WrapLayer(m_poBaseDataSource->CreateLayer(pszName, poSpatialRef, eGType, papszOptions));
 }
 
@@ -299,13 +296,13 @@ OGRLayer   *OGRDataSourceWithTransaction::CopyLayer( OGRLayer *poSrcLayer,
                                    const char *pszNewName,
                                    char **papszOptions )
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return WrapLayer(m_poBaseDataSource->CopyLayer(poSrcLayer, pszNewName, papszOptions ));
 }
 
 OGRStyleTable *OGRDataSourceWithTransaction::GetStyleTable()
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return m_poBaseDataSource->GetStyleTable();
 }
 
@@ -325,10 +322,10 @@ OGRLayer *  OGRDataSourceWithTransaction::ExecuteSQL( const char *pszStatement,
                                     OGRGeometry *poSpatialFilter,
                                     const char *pszDialect )
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     OGRLayer* poLayer = m_poBaseDataSource->ExecuteSQL(pszStatement, poSpatialFilter,
                                                        pszDialect);
-    if( poLayer != NULL )
+    if( poLayer != nullptr )
         m_oSetExecuteSQLLayers.insert(poLayer);
     return poLayer;
 }
@@ -355,7 +352,7 @@ OGRErr OGRDataSourceWithTransaction::StartTransaction(int bForce)
                  "Transactions only supported in forced mode");
         return OGRERR_UNSUPPORTED_OPERATION;
     }
-    if( m_oSetExecuteSQLLayers.size() != 0 )
+    if( !m_oSetExecuteSQLLayers.empty() )
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "Cannot start transaction while a layer returned by "
@@ -387,7 +384,7 @@ OGRErr OGRDataSourceWithTransaction::CommitTransaction()
                  "No transaction in progress");
         return OGRERR_FAILURE;
     }
-    if( m_oSetExecuteSQLLayers.size() != 0 )
+    if( !m_oSetExecuteSQLLayers.empty() )
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "Cannot interrupt transaction while a layer returned by "
@@ -412,7 +409,7 @@ OGRErr OGRDataSourceWithTransaction::RollbackTransaction()
                  "No transaction in progress");
         return OGRERR_FAILURE;
     }
-    if( m_oSetExecuteSQLLayers.size() != 0 )
+    if( !m_oSetExecuteSQLLayers.empty() )
     {
         CPLError(CE_Failure, CPLE_NotSupported,
                  "Cannot interrupt transaction while a layer returned by "
@@ -430,7 +427,7 @@ OGRErr OGRDataSourceWithTransaction::RollbackTransaction()
 
 char      **OGRDataSourceWithTransaction::GetMetadata( const char * pszDomain )
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return m_poBaseDataSource->GetMetadata(pszDomain);
 }
 
@@ -444,7 +441,7 @@ CPLErr      OGRDataSourceWithTransaction::SetMetadata( char ** papszMetadata,
 const char *OGRDataSourceWithTransaction::GetMetadataItem( const char * pszName,
                                               const char * pszDomain )
 {
-    if( !m_poBaseDataSource ) return NULL;
+    if( !m_poBaseDataSource ) return nullptr;
     return m_poBaseDataSource->GetMetadataItem(pszName, pszDomain);
 }
 
@@ -456,18 +453,16 @@ CPLErr      OGRDataSourceWithTransaction::SetMetadataItem( const char * pszName,
     return m_poBaseDataSource->SetMetadataItem(pszName, pszValue, pszDomain);
 }
 
-
 /************************************************************************/
 /*                       OGRLayerWithTransaction                        */
 /************************************************************************/
 
 OGRLayerWithTransaction::OGRLayerWithTransaction(
-                    OGRDataSourceWithTransaction* poDS, OGRLayer* poBaseLayer):
+    OGRDataSourceWithTransaction* poDS, OGRLayer* poBaseLayer) :
     OGRLayerDecorator(poBaseLayer, FALSE),
     m_poDS(poDS),
-    m_poFeatureDefn(NULL)
-{
-}
+    m_poFeatureDefn(nullptr)
+{}
 
 OGRLayerWithTransaction::~OGRLayerWithTransaction()
 {
@@ -479,14 +474,14 @@ OGRFeatureDefn *OGRLayerWithTransaction::GetLayerDefn()
 {
     if( !m_poDecoratedLayer )
     {
-        if( m_poFeatureDefn == NULL )
+        if( m_poFeatureDefn == nullptr )
         {
             m_poFeatureDefn = new OGRFeatureDefn(GetDescription());
             m_poFeatureDefn->Reference();
         }
         return m_poFeatureDefn;
     }
-    else if( m_poFeatureDefn == NULL )
+    else if( m_poFeatureDefn == nullptr )
     {
         OGRFeatureDefn* poSrcFeatureDefn = m_poDecoratedLayer->GetLayerDefn();
         m_poFeatureDefn = poSrcFeatureDefn->Clone();
@@ -562,10 +557,10 @@ OGRErr      OGRLayerWithTransaction::AlterFieldDefn( int iField,
 
 OGRFeature * OGRLayerWithTransaction::GetNextFeature()
 {
-    if( !m_poDecoratedLayer ) return NULL;
+    if( !m_poDecoratedLayer ) return nullptr;
     OGRFeature* poSrcFeature = m_poDecoratedLayer->GetNextFeature();
     if( !poSrcFeature )
-        return NULL;
+        return nullptr;
     OGRFeature* poFeature = new OGRFeature(GetLayerDefn());
     poFeature->SetFrom(poSrcFeature);
     poFeature->SetFID(poSrcFeature->GetFID());
@@ -575,10 +570,10 @@ OGRFeature * OGRLayerWithTransaction::GetNextFeature()
 
 OGRFeature * OGRLayerWithTransaction::GetFeature( GIntBig nFID )
 {
-    if( !m_poDecoratedLayer ) return NULL;
+    if( !m_poDecoratedLayer ) return nullptr;
     OGRFeature* poSrcFeature = m_poDecoratedLayer->GetFeature(nFID);
     if( !poSrcFeature )
-        return NULL;
+        return nullptr;
     OGRFeature* poFeature = new OGRFeature(GetLayerDefn());
     poFeature->SetFrom(poSrcFeature);
     poFeature->SetFID(poSrcFeature->GetFID());

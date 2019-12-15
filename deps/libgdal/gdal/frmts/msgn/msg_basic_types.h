@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msg_basic_types.h 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: msg_basic_types.h 5e93d96b9bbb129634c0ed389264b6eb4ddff473 2016-12-10 11:17:47Z Even Rouault $
  *
  * Project:  MSG Native Reader
  * Purpose:  Basic types implementation.
@@ -212,7 +212,7 @@ void to_native(IMAGE_DESCRIPTION_RECORD& r);
 void to_string(PH_DATA& d);
 
 // unit tests on structures, returns true on success
-bool perform_type_size_check(void);
+//bool perform_type_size_check(void);
 
 class Conversions {
 public:

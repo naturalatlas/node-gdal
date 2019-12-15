@@ -1,5 +1,4 @@
 /*
- * $Id: keadataset.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *  keadataset.cpp
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -31,6 +30,18 @@
 #include "keadataset.h"
 #include "keaband.h"
 #include "keacopy.h"
+#include "../frmts/hdf5/hdf5vfl.h"
+
+CPL_CVSID("$Id: keadataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+
+/************************************************************************/
+/*                     KEADatasetDriverUnload()                        */
+/************************************************************************/
+
+void KEADatasetDriverUnload(GDALDriver*)
+{
+    HDF5VFLUnloadFileDriver();
+}
 
 // Function for converting a libkea type into a GDAL type
 GDALDataType KEA_to_GDAL_Type( kealib::KEADataType ekeaType )
@@ -112,10 +123,24 @@ GDALDataset *KEADataset::Open( GDALOpenInfo * poOpenInfo )
             H5::H5File *pH5File;
             if( poOpenInfo->eAccess == GA_ReadOnly )
             {
-                pH5File = kealib::KEAImageIO::openKeaH5RDOnly( poOpenInfo->pszFilename );
+                // use the virtual driver so we can open files using
+                // /vsicurl etc
+                // do this same as libkea
+                H5::FileAccPropList keaAccessPlist = H5::FileAccPropList(H5::FileAccPropList::DEFAULT);
+                keaAccessPlist.setCache(kealib::KEA_MDC_NELMTS, kealib::KEA_RDCC_NELMTS, 
+                            kealib::KEA_RDCC_NBYTES, kealib::KEA_RDCC_W0);
+                keaAccessPlist.setSieveBufSize(kealib::KEA_SIEVE_BUF);
+                hsize_t blockSize = kealib::KEA_META_BLOCKSIZE;
+                keaAccessPlist.setMetaBlockSize(blockSize);
+                // but set the driver
+                keaAccessPlist.setDriver(HDF5VFLGetFileDriver(), nullptr);
+                
+                const H5std_string keaImgFilePath(poOpenInfo->pszFilename);
+                pH5File = new H5::H5File(keaImgFilePath, H5F_ACC_RDONLY, H5::FileCreatPropList::DEFAULT, keaAccessPlist);
             }
             else
             {
+                // Must be a local file
                 pH5File = kealib::KEAImageIO::openKeaH5RW( poOpenInfo->pszFilename );
             }
             // create the KEADataset object
@@ -129,13 +154,13 @@ GDALDataset *KEADataset::Open( GDALOpenInfo * poOpenInfo )
         catch (const kealib::KEAIOException &)
         {
             // was a problem - can't be a valid file
-            return NULL;
+            return nullptr;
         }
     }
     else
     {
         // not a KEA file
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -144,34 +169,28 @@ GDALDataset *KEADataset::Open( GDALOpenInfo * poOpenInfo )
 //
 int KEADataset::Identify( GDALOpenInfo * poOpenInfo )
 {
-    bool bisKEA = false;
 
 /* -------------------------------------------------------------------- */
 /*      Is it an HDF5 file?                                             */
 /* -------------------------------------------------------------------- */
     static const char achSignature[] = "\211HDF\r\n\032\n";
 
-    if( poOpenInfo->pabyHeader == NULL ||
+    if( poOpenInfo->pabyHeader == nullptr ||
         memcmp(poOpenInfo->pabyHeader,achSignature,8) != 0 )
     {
-        return false;
+        return 0;
     }
 
-    try
-    {
-        // is this a KEA file?
-        bisKEA = kealib::KEAImageIO::isKEAImage( poOpenInfo->pszFilename );
-    }
-    catch (const kealib::KEAIOException &)
-    {
-        bisKEA = false;
-    }
-    if( bisKEA )
+    // avoid using kealib::KEAImageIO::isKEAImage as this is likely
+    // to be too slow over curl etc (and doesn't take a HDF5 file handle
+    // anyway).
+    // Just test the extension
+    CPLString osExt(CPLGetExtension(poOpenInfo->pszFilename));
+    if( EQUAL(osExt, "KEA") )
         return 1;
     else
         return 0;
 }
-
 
 // static function
 H5::H5File *KEADataset::CreateLL( const char * pszFilename,
@@ -180,58 +199,58 @@ H5::H5File *KEADataset::CreateLL( const char * pszFilename,
                                   char ** papszParmList  )
 {
     GDALDriverH hDriver = GDALGetDriverByName( "KEA" );
-    if( ( hDriver == NULL ) || !GDALValidateCreationOptions( hDriver, papszParmList ) )
+    if( ( hDriver == nullptr ) || !GDALValidateCreationOptions( hDriver, papszParmList ) )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Attempt to create file `%s' failed. Invalid creation option(s)\n", pszFilename);
-        return NULL;
+        return nullptr;
     }
     // process any creation options in papszParmList
     // default value
     unsigned int nimageblockSize = kealib::KEA_IMAGE_CHUNK_SIZE;
     // see if they have provided a different value
     const char *pszValue = CSLFetchNameValue( papszParmList, "IMAGEBLOCKSIZE" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nimageblockSize = (unsigned int) atol( pszValue );
 
     unsigned int nattblockSize = kealib::KEA_ATT_CHUNK_SIZE;
     pszValue = CSLFetchNameValue( papszParmList, "ATTBLOCKSIZE" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nattblockSize = (unsigned int) atol( pszValue );
 
     unsigned int nmdcElmts = kealib::KEA_MDC_NELMTS;
     pszValue = CSLFetchNameValue( papszParmList, "MDC_NELMTS" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nmdcElmts = (unsigned int) atol( pszValue );
 
     hsize_t nrdccNElmts = kealib::KEA_RDCC_NELMTS;
     pszValue = CSLFetchNameValue( papszParmList, "RDCC_NELMTS" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nrdccNElmts = (unsigned int) atol( pszValue );
 
     hsize_t nrdccNBytes = kealib::KEA_RDCC_NBYTES;
     pszValue = CSLFetchNameValue( papszParmList, "RDCC_NBYTES" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nrdccNBytes = (unsigned int) atol( pszValue );
 
     double nrdccW0 = kealib::KEA_RDCC_W0;
     pszValue = CSLFetchNameValue( papszParmList, "RDCC_W0" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nrdccW0 = CPLAtof( pszValue );
 
     hsize_t nsieveBuf = kealib::KEA_SIEVE_BUF;
     pszValue = CSLFetchNameValue( papszParmList, "SIEVE_BUF" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nsieveBuf = (unsigned int) atol( pszValue );
 
     hsize_t nmetaBlockSize = kealib::KEA_META_BLOCKSIZE;
     pszValue = CSLFetchNameValue( papszParmList, "META_BLOCKSIZE" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         nmetaBlockSize = (unsigned int) atol( pszValue );
 
     unsigned int ndeflate = kealib::KEA_DEFLATE;
     pszValue = CSLFetchNameValue( papszParmList, "DEFLATE" );
-    if( pszValue != NULL )
+    if( pszValue != nullptr )
         ndeflate = (unsigned int) atol( pszValue );
 
     kealib::KEADataType keaDataType = GDAL_to_KEA_Type( eType );
@@ -240,7 +259,7 @@ H5::H5File *KEADataset::CreateLL( const char * pszFilename,
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Data type %s not supported in KEA",
                   GDALGetDataTypeName(eType) );
-        return NULL;
+        return nullptr;
     }
 
     try
@@ -249,7 +268,7 @@ H5::H5File *KEADataset::CreateLL( const char * pszFilename,
         H5::H5File *keaImgH5File = kealib::KEAImageIO::createKEAImage( pszFilename,
                                                     keaDataType,
                                                     nXSize, nYSize, nBands,
-                                                    NULL, NULL, nimageblockSize,
+                                                    nullptr, nullptr, nimageblockSize,
                                                     nattblockSize, nmdcElmts, nrdccNElmts,
                                                     nrdccNBytes, nrdccW0, nsieveBuf,
                                                     nmetaBlockSize, ndeflate );
@@ -260,7 +279,7 @@ H5::H5File *KEADataset::CreateLL( const char * pszFilename,
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Attempt to create file `%s' failed. Error: %s\n",
                   pszFilename, e.what() );
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -272,8 +291,8 @@ GDALDataset *KEADataset::Create( const char * pszFilename,
 {
     H5::H5File *keaImgH5File = CreateLL( pszFilename, nXSize, nYSize, nBands,
                                          eType, papszParmList  );
-    if( keaImgH5File == NULL )
-        return NULL;
+    if( keaImgH5File == nullptr )
+        return nullptr;
 
     bool bThematic =
         CPLTestBool(CSLFetchNameValueDef( papszParmList, "THEMATIC", "FALSE" ));
@@ -302,7 +321,7 @@ GDALDataset *KEADataset::Create( const char * pszFilename,
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Attempt to create file `%s' failed. Error: %s\n",
                   pszFilename, e.what() );
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -318,8 +337,8 @@ GDALDataset *KEADataset::CreateCopy( const char * pszFilename, GDALDataset *pSrc
     GDALDataType eType = (nBands == 0) ? GDT_Unknown : pSrcDs->GetRasterBand(1)->GetRasterDataType();
     H5::H5File *keaImgH5File = CreateLL( pszFilename, nXSize, nYSize, nBands,
                                          eType, papszParmList  );
-    if( keaImgH5File == NULL )
-        return NULL;
+    if( keaImgH5File == nullptr )
+        return nullptr;
 
     bool bThematic =
         CPLTestBool(CSLFetchNameValueDef( papszParmList, "THEMATIC", "FALSE" ));
@@ -336,7 +355,7 @@ GDALDataset *KEADataset::CreateCopy( const char * pszFilename, GDALDataset *pSrc
         if( !KEACopyFile( pSrcDs, pImageIO, pfnProgress, pProgressData) )
         {
             delete pImageIO;
-            return NULL;
+            return nullptr;
         }
 
         // close it
@@ -382,10 +401,10 @@ GDALDataset *KEADataset::CreateCopy( const char * pszFilename, GDALDataset *pSrc
                 if( GDALRasterBandCopyWholeRaster(
                     (GDALRasterBandH)pSrcDs->GetRasterBand(nCount+1)->GetMaskBand(),
                     (GDALRasterBandH)pDataset->GetRasterBand(nCount+1)->GetMaskBand(),
-                    NULL, NULL, NULL) != CE_None )
+                    nullptr, nullptr, nullptr) != CE_None )
                 {
                     delete pDataset;
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
@@ -397,9 +416,8 @@ GDALDataset *KEADataset::CreateCopy( const char * pszFilename, GDALDataset *pSrc
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Attempt to create file `%s' failed. Error: %s\n",
                   pszFilename, e.what() );
-        return NULL;
+        return nullptr;
     }
-
 }
 
 // constructor
@@ -412,9 +430,9 @@ KEADataset::KEADataset( H5::H5File *keaImgH5File, GDALAccess eAccessIn )
         m_pnRefcount = new int(1);
 
         // NULL until we read them in.
-        m_papszMetadataList = NULL;
-        m_pGCPs = NULL;
-        m_pszGCPProjection = NULL;
+        m_papszMetadataList = nullptr;
+        m_pGCPs = nullptr;
+        m_pszGCPProjection = nullptr;
 
         // open the file
         m_pImageIO->openKEAImageHeader( keaImgH5File );
@@ -509,7 +527,7 @@ CPLErr KEADataset::GetGeoTransform( double * padfTransform )
 }
 
 // read in the projection ref
-const char *KEADataset::GetProjectionRef()
+const char *KEADataset::_GetProjectionRef()
 {
     try
     {
@@ -519,7 +537,7 @@ const char *KEADataset::GetProjectionRef()
     }
     catch (const kealib::KEAIOException &)
     {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -550,7 +568,7 @@ CPLErr KEADataset::SetGeoTransform (double *padfTransform )
 }
 
 // set the projection
-CPLErr KEADataset::SetProjection( const char *pszWKT )
+CPLErr KEADataset::_SetProjection( const char *pszWKT )
 {
     try
     {
@@ -615,7 +633,7 @@ CPLErr KEADataset::IBuildOverviews(const char *pszResampling, int nOverviews, in
 CPLErr KEADataset::SetMetadataItem(const char *pszName, const char *pszValue, const char *pszDomain)
 {
     // only deal with 'default' domain - no geolocation etc
-    if( ( pszDomain != NULL ) && ( *pszDomain != '\0' ) )
+    if( ( pszDomain != nullptr ) && ( *pszDomain != '\0' ) )
         return CE_Failure;
 
     try
@@ -637,8 +655,8 @@ CPLErr KEADataset::SetMetadataItem(const char *pszName, const char *pszValue, co
 const char *KEADataset::GetMetadataItem (const char *pszName, const char *pszDomain)
 {
     // only deal with 'default' domain - no geolocation etc
-    if( ( pszDomain != NULL ) && ( *pszDomain != '\0' ) )
-        return NULL;
+    if( ( pszDomain != nullptr ) && ( *pszDomain != '\0' ) )
+        return nullptr;
     // string returned from CSLFetchNameValue should be persistent
     return CSLFetchNameValue(m_papszMetadataList, pszName);
 }
@@ -647,8 +665,8 @@ const char *KEADataset::GetMetadataItem (const char *pszName, const char *pszDom
 char **KEADataset::GetMetadata(const char *pszDomain)
 {
     // only deal with 'default' domain - no geolocation etc
-    if( ( pszDomain != NULL ) && ( *pszDomain != '\0' ) )
-        return NULL;
+    if( ( pszDomain != nullptr ) && ( *pszDomain != '\0' ) )
+        return nullptr;
     // this is what we store it as anyway
     return m_papszMetadataList;
 }
@@ -657,23 +675,22 @@ char **KEADataset::GetMetadata(const char *pszDomain)
 CPLErr KEADataset::SetMetadata(char **papszMetadata, const char *pszDomain)
 {
     // only deal with 'default' domain - no geolocation etc
-    if( ( pszDomain != NULL ) && ( *pszDomain != '\0' ) )
+    if( ( pszDomain != nullptr ) && ( *pszDomain != '\0' ) )
         return CE_Failure;
 
     int nIndex = 0;
-    char *pszName;
-    const char *pszValue;
     try
     {
         // go through each item
-        while( papszMetadata[nIndex] != NULL )
+        while( papszMetadata[nIndex] != nullptr )
         {
             // get the value/name
-            pszName = NULL;
-            pszValue = CPLParseNameValue( papszMetadata[nIndex], &pszName );
-            if( pszValue == NULL )
+            char *pszName = nullptr;
+            const char *pszValue =
+                CPLParseNameValue( papszMetadata[nIndex], &pszName );
+            if( pszValue == nullptr )
                 pszValue = "";
-            if( pszName != NULL )
+            if( pszName != nullptr )
             {
                 // set it with imageio
                 this->m_pImageIO->setImageMetaData(pszName, pszValue );
@@ -701,19 +718,19 @@ CPLErr KEADataset::AddBand(GDALDataType eType, char **papszOptions)
     unsigned int nimageBlockSize = kealib::KEA_IMAGE_CHUNK_SIZE;
     unsigned int nattBlockSize = kealib::KEA_ATT_CHUNK_SIZE;
     unsigned int ndeflate = kealib::KEA_DEFLATE;
-    if (papszOptions != NULL) {
+    if (papszOptions != nullptr) {
         const char *pszValue = CSLFetchNameValue(papszOptions,"IMAGEBLOCKSIZE");
-        if ( pszValue != NULL ) {
+        if ( pszValue != nullptr ) {
             nimageBlockSize = atoi(pszValue);
         }
 
         pszValue = CSLFetchNameValue(papszOptions, "ATTBLOCKSIZE");
-        if (pszValue != NULL) {
+        if (pszValue != nullptr) {
             nattBlockSize = atoi(pszValue);
         }
 
         pszValue = CSLFetchNameValue(papszOptions, "DEFLATE");
-        if (pszValue != NULL) {
+        if (pszValue != nullptr) {
             ndeflate = atoi(pszValue);
         }
     }
@@ -745,7 +762,6 @@ CPLErr KEADataset::AddBand(GDALDataType eType, char **papszOptions)
     return CE_None;
 }
 
-
 int KEADataset::GetGCPCount()
 {
     try
@@ -756,12 +772,11 @@ int KEADataset::GetGCPCount()
     {
         return 0;
     }
-
 }
 
-const char* KEADataset::GetGCPProjection()
+const char* KEADataset::_GetGCPProjection()
 {
-    if( m_pszGCPProjection == NULL )
+    if( m_pszGCPProjection == nullptr )
     {
         try
         {
@@ -770,7 +785,7 @@ const char* KEADataset::GetGCPProjection()
         }
         catch (const kealib::KEAIOException &)
         {
-            return NULL;
+            return nullptr;
         }
     }
     return m_pszGCPProjection;
@@ -778,7 +793,7 @@ const char* KEADataset::GetGCPProjection()
 
 const GDAL_GCP* KEADataset::GetGCPs()
 {
-    if( m_pGCPs == NULL )
+    if( m_pGCPs == nullptr )
     {
         // convert to GDAL data structures
         try
@@ -806,17 +821,17 @@ const GDAL_GCP* KEADataset::GetGCPs()
         }
         catch (const kealib::KEAIOException &)
         {
-            return NULL;
+            return nullptr;
         }
     }
     return m_pGCPs;
 }
 
-CPLErr KEADataset::SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection)
+CPLErr KEADataset::_SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection)
 {
     this->DestroyGCPs();
     CPLFree( m_pszGCPProjection );
-    m_pszGCPProjection = NULL;
+    m_pszGCPProjection = nullptr;
     CPLErr result = CE_None;
 
     std::vector<kealib::KEAImageGCP*> *pKEAGCPs = new std::vector<kealib::KEAImageGCP*>(nGCPCount);
@@ -844,7 +859,7 @@ CPLErr KEADataset::SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char
         result = CE_Failure;
     }
 
-    for( std::vector<kealib::KEAImageGCP*>::iterator itr = pKEAGCPs->begin(); itr != pKEAGCPs->end(); itr++)
+    for( std::vector<kealib::KEAImageGCP*>::iterator itr = pKEAGCPs->begin(); itr != pKEAGCPs->end(); ++itr)
     {
         kealib::KEAImageGCP *pKEA = (*itr);
         delete pKEA;
@@ -856,7 +871,7 @@ CPLErr KEADataset::SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char
 
 void KEADataset::DestroyGCPs()
 {
-    if( m_pGCPs != NULL )
+    if( m_pGCPs != nullptr )
     {
         // we assume this is always the same as the internal list...
         int nCount = this->GetGCPCount();
@@ -867,6 +882,6 @@ void KEADataset::DestroyGCPs()
             CPLFree( pGCP->pszInfo );
         }
         CPLFree( m_pGCPs );
-        m_pGCPs = NULL;
+        m_pGCPs = nullptr;
     }
 }

@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -34,40 +34,41 @@ namespace noding { // geos::noding
  * @author Martin Davis
  * @version 1.10
  */
-class SegmentSetMutualIntersector
-{
+class SegmentSetMutualIntersector {
 public:
-	
+
     SegmentSetMutualIntersector()
-        : segInt(0)
+        : segInt(nullptr)
     {}
 
-	virtual ~SegmentSetMutualIntersector() {}
+    virtual
+    ~SegmentSetMutualIntersector() {}
 
-	/**
-	 * Sets the {@link SegmentIntersector} to use with this intersector.
-	 * The SegmentIntersector will either rocord or add intersection nodes
-	 * for the input segment strings.
-	 *
-	 * @param segInt the segment intersector to use
-	 */
-	void setSegmentIntersector(SegmentIntersector* si)
-	{
-		segInt = si;
-	}
+    /**
+     * Sets the SegmentIntersector to use with this intersector.
+     * The SegmentIntersector will either rocord or add intersection nodes
+     * for the input segment strings.
+     *
+     * @param si the segment intersector to use
+     */
+    void
+    setSegmentIntersector(SegmentIntersector* si)
+    {
+        segInt = si;
+    }
 
-	/**
-	 * 
-	 * @param segStrings0 a collection of {@link SegmentString}s to node
-	 */
-	virtual void setBaseSegments(SegmentString::ConstVect* segStrings) = 0; 
+    /**
+     *
+     * @param segStrings a collection of [SegmentStrings](@ref SegmentString) to node
+     */
+    virtual void setBaseSegments(SegmentString::ConstVect* segStrings) = 0;
 
-	/**
-	 * Computes the intersections for two collections of {@link SegmentString}s.
-	 *
-	 * @param segStrings1 a collection of {@link SegmentString}s to node
-	 */
-	virtual void process(SegmentString::ConstVect* segStrings) = 0;
+    /**
+     * Computes the intersections for two collections of [SegmentStrings](@ref SegmentString).
+     *
+     * @param segStrings a collection of [SegmentStrings](@ref SegmentString) to node
+     */
+    virtual void process(SegmentString::ConstVect* segStrings) = 0;
 
 protected:
 

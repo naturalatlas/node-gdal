@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogridbdatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBDataSource class
@@ -32,7 +31,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogridbdatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogridbdatasource.cpp 4971449609881d6ffdca70188292293852d12691 2017-12-17 16:48:14Z Even Rouault $")
 /************************************************************************/
 /*                         OGRIDBDataSource()                          */
 /************************************************************************/
@@ -44,6 +43,7 @@ OGRIDBDataSource::OGRIDBDataSource()
     papoLayers = NULL;
     nLayers = 0;
     poConn = 0;
+    bDSUpdate = FALSE;
 }
 
 /************************************************************************/
@@ -61,6 +61,13 @@ OGRIDBDataSource::~OGRIDBDataSource()
         delete papoLayers[i];
 
     CPLFree( papoLayers );
+
+    if (poConn != NULL && poConn->IsOpen() ) 
+    {
+           poConn->Close();
+           CPLDebug( "OGR_IDB",
+              "Closing connection" );
+    }
 
     delete poConn;
 }
@@ -313,9 +320,7 @@ OGRLayer * OGRIDBDataSource::ExecuteSQL( const char *pszSQLCommand,
 /*      Create a results layer.  It will take ownership of the          */
 /*      statement.                                                      */
 /* -------------------------------------------------------------------- */
-    OGRIDBSelectLayer *poLayer = NULL;
-
-    poLayer = new OGRIDBSelectLayer( this, poCurr );
+    OGRIDBSelectLayer* poLayer = new OGRIDBSelectLayer( this, poCurr );
 
     if( poSpatialFilter != NULL )
         poLayer->SetSpatialFilter( poSpatialFilter );

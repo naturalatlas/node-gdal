@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: airsardataset.cpp 33901 2016-04-06 16:31:31Z goatbar $
  *
  * Project:  AirSAR Reader
  * Purpose:  Implements read support for AirSAR Polarimetric data.
@@ -34,7 +33,7 @@
 #include "gdal_frmts.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: airsardataset.cpp 33901 2016-04-06 16:31:31Z goatbar $");
+CPL_CVSID("$Id: airsardataset.cpp 2a2dadcdec82b42301260a87ea81c79809f021f3 2018-02-01 17:01:53Z Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -78,25 +77,25 @@ class AirSARDataset : public GDALPamDataset
 class AirSARRasterBand : public GDALPamRasterBand
 {
   public:
-                AirSARRasterBand( AirSARDataset *, int );
-    virtual     ~AirSARRasterBand();
+    AirSARRasterBand( AirSARDataset *, int );
+    ~AirSARRasterBand() override;
 
-    virtual CPLErr IReadBlock( int, int, void * );
+    CPLErr IReadBlock( int, int, void * ) override;
 };
 
 /* locations of stokes matrix values within padfMatrix ... same order as they
    are computed in the document. */
 
-static const int M11 = 0;
-static const int M12 = 1;
-static const int M13 = 2;
-static const int M14 = 3;
-static const int M23 = 4;
-static const int M24 = 5;
-static const int M33 = 6;
-static const int M34 = 7;
-static const int M44 = 8;
-static const int M22 = 9;
+constexpr int M11 = 0;
+constexpr int M12 = 1;
+constexpr int M13 = 2;
+constexpr int M14 = 3;
+constexpr int M23 = 4;
+constexpr int M24 = 5;
+constexpr int M33 = 6;
+constexpr int M34 = 7;
+constexpr int M44 = 8;
+constexpr int M22 = 9;
 
 /************************************************************************/
 /*                          AirSARRasterBand()                          */
@@ -106,8 +105,8 @@ AirSARRasterBand::AirSARRasterBand( AirSARDataset *poDSIn,
                                     int nBandIn )
 
 {
-    this->poDS = poDSIn;
-    this->nBand = nBandIn;
+    poDS = poDSIn;
+    nBand = nBandIn;
 
     nBlockXSize = poDS->GetRasterXSize();
     nBlockYSize = 1;
@@ -239,7 +238,7 @@ CPLErr AirSARRasterBand::IReadBlock( int /* nBlockXOff */,
             pafLine[iPixel*2 + 0] = (float)(SQRT_2 * (m[M13] - m[M23]));
 
             // imaginary
-            pafLine[iPixel*2 + 1] = (float)(SQRT_2 * (m[M23] - m[M14]));
+            pafLine[iPixel*2 + 1] = (float)(SQRT_2 * (m[M24] - m[M14]));
         }
     }
     else if( nBand == 6 ) /* C33 */
@@ -267,13 +266,13 @@ CPLErr AirSARRasterBand::IReadBlock( int /* nBlockXOff */,
 /************************************************************************/
 
 AirSARDataset::AirSARDataset() :
-    fp(NULL),
+    fp(nullptr),
     nLoadedLine(-1),
-    pabyCompressedLine(NULL),
-    padfMatrix(NULL),
+    pabyCompressedLine(nullptr),
+    padfMatrix(nullptr),
     nDataStart(0),
     nRecordLength(0)
-{ }
+{}
 
 /************************************************************************/
 /*                           ~AirSARDataset()                           */
@@ -286,10 +285,10 @@ AirSARDataset::~AirSARDataset()
     CPLFree( pabyCompressedLine );
     CPLFree( padfMatrix );
 
-    if( fp != NULL )
+    if( fp != nullptr )
     {
         VSIFCloseL( fp );
-        fp = NULL;
+        fp = nullptr;
     }
 }
 
@@ -306,13 +305,13 @@ CPLErr AirSARDataset::LoadLine( int iLine )
 /* -------------------------------------------------------------------- */
 /*      allocate working buffers if we don't have them already.         */
 /* -------------------------------------------------------------------- */
-    if( pabyCompressedLine == NULL )
+    if( pabyCompressedLine == nullptr )
     {
         pabyCompressedLine = (GByte *) VSI_MALLOC2_VERBOSE(nRasterXSize, 10);
 
         padfMatrix = (double *) VSI_MALLOC2_VERBOSE(10* sizeof(double), nRasterXSize);
-        if (pabyCompressedLine == NULL ||
-            padfMatrix == NULL)
+        if (pabyCompressedLine == nullptr ||
+            padfMatrix == nullptr)
         {
             CPLFree (pabyCompressedLine);
             CPLFree (padfMatrix);
@@ -376,7 +375,7 @@ char ** AirSARDataset::ReadHeader( VSILFILE * fp, int nFileOffset,
                                    const char *pszPrefix, int nMaxLines )
 
 {
-    char **papszHeadInfo = NULL;
+    char **papszHeadInfo = nullptr;
     char szLine[51];
 
     VSIFSeekL( fp, nFileOffset, SEEK_SET );
@@ -394,7 +393,7 @@ char ** AirSARDataset::ReadHeader( VSILFILE * fp, int nFileOffset,
             CPLError( CE_Failure, CPLE_FileIO,
                       "Read error collecting AirSAR header." );
             CSLDestroy( papszHeadInfo );
-            return NULL;
+            return nullptr;
         }
 
         szLine[50] = '\0';
@@ -492,12 +491,10 @@ char ** AirSARDataset::ReadHeader( VSILFILE * fp, int nFileOffset,
 
         papszHeadInfo =
             CSLSetNameValue( papszHeadInfo, szPrefixedKeyName, szLine+iValue );
-
     }
 
     return papszHeadInfo;
 }
-
 
 /************************************************************************/
 /*                                Open()                                */
@@ -506,18 +503,18 @@ char ** AirSARDataset::ReadHeader( VSILFILE * fp, int nFileOffset,
 GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 800 )
-        return NULL;
+    if( poOpenInfo->fpL == nullptr || poOpenInfo->nHeaderBytes < 800 )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Check for AirSAR/ keyword.                                      */
 /* -------------------------------------------------------------------- */
     if( !STARTS_WITH_CI((char *) poOpenInfo->pabyHeader, "RECORD LENGTH IN BYTES") )
-        return NULL;
+        return nullptr;
 
-    if( strstr((char *) poOpenInfo->pabyHeader, "COMPRESSED") == NULL
-        || strstr((char *) poOpenInfo->pabyHeader, "JPL AIRCRAFT") == NULL )
-        return NULL;
+    if( strstr((char *) poOpenInfo->pabyHeader, "COMPRESSED") == nullptr
+        || strstr((char *) poOpenInfo->pabyHeader, "JPL AIRCRAFT") == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Parse the header fields.  We turn all the transform the         */
@@ -526,8 +523,8 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     char **papszMD = ReadHeader( poOpenInfo->fpL, 0, "MH", 20 );
 
-    if( papszMD == NULL )
-        return NULL;
+    if( papszMD == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Confirm the requested access is supported.                      */
@@ -538,7 +535,7 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
                   "The AIRSAR driver does not support update access to existing"
                   " datasets.\n" );
         CSLDestroy( papszMD );
-        return NULL;
+        return nullptr;
     }
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
@@ -564,7 +561,7 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Adopt the openinfo file pointer.                                */
 /* -------------------------------------------------------------------- */
     poDS->fp = poOpenInfo->fpL;
-    poOpenInfo->fpL = NULL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read and merge parameter header into metadata.  Prefix          */
@@ -573,7 +570,7 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
     int nPHOffset = 0;
 
     if( CSLFetchNameValue( papszMD,
-                           "MH_BYTE_OFFSET_OF_PARAMETER_HEADER" ) != NULL )
+                           "MH_BYTE_OFFSET_OF_PARAMETER_HEADER" ) != nullptr )
     {
         nPHOffset = atoi(CSLFetchNameValue(
                         papszMD, "MH_BYTE_OFFSET_OF_PARAMETER_HEADER"));
@@ -625,7 +622,7 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
 
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -635,7 +632,7 @@ GDALDataset *AirSARDataset::Open( GDALOpenInfo * poOpenInfo )
 void GDALRegister_AirSAR()
 
 {
-    if( GDALGetDriverByName( "AirSAR" ) != NULL )
+    if( GDALGetDriverByName( "AirSAR" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

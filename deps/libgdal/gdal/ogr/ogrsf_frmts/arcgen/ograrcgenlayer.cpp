@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ograrcgenlayer.cpp 32330 2015-12-20 14:24:33Z rouault $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENLayer class.
@@ -33,7 +32,7 @@
 #include "ogr_p.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ograrcgenlayer.cpp 32330 2015-12-20 14:24:33Z rouault $");
+CPL_CVSID("$Id: ograrcgenlayer.cpp 98dfb4b4012c5ae4621e246e8eb393b3c05a3f48 2018-04-02 22:09:55 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                            OGRARCGENLayer()                             */
@@ -41,9 +40,9 @@ CPL_CVSID("$Id: ograrcgenlayer.cpp 32330 2015-12-20 14:24:33Z rouault $");
 
 OGRARCGENLayer::OGRARCGENLayer( const char* pszFilename,
                                 VSILFILE* fpIn, OGRwkbGeometryType eType ) :
-    poFeatureDefn(NULL),
+    poFeatureDefn(nullptr),
     fp(fpIn),
-    bEOF(FALSE),
+    bEOF(false),
     nNextFID(0)
 {
     poFeatureDefn = new OGRFeatureDefn( CPLGetBasename(pszFilename) );
@@ -67,7 +66,6 @@ OGRARCGENLayer::~OGRARCGENLayer()
     VSIFCloseL( fp );
 }
 
-
 /************************************************************************/
 /*                            ResetReading()                            */
 /************************************************************************/
@@ -76,10 +74,9 @@ void OGRARCGENLayer::ResetReading()
 
 {
     nNextFID = 0;
-    bEOF = FALSE;
+    bEOF = false;
     VSIFSeekL( fp, 0, SEEK_SET );
 }
-
 
 /************************************************************************/
 /*                           GetNextFeature()                           */
@@ -90,12 +87,12 @@ OGRFeature *OGRARCGENLayer::GetNextFeature()
     while( true )
     {
         OGRFeature *poFeature = GetNextRawFeature();
-        if (poFeature == NULL)
-            return NULL;
+        if (poFeature == nullptr)
+            return nullptr;
 
-        if((m_poFilterGeom == NULL
+        if((m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-        && (m_poAttrQuery == NULL
+        && (m_poAttrQuery == nullptr
             || m_poAttrQuery->Evaluate( poFeature )) )
         {
             return poFeature;
@@ -112,7 +109,7 @@ OGRFeature *OGRARCGENLayer::GetNextFeature()
 OGRFeature *OGRARCGENLayer::GetNextRawFeature()
 {
     if (bEOF)
-        return NULL;
+        return nullptr;
 
     OGRwkbGeometryType eType = poFeatureDefn->GetGeomType();
 
@@ -120,11 +117,11 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
     {
         while( true )
         {
-            const char* pszLine = CPLReadLine2L(fp,256,NULL);
-            if (pszLine == NULL || EQUAL(pszLine, "END"))
+            const char* pszLine = CPLReadLine2L(fp,256,nullptr);
+            if (pszLine == nullptr || EQUAL(pszLine, "END"))
             {
-                bEOF = TRUE;
-                return NULL;
+                bEOF = true;
+                return nullptr;
             }
             char** papszTokens = CSLTokenizeString2( pszLine, " ,", 0 );
             int nTokens = CSLCount(papszTokens);
@@ -152,17 +149,18 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
 
     CPLString osID;
     const bool bIsPoly = (wkbFlatten(eType) == wkbPolygon);
-    OGRLineString* poLS = static_cast<OGRLineString*>(
-        OGRGeometryFactory::createGeometry( (bIsPoly) ? wkbLinearRing : wkbLineString ));
+    OGRwkbGeometryType eRingType = (bIsPoly) ? wkbLinearRing : wkbLineString;
+    OGRLineString* poLS =
+        OGRGeometryFactory::createGeometry(eRingType)->toLineString();
     while( true )
     {
-        const char* pszLine = CPLReadLine2L(fp,256,NULL);
-        if (pszLine == NULL)
+        const char* pszLine = CPLReadLine2L(fp,256,nullptr);
+        if (pszLine == nullptr)
             break;
 
         if (EQUAL(pszLine, "END"))
         {
-            if (osID.size() == 0)
+            if (osID.empty())
                 break;
 
             OGRFeature* poFeature = new OGRFeature(poFeatureDefn);
@@ -171,7 +169,7 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
             if( bIsPoly )
             {
                 OGRPolygon* poPoly = new OGRPolygon();
-                poPoly->addRingDirectly((OGRLinearRing*)poLS);
+                poPoly->addRingDirectly(poLS->toLinearRing());
                 poFeature->SetGeometryDirectly(poPoly);
             }
             else
@@ -181,7 +179,7 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
 
         char** papszTokens = CSLTokenizeString2( pszLine, " ,", 0 );
         int nTokens = CSLCount(papszTokens);
-        if (osID.size() == 0)
+        if (osID.empty())
         {
             if (nTokens >= 1)
                 osID = papszTokens[0];
@@ -213,9 +211,9 @@ OGRFeature *OGRARCGENLayer::GetNextRawFeature()
         CSLDestroy(papszTokens);
     }
 
-    bEOF = TRUE;
+    bEOF = true;
     delete poLS;
-    return NULL;
+    return nullptr;
 }
 /************************************************************************/
 /*                           TestCapability()                           */

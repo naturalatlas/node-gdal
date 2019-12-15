@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -27,15 +27,14 @@ namespace strtree { // geos::index::strtree
 ///
 class GEOS_DLL Interval {
 public:
-	Interval(Interval *other);
-	Interval(double newMin, double newMax);
-	double getCentre();
-	Interval* expandToInclude(Interval *other);
-	bool intersects(Interval *other);
-	bool equals(void *o);
+    Interval(double newMin, double newMax);
+    double getCentre();
+    Interval* expandToInclude(const Interval* other);
+    bool intersects(const Interval* other) const;
+    bool equals(const Interval* o) const;
 private:
-	double imin;
-	double imax;
+    double imin;
+    double imax;
 };
 
 

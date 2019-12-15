@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrpgeotablelayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoTableLayer class, access to an existing table.
@@ -32,22 +31,19 @@
 #include "ogr_pgeo.h"
 #include "ogrpgeogeometry.h"
 
-CPL_CVSID("$Id: ogrpgeotablelayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogrpgeotablelayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRPGeoTableLayer()                         */
 /************************************************************************/
 
-OGRPGeoTableLayer::OGRPGeoTableLayer( OGRPGeoDataSource *poDSIn )
-
+OGRPGeoTableLayer::OGRPGeoTableLayer( OGRPGeoDataSource *poDSIn ) :
+    pszQuery(nullptr)
 {
     poDS = poDSIn;
-    pszQuery = NULL;
-    bUpdateAccess = TRUE;
     iNextShapeId = 0;
     nSRSId = -1;
-    poFeatureDefn = NULL;
-    memset( &sExtent, 0, sizeof(sExtent) );
+    poFeatureDefn = nullptr;
 }
 
 /************************************************************************/
@@ -81,13 +77,13 @@ CPLErr OGRPGeoTableLayer::Initialize( const char *pszTableName,
     SetDescription( pszTableName );
 
     CPLFree( pszGeomColumn );
-    if( pszGeomCol == NULL )
-        pszGeomColumn = NULL;
+    if( pszGeomCol == nullptr )
+        pszGeomColumn = nullptr;
     else
         pszGeomColumn = CPLStrdup( pszGeomCol );
 
     CPLFree( pszFIDColumn );
-    pszFIDColumn = NULL;
+    pszFIDColumn = nullptr;
 
     sExtent.MinX = dfExtentLeft;
     sExtent.MaxX = dfExtentRight;
@@ -146,7 +142,7 @@ CPLErr OGRPGeoTableLayer::Initialize( const char *pszTableName,
         if( oGetKey.Fetch() ) // more than one field in key!
         {
             CPLFree( pszFIDColumn );
-            pszFIDColumn = NULL;
+            pszFIDColumn = nullptr;
             CPLDebug( "PGeo", "%s: Compound primary key, ignoring.",
                       pszTableName );
         }
@@ -208,10 +204,10 @@ CPLErr OGRPGeoTableLayer::Initialize( const char *pszTableName,
 void OGRPGeoTableLayer::ClearStatement()
 
 {
-    if( poStmt != NULL )
+    if( poStmt != nullptr )
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
     }
 }
 
@@ -222,7 +218,7 @@ void OGRPGeoTableLayer::ClearStatement()
 CPLODBCStatement *OGRPGeoTableLayer::GetStatement()
 
 {
-    if( poStmt == NULL )
+    if( poStmt == nullptr )
         ResetStatement();
 
     return poStmt;
@@ -242,7 +238,7 @@ OGRErr OGRPGeoTableLayer::ResetStatement()
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
     poStmt->Append( poFeatureDefn->GetName() );
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         poStmt->Appendf( " WHERE %s", pszQuery );
 
     if( poStmt->ExecuteSQL() )
@@ -250,7 +246,7 @@ OGRErr OGRPGeoTableLayer::ResetStatement()
     else
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
         return OGRERR_FAILURE;
     }
 }
@@ -273,7 +269,7 @@ void OGRPGeoTableLayer::ResetReading()
 OGRFeature *OGRPGeoTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
-    if( pszFIDColumn == NULL )
+    if( pszFIDColumn == nullptr )
         return OGRPGeoLayer::GetFeature( nFeatureId );
 
     ClearStatement();
@@ -288,8 +284,8 @@ OGRFeature *OGRPGeoTableLayer::GetFeature( GIntBig nFeatureId )
     if( !poStmt->ExecuteSQL() )
     {
         delete poStmt;
-        poStmt = NULL;
-        return NULL;
+        poStmt = nullptr;
+        return nullptr;
     }
 
     return GetNextRawFeature();
@@ -303,21 +299,20 @@ OGRErr OGRPGeoTableLayer::SetAttributeFilter( const char *pszQueryIn )
 
 {
     CPLFree(m_pszAttrQueryString);
-    m_pszAttrQueryString = (pszQueryIn) ? CPLStrdup(pszQueryIn) : NULL;
+    m_pszAttrQueryString = (pszQueryIn) ? CPLStrdup(pszQueryIn) : nullptr;
 
-    if( (pszQueryIn == NULL && this->pszQuery == NULL)
-        || (pszQueryIn != NULL && this->pszQuery != NULL
-            && EQUAL(pszQueryIn,this->pszQuery)) )
+    if( (pszQueryIn == nullptr && pszQuery == nullptr)
+        || (pszQueryIn != nullptr && pszQuery != nullptr
+            && EQUAL(pszQueryIn, pszQuery)) )
         return OGRERR_NONE;
 
-    CPLFree( this->pszQuery );
-    this->pszQuery = pszQueryIn ? CPLStrdup( pszQueryIn ) : NULL;
+    CPLFree( pszQuery );
+    pszQuery = pszQueryIn ? CPLStrdup( pszQueryIn ) : nullptr;
 
     ClearStatement();
 
     return OGRERR_NONE;
 }
-
 
 /************************************************************************/
 /*                           TestCapability()                           */
@@ -330,7 +325,7 @@ int OGRPGeoTableLayer::TestCapability( const char * pszCap )
         return TRUE;
 
     else if( EQUAL(pszCap,OLCFastFeatureCount) )
-        return m_poFilterGeom == NULL;
+        return m_poFilterGeom == nullptr;
 
     else if( EQUAL(pszCap,OLCFastSpatialFilter) )
         return FALSE;
@@ -351,14 +346,14 @@ int OGRPGeoTableLayer::TestCapability( const char * pszCap )
 GIntBig OGRPGeoTableLayer::GetFeatureCount( int bForce )
 
 {
-    if( m_poFilterGeom != NULL )
+    if( m_poFilterGeom != nullptr )
         return OGRPGeoLayer::GetFeatureCount( bForce );
 
     CPLODBCStatement oStmt( poDS->GetSession() );
     oStmt.Append( "SELECT COUNT(*) FROM " );
     oStmt.Append( poFeatureDefn->GetName() );
 
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         oStmt.Appendf( " WHERE %s", pszQuery );
 
     if( !oStmt.ExecuteSQL() || !oStmt.Fetch() )

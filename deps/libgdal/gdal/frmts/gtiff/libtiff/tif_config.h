@@ -62,9 +62,15 @@
 #ifdef _WIN64
 #  define TIFF_SSIZE_T GIntBig
 #  define TIFF_SSIZE_FORMAT CPL_FRMT_GIB
+#  define TIFF_SIZE_FORMAT CPL_FRMT_GUIB
 #else
 #  define TIFF_SSIZE_T signed long
 #  define TIFF_SSIZE_FORMAT "%ld"
+#  if SIZEOF_VOIDP == 8
+#    define TIFF_SIZE_FORMAT "%lu"
+#  else
+#    define TIFF_SIZE_FORMAT "%u"
+#  endif
 #endif
 
 /* Unsigned 16-bit type */
@@ -84,6 +90,10 @@
 
 #ifdef JPEG_DUAL_MODE_8_12
 #  define LIBJPEG_12_PATH "../../jpeg/libjpeg12/jpeglib.h"
+#endif
+
+#ifndef SIZEOF_SIZE_T
+#define SIZEOF_SIZE_T SIZEOF_VOIDP
 #endif
 
 #ifdef RENAME_INTERNAL_LIBTIFF_SYMBOLS

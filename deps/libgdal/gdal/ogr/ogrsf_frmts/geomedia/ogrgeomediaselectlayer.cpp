@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgeomediaselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaSelectLayer class, layer access to the results
@@ -32,24 +31,23 @@
 #include "cpl_conv.h"
 #include "ogr_geomedia.h"
 
-CPL_CVSID("$Id: ogrgeomediaselectlayer.cpp 28375 2015-01-30 12:06:11Z rouault $");
+CPL_CVSID("$Id: ogrgeomediaselectlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                        OGRGeomediaSelectLayer()                      */
 /************************************************************************/
 
 OGRGeomediaSelectLayer::OGRGeomediaSelectLayer( OGRGeomediaDataSource *poDSIn,
-                                        CPLODBCStatement * poStmtIn )
-
+                                                CPLODBCStatement * poStmtIn ) :
+    pszBaseStatement(CPLStrdup( poStmtIn->GetCommand() ))
 {
     poDS = poDSIn;
 
     iNextShapeId = 0;
     nSRSId = -1;
-    poFeatureDefn = NULL;
+    poFeatureDefn = nullptr;
 
     poStmt = poStmtIn;
-    pszBaseStatement = CPLStrdup( poStmtIn->GetCommand() );
 
     BuildFeatureDefn( "SELECT", poStmt );
 }
@@ -72,10 +70,10 @@ OGRGeomediaSelectLayer::~OGRGeomediaSelectLayer()
 void OGRGeomediaSelectLayer::ClearStatement()
 
 {
-    if( poStmt != NULL )
+    if( poStmt != nullptr )
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
     }
 }
 
@@ -86,7 +84,7 @@ void OGRGeomediaSelectLayer::ClearStatement()
 CPLODBCStatement *OGRGeomediaSelectLayer::GetStatement()
 
 {
-    if( poStmt == NULL )
+    if( poStmt == nullptr )
         ResetStatement();
 
     return poStmt;
@@ -112,7 +110,7 @@ OGRErr OGRGeomediaSelectLayer::ResetStatement()
     else
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
         return OGRERR_FAILURE;
     }
 }

@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/naturalatlas/node-gdal.svg)](https://travis-ci.org/naturalatlas/node-gdal)
 [<img src="https://ci.appveyor.com/api/projects/status/mo06c2r5opdwak95?svg=true" height="20" alt="" />](https://ci.appveyor.com/project/brianreavis/node-gdal)
 
-Read and write raster and vector geospatial datasets straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [2.0.1](http://trac.osgeo.org/gdal/wiki/Release/2.0.1-News) ([GEOS](http://trac.osgeo.org/geos/) [3.4.2](http://trac.osgeo.org/geos/browser/tags/3.4.2/NEWS), [Proj.4](http://trac.osgeo.org/proj/) [4.8.0](http://www.osgeo.org/node/1268)) comes bundled, so node-gdal will work straight out of the box. To get started, browse the [**API Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html) or [examples](examples/).
+Read and write raster and vector geospatial datasets straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [3.0.0](https://trac.osgeo.org/gdal/wiki/Release/3.0.0-News) ([GEOS](http://trac.osgeo.org/geos/) [3.8.0](https://github.com/libgeos/geos/releases/tag/3.8.0), [Proj](http://trac.osgeo.org/proj/) [6.2.1](https://github.com/OSGeo/PROJ/releases/tag/6.2.1)) comes bundled, so node-gdal will work straight out of the box. To get started, browse the [**API Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html) or [examples](examples/).
 
 ```sh
 $ npm install gdal --save

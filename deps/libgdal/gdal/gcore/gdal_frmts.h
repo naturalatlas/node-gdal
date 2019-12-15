@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_frmts.h 33351 2016-02-03 15:52:38Z goatbar $
+ * $Id: gdal_frmts.h cad9d26629ae10b2fe4b4123fdae7e05bf0139e9 2018-07-04 17:05:18 +0200 Even Rouault $
  *
  * Project:  GDAL
  * Purpose:  Prototypes for all format specific driver initialization.
@@ -36,7 +36,6 @@
 CPL_C_START
 void CPL_DLL GDALRegister_GTiff(void);
 void CPL_DLL GDALRegister_GXF(void);
-void CPL_DLL GDALRegister_OGDI(void);
 void CPL_DLL GDALRegister_HFA(void);
 void CPL_DLL GDALRegister_AAIGrid(void);
 void CPL_DLL GDALRegister_GRASSASCIIGrid(void);
@@ -119,6 +118,7 @@ void CPL_DLL GDALRegister_DIPEx(void);
 void CPL_DLL GDALRegister_ISIS3(void);
 void CPL_DLL GDALRegister_ISIS2(void);
 void CPL_DLL GDALRegister_PDS(void);
+void CPL_DLL GDALRegister_PDS4(void);
 void CPL_DLL GDALRegister_VICAR(void);
 void CPL_DLL GDALRegister_IDRISI(void);
 void CPL_DLL GDALRegister_Terragen(void);
@@ -157,6 +157,7 @@ void CPL_DLL GDALRegister_KMLSUPEROVERLAY(void);
 void CPL_DLL GDALRegister_GTX(void);
 void CPL_DLL GDALRegister_LOSLAS(void);
 void CPL_DLL GDALRegister_Istar(void);
+void CPL_DLL GDALRegister_NTv1(void);
 void CPL_DLL GDALRegister_NTv2(void);
 void CPL_DLL GDALRegister_CTable2(void);
 void CPL_DLL GDALRegister_JP2OpenJPEG(void);
@@ -186,6 +187,19 @@ void CPL_DLL GDALRegister_WMTS(void);
 void CPL_DLL GDALRegister_SAFE(void);
 void CPL_DLL GDALRegister_SENTINEL2(void);
 void CPL_DLL GDALRegister_mrf(void);
+void CPL_DLL GDALRegister_RRASTER(void);
+void CPL_DLL GDALRegister_Derived(void);
+void CPL_DLL GDALRegister_JP2Lura(void);
+void CPL_DLL GDALRegister_PRF(void);
+void CPL_DLL GDALRegister_NULL(void);
+void CPL_DLL GDALRegister_RDA(void);
+void CPL_DLL GDALRegister_EEDAI(void);
+void CPL_DLL GDALRegister_EEDA(void);
+void CPL_DLL GDALRegister_SIGDEM(void);
+void CPL_DLL GDALRegister_BYN(void);
+void CPL_DLL GDALRegister_IGNFHeightASCIIGrid(void);
+void CPL_DLL GDALRegister_TileDB(void);
+void CPL_DLL GDALRegister_DAAS(void);
 CPL_C_END
 
 #endif /* ndef GDAL_FRMTS_H_INCLUDED */

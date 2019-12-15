@@ -122,20 +122,20 @@ describe('gdal.Polygon', function() {
 
 					assert.deepEqual(result, [
 						['{ "type": "Point", "coordinates": [ 0.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 10.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 10.0, 11.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 0.0, 10.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 0.0, 0.0, 0.0 ] }' ],
+							'{ "type": "Point", "coordinates": [ 10.0, 0.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 10.0, 11.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 0.0, 10.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 0.0, 0.0, 0.0 ] }' ],
 						[ '{ "type": "Point", "coordinates": [ 1.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 11.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 11.0, 11.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 1.0, 10.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 1.0, 0.0, 0.0 ] }' ],
+							'{ "type": "Point", "coordinates": [ 11.0, 0.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 11.0, 11.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 1.0, 10.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 1.0, 0.0, 0.0 ] }' ],
 						[ '{ "type": "Point", "coordinates": [ 2.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 20.0, 0.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 20.0, 11.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 3.0, 10.0, 0.0 ] }',
-						'{ "type": "Point", "coordinates": [ 3.0, 0.0, 0.0 ] }' ]
+							'{ "type": "Point", "coordinates": [ 20.0, 0.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 20.0, 11.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 3.0, 10.0, 0.0 ] }',
+							'{ "type": "Point", "coordinates": [ 3.0, 0.0, 0.0 ] }' ]
     																																																																																																																																																																				]);
 				});
 			});

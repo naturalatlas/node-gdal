@@ -21,14 +21,18 @@ Contributors:  Thomas Maurer
 */
 
 #include "CntZImage.h"
-#include "BitStuffer.h"
-#include "BitMask.h"
-#include "Defines.h"
+#include "BitStufferV1.h"
+#include "BitMaskV1.h"
+#include "DefinesV1.h"
 #include <cmath>
 #include <cfloat>
 #include <cstring>
 
 using namespace std;
+
+#ifdef DEBUG
+void LERC_BRKPNT() {}
+#endif
 
 NAMESPACE_LERC_START
 
@@ -36,7 +40,7 @@ CntZImage::CntZImage()
 {
   type_ = CNT_Z;
   memset(&m_infoFromComputeNumBytes, 0, sizeof(m_infoFromComputeNumBytes));
-};
+}
 
 // -------------------------------------------------------------------------- ;
 
@@ -151,20 +155,20 @@ unsigned int CntZImage::computeNumBytesNeededToWrite(double maxZError,
       if (!bCntsNoInt && cntMin == 0 && cntMax == 1)    // cnt part is binary mask, use fast RLE class
       {
         // convert to bit mask
-        BitMask bitMask(width_, height_);
-	// in case bitMask allocation fails
-	if (!bitMask.Size()) return 0;
+        BitMaskV1 bitMask(width_, height_);
+        // in case bitMask allocation fails
+        if (!bitMask.Size()) return 0;
         const CntZ* srcPtr = getData();
         for (int k = 0; k < width_ * height_ ; k++, srcPtr++)
         {
-          if (srcPtr->cnt <= 0)
+        if (srcPtr->cnt <= 0)
             bitMask.SetInvalid(k);
-	  else
-	    bitMask.SetValid(k);
+        else
+            bitMask.SetValid(k);
         }
 
         // determine numBytes needed to encode
-	numBytesOpt = static_cast<int>(bitMask.RLEsize());
+        numBytesOpt = static_cast<int>(bitMask.RLEsize());
       }
       else
       {
@@ -305,26 +309,26 @@ bool CntZImage::write(Byte** ppByte,
       if (numBytesOpt > 0)    // cnt part is binary mask, use fast RLE class
       {
         // convert to bit mask
-        BitMask bitMask(width_, height_);
+        BitMaskV1 bitMask(width_, height_);
         const CntZ* srcPtr = getData();
         for (int k = 0; k < width_ * height_ ; k++, srcPtr++)
         {
-	  if (srcPtr->cnt <= 0)
-	    bitMask.SetInvalid(k);
-	  else
-	    bitMask.SetValid(k);
+        if (srcPtr->cnt <= 0)
+            bitMask.SetInvalid(k);
+        else
+            bitMask.SetValid(k);
         }
 
         // RLE encoding, update numBytesWritten
-	numBytesWritten = static_cast<int>(bitMask.RLEcompress(bArr));
-      }
+        numBytesWritten = static_cast<int>(bitMask.RLEcompress(bArr));
+    }
     }
     else
     {
       // encode tiles to buffer
       float maxVal;
       if (!writeTiles(zPart, maxZError, bCntsNoInt, numTilesVert, numTilesHori,
-	  bArr, numBytesWritten, maxVal))
+          bArr, numBytesWritten, maxVal))
         return false;
     }
 
@@ -340,6 +344,7 @@ bool CntZImage::write(Byte** ppByte,
 // -------------------------------------------------------------------------- ;
 
 bool CntZImage::read(Byte** ppByte,
+                     size_t& nRemainingBytes,
                      double maxZError,
                      bool onlyHeader,
                      bool onlyZPart)
@@ -349,8 +354,14 @@ bool CntZImage::read(Byte** ppByte,
   size_t len = getTypeString().length();
   string typeStr(len, '0');
 
+  if( nRemainingBytes < len )
+  {
+    LERC_BRKPNT();
+    return false; 
+  }
   memcpy(&typeStr[0], *ppByte, len);
   *ppByte += len;
+  nRemainingBytes -= len;
 
   if (typeStr != getTypeString())
   {
@@ -361,6 +372,11 @@ bool CntZImage::read(Byte** ppByte,
   int width = 0, height = 0;
   double maxZErrorInFile = 0;
 
+  if( nRemainingBytes < 4 * sizeof(int) + sizeof(double) )
+  {
+    LERC_BRKPNT();
+    return false;
+  }
   Byte* ptr = *ppByte;
 
   memcpy(&version, ptr, sizeof(int));  ptr += sizeof(int);
@@ -370,6 +386,7 @@ bool CntZImage::read(Byte** ppByte,
   memcpy(&maxZErrorInFile, ptr, sizeof(double));  ptr += sizeof(double);
 
   *ppByte = ptr;
+  nRemainingBytes -= 4 * sizeof(int) + sizeof(double);
 
   SWAP_4(version);
   SWAP_4(type);
@@ -380,14 +397,21 @@ bool CntZImage::read(Byte** ppByte,
   if (version != 11 || type != type_)
     return false;
 
-  if (width > 20000 || height > 20000)
+  if (width <= 0 || width > 20000 || height <= 0 || height > 20000)
+    return false;
+  // To avoid excessive memory allocation attempts
+  if (width * height > 1800 * 1000 * 1000 / static_cast<int>(sizeof(CntZ)))
     return false;
 
   if (maxZErrorInFile > maxZError)
     return false;
 
-  if (onlyHeader)
-    return true;
+
+  if (onlyHeader) {
+      width_ = width;
+      height_ = height;
+      return true;
+  }
 
   if (!onlyZPart && !resizeFill0(width, height))
     return false;
@@ -402,6 +426,11 @@ bool CntZImage::read(Byte** ppByte,
     int numTilesVert = 0, numTilesHori = 0, numBytes = 0;
     float maxValInImg = 0;
 
+    if( nRemainingBytes < 3 * sizeof(int) + sizeof(float) )
+    {
+      LERC_BRKPNT();
+      return false;
+    }
     ptr = *ppByte;
     memcpy(&numTilesVert, ptr, sizeof(int));  ptr += sizeof(int);
     memcpy(&numTilesHori, ptr, sizeof(int));  ptr += sizeof(int);
@@ -409,6 +438,7 @@ bool CntZImage::read(Byte** ppByte,
     memcpy(&maxValInImg, ptr, sizeof(float));  ptr += sizeof(float);
 
     *ppByte = ptr;
+    nRemainingBytes -= 3 * sizeof(int) + sizeof(float);
     Byte *bArr = ptr;
 
     SWAP_4(numTilesVert);
@@ -432,21 +462,31 @@ bool CntZImage::read(Byte** ppByte,
       if (numBytes > 0)    // cnt part is binary mask, RLE compressed
       {
         // Read bit mask
-        BitMask bitMask(width_, height_);
-	if (!bitMask.RLEdecompress(bArr))
-	    return false;
+        BitMaskV1 bitMask(width_, height_);
+        if (!bitMask.RLEdecompress(bArr, nRemainingBytes))
+        {
+            LERC_BRKPNT();
+            return false;
+        }
 
-	CntZ* dstPtr = getData();
-	for (int k = 0; k < width_ * height_; k++, dstPtr++)
-	  dstPtr->cnt = bitMask.IsValid(k) ? 1.0f:0.0f;
+        CntZ* dstPtr = getData();
+        for (int k = 0; k < width_ * height_; k++, dstPtr++)
+            dstPtr->cnt = bitMask.IsValid(k) ? 1.0f:0.0f;
       }
     }
-    else if (!readTiles(zPart, maxZErrorInFile, numTilesVert, numTilesHori, maxValInImg, bArr))
+    else if (!readTiles(zPart, maxZErrorInFile, numTilesVert, numTilesHori, maxValInImg, bArr, nRemainingBytes))
     {
+      LERC_BRKPNT();
       return false;
     }
 
+    if( nRemainingBytes < static_cast<size_t>(numBytes) )
+    {
+      LERC_BRKPNT();
+      return false;
+    }
     *ppByte += numBytes;
+    nRemainingBytes -= numBytes;
   }
 
   m_tmpDataVec.clear();
@@ -467,7 +507,7 @@ bool CntZImage::findTiling(bool zPart, double maxZError, bool cntsNoIntIn,
   // first, do the entire image as 1 block
   numTilesVertA = 1;
   numTilesHoriA = 1;
-  if (!writeTiles(zPart, maxZError, cntsNoIntIn, 1, 1, NULL, numBytesOptA, maxValInImgA))
+  if (!writeTiles(zPart, maxZError, cntsNoIntIn, 1, 1, nullptr, numBytesOptA, maxValInImgA))
   {
     return false;
   }
@@ -496,7 +536,7 @@ bool CntZImage::findTiling(bool zPart, double maxZError, bool cntsNoIntIn,
 
     int numBytes = 0;
     float maxVal;
-    if (!writeTiles(zPart, maxZError, cntsNoIntIn, numTilesVert, numTilesHori, NULL, numBytes, maxVal))
+    if (!writeTiles(zPart, maxZError, cntsNoIntIn, numTilesVert, numTilesHori, nullptr, numBytes, maxVal))
       return false;
 
     if (numBytes < numBytesOptA)
@@ -567,7 +607,7 @@ bool CntZImage::writeTiles(bool zPart, double maxZError, bool cntsNoIntIn,
 
       if (bArr)
       {
-        int numBytesWritten;
+        int numBytesWritten = 0;
         rv = zPart ? writeZTile(  &ptr, numBytesWritten, i0, i0 + tileH, j0, j0 + tileW, numValidPixel, zMin, zMax, maxZError) :
                           writeCntTile(&ptr, numBytesWritten, i0, i0 + tileH, j0, j0 + tileW, cntMin, cntMax, cntsNoIntIn);
         if (!rv)
@@ -585,7 +625,7 @@ bool CntZImage::writeTiles(bool zPart, double maxZError, bool cntsNoIntIn,
 
 bool CntZImage::readTiles(bool zPart, double maxZErrorInFile,
                           int numTilesVert, int numTilesHori, float maxValInImg,
-                          Byte* bArr)
+                          Byte* bArr, size_t nRemainingBytes)
 {
   Byte* ptr = bArr;
 
@@ -609,8 +649,8 @@ bool CntZImage::readTiles(bool zPart, double maxZErrorInFile,
       if (tileW == 0)
         continue;
 
-      bool rv = zPart ? readZTile(  &ptr, i0, i0 + tileH, j0, j0 + tileW, maxZErrorInFile, maxValInImg) :
-                        readCntTile(&ptr, i0, i0 + tileH, j0, j0 + tileW);
+      bool rv = zPart ? readZTile(  &ptr, nRemainingBytes, i0, i0 + tileH, j0, j0 + tileW, maxZErrorInFile, maxValInImg) :
+                        readCntTile(&ptr, nRemainingBytes, i0, i0 + tileH, j0, j0 + tileW);
 
       if (!rv)
         return false;
@@ -723,7 +763,7 @@ int CntZImage::numBytesCntTile(int numPixel, float cntMin, float cntMax, bool cn
   else
   {
     unsigned int maxElem = (unsigned int)(cntMax - cntMin + 0.5f);
-    return 1 + numBytesFlt(floorf(cntMin + 0.5f)) + BitStuffer::computeNumBytesNeeded(numPixel, maxElem);
+    return 1 + numBytesFlt(floorf(cntMin + 0.5f)) + BitStufferV1::computeNumBytesNeeded(numPixel, maxElem);
   }
 }
 
@@ -744,7 +784,7 @@ int CntZImage::numBytesZTile(int numValidPixel, float zMin, float zMax, double m
     if (maxElem == 0)
       return 1 + numBytesFlt(zMin);
     else
-      return 1 + numBytesFlt(zMin) + BitStuffer::computeNumBytesNeeded(numValidPixel, maxElem);
+      return 1 + numBytesFlt(zMin) + BitStufferV1::computeNumBytesNeeded(numValidPixel, maxElem);
   }
 }
 
@@ -818,7 +858,7 @@ bool CntZImage::writeCntTile(Byte** ppByte, int& numBytes,
       }
     }
 
-    BitStuffer bitStuffer;
+    BitStufferV1 bitStuffer;
     if (!bitStuffer.write(&ptr, dataVec))
       return false;
   }
@@ -916,7 +956,7 @@ bool CntZImage::writeZTile(Byte** ppByte, int& numBytes,
       if (cntPixel != numValidPixel)
         return false;
 
-      BitStuffer bitStuffer;
+      BitStufferV1 bitStuffer;
       if (!bitStuffer.write(&ptr, dataVec))
         return false;
     }
@@ -929,16 +969,24 @@ bool CntZImage::writeZTile(Byte** ppByte, int& numBytes,
 
 // -------------------------------------------------------------------------- ;
 
-bool CntZImage::readCntTile(Byte** ppByte, int i0, int i1, int j0, int j1)
+bool CntZImage::readCntTile(Byte** ppByte, size_t& nRemainingBytesInOut, int i0, int i1, int j0, int j1)
 {
+  size_t nRemainingBytes = nRemainingBytesInOut;
   Byte* ptr = *ppByte;
   int numPixel = (i1 - i0) * (j1 - j0);
 
+  if( nRemainingBytes < 1 )
+  {
+    LERC_BRKPNT();
+    return false;
+  }
   Byte comprFlag = *ptr++;
+  nRemainingBytes -= 1;
 
   if (comprFlag == 2)    // entire tile is constant 0 (invalid)
   {                      // here we depend on resizeFill0()
     *ppByte = ptr;
+    nRemainingBytesInOut = nRemainingBytes;
     return true;
   }
 
@@ -956,6 +1004,7 @@ bool CntZImage::readCntTile(Byte** ppByte, int i0, int i1, int j0, int j1)
     }
 
     *ppByte = ptr;
+    nRemainingBytesInOut = nRemainingBytes;
     return true;
   }
 
@@ -972,7 +1021,13 @@ bool CntZImage::readCntTile(Byte** ppByte, int i0, int i1, int j0, int j1)
       CntZ* dstPtr = getData() + i * width_ + j0;
       for (int j = j0; j < j1; j++)
       {
+        if( nRemainingBytes < sizeof(float) )
+        {
+          LERC_BRKPNT();
+          return false;
+        }
         dstPtr->cnt = *srcPtr++;
+        nRemainingBytes -= sizeof(float);
         SWAP_4(dstPtr->cnt);
         dstPtr++;
       }
@@ -987,40 +1042,63 @@ bool CntZImage::readCntTile(Byte** ppByte, int i0, int i1, int j0, int j1)
     int n = (bits67 == 0) ? 4 : 3 - bits67;
 
     float offset = 0;
-    if (!readFlt(&ptr, offset, n))
+    if (!readFlt(&ptr, nRemainingBytes, offset, n))
+    {
+      LERC_BRKPNT();
       return false;
+    }
 
     vector<unsigned int>& dataVec = m_tmpDataVec;
-    BitStuffer bitStuffer;
-    if (!bitStuffer.read(&ptr, dataVec))
+    BitStufferV1 bitStuffer;
+    size_t nMaxElts =
+            static_cast<size_t>(i1-i0) * static_cast<size_t>(j1-j0);
+    if (!bitStuffer.read(&ptr, nRemainingBytes, dataVec, nMaxElts))
+    {
+      LERC_BRKPNT();
       return false;
+    }
 
-    unsigned int* srcPtr = &dataVec[0];
+    size_t dataVecIdx = 0;
 
     for (int i = i0; i < i1; i++)
     {
       CntZ* dstPtr = getData() + i * width_ + j0;
       for (int j = j0; j < j1; j++)
       {
-        dstPtr->cnt = offset + (float)(*srcPtr++);
+        if( dataVecIdx == dataVec.size() )
+        {
+          LERC_BRKPNT();
+          return false;
+        }
+        dstPtr->cnt = offset + (float)dataVec[dataVecIdx];
+        dataVecIdx ++;
         dstPtr++;
       }
     }
   }
 
   *ppByte = ptr;
+  nRemainingBytesInOut = nRemainingBytes;
   return true;
 }
 
 // -------------------------------------------------------------------------- ;
 
-bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
+bool CntZImage::readZTile(Byte** ppByte, size_t& nRemainingBytesInOut,
+                          int i0, int i1, int j0, int j1,
                           double maxZErrorInFile, float maxZInImg)
 {
+  size_t nRemainingBytes = nRemainingBytesInOut;
   Byte* ptr = *ppByte;
   int numPixel = 0;
 
+  if( nRemainingBytes < 1 )
+  {
+    LERC_BRKPNT();
+    return false;
+  }
   Byte comprFlag = *ptr++;
+  nRemainingBytes -= 1;
   int bits67 = comprFlag >> 6;
   comprFlag &= 63;
 
@@ -1038,6 +1116,7 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
     }
 
     *ppByte = ptr;
+    nRemainingBytesInOut = nRemainingBytes;
     return true;
   }
 
@@ -1056,7 +1135,13 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
       {
         if (dstPtr->cnt > 0)
         {
+          if( nRemainingBytes < sizeof(float) )
+          {
+            LERC_BRKPNT();
+            return false;
+          }
           dstPtr->z = *srcPtr++;
+          nRemainingBytes -= sizeof(float);
           SWAP_4(dstPtr->z);
           numPixel++;
         }
@@ -1071,8 +1156,11 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
     // read z's as int arr bit stuffed
     int n = (bits67 == 0) ? 4 : 3 - bits67;
     float offset = 0;
-    if (!readFlt(&ptr, offset, n))
+    if (!readFlt(&ptr, nRemainingBytes, offset, n))
+    {
+      LERC_BRKPNT();
       return false;
+    }
 
     if (comprFlag == 3)
     {
@@ -1090,12 +1178,17 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
     else
     {
       vector<unsigned int>& dataVec = m_tmpDataVec;
-      BitStuffer bitStuffer;
-      if (!bitStuffer.read(&ptr, dataVec))
+      BitStufferV1 bitStuffer;
+      size_t nMaxElts =
+            static_cast<size_t>(i1-i0) * static_cast<size_t>(j1-j0);
+      if (!bitStuffer.read(&ptr, nRemainingBytes, dataVec, nMaxElts))
+      {
+        LERC_BRKPNT();
         return false;
+      }
 
       double invScale = 2 * maxZErrorInFile;
-      unsigned int* srcPtr = &dataVec[0];
+      size_t nDataVecIdx = 0;
 
       for (int i = i0; i < i1; i++)
       {
@@ -1104,7 +1197,10 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
         {
           if (dstPtr->cnt > 0)
           {
-            float z = (float)(offset + *srcPtr++ * invScale);
+            if( nDataVecIdx == dataVec.size() )
+              return false;
+            float z = (float)(offset + dataVec[nDataVecIdx] * invScale);
+            nDataVecIdx ++;
             dstPtr->z = min(z, maxZInImg);    // make sure we stay in the orig range
           }
           dstPtr++;
@@ -1114,12 +1210,13 @@ bool CntZImage::readZTile(Byte** ppByte, int i0, int i1, int j0, int j1,
   }
 
   *ppByte = ptr;
+  nRemainingBytesInOut = nRemainingBytes;
   return true;
 }
 
 // -------------------------------------------------------------------------- ;
 
-int CntZImage::numBytesFlt(float z) const
+int CntZImage::numBytesFlt(float z)
 {
   short s = (short)z;
   signed char c = static_cast<signed char>(s);
@@ -1128,7 +1225,7 @@ int CntZImage::numBytesFlt(float z) const
 
 // -------------------------------------------------------------------------- ;
 
-bool CntZImage::writeFlt(Byte** ppByte, float z, int numBytes) const
+bool CntZImage::writeFlt(Byte** ppByte, float z, int numBytes)
 {
   Byte* ptr = *ppByte;
 
@@ -1157,23 +1254,38 @@ bool CntZImage::writeFlt(Byte** ppByte, float z, int numBytes) const
 
 // -------------------------------------------------------------------------- ;
 
-bool CntZImage::readFlt(Byte** ppByte, float& z, int numBytes) const
+bool CntZImage::readFlt(Byte** ppByte, size_t& nRemainingBytes, float& z, int numBytes)
 {
   Byte* ptr = *ppByte;
 
   if (numBytes == 1)
   {
+    if( nRemainingBytes < static_cast<size_t>(numBytes) )
+    {
+      LERC_BRKPNT();
+      return false;
+    }
     char c = *((char*)ptr);
     z = c;
   }
   else if (numBytes == 2)
   {
+    if( nRemainingBytes < static_cast<size_t>(numBytes) )
+    {
+      LERC_BRKPNT();
+      return false;
+    }
     short s = *((short*)ptr);
     SWAP_2(s);
     z = s;
   }
   else if (numBytes == 4)
   {
+    if( nRemainingBytes < static_cast<size_t>(numBytes) )
+    {
+      LERC_BRKPNT();
+      return false;
+    }
     z = *((float*)ptr);
     SWAP_4(z);
   }
@@ -1181,6 +1293,7 @@ bool CntZImage::readFlt(Byte** ppByte, float& z, int numBytes) const
     return false;
 
   *ppByte = ptr + numBytes;
+  nRemainingBytes -= numBytes;
   return true;
 }
 
@@ -1198,7 +1311,7 @@ bool CntZImage::readFlt(Byte** ppByte, float& z, int numBytes) const
 
 // endianness and alignment safe
 // returns the number of bytes it wrote, adjusts *ppByte
-int CntZImage::writeVal(Byte **ppByte, float z, int numBytes) const
+int CntZImage::writeVal(Byte **ppByte, float z, int numBytes)
 {
     assert(ppByte && *ppByte);
     assert(0 == numBytes || 1 == numBytes || 2 == numBytes || 4 == numBytes);
@@ -1206,27 +1319,27 @@ int CntZImage::writeVal(Byte **ppByte, float z, int numBytes) const
     short s = (short)z;
     // Calculate numBytes if needed
     if (0 == numBytes)
-	numBytes = (z != (float)s) ? 4 : (s != (signed char)s) ? 2 : 1;
+        numBytes = (z != (float)s) ? 4 : (s != (signed char)s) ? 2 : 1;
 
     if (4 == numBytes) {
-	// Store as floating point, 4 bytes in LSB order
-	Byte *fp = (Byte *)&z + POFFSET(float);
-	NEXTBYTE = *ADJUST(fp);
-	NEXTBYTE = *ADJUST(fp);
-	NEXTBYTE = *ADJUST(fp);
-	NEXTBYTE = *ADJUST(fp);
-	return 4;
+        // Store as floating point, 4 bytes in LSB order
+        Byte *fp = (Byte *)&z + POFFSET(float);
+        NEXTBYTE = *ADJUST(fp);
+        NEXTBYTE = *ADJUST(fp);
+        NEXTBYTE = *ADJUST(fp);
+        NEXTBYTE = *ADJUST(fp);
+        return 4;
     }
 
     // Int types, 2 or 1 bytes
     NEXTBYTE = (Byte)s; // Lower byte first
     if (2 == numBytes)
-	NEXTBYTE = (Byte)(s >> 8); // Second byte
+        NEXTBYTE = (Byte)(s >> 8); // Second byte
     return numBytes;
 }
 
 // endianness and alignment safe, not alliasing safe
-void CntZImage::readVal(Byte **ppByte, float &val, int numBytes) const
+void CntZImage::readVal(Byte **ppByte, float &val, int numBytes)
 {
     assert(numBytes == 4 || numBytes == 2 || numBytes == 1);
     assert(ppByte && *ppByte);
@@ -1234,17 +1347,18 @@ void CntZImage::readVal(Byte **ppByte, float &val, int numBytes) const
 
     // Floating point, read the 4 bytes in LSB first order
     if (4 == numBytes) {
-	Byte *vp = ((Byte*)&val) + POFFSET(float);
-	*ADJUST(vp) = NEXTBYTE;
-	*ADJUST(vp) = NEXTBYTE;
-	*ADJUST(vp) = NEXTBYTE;
-	*ADJUST(vp) = NEXTBYTE;
-	return;
+        // cppcheck-suppress unreadVariable
+        Byte *vp = ((Byte*)&val) + POFFSET(float);
+        *ADJUST(vp) = NEXTBYTE;
+        *ADJUST(vp) = NEXTBYTE;
+        *ADJUST(vp) = NEXTBYTE;
+        *ADJUST(vp) = NEXTBYTE;
+        return;
     }
 
     int v = (int)((signed char)NEXTBYTE); // Low byte, signed extended
     if (2 == numBytes)
-	v = (256 * (signed char)NEXTBYTE) | (v & 0xff);
+        v = (256 * (signed char)NEXTBYTE) | (v & 0xff);
     val = static_cast<float>(v);
 }
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: mitab_utils.h,v 1.10 2004-06-30 20:29:04 dmorissette Exp $
+ * $Id: mitab_utils.h 6508d9ac778fff47e6ef4eef3a3e6b70556f3814 2018-03-27 14:28:44 +0200 Even Rouault $
  *
  * Name:     mitab_utils.h
  * Project:  MapInfo TAB Read/Write library
@@ -27,39 +27,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- **********************************************************************
- *
- * $Log: mitab_utils.h,v $
- * Revision 1.10  2004-06-30 20:29:04  dmorissette
- * Fixed refs to old address danmo@videotron.ca
- *
- * Revision 1.9  2001/01/23 21:23:42  daniel
- * Added projection bounds lookup table, called from TABFile::SetProjInfo()
- *
- * Revision 1.8  2000/02/18 20:46:58  daniel
- * Added TABCleanFieldName()
- *
- * Revision 1.7  2000/01/15 22:30:45  daniel
- * Switch to MIT/X-Consortium OpenSource license
- *
- * Revision 1.6  2000/01/14 23:47:00  daniel
- * Added TABEscapeString()/TABUnEscapeString()
- *
- * Revision 1.5  1999/12/14 02:08:16  daniel
- * Added TABGetBasename() + TAB_CSLLoad()
- *
- * Revision 1.4  1999/09/28 13:33:32  daniel
- * Moved definition for PI to mitab.h
- *
- * Revision 1.3  1999/09/26 14:59:38  daniel
- * Implemented write support
- *
- * Revision 1.2  1999/09/16 02:39:17  daniel
- * Completed read support for most feature types
- *
- * Revision 1.1  1999/07/12 04:18:25  daniel
- * Initial checkin
- *
  **********************************************************************/
 
 #ifndef MITAB_UTILS_H_INCLUDED_
@@ -81,7 +48,6 @@ int TABGenerateArc(OGRLineString *poLine, int numPoints,
                    double dStartAngle, double dEndAngle);
 int TABCloseRing(OGRLineString *poRing);
 
-
 GBool TABAdjustFilenameExtension(char *pszFname);
 char *TABGetBasename(const char *pszFname);
 char **TAB_CSLLoad(const char *pszFname);
@@ -95,5 +61,6 @@ const char *TABUnitIdToString(int nId);
 int   TABUnitIdFromString(const char *pszName);
 
 void TABSaturatedAdd(GInt32& nVal, GInt32 nAdd);
+GInt16 TABInt16Diff(int a, int b);
 
 #endif /* MITAB_UTILS_H_INCLUDED_ */

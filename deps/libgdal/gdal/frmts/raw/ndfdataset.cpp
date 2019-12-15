@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ndfdataset.cpp 33864 2016-04-02 11:50:14Z goatbar $
  *
  * Project:  NDF Driver
  * Purpose:  Implementation of NLAPS Data Format read support.
@@ -33,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: ndfdataset.cpp 33864 2016-04-02 11:50:14Z goatbar $");
+CPL_CVSID("$Id: ndfdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -41,7 +40,7 @@ CPL_CVSID("$Id: ndfdataset.cpp 33864 2016-04-02 11:50:14Z goatbar $");
 /* ==================================================================== */
 /************************************************************************/
 
-class NDFDataset : public RawDataset
+class NDFDataset final: public RawDataset
 {
     double      adfGeoTransform[6];
 
@@ -51,15 +50,21 @@ class NDFDataset : public RawDataset
     char        **papszHeader;
     const char  *Get( const char *pszKey, const char *pszDefault);
 
-  public:
-                NDFDataset();
-    virtual ~NDFDataset();
+    CPL_DISALLOW_COPY_ASSIGN(NDFDataset)
 
-    virtual CPLErr  GetGeoTransform( double * padfTransform );
-    virtual const char *GetProjectionRef(void);
-    virtual char **GetFileList(void);
+  public:
+    NDFDataset();
+    ~NDFDataset() override;
+
+    CPLErr  GetGeoTransform( double * padfTransform ) override;
+    const char *_GetProjectionRef(void) override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
+    char **GetFileList(void) override;
 
     static GDALDataset *Open( GDALOpenInfo * );
+    static int Identify( GDALOpenInfo * );
 };
 
 /************************************************************************/
@@ -68,8 +73,8 @@ class NDFDataset : public RawDataset
 
 NDFDataset::NDFDataset() :
     pszProjection(CPLStrdup("")),
-    papszExtraFiles(NULL),
-    papszHeader(NULL)
+    papszExtraFiles(nullptr),
+    papszHeader(nullptr)
 {
     adfGeoTransform[0] = 0.0;
     adfGeoTransform[1] = 1.0;
@@ -90,19 +95,13 @@ NDFDataset::~NDFDataset()
     CPLFree( pszProjection );
     CSLDestroy( papszHeader );
     CSLDestroy( papszExtraFiles );
-
-    for( int i = 0; i < GetRasterCount(); i++ )
-    {
-       CPL_IGNORE_RET_VAL(VSIFCloseL( reinterpret_cast<RawRasterBand *>(
-           GetRasterBand(i+1) )->GetFPL() ));
-    }
 }
 
 /************************************************************************/
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *NDFDataset::GetProjectionRef()
+const char *NDFDataset::_GetProjectionRef()
 
 {
     return pszProjection;
@@ -130,7 +129,7 @@ const char *NDFDataset::Get( const char *pszKey, const char *pszDefault )
 {
     const char *pszResult = CSLFetchNameValue( papszHeader, pszKey );
 
-    if( pszResult == NULL )
+    if( pszResult == nullptr )
         return pszDefault;
 
     return pszResult;
@@ -154,6 +153,21 @@ char **NDFDataset::GetFileList()
 }
 
 /************************************************************************/
+/*                            Identify()                                */
+/************************************************************************/
+
+int NDFDataset::Identify( GDALOpenInfo * poOpenInfo )
+
+{
+/* -------------------------------------------------------------------- */
+/*      The user must select the header file (i.e. .H1).                */
+/* -------------------------------------------------------------------- */
+    return poOpenInfo->nHeaderBytes >= 50 &&
+           (STARTS_WITH_CI(reinterpret_cast<const char *>( poOpenInfo->pabyHeader ), "NDF_REVISION=2")
+            || STARTS_WITH_CI(reinterpret_cast<const char *>( poOpenInfo->pabyHeader ), "NDF_REVISION=0")) ;
+}
+
+/************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
 
@@ -163,13 +177,19 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      The user must select the header file (i.e. .H1).                */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->nHeaderBytes < 50 )
-        return NULL;
+    if( !Identify(poOpenInfo) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
-    if( !STARTS_WITH_CI(reinterpret_cast<const char *>( poOpenInfo->pabyHeader ), "NDF_REVISION=2")
-        && !STARTS_WITH_CI(reinterpret_cast<const char *>( poOpenInfo->pabyHeader ), "NDF_REVISION=0") )
-        return NULL;
-
+/* -------------------------------------------------------------------- */
+/*      Confirm the requested access is supported.                      */
+/* -------------------------------------------------------------------- */
+    if( poOpenInfo->eAccess == GA_Update )
+    {
+        CPLError( CE_Failure, CPLE_NotSupported,
+                  "The NDF driver does not support update access to existing"
+                  " datasets." );
+        return nullptr;
+    }
 /* -------------------------------------------------------------------- */
 /*      Read and process the header into a local name/value             */
 /*      stringlist.  We just take off the trailing semicolon.  The      */
@@ -177,21 +197,17 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      sign.                                                           */
 /* -------------------------------------------------------------------- */
 
-    VSILFILE* fp = VSIFOpenL(poOpenInfo->pszFilename, "rb");
-    if (fp == NULL)
-        return NULL;
-
-    const char *pszLine;
+    const char *pszLine = nullptr;
     const int nHeaderMax = 1000;
     int nHeaderLines = 0;
-    char **papszHeader = reinterpret_cast<char **>(
+    char **papszHeader = static_cast<char **>(
         CPLMalloc( sizeof(char *) * (nHeaderMax+1) ) );
 
     while( nHeaderLines < nHeaderMax
-           && (pszLine = CPLReadLineL( fp )) != NULL
+           && (pszLine = CPLReadLineL( poOpenInfo->fpL )) != nullptr
            && !EQUAL(pszLine,"END_OF_HDR;") )
     {
-        if( strstr(pszLine,"=") == NULL )
+        if( strstr(pszLine,"=") == nullptr )
             break;
 
         char *pszFixed = CPLStrdup( pszLine );
@@ -199,20 +215,20 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
             pszFixed[strlen(pszFixed)-1] = '\0';
 
         papszHeader[nHeaderLines++] = pszFixed;
-        papszHeader[nHeaderLines] = NULL;
+        papszHeader[nHeaderLines] = nullptr;
     }
-    CPL_IGNORE_RET_VAL(VSIFCloseL(fp));
-    fp = NULL;
+    CPL_IGNORE_RET_VAL(VSIFCloseL(poOpenInfo->fpL));
+    poOpenInfo->fpL = nullptr;
 
-    if( CSLFetchNameValue( papszHeader, "PIXELS_PER_LINE" ) == NULL
-        || CSLFetchNameValue( papszHeader, "LINES_PER_DATA_FILE" ) == NULL
-        || CSLFetchNameValue( papszHeader, "BITS_PER_PIXEL" ) == NULL
-        || CSLFetchNameValue( papszHeader, "PIXEL_FORMAT" ) == NULL )
+    if( CSLFetchNameValue( papszHeader, "PIXELS_PER_LINE" ) == nullptr
+        || CSLFetchNameValue( papszHeader, "LINES_PER_DATA_FILE" ) == nullptr
+        || CSLFetchNameValue( papszHeader, "BITS_PER_PIXEL" ) == nullptr
+        || CSLFetchNameValue( papszHeader, "PIXEL_FORMAT" ) == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
               "Dataset appears to be NDF but is missing a required field.");
         CSLDestroy( papszHeader );
-        return NULL;
+        return nullptr;
     }
 
     if( !EQUAL(CSLFetchNameValue( papszHeader, "PIXEL_FORMAT"), "BYTE" )
@@ -221,7 +237,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Currently NDF driver supports only 8bit BYTE format." );
         CSLDestroy( papszHeader );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -233,7 +249,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The NDF driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -250,11 +266,11 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     const char* pszBand = CSLFetchNameValue(papszHeader,
                                             "NUMBER_OF_BANDS_IN_VOLUME");
-    if (pszBand == NULL)
+    if (pszBand == nullptr)
     {
         CPLError(CE_Failure, CPLE_AppDefined, "Cannot find band count");
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     const int nBands = atoi(pszBand);
 
@@ -262,7 +278,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         !GDALCheckBandCount(nBands, FALSE))
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     for( int iBand = 0; iBand < nBands; iBand++ )
@@ -272,7 +288,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLString osFilename = poDS->Get(szKey,"");
 
         // NDF1 file do not include the band filenames.
-        if( osFilename.size() == 0 )
+        if( osFilename.empty() )
         {
             char szBandExtension[15];
             snprintf( szBandExtension, sizeof(szBandExtension), "I%d", iBand+1 );
@@ -282,17 +298,17 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         else
         {
             CPLString osBasePath = CPLGetPath(poOpenInfo->pszFilename);
-            osFilename = CPLFormFilename( osBasePath, osFilename, NULL);
+            osFilename = CPLFormFilename( osBasePath, osFilename, nullptr);
         }
 
         VSILFILE *fpRaw = VSIFOpenL( osFilename, "rb" );
-        if( fpRaw == NULL )
+        if( fpRaw == nullptr )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Failed to open band file: %s",
                       osFilename.c_str() );
             delete poDS;
-            return NULL;
+            return nullptr;
         }
         poDS->papszExtraFiles =
             CSLAddString( poDS->papszExtraFiles,
@@ -300,7 +316,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
 
         RawRasterBand *poBand =
             new RawRasterBand( poDS, iBand+1, fpRaw, 0, 1, poDS->nRasterXSize,
-                               GDT_Byte, TRUE, TRUE );
+                               GDT_Byte, TRUE, RawRasterBand::OwnFP::YES );
 
         snprintf( szKey, sizeof(szKey), "BAND%d_NAME", iBand+1 );
         poBand->SetDescription( poDS->Get(szKey, "") );
@@ -329,7 +345,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
             adfUSGSParms[i] = CPLAtof(papszParmTokens[i]);
     }
     CSLDestroy(papszParmTokens);
-    papszParmTokens = NULL;
+    papszParmTokens = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Minimal georef support ... should add full USGS style           */
@@ -360,10 +376,10 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
         oSRS.SetWellKnownGeogCS( "WGS84" );
     }
 
-    if( oSRS.GetRoot() != NULL )
+    if( oSRS.GetRoot() != nullptr )
     {
         CPLFree( poDS->pszProjection );
-        poDS->pszProjection = NULL;
+        poDS->pszProjection = nullptr;
         oSRS.exportToWkt( &(poDS->pszProjection) );
     }
 
@@ -425,7 +441,7 @@ GDALDataset *NDFDataset::Open( GDALOpenInfo * poOpenInfo )
 void GDALRegister_NDF()
 
 {
-    if( GDALGetDriverByName( "NDF" ) != NULL )
+    if( GDALGetDriverByName( "NDF" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -436,6 +452,7 @@ void GDALRegister_NDF()
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "frmt_various.html#NDF" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
+    poDriver->pfnIdentify = NDFDataset::Identify;
     poDriver->pfnOpen = NDFDataset::Open;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );

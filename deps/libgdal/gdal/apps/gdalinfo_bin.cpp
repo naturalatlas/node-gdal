@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalinfo_bin.cpp 33758 2016-03-21 09:06:22Z rouault $
  *
  * Project:  GDAL Utilities
  * Purpose:  Command line application to list info about a file.
@@ -28,32 +27,32 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "gdal_version.h"
 #include "gdal.h"
 #include "cpl_string.h"
 #include "cpl_multiproc.h"
 #include "commonutils.h"
 #include "gdal_utils_priv.h"
 
-CPL_CVSID("$Id: gdalinfo_bin.cpp 33758 2016-03-21 09:06:22Z rouault $");
+CPL_CVSID("$Id: gdalinfo_bin.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                               Usage()                                */
 /************************************************************************/
 
-static void Usage(const char* pszErrorMsg = NULL)
+static void Usage(const char* pszErrorMsg = nullptr)
 
 {
     printf( "Usage: gdalinfo [--help-general] [-json] [-mm] [-stats] [-hist] [-nogcp] [-nomd]\n"
             "                [-norat] [-noct] [-nofl] [-checksum] [-proj4]\n"
-            "                [-listmdd] [-mdd domain|`all`]*\n"
+            "                [-listmdd] [-mdd domain|`all`] [-wkt_format WKT1|WKT2|...]*\n"
             "                [-sd subdataset] [-oo NAME=VALUE]* datasetname\n" );
 
-    if( pszErrorMsg != NULL )
+    if( pszErrorMsg != nullptr )
         fprintf(stderr, "\nFAILURE: %s\n", pszErrorMsg);
 
     exit( 1 );
 }
-
 
 /************************************************************************/
 /*                         GDALInfoOptionsForBinary()                   */
@@ -61,7 +60,8 @@ static void Usage(const char* pszErrorMsg = NULL)
 
 static GDALInfoOptionsForBinary *GDALInfoOptionsForBinaryNew(void)
 {
-    return (GDALInfoOptionsForBinary*) CPLCalloc(  1, sizeof(GDALInfoOptionsForBinary) );
+    return static_cast<GDALInfoOptionsForBinary *>(
+        CPLCalloc(1, sizeof(GDALInfoOptionsForBinary)));
 }
 
 /************************************************************************/
@@ -82,7 +82,7 @@ static void GDALInfoOptionsForBinaryFree( GDALInfoOptionsForBinary* psOptionsFor
 /*                                main()                                */
 /************************************************************************/
 
-int main( int argc, char ** argv )
+MAIN_START(argc, argv)
 
 {
     EarlySetConfigOptions(argc, argv);
@@ -93,7 +93,7 @@ int main( int argc, char ** argv )
     if( argc < 1 )
         exit( -argc );
 
-    for( int i = 0; argv != NULL && argv[i] != NULL; i++ )
+    for( int i = 0; argv != nullptr && argv[i] != nullptr; i++ )
     {
         if( EQUAL(argv[i], "--utility_version") )
         {
@@ -113,10 +113,10 @@ int main( int argc, char ** argv )
 
     GDALInfoOptions *psOptions
         = GDALInfoOptionsNew(argv + 1, psOptionsForBinary);
-    if( psOptions == NULL )
+    if( psOptions == nullptr )
         Usage();
 
-    if( psOptionsForBinary->pszFilename == NULL )
+    if( psOptionsForBinary->pszFilename == nullptr )
         Usage("No datasource specified.");
 
 /* -------------------------------------------------------------------- */
@@ -129,10 +129,10 @@ int main( int argc, char ** argv )
 #endif
 
     GDALDatasetH hDataset
-        = GDALOpenEx( psOptionsForBinary->pszFilename, GDAL_OF_READONLY | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR, NULL,
-                      (const char* const* )psOptionsForBinary->papszOpenOptions, NULL );
+        = GDALOpenEx( psOptionsForBinary->pszFilename, GDAL_OF_READONLY | GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR, nullptr,
+                      psOptionsForBinary->papszOpenOptions, nullptr );
 
-    if( hDataset == NULL )
+    if( hDataset == nullptr )
     {
 #ifdef __AFL_HAVE_MANUAL_CONTROL
         continue;
@@ -173,7 +173,7 @@ int main( int argc, char ** argv )
 
         GDALDestroyDriverManager();
 
-        CPLDumpSharedList( NULL );
+        CPLDumpSharedList( nullptr );
 
         exit( 1 );
 #endif
@@ -207,7 +207,6 @@ int main( int argc, char ** argv )
                      "gdalinfo warning: subdataset %d of %d requested. "
                      "Reading the main dataset.\n",
                      psOptionsForBinary->nSubdataset, nSubdatasets );
-
         }
     }
 
@@ -233,9 +232,9 @@ int main( int argc, char ** argv )
 
     GDALDestroyDriverManager();
 
-    CPLDumpSharedList( NULL );
+    CPLDumpSharedList( nullptr );
     CPLCleanupTLS();
 
     exit( 0 );
-
 }
+MAIN_END

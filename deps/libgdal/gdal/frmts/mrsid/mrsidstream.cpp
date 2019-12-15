@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: mrsidstream.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  Multi-resolution Seamless Image Database (MrSID)
  * Purpose:  Input/output stream wrapper for usage with LizardTech's
@@ -36,7 +35,7 @@
 #include "cpl_error.h"
 #include "mrsidstream.h"
 
-CPL_CVSID("$Id: mrsidstream.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: mrsidstream.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 LT_USE_NAMESPACE(LizardTech)
 
@@ -46,7 +45,7 @@ LT_USE_NAMESPACE(LizardTech)
 /* ==================================================================== */
 /************************************************************************/
 
-LTIVSIStream::LTIVSIStream() : poFileHandle(NULL), nError(0), pnRefCount(NULL),
+LTIVSIStream::LTIVSIStream() : poFileHandle(nullptr), nError(0), pnRefCount(nullptr),
 bIsOpen(FALSE)
 {
 }
@@ -76,7 +75,7 @@ LTIVSIStream::~LTIVSIStream()
 LT_STATUS LTIVSIStream::initialize( const char *pszFilename,
                                     const char *pszAccess )
 {
-    CPLAssert(poFileHandle == NULL);
+    CPLAssert(poFileHandle == nullptr);
 
     errno = 0;
     poFileHandle = (VSIVirtualHandle *)VSIFOpenL( pszFilename, pszAccess );
@@ -96,7 +95,7 @@ LT_STATUS LTIVSIStream::initialize( const char *pszFilename,
 
 LT_STATUS LTIVSIStream::initialize( LTIVSIStream* ltiVSIStream )
 {
-    CPLAssert(poFileHandle == NULL);
+    CPLAssert(poFileHandle == nullptr);
 
     poFileHandle = ltiVSIStream->poFileHandle;
     if (poFileHandle)
@@ -129,7 +128,7 @@ bool LTIVSIStream::isEOF()
 
 bool LTIVSIStream::isOpen()
 {
-    return  poFileHandle != NULL && bIsOpen;
+    return  poFileHandle != nullptr && bIsOpen;
 }
 
 /************************************************************************/
@@ -138,7 +137,7 @@ bool LTIVSIStream::isOpen()
 
 LT_STATUS LTIVSIStream::open()
 {
-    bIsOpen = poFileHandle != NULL;
+    bIsOpen = poFileHandle != nullptr;
     return poFileHandle ? LT_STS_Success : LT_STS_Failure;
 }
 

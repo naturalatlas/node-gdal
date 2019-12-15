@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrwalklayer.cpp
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRWalkLayer class.
@@ -29,27 +28,25 @@
 
 #include "ogrwalk.h"
 
+#include <algorithm>
+
+CPL_CVSID("$Id: ogrwalklayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+
 /************************************************************************/
 /*                            OGRWalkLayer()                            */
 /************************************************************************/
 
-OGRWalkLayer::OGRWalkLayer( )
-
-{
-    poDS = NULL;
-
-    bGeomColumnWKB = FALSE;
-    pszGeomColumn = NULL;
-    pszFIDColumn = NULL;
-    panFieldOrdinals = NULL;
-
-    poStmt = NULL;
-
-    poFeatureDefn = NULL;
-    iNextShapeId = 0;
-
-    poSRS = NULL;
-}
+OGRWalkLayer::OGRWalkLayer() :
+    poFeatureDefn(nullptr),
+    poStmt(nullptr),
+    poSRS(nullptr),
+    iNextShapeId(0),
+    poDS(nullptr),
+    bGeomColumnWKB(false),
+    pszGeomColumn(nullptr),
+    pszFIDColumn(nullptr),
+    panFieldOrdinals(nullptr)
+{}
 
 /************************************************************************/
 /*                           ~OGRWalkLayer()                            */
@@ -58,17 +55,17 @@ OGRWalkLayer::OGRWalkLayer( )
 OGRWalkLayer::~OGRWalkLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "Walk", "%d features read on layer '%s'.",
-                  (int) m_nFeaturesRead,
+                  static_cast<int>(m_nFeaturesRead),
                   poFeatureDefn->GetName() );
     }
 
-    if( poFeatureDefn != NULL )
+    if( poFeatureDefn != nullptr )
     {
         poFeatureDefn->Release();
-        poFeatureDefn = NULL;
+        poFeatureDefn = nullptr;
     }
 
     if( poSRS )
@@ -99,9 +96,10 @@ CPLErr OGRWalkLayer::BuildFeatureDefn( const char *pszLayerName,
     {
         OGRFieldDefn    oField( poStmtIn->GetColName(iCol), OFTString );
 
-        oField.SetWidth( MAX(0,poStmtIn->GetColSize( iCol )) );
+        oField.SetWidth(
+            std::max(static_cast<short>(0), poStmtIn->GetColSize( iCol )));
 
-        if( pszGeomColumn != NULL
+        if( pszGeomColumn != nullptr
             && EQUAL(poStmtIn->GetColName(iCol),pszGeomColumn) )    //If Geometry Column, continue to next field
             continue;
 
@@ -158,14 +156,14 @@ CPLErr OGRWalkLayer::BuildFeatureDefn( const char *pszLayerName,
 /*      If we don't already have an FID, check if there is a special    */
 /*      FID named column available.                                     */
 /* -------------------------------------------------------------------- */
-    if( pszFIDColumn == NULL )
+    if( pszFIDColumn == nullptr )
     {
         const char *pszOGR_FID = CPLGetConfigOption("WALK_OGR_FID","FeatureID");
         if( poFeatureDefn->GetFieldIndex( pszOGR_FID ) != -1 )
             pszFIDColumn = CPLStrdup(pszOGR_FID);
     }
 
-    if( pszFIDColumn != NULL )
+    if( pszFIDColumn != nullptr )
         CPLDebug( "Walk", "Using column %s as FID for table %s.",
                   pszFIDColumn, poFeatureDefn->GetName() );
     else
@@ -185,7 +183,6 @@ void OGRWalkLayer::ResetReading()
     iNextShapeId = 0;
 }
 
-
 /************************************************************************/
 /*                           GetNextFeature()                           */
 /************************************************************************/
@@ -195,15 +192,13 @@ OGRFeature *OGRWalkLayer::GetNextFeature()
 {
     while( true )
     {
-        OGRFeature      *poFeature;
+        OGRFeature *poFeature = GetNextRawFeature();
+        if( poFeature == nullptr )
+            return nullptr;
 
-        poFeature = GetNextRawFeature();
-        if( poFeature == NULL )
-            return NULL;
-
-        if( (m_poFilterGeom == NULL
+        if( (m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature )) )
             return poFeature;
 
@@ -214,8 +209,8 @@ OGRFeature *OGRWalkLayer::GetNextFeature()
 OGRFeature *OGRWalkLayer::GetNextRawFeature()
 
 {
-    if( GetStatement() == NULL )
-        return NULL;
+    if( GetStatement() == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      If we are marked to restart then do so, and fetch a record.     */
@@ -223,8 +218,8 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
     if( !poStmt->Fetch() )
     {
         delete poStmt;
-        poStmt = NULL;
-        return NULL;
+        poStmt = nullptr;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -232,7 +227,7 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
 /* -------------------------------------------------------------------- */
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
 
-    if( pszFIDColumn != NULL && poStmt->GetColId(pszFIDColumn) > -1 )
+    if( pszFIDColumn != nullptr && poStmt->GetColId(pszFIDColumn) > -1 )
         poFeature->SetFID(
             atoi(poStmt->GetColData(poStmt->GetColId(pszFIDColumn))) );
     else
@@ -249,8 +244,8 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
         int iSrcField = panFieldOrdinals[iField]-1;
         const char *pszValue = poStmt->GetColData( iSrcField );
 
-        if( pszValue == NULL )
-            /* no value */;
+        if( pszValue == nullptr )
+            poFeature->SetFieldNull( iField );
         else if( poFeature->GetFieldDefnRef(iField)->GetType() == OFTBinary )
             poFeature->SetField( iField,
                                  poStmt->GetColDataLength(iSrcField),
@@ -262,22 +257,22 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
 /* -------------------------------------------------------------------- */
 /*      Try to extract a geometry.                                      */
 /* -------------------------------------------------------------------- */
-    if( pszGeomColumn != NULL )
+    if( pszGeomColumn != nullptr )
     {
         int iField = poStmt->GetColId( pszGeomColumn );
         const char *pszGeomBin = poStmt->GetColData( iField );
         int nGeomLength = poStmt->GetColDataLength( iField );
-        OGRGeometry *poGeom = NULL;
+        OGRGeometry *poGeom = nullptr;
         OGRErr eErr = OGRERR_NONE;
 
-        if( pszGeomBin != NULL && bGeomColumnWKB )
+        if( pszGeomBin != nullptr && bGeomColumnWKB )
         {
             WKBGeometry *WalkGeom = (WKBGeometry *)CPLMalloc(sizeof(WKBGeometry));
             if( Binary2WkbGeom((unsigned char *)pszGeomBin, WalkGeom, nGeomLength)
                 != OGRERR_NONE )
             {
                 CPLFree(WalkGeom);
-                return NULL;
+                return nullptr;
             }
             eErr = TranslateWalkGeom(&poGeom, WalkGeom);
 
@@ -287,7 +282,7 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
 
         if ( eErr != OGRERR_NONE )
         {
-            const char *pszMessage;
+            const char *pszMessage = nullptr;
 
             switch ( eErr )
             {
@@ -307,7 +302,7 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
                      "GetNextRawFeature(): %s", pszMessage);
         }
 
-        if( poGeom != NULL && eErr == OGRERR_NONE )
+        if( poGeom != nullptr && eErr == OGRERR_NONE )
         {
             poGeom->assignSpatialReference( poSRS );
             poFeature->SetGeometryDirectly( poGeom );
@@ -324,9 +319,9 @@ OGRFeature *OGRWalkLayer::GetNextRawFeature()
 void OGRWalkLayer::LookupSpatialRef( const char * pszMemo )
 
 {
-    char *pszProj4 = NULL;
-    const char *pszStart = NULL;
-    char *pszEnd = NULL;
+    char *pszProj4 = nullptr;
+    const char *pszStart = nullptr;
+    char *pszEnd = nullptr;
 
     if ( !pszMemo )
         return;
@@ -334,16 +329,16 @@ void OGRWalkLayer::LookupSpatialRef( const char * pszMemo )
 /* -------------------------------------------------------------------- */
 /*      Only proj4 is currently used                                    */
 /* -------------------------------------------------------------------- */
-    if ( (pszStart = strstr(pszMemo, "<proj4>")) != NULL )
+    if ( (pszStart = strstr(pszMemo, "<proj4>")) != nullptr )
     {
         pszProj4 = CPLStrdup( pszStart + 7 );
-        if ( (pszEnd = (char *)strstr(pszProj4, "</proj4>")) != NULL )
+        if ( (pszEnd = (char *)strstr(pszProj4, "</proj4>")) != nullptr )
             pszEnd[0] = '\0';
     }
-    else if ( (pszStart = strstr(pszMemo, "proj4={")) != NULL )
+    else if ( (pszStart = strstr(pszMemo, "proj4={")) != nullptr )
     {
         pszProj4 = CPLStrdup( pszStart + 7 );
-        if ( (pszEnd = (char *)strstr(pszProj4, "};")) != NULL )
+        if ( (pszEnd = (char *)strstr(pszProj4, "};")) != nullptr )
             pszEnd[0] = '\0';
     }
 
@@ -356,6 +351,7 @@ void OGRWalkLayer::LookupSpatialRef( const char * pszMemo )
     if ( strlen(pszProj4) > 0 )
     {
         poSRS = new OGRSpatialReference();
+        poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
         if( poSRS->importFromProj4( pszProj4 ) != OGRERR_NONE )
         {
@@ -363,7 +359,7 @@ void OGRWalkLayer::LookupSpatialRef( const char * pszMemo )
                       "importFromProj4() failed on SRS '%s'.",
                       pszProj4);
             delete poSRS;
-            poSRS = NULL;
+            poSRS = nullptr;
         }
     }
 

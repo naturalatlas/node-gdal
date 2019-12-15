@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,9 +28,12 @@ namespace io {
 
 CLocalizer::CLocalizer()
 {
-    char* p = std::setlocale(LC_NUMERIC, NULL);
-    if (0 != p)
-    {
+#ifdef _MSC_VER
+    // Avoid multithreading issues caused by setlocale
+    _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
+#endif
+    char* p = std::setlocale(LC_NUMERIC, nullptr);
+    if(nullptr != p) {
         saved_locale = p;
     }
     std::setlocale(LC_NUMERIC, "C");

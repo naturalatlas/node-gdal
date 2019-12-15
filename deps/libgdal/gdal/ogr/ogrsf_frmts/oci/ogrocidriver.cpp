@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrocidriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Implementation of the OGROCIDriver class.
@@ -29,8 +28,7 @@
 
 #include "ogr_oci.h"
 
-CPL_CVSID("$Id: ogrocidriver.cpp 33713 2016-03-12 17:41:57Z goatbar $");
-
+CPL_CVSID("$Id: ogrocidriver.cpp 000e648e500791c48d3df312cac32e30383828df 2019-01-25 15:11:29 +0100 hlaebe $")
 
 /************************************************************************/
 /*                        OGROCIDriverIdentify()                        */
@@ -49,7 +47,7 @@ static GDALDataset *OGROCIDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !OGROCIDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     OGROCIDataSource    *poDS;
 
@@ -59,7 +57,7 @@ static GDALDataset *OGROCIDriverOpen( GDALOpenInfo* poOpenInfo )
                      poOpenInfo->eAccess == GA_Update, TRUE ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -81,14 +79,13 @@ static GDALDataset *OGROCIDriverCreate( const char * pszName,
 
     poDS = new OGROCIDataSource();
 
-
-    if( !poDS->Open( pszName, NULL, TRUE, TRUE ) )
+    if( !poDS->Open( pszName, nullptr, TRUE, TRUE ) )
     {
         delete poDS;
         CPLError( CE_Failure, CPLE_AppDefined,
          "Oracle driver doesn't currently support database creation.\n"
                   "Please create database with Oracle tools before loading tables." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -104,7 +101,7 @@ void RegisterOGROCI()
     if( !GDAL_CHECK_VERSION("OCI driver") )
         return;
 
-    if( GDALGetDriverByName( "OCI" ) != NULL )
+    if( GDALGetDriverByName( "OCI" ) != nullptr )
         return;
 
     GDALDriver* poDriver = new GDALDriver();
@@ -120,6 +117,10 @@ void RegisterOGROCI()
 "  <Option name='USER' type='string' description='User name'/>"
 "  <Option name='PASSWORD' type='string' description='Password'/>"
 "  <Option name='TABLES' type='string' description='Restricted set of tables to list (comma separated)'/>"
+"  <Option name='WORKSPACE' type='string' description='Workspace'/>"
+"  <Option name='MULTI_LOAD' type='boolean' description='If enabled new features will be created in groups of 100 per SQL INSERT command' default='YES'/>"
+"  <Option name='MULTI_LOAD_COUNT' type='int' description='Number of itens for a group INSERT' default='100'/>"
+"  <Option name='FIRST_ID' type='int' description='First id value to be used on append'/>"
 "</OpenOptionList>");
 
     poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
@@ -132,6 +133,8 @@ void RegisterOGROCI()
         "  <Option name='INDEX_PARAMETERS' type='string' description='Creation parameters when the spatial index is created'/>"
         "  <Option name='ADD_LAYER_GTYPE' type='boolean' description='May be set to NO to disable the constraints on the geometry type in the spatial index' default='YES'/>"
         "  <Option name='MULTI_LOAD' type='boolean' description='If enabled new features will be created in groups of 100 per SQL INSERT command' default='YES'/>"
+        "  <Option name='MULTI_LOAD_COUNT' type='int' description='Number of itens for a group INSERT' default='100'/>"
+        "  <Option name='DEFAULT_STRING_SIZE' type='int' description='Default string column size' default='4000'/>"
         "  <Option name='LOADER_FILE' type='string' description='If this option is set, all feature information will be written to a file suitable for use with SQL*Loader'/>"
         "  <Option name='DIM' type='integer' description='Set to 2 to force the geometries to be 2D, or 3 to be 2.5D' default='3'/>"
         "  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column.' default='ORA_GEOMETRY'/>"
@@ -140,6 +143,8 @@ void RegisterOGROCI()
         "  <Option name='DIMINFO_Y' type='string' description='ymin,ymax,yres values to control the Y dimension info written into the USER_SDO_GEOM_METADATA table'/>"
         "  <Option name='DIMINFO_Z' type='string' description='zmin,zmax,zres values to control the Z dimension info written into the USER_SDO_GEOM_METADATA table'/>"
         "  <Option name='SRID' type='int' description='Forced SRID of the layer'/>"
+        "  <Option name='FIRST_ID' type='int' description='First id value'/>"
+        "  <Option name='NO_LOGGING' type='boolean' description='Create table with no_logging parameters' default='NO'/>"
         "</LayerCreationOptionList>");
 
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,

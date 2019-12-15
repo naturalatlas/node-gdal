@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: netcdfdataset.h 33794 2016-03-26 13:19:07Z goatbar $
+ * $Id: netcdfdataset.h e261fa324369d4f7742b57bf7761bcf41765cabb 2019-03-19 16:43:56 +0100 Even Rouault $
  *
  * Project:  netCDF read/write Driver
  * Purpose:  GDAL bindings over netCDF library.
@@ -31,6 +31,8 @@
 #define NETCDFDATASET_H_INCLUDED_
 
 #include <cfloat>
+#include <map>
+#include <vector>
 
 #include "cpl_string.h"
 #include "gdal_frmts.h"
@@ -39,10 +41,18 @@
 #include "netcdf.h"
 #include "ogr_spatialref.h"
 #include "ogrsf_frmts.h"
+#include "netcdfuffd.h"
+
+#if defined(DEBUG) || defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION) || defined(ALLOW_FORMAT_DUMPS)
+// Whether to support opening a ncdump file as a file dataset
+// Useful for fuzzing purposes
+#define ENABLE_NCDUMP
+#endif
+
 
 /************************************************************************/
 /* ==================================================================== */
-/*			     defines    		                             		*/
+/*                           defines                                    */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -113,10 +123,34 @@ typedef enum
 static const int NCDF_DEFLATE_LEVEL    = 1;  /* best time/size ratio */
 
 /* helper for libnetcdf errors */
-#define NCDF_ERR(status) if ( status != NC_NOERR ){ \
-CPLError( CE_Failure,CPLE_AppDefined, \
-"netcdf error #%d : %s .\nat (%s,%s,%d)\n",status, nc_strerror(status), \
-__FILE__, __FUNCTION__, __LINE__ ); }
+#define NCDF_ERR(status)                                                \
+    do {                                                                \
+        int NCDF_ERR_status_ = (status);                                \
+        if( NCDF_ERR_status_ != NC_NOERR )                              \
+        {                                                               \
+            CPLError(CE_Failure, CPLE_AppDefined,                       \
+                     "netcdf error #%d : %s .\nat (%s,%s,%d)\n",        \
+                     status, nc_strerror(NCDF_ERR_status_),             \
+                     __FILE__, __FUNCTION__, __LINE__);                 \
+        }                                                               \
+    } while(0)
+
+#define NCDF_ERR_RET(status)                    \
+    do {                                        \
+        int NCDF_ERR_RET_status_ = (status);    \
+        if( NCDF_ERR_RET_status_ != NC_NOERR )  \
+        {                                       \
+            NCDF_ERR(NCDF_ERR_RET_status_);     \
+            return CE_Failure;                  \
+        }                                       \
+    } while(0)
+
+#define ERR_RET(eErr)                           \
+    do {                                        \
+        CPLErr ERR_RET_eErr_ = (eErr);          \
+        if( ERR_RET_eErr_ != CE_None )          \
+            return ERR_RET_eErr_;               \
+    } while(0)
 
 /* Check for NC2 support in case it was not enabled at compile time. */
 /* NC4 has to be detected at compile as it requires a special build of netcdf-4. */
@@ -125,7 +159,6 @@ __FILE__, __FUNCTION__, __LINE__ ); }
 #define NETCDF_HAS_NC2 1
 #endif
 #endif
-
 
 /* -------------------------------------------------------------------- */
 /*       CF-1 or NUG (NetCDF User's Guide) defs                         */
@@ -163,7 +196,6 @@ __FILE__, __FUNCTION__, __LINE__ ); }
 #define CF_AXIS            "axis"
 /* #define CF_BOUNDS          "bounds" */
 /* #define CF_ORIG_UNITS      "original_units" */
-
 
 /* -------------------------------------------------------------------- */
 /*      CF-1 convention standard variables related to                   */
@@ -214,27 +246,29 @@ __FILE__, __FUNCTION__, __LINE__ ); }
 #define CF_PP_VERT_PERSP             "vertical_perspective" /*not used yet */
 #define CF_PP_PERSPECTIVE_POINT_HEIGHT "perspective_point_height"
 #define CF_PP_SWEEP_ANGLE_AXIS        "sweep_angle_axis"
-
+#define CF_PP_GRID_NORTH_POLE_LONGITUDE "grid_north_pole_longitude"
+#define CF_PP_GRID_NORTH_POLE_LATITUDE  "grid_north_pole_latitude"
+#define CF_PP_NORTH_POLE_GRID_LONGITUDE "north_pole_grid_longitude"
 
 /* -------------------------------------------------------------------- */
 /*         CF-1 Coordinate Type Naming (Chapter 4.  Coordinate Types )  */
 /* -------------------------------------------------------------------- */
-static const char* const papszCFLongitudeVarNames[] = { CF_LONGITUDE_VAR_NAME, "longitude", NULL };
-static const char* const papszCFLongitudeAttribNames[] = { CF_UNITS, CF_STD_NAME, CF_AXIS, NULL };
-static const char* const papszCFLongitudeAttribValues[] = { CF_DEGREES_EAST, CF_LONGITUDE_STD_NAME, "X", NULL };
-static const char* const papszCFLatitudeVarNames[] = { CF_LATITUDE_VAR_NAME, "latitude", NULL };
-static const char* const papszCFLatitudeAttribNames[] = { CF_UNITS, CF_STD_NAME, CF_AXIS, NULL };
-static const char* const papszCFLatitudeAttribValues[] = { CF_DEGREES_NORTH, CF_LATITUDE_STD_NAME, "Y", NULL };
+static const char* const papszCFLongitudeVarNames[] = { CF_LONGITUDE_VAR_NAME, "longitude", nullptr };
+static const char* const papszCFLongitudeAttribNames[] = { CF_UNITS, CF_STD_NAME, CF_AXIS, nullptr };
+static const char* const papszCFLongitudeAttribValues[] = { CF_DEGREES_EAST, CF_LONGITUDE_STD_NAME, "X", nullptr };
+static const char* const papszCFLatitudeVarNames[] = { CF_LATITUDE_VAR_NAME, "latitude", nullptr };
+static const char* const papszCFLatitudeAttribNames[] = { CF_UNITS, CF_STD_NAME, CF_AXIS, nullptr };
+static const char* const papszCFLatitudeAttribValues[] = { CF_DEGREES_NORTH, CF_LATITUDE_STD_NAME, "Y", nullptr };
 
-static const char* const papszCFProjectionXVarNames[] = { CF_PROJ_X_VAR_NAME, "xc", NULL };
-static const char* const papszCFProjectionXAttribNames[] = { CF_STD_NAME, NULL };
-static const char* const papszCFProjectionXAttribValues[] = { CF_PROJ_X_COORD, NULL };
-static const char* const papszCFProjectionYVarNames[] = { CF_PROJ_Y_VAR_NAME, "yc", NULL };
-static const char* const papszCFProjectionYAttribNames[] = { CF_STD_NAME, NULL };
-static const char* const papszCFProjectionYAttribValues[] = { CF_PROJ_Y_COORD, NULL };
+static const char* const papszCFProjectionXVarNames[] = { CF_PROJ_X_VAR_NAME, "xc", nullptr };
+static const char* const papszCFProjectionXAttribNames[] = { CF_STD_NAME, nullptr };
+static const char* const papszCFProjectionXAttribValues[] = { CF_PROJ_X_COORD, nullptr };
+static const char* const papszCFProjectionYVarNames[] = { CF_PROJ_Y_VAR_NAME, "yc", nullptr };
+static const char* const papszCFProjectionYAttribNames[] = { CF_STD_NAME, nullptr };
+static const char* const papszCFProjectionYAttribValues[] = { CF_PROJ_Y_COORD, nullptr };
 
-static const char* const papszCFVerticalAttribNames[] = { CF_AXIS, "positive", "positive", NULL };
-static const char* const papszCFVerticalAttribValues[] = { "Z", "up", "down", NULL };
+static const char* const papszCFVerticalAttribNames[] = { CF_AXIS, "positive", "positive", nullptr };
+static const char* const papszCFVerticalAttribValues[] = { "Z", "up", "down", nullptr };
 static const char* const papszCFVerticalUnitsValues[] = {
     /* units of pressure */
     "bar", "bars", "millibar", "millibars", "decibar", "decibars",
@@ -243,7 +277,7 @@ static const char* const papszCFVerticalUnitsValues[] = {
     "meter", "meters", "m", "kilometer", "kilometers", "km",
     /* dimensionless vertical coordinates */
     "level", "layer", "sigma_level",
-    NULL };
+    nullptr };
 /* dimensionless vertical coordinates */
 static const char* const papszCFVerticalStandardNameValues[] = {
     "atmosphere_ln_pressure_coordinate", "atmosphere_sigma_coordinate",
@@ -257,17 +291,16 @@ static const char* const papszCFVerticalStandardNameValues[] = {
     "atmosphere_hybrid_height_coordinate",
     "atmosphere_sleve_coordinate", "ocean_sigma_coordinate",
     "ocean_s_coordinate", "ocean_sigma_z_coordinate",
-    "ocean_double_sigma_coordinate", NULL };
+    "ocean_double_sigma_coordinate", nullptr };
 
-static const char* const papszCFTimeAttribNames[] = { CF_AXIS, NULL };
-static const char* const papszCFTimeAttribValues[] = { "T", NULL };
+static const char* const papszCFTimeAttribNames[] = { CF_AXIS, nullptr };
+static const char* const papszCFTimeAttribValues[] = { "T", nullptr };
 static const char* const papszCFTimeUnitsValues[] = {
     "days since", "day since", "d since",
     "hours since", "hour since", "h since", "hr since",
     "minutes since", "minute since", "min since",
     "seconds since", "second since", "sec since", "s since",
-    NULL };
-
+    nullptr };
 
 /* -------------------------------------------------------------------- */
 /*         CF-1 to GDAL mappings                                        */
@@ -308,7 +341,7 @@ static const oNetcdfSRS_PP poGenericMappings[] = {
     {CF_PP_LAT_PROJ_ORIGIN, SRS_PP_LATITUDE_OF_CENTER },
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL },
+    {nullptr, nullptr },
 };
 
 // Albers equal area
@@ -332,7 +365,7 @@ static const oNetcdfSRS_PP poAEAMappings[] = {
     {CF_PP_LONG_CENTRAL_MERIDIAN, SRS_PP_LONGITUDE_OF_CENTER},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Azimuthal equidistant
@@ -352,7 +385,7 @@ static const oNetcdfSRS_PP poAEMappings[] = {
     {CF_PP_LON_PROJ_ORIGIN, SRS_PP_LONGITUDE_OF_CENTER},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Lambert azimuthal equal area
@@ -372,7 +405,7 @@ static const oNetcdfSRS_PP poLAEAMappings[] = {
     {CF_PP_LON_PROJ_ORIGIN, SRS_PP_LONGITUDE_OF_CENTER},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Lambert conformal
@@ -405,7 +438,7 @@ static const oNetcdfSRS_PP poLCC1SPMappings[] = {
     {CF_PP_SCALE_FACTOR_ORIGIN, SRS_PP_SCALE_FACTOR}, /* special case */
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Lambert conformal conic - 2SP
@@ -416,7 +449,7 @@ static const oNetcdfSRS_PP poLCC2SPMappings[] = {
     {CF_PP_LONG_CENTRAL_MERIDIAN, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Lambert cylindrical equal area
@@ -441,7 +474,7 @@ static const oNetcdfSRS_PP poLCEAMappings[] = {
     {CF_PP_LONG_CENTRAL_MERIDIAN, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Latitude-Longitude
@@ -453,7 +486,6 @@ static const oNetcdfSRS_PP poLCEAMappings[] = {
 //    * None
 //
 // NB: handled as a special case - !isProjected()
-
 
 // Mercator
 //
@@ -474,19 +506,19 @@ static const oNetcdfSRS_PP poM1SPMappings[] = {
     {CF_PP_SCALE_FACTOR_ORIGIN, SRS_PP_SCALE_FACTOR},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Mercator 2 Standard Parallel
 static const oNetcdfSRS_PP poM2SPMappings[] = {
     {CF_PP_LON_PROJ_ORIGIN, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_STD_PARALLEL_1, SRS_PP_STANDARD_PARALLEL_1},
-    //From best understanding of this projection, only
- 	// actually specify one SP - it is the same N/S of equator.
-    //{CF_PP_STD_PARALLEL_2, SRS_PP_LATITUDE_OF_ORIGIN},
+    // From best understanding of this projection, only
+    // actually specify one SP - it is the same N/S of equator.
+    // {CF_PP_STD_PARALLEL_2, SRS_PP_LATITUDE_OF_ORIGIN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Orthographic
@@ -505,7 +537,7 @@ static const oNetcdfSRS_PP poOrthoMappings[] = {
     {CF_PP_LON_PROJ_ORIGIN, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
  };
 
 // Polar stereographic
@@ -544,7 +576,7 @@ static const oNetcdfSRS_PP poPSmappings[] = {
     {CF_PP_VERT_LONG_FROM_POLE, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
 };
 
 // Rotated Pole
@@ -558,11 +590,7 @@ static const oNetcdfSRS_PP poPSmappings[] = {
 //    * grid_north_pole_longitude
 //    * north_pole_grid_longitude - This parameter is optional (default is 0.).
 
-/* TODO: No GDAL equivalent of rotated pole? Doesn't seem to have an EPSG
-   code or WKT ... so unless some advanced proj4 features can be used
-   seems to rule out.
-   see GDAL bug #4285 for a possible fix or workaround
-*/
+// No WKT equivalent
 
 // Stereographic
 //
@@ -585,7 +613,7 @@ static const oNetcdfSRS_PP poStMappings[] = {
     {CF_PP_SCALE_FACTOR_ORIGIN, SRS_PP_SCALE_FACTOR},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
   };
 
 // Transverse Mercator
@@ -607,7 +635,7 @@ static const oNetcdfSRS_PP poTMMappings[] = {
     {CF_PP_LAT_PROJ_ORIGIN, SRS_PP_LATITUDE_OF_ORIGIN},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
-    {NULL, NULL}
+    {nullptr, nullptr}
   };
 
 // Vertical perspective
@@ -625,17 +653,14 @@ static const oNetcdfSRS_PP poTMMappings[] = {
 //
 // TODO: see how to map this to OGR
 
-
 static const oNetcdfSRS_PP poGEOSMappings[] = {
     {CF_PP_LON_PROJ_ORIGIN, SRS_PP_CENTRAL_MERIDIAN},
     {CF_PP_PERSPECTIVE_POINT_HEIGHT, SRS_PP_SATELLITE_HEIGHT},
     {CF_PP_FALSE_EASTING, SRS_PP_FALSE_EASTING },
     {CF_PP_FALSE_NORTHING, SRS_PP_FALSE_NORTHING },
     /* { CF_PP_SWEEP_ANGLE_AXIS, .... } handled as a proj.4 extension */
-    {NULL, NULL}
+    {nullptr, nullptr}
   };
-
-
 
 /* Mappings for various projections, including netcdf and GDAL projection names
    and corresponding oNetcdfSRS_PP mapping struct.
@@ -650,41 +675,41 @@ typedef struct {
 static const oNetcdfSRS_PT poNetcdfSRS_PT[] = {
     {CF_PT_AEA, SRS_PT_ALBERS_CONIC_EQUAL_AREA, poAEAMappings },
     {CF_PT_AE, SRS_PT_AZIMUTHAL_EQUIDISTANT, poAEMappings },
-    {"cassini_soldner", SRS_PT_CASSINI_SOLDNER, NULL },
+    {"cassini_soldner", SRS_PT_CASSINI_SOLDNER, nullptr },
     {CF_PT_LCEA, SRS_PT_CYLINDRICAL_EQUAL_AREA, poLCEAMappings },
-    {"eckert_iv", SRS_PT_ECKERT_IV, NULL },
-    {"eckert_vi", SRS_PT_ECKERT_VI, NULL },
-    {"equidistant_conic", SRS_PT_EQUIDISTANT_CONIC, NULL },
-    {"equirectangular", SRS_PT_EQUIRECTANGULAR, NULL },
-    {"gall_stereographic", SRS_PT_GALL_STEREOGRAPHIC, NULL },
+    {"eckert_iv", SRS_PT_ECKERT_IV, nullptr },
+    {"eckert_vi", SRS_PT_ECKERT_VI, nullptr },
+    {"equidistant_conic", SRS_PT_EQUIDISTANT_CONIC, nullptr },
+    {"equirectangular", SRS_PT_EQUIRECTANGULAR, nullptr },
+    {"gall_stereographic", SRS_PT_GALL_STEREOGRAPHIC, nullptr },
     {CF_PT_GEOS, SRS_PT_GEOSTATIONARY_SATELLITE, poGEOSMappings },
-    {"goode_homolosine", SRS_PT_GOODE_HOMOLOSINE, NULL },
-    {"gnomonic", SRS_PT_GNOMONIC, NULL },
-    {"hotine_oblique_mercator", SRS_PT_HOTINE_OBLIQUE_MERCATOR, NULL },
+    {"goode_homolosine", SRS_PT_GOODE_HOMOLOSINE, nullptr },
+    {"gnomonic", SRS_PT_GNOMONIC, nullptr },
+    {"hotine_oblique_mercator", SRS_PT_HOTINE_OBLIQUE_MERCATOR, nullptr },
     {"hotine_oblique_mercator_2P",
-     SRS_PT_HOTINE_OBLIQUE_MERCATOR_TWO_POINT_NATURAL_ORIGIN, NULL },
-    {"laborde_oblique_mercator", SRS_PT_LABORDE_OBLIQUE_MERCATOR, NULL },
+     SRS_PT_HOTINE_OBLIQUE_MERCATOR_TWO_POINT_NATURAL_ORIGIN, nullptr },
+    {"laborde_oblique_mercator", SRS_PT_LABORDE_OBLIQUE_MERCATOR, nullptr },
     {CF_PT_LCC, SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP, poLCC1SPMappings },
     {CF_PT_LCC, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP, poLCC2SPMappings },
     {CF_PT_LAEA, SRS_PT_LAMBERT_AZIMUTHAL_EQUAL_AREA, poLAEAMappings },
     {CF_PT_MERCATOR, SRS_PT_MERCATOR_1SP, poM1SPMappings },
     {CF_PT_MERCATOR, SRS_PT_MERCATOR_2SP, poM2SPMappings },
-    {"miller_cylindrical", SRS_PT_MILLER_CYLINDRICAL, NULL },
-    {"mollweide", SRS_PT_MOLLWEIDE, NULL },
-    {"new_zealand_map_grid", SRS_PT_NEW_ZEALAND_MAP_GRID, NULL },
+    {"miller_cylindrical", SRS_PT_MILLER_CYLINDRICAL, nullptr },
+    {"mollweide", SRS_PT_MOLLWEIDE, nullptr },
+    {"new_zealand_map_grid", SRS_PT_NEW_ZEALAND_MAP_GRID, nullptr },
     /* for now map to STEREO, see bug #4267 */
-    {"oblique_stereographic", SRS_PT_OBLIQUE_STEREOGRAPHIC, NULL },
+    {"oblique_stereographic", SRS_PT_OBLIQUE_STEREOGRAPHIC, nullptr },
     /* {STEREO, SRS_PT_OBLIQUE_STEREOGRAPHIC, poStMappings },  */
     {CF_PT_ORTHOGRAPHIC, SRS_PT_ORTHOGRAPHIC, poOrthoMappings },
     {CF_PT_POLAR_STEREO, SRS_PT_POLAR_STEREOGRAPHIC, poPSmappings },
-    {"polyconic", SRS_PT_POLYCONIC, NULL },
-    {"robinson", SRS_PT_ROBINSON, NULL },
-    {"sinusoidal", SRS_PT_SINUSOIDAL, NULL },
+    {"polyconic", SRS_PT_POLYCONIC, nullptr },
+    {"robinson", SRS_PT_ROBINSON, nullptr },
+    {"sinusoidal", SRS_PT_SINUSOIDAL, nullptr },
     {CF_PT_STEREO, SRS_PT_STEREOGRAPHIC, poStMappings },
-    {"swiss_oblique_cylindrical", SRS_PT_SWISS_OBLIQUE_CYLINDRICAL, NULL },
+    {"swiss_oblique_cylindrical", SRS_PT_SWISS_OBLIQUE_CYLINDRICAL, nullptr },
     {CF_PT_TM, SRS_PT_TRANSVERSE_MERCATOR, poTMMappings },
-    {"TM_south_oriented", SRS_PT_TRANSVERSE_MERCATOR_SOUTH_ORIENTED, NULL },
-    {NULL, NULL, NULL },
+    {"TM_south_oriented", SRS_PT_TRANSVERSE_MERCATOR_SOUTH_ORIENTED, nullptr },
+    {nullptr, nullptr, nullptr },
 };
 
 /************************************************************************/
@@ -695,52 +720,52 @@ static const oNetcdfSRS_PT poNetcdfSRS_PT[] = {
 
 class netCDFWriterConfigAttribute
 {
-    public:
-        CPLString m_osName;
-        CPLString m_osType;
-        CPLString m_osValue;
+  public:
+    CPLString m_osName;
+    CPLString m_osType;
+    CPLString m_osValue;
 
-        bool Parse(CPLXMLNode* psNode);
+    bool Parse(CPLXMLNode *psNode);
 };
 
 class netCDFWriterConfigField
 {
-    public:
-        CPLString m_osName;
-        CPLString m_osNetCDFName;
-        CPLString m_osMainDim;
-        std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
+  public:
+    CPLString m_osName;
+    CPLString m_osNetCDFName;
+    CPLString m_osMainDim;
+    std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
 
-        bool Parse(CPLXMLNode* psNode);
+    bool Parse(CPLXMLNode *psNode);
 };
 
 class netCDFWriterConfigLayer
 {
-    public:
-        CPLString m_osName;
-        CPLString m_osNetCDFName;
-        std::map<CPLString, CPLString> m_oLayerCreationOptions;
-        std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
-        std::map<CPLString, netCDFWriterConfigField> m_oFields;
+  public:
+    CPLString m_osName;
+    CPLString m_osNetCDFName;
+    std::map<CPLString, CPLString> m_oLayerCreationOptions;
+    std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
+    std::map<CPLString, netCDFWriterConfigField> m_oFields;
 
-        bool Parse(CPLXMLNode* psNode);
+    bool Parse(CPLXMLNode *psNode);
 };
 
 class netCDFWriterConfiguration
 {
-    public:
-        bool m_bIsValid;
-        std::map<CPLString, CPLString> m_oDatasetCreationOptions;
-        std::map<CPLString, CPLString> m_oLayerCreationOptions;
-        std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
-        std::map<CPLString, netCDFWriterConfigField> m_oFields;
-        std::map<CPLString, netCDFWriterConfigLayer> m_oLayers;
+  public:
+    bool m_bIsValid;
+    std::map<CPLString, CPLString> m_oDatasetCreationOptions;
+    std::map<CPLString, CPLString> m_oLayerCreationOptions;
+    std::vector<netCDFWriterConfigAttribute> m_aoAttributes;
+    std::map<CPLString, netCDFWriterConfigField> m_oFields;
+    std::map<CPLString, netCDFWriterConfigLayer> m_oLayers;
 
-        netCDFWriterConfiguration() : m_bIsValid(false) {}
+    netCDFWriterConfiguration() : m_bIsValid(false) {}
 
-        bool Parse(const char* pszFilename);
-        static bool SetNameValue(CPLXMLNode* psNode,
-                                 std::map<CPLString,CPLString>& oMap);
+    bool Parse(const char *pszFilename);
+    static bool SetNameValue(CPLXMLNode *psNode,
+                             std::map<CPLString, CPLString> &oMap);
 };
 
 /************************************************************************/
@@ -752,7 +777,7 @@ class netCDFWriterConfiguration
 class netCDFRasterBand;
 class netCDFLayer;
 
-class netCDFDataset : public GDALPamDataset
+class netCDFDataset final: public GDALPamDataset
 {
     friend class netCDFRasterBand; //TMP
     friend class netCDFLayer;
@@ -766,7 +791,14 @@ class netCDFDataset : public GDALPamDataset
 
     /* basic dataset vars */
     CPLString     osFilename;
+#ifdef ENABLE_NCDUMP
+    bool          bFileToDestroyAtClosing;
+#endif
     int           cdfid;
+#ifdef ENABLE_UFFD
+    cpl_uffd_context *pCtx = nullptr;
+#endif
+    int           nSubDatasets;
     char          **papszSubDatasets;
     char          **papszMetadata;
     CPLStringList papszDimName;
@@ -775,7 +807,7 @@ class netCDFDataset : public GDALPamDataset
     bool          bIsGdalFile; /* was this file created by GDAL? */
     bool          bIsGdalCfFile; /* was this file created by the (new) CF-compliant driver? */
     char         *pszCFProjection;
-    char         *pszCFCoordinates;
+    const char   *pszCFCoordinates;
     MultipleLayerBehaviour eMultipleLayerBehaviour;
     std::vector<netCDFDataset*> apoVectorDatasets;
 
@@ -786,12 +818,14 @@ class netCDFDataset : public GDALPamDataset
     int          nYDimID;
     bool         bIsProjected;
     bool         bIsGeographic;
+    bool         bSwitchedXY = false;
 
     /* state vars */
     bool         bDefineMode;
     bool         bSetProjection;
     bool         bSetGeoTransform;
-    bool         bAddedProjectionVars;
+    bool         bAddedProjectionVarsDefs;
+    bool         bAddedProjectionVarsData;
     bool         bAddedGridMappingRef;
 
     /* create vars */
@@ -812,27 +846,32 @@ class netCDFDataset : public GDALPamDataset
     static double       rint( double );
 
     double       FetchCopyParm( const char *pszGridMappingValue,
-                                const char *pszParm, double dfDefault );
+                                const char *pszParm, double dfDefault,
+                                bool *pbFound=nullptr );
 
     char **      FetchStandardParallels( const char *pszGridMappingValue );
 
+    const char *FetchAttr( const char *pszVarFullName, const char *pszAttr );
+    const char *FetchAttr( int nGroupId, int nVarId, const char *pszAttr );
+
     void ProcessCreationOptions( );
     int DefVarDeflate( int nVarId, bool bChunkingArg=true );
-    CPLErr AddProjectionVars( GDALProgressFunc pfnProgress=GDALDummyProgress,
-                              void * pProgressData=NULL );
+    CPLErr AddProjectionVars( bool bDefsOnly,
+                              GDALProgressFunc pfnProgress,
+                              void * pProgressData );
     void AddGridMappingRef();
 
-    bool GetDefineMode() { return bDefineMode; }
+    bool GetDefineMode() const { return bDefineMode; }
     bool SetDefineMode( bool bNewDefineMode );
 
     CPLErr      ReadAttributes( int, int );
 
-    void  CreateSubDatasetList( );
+    void  CreateSubDatasetList( int nGroupId );
 
-    void  SetProjectionFromVar( int, bool bReadSRSOnly );
+    void  SetProjectionFromVar( int nGroupId, int nVarId, bool bReadSRSOnly );
 
-    int ProcessCFGeolocation( int );
-    CPLErr Set1DGeolocation( int nVarId, const char *szDimName );
+    int ProcessCFGeolocation( int nGroupId, int nVarId );
+    CPLErr Set1DGeolocation( int nGroupId, int nVarId, const char *szDimName );
     double * Get1DGeolocation( const char *szDimName, int &nVarLen );
 
     static bool CloneAttributes(int old_cdfid, int new_cdfid, int nSrcVarId, int nDstVarId);
@@ -841,14 +880,23 @@ class netCDFDataset : public GDALPamDataset
                          int nDimIdToGrow, size_t nNewSize);
     bool GrowDim(int nLayerId, int nDimIdToGrow, size_t nNewSize);
 
+    CPLErr FilterVars( int nCdfId, bool bKeepRasters, bool bKeepVectors,
+                       char **papszIgnoreVars, int *pnRasterVars,
+                       int *pnGroupId, int *pnVarId, int *pnIgnoredVars );
+    CPLErr CreateGrpVectorLayers( int nCdfId, CPLString osFeatureType,
+                                  std::vector<int> anPotentialVectorVarID,
+                                  std::map<int, int> oMapDimIdToCount,
+                                  int nVarXId, int nVarYId, int nVarZId,
+                                  int nProfileDimId, int nParentIndexVarID,
+                                  bool bKeepRasters );
   protected:
 
-    CPLXMLNode *SerializeToXML( const char *pszVRTPath );
+    CPLXMLNode *SerializeToXML( const char *pszVRTPath ) override;
 
     virtual OGRLayer   *ICreateLayer( const char *pszName,
                                      OGRSpatialReference *poSpatialRef,
                                      OGRwkbGeometryType eGType,
-                                     char ** papszOptions );
+                                     char ** papszOptions ) override;
 
   public:
 
@@ -856,20 +904,26 @@ class netCDFDataset : public GDALPamDataset
     virtual ~netCDFDataset();
 
     /* Projection/GT */
-    CPLErr 	GetGeoTransform( double * );
-    CPLErr 	SetGeoTransform (double *);
-    const char * GetProjectionRef();
-    CPLErr 	SetProjection (const char *);
+    CPLErr      GetGeoTransform( double * ) override;
+    CPLErr      SetGeoTransform (double *) override;
+    const char * _GetProjectionRef() override;
+    CPLErr      _SetProjection (const char *) override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
+    CPLErr SetSpatialRef(const OGRSpatialReference* poSRS) override {
+        return OldSetProjectionFromSetSpatialRef(poSRS);
+    }
 
-    virtual char      **GetMetadataDomainList();
-    char ** GetMetadata( const char * );
+    virtual char      **GetMetadataDomainList() override;
+    char ** GetMetadata( const char * ) override;
 
-    virtual int  TestCapability(const char* pszCap);
+    virtual int  TestCapability(const char* pszCap) override;
 
-    virtual int  GetLayerCount() { return nLayers; }
-    virtual OGRLayer* GetLayer(int nIdx);
+    virtual int  GetLayerCount() override { return nLayers; }
+    virtual OGRLayer* GetLayer(int nIdx) override;
 
-    int GetCDFID() { return cdfid; }
+    int GetCDFID() const { return cdfid; }
 
     /* static functions */
     static int Identify( GDALOpenInfo * );
@@ -888,7 +942,7 @@ class netCDFDataset : public GDALPamDataset
                                     GDALProgressFunc pfnProgress, void * pProgressData );
 };
 
-class netCDFLayer: public OGRLayer
+class netCDFLayer final: public OGRLayer
 {
         typedef union
         {
@@ -987,17 +1041,17 @@ class netCDFLayer: public OGRLayer
         int             GetCDFID() const { return m_nLayerCDFId; }
         void            SetCDFID(int nId) { m_nLayerCDFId = nId; }
 
-        virtual void ResetReading();
-        virtual OGRFeature* GetNextFeature();
+        virtual void ResetReading() override;
+        virtual OGRFeature* GetNextFeature() override;
 
-        virtual GIntBig GetFeatureCount(int bForce);
+        virtual GIntBig GetFeatureCount(int bForce) override;
 
-        virtual int  TestCapability(const char* pszCap);
+        virtual int  TestCapability(const char* pszCap) override;
 
-        virtual OGRFeatureDefn* GetLayerDefn();
+        virtual OGRFeatureDefn* GetLayerDefn() override;
 
-        virtual OGRErr ICreateFeature(OGRFeature* poFeature);
-        virtual OGRErr CreateField(OGRFieldDefn* poFieldDefn, int bApproxOK);
+        virtual OGRErr ICreateFeature(OGRFeature* poFeature) override;
+        virtual OGRErr CreateField(OGRFieldDefn* poFieldDefn, int bApproxOK) override;
 };
 
 void NCDFWriteLonLatVarsAttributes(int cdfid, int nVarLonID, int nVarLatID);

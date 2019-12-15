@@ -1,3 +1,4 @@
+/* $Id: cpl_config_extras.h 55f4cce7557b301901f754e28cd6193f2f02b522 2016-12-23 14:54:07Z Kurt Schwehr $ */
 
 #ifndef INCLUDED_CPL_CONFIG_EXTRAS
 #define INCLUDED_CPL_CONFIG_EXTRAS
@@ -9,7 +10,6 @@
 #else
   #define HOST_FILLORDER FILLORDER_LSB2MSB
 #endif
-
 
 #ifdef __LP64__
   #define SIZEOF_UNSIGNED_LONG 8
@@ -37,4 +37,4 @@
 
 #endif // APPLE
 
-#endif //INCLUDED_CPL_CONFIG_EXTRAS
+#endif // INCLUDED_CPL_CONFIG_EXTRAS

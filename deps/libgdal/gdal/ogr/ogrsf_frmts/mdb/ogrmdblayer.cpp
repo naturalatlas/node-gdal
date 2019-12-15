@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmdblayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMDBLayer class
@@ -33,34 +32,27 @@
 #include "ogrpgeogeometry.h"
 #include "ogrgeomediageometry.h"
 
-CPL_CVSID("$Id: ogrmdblayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogrmdblayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                            OGRMDBLayer()                            */
 /************************************************************************/
 
-OGRMDBLayer::OGRMDBLayer(OGRMDBDataSource* poDSIn, OGRMDBTable* poMDBTableIn)
+OGRMDBLayer::OGRMDBLayer(OGRMDBDataSource* poDSIn, OGRMDBTable* poMDBTableIn) :
+    poMDBTable(poMDBTableIn),
+    eGeometryType(MDB_GEOM_NONE),
+    poFeatureDefn(nullptr),
+    poSRS(nullptr),
+    nSRSId(-2), // we haven't even queried the database for it yet.
+    iNextShapeId(0),
+    poDS(poDSIn),
+    iGeomColumn(-1),
+    pszGeomColumn(nullptr),
+    pszFIDColumn(nullptr),
+    panFieldOrdinals(nullptr),
+    bHasExtent(FALSE)
 
 {
-    this->poDS = poDSIn;
-    this->poMDBTable = poMDBTableIn;
-
-    eGeometryType = MDB_GEOM_NONE;
-
-    iGeomColumn = -1;
-    pszGeomColumn = NULL;
-    pszFIDColumn = NULL;
-
-    panFieldOrdinals = NULL;
-
-    poFeatureDefn = NULL;
-
-    iNextShapeId = 0;
-
-    poSRS = NULL;
-    nSRSId = -2; // we haven't even queried the database for it yet.
-
-    bHasExtent = FALSE;
 }
 
 /************************************************************************/
@@ -70,17 +62,17 @@ OGRMDBLayer::OGRMDBLayer(OGRMDBDataSource* poDSIn, OGRMDBTable* poMDBTableIn)
 OGRMDBLayer::~OGRMDBLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "MDB", "%d features read on layer '%s'.",
                   (int) m_nFeaturesRead,
                   poFeatureDefn->GetName() );
     }
 
-    if( poFeatureDefn != NULL )
+    if( poFeatureDefn != nullptr )
     {
         poFeatureDefn->Release();
-        poFeatureDefn = NULL;
+        poFeatureDefn = nullptr;
     }
 
     CPLFree( pszGeomColumn );
@@ -88,10 +80,10 @@ OGRMDBLayer::~OGRMDBLayer()
 
     CPLFree( panFieldOrdinals );
 
-    if( poSRS != NULL )
+    if( poSRS != nullptr )
     {
         poSRS->Release();
-        poSRS = NULL;
+        poSRS = nullptr;
     }
 
     delete poMDBTable;
@@ -112,7 +104,6 @@ CPLErr OGRMDBLayer::BuildFeatureDefn()
 
     poFeatureDefn->Reference();
 
-
     int nRawColumns = poMDBTable->GetColumnCount();
     panFieldOrdinals = (int *) CPLMalloc( sizeof(int) * nRawColumns );
 
@@ -121,19 +112,19 @@ CPLErr OGRMDBLayer::BuildFeatureDefn()
         const char* pszColName = poMDBTable->GetColumnName(iCol);
         OGRFieldDefn    oField(pszColName, OFTString );
 
-        if( pszGeomColumn != NULL
+        if( pszGeomColumn != nullptr
             && EQUAL(pszColName,pszGeomColumn) )
             continue;
 
         if( eGeometryType == MDB_GEOM_PGEO
-            && pszFIDColumn == NULL
+            && pszFIDColumn == nullptr
             && EQUAL(pszColName,"OBJECTID") )
         {
             pszFIDColumn = CPLStrdup(pszColName);
         }
 
         if( eGeometryType == MDB_GEOM_PGEO
-            && pszGeomColumn == NULL
+            && pszGeomColumn == nullptr
             && EQUAL(pszColName,"Shape") )
         {
             pszGeomColumn = CPLStrdup(pszColName);
@@ -178,13 +169,12 @@ CPLErr OGRMDBLayer::BuildFeatureDefn()
     if( poFeatureDefn->GetGeomFieldCount() > 0 )
     {
         poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poSRS);
-        if( pszGeomColumn != NULL )
+        if( pszGeomColumn != nullptr )
             poFeatureDefn->GetGeomFieldDefn(0)->SetName(pszGeomColumn);
     }
 
     return CE_None;
 }
-
 
 /************************************************************************/
 /*                            ResetReading()                            */
@@ -203,7 +193,7 @@ void OGRMDBLayer::ResetReading()
 
 GIntBig OGRMDBLayer::GetFeatureCount(int bForce)
 {
-    if (m_poFilterGeom != NULL || m_poAttrQuery != NULL)
+    if (m_poFilterGeom != nullptr || m_poAttrQuery != nullptr)
         return OGRLayer::GetFeatureCount(bForce);
     return poMDBTable->GetRowCount();
 }
@@ -220,12 +210,12 @@ OGRFeature *OGRMDBLayer::GetNextFeature()
         OGRFeature      *poFeature;
 
         poFeature = GetNextRawFeature();
-        if( poFeature == NULL )
-            return NULL;
+        if( poFeature == nullptr )
+            return nullptr;
 
-        if( (m_poFilterGeom == NULL
+        if( (m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature )) )
             return poFeature;
 
@@ -243,7 +233,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
     OGRErr err = OGRERR_NONE;
 
     if( !poMDBTable->GetNextRow() )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a feature from the current result.                       */
@@ -251,7 +241,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
     int         iField;
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
 
-    if( pszFIDColumn != NULL && poMDBTable->GetColumnIndex(pszFIDColumn) > -1 )
+    if( pszFIDColumn != nullptr && poMDBTable->GetColumnIndex(pszFIDColumn) > -1 )
         poFeature->SetFID(
             poMDBTable->GetColumnAsInt(poMDBTable->GetColumnIndex(pszFIDColumn)) );
     else
@@ -269,8 +259,8 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
         char *pszValue = poMDBTable->GetColumnAsString( iSrcField );
         OGRFieldType eType = poFeature->GetFieldDefnRef(iField)->GetType();
 
-        if( pszValue == NULL )
-            /* no value */;
+        if( pszValue == nullptr )
+            poFeature->SetFieldNull( iField );
         else if( eType == OFTBinary )
         {
             int nBytes = 0;
@@ -292,7 +282,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
         CPLFree(pszValue);
     }
 
-    if( !(m_poAttrQuery == NULL
+    if( !(m_poAttrQuery == nullptr
           || m_poAttrQuery->Evaluate( poFeature )) )
         return poFeature;
 
@@ -303,9 +293,9 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
     {
         int nBytes = 0;
         GByte* pData = poMDBTable->GetColumnAsBinary( iGeomColumn, &nBytes);
-        OGRGeometry *poGeom = NULL;
+        OGRGeometry *poGeom = nullptr;
 
-        if( pData != NULL )
+        if( pData != nullptr )
         {
             err = OGRCreateFromShapeBin( pData, &poGeom, nBytes );
             if( OGRERR_NONE != err )
@@ -318,7 +308,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
 
         CPLFree(pData);
 
-        if( poGeom != NULL && OGRERR_NONE == err )
+        if( poGeom != nullptr && OGRERR_NONE == err )
         {
             poGeom->assignSpatialReference( poSRS );
             poFeature->SetGeometryDirectly( poGeom );
@@ -328,9 +318,9 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
     {
         int nBytes = 0;
         GByte* pData = poMDBTable->GetColumnAsBinary( iGeomColumn, &nBytes);
-        OGRGeometry *poGeom = NULL;
+        OGRGeometry *poGeom = nullptr;
 
-        if( pData != NULL )
+        if( pData != nullptr )
         {
             err = OGRCreateFromGeomedia( pData, &poGeom, nBytes );
             if( OGRERR_NONE != err )
@@ -343,7 +333,7 @@ OGRFeature *OGRMDBLayer::GetNextRawFeature()
 
         CPLFree(pData);
 
-        if( poGeom != NULL && OGRERR_NONE == err )
+        if( poGeom != nullptr && OGRERR_NONE == err )
         {
             poGeom->assignSpatialReference( poSRS );
             poFeature->SetGeometryDirectly( poGeom );
@@ -378,7 +368,7 @@ int OGRMDBLayer::TestCapability( const char * pszCap )
     else*/
     if( EQUAL(pszCap,OLCFastFeatureCount) ||
         EQUAL(pszCap,OLCFastGetExtent) )
-        return m_poFilterGeom == NULL && m_poAttrQuery == NULL;
+        return m_poFilterGeom == nullptr && m_poAttrQuery == nullptr;
 
     else
         return FALSE;
@@ -396,7 +386,7 @@ void OGRMDBLayer::LookupSRID( int nSRID )
 /* -------------------------------------------------------------------- */
     OGRMDBDatabase* poDB = poMDBTable->GetDB();
     OGRMDBTable* poSRSTable = poDB->GetTable("GDB_SpatialRefs");
-    if (poSRSTable == NULL)
+    if (poSRSTable == nullptr)
         return;
 
     int iSRTEXT = poSRSTable->GetColumnIndex("SRTEXT", TRUE);
@@ -408,7 +398,7 @@ void OGRMDBLayer::LookupSRID( int nSRID )
         return;
     }
 
-    char* pszSRText = NULL;
+    char* pszSRText = nullptr;
     while(poSRSTable->GetNextRow())
     {
         int nTableSRID = poSRSTable->GetColumnAsInt(iSRID);
@@ -419,7 +409,7 @@ void OGRMDBLayer::LookupSRID( int nSRID )
         }
     }
 
-    if (pszSRText == NULL)
+    if (pszSRText == nullptr)
     {
         delete poSRSTable;
         return;
@@ -442,22 +432,15 @@ void OGRMDBLayer::LookupSRID( int nSRID )
 /*      Turn it into an OGRSpatialReference.                            */
 /* -------------------------------------------------------------------- */
     poSRS = new OGRSpatialReference();
+    poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-    char* pszSRTextPtr = pszSRText;
-    if( poSRS->importFromWkt( &pszSRTextPtr ) != OGRERR_NONE )
+    if( poSRS->importFromWkt( pszSRText ) != OGRERR_NONE )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "importFromWKT() failed on SRS '%s'.",
                   pszSRText);
         delete poSRS;
-        poSRS = NULL;
-    }
-    else if( poSRS->morphFromESRI() != OGRERR_NONE )
-    {
-        CPLError( CE_Failure, CPLE_AppDefined,
-                  "morphFromESRI() failed on SRS." );
-        delete poSRS;
-        poSRS = NULL;
+        poSRS = nullptr;
     }
     else
         nSRSId = nSRID;
@@ -473,7 +456,7 @@ void OGRMDBLayer::LookupSRID( int nSRID )
 const char *OGRMDBLayer::GetFIDColumn()
 
 {
-    if( pszFIDColumn != NULL )
+    if( pszFIDColumn != nullptr )
         return pszFIDColumn;
     else
         return "";
@@ -493,12 +476,11 @@ CPLErr OGRMDBLayer::Initialize( CPL_UNUSED const char *pszTableName,
                                 int nSRID,
                                 int bHasZ )
 
-
 {
     CPLFree( pszGeomColumn );
 
-    if( pszGeomCol == NULL )
-        pszGeomColumn = NULL;
+    if( pszGeomCol == nullptr )
+        pszGeomColumn = nullptr;
     else
     {
         pszGeomColumn = CPLStrdup( pszGeomCol );
@@ -506,7 +488,7 @@ CPLErr OGRMDBLayer::Initialize( CPL_UNUSED const char *pszTableName,
     }
 
     CPLFree( pszFIDColumn );
-    pszFIDColumn = NULL;
+    pszFIDColumn = nullptr;
 
     bHasExtent = TRUE;
     sExtent.MinX = dfExtentLeft;
@@ -565,7 +547,6 @@ CPLErr OGRMDBLayer::Initialize( CPL_UNUSED const char *pszTableName,
     return CE_None;
 }
 
-
 /************************************************************************/
 /*                             Initialize()                             */
 /************************************************************************/
@@ -574,12 +555,11 @@ CPLErr OGRMDBLayer::Initialize( const char * /*pszTableName */,
                                 const char *pszGeomCol,
                                 OGRSpatialReference* poSRSIn )
 
-
 {
     CPLFree( pszGeomColumn );
 
-    if( pszGeomCol == NULL )
-        pszGeomColumn = NULL;
+    if( pszGeomCol == nullptr )
+        pszGeomColumn = nullptr;
     else
     {
         pszGeomColumn = CPLStrdup( pszGeomCol );
@@ -587,7 +567,7 @@ CPLErr OGRMDBLayer::Initialize( const char * /*pszTableName */,
     }
 
     CPLFree( pszFIDColumn );
-    pszFIDColumn = NULL;
+    pszFIDColumn = nullptr;
 
     eGeometryType = MDB_GEOM_GEOMEDIA;
 

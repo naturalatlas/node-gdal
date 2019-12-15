@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -23,12 +23,13 @@ namespace geomgraph { // geos::geomgraph
 namespace index { // geos::geomgraph::index
 
 // This is here so that SweepLineEvent constructor
-// can use it as argument type. 
+// can use it as argument type.
 // Both  SweepLineSegment and MonotoneChain will
 // inherit from it.
 class GEOS_DLL SweepLineEventOBJ {
 public:
-	virtual ~SweepLineEventOBJ(){}
+    virtual
+    ~SweepLineEventOBJ() {}
 };
 
 

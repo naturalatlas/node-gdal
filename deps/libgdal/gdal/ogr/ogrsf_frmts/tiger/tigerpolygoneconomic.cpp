@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: tigerpolygoneconomic.cpp 33706 2016-03-11 13:33:27Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPolygonEconomic, providing access to .RTE files.
@@ -30,9 +29,9 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpolygoneconomic.cpp 33706 2016-03-11 13:33:27Z goatbar $");
+CPL_CVSID("$Id: tigerpolygoneconomic.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
-#define FILE_CODE       "E"
+static const char FILE_CODE[] = "E";
 
 /* I think this was the expected RTE format, but was never deployed, leaving
    it in the code in case I am missing something.

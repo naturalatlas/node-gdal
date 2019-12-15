@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrhtfdatasource.cpp 32744 2016-01-04 22:26:42Z goatbar $
  *
  * Project:  HTF Translator
  * Purpose:  Implements OGRHTFDataSource class
@@ -31,17 +30,17 @@
 #include "cpl_string.h"
 #include "ogr_htf.h"
 
-CPL_CVSID("$Id: ogrhtfdatasource.cpp 32744 2016-01-04 22:26:42Z goatbar $");
+CPL_CVSID("$Id: ogrhtfdatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRHTFDataSource()                          */
 /************************************************************************/
 
 OGRHTFDataSource::OGRHTFDataSource() :
-    pszName(NULL),
-    papoLayers(NULL),
+    pszName(nullptr),
+    papoLayers(nullptr),
     nLayers(0),
-    poMetadataLayer(NULL)
+    poMetadataLayer(nullptr)
 {}
 
 /************************************************************************/
@@ -76,7 +75,7 @@ OGRLayer *OGRHTFDataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
@@ -88,14 +87,14 @@ OGRLayer *OGRHTFDataSource::GetLayer( int iLayer )
 OGRLayer* OGRHTFDataSource::GetLayerByName( const char* pszLayerName )
 {
     if (nLayers == 0)
-        return NULL;
+        return nullptr;
     if (EQUAL(pszLayerName, "polygon"))
         return papoLayers[0];
     if (EQUAL(pszLayerName, "sounding"))
         return papoLayers[1];
     if (EQUAL(pszLayerName, "metadata"))
         return poMetadataLayer;
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -112,10 +111,9 @@ int OGRHTFDataSource::Open( const char * pszFilename )
 // --------------------------------------------------------------------
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
-    if (fp == NULL)
+    if (fp == nullptr)
         return FALSE;
 
-    const char* pszLine;
     bool bEndOfHTFHeader = false;
     bool bIsSouth = false;
     bool bGeodeticDatumIsWGS84 = false;
@@ -132,7 +130,9 @@ int OGRHTFDataSource::Open( const char * pszFilename )
     double dfNENorthing = 0;
     std::vector<CPLString> aosMD;
     int nTotalSoundings = 0;
-    while( (pszLine = CPLReadLine2L(fp, 1024, NULL)) != NULL)
+
+    const char* pszLine = nullptr;
+    while( (pszLine = CPLReadLine2L(fp, 1024, nullptr)) != nullptr)
     {
         nLines ++;
         if (nLines == 1000)

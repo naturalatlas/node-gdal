@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gpkgmbtilescommon.h 34001 2016-04-18 15:29:00Z rouault $
+ * $Id: gpkgmbtilescommon.h b7e1b1ddcb26a8716a1beea7a2e5f4e711481080 2018-03-22 10:28:21Z Even Rouault $
  *
  * Project:  GeoPackage/MBTiles Translator
  * Purpose:  Definition of common classes for GeoPackage and MBTiles drivers.
@@ -48,7 +48,9 @@ typedef enum
     GPKG_TF_PNG,
     GPKG_TF_PNG8,
     GPKG_TF_JPEG,
-    GPKG_TF_WEBP
+    GPKG_TF_WEBP,
+    GPKG_TF_PNG_16BIT, // For GPKG elevation data
+    GPKG_TF_TIFF_32BIT_FLOAT // For GPKG elevation data
 } GPKGTileFormat;
 
 GPKGTileFormat GDALGPKGMBTilesGetTileFormat(const char* pszTF );
@@ -59,8 +61,15 @@ class GDALGPKGMBTilesLikePseudoDataset
 
   protected:
     bool                m_bNew;
+    bool                m_bHasModifiedTiles;
 
     CPLString           m_osRasterTable;
+    GDALDataType        m_eDT;
+    int                 m_nDTSize;
+    double              m_dfOffset;
+    double              m_dfScale;
+    double              m_dfPrecision;
+    GUInt16             m_usGPKGNull;
     int                 m_nZoomLevel;
     GByte              *m_pabyCachedTiles;
     CachedTileDesc      m_asCachedTilesDesc[4];
@@ -84,9 +93,7 @@ class GDALGPKGMBTilesLikePseudoDataset
 
     CPLString           m_osWHERE;
 
-#ifdef HAVE_SQLITE_VFS
     sqlite3_vfs*        m_pMyVFS;
-#endif
     sqlite3            *m_hTempDB;
     CPLString           m_osTempDBFilename;
     time_t              m_nLastSpaceCheckTimestamp;
@@ -97,19 +104,35 @@ class GDALGPKGMBTilesLikePseudoDataset
 
     GDALGPKGMBTilesLikePseudoDataset* m_poParentDS;
 
+  private:
         bool                    m_bInWriteTile;
         CPLErr                  WriteTileInternal(); /* should only be called by WriteTile() */
+        GIntBig                 GetTileId(int nRow, int nCol);
+        bool                    DeleteTile(int nRow, int nCol);
+        bool                    DeleteFromGriddedTileAncillary(GIntBig nTileId);
+        void                    GetTileOffsetAndScale(
+                                    GIntBig nTileId,
+                                    double& dfTileOffset, double& dfTileScale);
+        void                    FillBuffer(GByte* pabyData, size_t nPixels);
+        void                    FillEmptyTile(GByte* pabyData);
+        void                    FillEmptyTileSingleBand(GByte* pabyData);
 
   public:
                                 GDALGPKGMBTilesLikePseudoDataset();
         virtual                ~GDALGPKGMBTilesLikePseudoDataset();
 
+        void                    SetDataType(GDALDataType eDT);
+        void                    SetGlobalOffsetScale(double dfOffset,
+                                                     double dfScale);
+
         CPLErr                  ReadTile(const CPLString& osMemFileName,
                                          GByte* pabyTileData,
-                                         bool* pbIsLossyFormat = NULL);
+                                         double dfTileOffset,
+                                         double dfTileScale,
+                                         bool* pbIsLossyFormat = nullptr);
         GByte*                  ReadTile(int nRow, int nCol);
         GByte*                  ReadTile(int nRow, int nCol, GByte* pabyData,
-                                         bool* pbIsLossyFormat = NULL);
+                                         bool* pbIsLossyFormat = nullptr);
 
         CPLErr                  WriteTile();
 
@@ -126,37 +149,48 @@ class GDALGPKGMBTilesLikePseudoDataset
         virtual sqlite3                *IGetDB() = 0;
         virtual bool                    IGetUpdate() = 0;
         virtual bool                    ICanIWriteBlock() = 0;
-        virtual void                    IStartTransaction() = 0;
-        virtual void                    ICommitTransaction() = 0;
+        virtual OGRErr                  IStartTransaction() = 0;
+        virtual OGRErr                  ICommitTransaction() = 0;
         virtual const char             *IGetFilename() = 0;
         virtual int                     GetRowFromIntoTopConvention(int nRow) = 0;
 };
 
 class GDALGPKGMBTilesLikeRasterBand: public GDALPamRasterBand
 {
-    GDALGPKGMBTilesLikePseudoDataset* m_poTPD;
+    protected:
+        GDALGPKGMBTilesLikePseudoDataset* m_poTPD;
+        int                               m_nDTSize;
+        bool                              m_bHasNoData;
+        double                            m_dfNoDataValue;
+        CPLString                         m_osUom;
 
     public:
                                 GDALGPKGMBTilesLikeRasterBand(GDALGPKGMBTilesLikePseudoDataset* poTPD,
                                                               int nTileWidth, int nTileHeight);
 
         virtual CPLErr          IReadBlock(int nBlockXOff, int nBlockYOff,
-                                           void* pData);
+                                           void* pData) override;
         virtual CPLErr          IWriteBlock(int nBlockXOff, int nBlockYOff,
-                                           void* pData);
-        virtual CPLErr          FlushCache();
+                                           void* pData) override;
+        virtual CPLErr          FlushCache() override;
 
-        virtual GDALColorTable* GetColorTable();
-        virtual CPLErr          SetColorTable(GDALColorTable* poCT);
+        virtual GDALColorTable* GetColorTable() override;
+        virtual CPLErr          SetColorTable(GDALColorTable* poCT) override;
 
-        virtual GDALColorInterp GetColorInterpretation();
-        virtual CPLErr          SetColorInterpretation( GDALColorInterp );
+        virtual GDALColorInterp GetColorInterpretation() override;
+        virtual CPLErr          SetColorInterpretation( GDALColorInterp ) override;
+
+        virtual double          GetNoDataValue( int* pbSuccess = nullptr ) override;
+        virtual const char*     GetUnitType() override { return m_osUom.c_str(); }
+
+        void                    SetNoDataValueInternal( double dfNoDataValue );
+        void                    SetUnitTypeInternal(const CPLString& osUom)
+                                                        { m_osUom = osUom; }
 
     protected:
         friend class GDALGPKGMBTilesLikePseudoDataset;
 
         GDALRasterBlock*        AccessibleTryGetLockedBlockRef(int nBlockXOff, int nBlockYOff) { return TryGetLockedBlockRef(nBlockXOff, nBlockYOff); }
-
 };
 
 #endif // GPKGMBTILESCOMMON_H_INCLUDED

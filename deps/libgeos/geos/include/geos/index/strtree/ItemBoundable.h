@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -29,20 +29,28 @@ namespace strtree { // geos::index::strtree
  *
  * \todo TODO: It's unclear who takes ownership of passed newBounds and newItem objects.
  */
-class GEOS_DLL ItemBoundable: public Boundable
-{
+class GEOS_DLL ItemBoundable: public Boundable {
 public:
 
-    ItemBoundable(const void* newBounds, void* newItem);
-	virtual ~ItemBoundable();
-	
-    const void* getBounds() const;
-	void* getItem() const;
+    ItemBoundable(const void* newBounds, void* newItem) : bounds(newBounds), item(newItem) {}
+    ~ItemBoundable() override = default;
+
+    bool isLeaf() const override {
+        return true;
+    }
+
+    const void* getBounds() const override {
+        return bounds;
+    }
+
+    void* getItem() const {
+        return item;
+    }
 
 private:
 
-	const void* bounds;
-	void* item;
+    const void* bounds;
+    void* item;
 };
 
 } // namespace geos::index::strtree

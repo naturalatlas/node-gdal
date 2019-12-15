@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xplane_awy_reader.cpp
+ * $Id: ogr_xplane_awy_reader.cpp$
  *
  * Project:  X-Plane awy.dat file reader header
  * Purpose:  Definition of classes for X-Plane awy.dat file reader
@@ -39,8 +39,7 @@
 /*                   OGRXPlaneAirwaySegmentLayer                        */
 /************************************************************************/
 
-
-class OGRXPlaneAirwaySegmentLayer : public OGRXPlaneLayer
+class OGRXPlaneAirwaySegmentLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneAirwaySegmentLayer();
@@ -60,27 +59,27 @@ class OGRXPlaneAirwaySegmentLayer : public OGRXPlaneLayer
 /*                 OGRXPlaneAirwayIntersectionLayer                     */
 /************************************************************************/
 
-class OGRXPlaneAirwayIntersectionLayer : public OGRXPlaneLayer
+class OGRXPlaneAirwayIntersectionLayer final: public OGRXPlaneLayer
 {
   private:
     CPLHashSet* poSet;
 
   public:
                         OGRXPlaneAirwayIntersectionLayer();
-                        ~OGRXPlaneAirwayIntersectionLayer();
+                        virtual ~OGRXPlaneAirwayIntersectionLayer();
 
     OGRFeature*         AddFeature(const char* pszIntersectionName,
                                    double dfLat,
                                    double dfLon);
 
-    virtual void        ResetReading();
+    virtual void        ResetReading() override;
 };
 
 /************************************************************************/
 /*                           OGRXPlaneAwyReader                         */
 /************************************************************************/
 
-class OGRXPlaneAwyReader : public OGRXPlaneReader
+class OGRXPlaneAwyReader final: public OGRXPlaneReader
 {
     private:
         OGRXPlaneAirwaySegmentLayer*      poAirwaySegmentLayer;
@@ -91,12 +90,12 @@ class OGRXPlaneAwyReader : public OGRXPlaneReader
         void                     ParseRecord();
 
     protected:
-        virtual void             Read();
+        virtual void             Read() override;
 
     public:
-                                 OGRXPlaneAwyReader( OGRXPlaneDataSource* poDataSource );
-        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer);
-        virtual int              IsRecognizedVersion( const char* pszVersionString);
+        explicit                 OGRXPlaneAwyReader( OGRXPlaneDataSource* poDataSource );
+        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer) override;
+        virtual int              IsRecognizedVersion( const char* pszVersionString) override;
 };
 
 #endif

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogr_srs_erm.cpp 33553 2016-02-25 14:05:00Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implement ERMapper projection conversions.
@@ -28,10 +27,20 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "ogr_spatialref.h"
-#include "cpl_conv.h"
+#include "cpl_port.h"
+#include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: ogr_srs_erm.cpp 33553 2016-02-25 14:05:00Z goatbar $");
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "ogr_core.h"
+#include "ogr_spatialref.h"
+
+CPL_CVSID("$Id: ogr_srs_erm.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                         OSRImportFromERM()                           */
@@ -49,9 +58,8 @@ OGRErr OSRImportFromERM( OGRSpatialReferenceH hSRS, const char *pszProj,
 {
     VALIDATE_POINTER1( hSRS, "OSRImportFromERM", OGRERR_FAILURE );
 
-    return ((OGRSpatialReference *) hSRS)->importFromERM( pszProj,
-                                                          pszDatum,
-                                                          pszUnits );
+    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+        importFromERM(pszProj, pszDatum, pszUnits);
 }
 
 /************************************************************************/
@@ -82,7 +90,7 @@ OGRErr OGRSpatialReference::importFromERM( const char *pszProj,
 /* -------------------------------------------------------------------- */
 /*      do we have projection and datum?                                */
 /* -------------------------------------------------------------------- */
-    if( EQUAL(pszProj,"RAW") )
+    if( EQUAL(pszProj, "RAW") )
         return OGRERR_NONE;
 
 /* -------------------------------------------------------------------- */
@@ -92,46 +100,56 @@ OGRErr OGRSpatialReference::importFromERM( const char *pszProj,
     if( STARTS_WITH_CI(pszProj, "EPSG:") )
         return importFromEPSG( atoi(pszProj+5) );
 
-
     if( STARTS_WITH_CI(pszDatum, "EPSG:") )
         return importFromEPSG( atoi(pszDatum+5) );
+
+
+    CPLString osGEOGCS = lookupInDict( "ecw_cs.wkt", pszDatum );
+    if( osGEOGCS.empty() )
+        return OGRERR_UNSUPPORTED_SRS;
 
 /* -------------------------------------------------------------------- */
 /*      Set projection if we have it.                                   */
 /* -------------------------------------------------------------------- */
-    OGRErr eErr;
-
-    if( EQUAL(pszProj,"GEODETIC") )
+    if( !EQUAL(pszProj, "GEODETIC") )
     {
+        CPLString osProjWKT = lookupInDict( "ecw_cs.wkt", pszProj );
+        if( osProjWKT.empty() || osProjWKT.back() != ']' )
+            return OGRERR_UNSUPPORTED_SRS;
+
+        if( osProjWKT.find("LOCAL_CS[") == 0 )
+        {
+            return importFromWkt(osProjWKT);
+        }
+
+        // Remove trailing ]
+        osProjWKT.resize(osProjWKT.size() - 1);
+
+        // Remove any UNIT
+        auto nPos = osProjWKT.find(",UNIT");
+        if( nPos != std::string::npos )
+        {
+            osProjWKT.resize(nPos);
+        }
+
+        // Insert GEOGCS
+        nPos = osProjWKT.find(",PROJECTION");
+        if( nPos == std::string::npos )
+            return OGRERR_UNSUPPORTED_SRS;
+
+        osProjWKT = osProjWKT.substr(0, nPos) + ',' + osGEOGCS + osProjWKT.substr(nPos);
+
+        if( EQUAL(pszUnits, "FEET") )
+            osProjWKT += ",UNIT[\"Foot_US\",0.3048006096012192]]";
+        else
+            osProjWKT += ",UNIT[\"Metre\",1.0]]";
+
+        return importFromWkt(osProjWKT);
     }
     else
     {
-        eErr = importFromDict( "ecw_cs.wkt", pszProj );
-        if( eErr != OGRERR_NONE )
-            return eErr;
-
-        if( EQUAL(pszUnits,"FEET") )
-            SetLinearUnits( SRS_UL_US_FOOT, CPLAtof(SRS_UL_US_FOOT_CONV));
-        else
-            SetLinearUnits( SRS_UL_METER, 1.0 );
+        return importFromWkt(osGEOGCS);
     }
-
-/* -------------------------------------------------------------------- */
-/*      Set the geogcs.                                                 */
-/* -------------------------------------------------------------------- */
-    OGRSpatialReference oGeogCS;
-
-    eErr = oGeogCS.importFromDict( "ecw_cs.wkt", pszDatum );
-    if( eErr != OGRERR_NONE )
-    {
-        Clear();
-        return eErr;
-    }
-
-    if( !IsLocal() )
-        CopyGeogCSFrom( &oGeogCS );
-
-    return OGRERR_NONE;
 }
 
 /************************************************************************/
@@ -148,8 +166,8 @@ OGRErr OSRExportToERM( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRExportToERM", OGRERR_FAILURE );
 
-    return ((OGRSpatialReference *) hSRS)->exportToERM( pszProj, pszDatum,
-                                                        pszUnits );
+    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+        exportToERM(pszProj, pszDatum, pszUnits);
 }
 
 /************************************************************************/
@@ -171,6 +189,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
                                          char *pszUnits )
 
 {
+    const int BUFFER_SIZE = 32;
     strcpy( pszProj, "RAW" );
     strcpy( pszDatum, "RAW" );
     strcpy( pszUnits, "METERS" );
@@ -187,7 +206,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
     {
         const char *pszAuthName = GetAuthorityName( "PROJCS" );
 
-        if( pszAuthName != NULL && EQUAL(pszAuthName,"epsg") )
+        if( pszAuthName != nullptr && EQUAL(pszAuthName, "epsg") )
         {
             nEPSGCode = atoi(GetAuthorityCode( "PROJCS" ));
         }
@@ -196,7 +215,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
     {
         const char *pszAuthName = GetAuthorityName( "GEOGCS" );
 
-        if( pszAuthName != NULL && EQUAL(pszAuthName,"epsg") )
+        if( pszAuthName != nullptr && EQUAL(pszAuthName, "epsg") )
         {
             nEPSGCode = atoi(GetAuthorityCode( "GEOGCS" ));
         }
@@ -205,20 +224,19 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
 /* -------------------------------------------------------------------- */
 /*      Is our GEOGCS name already defined in ecw_cs.wkt?               */
 /* -------------------------------------------------------------------- */
-    OGRSpatialReference oSRSWork;
     const char *pszWKTDatum = GetAttrValue( "DATUM" );
 
-    if( pszWKTDatum != NULL
-        && oSRSWork.importFromDict( "ecw_cs.wkt", pszWKTDatum ) == OGRERR_NONE)
+    if( pszWKTDatum != nullptr
+        && !lookupInDict( "ecw_cs.wkt", pszWKTDatum ).empty() )
     {
-        strncpy( pszDatum, pszWKTDatum, 32 );
-        pszDatum[31] = '\0';
+        strncpy( pszDatum, pszWKTDatum, BUFFER_SIZE );
+        pszDatum[BUFFER_SIZE-1] = '\0';
     }
 
 /* -------------------------------------------------------------------- */
 /*      Is this a "well known" geographic coordinate system?            */
 /* -------------------------------------------------------------------- */
-    if( EQUAL(pszDatum,"RAW") )
+    if( EQUAL(pszDatum, "RAW") )
     {
         int nEPSGGCSCode = GetEPSGGeogCS();
 
@@ -271,7 +289,7 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
 
     if( IsGeographic() )
     {
-        if( EQUAL(pszDatum,"RAW") )
+        if( EQUAL(pszDatum, "RAW") )
             return OGRERR_UNSUPPORTED_SRS;
         else
         {
@@ -283,21 +301,22 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
 /* -------------------------------------------------------------------- */
 /*      Is this a UTM projection?                                       */
 /* -------------------------------------------------------------------- */
-    int bNorth, nZone;
+    int bNorth = FALSE;
+    int nZone = 0;
 
     nZone = GetUTMZone( &bNorth );
     if( nZone > 0 )
     {
-        if( EQUAL(pszDatum,"GDA94") && !bNorth && nZone >= 48 && nZone <= 58)
+        if( EQUAL(pszDatum, "GDA94") && !bNorth && nZone >= 48 && nZone <= 58)
         {
-            snprintf( pszProj, 32, "MGA%02d", nZone );
+            snprintf( pszProj, BUFFER_SIZE, "MGA%02d", nZone );
         }
         else
         {
             if( bNorth )
-                snprintf( pszProj, 32, "NUTM%02d", nZone );
+                snprintf( pszProj, BUFFER_SIZE, "NUTM%02d", nZone );
             else
-                snprintf( pszProj, 32, "SUTM%02d", nZone );
+                snprintf( pszProj, BUFFER_SIZE, "SUTM%02d", nZone );
         }
     }
 
@@ -308,12 +327,11 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
     {
         const char *pszPROJCS = GetAttrValue( "PROJCS" );
 
-        if( pszPROJCS != NULL
-            && oSRSWork.importFromDict( "ecw_cs.wkt", pszPROJCS ) == OGRERR_NONE
-            && oSRSWork.IsProjected() )
+        if( pszPROJCS != nullptr
+            && lookupInDict( "ecw_cs.wkt", pszPROJCS ).find("PROJCS") == 0 )
         {
-            strncpy( pszProj, pszPROJCS, 32 );
-            pszProj[31] = '\0';
+            strncpy( pszProj, pszPROJCS, BUFFER_SIZE );
+            pszProj[BUFFER_SIZE-1] = '\0';
         }
     }
 
@@ -321,24 +339,24 @@ OGRErr OGRSpatialReference::exportToERM( char *pszProj, char *pszDatum,
 /*      If we have not translated it yet, but we have an EPSG code      */
 /*      then use EPSG:n notation.                                       */
 /* -------------------------------------------------------------------- */
-    if( (EQUAL(pszDatum,"RAW") || EQUAL(pszProj,"RAW")) && nEPSGCode != 0 )
+    if( (EQUAL(pszDatum, "RAW") || EQUAL(pszProj, "RAW")) && nEPSGCode != 0 )
     {
-        snprintf( pszProj, 32, "EPSG:%d", nEPSGCode );
-        snprintf( pszDatum, 32, "EPSG:%d", nEPSGCode );
+        snprintf( pszProj, BUFFER_SIZE, "EPSG:%d", nEPSGCode );
+        snprintf( pszDatum, BUFFER_SIZE, "EPSG:%d", nEPSGCode );
     }
 
 /* -------------------------------------------------------------------- */
 /*      Handle the units.                                               */
 /* -------------------------------------------------------------------- */
-    double dfUnits = GetLinearUnits();
+    const double dfUnits = GetLinearUnits();
 
     if( fabs(dfUnits-0.3048) < 0.0001 )
         strcpy( pszUnits, "FEET" );
     else
         strcpy( pszUnits, "METERS" );
 
-    if( EQUAL(pszProj,"RAW") )
+    if( EQUAL(pszProj, "RAW") )
         return OGRERR_UNSUPPORTED_SRS;
-    else
-        return OGRERR_NONE;
+
+    return OGRERR_NONE;
 }

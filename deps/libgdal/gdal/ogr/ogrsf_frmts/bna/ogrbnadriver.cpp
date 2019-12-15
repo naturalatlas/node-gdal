@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrbnadriver.cpp
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNADriver.
@@ -30,6 +29,8 @@
 #include "ogr_bna.h"
 #include "cpl_conv.h"
 
+CPL_CVSID("$Id: ogrbnadriver.cpp a36939afd5248338d928ac2107e2136b32ffb9df 2018-06-01 14:24:48 +0200 Even Rouault $")
+
 /************************************************************************/
 /*                                Open()                                */
 /************************************************************************/
@@ -45,22 +46,26 @@ static GDALDataset *OGRBNADriverOpen( GDALOpenInfo* poOpenInfo )
     {
         pszFilename += 4;
     }
-    else if( poOpenInfo->fpL == NULL ||
+    else if( poOpenInfo->fpL == nullptr ||
         !(EQUAL( CPLGetExtension(pszFilename), "bna" )
            || ((STARTS_WITH_CI(pszFilename, "/vsigzip/") ||
                 STARTS_WITH_CI(pszFilename, "/vsizip/")) &&
                (strstr( pszFilename, ".bna") ||
                 strstr( pszFilename, ".BNA")))) )
     {
-        return NULL;
+        return nullptr;
+    }
+    if( poOpenInfo->eAccess == GA_Update )
+    {
+        return nullptr;
     }
 
     OGRBNADataSource   *poDS = new OGRBNADataSource();
 
-    if( !poDS->Open( pszFilename, poOpenInfo->eAccess == GA_Update ) )
+    if( !poDS->Open( pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -82,7 +87,7 @@ static GDALDataset *OGRBNADriverCreate( const char * pszName,
     if( !poDS->Create( pszName, papszOptions ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -108,7 +113,7 @@ static CPLErr OGRBNADriverDelete( const char *pszFilename )
 void RegisterOGRBNA()
 
 {
-    if( GDALGetDriverByName( "BNA" ) != NULL )
+    if( GDALGetDriverByName( "BNA" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();

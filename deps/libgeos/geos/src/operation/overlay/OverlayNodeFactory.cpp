@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,16 +28,16 @@ namespace operation { // geos.operation
 namespace overlay { // geos.operation.overlay
 
 Node*
-OverlayNodeFactory::createNode(const geom::Coordinate &coord) const
+OverlayNodeFactory::createNode(const geom::Coordinate& coord) const
 {
-	return new Node(coord, new DirectedEdgeStar());
+    return new Node(coord, new DirectedEdgeStar());
 }
 
-const NodeFactory &
-OverlayNodeFactory::instance() 
+const NodeFactory&
+OverlayNodeFactory::instance()
 {
-  static OverlayNodeFactory onf;
-	return onf;
+    static OverlayNodeFactory onf;
+    return onf;
 }
 
 } // namespace geos.operation.overlay

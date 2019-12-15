@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -23,13 +23,15 @@ namespace geos {
 namespace geom { // geos.geom
 namespace prep { // geos.geom.prep
 
-bool 
-PreparedPoint::intersects(const geom::Geometry* g)
+bool
+PreparedPoint::intersects(const geom::Geometry* g) const
 {
-	if (! envelopesIntersect( g)) return false;
+    if(! envelopesIntersect(g)) {
+        return false;
+    }
 
-	// This avoids computing topology for the test geometry
-	return isAnyTargetComponentInTest( g);
+    // This avoids computing topology for the test geometry
+    return isAnyTargetComponentInTest(g);
 }
 
 } // namespace geos.geom.prep

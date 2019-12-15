@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: subfile_source.h 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: vsil_target.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  JPEG-2000
  * Purpose:  Implements VSI*L based writer.
@@ -27,6 +27,9 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#ifndef VSIL_TARGET_H
+#define VSIL_TARGET_H
+
 #include "kdu_file_io.h"
 #include "cpl_error.h"
 #include "cpl_vsi.h"
@@ -38,14 +41,14 @@
 class vsil_target : public kdu_compressed_target {
 
 public:
-    vsil_target() { file = NULL; }
+    vsil_target() { file = nullptr; }
     ~vsil_target() { close(); }
 
     void open(const char *fname, const char *access )
         {
             close();
             file = VSIFOpenL( fname, access );
-            if( file == NULL )
+            if( file == nullptr )
             {
                 kdu_error e;
                 e << "Unable to open compressed data file, \"" <<
@@ -54,9 +57,9 @@ public:
             }
         }
 
-    bool write(const kdu_byte *buf, int num_bytes)
+    bool write(const kdu_byte *buf, int num_bytes) override
         {
-            if( file == NULL )
+            if( file == nullptr )
                 return false;
 
             if( (int) VSIFWriteL( buf, 1, num_bytes, file ) != num_bytes )
@@ -65,9 +68,9 @@ public:
                 return true;
         }
 
-    bool start_rewrite(kdu_long backtrack)
+    bool start_rewrite(kdu_long backtrack) override
         {
-            if( file == NULL )
+            if( file == nullptr )
                 return false;
 
             if( VSIFSeekL( file, VSIFTellL(file)-backtrack, SEEK_SET ) != 0 )
@@ -76,9 +79,9 @@ public:
                 return true;
         }
 
-    bool end_rewrite()
+    bool end_rewrite() override
         {
-            if( file == NULL )
+            if( file == nullptr )
                 return false;
 
             if( VSIFSeekL( file, 0, SEEK_END ) != 0 )
@@ -87,14 +90,16 @@ public:
                 return true;
         }
 
-    bool close()
+    bool close() override
         {
-            if (file != NULL)
+            if (file != nullptr)
                 VSIFCloseL( file );
-            file = NULL;
+            file = nullptr;
             return true;
         }
 
 private: // Data
     VSILFILE *file;
 };
+
+#endif // VSIL_TARGET_H

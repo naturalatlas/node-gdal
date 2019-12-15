@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ddfsubfielddefn.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  ISO 8211 Access
  * Purpose:  Implements the DDFSubfieldDefn class.
@@ -28,32 +27,36 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "iso8211.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include <algorithm>
+
 #include "cpl_conv.h"
+#include "cpl_error.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ddfsubfielddefn.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: ddfsubfielddefn.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $")
 
 /************************************************************************/
 /*                          DDFSubfieldDefn()                           */
 /************************************************************************/
 
-DDFSubfieldDefn::DDFSubfieldDefn()
-
-{
-    pszName = NULL;
-
-    bIsVariable = TRUE;
-    nFormatWidth = 0;
-    chFormatDelimiter = DDF_UNIT_TERMINATOR;
-    eBinaryFormat = NotBinary;
-    eType = DDFString;
-
-    pszFormatString = CPLStrdup("");
-
-    nMaxBufChars = 0;
-    pachBuffer = NULL;
-}
+DDFSubfieldDefn::DDFSubfieldDefn() :
+    pszName(nullptr),
+    pszFormatString(CPLStrdup("")),
+    eType(DDFString),
+    eBinaryFormat(NotBinary),
+    bIsVariable(TRUE),
+    chFormatDelimiter(DDF_UNIT_TERMINATOR),
+    nFormatWidth(0),
+    nMaxBufChars(0),
+    pachBuffer(nullptr)
+{}
 
 /************************************************************************/
 /*                          ~DDFSubfieldDefn()                          */
@@ -142,6 +145,9 @@ int DDFSubfieldDefn::SetFormat( const char * pszFormat )
       case 'b':
         // Is the width expressed in bits? (is it a bitstring)
         bIsVariable = FALSE;
+        if( pszFormatString[1] == '\0' )
+            return FALSE;
+
         if( pszFormatString[1] == '(' )
         {
             nFormatWidth = atoi(pszFormatString+2);
@@ -266,14 +272,14 @@ int DDFSubfieldDefn::GetDataLength( const char * pachSourceData,
                       "format string %s ... returning shortened data.",
                       nMaxBytes, pszName, pszFormatString );
 
-            if( pnConsumedBytes != NULL )
+            if( pnConsumedBytes != nullptr )
                 *pnConsumedBytes = nMaxBytes;
 
             return nMaxBytes;
         }
         else
         {
-            if( pnConsumedBytes != NULL )
+            if( pnConsumedBytes != nullptr )
                 *pnConsumedBytes = nFormatWidth;
 
             return nFormatWidth;
@@ -343,7 +349,7 @@ int DDFSubfieldDefn::GetDataLength( const char * pachSourceData,
             nLength++;
         }
 
-        if( pnConsumedBytes != NULL )
+        if( pnConsumedBytes != nullptr )
         {
             if( nMaxBytes == 0 )
                 *pnConsumedBytes = nLength + extraConsumedBytes;
@@ -475,8 +481,14 @@ DDFSubfieldDefn::ExtractFloatData( const char * pachSourceData,
                         pszName, pszFormatString, nMaxBytes );
               return 0;
           }
+          if( nFormatWidth > static_cast<int>(sizeof(abyData)) )
+          {
+              CPLError( CE_Failure, CPLE_AppDefined,
+                        "Format width %d too large", nFormatWidth );
+              return 0;
+          }
 
-          if( pnConsumedBytes != NULL )
+          if( pnConsumedBytes != nullptr )
               *pnConsumedBytes = nFormatWidth;
 
           // Byte swap the data if it isn't in machine native format.
@@ -501,45 +513,45 @@ DDFSubfieldDefn::ExtractFloatData( const char * pachSourceData,
           {
             case UInt:
               if( nFormatWidth == 1 )
-                  return( abyData[0] );
+                  return abyData[0];
               else if( nFormatWidth == 2 )
-                  return( *((GUInt16 *) pabyData) );
+                  return *((GUInt16 *) pabyData);
               else if( nFormatWidth == 4 )
-                  return( *((GUInt32 *) pabyData) );
+                  return *((GUInt32 *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0.0;
               }
 
             case SInt:
               if( nFormatWidth == 1 )
-                  return( *((signed char *) abyData) );
+                  return *((signed char *) abyData);
               else if( nFormatWidth == 2 )
-                  return( *((GInt16 *) pabyData) );
+                  return *((GInt16 *) pabyData);
               else if( nFormatWidth == 4 )
-                  return( *((GInt32 *) pabyData) );
+                  return *((GInt32 *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0.0;
               }
 
             case FloatReal:
               if( nFormatWidth == 4 )
-                  return( *((float *) pabyData) );
+                  return *((float *) pabyData);
               else if( nFormatWidth == 8 )
-                  return( *((double *) pabyData) );
+                  return *((double *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0.0;
               }
 
             case NotBinary:
             case FPReal:
             case FloatComplex:
-              //CPLAssert( FALSE );
+              // CPLAssert( false );
               return 0.0;
           }
           break;
@@ -547,11 +559,11 @@ DDFSubfieldDefn::ExtractFloatData( const char * pachSourceData,
       }
 
       default:
-        //CPLAssert( FALSE );
+        // CPLAssert( false );
         return 0.0;
     }
 
-    //CPLAssert( FALSE );
+    // CPLAssert( false );
     return 0.0;
 }
 
@@ -605,14 +617,15 @@ DDFSubfieldDefn::ExtractIntData( const char * pachSourceData,
 
           if( nFormatWidth > nMaxBytes || nFormatWidth >= (int)sizeof(abyData) )
           {
-              CPLError( CE_Warning, CPLE_AppDefined,
-                        "Attempt to extract int subfield %s with format %s\n"
-                        "failed as only %d bytes available.  Using zero.",
-                        pszName, pszFormatString, MIN(nMaxBytes, (int)sizeof(abyData)) );
+              CPLError(CE_Warning, CPLE_AppDefined,
+                       "Attempt to extract int subfield %s with format %s\n"
+                       "failed as only %d bytes available.  Using zero.",
+                       pszName, pszFormatString,
+                       std::min(nMaxBytes, static_cast<int>(sizeof(abyData))));
               return 0;
           }
 
-          if( pnConsumedBytes != NULL )
+          if( pnConsumedBytes != nullptr )
               *pnConsumedBytes = nFormatWidth;
 
           // Byte swap the data if it isn't in machine native format.
@@ -637,45 +650,45 @@ DDFSubfieldDefn::ExtractIntData( const char * pachSourceData,
           {
             case UInt:
               if( nFormatWidth == 4 )
-                  return( (int) *((GUInt32 *) pabyData) );
+                  return (int) *((GUInt32 *) pabyData);
               else if( nFormatWidth == 1 )
-                  return( abyData[0] );
+                  return abyData[0];
               else if( nFormatWidth == 2 )
-                  return( *((GUInt16 *) pabyData) );
+                  return *((GUInt16 *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0;
               }
 
             case SInt:
               if( nFormatWidth == 4 )
-                  return( *((GInt32 *) pabyData) );
+                  return *((GInt32 *) pabyData);
               else if( nFormatWidth == 1 )
-                  return( *((signed char *) abyData) );
+                  return *((signed char *) abyData);
               else if( nFormatWidth == 2 )
-                  return( *((GInt16 *) pabyData) );
+                  return *((GInt16 *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0;
               }
 
             case FloatReal:
               if( nFormatWidth == 4 )
-                  return( (int) *((float *) pabyData) );
+                  return (int) *((float *) pabyData);
               else if( nFormatWidth == 8 )
-                  return( (int) *((double *) pabyData) );
+                  return (int) *((double *) pabyData);
               else
               {
-                  //CPLAssert( FALSE );
+                  // CPLAssert( false );
                   return 0;
               }
 
             case NotBinary:
             case FPReal:
             case FloatComplex:
-              //CPLAssert( FALSE );
+              // CPLAssert( false );
               return 0;
           }
           break;
@@ -683,11 +696,11 @@ DDFSubfieldDefn::ExtractIntData( const char * pachSourceData,
       }
 
       default:
-        //CPLAssert( FALSE );
+        // CPLAssert( false );
         return 0;
     }
 
-    //CPLAssert( FALSE );
+    // CPLAssert( false );
     return 0;
 }
 
@@ -718,18 +731,19 @@ void DDFSubfieldDefn::DumpData( const char * pachData, int nMaxBytes,
     if( eType == DDFFloat )
         fprintf( fp, "      Subfield `%s' = %f\n",
                  pszName,
-                 ExtractFloatData( pachData, nMaxBytes, NULL ) );
+                 ExtractFloatData( pachData, nMaxBytes, nullptr ) );
     else if( eType == DDFInt )
         fprintf( fp, "      Subfield `%s' = %d\n",
                  pszName,
-                 ExtractIntData( pachData, nMaxBytes, NULL ) );
+                 ExtractIntData( pachData, nMaxBytes, nullptr ) );
     else if( eType == DDFBinaryString )
     {
-        int     nBytes, i;
-        GByte   *pabyBString = (GByte *) ExtractStringData( pachData, nMaxBytes, &nBytes );
+        int nBytes = 0;
+        GByte *pabyBString =
+            (GByte *) ExtractStringData( pachData, nMaxBytes, &nBytes );
 
         fprintf( fp, "      Subfield `%s' = 0x", pszName );
-        for( i = 0; i < MIN(nBytes,24); i++ )
+        for( int i = 0; i < std::min(nBytes, 24); i++ )
             fprintf( fp, "%02X", pabyBString[i] );
 
         if( nBytes > 24 )
@@ -740,7 +754,7 @@ void DDFSubfieldDefn::DumpData( const char * pachData, int nMaxBytes,
     else
         fprintf( fp, "      Subfield `%s' = `%s'\n",
                  pszName,
-                 ExtractStringData( pachData, nMaxBytes, NULL ) );
+                 ExtractStringData( pachData, nMaxBytes, nullptr ) );
 }
 
 /************************************************************************/
@@ -767,7 +781,7 @@ void DDFSubfieldDefn::DumpData( const char * pachData, int nMaxBytes,
  */
 
 int DDFSubfieldDefn::GetDefaultValue( char *pachData, int nBytesAvailable,
-                                      int *pnBytesUsed )
+                                      int *pnBytesUsed ) const
 
 {
     int nDefaultSize;
@@ -777,10 +791,10 @@ int DDFSubfieldDefn::GetDefaultValue( char *pachData, int nBytesAvailable,
     else
         nDefaultSize = 1;
 
-    if( pnBytesUsed != NULL )
+    if( pnBytesUsed != nullptr )
         *pnBytesUsed = nDefaultSize;
 
-    if( pachData == NULL )
+    if( pachData == nullptr )
         return TRUE;
 
     if( nBytesAvailable < nDefaultSize )
@@ -822,7 +836,7 @@ int DDFSubfieldDefn::GetDefaultValue( char *pachData, int nBytesAvailable,
 int DDFSubfieldDefn::FormatStringValue( char *pachData, int nBytesAvailable,
                                         int *pnBytesUsed,
                                         const char *pszValue,
-                                        int nValueLength )
+                                        int nValueLength ) const
 
 {
     int nSize;
@@ -839,10 +853,10 @@ int DDFSubfieldDefn::FormatStringValue( char *pachData, int nBytesAvailable,
         nSize = nFormatWidth;
     }
 
-    if( pnBytesUsed != NULL )
+    if( pnBytesUsed != nullptr )
         *pnBytesUsed = nSize;
 
-    if( pachData == NULL )
+    if( pachData == nullptr )
         return TRUE;
 
     if( nBytesAvailable < nSize )
@@ -858,12 +872,14 @@ int DDFSubfieldDefn::FormatStringValue( char *pachData, int nBytesAvailable,
         if( GetBinaryFormat() == NotBinary )
         {
             memset( pachData, ' ', nSize );
-            memcpy( pachData, pszValue, MIN(nValueLength,nSize) );
+            // cppcheck-suppress redundantCopy
+            memcpy( pachData, pszValue, std::min(nValueLength, nSize) );
         }
         else
         {
             memset( pachData, 0, nSize );
-            memcpy( pachData, pszValue, MIN(nValueLength,nSize) );
+            // cppcheck-suppress redundantCopy
+            memcpy( pachData, pszValue, std::min(nValueLength, nSize) );
         }
     }
 
@@ -882,7 +898,7 @@ int DDFSubfieldDefn::FormatStringValue( char *pachData, int nBytesAvailable,
  */
 
 int DDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
-                                     int *pnBytesUsed, int nNewValue )
+                                     int *pnBytesUsed, int nNewValue ) const
 
 {
     int nSize;
@@ -902,10 +918,10 @@ int DDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
             return FALSE;
     }
 
-    if( pnBytesUsed != NULL )
+    if( pnBytesUsed != nullptr )
         *pnBytesUsed = nSize;
 
-    if( pachData == NULL )
+    if( pachData == nullptr )
         return TRUE;
 
     if( nBytesAvailable < nSize )
@@ -927,7 +943,7 @@ int DDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
           {
             char chFillChar = '0'; /* ASCII zero intended */
             memset( pachData, chFillChar, nSize );
-            strncpy( pachData + nSize - strlen(szWork), szWork,
+            memcpy( pachData + nSize - strlen(szWork), szWork,
                      strlen(szWork) );
             break;
           }
@@ -945,16 +961,16 @@ int DDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
                     iOut = i;
 
                 pachData[iOut] = (char)((nNewValue & nMask) >> (i*8));
-                nMask *= 256;
+                nMask <<= 8;
             }
             break;
 
           case FloatReal:
-            CPLAssert( FALSE );
+            CPLAssert( false );
             break;
 
           default:
-            CPLAssert( FALSE );
+            CPLAssert( false );
             break;
         }
     }
@@ -974,7 +990,7 @@ int DDFSubfieldDefn::FormatIntValue( char *pachData, int nBytesAvailable,
  */
 
 int DDFSubfieldDefn::FormatFloatValue( char *pachData, int nBytesAvailable,
-                                       int *pnBytesUsed, double dfNewValue )
+                                       int *pnBytesUsed, double dfNewValue ) const
 
 {
     int nSize;
@@ -994,10 +1010,10 @@ int DDFSubfieldDefn::FormatFloatValue( char *pachData, int nBytesAvailable,
             return FALSE;
     }
 
-    if( pnBytesUsed != NULL )
+    if( pnBytesUsed != nullptr )
         *pnBytesUsed = nSize;
 
-    if( pachData == NULL )
+    if( pachData == nullptr )
         return TRUE;
 
     if( nBytesAvailable < nSize )
@@ -1015,12 +1031,12 @@ int DDFSubfieldDefn::FormatFloatValue( char *pachData, int nBytesAvailable,
             const char chFillZeroASCII = '0'; /* ASCII zero intended */
             /* coverity[bad_memset] */
             memset( pachData, chFillZeroASCII, nSize );
-            strncpy( pachData + nSize - strlen(szWork), szWork,
+            memcpy( pachData + nSize - strlen(szWork), szWork,
                      strlen(szWork) );
         }
         else
         {
-            CPLAssert( FALSE );
+            CPLAssert( false );
             /* implement me */
         }
     }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxf_ogcwkt.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: gxf_ogcwkt.c e4ee8bc7e8e7e9ccd48caeaac99a8c9b7edb423c 2018-03-03 22:05:25Z Even Rouault $
  *
  * Project:  GXF Reader
  * Purpose:  Handle GXF to OGC WKT projection transformation.
@@ -31,7 +31,7 @@
 #include "gxfopen.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gxf_ogcwkt.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: gxf_ogcwkt.c e4ee8bc7e8e7e9ccd48caeaac99a8c9b7edb423c 2018-03-03 22:05:25Z Even Rouault $")
 
 /* -------------------------------------------------------------------- */
 /* the following #defines come from ogr_spatialref.h in the GDAL/OGR	*/
@@ -207,7 +207,7 @@ static void OGCWKTSetProj( char * pszProjection,
 
 {
     int		iParm, nCount = CSLCount(papszMethods);
-    const char	*apszParmNames[8];
+    const char	*apszParmNames[8] = { NULL };
 
     apszParmNames[0] = pszParm1;
     apszParmNames[1] = pszParm2;
@@ -290,7 +290,7 @@ char *GXFGetMapProjectionAsOGCWKT( GXFHandle hGXF )
 {
     GXFInfo_t	*psGXF = (GXFInfo_t *) hGXF;
     char	**papszMethods = NULL;
-    char	szWKT[1024];
+    char	szWKT[1024+32];
     char	szGCS[512];
     char	szProjection[512];
 

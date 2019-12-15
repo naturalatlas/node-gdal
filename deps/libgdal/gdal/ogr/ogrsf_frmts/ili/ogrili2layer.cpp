@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrili2layer.cpp 32765 2016-01-05 19:27:15Z rouault $
  *
  * Project:  Interlis 2 Translator
  * Purpose:  Implements OGRILI2Layer class.
@@ -32,14 +31,14 @@
 #include "cpl_string.h"
 #include "ogr_ili2.h"
 
-CPL_CVSID("$Id: ogrili2layer.cpp 32765 2016-01-05 19:27:15Z rouault $");
+CPL_CVSID("$Id: ogrili2layer.cpp 98dfb4b4012c5ae4621e246e8eb393b3c05a3f48 2018-04-02 22:09:55 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRILI2Layer()                              */
 /************************************************************************/
 
 OGRILI2Layer::OGRILI2Layer( OGRFeatureDefn* poFeatureDefnIn,
-                            GeomFieldInfos oGeomFieldInfosIn,
+                            const GeomFieldInfos& oGeomFieldInfosIn,
                             OGRILI2DataSource *poDSIn ) :
     poFeatureDefn(poFeatureDefnIn),
     oGeomFieldInfos(oGeomFieldInfosIn),
@@ -68,15 +67,14 @@ OGRILI2Layer::~OGRILI2Layer()
     }
 }
 
-
 /************************************************************************/
-/*                             ISetFeature()                             */
+/*                             AddFeature()                             */
 /************************************************************************/
 
-OGRErr OGRILI2Layer::ISetFeature (OGRFeature *poFeature)
+void OGRILI2Layer::AddFeature (OGRFeature *poFeature)
 {
+    poFeature->SetFID( static_cast<GIntBig>(1 + listFeature.size()) );
     listFeature.push_back(poFeature);
-    return OGRERR_NONE;
 }
 
 /************************************************************************/
@@ -98,13 +96,13 @@ OGRFeature *OGRILI2Layer::GetNextFeature()
     {
       OGRFeature *poFeature = *(listFeatureIt++);
       //apply filters
-      if( (m_poFilterGeom == NULL
+      if( (m_poFilterGeom == nullptr
            || FilterGeometry( poFeature->GetGeometryRef() ) )
-          && (m_poAttrQuery == NULL
+          && (m_poAttrQuery == nullptr
               || m_poAttrQuery->Evaluate( poFeature )) )
           return poFeature->Clone();
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -113,7 +111,7 @@ OGRFeature *OGRILI2Layer::GetNextFeature()
 
 GIntBig OGRILI2Layer::GetFeatureCount( int bForce )
 {
-    if (m_poFilterGeom == NULL && m_poAttrQuery == NULL)
+    if (m_poFilterGeom == nullptr && m_poAttrQuery == nullptr)
     {
         return listFeature.size();
     }
@@ -135,7 +133,7 @@ static const char* d2str(double val)
     return CPLSPrintf("%.3f", val );
 }
 
-static void AppendCoordinateList( OGRLineString *poLine, VSILFILE* fp )
+static void AppendCoordinateList( const OGRLineString *poLine, VSILFILE* fp )
 {
     const bool b3D = CPL_TO_BOOL(wkbHasZ(poLine->getGeometryType()));
 
@@ -150,7 +148,7 @@ static void AppendCoordinateList( OGRLineString *poLine, VSILFILE* fp )
     }
 }
 
-static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
+static int OGR2ILIGeometryAppend( const OGRGeometry *poGeometry, VSILFILE* fp,
                                   const char *attrname, CPLString iliGeomType )
 {
 #ifdef DEBUG_VERBOSE
@@ -164,7 +162,7 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
     if( poGeometry->getGeometryType() == wkbPoint ||
         poGeometry->getGeometryType() == wkbPoint25D )
     {
-        OGRPoint *poPoint = reinterpret_cast<OGRPoint *>( poGeometry );
+        const OGRPoint *poPoint = poGeometry->toPoint();
 
         VSIFPrintfL(fp, "<%s>\n", attrname);
         VSIFPrintfL(fp, "<COORD>");
@@ -186,7 +184,7 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
         VSIFPrintfL(fp, "<POLYLINE>\n");
         // unclipped polyline, add one sequence
         // VSIFPrintfL(fp, "<SEGMENTS>\n");
-        AppendCoordinateList( (OGRLineString *) poGeometry, fp );
+        AppendCoordinateList( poGeometry->toLineString(), fp );
         // VSIFPrintfL(fp, "</SEGMENTS>\n");
         VSIFPrintfL(fp, "</POLYLINE>\n");
         if (attrname) VSIFPrintfL(fp, "</%s>\n", attrname);
@@ -198,7 +196,7 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
     else if( poGeometry->getGeometryType() == wkbPolygon
              || poGeometry->getGeometryType() == wkbPolygon25D )
     {
-        OGRPolygon      *poPolygon = (OGRPolygon *) poGeometry;
+        const OGRPolygon      *poPolygon = poGeometry->toPolygon();
 
         if (attrname) VSIFPrintfL(fp, "<%s>\n", attrname);
         if( iliGeomType == "Surface" || iliGeomType == "Area" )
@@ -208,18 +206,9 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
             VSIFPrintfL(fp, "<BOUNDARY>\n");
         }
 
-        if( poPolygon->getExteriorRing() != NULL )
+        for( auto&& poRing: *poPolygon )
         {
-            if( !OGR2ILIGeometryAppend( poPolygon->getExteriorRing(), fp,
-                                        NULL, "" ) )
-                return FALSE;
-        }
-
-        for( int iRing = 0; iRing < poPolygon->getNumInteriorRings(); iRing++ )
-        {
-            OGRLinearRing *poRing = poPolygon->getInteriorRing(iRing);
-
-            if( !OGR2ILIGeometryAppend( poRing, fp, NULL, "" ) )
+            if( !OGR2ILIGeometryAppend( poRing, fp, nullptr, "" ) )
                 return FALSE;
         }
         if( iliGeomType == "Surface" || iliGeomType == "Area" )
@@ -239,7 +228,7 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
              || wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPoint
              || wkbFlatten(poGeometry->getGeometryType()) == wkbGeometryCollection )
     {
-        OGRGeometryCollection *poGC = (OGRGeometryCollection *) poGeometry;
+        const OGRGeometryCollection *poGC = poGeometry->toGeometryCollection();
 
 #if 0
         // TODO: Why were these all blank?
@@ -256,14 +245,11 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
         {
         }
 #endif
-        for( int iMember = 0; iMember < poGC->getNumGeometries(); iMember++)
+        for( auto&& poMember: *poGC )
         {
-            OGRGeometry *poMember = poGC->getGeometryRef( iMember );
-
-            if( !OGR2ILIGeometryAppend( poMember, fp, NULL, "" ) )
+            if( !OGR2ILIGeometryAppend( poMember, fp, nullptr, "" ) )
                 return FALSE;
         }
-
     }
 
     else
@@ -278,7 +264,7 @@ static int OGR2ILIGeometryAppend( OGRGeometry *poGeometry, VSILFILE* fp,
 
 OGRErr OGRILI2Layer::ICreateFeature( OGRFeature *poFeature ) {
     char szTempBuffer[80];
-    const char* tid;
+    const char* tid = nullptr;
     int iField = 0;
     if( poFeatureDefn->GetFieldCount() &&
         EQUAL(poFeatureDefn->GetFieldDefn(iField)->GetNameRef(), "TID") )
@@ -294,7 +280,7 @@ OGRErr OGRILI2Layer::ICreateFeature( OGRFeature *poFeature ) {
     }
 
     VSILFILE* fp = poDS->GetOutputFP();
-    if (fp == NULL)
+    if (fp == nullptr)
         return OGRERR_FAILURE;
 
     VSIFPrintfL(fp, "<%s TID=\"%s\">\n", poFeatureDefn->GetName(), tid);
@@ -307,7 +293,7 @@ OGRErr OGRILI2Layer::ICreateFeature( OGRFeature *poFeature ) {
         OGRGeomFieldDefn *poFieldDefn
             = poFeatureDefn->GetGeomFieldDefn(iGeomField);
         OGRGeometry* poGeom = poFeature->GetGeomFieldRef(iGeomField);
-        if( poGeom != NULL )
+        if( poGeom != nullptr )
         {
             CPLString iliGeomType = GetIliGeomType(poFieldDefn->GetNameRef());
             OGR2ILIGeometryAppend( poGeom, fp, poFieldDefn->GetNameRef(),
@@ -321,7 +307,7 @@ OGRErr OGRILI2Layer::ICreateFeature( OGRFeature *poFeature ) {
 
         OGRFieldDefn *poField = poFeatureDefn->GetFieldDefn( iField );
 
-        if( poFeature->IsFieldSet( iField ) )
+        if( poFeature->IsFieldSetAndNotNull( iField ) )
         {
             const char *pszRaw = poFeature->GetFieldAsString( iField );
             VSIFPrintfL(fp, "<%s>%s</%s>\n", poField->GetNameRef(), pszRaw, poField->GetNameRef());

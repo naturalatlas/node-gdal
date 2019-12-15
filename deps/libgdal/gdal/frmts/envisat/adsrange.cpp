@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: adsrange.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Detect range of ADS records matching the MDS records.
@@ -39,6 +38,8 @@ CPL_C_END
 
 #include <cmath>
 
+CPL_CVSID("$Id: adsrange.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /* -------------------------------------------------------------------- */
 /*
  * data-set descriptor (private helper class)
@@ -55,8 +56,8 @@ class DataSet
     DataSet( EnvisatFile & envfileIn , int indexIn ) :
         envfile(envfileIn), index(indexIn), nrec(0)
     {
-        EnvisatFile_GetDatasetInfo( &envfileIn, indexIn, NULL, NULL, NULL,
-                NULL , NULL, &nrec, NULL ) ;
+        EnvisatFile_GetDatasetInfo( &envfileIn, indexIn, nullptr, nullptr, nullptr,
+                nullptr , nullptr, &nrec, nullptr ) ;
     }
 
     TimeDelta getMJD( int ridx )
@@ -74,7 +75,7 @@ class DataSet
     }
 
   private:
-    CPL_DISALLOW_COPY_ASSIGN(DataSet);
+    CPL_DISALLOW_COPY_ASSIGN(DataSet)
 } ;
 
 /* -------------------------------------------------------------------- */
@@ -83,8 +84,10 @@ class DataSet
  *
  */
 
-ADSRangeLastAfter::ADSRangeLastAfter( EnvisatFile & envfile,
-    int  ads_idx , int mds_idx, const TimeDelta & line_interval )
+ADSRangeLastAfter::ADSRangeLastAfter(
+      EnvisatFile & envfile,
+      int  ads_idx , int mds_idx,
+      const TimeDelta & line_interval )
 {
     /* abs.time tolerance */
     TimeDelta atol = line_interval * 0.5 ;

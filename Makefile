@@ -1,6 +1,6 @@
 .PHONY: clean clean-test build rebuild release test test-concurrent test-syntax authors
 
-MOCHA_ARGS=test -R list -gc --require ./test/_common.js
+MOCHA_ARGS=test -R list --expose-gc --require ./test/_common.js
 
 all: build
 
@@ -26,12 +26,12 @@ clean-test:
 	npm install node-pre-gyp
 
 build: ./node_modules/.bin/node-pre-gyp
-	./node_modules/.bin/node-pre-gyp configure --enable-logging=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp configure --silent
+	./node_modules/.bin/node-pre-gyp build -j max
 
 build-shared: ./node_modules/.bin/node-pre-gyp
-	./node_modules/.bin/node-pre-gyp configure --enable-logging=true --shared_gdal=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp configure --shared_gdal=true --silent
+	./node_modules/.bin/node-pre-gyp build -j max
 
 rebuild:
 	@make clean
@@ -67,7 +67,6 @@ else
 	make test
 	@make authors
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package.json
-	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package-lock.json
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' yuidoc.json
 	rm *.bak
 	git add .

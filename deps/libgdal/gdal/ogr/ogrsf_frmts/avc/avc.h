@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: avc.h,v 1.25 2008/07/23 20:51:38 dmorissette Exp $
+ * $Id: avc.h 8c2da2c75918f3f65f0046acaebdbc929e6c162b 2018-06-24 14:47:47 +0200 Even Rouault $
  *
  * Name:     avc.h
  * Project:  Arc/Info Vector coverage (AVC) BIN<->E00 conversion library
@@ -119,6 +119,9 @@
 #include "cpl_string.h"
 
 #ifdef GDAL_COMPILATION
+#ifdef RENAME_INTERNAL_SHAPELIB_SYMBOLS
+#include "gdal_shapelib_symbol_rename.h"
+#endif
 #include "shapefil.h"
 #else
 #include "dbfopen.h"
@@ -132,7 +135,6 @@ CPL_C_START
  * Current version of the AVCE00 library... always useful!
  *--------------------------------------------------------------------*/
 #define AVC_VERSION "2.0.0 (2006-08-17)"
-
 
 /* Coverage precision
  */
@@ -163,7 +165,6 @@ typedef enum
     AVCFileTABLE
 }AVCFileType;
 
-
 /* Read or Write access flag
  */
 typedef enum
@@ -192,7 +193,6 @@ typedef enum
     AVCBigEndian,    /* CPL_MSB, Motorola ordering */
     AVCLittleEndian  /* CPL_LSB, Intel ordering */
 } AVCByteOrder;
-
 
 /* Macros to establish byte ordering for each coverage type
  * The rule until now: all coverage types use big endian (Motorola ordering)
@@ -262,7 +262,6 @@ typedef struct AVCCnt_t
     GInt32      *panLabelIds;
 }AVCCnt;
 
-
 /*---------------------------------------------------------------------
  * AVCLab: Information about a LAB (polygon Label)
  *--------------------------------------------------------------------*/
@@ -293,7 +292,7 @@ typedef struct AVCTxt_t
     GInt32      nTxtId;
     GInt32      nUserId;
     GInt32      nLevel;
-    float       f_1e2;	/* Always (float)-1e+20, even for double precision! */
+    float       f_1e2;  /* Always (float)-1e+20, even for double precision! */
     GInt32      nSymbol;
     GInt32      numVerticesLine;
     GInt32      n28;    /* Unknown value at byte 28 */
@@ -320,7 +319,6 @@ typedef struct AVCRxp_t
     GInt32      n1;
     GInt32      n2;
 }AVCRxp;
-
 
 /*---------------------------------------------------------------------
  * AVCTableDef: Definition of an INFO table's structure.
@@ -360,7 +358,6 @@ typedef struct AVCFieldInfo_t
 #define AVC_FT_BININT   50
 #define AVC_FT_BINFLOAT 60
 
-
 typedef struct AVCTableDef_t
 {
     /* Stuff read from the arc.dir file
@@ -381,8 +378,7 @@ typedef struct AVCTableDef_t
     /* Field information read from the arc####.nit file
      */
     AVCFieldInfo *pasFieldDef;
-
-}AVCTableDef;
+} AVCTableDef;
 
 typedef struct AVCField_t
 {
@@ -391,7 +387,7 @@ typedef struct AVCField_t
     float       fFloat;
     double      dDouble;
     GByte       *pszStr;
-}AVCField;
+} AVCField;
 
 /*---------------------------------------------------------------------
  * Stuff related to buffered reading of raw binary files
@@ -401,7 +397,7 @@ typedef struct AVCField_t
 
 typedef struct AVCRawBinFile_t
 {
-    FILE        *fp;
+    VSILFILE    *fp;
     char        *pszFname;
     AVCAccess   eAccess;
     AVCByteOrder eByteOrder;
@@ -417,8 +413,7 @@ typedef struct AVCRawBinFile_t
     /* Handle on dataset's multibyte character encoding info. */
     AVCDBCSInfo *psDBCSInfo;
 
-}AVCRawBinFile;
-
+} AVCRawBinFile;
 
 /*---------------------------------------------------------------------
  * Stuff related to reading and writing binary coverage files
@@ -466,7 +461,7 @@ typedef struct AVCBinFile_t
         char         **papszPrj;
     }cur;
 
-}AVCBinFile;
+} AVCBinFile;
 
 /*---------------------------------------------------------------------
  * Stuff related to the generation of E00
@@ -499,28 +494,28 @@ typedef struct AVCE00GenInfo_t
  * their buffer and their current state while parsing an object.
  *--------------------------------------------------------------------*/
 
-typedef struct AVCE00ParseInfo_t
+struct AVCE00ParseInfo
 {
-    AVCFileType eFileType;
-    int         nPrecision;     /* AVC_SINGLE/DOUBLE_PREC       */
-    int         iCurItem;
-    int         numItems;
-    int         nStartLineNum;
-    int         nCurLineNum;
+    AVCFileType eFileType = AVCFileUnknown;
+    int         nPrecision = 0;     /* AVC_SINGLE/DOUBLE_PREC       */
+    int         iCurItem = 0;
+    int         numItems = 0;
+    int         nStartLineNum = 0;
+    int         nCurLineNum = 0;
 
-    int         nCurObjectId;
-    GBool       bForceEndOfSection;  /* For sections that don't have an */
+    int         nCurObjectId = 0;
+    GBool       bForceEndOfSection = 0;  /* For sections that don't have an */
                                      /* explicit end-of-section line.   */
-    AVCFileType eSuperSectionType;/* For sections containing several files*/
-    char        *pszSectionHdrLine;  /* Used by supersection types      */
+    AVCFileType eSuperSectionType = AVCFileUnknown;/* For sections containing several files*/
+    char        *pszSectionHdrLine = nullptr;  /* Used by supersection types      */
 
-    union
+    struct
     {
-        AVCTableDef  *psTableDef;
-    }hdr;
-    GBool       bTableHdrComplete;   /* FALSE until table header is */
+        AVCTableDef  *psTableDef = nullptr;
+    } hdr;
+    GBool       bTableHdrComplete = 0;   /* FALSE until table header is */
                                      /* finished parsing */
-    int         nTableE00RecLength;
+    int         nTableE00RecLength = 0;
 
     /* cur.* : temp. storage used to store current object (ARC, PAL, ... or
      *         Table record) from the file.
@@ -535,13 +530,14 @@ typedef struct AVCE00ParseInfo_t
         AVCTxt       *psTxt;
         AVCRxp       *psRxp;
         AVCField     *pasFields;
-        char         **papszPrj;
     }cur;
+    CPLStringList aosPrj;
 
-    char        *pszBuf;        /* Buffer used only for TABLEs  */
-    int         nBufSize;
-}AVCE00ParseInfo;
+    char        *pszBuf = nullptr;        /* Buffer used only for TABLEs  */
+    int         nBufSize = 0;
 
+    AVCE00ParseInfo() { cur.psArc = nullptr; }
+};
 
 /*---------------------------------------------------------------------
  * Stuff related to the transparent binary -> E00 conversion
@@ -612,10 +608,9 @@ typedef struct AVCE00ReadInfoE00_t
 
     /* File handle of the E00 file currently being processed
      */
-    FILE          *hFile;
+    VSILFILE     *hFile;
 
 } *AVCE00ReadE00Ptr;
-
 
 /* E00 generation steps... tells the AVCE00Read*() functions which
  * parts of the given E00 file are currently being processed.
@@ -674,6 +669,7 @@ void        AVCRawBinClose(AVCRawBinFile *psInfo);
 void        AVCRawBinFSeek(AVCRawBinFile *psInfo, int nOffset, int nFrom);
 GBool       AVCRawBinEOF(AVCRawBinFile *psInfo);
 void        AVCRawBinSetFileDataSize(AVCRawBinFile *psInfo, int nDataSize);
+int AVCRawBinIsFileGreaterThan(AVCRawBinFile *psFile, vsi_l_offset nSize);
 
 void        AVCRawBinReadBytes(AVCRawBinFile *psInfo, int nBytesToRead,
                                GByte *pBuf);
@@ -809,7 +805,6 @@ AVCTableDef *AVCE00ParseNextTableDefLine(AVCE00ParseInfo *psInfo,
                                          const char *pszLine);
 AVCField    *AVCE00ParseNextTableRecLine(AVCE00ParseInfo *psInfo,
                                          const char *pszLine);
-
 
 /*---------------------------------------------------------------------
  * Misc. functions shared by several parts of the lib.

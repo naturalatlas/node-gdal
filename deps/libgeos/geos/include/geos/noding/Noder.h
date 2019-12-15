@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -24,9 +24,9 @@
 
 // Forward declarations
 namespace geos {
-	namespace noding {
-		class SegmentString;
-	}
+namespace noding {
+class SegmentString;
+}
 }
 
 namespace geos {
@@ -36,8 +36,8 @@ namespace noding { // geos.noding
 /** \brief
  * Computes all intersections between segments in a set of SegmentString.
  *
- * Intersections found are represented as {@link SegmentNode}s and added to the
- * {@link SegmentString}s in which they occur.
+ * Intersections found are represented as [SegmentNodes](@ref SegmentNode) and
+ * added to the [SegmentStrings](@ref SegmentString) in which they occur.
  * As a final step in the noding a new set of segment strings split
  * at the nodes may be returned.
  *
@@ -48,29 +48,30 @@ namespace noding { // geos.noding
  */
 class GEOS_DLL Noder {
 public:
-	/** \brief
-	 * Computes the noding for a collection of {@link SegmentString}s.
-	 *
-	 * Some Noders may add all these nodes to the input SegmentStrings;
-	 * others may only add some or none at all.
-	 *
-	 * @param segStrings a collection of {@link SegmentString}s to node
-	 */
-	virtual void computeNodes(std::vector<SegmentString*>* segStrings)=0;
+    /** \brief
+     * Computes the noding for a collection of [SegmentStrings](@ref SegmentString).
+     *
+     * Some Noders may add all these nodes to the input SegmentStrings;
+     * others may only add some or none at all.
+     *
+     * @param segStrings a collection of {@link SegmentString}s to node
+     */
+    virtual void computeNodes(std::vector<SegmentString*>* segStrings) = 0;
 
-	/** \brief
-	 * Returns a {@link Collection} of fully noded {@link SegmentStrings}.
-	 * The SegmentStrings have the same context as their parent.
-	 *
-	 * @return a newly allocated std::vector of const SegmentStrings.
-	 *         Caller is responsible to delete container and elements.
-	 */
-	virtual std::vector<SegmentString*>* getNodedSubstrings() const=0;
+    /** \brief
+     * Returns a collection of fully noded [SegmentStrings](@ref SegmentString).
+     * The SegmentStrings have the same context as their parent.
+     *
+     * @return a newly allocated std::vector of const SegmentStrings.
+     *         Caller is responsible to delete container and elements.
+     */
+    virtual std::vector<SegmentString*>* getNodedSubstrings() const = 0;
 
-	virtual ~Noder() {}
+    virtual
+    ~Noder() {}
 
 protected:
-	Noder(){}
+    Noder() {}
 };
 
 } // namespace geos.noding

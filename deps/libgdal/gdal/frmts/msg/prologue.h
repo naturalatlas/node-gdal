@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: prologue.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: prologue.h e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $
  *
  * Purpose:  Interface of Prologue class. Parse the prologue of one repeat
  *           cycle and keep the interesting info.
@@ -30,16 +30,12 @@
 #if !defined(AFX_PROLOGUE_H__777B5B86_04F4_4A01_86F6_24615DCD8446__INCLUDED_)
 #define AFX_PROLOGUE_H__777B5B86_04F4_4A01_86F6_24615DCD8446__INCLUDED_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #include <fstream>
 
 class ReferenceGridRecord
 {
 public:
-  ReferenceGridRecord(std::ifstream & ifile);
+  explicit ReferenceGridRecord(std::ifstream & ifile);
 
   int NumberOfLines;
   int NumberOfColumns;
@@ -51,7 +47,7 @@ public:
 class PlannedCoverageVIS_IRRecord
 {
 public:
-  PlannedCoverageVIS_IRRecord(std::ifstream & ifile);
+  explicit PlannedCoverageVIS_IRRecord(std::ifstream & ifile);
 
   int SouthernLinePlanned;
   int NorthernLinePlanned;
@@ -62,7 +58,7 @@ public:
 class PlannedCoverageHRVRecord
 {
 public:
-  PlannedCoverageHRVRecord(std::ifstream & ifile);
+  explicit PlannedCoverageHRVRecord(std::ifstream & ifile);
   int LowerSouthLinePlanned;
   int LowerNorthLinePlanned;
   int LowerEastColumnPlanned;
@@ -75,8 +71,10 @@ public:
 
 class ImageDescriptionRecord
 {
+  CPL_DISALLOW_COPY_ASSIGN( ImageDescriptionRecord )
+
 public:
-  ImageDescriptionRecord(std::ifstream & ifile);
+  explicit ImageDescriptionRecord(std::ifstream & ifile);
   virtual ~ImageDescriptionRecord();
 
   unsigned char TypeOfProjection; // 1 == Geostationary, Earth centered in grid
@@ -93,7 +91,7 @@ public:
 class RadiometricProcessingRecord
 {
 public:
-  RadiometricProcessingRecord(std::ifstream & ifile);
+  explicit RadiometricProcessingRecord(std::ifstream & ifile);
 
   double Cal_Slope [12];
   double Cal_Offset [12];
@@ -107,20 +105,19 @@ public:
 
   void read(std::ifstream & ifile);
 
-  const ImageDescriptionRecord * idr()
+  const ImageDescriptionRecord * idr() const
   {
     return m_idr;
-  };
+  }
 
-  const RadiometricProcessingRecord * rpr()
+  const RadiometricProcessingRecord * rpr() const
   {
     return m_rpr;
-  };
+  }
 
 private:
   ImageDescriptionRecord * m_idr;
   RadiometricProcessingRecord * m_rpr;
-
 };
 
 #endif // !defined(AFX_PROLOGUE_H__777B5B86_04F4_4A01_86F6_24615DCD8446__INCLUDED_)

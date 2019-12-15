@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -35,97 +35,112 @@ namespace geos {
 namespace operation { // geos.operation
 namespace relate { // geos.operation.relate
 
-EdgeEndBundle::EdgeEndBundle(EdgeEnd *e):
-	EdgeEnd(e->getEdge(),e->getCoordinate(),
-		e->getDirectedCoordinate(),
-		e->getLabel())
+EdgeEndBundle::EdgeEndBundle(EdgeEnd* e):
+    EdgeEnd(e->getEdge(), e->getCoordinate(),
+            e->getDirectedCoordinate(),
+            e->getLabel())
 {
-	edgeEnds=new vector<EdgeEnd*>();
-	insert(e);
+    insert(e);
 }
 
-EdgeEndBundle::~EdgeEndBundle(){
-	for(size_t i=0, n=edgeEnds->size(); i<n; i++) {
-		delete (*edgeEnds)[i];
-	}
-	delete edgeEnds;
+EdgeEndBundle::~EdgeEndBundle()
+{
+    for(size_t i = 0, n = edgeEnds.size(); i < n; i++) {
+        delete edgeEnds[i];
+    }
 }
 
 //Not needed
 //public Iterator iterator() { return edgeEnds.iterator(); }
 
-vector<EdgeEnd*>* EdgeEndBundle::getEdgeEnds() {
-	return edgeEnds;
+const vector<EdgeEnd*>&
+EdgeEndBundle::getEdgeEnds()
+{
+    return edgeEnds;
 }
 
-void EdgeEndBundle::insert(EdgeEnd *e){
-	// Assert: start point is the same
-	// Assert: direction is the same
-	edgeEnds->push_back(e);
+void
+EdgeEndBundle::insert(EdgeEnd* e)
+{
+    // Assert: start point is the same
+    // Assert: direction is the same
+    edgeEnds.push_back(e);
 }
-  
+
 
 /**
 * This computes the overall edge label for the set of
 * edges in this EdgeStubBundle.  It essentially merges
 * the ON and side labels for each edge.  These labels must be compatible
 */
-void EdgeEndBundle::computeLabel(
-	const algorithm::BoundaryNodeRule& boundaryNodeRule)
+void
+EdgeEndBundle::computeLabel(
+    const algorithm::BoundaryNodeRule& boundaryNodeRule)
 {
-	// create the label.  If any of the edges belong to areas,
-	// the label must be an area label
-	bool isArea=false;
+    // create the label.  If any of the edges belong to areas,
+    // the label must be an area label
+    bool isArea = false;
 
-	for(vector<EdgeEnd*>::iterator it=edgeEnds->begin(), itEnd=edgeEnds->end();
-			it != itEnd; it++)
-	{
-		EdgeEnd *e=*it;
-		if (e->getLabel().isArea()) isArea=true;
-	}
-	if (isArea) {
-		label = Label(Location::UNDEF,Location::UNDEF,Location::UNDEF);
-	} else {
-		label = Label(Location::UNDEF);
-	}
-	// compute the On label, and the side labels if present
-	for(int i=0;i<2;i++) {
-		computeLabelOn(i, boundaryNodeRule);
-		if (isArea)
-			computeLabelSides(i);
-	}
+    for(vector<EdgeEnd*>::iterator it = edgeEnds.begin(), itEnd = edgeEnds.end();
+            it != itEnd; it++) {
+        EdgeEnd* e = *it;
+        if(e->getLabel().isArea()) {
+            isArea = true;
+        }
+    }
+    if(isArea) {
+        label = Label(Location::UNDEF, Location::UNDEF, Location::UNDEF);
+    }
+    else {
+        label = Label(Location::UNDEF);
+    }
+    // compute the On label, and the side labels if present
+    for(int i = 0; i < 2; i++) {
+        computeLabelOn(i, boundaryNodeRule);
+        if(isArea) {
+            computeLabelSides(i);
+        }
+    }
 }
 
 
 void
 EdgeEndBundle::computeLabelOn(int geomIndex, const algorithm::BoundaryNodeRule& boundaryNodeRule)
 {
-	// compute the ON location value
-	int boundaryCount=0;
-	bool foundInterior=false;
+    // compute the ON location value
+    int boundaryCount = 0;
+    bool foundInterior = false;
 
-	for(vector<EdgeEnd*>::iterator it=edgeEnds->begin();it<edgeEnds->end();it++) {
-		EdgeEnd *e=*it;
-		int loc=e->getLabel().getLocation(geomIndex);
-		if (loc==Location::BOUNDARY) boundaryCount++;
-		if (loc==Location::INTERIOR) foundInterior=true;
-	}
-	int loc=Location::UNDEF;
-	if (foundInterior) loc=Location::INTERIOR;
-	if (boundaryCount>0) {
-		loc = GeometryGraph::determineBoundary(boundaryNodeRule,
-		                                       boundaryCount);
-	}
-	label.setLocation(geomIndex,loc);
+    for(vector<EdgeEnd*>::iterator it = edgeEnds.begin(); it < edgeEnds.end(); it++) {
+        EdgeEnd* e = *it;
+        Location loc = e->getLabel().getLocation(geomIndex);
+        if(loc == Location::BOUNDARY) {
+            boundaryCount++;
+        }
+        if(loc == Location::INTERIOR) {
+            foundInterior = true;
+        }
+    }
+    Location loc = Location::UNDEF;
+    if(foundInterior) {
+        loc = Location::INTERIOR;
+    }
+    if(boundaryCount > 0) {
+        loc = GeometryGraph::determineBoundary(boundaryNodeRule,
+                                               boundaryCount);
+    }
+    label.setLocation(geomIndex, loc);
 }
 
 
 /**
 * Compute the labelling for each side
 */
-void EdgeEndBundle::computeLabelSides(int geomIndex) {
-	computeLabelSide(geomIndex,Position::LEFT);
-	computeLabelSide(geomIndex,Position::RIGHT);
+void
+EdgeEndBundle::computeLabelSides(int geomIndex)
+{
+    computeLabelSide(geomIndex, Position::LEFT);
+    computeLabelSide(geomIndex, Position::RIGHT);
 }
 
 /**
@@ -142,33 +157,39 @@ void EdgeEndBundle::computeLabelSides(int geomIndex) {
 *  along an edge.  This is the reason for Interior-primacy rule above - it
 *  results in the summary label having the Geometry interior on <b>both</b> sides.
 */
-void EdgeEndBundle::computeLabelSide(int geomIndex, int side) {
-	for(vector<EdgeEnd*>::iterator it=edgeEnds->begin();it<edgeEnds->end();it++) {
-		EdgeEnd *e=*it;
-		if (e->getLabel().isArea()) {
-			int loc=e->getLabel().getLocation(geomIndex,side);
-			if (loc==Location::INTERIOR) {
-				label.setLocation(geomIndex,side,Location::INTERIOR);
-				return;
-			} else if (loc==Location::EXTERIOR) {
-				label.setLocation(geomIndex,side,Location::EXTERIOR);
-			}
-		}
-	}
+void
+EdgeEndBundle::computeLabelSide(int geomIndex, int side)
+{
+    for(vector<EdgeEnd*>::iterator it = edgeEnds.begin(); it < edgeEnds.end(); it++) {
+        EdgeEnd* e = *it;
+        if(e->getLabel().isArea()) {
+            Location loc = e->getLabel().getLocation(geomIndex, side);
+            if(loc == Location::INTERIOR) {
+                label.setLocation(geomIndex, side, Location::INTERIOR);
+                return;
+            }
+            else if(loc == Location::EXTERIOR) {
+                label.setLocation(geomIndex, side, Location::EXTERIOR);
+            }
+        }
+    }
 }
 
-void EdgeEndBundle::updateIM(IntersectionMatrix& im) {
-	Edge::updateIM(label, im);
+void
+EdgeEndBundle::updateIM(IntersectionMatrix& im)
+{
+    Edge::updateIM(label, im);
 }
 
-string EdgeEndBundle::print() {
-	string out="EdgeEndBundle--> Label: "+label.toString()+"\n";
-	for(vector<EdgeEnd*>::iterator it=edgeEnds->begin();it<edgeEnds->end();it++) {
-		EdgeEnd *e=*it;
-		out+=e->print();
-		out+="\n";
-	}
-	return out;
+string
+EdgeEndBundle::print() const
+{
+    string out = "EdgeEndBundle--> Label: " + label.toString() + "\n";
+    for(auto& e : edgeEnds) {
+        out += e->print();
+        out += "\n";
+    }
+    return out;
 }
 
 } // namespace geos.operation.relate

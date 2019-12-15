@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: dipxdataset.cpp 33930 2016-04-09 19:28:36Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  Implementation for ELAS DIPEx format variant.
@@ -33,35 +32,12 @@
 #include "ogr_spatialref.h"
 #include "rawdataset.h"
 
+#include <cmath>
 #include <algorithm>
 
 using std::fill;
 
-CPL_CVSID("$Id: dipxdataset.cpp 33930 2016-04-09 19:28:36Z goatbar $");
-
-typedef struct {
-    GInt32      NBIH;   /* bytes in header, normally 1024 */
-    GInt32      NBPR;   /* bytes per data record (all bands of scanline) */
-    GInt32      IL;     /* initial line - normally 1 */
-    GInt32      LL;     /* last line */
-    GInt32      IE;     /* initial element (pixel), normally 1 */
-    GInt32      LE;     /* last element (pixel) */
-    GInt32      NC;     /* number of channels (bands) */
-    GInt32      H4322;  /* header record identifier - always 4322. */
-    char        unused1[40];
-    GByte       IH19[4];/* data type, and size flags */
-    GInt32      IH20;   /* number of secondary headers */
-    GInt32      SRID;
-    char        unused2[12];
-    double      YOffset;
-    double      XOffset;
-    double      YPixSize;
-    double      XPixSize;
-    double      Matrix[4];
-    char        unused3[344];
-    GUInt16     ColorTable[256];  /* RGB packed with 4 bits each */
-    char        unused4[32];
-} DIPExHeader;
+CPL_CVSID("$Id: dipxdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -69,28 +45,53 @@ typedef struct {
 /* ==================================================================== */
 /************************************************************************/
 
-class DIPExRasterBand;
-
-class DIPExDataset : public GDALPamDataset
+class DIPExDataset final: public GDALPamDataset
 {
-    friend class DIPExRasterBand;
+    struct DIPExHeader{
+        GInt32      NBIH{};   /* bytes in header, normally 1024 */
+        GInt32      NBPR{};   /* bytes per data record (all bands of scanline) */
+        GInt32      IL{};     /* initial line - normally 1 */
+        GInt32      LL{};     /* last line */
+        GInt32      IE{};     /* initial element (pixel), normally 1 */
+        GInt32      LE{};     /* last element (pixel) */
+        GInt32      NC{};     /* number of channels (bands) */
+        GInt32      H4322{};  /* header record identifier - always 4322. */
+        char        unused1[40];
+        GByte       IH19[4];/* data type, and size flags */
+        GInt32      IH20{};   /* number of secondary headers */
+        GInt32      SRID{};
+        char        unused2[12]{};
+        double      YOffset{};
+        double      XOffset{};
+        double      YPixSize{};
+        double      XPixSize{};
+        double      Matrix[4];
+        char        unused3[344];
+        GUInt16     ColorTable[256];  /* RGB packed with 4 bits each */
+        char        unused4[32];
+    };
 
     VSILFILE    *fp;
-    CPLString    osSRS;
+    CPLString    osSRS{};
 
-    DIPExHeader  sHeader;
+    DIPExHeader  sHeader{};
 
     GDALDataType eRasterDataType;
 
     double      adfGeoTransform[6];
 
+    CPL_DISALLOW_COPY_ASSIGN(DIPExDataset)
+
   public:
-                 DIPExDataset();
-    virtual ~DIPExDataset();
+    DIPExDataset();
+    ~DIPExDataset() override;
 
-    virtual CPLErr GetGeoTransform( double * );
+    CPLErr GetGeoTransform( double * ) override;
 
-    virtual const char *GetProjectionRef( void );
+    const char *_GetProjectionRef( void ) override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
     static GDALDataset *Open( GDALOpenInfo * );
 };
 
@@ -100,14 +101,12 @@ class DIPExDataset : public GDALPamDataset
 /* ==================================================================== */
 /************************************************************************/
 
-
 /************************************************************************/
 /*                            DIPExDataset()                             */
 /************************************************************************/
 
-
 DIPExDataset::DIPExDataset() :
-    fp(NULL),
+    fp(nullptr),
     eRasterDataType(GDT_Unknown)
 {
     sHeader.NBIH = 0;
@@ -120,15 +119,15 @@ DIPExDataset::DIPExDataset() :
     sHeader.H4322 = 0;
     fill( sHeader.unused1,
           sHeader.unused1 + CPL_ARRAYSIZE(sHeader.unused1),
-          0 );
+          static_cast<char>(0) );
     fill( sHeader.IH19,
           sHeader.IH19 + CPL_ARRAYSIZE(sHeader.IH19),
-          0 );
+          static_cast<GByte>(0) );
     sHeader.IH20 = 0;
     sHeader.SRID = 0;
     fill( sHeader.unused2,
           sHeader.unused2 + CPL_ARRAYSIZE(sHeader.unused2),
-          0 );
+          static_cast<char>(0) );
     sHeader.YOffset = 0.0;
     sHeader.XOffset = 0.0;
     sHeader.YPixSize = 0.0;
@@ -139,13 +138,13 @@ DIPExDataset::DIPExDataset() :
     sHeader.Matrix[3] = 0.0;
     fill( sHeader.unused3,
           sHeader.unused3 + CPL_ARRAYSIZE(sHeader.unused3),
-          0 );
+          static_cast<char>(0) );
     fill( sHeader.ColorTable,
           sHeader.ColorTable + CPL_ARRAYSIZE(sHeader.ColorTable),
-          0 );
+          static_cast<GUInt16>(0) );
     fill( sHeader.unused4,
           sHeader.unused4 + CPL_ARRAYSIZE(sHeader.unused4),
-          0 );
+          static_cast<char>(0) );
 
     adfGeoTransform[0] = 0.0;
     adfGeoTransform[1] = 1.0;
@@ -164,7 +163,7 @@ DIPExDataset::~DIPExDataset()
 {
     if( fp )
         CPL_IGNORE_RET_VAL(VSIFCloseL( fp ));
-    fp = NULL;
+    fp = nullptr;
 }
 
 /************************************************************************/
@@ -178,40 +177,25 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      First we check to see if the file has the expected header       */
 /*      bytes.                                                          */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->nHeaderBytes < 256 )
-        return NULL;
+    if( poOpenInfo->nHeaderBytes < 256 || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
     if( CPL_LSBWORD32(*( reinterpret_cast<GInt32 *>( poOpenInfo->pabyHeader + 0 )))
         != 1024 )
-        return NULL;
+        return nullptr;
 
     if( CPL_LSBWORD32(*( reinterpret_cast<GInt32 *>( poOpenInfo->pabyHeader + 28 )))
         != 4322 )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
-    const char *pszAccess = NULL;
-
-    if( poOpenInfo->eAccess == GA_Update )
-        pszAccess = "r+b";
-    else
-        pszAccess = "rb";
-
     DIPExDataset *poDS = new DIPExDataset();
 
-    poDS->fp = VSIFOpenL( poOpenInfo->pszFilename, pszAccess );
-    if( poDS->fp == NULL )
-    {
-        CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Attempt to open `%s' with access `%s' failed.\n",
-                  poOpenInfo->pszFilename, pszAccess );
-        delete poDS;
-        return NULL;
-    }
-
     poDS->eAccess = poOpenInfo->eAccess;
+    poDS->fp = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read the header information.                                    */
@@ -222,7 +206,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
                   "Attempt to read 1024 byte header filed on file %s\n",
                   poOpenInfo->pszFilename );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -232,11 +216,23 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
 
     int nStart = CPL_LSBWORD32( poDS->sHeader.IL );
     int nEnd = CPL_LSBWORD32( poDS->sHeader.LL );
-    poDS->nRasterYSize = nEnd - nStart + 1;
+    GIntBig nDiff = static_cast<GIntBig>(nEnd) - nStart + 1;
+    if( nDiff <= 0 || nDiff > INT_MAX )
+    {
+        delete poDS;
+        return nullptr;
+    }
+    poDS->nRasterYSize = static_cast<int>(nDiff);
 
     nStart = CPL_LSBWORD32( poDS->sHeader.IE );
     nEnd = CPL_LSBWORD32( poDS->sHeader.LE );
-    poDS->nRasterXSize = nEnd - nStart + 1;
+    nDiff = static_cast<GIntBig>(nEnd) - nStart + 1;
+    if( nDiff <= 0 || nDiff > INT_MAX )
+    {
+        delete poDS;
+        return nullptr;
+    }
+    poDS->nRasterXSize = static_cast<int>(nDiff);
 
     const int nBands = CPL_LSBWORD32( poDS->sHeader.NC );
 
@@ -244,7 +240,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
         !GDALCheckBandCount(nBands, FALSE) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     const int nDIPExDataType = (poDS->sHeader.IH19[1] & 0x7e) >> 2;
@@ -264,7 +260,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Unrecognized image data type %d, with BytesPerSample=%d.",
                   nDIPExDataType, nBytesPerSample );
-        return NULL;
+        return nullptr;
     }
 
     if( nLineOffset <= 0 || nLineOffset > INT_MAX / nBands )
@@ -273,7 +269,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Invalid values: nLineOffset = %d, nBands = %d.",
                   nLineOffset, nBands );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -288,11 +284,12 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
                                           nBytesPerSample,
                                           nLineOffset * nBands,
                                           poDS->eRasterDataType,
-                                          CPL_IS_LSB, TRUE ) );
+                                          CPL_IS_LSB,
+                                          RawRasterBand::OwnFP::NO ) );
         if( CPLGetLastErrorType() != CE_None )
         {
             delete poDS;
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -311,7 +308,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
         poDS->adfGeoTransform[2] = 0.0;
         poDS->adfGeoTransform[3] = poDS->sHeader.YOffset;
         poDS->adfGeoTransform[4] = 0.0;
-        poDS->adfGeoTransform[5] = -1.0 * ABS(poDS->sHeader.YPixSize);
+        poDS->adfGeoTransform[5] = -1.0 * std::abs(poDS->sHeader.YPixSize);
 
         poDS->adfGeoTransform[0] -= poDS->adfGeoTransform[1] * 0.5;
         poDS->adfGeoTransform[3] -= poDS->adfGeoTransform[5] * 0.5;
@@ -337,7 +334,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
 
         if( oSR.importFromEPSG( poDS->sHeader.SRID ) == OGRERR_NONE )
         {
-            char *pszWKT = NULL;
+            char *pszWKT = nullptr;
             oSR.exportToWkt( &pszWKT );
             poDS->osSRS = pszWKT;
             CPLFree( pszWKT );
@@ -363,7 +360,7 @@ GDALDataset *DIPExDataset::Open( GDALOpenInfo * poOpenInfo )
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *DIPExDataset::GetProjectionRef()
+const char *DIPExDataset::_GetProjectionRef()
 
 {
     return osSRS.c_str();
@@ -388,7 +385,7 @@ CPLErr DIPExDataset::GetGeoTransform( double * padfTransform )
 void GDALRegister_DIPEx()
 
 {
-    if( GDALGetDriverByName( "DIPEx" ) != NULL )
+    if( GDALGetDriverByName( "DIPEx" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

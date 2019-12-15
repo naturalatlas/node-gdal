@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: s57featuredefns.cpp 33271 2016-01-30 16:01:55Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements methods to create OGRFeatureDefns for various
@@ -33,8 +32,7 @@
 #include "ogr_api.h"
 #include "s57.h"
 
-CPL_CVSID("$Id: s57featuredefns.cpp 33271 2016-01-30 16:01:55Z goatbar $");
-
+CPL_CVSID("$Id: s57featuredefns.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                     S57GenerateGeomFeatureDefn()                     */
@@ -180,7 +178,7 @@ OGRFeatureDefn *S57GenerateGeomFeatureDefn( OGRwkbGeometryType eGType,
                                             int nOptionFlags )
 
 {
-    OGRFeatureDefn      *poFDefn = NULL;
+    OGRFeatureDefn      *poFDefn = nullptr;
 
     if( eGType == wkbPoint )
     {
@@ -208,7 +206,7 @@ OGRFeatureDefn *S57GenerateGeomFeatureDefn( OGRwkbGeometryType eGType,
         poFDefn->SetGeomType( eGType );
     }
     else
-        return NULL;
+        return nullptr;
 
     poFDefn->Reference();
     S57GenerateStandardAttributes( poFDefn, nOptionFlags );
@@ -224,7 +222,7 @@ OGRFeatureDefn *
 S57GenerateVectorPrimitiveFeatureDefn( int nRCNM,
                                        int /* nOptionFlags */ )
 {
-    OGRFeatureDefn      *poFDefn = NULL;
+    OGRFeatureDefn      *poFDefn = nullptr;
 
     if( nRCNM == RCNM_VI )
     {
@@ -247,7 +245,7 @@ S57GenerateVectorPrimitiveFeatureDefn( int nRCNM,
         poFDefn->SetGeomType( wkbPolygon );
     }
     else
-        return NULL;
+        return nullptr;
 
     poFDefn->Reference();
 
@@ -266,6 +264,15 @@ S57GenerateVectorPrimitiveFeatureDefn( int nRCNM,
     poFDefn->AddFieldDefn( &oField );
 
     oField.Set( "RUIN", OFTInteger, 2, 0 );
+    poFDefn->AddFieldDefn( &oField );
+
+/* -------------------------------------------------------------------- */
+/*      Geometric primitive attributes                                  */
+/* -------------------------------------------------------------------- */
+    oField.Set( "POSACC", OFTReal, 10, 2 );
+    poFDefn->AddFieldDefn( &oField );
+
+    oField.Set( "QUAPOS", OFTInteger, 2, 0 );
     poFDefn->AddFieldDefn( &oField );
 
 /* -------------------------------------------------------------------- */
@@ -325,7 +332,7 @@ OGRFeatureDefn *S57GenerateObjectClassDefn(
 
 {
     if( !poClassContentExplorer->SelectClass( nOBJL ) )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create the feature definition based on the object class         */
@@ -381,7 +388,7 @@ OGRFeatureDefn *S57GenerateObjectClassDefn(
     char **papszAttrList = poClassContentExplorer->GetAttributeList();
 
     for( int iAttr = 0;
-         papszAttrList != NULL && papszAttrList[iAttr] != NULL;
+         papszAttrList != nullptr && papszAttrList[iAttr] != nullptr;
          iAttr++ )
     {
         const int iAttrIndex = poCR->FindAttrByAcronym( papszAttrList[iAttr] );
@@ -424,7 +431,8 @@ OGRFeatureDefn *S57GenerateObjectClassDefn(
 /* -------------------------------------------------------------------- */
 /*      Do we need to add DEPTH attributes to soundings?                */
 /* -------------------------------------------------------------------- */
-    if( EQUAL(poClassContentExplorer->GetAcronym(), "SOUNDG")
+    const char* pszClassAcronym = poClassContentExplorer->GetAcronym();
+    if( pszClassAcronym != nullptr && EQUAL(pszClassAcronym, "SOUNDG")
         && (nOptionFlags & S57M_ADD_SOUNDG_DEPTH) )
     {
         OGRFieldDefn oField( "DEPTH", OFTReal );

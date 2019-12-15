@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -34,28 +34,28 @@ namespace io {
 
 class GEOS_DLL StringTokenizer {
 public:
-	enum {
-		TT_EOF,
-		TT_EOL,
-		TT_NUMBER,
-		TT_WORD
-	};
-	//StringTokenizer();
-	StringTokenizer(const std::string& txt);
-	~StringTokenizer() {}
-	int nextToken();
-	int peekNextToken();
-	double getNVal();
-	std::string getSVal();
+    enum {
+        TT_EOF,
+        TT_EOL,
+        TT_NUMBER,
+        TT_WORD
+    };
+    //StringTokenizer();
+    explicit StringTokenizer(const std::string& txt);
+    ~StringTokenizer() {}
+    int nextToken();
+    int peekNextToken();
+    double getNVal();
+    std::string getSVal();
 private:
-	const std::string &str;
-	std::string stok;
-	double ntok;
-	std::string::const_iterator iter;
+    const std::string& str;
+    std::string stok;
+    double ntok;
+    std::string::const_iterator iter;
 
     // Declare type as noncopyable
-    StringTokenizer(const StringTokenizer& other);
-    StringTokenizer& operator=(const StringTokenizer& rhs);
+    StringTokenizer(const StringTokenizer& other) = delete;
+    StringTokenizer& operator=(const StringTokenizer& rhs) = delete;
 };
 
 } // namespace io

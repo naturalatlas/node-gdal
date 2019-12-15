@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -23,8 +23,8 @@
 #define GEOS_GEOMGRAPH_EDGEINTERSECTIONLIST_H
 
 #include <geos/export.h>
+#include <algorithm>
 #include <vector>
-#include <set>
 #include <string>
 
 #include <geos/geomgraph/EdgeIntersection.h> // for EdgeIntersectionLessThen
@@ -39,12 +39,12 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Coordinate;
-	}
-	namespace geomgraph {
-		class Edge;
-	}
+namespace geom {
+class Coordinate;
+}
+namespace geomgraph {
+class Edge;
+}
 }
 
 namespace geos {
@@ -56,55 +56,68 @@ namespace geomgraph { // geos.geomgraph
  * Implements splitting an edge with intersections
  * into multiple resultant edges.
  */
-class GEOS_DLL EdgeIntersectionList{
+class GEOS_DLL EdgeIntersectionList {
 public:
-	typedef std::set<EdgeIntersection *, EdgeIntersectionLessThen> container;
-	typedef container::iterator iterator;
-	typedef container::const_iterator const_iterator;
+    // Instead of storing edge intersections in a set, as JTS does, we store them
+    // in a vector and then sort the vector if needed before iterating among the
+    // edges. This is much faster.
+    using container = std::vector<EdgeIntersection>;
+    using const_iterator = container::const_iterator;
 
 private:
-	container nodeMap;
+    mutable container nodeMap;
+    mutable bool sorted;
 
 public:
 
-	Edge *edge;
-	EdgeIntersectionList(Edge *edge);
-	~EdgeIntersectionList();
+    const Edge* edge;
+    EdgeIntersectionList(const Edge* edge);
+    ~EdgeIntersectionList() = default;
 
-	/*
-	 * Adds an intersection into the list, if it isn't already there.
-	 * The input segmentIndex and dist are expected to be normalized.
-	 * @return the EdgeIntersection found or added
-	 */
-	EdgeIntersection* add(const geom::Coordinate& coord,
-		int segmentIndex, double dist);
+    /*
+     * Adds an intersection into the list, if it isn't already there.
+     * The input segmentIndex and dist are expected to be normalized.
+     * @return the EdgeIntersection found or added
+     */
+    void add(const geom::Coordinate& coord, size_t segmentIndex, double dist);
 
-	iterator begin() { return nodeMap.begin(); }
-	iterator end() { return nodeMap.end(); }
-	const_iterator begin() const { return nodeMap.begin(); }
-	const_iterator end() const { return nodeMap.end(); }
+    const_iterator
+    begin() const
+    {
+        if (!sorted) {
+            std::sort(nodeMap.begin(), nodeMap.end());
+            nodeMap.erase(std::unique(nodeMap.begin(), nodeMap.end()), nodeMap.end());
+            sorted = true;
+        }
 
-	bool isEmpty() const;
-	bool isIntersection(const geom::Coordinate& pt) const;
+        return nodeMap.begin();
+    }
+    const_iterator
+    end() const
+    {
+        return nodeMap.end();
+    }
 
-	/*
-	 * Adds entries for the first and last points of the edge to the list
-	 */
-	void addEndpoints();
+    bool isEmpty() const;
+    bool isIntersection(const geom::Coordinate& pt) const;
 
-	/**
-	 * Creates new edges for all the edges that the intersections in this
-	 * list split the parent edge into.
-	 * Adds the edges to the input list (this is so a single list
-	 * can be used to accumulate all split edges for a Geometry).
-	 *
-	 * @param edgeList a list of EdgeIntersections
-	 */
-	void addSplitEdges(std::vector<Edge*> *edgeList);
+    /*
+     * Adds entries for the first and last points of the edge to the list
+     */
+    void addEndpoints();
 
-	Edge *createSplitEdge(EdgeIntersection *ei0, EdgeIntersection *ei1);
-	std::string print() const;
+    /**
+     * Creates new edges for all the edges that the intersections in this
+     * list split the parent edge into.
+     * Adds the edges to the input list (this is so a single list
+     * can be used to accumulate all split edges for a Geometry).
+     *
+     * @param edgeList a list of EdgeIntersections
+     */
+    void addSplitEdges(std::vector<Edge*>* edgeList);
 
+    Edge* createSplitEdge(const EdgeIntersection* ei0, const EdgeIntersection* ei1);
+    std::string print() const;
 };
 
 std::ostream& operator<< (std::ostream&, const EdgeIntersectionList&);

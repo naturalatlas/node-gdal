@@ -1,5 +1,5 @@
 /*
- * $Id: kearat.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: kearat.h 2519a7eb0e1649dbf8625ae8ffc7bb7c3ef9514b 2018-07-10 12:05:23 +0100 Robert Coup $
  *  kearat.h
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -36,50 +36,57 @@
 
 #include "keaband.h"
 
-class KEARasterAttributeTable : public GDALRasterAttributeTable
+class KEARasterAttributeTable : public GDALDefaultRasterAttributeTable
 {
 private:
     kealib::KEAAttributeTable *m_poKEATable;
     std::vector<kealib::KEAATTField> m_aoFields;
     CPLString osWorkingResult;
+    KEARasterBand *m_poBand;
 
 public:
-    KEARasterAttributeTable(kealib::KEAAttributeTable *poKEATable);
+    KEARasterAttributeTable(kealib::KEAAttributeTable *poKEATable, KEARasterBand *poBand);
     ~KEARasterAttributeTable();
 
-    GDALDefaultRasterAttributeTable *Clone() const;
+    GDALDefaultRasterAttributeTable *Clone() const override;
 
-    virtual int           GetColumnCount() const;
+    virtual int           GetColumnCount() const override;
 
-    virtual const char   *GetNameOfCol( int ) const;
-    virtual GDALRATFieldUsage GetUsageOfCol( int ) const;
-    virtual GDALRATFieldType GetTypeOfCol( int ) const;
+    virtual const char   *GetNameOfCol( int ) const override;
+    virtual GDALRATFieldUsage GetUsageOfCol( int ) const override;
+    virtual GDALRATFieldType GetTypeOfCol( int ) const override;
 
-    virtual int           GetColOfUsage( GDALRATFieldUsage ) const;
+    virtual int           GetColOfUsage( GDALRATFieldUsage ) const override;
 
-    virtual int           GetRowCount() const;
+    virtual int           GetRowCount() const override;
 
-    virtual const char   *GetValueAsString( int iRow, int iField ) const;
-    virtual int           GetValueAsInt( int iRow, int iField ) const;
-    virtual double        GetValueAsDouble( int iRow, int iField ) const;
+    virtual const char   *GetValueAsString( int iRow, int iField ) const override;
+    virtual int           GetValueAsInt( int iRow, int iField ) const override;
+    virtual double        GetValueAsDouble( int iRow, int iField ) const override;
 
-    virtual void          SetValue( int iRow, int iField, const char *pszValue );
-    virtual void          SetValue( int iRow, int iField, double dfValue);
-    virtual void          SetValue( int iRow, int iField, int nValue );
+    virtual void          SetValue( int iRow, int iField, const char *pszValue ) override;
+    virtual void          SetValue( int iRow, int iField, double dfValue) override;
+    virtual void          SetValue( int iRow, int iField, int nValue ) override;
 
-    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, double *pdfData);
-    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, int *pnData);
-    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, char **papszStrList);
+    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, double *pdfData) override;
+    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, int *pnData) override;
+    virtual CPLErr        ValuesIO(GDALRWFlag eRWFlag, int iField, int iStartRow, int iLength, char **papszStrList) override;
 
-    virtual int           ChangesAreWrittenToFile();
-    virtual void          SetRowCount( int iCount );
+    virtual int           ChangesAreWrittenToFile() override;
+    virtual void          SetRowCount( int iCount ) override;
 
     virtual CPLErr        CreateColumn( const char *pszFieldName,
                                 GDALRATFieldType eFieldType,
-                                GDALRATFieldUsage eFieldUsage );
+                                GDALRATFieldUsage eFieldUsage ) override;
+    virtual CPLErr        SetLinearBinning( double dfRow0Min,
+                                            double dfBinSize ) override;
+    virtual int           GetLinearBinning( double *pdfRow0Min,
+                                            double *pdfBinSize ) const override;
 
-    virtual CPLXMLNode   *Serialize() const;
+    virtual CPLXMLNode   *Serialize() const override;
 
+    virtual GDALRATTableType GetTableType() const override;
+    virtual CPLErr        SetTableType(const GDALRATTableType eInTableType) override;
 };
 
 #endif //KEARAT_H

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: nitfbilevel.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module implement BILEVEL (C1) compressed image reading.
@@ -28,19 +27,23 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
+#include "nitflib.h"
+
+#include <cstring>
+
 #include "cpl_conv.h"
 #include "cpl_multiproc.h"
 #include "cpl_string.h"
+#include "cpl_vsi.h"
 #include "gdal.h"
-#include "nitflib.h"
-
+// #include "tiff.h"
 CPL_C_START
 #include "tiffio.h"
 CPL_C_END
-
 #include "tifvsi.h"
 
-CPL_CVSID("$Id: nitfbilevel.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: nitfbilevel.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                       NITFUncompressBILEVEL()                        */
@@ -61,10 +64,10 @@ int NITFUncompressBILEVEL( NITFImage *psImage,
     osFilename.Printf( "/vsimem/nitf-wrk-%ld.tif", (long) CPLGetPID() );
 
     VSILFILE* fpL = VSIFOpenL(osFilename, "w+");
-    if( fpL == NULL )
+    if( fpL == nullptr )
         return FALSE;
     TIFF *hTIFF = VSI_TIFFOpen( osFilename, "w+", fpL );
-    if (hTIFF == NULL)
+    if (hTIFF == nullptr)
     {
         CPL_IGNORE_RET_VAL(VSIFCloseL(fpL));
         return FALSE;
@@ -96,7 +99,7 @@ int NITFUncompressBILEVEL( NITFImage *psImage,
     bool bResult = true;
 
     hTIFF = VSI_TIFFOpen( osFilename, "r", fpL );
-    if (hTIFF == NULL)
+    if (hTIFF == nullptr)
     {
         CPL_IGNORE_RET_VAL(VSIFCloseL(fpL));
         return FALSE;

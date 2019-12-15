@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdxfwriterds.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFWriterDS - the OGRDataSource class used for
@@ -29,27 +28,31 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
+
+#include <cstdlib>
+
 #include "ogr_dxf.h"
 #include "cpl_conv.h"
 #include "cpl_string.h"
+#include "cpl_vsi_error.h"
 
-CPL_CVSID("$Id: ogrdxfwriterds.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+
+CPL_CVSID("$Id: ogrdxfwriterds.cpp 1175a0de53d9a22112b2cf119f653861a660f236 2019-03-10 15:09:44 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRDXFWriterDS()                          */
 /************************************************************************/
 
-OGRDXFWriterDS::OGRDXFWriterDS()
-
-{
-    fp = NULL;
-    fpTemp = NULL;
-    poLayer = NULL;
-    poBlocksLayer = NULL;
-    papszLayersToCreate = NULL;
-    nNextFID = 80;
-    nHANDSEEDOffset = 0;
-}
+OGRDXFWriterDS::OGRDXFWriterDS() :
+    nNextFID(80),
+    poLayer(nullptr),
+    poBlocksLayer(nullptr),
+    fp(nullptr),
+    fpTemp(nullptr),
+    papszLayersToCreate(nullptr),
+    nHANDSEEDOffset(0)
+{}
 
 /************************************************************************/
 /*                         ~OGRDXFWriterDS()                          */
@@ -58,7 +61,7 @@ OGRDXFWriterDS::OGRDXFWriterDS()
 OGRDXFWriterDS::~OGRDXFWriterDS()
 
 {
-    if (fp != NULL)
+    if (fp != nullptr)
     {
 /* -------------------------------------------------------------------- */
 /*      Transfer over the header into the destination file with any     */
@@ -68,17 +71,16 @@ OGRDXFWriterDS::~OGRDXFWriterDS()
 
         TransferUpdateHeader( fp );
 
-        if (fpTemp != NULL)
+        if (fpTemp != nullptr)
         {
 /* -------------------------------------------------------------------- */
 /*      Copy in the temporary file contents.                            */
 /* -------------------------------------------------------------------- */
-            const char *pszLine;
-
             VSIFCloseL(fpTemp);
             fpTemp = VSIFOpenL( osTempFilename, "r" );
 
-            while( (pszLine = CPLReadLineL(fpTemp)) != NULL )
+            const char *pszLine = nullptr;
+            while( (pszLine = CPLReadLineL(fpTemp)) != nullptr )
             {
                 VSIFWriteL( pszLine, 1, strlen(pszLine), fp );
                 VSIFWriteL( "\n", 1, 1, fp );
@@ -108,7 +110,7 @@ OGRDXFWriterDS::~OGRDXFWriterDS()
 /* -------------------------------------------------------------------- */
 
         VSIFCloseL( fp );
-        fp = NULL;
+        fp = nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -129,7 +131,7 @@ int OGRDXFWriterDS::TestCapability( const char * pszCap )
 {
     if( EQUAL(pszCap,ODsCCreateLayer) )
         // Unable to have more than one OGR entities layer in a DXF file, with one options blocks layer.
-        return poBlocksLayer == NULL || poLayer == NULL;
+        return poBlocksLayer == nullptr || poLayer == nullptr;
     else
         return FALSE;
 }
@@ -138,14 +140,13 @@ int OGRDXFWriterDS::TestCapability( const char * pszCap )
 /*                              GetLayer()                              */
 /************************************************************************/
 
-
 OGRLayer *OGRDXFWriterDS::GetLayer( int iLayer )
 
 {
     if( iLayer == 0 )
         return poLayer;
     else
-        return NULL;
+        return nullptr;
 }
 
 /************************************************************************/
@@ -171,12 +172,12 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Open the standard header, or a user provided header.            */
 /* -------------------------------------------------------------------- */
-    if( CSLFetchNameValue(papszOptions,"HEADER") != NULL )
+    if( CSLFetchNameValue(papszOptions,"HEADER") != nullptr )
         osHeaderFile = CSLFetchNameValue(papszOptions,"HEADER");
     else
     {
         const char *pszValue = CPLFindFile( "gdal", "header.dxf" );
-        if( pszValue == NULL )
+        if( pszValue == nullptr )
         {
             CPLError( CE_Failure, CPLE_OpenFailed,
                       "Failed to find template header file header.dxf for reading,\nis GDAL_DATA set properly?" );
@@ -188,12 +189,12 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Establish the name for our trailer file.                        */
 /* -------------------------------------------------------------------- */
-    if( CSLFetchNameValue(papszOptions,"TRAILER") != NULL )
+    if( CSLFetchNameValue(papszOptions,"TRAILER") != nullptr )
         osTrailerFile = CSLFetchNameValue(papszOptions,"TRAILER");
     else
     {
         const char *pszValue = CPLFindFile( "gdal", "trailer.dxf" );
-        if( pszValue != NULL )
+        if( pszValue != nullptr )
             osTrailerFile = pszValue;
     }
 
@@ -208,7 +209,7 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
     nNextFID = 131072;
 #endif
 
-    if( CSLFetchNameValue( papszOptions, "FIRST_ENTITY" ) != NULL )
+    if( CSLFetchNameValue( papszOptions, "FIRST_ENTITY" ) != nullptr )
         nNextFID = atoi(CSLFetchNameValue( papszOptions, "FIRST_ENTITY" ));
 
 /* -------------------------------------------------------------------- */
@@ -227,13 +228,13 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
 /* -------------------------------------------------------------------- */
 /*      Create the output file.                                         */
 /* -------------------------------------------------------------------- */
-    fp = VSIFOpenL( pszFilename, "w+" );
+    fp = VSIFOpenExL( pszFilename, "w+", true );
 
-    if( fp == NULL )
+    if( fp == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Failed to open '%s' for writing.",
-                  pszFilename );
+                  "Failed to open '%s' for writing: %s",
+                  pszFilename, VSIGetLastErrorMsg() );
         return FALSE;
     }
 
@@ -244,7 +245,7 @@ int OGRDXFWriterDS::Open( const char * pszFilename, char **papszOptions )
     osTempFilename += ".tmp";
 
     fpTemp = VSIFOpenL( osTempFilename, "w" );
-    if( fpTemp == NULL )
+    if( fpTemp == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to open '%s' for writing.",
@@ -265,12 +266,12 @@ OGRLayer *OGRDXFWriterDS::ICreateLayer( const char *pszName,
                                        char ** )
 
 {
-    if( EQUAL(pszName,"blocks") && poBlocksLayer == NULL )
+    if( EQUAL(pszName,"blocks") && poBlocksLayer == nullptr )
     {
         poBlocksLayer = new OGRDXFBlocksWriterLayer( this );
         return poBlocksLayer;
     }
-    else if( poLayer == NULL )
+    else if( poLayer == nullptr )
     {
         poLayer = new OGRDXFWriterLayer( this, fpTemp );
         return poLayer;
@@ -279,7 +280,7 @@ OGRLayer *OGRDXFWriterDS::ICreateLayer( const char *pszName,
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Unable to have more than one OGR entities layer in a DXF file, with one options blocks layer." );
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -287,7 +288,7 @@ OGRLayer *OGRDXFWriterDS::ICreateLayer( const char *pszName,
 /*                             WriteValue()                             */
 /************************************************************************/
 
-static int WriteValue( VSILFILE *fp, int nCode, const char *pszLine )
+static bool WriteValue( VSILFILE *fp, int nCode, const char *pszLine )
 
 {
     char szLinePair[300];
@@ -298,17 +299,17 @@ static int WriteValue( VSILFILE *fp, int nCode, const char *pszLine )
     {
         CPLError( CE_Failure, CPLE_FileIO,
                   "Attempt to write line to DXF file failed, disk full?." );
-        return FALSE;
+        return false;
     }
-    else
-        return TRUE;
+
+    return true;
 }
 
 /************************************************************************/
 /*                             WriteValue()                             */
 /************************************************************************/
 
-static int WriteValue( VSILFILE *fp, int nCode, double dfValue )
+static bool WriteValue( VSILFILE *fp, int nCode, double dfValue )
 
 {
     char szLinePair[64];
@@ -319,26 +320,41 @@ static int WriteValue( VSILFILE *fp, int nCode, double dfValue )
     {
         CPLError( CE_Failure, CPLE_FileIO,
                   "Attempt to write line to DXF file failed, disk full?." );
-        return FALSE;
+        return false;
     }
-    else
-        return TRUE;
+
+    return true;
 }
 /************************************************************************/
 /*                        TransferUpdateHeader()                        */
 /************************************************************************/
 
-int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
+bool OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
 
 {
     oHeaderDS.ResetReadPointer( 0 );
+
+    // We don't like non-finite extents. In this case, just write a generic
+    // bounding box. Most CAD programs probably ignore this anyway.
+    if( !CPLIsFinite( oGlobalEnvelope.MinX ) ||
+        !CPLIsFinite( oGlobalEnvelope.MinY ) ||
+        !CPLIsFinite( oGlobalEnvelope.MaxX ) ||
+        !CPLIsFinite( oGlobalEnvelope.MaxY ) )
+    {
+        oGlobalEnvelope.MinX = 0.0;
+        oGlobalEnvelope.MinY = 0.0;
+        oGlobalEnvelope.MaxX = 10.0;
+        oGlobalEnvelope.MaxY = 10.0;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Copy header, inserting in new objects as needed.                */
 /* -------------------------------------------------------------------- */
     char szLineBuf[257];
-    int nCode;
-    CPLString osSection, osTable, osEntity;
+    int nCode = 0;
+    CPLString osSection;
+    CPLString osTable;
+    CPLString osEntity;
 
     while( (nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) )) != -1
            && osSection != "ENTITIES" )
@@ -350,7 +366,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
             if( osTable == "LAYER" )
             {
                 if( !WriteNewLayerDefinitions( fp ) )
-                    return FALSE;
+                    return false;
             }
 
             // If at the end of the BLOCK_RECORD TABLE consider inserting
@@ -358,7 +374,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
             if( osTable == "BLOCK_RECORD" && poBlocksLayer )
             {
                 if( !WriteNewBlockRecords( fp ) )
-                    return FALSE;
+                    return false;
             }
 
             // If at the end of the LTYPE TABLE consider inserting
@@ -366,7 +382,15 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
             if( osTable == "LTYPE" )
             {
                 if( !WriteNewLineTypeRecords( fp ) )
-                    return FALSE;
+                    return false;
+            }
+
+            // If at the end of the STYLE TABLE consider inserting
+            // missing layer type definitions.
+            if( osTable == "STYLE" )
+            {
+                if( !WriteNewTextStyleRecords( fp ) )
+                    return false;
             }
 
             osTable = "";
@@ -375,10 +399,10 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         // If we are at the end of the BLOCKS section, consider inserting
         // supplementary blocks.
         if( nCode == 0 && osSection == "BLOCKS" && EQUAL(szLineBuf,"ENDSEC")
-            && poBlocksLayer != NULL )
+            && poBlocksLayer != nullptr )
         {
             if( !WriteNewBlockDefinitions( fp ) )
-                return FALSE;
+                return false;
         }
 
         // We need to keep track of where $HANDSEED is so that we can
@@ -386,7 +410,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         if( nCode == 9 && EQUAL(szLineBuf,"$HANDSEED") )
         {
             if( !WriteValue( fpOut, nCode, szLineBuf ) )
-                return FALSE;
+                return false;
 
             nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) );
 
@@ -404,19 +428,19 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         if( nCode == 9 && EQUAL(szLineBuf,"$EXTMIN") )
         {
             if( !WriteValue( fpOut, nCode, szLineBuf ) )
-                return FALSE;
+                return false;
 
             nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) );
             if (nCode == 10)
             {
                 if( !WriteValue( fpOut, nCode, oGlobalEnvelope.MinX ) )
-                    return FALSE;
+                    return false;
 
                 nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) );
                 if (nCode == 20)
                 {
                     if( !WriteValue( fpOut, nCode, oGlobalEnvelope.MinY ) )
-                        return FALSE;
+                        return false;
 
                     continue;
                 }
@@ -427,19 +451,19 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         if( nCode == 9 && EQUAL(szLineBuf,"$EXTMAX") )
         {
             if( !WriteValue( fpOut, nCode, szLineBuf ) )
-                return FALSE;
+                return false;
 
             nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) );
             if (nCode == 10)
             {
                 if( !WriteValue( fpOut, nCode, oGlobalEnvelope.MaxX ) )
-                    return FALSE;
+                    return false;
 
                 nCode = oHeaderDS.ReadValue( szLineBuf, sizeof(szLineBuf) );
                 if (nCode == 20)
                 {
                     if( !WriteValue( fpOut, nCode, oGlobalEnvelope.MaxY ) )
-                        return FALSE;
+                        return false;
 
                     continue;
                 }
@@ -448,7 +472,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
 
         // Copy over the source line.
         if( !WriteValue( fpOut, nCode, szLineBuf ) )
-            return FALSE;
+            return false;
 
         // Track what entity we are in - that is the last "code 0" object.
         if( nCode == 0  )
@@ -462,7 +486,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
                 break;
 
             if( !WriteValue( fpOut, nCode, szLineBuf ) )
-                return FALSE;
+                return false;
 
             osSection = szLineBuf;
         }
@@ -472,7 +496,7 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         {
             nCode = oHeaderDS.ReadValue( szLineBuf );
             if( !WriteValue( fpOut, nCode, szLineBuf ) )
-                return FALSE;
+                return false;
 
             osTable = szLineBuf;
         }
@@ -481,14 +505,14 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         // the layer contents while copying so we can duplicate
         // it for any new layer definitions.
         if( nCode == 0 && EQUAL(szLineBuf,"LAYER")
-            && osTable == "LAYER" && aosDefaultLayerText.size() == 0 )
+            && osTable == "LAYER" && aosDefaultLayerText.empty() )
         {
             do {
                 anDefaultLayerCode.push_back( nCode );
                 aosDefaultLayerText.push_back( szLineBuf );
 
                 if( nCode != 0 && !WriteValue( fpOut, nCode, szLineBuf ) )
-                    return FALSE;
+                    return false;
 
                 nCode = oHeaderDS.ReadValue( szLineBuf );
 
@@ -504,33 +528,31 @@ int OGRDXFWriterDS::TransferUpdateHeader( VSILFILE *fpOut )
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                       TransferUpdateTrailer()                        */
 /************************************************************************/
 
-int OGRDXFWriterDS::TransferUpdateTrailer( VSILFILE *fpOut )
+bool OGRDXFWriterDS::TransferUpdateTrailer( VSILFILE *fpOut )
 {
-    OGRDXFReader oReader;
-    VSILFILE *l_fp;
-
 /* -------------------------------------------------------------------- */
 /*      Open the file and setup a reader.                               */
 /* -------------------------------------------------------------------- */
-    l_fp = VSIFOpenL( osTrailerFile, "r" );
+    VSILFILE *l_fp = VSIFOpenL( osTrailerFile, "r" );
 
-    if( l_fp == NULL )
-        return FALSE;
+    if( l_fp == nullptr )
+        return false;
 
+    OGRDXFReader oReader;
     oReader.Initialize( l_fp );
 
 /* -------------------------------------------------------------------- */
 /*      Scan ahead to find the OBJECTS section.                         */
 /* -------------------------------------------------------------------- */
     char szLineBuf[257];
-    int  nCode;
+    int nCode = 0;
 
     while( (nCode = oReader.ReadValue( szLineBuf, sizeof(szLineBuf) )) != -1 )
     {
@@ -547,7 +569,7 @@ int OGRDXFWriterDS::TransferUpdateTrailer( VSILFILE *fpOut )
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Failed to find OBJECTS section in trailer file '%s'.",
                   osTrailerFile.c_str() );
-        return FALSE;
+        return false;
     }
 
 /* -------------------------------------------------------------------- */
@@ -561,18 +583,19 @@ int OGRDXFWriterDS::TransferUpdateTrailer( VSILFILE *fpOut )
 /* -------------------------------------------------------------------- */
 /*      Copy the remainder of the file.                                 */
 /* -------------------------------------------------------------------- */
+    bool ret = true;
     while( (nCode = oReader.ReadValue( szLineBuf, sizeof(szLineBuf) )) != -1 )
     {
         if( !WriteValue( fpOut, nCode, szLineBuf ) )
         {
-            VSIFCloseL( fp );
-            return FALSE;
+            ret = false;
+            break;
         }
     }
 
     VSIFCloseL( l_fp );
 
-    return TRUE;
+    return ret;
 }
 
 /************************************************************************/
@@ -582,18 +605,18 @@ int OGRDXFWriterDS::TransferUpdateTrailer( VSILFILE *fpOut )
 /*      variable.                                                       */
 /************************************************************************/
 
-int OGRDXFWriterDS::FixupHANDSEED( VSILFILE *fpIn )
+bool OGRDXFWriterDS::FixupHANDSEED( VSILFILE *fpIn )
 
 {
 /* -------------------------------------------------------------------- */
 /*      What is a good next handle seed?  Scan existing values.         */
 /* -------------------------------------------------------------------- */
-    unsigned int   nHighestHandle = 0;
+    unsigned int nHighestHandle = 0;
     std::set<CPLString>::iterator it;
 
-    for( it = aosUsedEntities.begin(); it != aosUsedEntities.end(); it++ )
+    for( it = aosUsedEntities.begin(); it != aosUsedEntities.end(); ++it )
     {
-        unsigned int nHandle;
+        unsigned int nHandle = 0;
         if( sscanf( (*it).c_str(), "%x", &nHandle ) == 1 )
         {
             if( nHandle > nHighestHandle )
@@ -604,15 +627,14 @@ int OGRDXFWriterDS::FixupHANDSEED( VSILFILE *fpIn )
 /* -------------------------------------------------------------------- */
 /*      Read the existing handseed value, replace it, and write back.   */
 /* -------------------------------------------------------------------- */
-    char szWorkBuf[30];
-    int  i = 0;
-
     if( nHANDSEEDOffset == 0 )
-        return FALSE;
+        return false;
 
+    char szWorkBuf[30];
     VSIFSeekL( fpIn, nHANDSEEDOffset, SEEK_SET );
     VSIFReadL( szWorkBuf, 1, sizeof(szWorkBuf), fpIn );
 
+    int i = 0;
     while( szWorkBuf[i] != '\n' )
         i++;
 
@@ -628,26 +650,31 @@ int OGRDXFWriterDS::FixupHANDSEED( VSILFILE *fpIn )
     VSIFSeekL( fpIn, nHANDSEEDOffset, SEEK_SET );
     VSIFWriteL( szWorkBuf, 1, sizeof(szWorkBuf), fp );
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                      WriteNewLayerDefinitions()                      */
 /************************************************************************/
 
-int  OGRDXFWriterDS::WriteNewLayerDefinitions( VSILFILE * fpOut )
+bool OGRDXFWriterDS::WriteNewLayerDefinitions( VSILFILE * fpOut )
 
 {
-    int iLayer, nNewLayers = CSLCount(papszLayersToCreate);
+    const int nNewLayers = CSLCount(papszLayersToCreate);
 
-    for( iLayer = 0; iLayer < nNewLayers; iLayer++ )
+    for( int iLayer = 0; iLayer < nNewLayers; iLayer++ )
     {
+        bool bIsDefPoints = false;
+        bool bWrote290 = false;
         for( unsigned i = 0; i < aosDefaultLayerText.size(); i++ )
         {
             if( anDefaultLayerCode[i] == 2 )
             {
+                if( EQUAL(papszLayersToCreate[iLayer], "DEFPOINTS") )
+                    bIsDefPoints = true;
+
                 if( !WriteValue( fpOut, 2, papszLayersToCreate[iLayer] ) )
-                    return FALSE;
+                    return false;
             }
             else if( anDefaultLayerCode[i] == 5 )
             {
@@ -655,56 +682,117 @@ int  OGRDXFWriterDS::WriteNewLayerDefinitions( VSILFILE * fpOut )
             }
             else
             {
+                if( anDefaultLayerCode[i] == 290 )
+                    bWrote290 = true;
+
                 if( !WriteValue( fpOut,
                                  anDefaultLayerCode[i],
                                  aosDefaultLayerText[i] ) )
-                    return FALSE;
+                    return false;
             }
+        }
+        if( bIsDefPoints && !bWrote290 )
+        {
+            // The Defpoints layer must be explicitly set to not plotted to
+            // please Autocad. See https://trac.osgeo.org/gdal/ticket/7078
+            if( !WriteValue( fpOut, 290, "0" ) )
+                return false;
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                      WriteNewLineTypeRecords()                       */
 /************************************************************************/
 
-int OGRDXFWriterDS::WriteNewLineTypeRecords( VSILFILE *fpIn )
+bool OGRDXFWriterDS::WriteNewLineTypeRecords( VSILFILE *fpIn )
 
 {
-    if( poLayer == NULL )
-        return TRUE;
+    if( poLayer == nullptr )
+        return true;
 
-    std::map<CPLString,CPLString>::iterator oIt;
-    std::map<CPLString,CPLString>& oNewLineTypes =
+    std::map<CPLString,std::vector<double>>& oNewLineTypes =
         poLayer->GetNewLineTypeMap();
 
-    for( oIt = oNewLineTypes.begin();
-         oIt != oNewLineTypes.end(); oIt++ )
+    for( const auto& oPair : oNewLineTypes )
     {
         WriteValue( fpIn, 0, "LTYPE" );
         WriteEntityID( fpIn );
         WriteValue( fpIn, 100, "AcDbSymbolTableRecord" );
         WriteValue( fpIn, 100, "AcDbLinetypeTableRecord" );
-        WriteValue( fpIn, 2, (*oIt).first );
+        WriteValue( fpIn, 2, oPair.first );
         WriteValue( fpIn, 70, "0" );
         WriteValue( fpIn, 3, "" );
         WriteValue( fpIn, 72, "65" );
-        VSIFWriteL( (*oIt).second.c_str(), 1, (*oIt).second.size(), fpIn );
+        WriteValue( fpIn, 73, static_cast<int>(oPair.second.size()) );
 
-        CPLDebug( "DXF", "Define Line type '%s'.",
-                  (*oIt).first.c_str() );
+        double dfTotalLength = 0.0;
+        for( const double& dfSegment : oPair.second )
+            dfTotalLength += fabs( dfSegment );
+        WriteValue( fpIn, 40, dfTotalLength );
+
+        for( const double& dfSegment : oPair.second )
+        {
+            WriteValue( fpIn, 49, dfSegment );
+            WriteValue( fpIn, 74, "0" );
+        }
     }
 
-    return TRUE;
+    return true;
+}
+
+/************************************************************************/
+/*                      WriteNewTextStyleRecords()                      */
+/************************************************************************/
+
+bool OGRDXFWriterDS::WriteNewTextStyleRecords( VSILFILE *fpIn )
+
+{
+    if( poLayer == nullptr )
+        return true;
+
+    auto& oNewTextStyles = poLayer->GetNewTextStyleMap();
+
+    for( auto& oPair : oNewTextStyles )
+    {
+        WriteValue( fpIn, 0, "STYLE" );
+        WriteEntityID( fpIn );
+        WriteValue( fpIn, 100, "AcDbSymbolTableRecord" );
+        WriteValue( fpIn, 100, "AcDbTextStyleTableRecord" );
+        WriteValue( fpIn, 2, oPair.first );
+        WriteValue( fpIn, 70, "0" );
+        WriteValue( fpIn, 40, "0.0" );
+
+        if( oPair.second.count("Width") )
+            WriteValue( fpIn, 41, oPair.second["Width"] );
+        else
+            WriteValue( fpIn, 41, "1.0" );
+
+        WriteValue( fpIn, 50, "0.0" );
+        WriteValue( fpIn, 71, "0" );
+        WriteValue( fpIn, 1001, "ACAD" );
+
+        if( oPair.second.count("Font") )
+            WriteValue( fpIn, 1000, oPair.second["Font"] );
+
+        int nStyleValue = 0;
+        if( oPair.second.count("Italic") && oPair.second["Italic"] == "1" )
+            nStyleValue |= 0x1000000;
+        if( oPair.second.count("Bold") && oPair.second["Bold"] == "1" )
+            nStyleValue |= 0x2000000;
+        WriteValue( fpIn, 1071, CPLString().Printf( "%d", nStyleValue ).c_str() );
+    }
+
+    return true;
 }
 
 /************************************************************************/
 /*                        WriteNewBlockRecords()                        */
 /************************************************************************/
 
-int OGRDXFWriterDS::WriteNewBlockRecords( VSILFILE * fpIn )
+bool OGRDXFWriterDS::WriteNewBlockRecords( VSILFILE * fpIn )
 
 {
     std::set<CPLString> aosAlreadyHandled;
@@ -719,9 +807,9 @@ int OGRDXFWriterDS::WriteNewBlockRecords( VSILFILE * fpIn )
 /* -------------------------------------------------------------------- */
 /*      Is this block already defined in the template header?           */
 /* -------------------------------------------------------------------- */
-        CPLString osBlockName = poThisBlockFeat->GetFieldAsString("BlockName");
+        CPLString osBlockName = poThisBlockFeat->GetFieldAsString("Block");
 
-        if( oHeaderDS.LookupBlock( osBlockName ) != NULL )
+        if( oHeaderDS.LookupBlock( osBlockName ) != nullptr )
             continue;
 
 /* -------------------------------------------------------------------- */
@@ -739,21 +827,23 @@ int OGRDXFWriterDS::WriteNewBlockRecords( VSILFILE * fpIn )
         WriteEntityID( fpIn );
         WriteValue( fpIn, 100, "AcDbSymbolTableRecord" );
         WriteValue( fpIn, 100, "AcDbBlockTableRecord" );
-        WriteValue( fpIn, 2, poThisBlockFeat->GetFieldAsString("BlockName") );
+        WriteValue( fpIn, 2, poThisBlockFeat->GetFieldAsString("Block") );
         if( !WriteValue( fpIn, 340, "0" ) )
-            return FALSE;
+            return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                      WriteNewBlockDefinitions()                      */
 /************************************************************************/
 
-int OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
+bool OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
 
 {
+    if( poLayer == nullptr )
+        poLayer = new OGRDXFWriterLayer( this, fpTemp );
     poLayer->ResetFP( fpIn );
 
 /* ==================================================================== */
@@ -766,16 +856,16 @@ int OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
 /* -------------------------------------------------------------------- */
 /*      Is this block already defined in the template header?           */
 /* -------------------------------------------------------------------- */
-        CPLString osBlockName = poThisBlockFeat->GetFieldAsString("BlockName");
+        CPLString osBlockName = poThisBlockFeat->GetFieldAsString("Block");
 
-        if( oHeaderDS.LookupBlock( osBlockName ) != NULL )
+        if( oHeaderDS.LookupBlock( osBlockName ) != nullptr )
             continue;
 
 /* -------------------------------------------------------------------- */
 /*      Write the block definition preamble.                            */
 /* -------------------------------------------------------------------- */
         CPLDebug( "DXF", "Writing BLOCK definition for '%s'.",
-                  poThisBlockFeat->GetFieldAsString("BlockName") );
+                  poThisBlockFeat->GetFieldAsString("Block") );
 
         WriteValue( fpIn, 0, "BLOCK" );
         WriteEntityID( fpIn );
@@ -785,7 +875,7 @@ int OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
         else
             WriteValue( fpIn, 8, "0" );
         WriteValue( fpIn, 100, "AcDbBlockBegin" );
-        WriteValue( fpIn, 2, poThisBlockFeat->GetFieldAsString("BlockName") );
+        WriteValue( fpIn, 2, poThisBlockFeat->GetFieldAsString("Block") );
         WriteValue( fpIn, 70, "0" );
 
         // Origin
@@ -793,27 +883,27 @@ int OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
         WriteValue( fpIn, 20, "0.0" );
         WriteValue( fpIn, 30, "0.0" );
 
-        WriteValue( fpIn, 3, poThisBlockFeat->GetFieldAsString("BlockName") );
+        WriteValue( fpIn, 3, poThisBlockFeat->GetFieldAsString("Block") );
         WriteValue( fpIn, 1, "" );
 
 /* -------------------------------------------------------------------- */
 /*      Write out the feature entities.                                 */
 /* -------------------------------------------------------------------- */
         if( poLayer->CreateFeature( poThisBlockFeat ) != OGRERR_NONE )
-            return FALSE;
+            return false;
 
 /* -------------------------------------------------------------------- */
 /*      Write out following features if they are the same block.        */
 /* -------------------------------------------------------------------- */
         while( iBlock < poBlocksLayer->apoBlocks.size()-1
-            && EQUAL(poBlocksLayer->apoBlocks[iBlock+1]->GetFieldAsString("BlockName"),
+            && EQUAL(poBlocksLayer->apoBlocks[iBlock+1]->GetFieldAsString("Block"),
                      osBlockName) )
         {
             iBlock++;
 
             if( poLayer->CreateFeature( poBlocksLayer->apoBlocks[iBlock] )
                 != OGRERR_NONE )
-                return FALSE;
+                return false;
         }
 
 /* -------------------------------------------------------------------- */
@@ -829,7 +919,7 @@ int OGRDXFWriterDS::WriteNewBlockDefinitions( VSILFILE * fpIn )
         WriteValue( fpIn, 100, "AcDbBlockEnd" );
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -844,24 +934,22 @@ void OGRDXFWriterDS::ScanForEntities( const char *pszFilename,
                                       const char *pszTarget )
 
 {
-    OGRDXFReader oReader;
-    VSILFILE *l_fp;
-
 /* -------------------------------------------------------------------- */
 /*      Open the file and setup a reader.                               */
 /* -------------------------------------------------------------------- */
-    l_fp = VSIFOpenL( pszFilename, "r" );
+    VSILFILE *l_fp = VSIFOpenL( pszFilename, "r" );
 
-    if( l_fp == NULL )
+    if( l_fp == nullptr )
         return;
 
+    OGRDXFReader oReader;
     oReader.Initialize( l_fp );
 
 /* -------------------------------------------------------------------- */
 /*      Add every code "5" line to our entities list.                   */
 /* -------------------------------------------------------------------- */
     char szLineBuf[257];
-    int  nCode;
+    int nCode = 0;
     const char *pszPortion = "HEADER";
 
     while( (nCode = oReader.ReadValue( szLineBuf, sizeof(szLineBuf) )) != -1 )
@@ -896,16 +984,13 @@ void OGRDXFWriterDS::ScanForEntities( const char *pszFilename,
 /*      Does the mentioned entity already exist?                        */
 /************************************************************************/
 
-int OGRDXFWriterDS::CheckEntityID( const char *pszEntityID )
+bool OGRDXFWriterDS::CheckEntityID( const char *pszEntityID )
 
 {
     std::set<CPLString>::iterator it;
 
     it = aosUsedEntities.find( pszEntityID );
-    if( it != aosUsedEntities.end() )
-        return TRUE;
-    else
-        return FALSE;
+    return it != aosUsedEntities.end();
 }
 
 /************************************************************************/

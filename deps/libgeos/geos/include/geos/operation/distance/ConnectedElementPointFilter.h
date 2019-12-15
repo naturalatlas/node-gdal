@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -27,10 +27,10 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom { 
-		class Coordinate;
-		class Geometry;
-	}
+namespace geom {
+class Coordinate;
+class Geometry;
+}
 }
 
 
@@ -47,24 +47,24 @@ namespace distance { // geos::operation::distance
 class GEOS_DLL ConnectedElementPointFilter: public geom::GeometryFilter {
 
 private:
-	std::vector<const geom::Coordinate*> *pts;
+    std::vector<const geom::Coordinate*>* pts;
 
 public:
-	/**
-	 * Returns a list containing a Coordinate from each Polygon, LineString, and Point
-	 * found inside the specified geometry. Thus, if the specified geometry is
-	 * not a GeometryCollection, an empty list will be returned.
-	 */
-	static std::vector<const geom::Coordinate*>* getCoordinates(const geom::Geometry *geom);
+    /**
+     * Returns a list containing a Coordinate from each Polygon, LineString, and Point
+     * found inside the specified geometry. Thus, if the specified geometry is
+     * not a GeometryCollection, an empty list will be returned.
+     */
+    static std::vector<const geom::Coordinate*>* getCoordinates(const geom::Geometry* geom);
 
-	ConnectedElementPointFilter(std::vector<const geom::Coordinate*> *newPts)
-		:
-		pts(newPts)
-	{}
+    ConnectedElementPointFilter(std::vector<const geom::Coordinate*>* newPts)
+        :
+        pts(newPts)
+    {}
 
-	void filter_ro(const geom::Geometry *geom);
+    void filter_ro(const geom::Geometry* geom) override;
 
-	//void filter_rw(geom::Geometry * /*geom*/) {};
+    //void filter_rw(geom::Geometry * /*geom*/) {};
 };
 
 

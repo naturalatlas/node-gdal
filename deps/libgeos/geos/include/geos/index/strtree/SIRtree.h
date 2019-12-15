@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -39,69 +39,85 @@ namespace strtree { // geos::index::strtree
  * @see STRtree
  */
 class GEOS_DLL SIRtree: public AbstractSTRtree {
-using AbstractSTRtree::insert;
-using AbstractSTRtree::query;
+    using AbstractSTRtree::insert;
+    using AbstractSTRtree::query;
 
 public:
 
-	/** \brief
-	 * Constructs an SIRtree with the default node capacity.
-	 */
-	SIRtree();
+    /** \brief
+     * Constructs an SIRtree with the default node capacity.
+     */
+    SIRtree();
 
-	/** \brief
-	 * Constructs an SIRtree with the given maximum number of child nodes
-	 * that a node may have
-	 */
-	SIRtree(std::size_t nodeCapacity);
+    /** \brief
+     * Constructs an SIRtree with the given maximum number of child nodes
+     * that a node may have
+     */
+    SIRtree(std::size_t nodeCapacity);
 
-	virtual ~SIRtree();
+    ~SIRtree() override;
 
-	void insert(double x1, double x2, void* item);
+    void insert(double x1, double x2, void* item);
 
-	/**
-	 * Returns items whose bounds intersect the given bounds.
-	 * @param x1 possibly equal to x2
-	 */
-	std::vector<void*>* query(double x1, double x2)
-	{
-		std::vector<void*>* results = new std::vector<void*>();
-		Interval interval((std::min)(x1, x2), (std::max)(x1, x2));
-		AbstractSTRtree::query(&interval, *results);
-		return results;
-	}
+    /**
+     * Returns items whose bounds intersect the given bounds.
+     * @param x1 possibly equal to x2
+     * @param x2
+     */
+    std::vector<void*>*
+    query(double x1, double x2)
+    {
+        std::vector<void*>* results = new std::vector<void*>();
+        Interval interval(std::min(x1, x2), std::max(x1, x2));
+        AbstractSTRtree::query(&interval, *results);
+        return results;
+    }
 
-	/**
-	 * Returns items whose bounds intersect the given value.
-	 */
-	std::vector<void*>* query(double x) { return query(x,x); }
+    /**
+     * Returns items whose bounds intersect the given value.
+     */
+    std::vector<void*>*
+    query(double x)
+    {
+        return query(x, x);
+    }
 
+    /**
+     * Disable copy construction and assignment. Apparently needed to make this
+     * class compile under MSVC. (See https://stackoverflow.com/q/29565299)
+     */
+    SIRtree(const SIRtree&) = delete;
+    SIRtree& operator=(const SIRtree&) = delete;
 
 protected:
 
-	class SIRIntersectsOp:public AbstractSTRtree::IntersectsOp {
-	public:
-		bool intersects(const void* aBounds, const void* bBounds);
-	};
+    class SIRIntersectsOp: public AbstractSTRtree::IntersectsOp {
+    public:
+        bool intersects(const void* aBounds, const void* bBounds) override;
+    };
 
-	/** \brief
-	 * Sorts the childBoundables then divides them into groups of size M, where
-	 * M is the node capacity.
-	 */
-	std::auto_ptr<BoundableList> createParentBoundables(
-			BoundableList* childBoundables, int newLevel);
+    /** \brief
+     * Sorts the childBoundables then divides them into groups of size M, where
+     * M is the node capacity.
+     */
+    std::unique_ptr<BoundableList> createParentBoundables(
+        BoundableList* childBoundables, int newLevel) override;
 
-	AbstractNode* createNode(int level);
+    AbstractNode* createNode(int level) override;
 
-	IntersectsOp* getIntersectsOp() {return intersectsOp;}
+    IntersectsOp*
+    getIntersectsOp() override
+    {
+        return intersectsOp;
+    }
 
-	std::auto_ptr<BoundableList> sortBoundables(const BoundableList* input);
+    std::unique_ptr<BoundableList> sortBoundables(const BoundableList* input) override;
 
 private:
-
-	IntersectsOp* intersectsOp;
+    IntersectsOp* intersectsOp;
+    std::vector<std::unique_ptr<Interval>> intervals;
 };
-	
+
 
 } // namespace geos::index::strtree
 } // namespace geos::index

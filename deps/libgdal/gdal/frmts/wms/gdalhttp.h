@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id: gdalhttp.h 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: gdalhttp.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -28,29 +28,44 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-typedef struct {
+#ifndef GDALHTTP_H
+#define GDALHTTP_H
+
+#include "cpl_port.h"
+#include "cpl_http.h"
+
+struct WMSHTTPRequest {
+    WMSHTTPRequest()
+        :options(nullptr), nStatus(0), pabyData(nullptr), nDataLen(0), nDataAlloc(0), m_curl_handle(nullptr), m_headers(nullptr), x(0), y(0) {}
+    ~WMSHTTPRequest();
+
     /* Input */
-    char *pszURL;
-    char **papszOptions;
+    CPLString URL;
+    // Not owned, do not release
+    const char *const *options;
+    CPLString Range;
 
     /* Output */
-    int nStatus;		/* 200 = success, 404 = not found, 0 = no response / error */
-    char *pszContentType;
-    char *pszError;
+    CPLString ContentType;
+    CPLString Error;
 
+    int nStatus;  /* 200 = success, 404 = not found, 0 = no response / error */
     GByte *pabyData;
     size_t nDataLen;
     size_t nDataAlloc;
 
-    //    int nMimePartCount;
-    //    CPLMimePart *pasMimePart;
-
-    /* Internal stuff */
+    /* curl internal stuff */
     CURL *m_curl_handle;
-    struct curl_slist *m_headers;
-    char *m_curl_error;
-} CPLHTTPRequest;
+    struct curl_slist* m_headers;
+    // Which tile is being requested
+    int x, y;
 
-void CPL_DLL CPLHTTPInitializeRequest(CPLHTTPRequest *psRequest, const char *pszURL = NULL, const char *const *papszOptions = NULL);
-void CPL_DLL CPLHTTPCleanupRequest(CPLHTTPRequest *psRequest);
-CPLErr CPL_DLL CPLHTTPFetchMulti(CPLHTTPRequest *pasRequest, int nRequestCount = 1, const char *const *papszOptions = NULL);
+    // Space for error message, doesn't seem to be used by the multi-request interface
+    std::vector<char> m_curl_error;
+};
+
+// Not public, only for use within WMS
+void WMSHTTPInitializeRequest(WMSHTTPRequest *psRequest);
+CPLErr WMSHTTPFetchMulti(WMSHTTPRequest *psRequest, int nRequestCount = 1);
+
+#endif /*  GDALHTTP_H */

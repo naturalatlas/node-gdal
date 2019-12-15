@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -29,36 +29,42 @@ namespace index { // geos.geomgraph.index
 
 void
 MonotoneChainIndexer::getChainStartIndices(const CoordinateSequence* pts,
-	vector<int> &startIndexList)
+        vector<size_t>& startIndexList)
 {
-	// find the startpoint (and endpoints) of all monotone chains
-	// in this edge
-	int start=0;
-	//vector<int>* startIndexList=new vector<int>();
-	startIndexList.push_back(start);
-	do {
-		int last=findChainEnd(pts,start);
-		startIndexList.push_back(last);
-		start=last;
-	} while(start<(int)pts->getSize()-1);
-	// copy list to an array of ints, for efficiency
-	//return startIndexList;
+    // find the startpoint (and endpoints) of all monotone chains
+    // in this edge
+    size_t start = 0;
+    //vector<int>* startIndexList=new vector<int>();
+    startIndexList.push_back(start);
+    do {
+        auto last = findChainEnd(pts, start);
+        startIndexList.push_back(last);
+        start = last;
+    }
+    while(start < pts->size() - 1);
+    // copy list to an array of ints, for efficiency
+    //return startIndexList;
 }
 
 /**
 * @return the index of the last point in the monotone chain
 */
-int MonotoneChainIndexer::findChainEnd(const CoordinateSequence* pts,int start){
-	// determine quadrant for chain
-	int chainQuad=Quadrant::quadrant(pts->getAt(start),pts->getAt(start + 1));
-	int last=start+1;
-	while(last<(int)pts->getSize()) {
-		// compute quadrant for next possible segment in chain
-		int quad=Quadrant::quadrant(pts->getAt(last - 1),pts->getAt(last));
-		if (quad!=chainQuad) break;
-		last++;
-	}
-	return last-1;
+size_t
+MonotoneChainIndexer::findChainEnd(const CoordinateSequence* pts, size_t start)
+{
+    // determine quadrant for chain
+    auto chainQuad = Quadrant::quadrant(pts->getAt(start), pts->getAt(start + 1));
+    auto last = start + 1;
+    auto sz = pts->size(); // virtual call, doesn't inline
+    while(last < sz) {
+        // compute quadrant for next possible segment in chain
+        auto quad = Quadrant::quadrant(pts->getAt(last - 1), pts->getAt(last));
+        if(quad != chainQuad) {
+            break;
+        }
+        ++last;
+    }
+    return last - 1;
 }
 
 } // namespace geos.geomgraph.index

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgeomediadatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaDataSource class.
@@ -34,22 +33,20 @@
 #include "cpl_string.h"
 #include <vector>
 
-CPL_CVSID("$Id: ogrgeomediadatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrgeomediadatasource.cpp 4971449609881d6ffdca70188292293852d12691 2017-12-17 16:48:14Z Even Rouault $")
 
 /************************************************************************/
 /*                       OGRGeomediaDataSource()                        */
 /************************************************************************/
 
-OGRGeomediaDataSource::OGRGeomediaDataSource()
-
-{
-    pszName = NULL;
-    papoLayers = NULL;
-    papoLayersInvisible = NULL;
-    nLayers = 0;
-    nLayersWithInvisible = 0;
-    bDSUpdate = FALSE;
-}
+OGRGeomediaDataSource::OGRGeomediaDataSource() :
+    papoLayers(nullptr),
+    nLayers(0),
+    papoLayersInvisible(nullptr),
+    nLayersWithInvisible(0),
+    pszName(nullptr),
+    bDSUpdate(FALSE)
+{}
 
 /************************************************************************/
 /*                       ~OGRGeomediaDataSource()                       */
@@ -58,15 +55,13 @@ OGRGeomediaDataSource::OGRGeomediaDataSource()
 OGRGeomediaDataSource::~OGRGeomediaDataSource()
 
 {
-    int         i;
-
     CPLFree( pszName );
 
-    for( i = 0; i < nLayers; i++ )
+    for( int i = 0; i < nLayers; i++ )
         delete papoLayers[i];
     CPLFree( papoLayers );
 
-    for( i = 0; i < nLayersWithInvisible; i++ )
+    for( int i = 0; i < nLayersWithInvisible; i++ )
         delete papoLayersInvisible[i];
     CPLFree( papoLayersInvisible );
 }
@@ -116,13 +111,14 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
 /*      get the DSN.                                                    */
 /*                                                                      */
 /* -------------------------------------------------------------------- */
-    char *pszDSN;
+    char *pszDSN = nullptr;
     if( STARTS_WITH_CI(pszNewName, "GEOMEDIA:") )
         pszDSN = CPLStrdup( pszNewName + 9 );
     else
     {
-        const char *pszDSNStringTemplate = NULL;
-        pszDSNStringTemplate = CPLGetConfigOption( "GEOMEDIA_DRIVER_TEMPLATE", "DRIVER=Microsoft Access Driver (*.mdb);DBQ=%s");
+        const char *pszDSNStringTemplate = 
+            CPLGetConfigOption( "GEOMEDIA_DRIVER_TEMPLATE",
+                            "DRIVER=Microsoft Access Driver (*.mdb);DBQ=%s");
         if (!CheckDSNStringTemplate(pszDSNStringTemplate))
         {
             CPLError( CE_Failure, CPLE_AppDefined,
@@ -141,7 +137,7 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
 /* -------------------------------------------------------------------- */
     CPLDebug( "Geomedia", "EstablishSession(%s)", pszDSN );
 
-    if( !oSession.EstablishSession( pszDSN, NULL, NULL ) )
+    if( !oSession.EstablishSession( pszDSN, nullptr, nullptr ) )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Unable to initialize ODBC connection to DSN for %s,\n"
@@ -161,7 +157,7 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
 /*      GAliasTable.                                                    */
 /* -------------------------------------------------------------------- */
     CPLString osGFeaturesTable = GetTableNameFromType("INGRFeatures");
-    if (osGFeaturesTable.size() == 0)
+    if (osGFeaturesTable.empty())
         return FALSE;
 
     CPLString osGeometryProperties = GetTableNameFromType("INGRGeometryProperties");
@@ -184,7 +180,7 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
         while( oStmt.Fetch() )
         {
             int i, iNew = static_cast<int>(apapszGeomColumns.size());
-            char **papszRecord = NULL;
+            char **papszRecord = nullptr;
             for( i = 0; i < 2; i++ )
                 papszRecord = CSLAddString( papszRecord,
                                             oStmt.GetColData(i) );
@@ -194,7 +190,7 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
     }
 
     std::vector<OGRSpatialReference*> apoSRS;
-    if (osGeometryProperties.size() != 0 && osGCoordSystemTable.size() != 0)
+    if (!osGeometryProperties.empty() && !osGCoordSystemTable.empty())
     {
         std::vector<CPLString> aosGUID;
         {
@@ -223,8 +219,7 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
             }
         }
 
-        int i;
-        for(i=0; i<(int)aosGUID.size();i++)
+        for( size_t i = 0; i < aosGUID.size(); i++ )
         {
             apoSRS.push_back(GetGeomediaSRS(osGCoordSystemTable, aosGUID[i]));
         }
@@ -233,19 +228,16 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
 /* -------------------------------------------------------------------- */
 /*      Create a layer for each spatial table.                          */
 /* -------------------------------------------------------------------- */
-    unsigned int iTable;
 
     papoLayers = (OGRGeomediaLayer **) CPLCalloc(apapszGeomColumns.size(),
                                              sizeof(void*));
 
-    for( iTable = 0; iTable < apapszGeomColumns.size(); iTable++ )
+    for( unsigned int iTable = 0; iTable < apapszGeomColumns.size(); iTable++ )
     {
         char **papszRecord = apapszGeomColumns[iTable];
-        OGRGeomediaTableLayer  *poLayer;
+        OGRGeomediaTableLayer *poLayer = new OGRGeomediaTableLayer( this );
 
-        poLayer = new OGRGeomediaTableLayer( this );
-
-        if( poLayer->Initialize( papszRecord[0], papszRecord[1], (apoSRS.size()) ? apoSRS[iTable] : NULL )
+        if( poLayer->Initialize( papszRecord[0], papszRecord[1], (apoSRS.size()) ? apoSRS[iTable] : nullptr )
             != CE_None )
         {
             delete poLayer;
@@ -259,7 +251,6 @@ int OGRGeomediaDataSource::Open( const char * pszNewName, int bUpdate,
 
     return TRUE;
 }
-
 
 /************************************************************************/
 /*                     GetTableNameFromType()                           */
@@ -288,7 +279,6 @@ CPLString OGRGeomediaDataSource::GetTableNameFromType(const char* pszTableType)
     return "";
 }
 
-
 /************************************************************************/
 /*                          GetGeomediaSRS()                            */
 /************************************************************************/
@@ -296,17 +286,17 @@ CPLString OGRGeomediaDataSource::GetTableNameFromType(const char* pszTableType)
 OGRSpatialReference* OGRGeomediaDataSource::GetGeomediaSRS(const char* pszGCoordSystemTable,
                                                       const char* pszGCoordSystemGUID)
 {
-    if (pszGCoordSystemTable == NULL || pszGCoordSystemGUID == NULL)
-        return NULL;
+    if (pszGCoordSystemTable == nullptr || pszGCoordSystemGUID == nullptr)
+        return nullptr;
 
     OGRLayer* poGCoordSystemTable = GetLayerByName(pszGCoordSystemTable);
-    if (poGCoordSystemTable == NULL)
-        return NULL;
+    if (poGCoordSystemTable == nullptr)
+        return nullptr;
 
     poGCoordSystemTable->ResetReading();
 
-    OGRFeature* poFeature;
-    while((poFeature = poGCoordSystemTable->GetNextFeature()) != NULL)
+    OGRFeature* poFeature = nullptr;
+    while((poFeature = poGCoordSystemTable->GetNextFeature()) != nullptr)
     {
         const char* pszCSGUID = poFeature->GetFieldAsString("CSGUID");
         if (pszCSGUID && strcmp(pszCSGUID, pszGCoordSystemGUID) == 0)
@@ -319,7 +309,7 @@ OGRSpatialReference* OGRGeomediaDataSource::GetGeomediaSRS(const char* pszGCoord
         delete poFeature;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -339,11 +329,10 @@ OGRLayer *OGRGeomediaDataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
     else
         return papoLayers[iLayer];
 }
-
 
 /************************************************************************/
 /*                          GetLayerByName()                            */
@@ -352,8 +341,8 @@ OGRLayer *OGRGeomediaDataSource::GetLayer( int iLayer )
 OGRLayer *OGRGeomediaDataSource::GetLayerByName( const char* pszNameIn )
 
 {
-    if (pszNameIn == NULL)
-        return NULL;
+    if (pszNameIn == nullptr)
+        return nullptr;
     OGRLayer* poLayer = OGRDataSource::GetLayerByName(pszNameIn);
     if (poLayer)
         return poLayer;
@@ -366,14 +355,12 @@ OGRLayer *OGRGeomediaDataSource::GetLayerByName( const char* pszNameIn )
             return poLayer;
     }
 
-    OGRGeomediaTableLayer  *poGeomediaLayer;
+    OGRGeomediaTableLayer *poGeomediaLayer = new OGRGeomediaTableLayer( this );
 
-    poGeomediaLayer = new OGRGeomediaTableLayer( this );
-
-    if( poGeomediaLayer->Initialize(pszNameIn, NULL, NULL) != CE_None )
+    if( poGeomediaLayer->Initialize(pszNameIn, nullptr, nullptr) != CE_None )
     {
         delete poGeomediaLayer;
-        return NULL;
+        return nullptr;
     }
 
     papoLayersInvisible = (OGRGeomediaLayer**)CPLRealloc(papoLayersInvisible,
@@ -411,7 +398,7 @@ OGRLayer * OGRGeomediaDataSource::ExecuteSQL( const char *pszSQLCommand,
         CPLError( CE_Failure, CPLE_AppDefined,
                   "%s", oSession.GetLastError() );
         delete poStmt;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -421,18 +408,17 @@ OGRLayer * OGRGeomediaDataSource::ExecuteSQL( const char *pszSQLCommand,
     {
         delete poStmt;
         CPLErrorReset();
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Create a results layer.  It will take ownership of the          */
 /*      statement.                                                      */
 /* -------------------------------------------------------------------- */
-    OGRGeomediaSelectLayer *poLayer = NULL;
+    OGRGeomediaSelectLayer *poLayer =
+                                new OGRGeomediaSelectLayer( this, poStmt );
 
-    poLayer = new OGRGeomediaSelectLayer( this, poStmt );
-
-    if( poSpatialFilter != NULL )
+    if( poSpatialFilter != nullptr )
         poLayer->SetSpatialFilter( poSpatialFilter );
 
     return poLayer;

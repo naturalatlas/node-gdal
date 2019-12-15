@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: geoconcept.h
+ * $Id: geoconcept.h$
  *
  * Name:     geoconcept.h
  * Project:  OpenGIS Simple Features Reference Implementation
@@ -261,7 +261,7 @@ struct _tSubType_GCIO {
   GCExtent*       frame;
   OGRFeatureDefnH _poFeaDefn;
   long            id;
-  long            _foff;     /* offset 1st feature */
+  vsi_l_offset    _foff;     /* offset 1st feature */
   unsigned long   _flin;     /* 1st ligne 1st feature */
   unsigned long   _nFeatures;
   GCTypeKind      knd;
@@ -299,9 +299,9 @@ struct _GCExportFileH {
   char*                 path;
   char*                 bn;
   char*                 ext;
-  FILE*                 H;
+  VSILFILE*                 H;
   GCExportFileMetadata* header;
-  long                  coff;
+  vsi_l_offset          coff;
   unsigned long         clin;
   unsigned long         nbObjects;
   GCAccessMode          mode;
@@ -495,6 +495,5 @@ OGRFeatureH GCIOAPI_CALL ReadNextFeature_GCIO ( GCSubType* theSubType );
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* ndef GEOCONCEPT_H_INCLUDED */

@@ -1,0 +1,87 @@
+--- libgdal/gdal/frmts/sdts/sdts2shp.cpp	2019-06-19 12:28:06.000000000 -0400
++++ libgdal/gdal/frmts/sdts/nu.cpp	2019-06-19 12:28:52.000000000 -0400
+@@ -687,7 +687,7 @@
+
+             switch( poSFDefn->GetType() )
+             {
+-              case DDFString:
++              case DDFString: {
+                 if( nWidth == 0 )
+                 {
+                     int         nMaxBytes;
+@@ -701,25 +701,26 @@
+
+                 DBFAddField( hDBF, poSFDefn->GetName(), FTString, nWidth, 0 );
+                 break;
+-
+-              case DDFInt:
++              }
++              case DDFInt: {
+                 if( nWidth == 0 )
+                     nWidth = 9;
+
+                 DBFAddField( hDBF, poSFDefn->GetName(), FTInteger, nWidth, 0 );
+                 break;
+-
+-              case DDFFloat:
++              }
++              case DDFFloat: {
+                 DBFAddField( hDBF, poSFDefn->GetName(), FTDouble, 18, 6 );
+                 break;
+-
+-              default:
++              }
++              default: {
+                 fprintf( stderr,
+                          "Dropping attribute `%s' of module `%s'.  "
+                          "Type unsupported\n",
+                          poSFDefn->GetName(),
+                          papszModuleList[iModule] );
+                 break;
++              }
+             }
+         }
+
+@@ -790,15 +791,15 @@
+ /* -------------------------------------------------------------------- */
+         switch( poSFDefn->GetType() )
+         {
+-          case DDFString:
++          case DDFString: {
+             const char *pszValue
+                 = poSFDefn->ExtractStringData(pachData, nMaxBytes, NULL);
+
+             if( iField != -1 )
+                 DBFWriteStringAttribute(hDBF, iRecord, iField, pszValue );
+             break;
+-
+-          case DDFFloat:
++          }
++          case DDFFloat: {
+             double      dfValue;
+
+             dfValue = poSFDefn->ExtractFloatData(pachData, nMaxBytes,
+@@ -807,8 +808,8 @@
+             if( iField != -1 )
+                 DBFWriteDoubleAttribute( hDBF, iRecord, iField, dfValue );
+             break;
+-
+-          case DDFInt:
++          }
++          case DDFInt: {
+             int         nValue;
+
+             nValue = poSFDefn->ExtractIntData(pachData, nMaxBytes, NULL);
+@@ -816,9 +817,10 @@
+             if( iField != -1 )
+                 DBFWriteIntegerAttribute( hDBF, iRecord, iField, nValue );
+             break;
+-
+-          default:
++          }
++          default: {
+             break;
++          }
+         }
+     } /* next subfield */
+ }

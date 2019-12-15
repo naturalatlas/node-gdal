@@ -25,12 +25,12 @@ Contributors:  Thomas Maurer
 #define IMAGE_H
 
 // ---- includes ------------------------------------------------------------ ;
-#include "Defines.h"
+#include "DefinesV1.h"
 #include <string>
 
 NAMESPACE_LERC_START
 
-/**	Base class for all image classes
+/**     Base class for all image classes
  *
  */
 
@@ -38,7 +38,7 @@ class Image
 {
 public:
 
-  virtual ~Image()    {};
+  virtual ~Image()    {}
 
   enum Type
   {
@@ -55,7 +55,7 @@ public:
     Last_Type_
   };
 
-  bool isType(Type t) const	 { return t == type_; }
+  bool isType(Type t) const      { return t == type_; }
   Type getType() const           { return type_; }
   int getWidth() const          { return width_; }
   int getHeight() const         { return height_; }
@@ -70,18 +70,17 @@ public:
 
 protected:
 
-  Image() : type_(Last_Type_), width_(0), height_(0)   {};
+  Image() : type_(Last_Type_), width_(0), height_(0)   {}
 
   /// compare
   bool operator == (const Image& img) const
   {
       return type_ == img.type_ && width_ == img.width_ && height_ == img.height_;
   }
-  bool operator != (const Image& img) const	{ return !operator==(img); };
+  bool operator != (const Image& img) const     { return !operator==(img); }
 
   Type type_;
   int width_, height_;
-
 };
 
 NAMESPACE_LERC_END

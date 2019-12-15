@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: msg_basic_types.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  MSG Native Reader
  * Purpose:  Basic types implementation.
@@ -28,9 +27,10 @@
  ****************************************************************************/
 
 #include "cpl_port.h"
+#include "cpl_error.h"
 #include "msg_basic_types.h"
 
-CPL_CVSID("$Id: msg_basic_types.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: msg_basic_types.cpp 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 #include <stdio.h>
 
@@ -93,31 +93,33 @@ void to_string(PH_DATA& d) {
     d.value[49] = 0;
 }
 
+#ifdef notdef
 // unit tests on structures
 bool perform_type_size_check(void) {
     bool success = true;
     if (sizeof(MAIN_PROD_HEADER) != 3674) {
-        fprintf(stderr, "MAIN_PROD_HEADER size not 3674 (%lu)\n", (unsigned long)sizeof(MAIN_PROD_HEADER));
+        fprintf(stderr, "MAIN_PROD_HEADER size not 3674 (%lu)\n", (unsigned long)sizeof(MAIN_PROD_HEADER));/*ok*/
         success = false;
     }
     if (sizeof(SECONDARY_PROD_HEADER) != 1120) {
-        fprintf(stderr, "SECONDARY_PROD_HEADER size not 1120 (%lu)\n", (unsigned long)sizeof(SECONDARY_PROD_HEADER));
+        fprintf(stderr, "SECONDARY_PROD_HEADER size not 1120 (%lu)\n", (unsigned long)sizeof(SECONDARY_PROD_HEADER));/*ok*/
         success = false;
     }
     if (sizeof(SUB_VISIRLINE) != 27) {
-        fprintf(stderr, "SUB_VISIRLINE size not 17 (%lu)\n", (unsigned long)sizeof(SUB_VISIRLINE));
+        fprintf(stderr, "SUB_VISIRLINE size not 17 (%lu)\n", (unsigned long)sizeof(SUB_VISIRLINE));/*ok*/
         success = false;
     }
     if (sizeof(GP_PK_HEADER) != 22) {
-        fprintf(stderr, "GP_PK_HEADER size not 22 (%lu)\n", (unsigned long)sizeof(GP_PK_HEADER));
+        fprintf(stderr, "GP_PK_HEADER size not 22 (%lu)\n", (unsigned long)sizeof(GP_PK_HEADER));/*ok*/
         success = false;
     }
     if (sizeof(GP_PK_SH1) != 16) {
-        fprintf(stderr, "GP_PK_SH1 size not 16 (%lu)\n", (unsigned long)sizeof(GP_PK_SH1));
+        fprintf(stderr, "GP_PK_SH1 size not 16 (%lu)\n", (unsigned long)sizeof(GP_PK_SH1));/*ok*/
         success = false;
     }
     return success;
 }
+#endif
 
 const double Conversions::altitude      =   42164;          // from origin
 const double Conversions::req           =   6378.1690;       // earthequatorial radius
@@ -180,7 +182,7 @@ void Conversions::compute_pixel_xyz(double line, double column, double& x,double
         z = k * r;
     } else {
         x = y = z = 0;
-        fprintf(stderr, "Warning: pixel not visible\n");
+        CPLError(CE_Warning, CPLE_AppDefined, "Warning: pixel not visible");
     }
 }
 

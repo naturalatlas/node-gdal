@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -25,9 +25,9 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom { 
-		class Coordinate;
-	}
+namespace geom {
+class Coordinate;
+}
 }
 
 namespace geos {
@@ -43,24 +43,21 @@ namespace geom { // geos::geom
 class GEOS_DLL CoordinateArraySequenceFactory: public CoordinateSequenceFactory {
 
 public:
+    std::unique_ptr<CoordinateSequence> create() const override;
 
-	/** \brief
-	 * Returns a CoordinateArraySequence based on the given vector
-	 * (the vector is not copied - callers give up ownership).
-	 */
-	CoordinateSequence *create(std::vector<Coordinate> *coords) const;
+    std::unique_ptr<CoordinateSequence> create(std::vector<Coordinate>* coords, std::size_t dims = 0) const override;
 
-	CoordinateSequence *create(std::vector<Coordinate> *coords, std::size_t dims) const;
+    std::unique_ptr<CoordinateSequence> create(std::vector<Coordinate> && coords, std::size_t dims = 0) const override;
 
-   	/** @see CoordinateSequenceFactory::create(std::size_t, int) */
-	CoordinateSequence *create(std::size_t size, std::size_t dimension=0) const;
+    /** @see CoordinateSequenceFactory::create(std::size_t, int) */
+    std::unique_ptr<CoordinateSequence> create(std::size_t size, std::size_t dimension = 0) const override;
 
-	CoordinateSequence *create(const CoordinateSequence &coordSeq) const;
+    std::unique_ptr<CoordinateSequence> create(const CoordinateSequence& coordSeq) const override;
 
-	/** \brief
-	 * Returns the singleton instance of CoordinateArraySequenceFactory
-	 */
-	static const CoordinateSequenceFactory *instance();
+    /** \brief
+     * Returns the singleton instance of CoordinateArraySequenceFactory
+     */
+    static const CoordinateSequenceFactory* instance();
 };
 
 /// This is for backward API compatibility

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id$
+ * $Id: gdal_utils_priv.h 9d450e52444f125a99f6a38c1e6ee820bc9b4ce2 2019-01-14 20:23:45 +0100 Even Rouault $
  *
  * Project:  GDAL Utilities
  * Purpose:  GDAL Utilities Private Declarations.
@@ -30,6 +30,8 @@
 #ifndef GDAL_UTILS_PRIV_H_INCLUDED
 #define GDAL_UTILS_PRIV_H_INCLUDED
 
+#ifndef DOXYGEN_SKIP
+
 #include "cpl_port.h"
 #include "gdal_utils.h"
 
@@ -56,7 +58,6 @@ struct GDALTranslateOptionsForBinary
     int bQuiet;
     int bCopySubDatasets;
     char** papszOpenOptions;
-    int bFormatExplicitlySet;
     char* pszFormat;
 };
 
@@ -70,10 +71,10 @@ struct GDALWarpAppOptionsForBinary
     /*! output dataset open option (format specific) */
     char **papszDestOpenOptions;
 
+    char **papszCreateOptions;
+
     int bOverwrite;
     int bCreateOutput;
-    int bFormatExplicitlySet;
-    char* pszFormat;
 };
 
 /* Access modes */
@@ -91,7 +92,6 @@ struct GDALVectorTranslateOptionsForBinary
     char* pszDestDataSource;
     int bQuiet;
     char** papszOpenOptions;
-    int bFormatExplicitlySet;
     char* pszFormat;
     GDALVectorTranslateAccessMode eAccessMode;
 };
@@ -103,8 +103,6 @@ struct GDALDEMProcessingOptionsForBinary
     char* pszColorFilename;
     char* pszDstFilename;
     int bQuiet;
-    int bFormatExplicitlySet;
-    char* pszFormat;
 };
 
 struct GDALNearblackOptionsForBinary
@@ -112,8 +110,6 @@ struct GDALNearblackOptionsForBinary
     char* pszInFile;
     char* pszOutFile;
     int bQuiet;
-    int bFormatExplicitlySet;
-    char* pszFormat;
 };
 
 struct GDALGridOptionsForBinary
@@ -121,7 +117,6 @@ struct GDALGridOptionsForBinary
     char* pszSource;
     char* pszDest;
     int bQuiet;
-    int bFormatExplicitlySet;
     char* pszFormat;
 };
 
@@ -130,7 +125,6 @@ struct GDALRasterizeOptionsForBinary
     char* pszSource;
     char* pszDest;
     int bQuiet;
-    int bFormatExplicitlySet;
     char* pszFormat;
     int bCreateOutput;
 };
@@ -145,5 +139,7 @@ struct GDALBuildVRTOptionsForBinary
 };
 
 CPL_C_END
+
+#endif /* #ifndef DOXYGEN_SKIP */
 
 #endif /* GDAL_UTILS_PRIV_H_INCLUDED */

@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -27,24 +27,24 @@
 namespace geos {
 namespace algorithm { // geos::algorithm
 
-INLINE 
-ConvexHull::ConvexHull(const geom::Geometry *newGeometry)
-	:
-	geomFactory(newGeometry->getFactory())
+INLINE
+ConvexHull::ConvexHull(const geom::Geometry* newGeometry)
+    :
+    geomFactory(newGeometry->getFactory())
 {
-	extractCoordinates(newGeometry);
+    extractCoordinates(newGeometry);
 }
 
-INLINE 
+INLINE
 ConvexHull::~ConvexHull()
 {
 }
 
 INLINE void
-ConvexHull::extractCoordinates(const geom::Geometry *geom)
+ConvexHull::extractCoordinates(const geom::Geometry* geom)
 {
-	util::UniqueCoordinateArrayFilter filter(inputPts);
-	geom->apply_ro(&filter);
+    util::UniqueCoordinateArrayFilter filter(inputPts);
+    geom->apply_ro(&filter);
 }
 
 } // namespace geos::algorithm

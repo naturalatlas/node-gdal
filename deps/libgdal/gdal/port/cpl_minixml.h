@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_minixml.h 33666 2016-03-07 05:21:07Z goatbar $
+ * $Id: cpl_minixml.h df507edcc67aa14ada1432baf516f49e6557fb06 2018-04-10 15:26:13 +0200 Even Rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  Declarations for MiniXML Handler.
@@ -40,6 +40,7 @@
 
 CPL_C_START
 
+/** XML node type */
 typedef enum
 {
     /*! Node is an element */           CXT_Element = 0,
@@ -117,14 +118,37 @@ typedef struct CPLXMLNode
     struct CPLXMLNode  *psChild;
 } CPLXMLNode;
 
-
 CPLXMLNode CPL_DLL *CPLParseXMLString( const char * );
 void       CPL_DLL  CPLDestroyXMLNode( CPLXMLNode * );
 CPLXMLNode CPL_DLL *CPLGetXMLNode( CPLXMLNode *poRoot,
                                    const char *pszPath );
+#if defined(__cplusplus) && !defined(CPL_SUPRESS_CPLUSPLUS)
+/*! @cond Doxygen_Suppress */
+extern "C++"
+{
+inline const CPLXMLNode *CPLGetXMLNode( const CPLXMLNode *poRoot,
+                                        const char *pszPath ) {
+    return const_cast<const CPLXMLNode*>(CPLGetXMLNode(
+        const_cast<CPLXMLNode*>(poRoot), pszPath));
+}
+}
+/*! @endcond */
+#endif
 CPLXMLNode CPL_DLL *CPLSearchXMLNode( CPLXMLNode *poRoot,
                                       const char *pszTarget );
-const char CPL_DLL *CPLGetXMLValue( CPLXMLNode *poRoot,
+#if defined(__cplusplus) && !defined(CPL_SUPRESS_CPLUSPLUS)
+/*! @cond Doxygen_Suppress */
+extern "C++"
+{
+inline const CPLXMLNode *CPLSearchXMLNode( const CPLXMLNode *poRoot,
+                                           const char *pszTarget ) {
+    return const_cast<const CPLXMLNode*>(CPLSearchXMLNode(
+        const_cast<CPLXMLNode*>(poRoot), pszTarget));
+}
+}
+/*! @endcond */
+#endif
+const char CPL_DLL *CPLGetXMLValue( const CPLXMLNode *poRoot,
                                     const char *pszPath,
                                     const char *pszDefault );
 CPLXMLNode CPL_DLL *CPLCreateXMLNode( CPLXMLNode *poParent,
@@ -143,7 +167,7 @@ CPLXMLNode CPL_DLL *CPLCreateXMLElementAndValue( CPLXMLNode *psParent,
 void       CPL_DLL CPLAddXMLAttributeAndValue( CPLXMLNode *psParent,
                                                  const char *pszName,
                                                  const char *pszValue );
-CPLXMLNode CPL_DLL *CPLCloneXMLTree( CPLXMLNode *psTree );
+CPLXMLNode CPL_DLL *CPLCloneXMLTree( const CPLXMLNode *psTree );
 int        CPL_DLL CPLSetXMLValue( CPLXMLNode *psRoot,  const char *pszPath,
                                    const char *pszValue );
 void       CPL_DLL CPLStripXMLNamespace( CPLXMLNode *psRoot,
@@ -157,25 +181,38 @@ int        CPL_DLL CPLSerializeXMLTreeToFile( const CPLXMLNode *psTree,
 
 CPL_C_END
 
-#ifdef __cplusplus
-// Manage a tree of XML nodes so that all nodes are freed when the instance goes
-// out of scope.  Only the top level node should be in a CPLXMLTreeCloser.
-class CPLXMLTreeCloser {
- public:
-  explicit CPLXMLTreeCloser(CPLXMLNode* data) { the_data_ = data; }
+#if defined(__cplusplus) && !defined(CPL_SUPRESS_CPLUSPLUS)
 
-  ~CPLXMLTreeCloser() {
-    if (the_data_) CPLDestroyXMLNode(the_data_);
-  }
+extern "C++"
+{
+#ifndef DOXYGEN_SKIP
+#include <memory>
+#endif
 
-  // Modifying the contents pointed to by the return is allowed.
-  CPLXMLNode* get() const { return the_data_; }
-
-  CPLXMLNode* operator->() const { return get(); }
-
- private:
-  CPLXMLNode* the_data_;
+/*! @cond Doxygen_Suppress */
+struct CPLXMLTreeCloserDeleter
+{
+    void operator()(CPLXMLNode* psNode) const { CPLDestroyXMLNode(psNode); }
 };
+/*! @endcond */
+
+/** Manage a tree of XML nodes so that all nodes are freed when the instance goes
+ * out of scope.  Only the top level node should be in a CPLXMLTreeCloser.
+ */
+class CPLXMLTreeCloser: public std::unique_ptr<CPLXMLNode, CPLXMLTreeCloserDeleter>
+{
+ public:
+  /** Constructor */
+  explicit CPLXMLTreeCloser(CPLXMLNode* data):
+    std::unique_ptr<CPLXMLNode, CPLXMLTreeCloserDeleter>(data) {}
+
+  /** Returns a pointer to the document (root) element
+   * @return the node pointer */
+  CPLXMLNode* getDocumentElement();
+};
+
+} // extern "C++"
+
 #endif /* __cplusplus */
 
 #endif /* CPL_MINIXML_H_INCLUDED */

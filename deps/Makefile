@@ -1,7 +1,11 @@
 .PHONY: clean
 
 all:
+	./libsqlite.sh
 	./libgdal.sh
+	./libexpat.sh
+	./libgeos.sh
+	./libproj.sh
 
 clean:
 	rm -rf libgdal/gyp-formats

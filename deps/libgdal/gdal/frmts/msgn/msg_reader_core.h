@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msg_reader_core.h 11698 2007-06-25 16:33:06Z warmerdam $
+ * $Id: msg_reader_core.h e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $
  *
  * Project:  MSG Native Reader
  * Purpose:  Base class for reading in the headers of MSG native images
@@ -32,6 +32,7 @@
 
 #include "msg_basic_types.h"
 #include <stdio.h>
+#include "cpl_vsi.h"
 
 namespace msg_native_format {
 
@@ -60,55 +61,55 @@ typedef enum {
 
 class Msg_reader_core {
 public:
-    Msg_reader_core(const char* fname);
-    Msg_reader_core(FILE* fp);
-    virtual ~Msg_reader_core(void) {};
+    explicit Msg_reader_core(const char* fname);
+    explicit Msg_reader_core(VSILFILE* fp);
+    virtual ~Msg_reader_core() {}
 
-    bool get_open_success(void) { return _open_success; }
+    bool get_open_success() const { return _open_success; }
 
     #ifndef GDAL_SUPPORT
     virtual void radiance_to_blackbody(int using_chan_no = 0) = 0;   // can override which channel's parameters to use
     virtual double* get_data(int chan_no=0) = 0;
     #endif
 
-    unsigned int get_lines(void) { return _lines; }
-    unsigned int get_columns(void) { return _columns; }
+    unsigned int get_lines() const { return _lines; }
+    unsigned int get_columns() const { return _columns; }
 
-    void get_pixel_geo_coordinates(unsigned int line, unsigned int column, double& longitude, double& latitude); // x and y relative to this image, not full disc image
+    void get_pixel_geo_coordinates(unsigned int line, unsigned int column, double& longitude, double& latitude) const; // x and y relative to this image, not full disc image
     void get_pixel_geo_coordinates(double line, double column, double& longitude, double& latitude); // x and y relative to this image, not full disc image
     double compute_pixel_area_sqkm(double line, double column);
 
     static const Blackbody_lut_type Blackbody_LUT[MSG_NUM_CHANNELS+1];
 
-    unsigned int get_year(void) { return _year; }
-    unsigned int get_month(void) { return _month; }
-    unsigned int get_day(void) { return _day; }
-    unsigned int get_hour(void) { return _hour; }
-    unsigned int get_minute(void) { return _minute; }
+    unsigned int get_year() const { return _year; }
+    unsigned int get_month() const { return _month; }
+    unsigned int get_day() const { return _day; }
+    unsigned int get_hour() const { return _hour; }
+    unsigned int get_minute() const { return _minute; }
 
-    unsigned int get_line_start(void) { return _line_start; }
-    unsigned int get_col_start(void) { return _col_start; }
+    unsigned int get_line_start() const { return _line_start; }
+    unsigned int get_col_start() const { return _col_start; }
 
-    float get_col_dir_step(void) { return _col_dir_step; }
-    float get_line_dir_step(void) { return _line_dir_step; }
+    float get_col_dir_step() const { return _col_dir_step; }
+    float get_line_dir_step() const { return _line_dir_step; }
 
-    unsigned int get_f_data_offset(void) { return _f_data_offset; }
-    unsigned int get_visir_bytes_per_line(void) { return _visir_bytes_per_line; }
-    unsigned int get_visir_packet_size(void) { return _visir_packet_size; }
-    unsigned int get_hrv_bytes_per_line(void) { return _hrv_bytes_per_line; }
-    unsigned int get_hrv_packet_size(void) { return _hrv_packet_size; }
-    unsigned int get_interline_spacing(void) { return _interline_spacing; }
+    unsigned int get_f_data_offset() const { return _f_data_offset; }
+    unsigned int get_visir_bytes_per_line() const { return _visir_bytes_per_line; }
+    unsigned int get_visir_packet_size() const { return _visir_packet_size; }
+    unsigned int get_hrv_bytes_per_line() const { return _hrv_bytes_per_line; }
+    unsigned int get_hrv_packet_size() const { return _hrv_packet_size; }
+    unsigned int get_interline_spacing( )const { return _interline_spacing; }
 
-    unsigned char* get_band_map(void) { return _bands; }
+    const unsigned char* get_band_map() const { return _bands; }
 
-    CALIBRATION*  get_calibration_parameters(void) { return _calibration; }
+    const CALIBRATION*  get_calibration_parameters() const { return _calibration; }
 
 private:
-    void read_metadata_block(FILE* fp);
+    void read_metadata_block(VSILFILE* fp);
 
 protected:
 
-    int _chan_to_idx(Msg_channel_names channel);
+    static int _chan_to_idx(Msg_channel_names channel);
 
     unsigned int    _lines;
     unsigned int    _columns;

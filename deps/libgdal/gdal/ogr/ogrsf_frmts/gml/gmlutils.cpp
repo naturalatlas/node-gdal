@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gmlutils.cpp 33702 2016-03-11 06:20:16Z goatbar $
  *
  * Project:  GML Utils
  * Purpose:  GML reader
@@ -27,42 +26,55 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "gmlutils.h"
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <map>
+#include <string>
+#include <utility>
+
+#include "cpl_conv.h"
 #include "cpl_string.h"
 #include "ogr_api.h"
+#include "ogr_core.h"
 #include "ogr_p.h"
-#include <string>
-#include <map>
+#include "ogr_spatialref.h"
+
+CPL_CVSID("$Id: gmlutils.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                GML_ExtractSrsNameFromGeometry()                      */
 /************************************************************************/
 
-const char* GML_ExtractSrsNameFromGeometry(const CPLXMLNode* const * papsGeometry,
-                                     std::string& osWork,
-                                     bool bConsiderEPSGAsURN)
+const char *
+GML_ExtractSrsNameFromGeometry(const CPLXMLNode *const *papsGeometry,
+                               std::string &osWork, bool bConsiderEPSGAsURN)
 {
-    if (papsGeometry[0] != NULL && papsGeometry[1] == NULL)
+    if (papsGeometry[0] != nullptr && papsGeometry[1] == nullptr)
     {
-        const char* pszSRSName = CPLGetXMLValue((CPLXMLNode*)papsGeometry[0], "srsName", NULL);
-        if (pszSRSName)
+        const char *pszSRSName =
+            CPLGetXMLValue(papsGeometry[0],
+                           "srsName", nullptr);
+        if(pszSRSName)
         {
-            int nLen = static_cast<int>(strlen(pszSRSName));
+            const int nLen = static_cast<int>(strlen(pszSRSName));
 
-            if (STARTS_WITH(pszSRSName, "EPSG:") &&
-                bConsiderEPSGAsURN)
+            if(STARTS_WITH(pszSRSName, "EPSG:") && bConsiderEPSGAsURN)
             {
-                osWork.reserve(22 + nLen-5);
+                osWork.reserve(22 + nLen - 5);
                 osWork.assign("urn:ogc:def:crs:EPSG::", 22);
-                osWork.append(pszSRSName+5, nLen-5);
+                osWork.append(pszSRSName + 5, nLen - 5);
                 return osWork.c_str();
             }
-            else if (STARTS_WITH(pszSRSName, "http://www.opengis.net/gml/srs/epsg.xml#"))
+            else if (STARTS_WITH(pszSRSName,
+                                "http://www.opengis.net/gml/srs/epsg.xml#"))
             {
-                osWork.reserve(5 + nLen-40 );
+                osWork.reserve(5 + nLen - 40);
                 osWork.assign("EPSG:", 5);
-                osWork.append(pszSRSName+40, nLen-40);
+                osWork.append(pszSRSName + 40, nLen - 40);
                 return osWork.c_str();
             }
             else
@@ -71,38 +83,40 @@ const char* GML_ExtractSrsNameFromGeometry(const CPLXMLNode* const * papsGeometr
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
 /*                       GML_IsSRSLatLongOrder()                        */
 /************************************************************************/
 
-bool GML_IsSRSLatLongOrder(const char* pszSRSName)
+bool GML_IsSRSLatLongOrder(const char *pszSRSName)
 {
-    if (pszSRSName == NULL)
+    if(pszSRSName == nullptr)
         return false;
 
-    if (STARTS_WITH(pszSRSName, "urn:"))
+    if(STARTS_WITH(pszSRSName, "urn:") && strstr(pszSRSName, ":4326") != nullptr)
     {
-        if (strstr(pszSRSName, ":4326") != NULL)
+        // Shortcut.
+        return true;
+    }
+    /* fguuid:jgd20??.bl (Japanese FGD GML v4) */
+    else if( EQUALN(pszSRSName, "fguuid:jgd2011.bl", 17) ||
+            EQUALN(pszSRSName, "fguuid:jgd2001.bl", 17) )
+    {
+        return true;
+    }
+    else if( !EQUALN(pszSRSName, "EPSG:", 5) )
+    {
+        OGRSpatialReference oSRS;
+        if(oSRS.SetFromUserInput(pszSRSName) == OGRERR_NONE)
         {
-            /* Shortcut ... */
-            return true;
-        }
-        else
-        {
-            OGRSpatialReference oSRS;
-            if (oSRS.importFromURN(pszSRSName) == OGRERR_NONE)
-            {
-                if (oSRS.EPSGTreatsAsLatLong() || oSRS.EPSGTreatsAsNorthingEasting())
-                    return true;
-            }
+            if(oSRS.EPSGTreatsAsLatLong() || oSRS.EPSGTreatsAsNorthingEasting())
+                return true;
         }
     }
     return false;
 }
-
 
 /************************************************************************/
 /*                GML_BuildOGRGeometryFromList_CreateCache()            */
@@ -115,33 +129,28 @@ public:
     bool                 bAxisInvert;
     OGRSpatialReference* poSRS;
 
-    SRSDesc() : bAxisInvert(false), poSRS(NULL)
-    {
-    }
+    SRSDesc() : bAxisInvert(false), poSRS(nullptr) {}
 };
 
 class SRSCache
 {
     std::map<std::string, SRSDesc> oMap;
-    SRSDesc                        oLastDesc;
+    SRSDesc oLastDesc;
 
-public:
-
-    SRSCache()
-    {
-    }
+  public:
+    SRSCache() {}
 
     ~SRSCache()
     {
         std::map<std::string, SRSDesc>::iterator oIter;
         for( oIter = oMap.begin(); oIter != oMap.end(); ++oIter )
         {
-            if( oIter->second.poSRS != NULL )
+            if( oIter->second.poSRS != nullptr )
                 oIter->second.poSRS->Release();
         }
     }
 
-    SRSDesc& Get(const std::string& osSRSName)
+    SRSDesc &Get(const std::string &osSRSName)
     {
         if( osSRSName == oLastDesc.osSRSName )
             return oLastDesc;
@@ -156,99 +165,109 @@ public:
         oLastDesc.osSRSName = osSRSName;
         oLastDesc.bAxisInvert = GML_IsSRSLatLongOrder(osSRSName.c_str());
         oLastDesc.poSRS = new OGRSpatialReference();
-        if( oLastDesc.poSRS->SetFromUserInput(osSRSName.c_str()) != OGRERR_NONE )
+        oLastDesc.poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        if( oLastDesc.poSRS->SetFromUserInput(osSRSName.c_str()) !=
+            OGRERR_NONE )
         {
             delete oLastDesc.poSRS;
-            oLastDesc.poSRS = NULL;
+            oLastDesc.poSRS = nullptr;
         }
         oMap[osSRSName] = oLastDesc;
         return oLastDesc;
     }
 };
 
-void* GML_BuildOGRGeometryFromList_CreateCache()
-{
-    return new SRSCache();
-}
+void *GML_BuildOGRGeometryFromList_CreateCache() { return new SRSCache(); }
 
 /************************************************************************/
 /*                 GML_BuildOGRGeometryFromList_DestroyCache()          */
 /************************************************************************/
 
-void GML_BuildOGRGeometryFromList_DestroyCache(void* hCacheSRS)
+void GML_BuildOGRGeometryFromList_DestroyCache(void *hCacheSRS)
 {
-    delete (SRSCache*)hCacheSRS;
+    delete static_cast<SRSCache *>(hCacheSRS);
 }
 
 /************************************************************************/
 /*                 GML_BuildOGRGeometryFromList()                       */
 /************************************************************************/
 
-OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry,
-                                          bool bTryToMakeMultipolygons,
-                                          bool bInvertAxisOrderIfLatLong,
-                                          const char* pszDefaultSRSName,
-                                          bool bConsiderEPSGAsURN,
-                                          int nPseudoBoolGetSecondaryGeometryOption,
-                                          void* hCacheSRS,
-                                          bool bFaceHoleNegative)
+OGRGeometry* GML_BuildOGRGeometryFromList(
+    const CPLXMLNode *const *papsGeometry,
+    bool bTryToMakeMultipolygons,
+    bool bInvertAxisOrderIfLatLong,
+    const char *pszDefaultSRSName,
+    bool bConsiderEPSGAsURN,
+    GMLSwapCoordinatesEnum eSwapCoordinates,
+    int nPseudoBoolGetSecondaryGeometryOption,
+    void *hCacheSRS,
+    bool bFaceHoleNegative)
 {
-    OGRGeometry* poGeom = NULL;
-    OGRGeometryCollection* poCollection = NULL;
-    for( int i=0; papsGeometry[i] != NULL; i++ )
+    OGRGeometry *poGeom = nullptr;
+    OGRGeometryCollection *poCollection = nullptr;
+    for( int i = 0; papsGeometry[i] != nullptr; i++ )
     {
-        OGRGeometry* poSubGeom = GML2OGRGeometry_XMLNode( papsGeometry[i],
-                                                          nPseudoBoolGetSecondaryGeometryOption,
-                                                          0, 0, false, true,
-                                                          bFaceHoleNegative );
+        OGRGeometry* poSubGeom = GML2OGRGeometry_XMLNode(
+            papsGeometry[i],
+            nPseudoBoolGetSecondaryGeometryOption,
+            0, 0, false, true,
+            bFaceHoleNegative);
         if (poSubGeom)
         {
-            if (poGeom == NULL)
+            if (poGeom == nullptr)
+            {
                 poGeom = poSubGeom;
+            }
             else
             {
-                if (poCollection == NULL)
+                if (poCollection == nullptr)
                 {
                     if (bTryToMakeMultipolygons &&
                         wkbFlatten(poGeom->getGeometryType()) == wkbPolygon &&
                         wkbFlatten(poSubGeom->getGeometryType()) == wkbPolygon)
                     {
-                        OGRGeometryCollection* poGeomColl = new OGRMultiPolygon();
+                        OGRGeometryCollection *poGeomColl =
+                            new OGRMultiPolygon();
                         poGeomColl->addGeometryDirectly(poGeom);
                         poGeomColl->addGeometryDirectly(poSubGeom);
                         poGeom = poGeomColl;
                     }
-                    else if (bTryToMakeMultipolygons &&
-                                wkbFlatten(poGeom->getGeometryType()) == wkbMultiPolygon &&
-                                wkbFlatten(poSubGeom->getGeometryType()) == wkbPolygon)
+                    else if(bTryToMakeMultipolygons &&
+                            wkbFlatten(poGeom->getGeometryType()) ==
+                                wkbMultiPolygon &&
+                            wkbFlatten(poSubGeom->getGeometryType()) ==
+                                wkbPolygon)
                     {
-                        OGRGeometryCollection* poGeomColl = (OGRGeometryCollection* )poGeom;
+                        OGRMultiPolygon *poGeomColl = poGeom->toMultiPolygon();
                         poGeomColl->addGeometryDirectly(poSubGeom);
                     }
-                    else if (bTryToMakeMultipolygons &&
-                                wkbFlatten(poGeom->getGeometryType()) == wkbMultiPolygon &&
-                                wkbFlatten(poSubGeom->getGeometryType()) == wkbMultiPolygon)
+                    else if(bTryToMakeMultipolygons &&
+                            wkbFlatten(poGeom->getGeometryType()) ==
+                                wkbMultiPolygon &&
+                            wkbFlatten(poSubGeom->getGeometryType()) ==
+                                wkbMultiPolygon)
                     {
-                        OGRGeometryCollection* poGeomColl = (OGRGeometryCollection* )poGeom;
-                        OGRGeometryCollection* poGeomColl2 = (OGRGeometryCollection* )poSubGeom;
-                        int nCount = poGeomColl2->getNumGeometries();
-                        for(int j=0;j<nCount;j++)
+                        OGRMultiPolygon *poGeomColl = poGeom->toMultiPolygon();
+                        for( auto&& poMember: poSubGeom->toMultiPolygon() ) 
                         {
-                            poGeomColl->addGeometry(poGeomColl2->getGeometryRef(j));
+                            poGeomColl->addGeometry(poMember);
                         }
                         delete poSubGeom;
                     }
-                    else if (bTryToMakeMultipolygons &&
-                                wkbFlatten(poGeom->getGeometryType()) == wkbMultiPolygon)
+                    else if(bTryToMakeMultipolygons &&
+                            wkbFlatten(poGeom->getGeometryType()) ==
+                                wkbMultiPolygon)
                     {
                         delete poGeom;
                         delete poSubGeom;
-                        return GML_BuildOGRGeometryFromList(papsGeometry, false,
-                                                            bInvertAxisOrderIfLatLong,
-                                                            pszDefaultSRSName,
-                                                            bConsiderEPSGAsURN,
-                                                            nPseudoBoolGetSecondaryGeometryOption,
-                                                            hCacheSRS);
+                        return GML_BuildOGRGeometryFromList(
+                            papsGeometry, false,
+                            bInvertAxisOrderIfLatLong,
+                            pszDefaultSRSName,
+                            bConsiderEPSGAsURN,
+                            eSwapCoordinates,
+                            nPseudoBoolGetSecondaryGeometryOption,
+                            hCacheSRS);
                     }
                     else
                     {
@@ -257,7 +276,7 @@ OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry
                         poGeom = poCollection;
                     }
                 }
-                if (poCollection != NULL)
+                if (poCollection != nullptr)
                 {
                     poCollection->addGeometryDirectly(poSubGeom);
                 }
@@ -265,23 +284,27 @@ OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry
         }
     }
 
-    if( poGeom == NULL )
-        return NULL;
+    if( poGeom == nullptr )
+        return nullptr;
 
     std::string osWork;
-    const char* pszSRSName = GML_ExtractSrsNameFromGeometry(papsGeometry, osWork,
-                                                            bConsiderEPSGAsURN);
-    const char* pszNameLookup = pszSRSName;
-    if( pszNameLookup == NULL )
+    const char *pszSRSName = GML_ExtractSrsNameFromGeometry(
+        papsGeometry, osWork, bConsiderEPSGAsURN);
+    const char *pszNameLookup = pszSRSName;
+    if( pszNameLookup == nullptr )
         pszNameLookup = pszDefaultSRSName;
 
-    if (pszNameLookup != NULL)
+    if (pszNameLookup != nullptr)
     {
-        SRSCache* poSRSCache = (SRSCache*)hCacheSRS;
-        SRSDesc& oSRSDesc = poSRSCache->Get(pszNameLookup);
+        SRSCache *poSRSCache = static_cast<SRSCache *>(hCacheSRS);
+        SRSDesc &oSRSDesc = poSRSCache->Get(pszNameLookup);
         poGeom->assignSpatialReference(oSRSDesc.poSRS);
-        if (oSRSDesc.bAxisInvert && bInvertAxisOrderIfLatLong)
+        if( (eSwapCoordinates == GML_SWAP_AUTO &&
+            oSRSDesc.bAxisInvert && bInvertAxisOrderIfLatLong) ||
+            eSwapCoordinates == GML_SWAP_YES )
+        {
             poGeom->swapXY();
+        }
     }
 
     return poGeom;
@@ -291,56 +314,58 @@ OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry
 /*                           GML_GetSRSName()                           */
 /************************************************************************/
 
-char* GML_GetSRSName(const OGRSpatialReference* poSRS, bool bLongSRS, bool *pbCoordSwap)
+char *GML_GetSRSName(const OGRSpatialReference *poSRS,
+                     OGRGMLSRSNameFormat eSRSNameFormat, bool *pbCoordSwap)
 {
     *pbCoordSwap = false;
-    if (poSRS == NULL)
+    if (poSRS == nullptr)
         return CPLStrdup("");
 
-    const char* pszAuthName = NULL;
-    const char* pszAuthCode = NULL;
-    const char* pszTarget = NULL;
-
-    if (poSRS->IsProjected())
-        pszTarget = "PROJCS";
-    else
-        pszTarget = "GEOGCS";
-
-    char szSrsName[50];
-    szSrsName[0] = 0;
-
-    pszAuthName = poSRS->GetAuthorityName( pszTarget );
-    if( NULL != pszAuthName )
+    const auto& map = poSRS->GetDataAxisToSRSAxisMapping();
+    if( eSRSNameFormat != SRSNAME_SHORT &&
+        map.size() >= 2 && map[0] == 2 && map[1] == 1 )
     {
-        if( EQUAL( pszAuthName, "EPSG" ) )
-        {
-            pszAuthCode = poSRS->GetAuthorityCode( pszTarget );
-            if( NULL != pszAuthCode && strlen(pszAuthCode) < 10 )
-            {
-                if (bLongSRS && !(((OGRSpatialReference*)poSRS)->EPSGTreatsAsLatLong() ||
-                                  ((OGRSpatialReference*)poSRS)->EPSGTreatsAsNorthingEasting()))
-                {
-                    OGRSpatialReference oSRS;
-                    if (oSRS.importFromEPSGA(atoi(pszAuthCode)) == OGRERR_NONE)
-                    {
-                        if (oSRS.EPSGTreatsAsLatLong() || oSRS.EPSGTreatsAsNorthingEasting())
-                            *pbCoordSwap = true;
-                    }
-                }
-
-                if (bLongSRS)
-                {
-                    snprintf( szSrsName, sizeof(szSrsName), " srsName=\"urn:ogc:def:crs:%s::%s\"",
-                        pszAuthName, pszAuthCode );
-                }
-                else
-                {
-                    snprintf( szSrsName, sizeof(szSrsName), " srsName=\"%s:%s\"",
-                            pszAuthName, pszAuthCode );
-                }
-            }
-        }
+        *pbCoordSwap = true;
     }
 
-    return CPLStrdup(szSrsName);
+    const char *pszAuthName = poSRS->GetAuthorityName(nullptr);
+    const char *pszAuthCode = poSRS->GetAuthorityCode(nullptr);
+    if( nullptr != pszAuthName && nullptr != pszAuthCode )
+    {
+        if (eSRSNameFormat == SRSNAME_SHORT)
+        {
+            return CPLStrdup(
+                CPLSPrintf(" srsName=\"%s:%s\"", pszAuthName, pszAuthCode));
+        }
+        else if (eSRSNameFormat == SRSNAME_OGC_URN)
+        {
+            return CPLStrdup(CPLSPrintf(" srsName=\"urn:ogc:def:crs:%s::%s\"",
+                                        pszAuthName, pszAuthCode));
+        }
+        else if (eSRSNameFormat == SRSNAME_OGC_URL)
+        {
+            return CPLStrdup(CPLSPrintf(
+                " srsName=\"http://www.opengis.net/def/crs/%s/0/%s\"",
+                pszAuthName, pszAuthCode));
+        }
+    }
+    return CPLStrdup("");
+}
+
+/************************************************************************/
+/*                       GML_IsLegitSRSName()                           */
+/************************************************************************/
+
+bool GML_IsLegitSRSName(const char* pszSRSName)
+{
+
+    if( STARTS_WITH_CI(pszSRSName, "http") )
+    {
+        if( !(STARTS_WITH_CI(pszSRSName, "http://opengis.net/def/crs")
+        || STARTS_WITH_CI(pszSRSName, "http://www.opengis.net/def/crs")) )
+        {
+            return false;
+        }
+    }
+    return true;
 }

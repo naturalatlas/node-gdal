@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_mdreader.h 33694 2016-03-10 17:54:30Z goatbar $
+ * $Id: gdal_mdreader.h e37e476c4cf8f4b0df8995e0d95d5d672fca1a9b 2018-05-05 16:54:18 +0200 Even Rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata (mainly the remote sensing imagery) from files of
@@ -30,7 +30,6 @@
 
 #ifndef GDAL_MDREADER_H_INCLUDED
 #define GDAL_MDREADER_H_INCLUDED
-
 
 #include "cpl_port.h"
 #include "gdal_priv.h"
@@ -67,6 +66,12 @@
 #define RPC_SAMP_NUM_COEFF  "SAMP_NUM_COEFF"
 #define RPC_SAMP_DEN_COEFF  "SAMP_DEN_COEFF"
 
+/* Optional */
+#define RPC_MIN_LONG        "MIN_LONG"
+#define RPC_MIN_LAT         "MIN_LAT"
+#define RPC_MAX_LONG        "MAX_LONG"
+#define RPC_MAX_LAT         "MAX_LAT"
+
 /**
  * Enumerator of metadata readers
  */
@@ -88,11 +93,13 @@ typedef enum {
                MDR_LS | MDR_RE | MDR_KOMPSAT | MDR_EROS | MDR_ALOS /**< any reader */
 } MDReaders;
 
-
 /**
  * The base class for all metadata readers
  */
 class GDALMDReaderBase{
+
+    CPL_DISALLOW_COPY_ASSIGN(GDALMDReaderBase)
+
 public:
     GDALMDReaderBase(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderBase();
@@ -156,11 +163,13 @@ protected:
     virtual char** AddXMLNameValueToList(char** papszList, const char *pszName,
                                          const char *pszValue);
 protected:
-    char **m_papszIMDMD;
-    char **m_papszRPCMD;
-    char **m_papszIMAGERYMD;
-    char **m_papszDEFAULTMD;
-    bool m_bIsMetadataLoad;
+//! @cond Doxygen_Suppress
+    char **m_papszIMDMD = nullptr;
+    char **m_papszRPCMD = nullptr;
+    char **m_papszIMAGERYMD = nullptr;
+    char **m_papszDEFAULTMD = nullptr;
+    bool m_bIsMetadataLoad = false;
+//! @endcond
 };
 
 /**
@@ -169,6 +178,9 @@ protected:
  * for provided path.
  */
 class CPL_DLL GDALMDReaderManager{
+
+    CPL_DISALLOW_COPY_ASSIGN(GDALMDReaderManager)
+
 public:
     GDALMDReaderManager();
     virtual ~GDALMDReaderManager();
@@ -187,7 +199,9 @@ public:
                                         char **papszSiblingFiles,
                                         GUInt32 nType = MDR_ANY);
 protected:
-    GDALMDReaderBase *m_pReader;
+//! @cond Doxygen_Suppress
+    GDALMDReaderBase *m_pReader = nullptr;
+//! @endcond
 };
 
 // misc

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  GNM result layer class.
@@ -31,6 +30,9 @@
 #include "gnm.h"
 #include "gnm_priv.h"
 
+CPL_CVSID("$Id: gnmresultlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
+/** Constructor */
 OGRGNMWrappedResultLayer::OGRGNMWrappedResultLayer(GDALDataset* poDSIn,
                                                    OGRLayer* poLayerIn)
 {
@@ -119,6 +121,7 @@ OGRSpatialReference *OGRGNMWrappedResultLayer::GetSpatialRef()
     return poLayer->GetSpatialRef();
 }
 
+/** Undocumented */
 OGRErr OGRGNMWrappedResultLayer::InsertFeature(OGRFeature *poFeature,
                                               const CPLString &soLayerName,
                                               int nPathNo, bool bIsEdge)
@@ -127,7 +130,7 @@ OGRErr OGRGNMWrappedResultLayer::InsertFeature(OGRFeature *poFeature,
     // add fields from input feature
     OGRFeatureDefn *poSrcDefn = poFeature->GetDefnRef();
     OGRFeatureDefn* poDstFDefn = GetLayerDefn();
-    if(NULL == poSrcDefn || NULL == poDstFDefn)
+    if(nullptr == poSrcDefn || nullptr == poDstFDefn)
         return OGRERR_INVALID_HANDLE;
 
     int nSrcFieldCount = poSrcDefn->GetFieldCount();
@@ -151,7 +154,7 @@ OGRErr OGRGNMWrappedResultLayer::InsertFeature(OGRFeature *poFeature,
             // TODO: by now skip fields with different types. In future shoul
             // cast types
             OGRFieldDefn *poDstField = poDstFDefn->GetFieldDefn(iDstField);
-            if(NULL != poDstField && oFieldDefn.GetType() == poDstField->GetType())
+            if(nullptr != poDstField && oFieldDefn.GetType() == poDstField->GetType())
                 panMap[iField] = iDstField;
         }
         else if (CreateField( &oFieldDefn ) == OGRERR_NONE)
@@ -210,4 +213,3 @@ OGRErr OGRGNMWrappedResultLayer::ICreateFeature(OGRFeature *poFeature)
 {
     return poLayer->CreateFeature(poFeature);
 }
-

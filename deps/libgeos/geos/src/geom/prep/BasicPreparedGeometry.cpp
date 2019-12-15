@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -18,9 +18,9 @@
 
 
 #include <geos/geom/prep/BasicPreparedGeometry.h>
-#include <geos/geom/Coordinate.h> 
-#include <geos/algorithm/PointLocator.h> 
-#include <geos/geom/util/ComponentCoordinateExtracter.h> 
+#include <geos/geom/Coordinate.h>
+#include <geos/algorithm/PointLocator.h>
+#include <geos/geom/util/ComponentCoordinateExtracter.h>
 
 namespace geos {
 namespace geom { // geos.geom
@@ -30,125 +30,127 @@ namespace prep { // geos.geom.prep
  * protected: *
  *            */
 
-void 
-BasicPreparedGeometry::setGeometry( const geom::Geometry * geom ) 
+void
+BasicPreparedGeometry::setGeometry(const geom::Geometry* geom)
 {
-	baseGeom = geom;
-	geom::util::ComponentCoordinateExtracter::getCoordinates(*baseGeom, representativePts);
+    baseGeom = geom;
+    geom::util::ComponentCoordinateExtracter::getCoordinates(*baseGeom, representativePts);
 }
 
-bool 
-BasicPreparedGeometry::envelopesIntersect( const geom::Geometry* g) const
+bool
+BasicPreparedGeometry::envelopesIntersect(const geom::Geometry* g) const
 {
-	return baseGeom->getEnvelopeInternal()->intersects(g->getEnvelopeInternal());
+    if (g->getGeometryTypeId() == GEOS_POINT) {
+        return baseGeom->getEnvelopeInternal()->intersects(*(g->getCoordinate()));
+    }
+
+    return baseGeom->getEnvelopeInternal()->intersects(g->getEnvelopeInternal());
 }
 
-bool 
-BasicPreparedGeometry::envelopeCovers( const geom::Geometry* g) const
+bool
+BasicPreparedGeometry::envelopeCovers(const geom::Geometry* g) const
 {
-	return baseGeom->getEnvelopeInternal()->covers(g->getEnvelopeInternal());
+    if (g->getGeometryTypeId() == GEOS_POINT) {
+        return baseGeom->getEnvelopeInternal()->covers(g->getCoordinate());
+    }
+
+    return baseGeom->getEnvelopeInternal()->covers(g->getEnvelopeInternal());
 }
 
 /*
  * public:
  */
-BasicPreparedGeometry::BasicPreparedGeometry( const Geometry * geom)
+BasicPreparedGeometry::BasicPreparedGeometry(const Geometry* geom)
 {
-	setGeometry( geom);
+    setGeometry(geom);
 }
 
-BasicPreparedGeometry::~BasicPreparedGeometry( )
+bool
+BasicPreparedGeometry::isAnyTargetComponentInTest(const geom::Geometry* testGeom) const
 {
+    algorithm::PointLocator locator;
+
+    for(size_t i = 0, n = representativePts.size(); i < n; i++) {
+        const geom::Coordinate& c = *(representativePts[i]);
+        if(locator.intersects(c, testGeom)) {
+            return true;
+        }
+    }
+    return false;
 }
 
-
-bool 
-BasicPreparedGeometry::isAnyTargetComponentInTest( const geom::Geometry * testGeom) const
+bool
+BasicPreparedGeometry::contains(const geom::Geometry* g) const
 {
-	algorithm::PointLocator locator;
-
-	for (size_t i=0, n=representativePts.size(); i<n; i++)
-	{
-		const geom::Coordinate& c = *(representativePts[i]);
-		if ( locator.intersects( c, testGeom) )
-		return true;
-	}
-	return false;
+    return baseGeom->contains(g);
 }
 
-bool 
-BasicPreparedGeometry::contains(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::containsProperly(const geom::Geometry* g)	const
 {
-	return baseGeom->contains(g);
+    // since raw relate is used, provide some optimizations
+
+    // short-circuit test
+    if(! baseGeom->getEnvelopeInternal()->contains(g->getEnvelopeInternal())) {
+        return false;
+    }
+
+    // otherwise, compute using relate mask
+    return baseGeom->relate(g, "T**FF*FF*");
 }
 
-bool 
-BasicPreparedGeometry::containsProperly(const geom::Geometry * g)	const
+bool
+BasicPreparedGeometry::coveredBy(const geom::Geometry* g) const
 {
-	// since raw relate is used, provide some optimizations
-
-	// short-circuit test
-	if (! baseGeom->getEnvelopeInternal()->contains(g->getEnvelopeInternal()))
-	{
-		return false;
-	}
-
-	// otherwise, compute using relate mask
-	return baseGeom->relate(g, "T**FF*FF*");
+    return baseGeom->coveredBy(g);
 }
 
-bool 
-BasicPreparedGeometry::coveredBy(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::covers(const geom::Geometry* g) const
 {
-	return baseGeom->coveredBy(g);
+    return baseGeom->covers(g);
 }
 
-bool 
-BasicPreparedGeometry::covers(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::crosses(const geom::Geometry* g) const
 {
-	return baseGeom->covers(g);
+    return baseGeom->crosses(g);
 }
 
-bool 
-BasicPreparedGeometry::crosses(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::disjoint(const geom::Geometry* g)	const
 {
-	return baseGeom->crosses(g);
+    return ! intersects(g);
 }
 
-bool 
-BasicPreparedGeometry::disjoint(const geom::Geometry * g)	const
+bool
+BasicPreparedGeometry::intersects(const geom::Geometry* g) const
 {
-	return ! intersects(g);
+    return baseGeom->intersects(g);
 }
 
-bool 
-BasicPreparedGeometry::intersects(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::overlaps(const geom::Geometry* g)	const
 {
-	return baseGeom->intersects(g);
+    return baseGeom->overlaps(g);
 }
 
-bool 
-BasicPreparedGeometry::overlaps(const geom::Geometry * g)	const
+bool
+BasicPreparedGeometry::touches(const geom::Geometry* g) const
 {
-	return baseGeom->overlaps(g);
+    return baseGeom->touches(g);
 }
 
-bool 
-BasicPreparedGeometry::touches(const geom::Geometry * g) const
+bool
+BasicPreparedGeometry::within(const geom::Geometry* g) const
 {
-	return baseGeom->touches(g);
+    return baseGeom->within(g);
 }
 
-bool 
-BasicPreparedGeometry::within(const geom::Geometry * g) const
-{
-	return baseGeom->within(g);
-}
-
-std::string 
+std::string
 BasicPreparedGeometry::toString()
 {
-	return baseGeom->toString();
+    return baseGeom->toString();
 }
 
 } // namespace geos.geom.prep

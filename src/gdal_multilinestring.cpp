@@ -24,7 +24,7 @@ void MultiLineString::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "toString", toString);
 	Nan::SetPrototypeMethod(lcons, "polygonize", polygonize);
 
-	target->Set(Nan::New("MultiLineString").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("MultiLineString").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -123,7 +123,7 @@ Local<Value> MultiLineString::New(OGRMultiLineString *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(MultiLineString::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(MultiLineString::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

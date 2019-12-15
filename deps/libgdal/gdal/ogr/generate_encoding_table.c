@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: generate_encoding_table.c 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: generate_encoding_table.c 340b059d097242e67d5869f851d4c8d5978fe7c4 2016-11-22 23:34:00Z Even Rouault $
  *
  * Project:  OGR
  * Purpose:  Generate a mapping table from a 1-byte encoding to unicode,
@@ -28,10 +28,10 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include <errno.h>
 #include <iconv.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 
 static unsigned utf8decode(const char* p, const char* end, int* len)
@@ -213,7 +213,6 @@ int main(int argc, char* argv[])
             printf("for(i = 0x%02X; i < 0x%02X; i++)\n", nLastIdentical, i);
             printf("    info->map[i] = i;\n");
         }
-        nLastIdentical = -1;
     }
 
     iconv_close( sConv );

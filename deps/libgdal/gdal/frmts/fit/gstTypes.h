@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gstTypes.h 31777 2015-11-26 14:14:41Z rouault $
+ * $Id: gstTypes.h 9005cb767a7601165bfe84b547737bceaab58565 2016-09-05 20:18:57Z Kurt Schwehr $
  *
  * Project:  FIT Driver
  * Purpose:  Implement FIT Support - not using the SGI iflFIT library.
@@ -35,12 +35,12 @@
 
 typedef int (*gstItemGetFunc)(void *data, int tag, ...);
 
-typedef GUInt16				uint16;
-typedef GInt16				int16;
-typedef GUInt32				uint32;
-typedef GInt32				int32;
-typedef GUIntBig			uint64;
-typedef GIntBig				int64;
+typedef GUInt16                         uint16;
+typedef GInt16                          int16;
+typedef GUInt32                         uint32;
+typedef GInt32                          int32;
+typedef GUIntBig                        uint64;
+typedef GIntBig                         int64;
 
 typedef unsigned char                   uchar;
 

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgeomediatablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRGeomediaTableLayer class, access to an existing table.
@@ -31,21 +30,19 @@
 #include "cpl_conv.h"
 #include "ogr_geomedia.h"
 
-CPL_CVSID("$Id: ogrgeomediatablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrgeomediatablelayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRGeomediaTableLayer()                     */
 /************************************************************************/
 
-OGRGeomediaTableLayer::OGRGeomediaTableLayer( OGRGeomediaDataSource *poDSIn )
-
+OGRGeomediaTableLayer::OGRGeomediaTableLayer( OGRGeomediaDataSource *poDSIn ) :
+    pszQuery(nullptr)
 {
     poDS = poDSIn;
-    pszQuery = NULL;
-    bUpdateAccess = TRUE;
     iNextShapeId = 0;
     nSRSId = -1;
-    poFeatureDefn = NULL;
+    poFeatureDefn = nullptr;
 }
 
 /************************************************************************/
@@ -67,20 +64,19 @@ CPLErr OGRGeomediaTableLayer::Initialize( const char *pszTableName,
                                           const char *pszGeomCol,
                                           OGRSpatialReference* poSRSIn )
 
-
 {
     CPLODBCSession *poSession = poDS->GetSession();
 
     CPLFree( pszGeomColumn );
-    if( pszGeomCol == NULL )
-        pszGeomColumn = NULL;
+    if( pszGeomCol == nullptr )
+        pszGeomColumn = nullptr;
     else
         pszGeomColumn = CPLStrdup( pszGeomCol );
 
     CPLFree( pszFIDColumn );
-    pszFIDColumn = NULL;
+    pszFIDColumn = nullptr;
 
-    this->poSRS = poSRSIn;
+    poSRS = poSRSIn;
 
 /* -------------------------------------------------------------------- */
 /*      Do we have a simple primary key?                                */
@@ -95,7 +91,7 @@ CPLErr OGRGeomediaTableLayer::Initialize( const char *pszTableName,
         if( oGetKey.Fetch() ) // more than one field in key!
         {
             CPLFree( pszFIDColumn );
-            pszFIDColumn = NULL;
+            pszFIDColumn = nullptr;
             CPLDebug( "Geomedia", "%s: Compound primary key, ignoring.",
                       pszTableName );
         }
@@ -143,10 +139,10 @@ CPLErr OGRGeomediaTableLayer::Initialize( const char *pszTableName,
 void OGRGeomediaTableLayer::ClearStatement()
 
 {
-    if( poStmt != NULL )
+    if( poStmt != nullptr )
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
     }
 }
 
@@ -157,7 +153,7 @@ void OGRGeomediaTableLayer::ClearStatement()
 CPLODBCStatement *OGRGeomediaTableLayer::GetStatement()
 
 {
-    if( poStmt == NULL )
+    if( poStmt == nullptr )
         ResetStatement();
 
     return poStmt;
@@ -177,7 +173,7 @@ OGRErr OGRGeomediaTableLayer::ResetStatement()
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
     poStmt->Append( poFeatureDefn->GetName() );
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         poStmt->Appendf( " WHERE %s", pszQuery );
 
     if( poStmt->ExecuteSQL() )
@@ -185,7 +181,7 @@ OGRErr OGRGeomediaTableLayer::ResetStatement()
     else
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
         return OGRERR_FAILURE;
     }
 }
@@ -208,7 +204,7 @@ void OGRGeomediaTableLayer::ResetReading()
 OGRFeature *OGRGeomediaTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
-    if( pszFIDColumn == NULL )
+    if( pszFIDColumn == nullptr )
         return OGRGeomediaLayer::GetFeature( nFeatureId );
 
     ClearStatement();
@@ -223,8 +219,8 @@ OGRFeature *OGRGeomediaTableLayer::GetFeature( GIntBig nFeatureId )
     if( !poStmt->ExecuteSQL() )
     {
         delete poStmt;
-        poStmt = NULL;
-        return NULL;
+        poStmt = nullptr;
+        return nullptr;
     }
 
     return GetNextRawFeature();
@@ -237,19 +233,18 @@ OGRFeature *OGRGeomediaTableLayer::GetFeature( GIntBig nFeatureId )
 OGRErr OGRGeomediaTableLayer::SetAttributeFilter( const char *pszQueryIn )
 
 {
-    if( (pszQueryIn == NULL && this->pszQuery == NULL)
-        || (pszQueryIn != NULL && this->pszQuery != NULL
-            && EQUAL(pszQueryIn,this->pszQuery)) )
+    if( (pszQueryIn == nullptr && pszQuery == nullptr)
+        || (pszQueryIn != nullptr && pszQuery != nullptr
+            && EQUAL(pszQueryIn, pszQuery)) )
         return OGRERR_NONE;
 
-    CPLFree( this->pszQuery );
-    this->pszQuery = pszQueryIn ? CPLStrdup( pszQueryIn ) : NULL;
+    CPLFree( pszQuery );
+    pszQuery = pszQueryIn ? CPLStrdup( pszQueryIn ) : nullptr;
 
     ClearStatement();
 
     return OGRERR_NONE;
 }
-
 
 /************************************************************************/
 /*                           TestCapability()                           */
@@ -262,7 +257,7 @@ int OGRGeomediaTableLayer::TestCapability( const char * pszCap )
         return TRUE;
 
     else if( EQUAL(pszCap,OLCFastFeatureCount) )
-        return m_poFilterGeom == NULL;
+        return m_poFilterGeom == nullptr;
 
     else if( EQUAL(pszCap,OLCFastSpatialFilter) )
         return FALSE;
@@ -283,14 +278,14 @@ int OGRGeomediaTableLayer::TestCapability( const char * pszCap )
 GIntBig OGRGeomediaTableLayer::GetFeatureCount( int bForce )
 
 {
-    if( m_poFilterGeom != NULL )
+    if( m_poFilterGeom != nullptr )
         return OGRGeomediaLayer::GetFeatureCount( bForce );
 
     CPLODBCStatement oStmt( poDS->GetSession() );
     oStmt.Append( "SELECT COUNT(*) FROM " );
     oStmt.Append( poFeatureDefn->GetName() );
 
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         oStmt.Appendf( " WHERE %s", pszQuery );
 
     if( !oStmt.ExecuteSQL() || !oStmt.Fetch() )

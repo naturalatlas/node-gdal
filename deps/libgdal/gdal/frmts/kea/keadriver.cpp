@@ -1,5 +1,4 @@
 /*
- * $Id: keadriver.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *  keadriver.cpp
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -31,13 +30,15 @@
 #include "gdal_frmts.h"
 #include "keadataset.h"
 
+CPL_CVSID("$Id: keadriver.cpp 80c30052d1c3c82fd6b3addde765b35eb5c10559 2019-01-04 11:59:45 +1000 Sam Gillingham $")
+
 // method to register this driver
 void GDALRegister_KEA()
 {
     if( !GDAL_CHECK_VERSION( "KEA" ) )
         return;
 
-    if( GDALGetDriverByName( "KEA" ) != NULL )
+    if( GDALGetDriverByName( "KEA" ) != nullptr )
       return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -74,11 +75,13 @@ void GDALRegister_KEA()
         static_cast<int>(kealib::KEA_SIEVE_BUF),
         static_cast<int>(kealib::KEA_META_BLOCKSIZE),
         kealib::KEA_DEFLATE ) );
+    poDriver->SetMetadataItem(GDAL_DCAP_VIRTUALIO, "YES" );
 
     poDriver->pfnOpen = KEADataset::Open;
     poDriver->pfnIdentify = KEADataset::Identify;
     poDriver->pfnCreate = KEADataset::Create;
     poDriver->pfnCreateCopy = KEADataset::CreateCopy;
+    poDriver->pfnUnloadDriver = KEADatasetDriverUnload;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }

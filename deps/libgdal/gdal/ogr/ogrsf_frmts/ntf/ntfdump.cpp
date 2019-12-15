@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ntfdump.cpp 32177 2015-12-14 07:25:30Z goatbar $
  *
  * Project:  NTF Translator
  * Purpose:  Simple test harness.
@@ -31,7 +30,7 @@
 #include "cpl_vsi.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ntfdump.cpp 32177 2015-12-14 07:25:30Z goatbar $");
+CPL_CVSID("$Id: ntfdump.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 static void NTFDump( const char * pszFile, char **papszOptions );
 static void NTFCount( const char * pszFile );
@@ -82,30 +81,25 @@ int main( int argc, char ** argv )
 static void NTFCount( const char * pszFile )
 
 {
-    FILE      *fp;
-    NTFRecord *poRecord = NULL;
-    int       anCount[100], i;
-
-    for( i = 0; i < 100; i++ )
-        anCount[i] = 0;
-
-    fp = VSIFOpen( pszFile, "r" );
+    FILE *fp = VSIFOpen( pszFile, "r" );
     if( fp == NULL )
         return;
 
+    int anCount[100] = {};
+
+    NTFRecord *poRecord = NULL;
     do {
         if( poRecord != NULL )
             delete poRecord;
 
         poRecord = new NTFRecord( fp );
         anCount[poRecord->GetType()]++;
-
     } while( poRecord->GetType() != 99 );
 
     VSIFClose( fp );
 
     printf( "\nReporting on: %s\n", pszFile );
-    for( i = 0; i < 100; i++ )
+    for( int i = 0; i < 100; i++ )
     {
         if( anCount[i] > 0 )
             printf( "Found %d records of type %d\n", anCount[i], i );
@@ -119,14 +113,14 @@ static void NTFCount( const char * pszFile )
 static void NTFDump( const char * pszFile, char **papszOptions )
 
 {
-    OGRFeature         *poFeature;
-    OGRNTFDataSource   oDS;
+    OGRNTFDataSource oDS;
 
     oDS.SetOptionList( papszOptions );
 
     if( !oDS.Open( pszFile ) )
         return;
 
+    OGRFeature *poFeature = NULL;
     while( (poFeature = oDS.GetNextFeature()) != NULL )
     {
         printf( "-------------------------------------\n" );

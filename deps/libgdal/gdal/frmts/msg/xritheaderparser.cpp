@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: xritheaderparser.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Purpose:  Implementation of XRITHeaderParser class. Parse the header
  *           of the combined XRIT header/data files.
@@ -27,9 +26,13 @@
  * DEALINGS IN THE SOFTWARE.
  ******************************************************************************/
 
+ #include "cpl_port.h"  // Must be first.
+
 #include "xritheaderparser.h"
 #include <cstdlib> // malloc, free
 #include <cstring> // memcpy
+
+CPL_CVSID("$Id: xritheaderparser.cpp 73a8764b2d7a65a29eb93c84c5d1f2b9dcdc8158 2019-03-23 14:27:02 +0100 Even Rouault $")
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -69,18 +72,11 @@ XRITHeaderParser::XRITHeaderParser(std::ifstream & ifile)
 
   if (!m_isValid) // seek back to original position
   {
-#if _MSC_VER > 1000 && _MSC_VER < 1300
-    ifile.seekg(-probeSize, std::ios_base::seekdir::cur);
-#else
     ifile.seekg(-probeSize, std::ios_base::cur);
-#endif
   }
 }
 
-XRITHeaderParser::~XRITHeaderParser()
-{
-
-}
+XRITHeaderParser::~XRITHeaderParser() {}
 
 int XRITHeaderParser::parseInt16(unsigned char * num)
 {
@@ -89,12 +85,15 @@ int XRITHeaderParser::parseInt16(unsigned char * num)
 
 long XRITHeaderParser::parseInt32(unsigned char * num)
 {
-  return (num[0]<<24) | (num[1]<<16) | (num[2]<<8) | num[3];
+    int i;
+    memcpy(&i, num, 4);
+    CPL_MSBPTR32(&i);
+    return i;
 }
 
 void XRITHeaderParser::parseHeader(unsigned char * buf, long totalHeaderLength)
 {
-  int remainingHeaderLength = totalHeaderLength;
+  int remainingHeaderLength = static_cast<int>(totalHeaderLength);
 
   while (remainingHeaderLength > 0)
   {
@@ -123,10 +122,14 @@ void XRITHeaderParser::parseHeader(unsigned char * buf, long totalHeaderLength)
         break;
       case 2: // image navigation
         {
-          long cfac = parseInt32(&buf[35]); // column scaling factor
+#if 0
+          /*long cfac =*/ parseInt32(&buf[35]); // column scaling factor
+#endif
           long lfac = parseInt32(&buf[39]); // line scaling factor
-          long coff = parseInt32(&buf[43]); // column offset
-          long loff = parseInt32(&buf[47]); // line offset
+#if 0
+          /*long coff =*/ parseInt32(&buf[43]); // column offset
+          /*long loff =*/ parseInt32(&buf[47]); // line offset
+#endif
           if (lfac >= 0)
             m_scanNorth = true;
           else

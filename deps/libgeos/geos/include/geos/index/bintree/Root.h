@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -20,12 +20,12 @@
 
 // Forward declarations
 namespace geos {
-	namespace index { 
-		namespace bintree { 
-			class Interval;
-			class Node;
-		}
-	}
+namespace index {
+namespace bintree {
+class Interval;
+class Node;
+}
+}
 }
 
 namespace geos {
@@ -42,30 +42,34 @@ class GEOS_DLL Root: public NodeBase {
 
 private:
 
-	// the singleton root node is centred at the origin.
-	static double origin;
+    // the singleton root node is centred at the origin.
+    static double origin;
 
-	void insertContained(Node *tree,
-			Interval *itemInterval,
-			void* item);
+    void insertContained(Node* tree,
+                         Interval* itemInterval,
+                         void* item);
 
 public:
 
-	Root() {}
+    Root() {}
 
-	~Root() {}
+    ~Root() override {}
 
-	/// @param itemInterval
-	///     Ownership left to caller, references kept in this class.
-	///
-	/// @param item
-	///     Ownership left to caller, references kept in this class.
-	///
-	void insert(Interval *itemInterval, void* item);
+    /// @param itemInterval
+    ///     Ownership left to caller, references kept in this class.
+    ///
+    /// @param item
+    ///     Ownership left to caller, references kept in this class.
+    ///
+    void insert(Interval* itemInterval, void* item);
 
 protected:
 
-	bool isSearchMatch(Interval* /*interval*/) { return true; }
+    bool
+    isSearchMatch(Interval* /*interval*/) override
+    {
+        return true;
+    }
 };
 
 } // namespace geos::index::bintree

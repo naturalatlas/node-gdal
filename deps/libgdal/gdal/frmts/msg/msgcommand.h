@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgcommand.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: msgcommand.h e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $
  *
  * Purpose:  Interface of MSGCommand class. Parse the src_dataset string
  *           that is meant for the MSG driver.
@@ -42,8 +42,8 @@ public:
   std::string sFileName(int iSatellite, int iSequence, int iStrip);
   std::string sPrologueFileName(int iSatellite, int iSequence);
   std::string sCycle(int iCycle);
-  int iNrChannels();
-  int iChannel(int iNr);
+  int iNrChannels() const;
+  int iChannel(int iNr) const;
 
   static int iNrStrips(int iChannel);
 
@@ -52,9 +52,9 @@ public:
   int channel[12];
 
 private:
-  std::string sTrimSpaces(std::string const& str);
-  std::string sNextTerm(std::string const& str, int & iPos);
-  int iDaysInMonth(int iMonth, int iYear);
+  static std::string sTrimSpaces(std::string const& str);
+  static std::string sNextTerm(std::string const& str, int & iPos);
+  static int iDaysInMonth(int iMonth, int iYear);
   static std::string sChannel(int iChannel);
   static int iChannel(std::string const& sChannel);
   static std::string sTimeStampToFolder(std::string& sTimeStamp);

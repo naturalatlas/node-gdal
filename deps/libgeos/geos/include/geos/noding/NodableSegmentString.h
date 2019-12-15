@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -20,9 +20,9 @@
 #include <geos/noding/SegmentString.h> // for inheritance
 
 namespace geos {
-	namespace geom {
-		class Coordinate;
-	}
+namespace geom {
+class Coordinate;
+}
 }
 
 namespace geos {
@@ -31,26 +31,25 @@ namespace noding { // geos::noding
 /** \brief
  * An interface for classes which support adding nodes to
  * a segment string.
- * 
+ *
  * @author Martin Davis
  */
-class GEOS_DLL NodableSegmentString : public SegmentString 
-{
+class GEOS_DLL NodableSegmentString : public SegmentString {
 private:
 protected:
 public:
-	NodableSegmentString(const void* newContext)
-		:
-		SegmentString( newContext ) 
-	{ }
+    NodableSegmentString(const void* newContext)
+        :
+        SegmentString(newContext)
+    { }
 
-	/**
-	 * Adds an intersection node for a given point and segment to this segment string.
-	 * 
-	 * @param intPt the location of the intersection
-	 * @param segmentIndex the index of the segment containing the intersection
-	 */
-	//virtual void addIntersection( const geom::Coordinate * intPt, int segmentIndex) =0;
+    /**
+     * Adds an intersection node for a given point and segment to this segment string.
+     *
+     * @param intPt the location of the intersection
+     * @param segmentIndex the index of the segment containing the intersection
+     */
+    //virtual void addIntersection( const geom::Coordinate * intPt, int segmentIndex) =0;
 };
 
 } // namespace geos::noding

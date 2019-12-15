@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,18 +29,19 @@
 #pragma warning(disable: 4251) // warning C4251: needs to have dll-interface to be used by clients of class
 #endif
 
-// Forward declarations 
+// Forward declarations
 namespace geos {
-	namespace geom { 
-		class GeometryFactory;
-		class CoordinateSequence;
-		class LineString;
-	}
-	namespace operation { 
-		namespace linemerge { 
-			class LineMergeDirectedEdge;
-		}
-	}
+namespace geom {
+class GeometryFactory;
+class CoordinateArraySequence;
+class CoordinateSequence;
+class LineString;
+}
+namespace operation {
+namespace linemerge {
+class LineMergeDirectedEdge;
+}
+}
 }
 
 namespace geos {
@@ -54,29 +55,29 @@ namespace linemerge { // geos::operation::linemerge
  */
 class GEOS_DLL EdgeString {
 private:
-	const geom::GeometryFactory *factory;
-	std::vector<LineMergeDirectedEdge*> directedEdges;
-	geom::CoordinateSequence *coordinates;
-	geom::CoordinateSequence* getCoordinates();
+    const geom::GeometryFactory* factory;
+    std::vector<LineMergeDirectedEdge*> directedEdges;
+    geom::CoordinateArraySequence* coordinates;
+    geom::CoordinateSequence* getCoordinates();
 public:
-	/*
-	 * \brief
-	 * Constructs an EdgeString with the given factory used to
-	 * convert this EdgeString to a LineString
-	 */
-	EdgeString(const geom::GeometryFactory *newFactory);
+    /*
+     * \brief
+     * Constructs an EdgeString with the given factory used to
+     * convert this EdgeString to a LineString
+     */
+    EdgeString(const geom::GeometryFactory* newFactory);
 
-	~EdgeString();
+    ~EdgeString() = default;
 
-	/**
-	* Adds a directed edge which is known to form part of this line.
-	*/
-	void add(LineMergeDirectedEdge *directedEdge);
+    /**
+    * Adds a directed edge which is known to form part of this line.
+    */
+    void add(LineMergeDirectedEdge* directedEdge);
 
-	/*
-	 * Converts this EdgeString into a LineString.
-	 */
-	geom::LineString* toLineString();
+    /*
+     * Converts this EdgeString into a LineString.
+     */
+    geom::LineString* toLineString();
 };
 
 } // namespace geos::operation::linemerge

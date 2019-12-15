@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: grassdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  GRASS Driver
  * Purpose:  Implement GRASS raster read/write support
@@ -35,7 +34,7 @@
 #include "gdal_priv.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: grassdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: grassdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                         Grass2CPLErrorHook()                         */
@@ -54,7 +53,7 @@ int Grass2CPLErrorHook( char * pszMessage, int bFatal )
 
 /************************************************************************/
 /* ==================================================================== */
-/*				GRASSDataset				*/
+/*                              GRASSDataset                            */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -64,16 +63,19 @@ class GRASSDataset : public GDALDataset
 {
     friend class GRASSRasterBand;
 
-    char	*pszProjection;
+    char        *pszProjection;
 
-    double	adfGeoTransform[6];
+    double      adfGeoTransform[6];
 
   public:
-                 GRASSDataset();
-                 ~GRASSDataset();
+    GRASSDataset();
+    ~GRASSDataset() override;
 
-    virtual const char *GetProjectionRef(void);
-    virtual CPLErr GetGeoTransform( double * );
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
+    CPLErr GetGeoTransform( double * ) override;
 
     static GDALDataset *Open( GDALOpenInfo * );
 };
@@ -88,31 +90,28 @@ class GRASSRasterBand : public GDALRasterBand
 {
     friend class GRASSDataset;
 
-    int		hCell;
+    int         hCell;
     int         nGRSType;
 
     GDALColorTable *poCT;
 
-    int		bHaveMinMax;
-    double	dfCellMin;
-    double	dfCellMax;
+    int         bHaveMinMax;
+    double      dfCellMin;
+    double      dfCellMax;
 
-    double	dfNoData;
+    double      dfNoData;
 
   public:
+    GRASSRasterBand( GRASSDataset *, int, const char *, const char * );
+    ~GRASSRasterBand() override;
 
-                   GRASSRasterBand( GRASSDataset *, int,
-                                    const char *, const char * );
-    virtual        ~GRASSRasterBand();
-
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual GDALColorTable *GetColorTable();
-    virtual double GetMinimum( int *pbSuccess = NULL );
-    virtual double GetMaximum( int *pbSuccess = NULL );
-    virtual double GetNoDataValue( int *pbSuccess = NULL );
+    CPLErr IReadBlock( int, int, void * ) override;
+    GDALColorInterp GetColorInterpretation() override;
+    GDALColorTable *GetColorTable() override;
+    double GetMinimum( int *pbSuccess = NULL ) override;
+    double GetMaximum( int *pbSuccess = NULL ) override;
+    double GetNoDataValue( int *pbSuccess = NULL ) override;
 };
-
 
 /************************************************************************/
 /*                          GRASSRasterBand()                           */
@@ -123,7 +122,7 @@ GRASSRasterBand::GRASSRasterBand( GRASSDataset *poDS, int nBand,
                                   const char * pszCellName )
 
 {
-    struct Cell_head	sCellInfo;
+    struct Cell_head sCellInfo;
 
     this->poDS = poDS;
     this->nBand = nBand;
@@ -188,7 +187,7 @@ GRASSRasterBand::GRASSRasterBand( GRASSDataset *poDS, int nBand,
         dfNoData = -12345.0;
     }
 
-    nBlockXSize = poDS->nRasterXSize;;
+    nBlockXSize = poDS->nRasterXSize;
     nBlockYSize = 1;
 
     hCell = G_open_cell_old((char *) pszCellName, (char *) pszMapset);
@@ -205,7 +204,7 @@ GRASSRasterBand::GRASSRasterBand( GRASSDataset *poDS, int nBand,
         poCT = new GDALColorTable();
         for( int iColor = 0; iColor < 256; iColor++ )
         {
-            int	nRed, nGreen, nBlue;
+            int nRed, nGreen, nBlue;
             GDALColorEntry    sColor;
 
             if( G_get_color( iColor, &nRed, &nGreen, &nBlue, &sGrassColors ) )
@@ -246,7 +245,6 @@ GRASSRasterBand::~GRASSRasterBand()
         G_close_cell( hCell );
 }
 
-
 /************************************************************************/
 /*                             IReadBlock()                             */
 /*                                                                      */
@@ -256,12 +254,10 @@ GRASSRasterBand::~GRASSRasterBand()
 /************************************************************************/
 
 CPLErr GRASSRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
-                                  void * pImage )
+                                    void * pImage )
 
 {
-    char *pachNullBuf;
-
-    pachNullBuf = (char *) CPLMalloc(nBlockXSize);
+    char *pachNullBuf = (char *) CPLMalloc(nBlockXSize);
     G_get_null_value_row( hCell, pachNullBuf, nBlockYOff );
 
     if( eDataType == GDT_Float32 || eDataType == GDT_Float64
@@ -390,7 +386,6 @@ double GRASSRasterBand::GetNoDataValue( int *pbSuccess )
 /* ==================================================================== */
 /************************************************************************/
 
-
 /************************************************************************/
 /*                            GRASSDataset()                            */
 /************************************************************************/
@@ -422,7 +417,7 @@ GRASSDataset::~GRASSDataset()
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *GRASSDataset::GetProjectionRef()
+const char *GRASSDataset::_GetProjectionRef()
 {
     if( pszProjection == NULL )
         return "";
@@ -450,13 +445,14 @@ typedef int (*GrassErrorHandler)();
 GDALDataset *GRASSDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    static int	bDoneGISInit = FALSE;
-    char	*pszMapset = NULL, *pszCell = NULL;
+    static int  bDoneGISInit = FALSE;
+    char        *pszMapset = NULL, *pszCell = NULL;
     char        **papszCells = NULL;
     char        **papszMapsets = NULL;
 
     if( !bDoneGISInit )
     {
+        bDoneGISInit = TRUE;
         G_set_error_routine( (GrassErrorHandler) Grass2CPLErrorHook );
         G_gisinit_2( "GDAL", NULL, NULL, NULL );
     }
@@ -501,9 +497,7 @@ GDALDataset *GRASSDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
-    GRASSDataset 	*poDS;
-
-    poDS = new GRASSDataset();
+    GRASSDataset *poDS = new GRASSDataset();
 
     /* notdef: should only allow read access to an existing cell, right? */
     poDS->eAccess = poOpenInfo->eAccess;
@@ -511,7 +505,7 @@ GDALDataset *GRASSDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Capture some information from the file that is of interest.     */
 /* -------------------------------------------------------------------- */
-    struct Cell_head	sCellInfo;
+    struct Cell_head sCellInfo;
 
     if( G_get_cellhd( papszCells[0], papszMapsets[0], &sCellInfo ) != 0 )
     {
@@ -534,9 +528,7 @@ GDALDataset *GRASSDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Try to get a projection definition.                             */
 /* -------------------------------------------------------------------- */
-    char	*pszProj4;
-
-    pszProj4 = G_get_cell_as_proj4( papszCells[0], papszMapsets[0] );
+    char *pszProj4 = G_get_cell_as_proj4( papszCells[0], papszMapsets[0] );
     if( pszProj4 != NULL )
     {
         OGRSpatialReference   oSRS;

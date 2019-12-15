@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ili1.h 33325 2016-02-02 14:30:48Z rouault $
+ * $Id: ogr_ili1.h 29dcefd34892121afac0b7b978757ee6daad614a 2018-05-03 15:55:54 +0200 Even Rouault $
  *
  * Project:  Interlis 1 Translator
  * Purpose:   Definition of classes for OGR Interlis 1 driver.
@@ -33,8 +33,6 @@
 #include "ogrsf_frmts.h"
 #include "ili1reader.h"
 
-
-
 class OGRILI1DataSource;
 
 /************************************************************************/
@@ -60,30 +58,30 @@ private:
 
   public:
                         OGRILI1Layer( OGRFeatureDefn* poFeatureDefn,
-                                      GeomFieldInfos oGeomFieldInfos,
+                                      const GeomFieldInfos& oGeomFieldInfos,
                                       OGRILI1DataSource *poDS );
 
                        ~OGRILI1Layer();
 
     OGRErr              AddFeature(OGRFeature *poFeature);
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
     OGRFeature *        GetNextFeatureRef();
-    OGRFeature *        GetFeatureRef( long nFid );
+    OGRFeature *        GetFeatureRef( GIntBig nFid );
     OGRFeature *        GetFeatureRef( const char* );
 
-    GIntBig             GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE ) override;
 
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
     int                 GeometryAppend( OGRGeometry *poGeometry );
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
     GeomFieldInfos      GetGeomFieldInfos() { return oGeomFieldInfos; }
 
-    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE );
+    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
   private:
     void                JoinGeomLayers();
@@ -102,31 +100,33 @@ class OGRILI1DataSource : public OGRDataSource
     char       *pszName;
     ImdReader  *poImdReader;
     IILI1Reader *poReader;
-    FILE       *fpTransfer;
+    VSILFILE   *fpTransfer;
     char       *pszTopic;
     int         nLayers;
     OGRILI1Layer** papoLayers;
 
+    CPL_DISALLOW_COPY_ASSIGN(OGRILI1DataSource)
+
   public:
                 OGRILI1DataSource();
-               ~OGRILI1DataSource();
+               virtual ~OGRILI1DataSource();
 
     int         Open( const char *, char** papszOpenOptions, int bTestOpen );
     int         Create( const char *pszFile, char **papszOptions );
 
-    const char *GetName() { return pszName; }
-    int         GetLayerCount() { return poReader ? poReader->GetLayerCount() : 0; }
-    OGRLayer   *GetLayer( int );
-    OGRILI1Layer *GetLayerByName( const char* );
+    const char *GetName() override { return pszName; }
+    int         GetLayerCount() override { return poReader ? poReader->GetLayerCount() : 0; }
+    OGRLayer   *GetLayer( int ) override;
+    OGRILI1Layer *GetLayerByName( const char* ) override;
 
-    FILE       *GetTransferFile() { return fpTransfer; }
+    VSILFILE   *GetTransferFile() { return fpTransfer; }
 
     virtual OGRLayer *ICreateLayer( const char *,
-                                      OGRSpatialReference * = NULL,
+                                      OGRSpatialReference * = nullptr,
                                       OGRwkbGeometryType = wkbUnknown,
-                                      char ** = NULL );
+                                      char ** = nullptr ) override;
 
-    int         TestCapability( const char * );
+    int         TestCapability( const char * ) override;
 };
 
 #endif /* OGR_ILI1_H_INCLUDED */

@@ -55,12 +55,20 @@ CPCIDSKGCP2Segment::CPCIDSKGCP2Segment(PCIDSKFile *fileIn, int segmentIn, const 
     pimpl_ = new PCIDSKGCP2SegInfo;
     pimpl_->gcps.clear();
     pimpl_->changed = false;
-    Load();
+    try
+    {
+        Load();
+    }
+    catch( const PCIDSKException& )
+    {
+        delete pimpl_;
+        pimpl_ = nullptr;
+        throw;
+    }
 }
  
 CPCIDSKGCP2Segment::~CPCIDSKGCP2Segment()
 {
-    RebuildSegmentData();
     delete pimpl_;
 }
 
@@ -77,7 +85,7 @@ void CPCIDSKGCP2Segment::Load()
 
     // check for 'GCP2    ' in the first 8 bytes
     if (!STARTS_WITH(pimpl_->seg_data.buffer, "GCP2    ")) {
-        // Assume it's an empty segment, so we can mark loaded_ = true,
+        // Assume it is an empty segment, so we can mark loaded_ = true,
         // write it out and return
         pimpl_->changed = true;
         pimpl_->map_units = "LAT/LONG D000";
@@ -169,8 +177,6 @@ void CPCIDSKGCP2Segment::SetGCPs(std::vector<PCIDSK::GCP> const& gcps)
     pimpl_->num_gcps = static_cast<unsigned int>(gcps.size());
     pimpl_->gcps = gcps; // copy them in
     pimpl_->changed = true;
-    
-    RebuildSegmentData();
 }
  
 // Return the count of GCPs in the segment
@@ -179,18 +185,27 @@ unsigned int  CPCIDSKGCP2Segment::GetGCPCount(void) const
     return pimpl_->num_gcps;
 }
 
+void CPCIDSKGCP2Segment::Synchronize()
+{
+    if( pimpl_ != nullptr )
+    {
+        RebuildSegmentData();
+    }
+}
+
 void CPCIDSKGCP2Segment::RebuildSegmentData(void)
 {
-    if (pimpl_->changed == false) {
+    if (pimpl_->changed == false || !GetUpdatable()) {
         return;
     }
+    pimpl_->changed = false;
     
     // Rebuild the segment data based on the contents of the struct
     int num_blocks = (pimpl_->num_gcps + 1) / 2;
     
     // This will have to change when we have proper projections support
 
-    if (pimpl_->gcps.size() > 0)
+    if (!pimpl_->gcps.empty())
     {
         pimpl_->gcps[0].GetMapUnits(pimpl_->map_units, 
             pimpl_->proj_parms);
@@ -275,8 +290,8 @@ void CPCIDSKGCP2Segment::RebuildSegmentData(void)
         pimpl_->seg_data.Put((*iter).GetYErr(), offset + 136, 14, "%14.4e");
         pimpl_->seg_data.Put((*iter).GetIDString(), offset + 192, 64, true );
         
-        id++;
-        iter++;
+        ++id;
+        ++iter;
     }
     
     WriteToFile(pimpl_->seg_data.buffer, 0, pimpl_->seg_data.buffer_size);
@@ -290,6 +305,4 @@ void  CPCIDSKGCP2Segment::ClearGCPs(void)
     pimpl_->num_gcps = 0;
     pimpl_->gcps.clear();
     pimpl_->changed = true;
-    
-    RebuildSegmentData();
 }

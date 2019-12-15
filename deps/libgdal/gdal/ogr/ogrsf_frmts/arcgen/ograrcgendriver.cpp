@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ograrcgendriver.cpp 32119 2015-12-11 05:47:58Z goatbar $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENDriver.
@@ -30,10 +29,9 @@
 #include "ogr_arcgen.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ograrcgendriver.cpp 32119 2015-12-11 05:47:58Z goatbar $");
+CPL_CVSID("$Id: ograrcgendriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 extern "C" void RegisterOGRARCGEN();
-
 
 /************************************************************************/
 /*                                Open()                                */
@@ -43,9 +41,9 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL )
+        poOpenInfo->fpL == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
 
     /* Check that the first line is compatible with a generate file */
@@ -53,7 +51,7 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
     bool bFoundEOL = false;
     char* szFirstLine
         = CPLStrdup(reinterpret_cast<char *>( poOpenInfo->pabyHeader ) );
-    for(int i=0;szFirstLine[i] != '\0';i++)
+    for( int i = 0; szFirstLine[i] != '\0'; i++ )
     {
         if (szFirstLine[i] == '\n' || szFirstLine[i] == '\r')
         {
@@ -64,14 +62,14 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
         if (szFirstLine[i] < 32)
         {
             CPLFree(szFirstLine);
-            return NULL;
+            return nullptr;
         }
     }
 
     if (!bFoundEOL)
     {
         CPLFree(szFirstLine);
-        return NULL;
+        return nullptr;
     }
 
     char** papszTokens = CSLTokenizeString2( szFirstLine, " ,", 0 );
@@ -80,7 +78,7 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
     {
         CSLDestroy(papszTokens);
         CPLFree(szFirstLine);
-        return NULL;
+        return nullptr;
     }
     for(int i=0;i<nTokens;i++)
     {
@@ -88,7 +86,7 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
         {
             CSLDestroy(papszTokens);
             CPLFree(szFirstLine);
-            return NULL;
+            return nullptr;
         }
     }
     CSLDestroy(papszTokens);
@@ -99,7 +97,7 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -112,7 +110,7 @@ static GDALDataset *OGRARCGENDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRARCGEN()
 
 {
-    if( GDALGetDriverByName( "ARCGEN" ) != NULL )
+    if( GDALGetDriverByName( "ARCGEN" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -126,4 +124,3 @@ void RegisterOGRARCGEN()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

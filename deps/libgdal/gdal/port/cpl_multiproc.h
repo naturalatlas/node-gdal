@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_multiproc.h 33817 2016-03-30 17:35:37Z rouault $
+ * $Id: cpl_multiproc.h 49f2075cf4be6b103a5ab0b5a64f1ed3e2e7f46b 2018-11-27 21:21:53Z Robert Coup $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  CPL Multi-Threading, and process handling portability functions.
@@ -101,7 +101,6 @@ const char CPL_DLL *CPLGetThreadingModel( void );
 
 int CPL_DLL CPLGetNumCPUs( void );
 
-
 typedef struct _CPLLock CPLLock;
 
 /* Currently LOCK_ADAPTIVE_MUTEX is Linux-only and LOCK_SPIN only available */
@@ -121,10 +120,9 @@ void  CPL_DLL  CPLReleaseLock( CPLLock* );
 void  CPL_DLL  CPLDestroyLock( CPLLock* );
 void  CPL_DLL  CPLLockSetDebugPerf( CPLLock*, int bEnableIn ); /* only available on x86/x86_64 with GCC for now */
 
-
 CPL_C_END
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(CPL_SUPRESS_CPLUSPLUS)
 
 /* Instantiates the mutex if not already done. The parameter x should be a (void**). */
 #define CPLMutexHolderD(x)  CPLMutexHolder oHolder(x,1000.0,__FILE__,__LINE__);
@@ -137,24 +135,28 @@ CPL_C_END
 /* be a no-op. The parameter x should be a (void*) */
 #define CPLMutexHolderOptionalLockD(x)  CPLMutexHolder oHolder(x,1000.0,__FILE__,__LINE__);
 
+/** Object to hold a mutex */
 class CPL_DLL CPLMutexHolder
 {
   private:
-    CPLMutex   *hMutex;
-    const char *pszFile;
-    int         nLine;
+    CPLMutex   *hMutex = nullptr;
+    // Only used for debugging.
+    const char *pszFile = nullptr;
+    int         nLine = 0;
+
+    CPL_DISALLOW_COPY_ASSIGN(CPLMutexHolder)
 
   public:
 
-    /* Instantiates the mutex if not already done. */
-    CPLMutexHolder( CPLMutex **phMutex, double dfWaitInSeconds = 1000.0,
+    /** Instantiates the mutex if not already done. */
+    explicit CPLMutexHolder( CPLMutex **phMutex, double dfWaitInSeconds = 1000.0,
                     const char *pszFile = __FILE__,
                     int nLine = __LINE__,
                     int nOptions = CPL_MUTEX_RECURSIVE);
 
-    /* This variant assumes the mutex has already been created. If not, it will */
-    /* be a no-op */
-    CPLMutexHolder( CPLMutex* hMutex, double dfWaitInSeconds = 1000.0,
+    /** This variant assumes the mutex has already been created. If not, it will
+     * be a no-op */
+    explicit CPLMutexHolder( CPLMutex* hMutex, double dfWaitInSeconds = 1000.0,
                     const char *pszFile = __FILE__,
                     int nLine = __LINE__ );
 
@@ -168,29 +170,31 @@ class CPL_DLL CPLMutexHolder
 /* be a no-op. The parameter should be (CPLLock*) */
 #define CPLLockHolderOptionalLockD(x)  CPLLockHolder oHolder(x,__FILE__,__LINE__);
 
+/** Object to hold a lock */
 class CPL_DLL CPLLockHolder
 {
   private:
-    CPLLock    *hLock;
-    const char *pszFile;
-    int         nLine;
+    CPLLock    *hLock = nullptr;
+    const char *pszFile = nullptr;
+    int         nLine = 0;
+
+    CPL_DISALLOW_COPY_ASSIGN(CPLLockHolder)
 
   public:
 
-    /* Instantiates the lock if not already done. */
+    /** Instantiates the lock if not already done. */
     CPLLockHolder( CPLLock **phSpin, CPLLockType eType,
                     const char *pszFile = __FILE__,
                     int nLine = __LINE__);
 
-    /* This variant assumes the lock has already been created. If not, it will */
-    /* be a no-op */
-    CPLLockHolder( CPLLock* hSpin,
+    /** This variant assumes the lock has already been created. If not, it will
+     * be a no-op */
+    explicit CPLLockHolder( CPLLock* hSpin,
                     const char *pszFile = __FILE__,
                     int nLine = __LINE__ );
 
     ~CPLLockHolder();
 };
-
 
 #endif /* def __cplusplus */
 
@@ -203,9 +207,9 @@ class CPL_DLL CPLLockHolder
 #define CTLS_CSVTABLEPTR                 3         /* cpl_csv.cpp */
 #define CTLS_CSVDEFAULTFILENAME          4         /* cpl_csv.cpp */
 #define CTLS_ERRORCONTEXT                5         /* cpl_error.cpp */
-#define CTLS_GDALDATASET_REC_PROTECT_MAP 6        /* gdaldataset.cpp */
+/* 6: unused */
 #define CTLS_PATHBUF                     7         /* cpl_path.cpp */
-#define CTLS_UNUSED3                     8
+#define CTLS_ABSTRACTARCHIVE_SPLIT       8         /* cpl_vsil_abstract_archive.cpp */
 #define CTLS_UNUSED4                     9
 #define CTLS_CPLSPRINTF                 10         /* cpl_string.h */
 #define CTLS_RESPONSIBLEPID             11         /* gdaldataset.cpp */
@@ -214,6 +218,7 @@ class CPL_DLL CPLLockHolder
 #define CTLS_CONFIGOPTIONS              14         /* cpl_conv.cpp */
 #define CTLS_FINDFILE                   15         /* cpl_findfile.cpp */
 #define CTLS_VSIERRORCONTEXT            16         /* cpl_vsi_error.cpp */
+#define CTLS_ERRORHANDLERACTIVEDATA     17         /* cpl_error.cpp */
 
 #define CTLS_MAX                        32
 

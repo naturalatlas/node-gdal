@@ -1,6 +1,6 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
-var WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
+var WGS84 = 'GEOGCS["WGS_84",DATUM["WGS_1984",SPHEROID["WGS_84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433],AXIS["Longitude",EAST],AXIS["Latitude",NORTH]]';
 
 describe('gdal.Geometry', function() {
 	afterEach(gc);
@@ -59,7 +59,7 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toWKB()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			var wkb = point2d.toWKB();
 			var expected;
 			if (wkb[0] === 0) {
@@ -72,7 +72,7 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toWKT()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			var wkt = point2d.toWKT();
 			assert.equal(wkt, 'POINT (1 2)');
 		});

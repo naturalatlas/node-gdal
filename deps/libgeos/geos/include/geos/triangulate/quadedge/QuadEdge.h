@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,330 +28,380 @@ namespace geos {
 namespace triangulate { //geos.triangulate
 namespace quadedge { //geos.triangulate.quadedge
 
-/**
- * A class that represents the edge data structure which implements the quadedge algebra. 
+/** \brief
+ * A class that represents the edge data structure which implements the quadedge algebra.
+ *
  * The quadedge algebra was described in a well-known paper by Guibas and Stolfi,
- * "Primitives for the manipulation of general subdivisions and the computation of Voronoi diagrams", 
- * <i>ACM Transactions on Graphics</i>, 4(2), 1985, 75-123.
- * 
- * Each edge object is part of a quartet of 4 edges,
- * linked via their <tt>_rot</tt> references.
+ * "Primitives for the manipulation of general subdivisions and the computation of Voronoi diagrams",
+ * *ACM Transactions on Graphics*, 4(2), 1985, 75-123.
+ *
+ * Each edge object is part of a quartet of 4 edges, linked via their `_rot` references.
  * Any edge in the group may be accessed using a series of {@link #rot()} operations.
- * Quadedges in a subdivision are linked together via their <tt>next</tt> references.
+ * Quadedges in a subdivision are linked together via their `next` references.
  * The linkage between the quadedge quartets determines the topology
- * of the subdivision. 
+ * of the subdivision.
  *
  * The edge class does not contain separate information for vertice or faces; a vertex is implicitly
- * defined as a ring of edges (created using the <tt>next</tt> field).
- * 
+ * defined as a ring of edges (created using the `next` field).
+ *
  * @author JTS: David Skea
  * @author JTS: Martin Davis
  * @author Benjamin Campbell
  * */
 class GEOS_DLL QuadEdge {
 public:
-	/**
-	 * Creates a new QuadEdge quartet from {@link Vertex} o to {@link Vertex} d.
-	 * 
-	 * @param o
-	 *		  the origin Vertex
-	 * @param d
-	 *		  the destination Vertex
-	 * @return the new QuadEdge* The caller is reponsible for
-	 * freeing the returned pointer
-	 */
-	static std::auto_ptr<QuadEdge> makeEdge(const Vertex &o, const Vertex &d);
+    /** \brief
+     * Creates a new QuadEdge quartet from {@link Vertex} o to {@link Vertex} d.
+     *
+     * @param o the origin Vertex
+     * @param d the destination Vertex
+     * @return the new QuadEdge* The caller is reponsible for
+     *         freeing the returned pointer
+     */
+    static std::unique_ptr<QuadEdge> makeEdge(const Vertex& o, const Vertex& d);
 
-	/**
-	 * Creates a new QuadEdge connecting the destination of a to the origin of
-	 * b, in such a way that all three have the same left face after the
-	 * connection is complete. Additionally, the data pointers of the new edge
-	 * are set.
-	 *
-	 * @return the new QuadEdge* The caller is reponsible for
-	 * freeing the returned pointer
-	 */
-	static std::auto_ptr<QuadEdge> connect(QuadEdge &a, QuadEdge &b);
+    /** \brief
+     * Creates a new QuadEdge connecting the destination of a to the origin of
+     * b, in such a way that all three have the same left face after the
+     * connection is complete.
+     *
+     * Additionally, the data pointers of the new edge are set.
+     *
+     * @return the new QuadEdge* The caller is reponsible for
+     *         freeing the returned pointer
+     */
+    static std::unique_ptr<QuadEdge> connect(QuadEdge& a, QuadEdge& b);
 
-	/**
-	 * Splices two edges together or apart.
-	 * Splice affects the two edge rings around the origins of a and b, and, independently, the two
-	 * edge rings around the left faces of <tt>a</tt> and <tt>b</tt>. 
-	 * In each case, (i) if the two rings are distinct,
-	 * Splice will combine them into one, or (ii) if the two are the same ring, Splice will break it
-	 * into two separate pieces. Thus, Splice can be used both to attach the two edges together, and
-	 * to break them apart.
-	 * 
-	 * @param a an edge to splice
-	 * @param b an edge to splice
-	 * 
-	 */
-	static void splice(QuadEdge &a, QuadEdge &b);
+    /** \brief
+     * Splices two edges together or apart.
+     *
+     * Splice affects the two edge rings around the origins of a and b, and, independently, the two
+     * edge rings around the left faces of `a` and `b`.
+     * In each case, (i) if the two rings are distinct,
+     * Splice will combine them into one, or (ii) if the two are the same ring, Splice will break it
+     * into two separate pieces. Thus, Splice can be used both to attach the two edges together, and
+     * to break them apart.
+     *
+     * @param a an edge to splice
+     * @param b an edge to splice
+     *
+     */
+    static void splice(QuadEdge& a, QuadEdge& b);
 
-	/**
-	 * Turns an edge counterclockwise inside its enclosing quadrilateral.
-	 * 
-	 * @param e the quadedge to turn
-	 */
-	static void swap(QuadEdge &e);
+    /** \brief
+     * Turns an edge counterclockwise inside its enclosing quadrilateral.
+     *
+     * @param e the quadedge to turn
+     */
+    static void swap(QuadEdge& e);
 
 private:
-	//// the dual of this edge, directed from right to left
-	QuadEdge *_rot;
-	Vertex   vertex;			// The vertex that this edge represents
-	QuadEdge *next;			  // A reference to a connected edge
-	void*   data;
-	bool isAlive;
+    //// the dual of this edge, directed from right to left
+    QuadEdge* _rot;
+    Vertex   vertex;			// The vertex that this edge represents
+    QuadEdge* next;			  // A reference to a connected edge
+    void*   data;
+    bool isAlive;
+    bool visited;
 
-	/**
-	 * Quadedges must be made using {@link makeEdge}, 
-	 * to ensure proper construction.
-	 */
-	QuadEdge();
+    /**
+     * Quadedges must be made using {@link makeEdge},
+     * to ensure proper construction.
+     */
+    QuadEdge();
 
 public:
-	~QuadEdge();
+    virtual ~QuadEdge();
 
-	/**
-	 * Free the QuadEdge quartet associated with this QuadEdge by a connect()
-	 * or makeEdge() call.
-	 * DO NOT call this function on a QuadEdge that was not returned
-	 * by connect() or makeEdge().
-	 */
-	virtual void free();
+    /** \brief
+     * Free the QuadEdge quartet associated with this QuadEdge by a connect()
+     * or makeEdge() call.
+     *
+     * @note DO NOT call this function on a QuadEdge that was not returned
+     * by connect() or makeEdge().
+     */
+    virtual void free();
 
-	/**
-	 * Gets the primary edge of this quadedge and its <tt>sym</tt>.
-	 * The primary edge is the one for which the origin
-	 * and destination coordinates are ordered
-	 * according to the standard {@link Coordinate} ordering
-	 * 
-	 * @return the primary quadedge
-	 */
-	const QuadEdge& getPrimary() const;
-	
-	/**
-	 * Sets the external data value for this edge.
-	 * 
-	 * @param data an object containing external data
-	 */
-	virtual void setData(void* data);
-	
-	/**
-	 * Gets the external data value for this edge.
-	 * 
-	 * @return the data object
-	 */
-	virtual void* getData();
+    /** \brief
+     * Gets the primary edge of this quadedge and its `sym`.
+     *
+     * The primary edge is the one for which the origin
+     * and destination coordinates are ordered
+     * according to the standard geom::Coordinate ordering
+     *
+     * @return the primary quadedge
+     */
+    const QuadEdge& getPrimary() const;
 
-	/**
-	 * Marks this quadedge as being deleted.
-	 * This does not free the memory used by
-	 * this quadedge quartet, but indicates
-	 * that this quadedge quartet no longer participates
-	 * in a subdivision.
-	 *
-	 * NOTE: called "delete" in JTS
-	 *
-	 */
-	void remove();
-	
-	/**
-	 * Tests whether this edge has been deleted.
-	 * 
-	 * @return true if this edge has not been deleted.
-	 */
-	inline bool isLive() {
-		return isAlive;
-	}
+    /** \brief
+     * Sets the external data value for this edge.
+     *
+     * @param data an object containing external data
+     */
+    virtual void setData(void* data);
 
+    /** \brief
+     * Gets the external data value for this edge.
+     *
+     * @return the data object
+     */
+    virtual void* getData();
 
-	/**
-	 * Sets the connected edge
-	 * 
-	 * @param nextEdge edge
-	 */
-	inline void setNext(QuadEdge *next) {
-		this->next = next;
-	}
-	
-	/***************************************************************************
-	 * QuadEdge Algebra 
-	 ***************************************************************************
-	 */
+    /** \brief
+     * Marks this quadedge as being deleted.
+     *
+     * This does not free the memory used by
+     * this quadedge quartet, but indicates
+     * that this quadedge quartet no longer participates
+     * in a subdivision.
+     *
+     * @note called "delete" in JTS
+     *
+     */
+    void remove();
 
-	/**
-	 * Gets the dual of this edge, directed from its right to its left.
-	 * 
-	 * @return the rotated edge
-	 */
-	 inline QuadEdge& rot() const {
-	  return *_rot;
-	}
+    /** \brief
+     * Tests whether this edge has been deleted.
+     *
+     * @return `true` if this edge has not been deleted.
+     */
+    inline bool
+    isLive() const
+    {
+        return isAlive;
+    }
 
-	/**
-	 * Gets the dual of this edge, directed from its left to its right.
-	 * 
-	 * @return the inverse rotated edge.
-	 */
-	inline QuadEdge& invRot() const  {
-	  return rot().sym();
-	}
+    inline bool
+    isVisited() const
+    {
+        return visited;
+    }
 
-	/**
-	 * Gets the edge from the destination to the origin of this edge.
-	 * 
-	 * @return the sym of the edge
-	 */
-	inline QuadEdge& sym() const {
-	  return rot().rot();
-	}
+    inline void
+    setVisited(bool v) {
+        visited = v;
+    }
 
-	/**
-	 * Gets the next CCW edge around the origin of this edge.
-	 * 
-	 * @return the next linked edge.
-	 */
-	inline QuadEdge& oNext() const {
-		return *next;
-	}
+    /** \brief
+     * Sets the connected edge
+     *
+     * @param p_next edge
+     */
+    inline void
+    setNext(QuadEdge* p_next)
+    {
+        this->next = p_next;
+    }
 
-	/**
-	 * Gets the next CW edge around (from) the origin of this edge.
-	 * 
-	 * @return the previous edge.
-	 */
-	inline QuadEdge& oPrev() const {
-		return rot().oNext().rot();
-	}
+    /***************************************************************************
+     * QuadEdge Algebra
+     ***************************************************************************
+     */
 
-	/**
-	 * Gets the next CCW edge around (into) the destination of this edge.
-	 * 
-	 * @return the next destination edge.
-	 */
-	inline QuadEdge& dNext() const {
-		return sym().oNext().sym();
-	}
+    /** \brief
+     * Gets the dual of this edge, directed from its right to its left.
+     *
+     * @return the rotated edge
+     */
+    inline QuadEdge&
+    rot() const
+    {
+        return *_rot;
+    }
 
-	/**
-	 * Gets the next CW edge around (into) the destination of this edge.
-	 * 
-	 * @return the previous destination edge.
-	 */
-	inline QuadEdge& dPrev() const {
-		return invRot().oNext().invRot();
-	}
+    /** \brief
+     * Gets the dual of this edge, directed from its left to its right.
+     *
+     * @return the inverse rotated edge.
+     */
+    inline QuadEdge&
+    invRot() const
+    {
+        return rot().sym();
+    }
 
-	/**
-	 * Gets the CCW edge around the left face following this edge.
-	 * 
-	 * @return the next left face edge.
-	 */
-	inline QuadEdge& lNext() const {
-		return invRot().oNext().rot();
-	}
+    /** \brief
+     * Gets the edge from the destination to the origin of this edge.
+     *
+     * @return the sym of the edge
+     */
+    inline QuadEdge&
+    sym() const
+    {
+        return rot().rot();
+    }
 
-	/**
-	 * Gets the CCW edge around the left face before this edge.
-	 * 
-	 * @return the previous left face edge.
-	 */
-	inline QuadEdge& lPrev() const {
-		return oNext().sym();
-	}
+    /** \brief
+     * Gets the next CCW edge around the origin of this edge.
+     *
+     * @return the next linked edge.
+     */
+    inline QuadEdge&
+    oNext() const
+    {
+        return *next;
+    }
 
-	/**
-	 * Gets the edge around the right face ccw following this edge.
-	 * 
-	 * @return the next right face edge.
-	 */
-	inline QuadEdge& rNext() {
-		return rot().oNext().invRot();
-	}
+    /** \brief
+     * Gets the next CW edge around (from) the origin of this edge.
+     *
+     * @return the previous edge.
+     */
+    inline QuadEdge&
+    oPrev() const
+    {
+        return rot().oNext().rot();
+    }
 
-	/**
-	 * Gets the edge around the right face ccw before this edge.
-	 * 
-	 * @return the previous right face edge.
-	 */
-	inline QuadEdge& rPrev() {
-		return sym().oNext();
-	}
+    /** \brief
+     * Gets the next CCW edge around (into) the destination of this edge.
+     *
+     * @return the next destination edge.
+     */
+    inline QuadEdge&
+    dNext() const
+    {
+        return sym().oNext().sym();
+    }
 
-	/***********************************************************************************************
-	 * Data Access
-	 **********************************************************************************************/
-	/**
-	 * Sets the vertex for this edge's origin
-	 * 
-	 * @param o the origin vertex
-	 */
-	inline void setOrig(const Vertex &o) {
-		vertex = o;
-	}
+    /** \brief
+     * Gets the next CW edge around (into) the destination of this edge.
+     *
+     * @return the previous destination edge.
+     */
+    inline QuadEdge&
+    dPrev() const
+    {
+        return invRot().oNext().invRot();
+    }
 
-	/**
-	 * Sets the vertex for this edge's destination
-	 * 
-	 * @param d the destination vertex
-	 */
-	inline void setDest(const Vertex &d) {
-		sym().setOrig(d);
-	}
+    /** \brief
+     * Gets the CCW edge around the left face following this edge.
+     *
+     * @return the next left face edge.
+     */
+    inline QuadEdge&
+    lNext() const
+    {
+        return invRot().oNext().rot();
+    }
 
-	/**
-	 * Gets the vertex for the edge's origin
-	 * 
-	 * @return the origin vertex
-	 */
-	const Vertex& orig() const {
-		return vertex;
-	}
+    /** \brief
+     * Gets the CCW edge around the left face before this edge.
+     *
+     * @return the previous left face edge.
+     */
+    inline QuadEdge&
+    lPrev() const
+    {
+        return oNext().sym();
+    }
 
-	/**
-	 * Gets the vertex for the edge's destination
-	 * 
-	 * @return the destination vertex
-	 */
-	const Vertex& dest() const {
-		return sym().orig();
-	}
+    /** \brief
+     * Gets the edge around the right face ccw following this edge.
+     *
+     * @return the next right face edge.
+     */
+    inline QuadEdge&
+    rNext()
+    {
+        return rot().oNext().invRot();
+    }
 
-	/**
-	 * Gets the length of the geometry of this quadedge.
-	 * 
-	 * @return the length of the quadedge
-	 */
-	inline double getLength() const {
-		return orig().getCoordinate().distance(dest().getCoordinate());
-	}
+    /** \brief
+     * Gets the edge around the right face ccw before this edge.
+     *
+     * @return the previous right face edge.
+     */
+    inline QuadEdge&
+    rPrev()
+    {
+        return sym().oNext();
+    }
 
-	/**
-	 * Tests if this quadedge and another have the same line segment geometry, 
-	 * regardless of orientation.
-	 * 
-	 * @param qe a quadege
-	 * @return true if the quadedges are based on the same line segment regardless of orientation
-	 */
-	bool equalsNonOriented(const QuadEdge &qe) const;
+    /***********************************************************************************************
+     * Data Access
+     **********************************************************************************************/
+    /** \brief
+     * Sets the vertex for this edge's origin
+     *
+     * @param o the origin vertex
+     */
+    inline void
+    setOrig(const Vertex& o)
+    {
+        vertex = o;
+    }
 
-	/**
-	 * Tests if this quadedge and another have the same line segment geometry
-	 * with the same orientation.
-	 * 
-	 * @param qe a quadege
-	 * @return true if the quadedges are based on the same line segment
-	 */
-	bool equalsOriented(const QuadEdge &qe) const;
+    /** \brief
+     * Sets the vertex for this edge's destination
+     *
+     * @param d the destination vertex
+     */
+    inline void
+    setDest(const Vertex& d)
+    {
+        sym().setOrig(d);
+    }
 
-	/**
-	 * Creates a {@link LineSegment} representing the
-	 * geometry of this edge.
-	 * 
-	 * @return a LineSegment
-	 */
-	std::auto_ptr<geom::LineSegment> toLineSegment() const;
+    /** \brief
+     * Gets the vertex for the edge's origin
+     *
+     * @return the origin vertex
+     */
+    const Vertex&
+    orig() const
+    {
+        return vertex;
+    }
+
+    /** \brief
+     * Gets the vertex for the edge's destination
+     *
+     * @return the destination vertex
+     */
+    const Vertex&
+    dest() const
+    {
+        return sym().orig();
+    }
+
+    /** \brief
+     * Gets the length of the geometry of this quadedge.
+     *
+     * @return the length of the quadedge
+     */
+    inline double
+    getLength() const
+    {
+        return orig().getCoordinate().distance(dest().getCoordinate());
+    }
+
+    /** \brief
+     * Tests if this quadedge and another have the same line segment geometry,
+     * regardless of orientation.
+     *
+     * @param qe a quadege
+     * @return `true` if the quadedges are based on the same line segment regardless of orientation
+     */
+    bool equalsNonOriented(const QuadEdge& qe) const;
+
+    /** \brief
+     * Tests if this quadedge and another have the same line segment geometry
+     * with the same orientation.
+     *
+     * @param qe a quadege
+     * @return `true` if the quadedges are based on the same line segment
+     */
+    bool equalsOriented(const QuadEdge& qe) const;
+
+    /** \brief
+     * Creates a {@link geom::LineSegment} representing the
+     * geometry of this edge.
+     *
+     * @return a LineSegment
+     */
+    std::unique_ptr<geom::LineSegment> toLineSegment() const;
 };
 
 } //namespace geos.triangulate.quadedge

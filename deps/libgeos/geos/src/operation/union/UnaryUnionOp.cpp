@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -16,16 +16,15 @@
  *
  **********************************************************************/
 
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 #include <cassert> // for assert
 #include <algorithm> // for copy
 
-#include <geos/operation/union/UnaryUnionOp.h> 
-#include <geos/operation/union/CascadedUnion.h> 
-#include <geos/operation/union/CascadedPolygonUnion.h> 
-#include <geos/operation/union/PointGeometryUnion.h> 
-#include <geos/geom/Coordinate.h> 
-#include <geos/geom/Puntal.h> 
+#include <geos/operation/union/UnaryUnionOp.h>
+#include <geos/operation/union/CascadedUnion.h>
+#include <geos/operation/union/CascadedPolygonUnion.h>
+#include <geos/operation/union/PointGeometryUnion.h>
+#include <geos/geom/Coordinate.h>
 #include <geos/geom/Point.h>
 #include <geos/geom/MultiPoint.h>
 #include <geos/geom/MultiLineString.h>
@@ -42,92 +41,106 @@ namespace operation { // geos::operation
 namespace geounion {  // geos::operation::geounion
 
 /*private*/
-std::auto_ptr<geom::Geometry>
-UnaryUnionOp::unionWithNull(std::auto_ptr<geom::Geometry> g0,
-                            std::auto_ptr<geom::Geometry> g1)
+std::unique_ptr<geom::Geometry>
+UnaryUnionOp::unionWithNull(std::unique_ptr<geom::Geometry> g0,
+                            std::unique_ptr<geom::Geometry> g1)
 {
-  std::auto_ptr<geom::Geometry> ret;
-  if ( ( ! g0.get() ) && ( ! g1.get() ) ) return ret;
+    std::unique_ptr<geom::Geometry> ret;
+    if((! g0.get()) && (! g1.get())) {
+        return ret;
+    }
 
-  if ( ! g0.get() ) return g1;
-  if ( ! g1.get() ) return g0;
+    if(! g0.get()) {
+        return g1;
+    }
+    if(! g1.get()) {
+        return g0;
+    }
 
-  ret.reset( g0->Union(g1.get()) );
-  return ret;
+    ret = g0->Union(g1.get());
+    return ret;
 }
 
 /*public*/
-std::auto_ptr<geom::Geometry>
+std::unique_ptr<geom::Geometry>
 UnaryUnionOp::Union()
 {
-  using geom::Puntal;
-  typedef std::auto_ptr<geom::Geometry> GeomAutoPtr;
+    typedef std::unique_ptr<geom::Geometry> GeomPtr;
 
-  GeomAutoPtr ret;
-  if ( ! geomFact ) return ret;
+    GeomPtr ret;
+    if(! geomFact) {
+        return ret;
+    }
 
-  /**
-   * For points and lines, only a single union operation is
-   * required, since the OGC model allowings self-intersecting
-   * MultiPoint and MultiLineStrings.
-   * This is not the case for polygons, so Cascaded Union is required.
-   */
+    /**
+     * For points and lines, only a single union operation is
+     * required, since the OGC model allowings self-intersecting
+     * MultiPoint and MultiLineStrings.
+     * This is not the case for polygons, so Cascaded Union is required.
+     */
 
-  GeomAutoPtr unionPoints;
-  if (!points.empty()) {
-      GeomAutoPtr ptGeom = geomFact->buildGeometry( points.begin(),
-                                                    points.end()    );
-      unionPoints = unionNoOpt(*ptGeom);
-  }
+    GeomPtr unionPoints;
+    if(!points.empty()) {
+        GeomPtr ptGeom = geomFact->buildGeometry(points.begin(),
+                         points.end());
+        unionPoints = unionNoOpt(*ptGeom);
+    }
 
-  GeomAutoPtr unionLines;
-  if (!lines.empty()) {
-      /* JTS compatibility NOTE:
-       * we use cascaded here for robustness [1]
-       * but also add a final unionNoOpt step to deal with
-       * self-intersecting lines [2]
-       *
-       * [1](http://trac.osgeo.org/geos/ticket/392
-       * [2](http://trac.osgeo.org/geos/ticket/482
-       *
-       */
-      unionLines.reset( CascadedUnion::Union( lines.begin(),
-                                              lines.end()   ) );
-      unionLines = unionNoOpt(*unionLines);
-  }
+    GeomPtr unionLines;
+    if(!lines.empty()) {
+        /* JTS compatibility NOTE:
+         * we use cascaded here for robustness [1]
+         * but also add a final unionNoOpt step to deal with
+         * self-intersecting lines [2]
+         *
+         * [1](http://trac.osgeo.org/geos/ticket/392
+         * [2](http://trac.osgeo.org/geos/ticket/482
+         *
+         */
+        try {
+            auto combinedLines = geomFact->buildGeometry(lines.begin(), lines.end());
+            unionLines = unionNoOpt(*combinedLines);
+        } catch (geos::util::TopologyException &) {
+            unionLines.reset(CascadedUnion::Union(lines.begin(),
+                                                  lines.end()));
+            if(unionLines.get()) {
+                unionLines = unionNoOpt(*unionLines);
+            }
+        }
+    }
 
-  GeomAutoPtr unionPolygons;
-  if (!polygons.empty()) {
-      unionPolygons.reset( CascadedPolygonUnion::Union( polygons.begin(),
-                                                        polygons.end()   ) );
-  }
+    GeomPtr unionPolygons;
+    if(!polygons.empty()) {
+        unionPolygons.reset(CascadedPolygonUnion::Union(polygons.begin(),
+                            polygons.end()));
+    }
 
-  /**
-   * Performing two unions is somewhat inefficient,
-   * but is mitigated by unioning lines and points first
-   */
+    /**
+     * Performing two unions is somewhat inefficient,
+     * but is mitigated by unioning lines and points first
+     */
 
-  GeomAutoPtr unionLA = unionWithNull(unionLines, unionPolygons);
-  assert(!unionLines.get()); assert(!unionPolygons.get());
+    GeomPtr unionLA = unionWithNull(std::move(unionLines), std::move(unionPolygons));
+    assert(!unionLines.get());
+    assert(!unionPolygons.get());
 
-  if ( ! unionPoints.get() ) {
-    ret = unionLA;
-    assert(!unionLA.get()); 
-  }
-  else if ( ! unionLA.get() ) {
-    ret = unionPoints;
-    assert(!unionPoints.get()); 
-  }
-  else {
-    Puntal& up = dynamic_cast<Puntal&>(*unionPoints);
-    ret = PointGeometryUnion::Union(up, *unionLA);
-  }
+    if(! unionPoints.get()) {
+        ret = std::move(unionLA);
+        assert(!unionLA.get());
+    }
+    else if(! unionLA.get()) {
+        ret = std::move(unionPoints);
+        assert(!unionPoints.get());
+    }
+    else {
+        ret = PointGeometryUnion::Union(*unionPoints, *unionLA);
+    }
 
-  if ( ! ret.get() ) {
-          ret.reset( geomFact->createGeometryCollection() );
-  }
+    if(! ret.get()) {
+        ret = geomFact->createGeometryCollection();
+    }
 
-  return ret;
+    return ret;
 
 }
 

@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -20,8 +20,6 @@
 #include <geos/io/Writer.h>
 #include <string>
 
-using namespace std;
-
 namespace geos {
 namespace io { // geos.io
 
@@ -32,23 +30,19 @@ Writer::Writer()
 void
 Writer::reserve(std::size_t capacity)
 {
-  str.reserve(capacity);
-}
-
-Writer::~Writer()
-{
+    str.reserve(capacity);
 }
 
 void
 Writer::write(const std::string& txt)
 {
-	str.append(txt);
+    str.append(txt);
 }
 
 const std::string&
 Writer::toString()
 {
-	return str;
+    return str;
 }
 
 } // namespace geos.io

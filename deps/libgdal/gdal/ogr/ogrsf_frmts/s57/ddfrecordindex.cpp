@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ddfrecordindex.cpp 33271 2016-01-30 16:01:55Z goatbar $
  *
  * Project:  S-57 Translator
  * Purpose:  Implements DDFRecordIndex class.  This class is used to cache
@@ -32,7 +31,7 @@
 #include "cpl_conv.h"
 #include "s57.h"
 
-CPL_CVSID("$Id: ddfrecordindex.cpp 33271 2016-01-30 16:01:55Z goatbar $");
+CPL_CVSID("$Id: ddfrecordindex.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                           DDFRecordIndex()                           */
@@ -44,7 +43,7 @@ DDFRecordIndex::DDFRecordIndex() :
     nRecordMax(0),
     nLastObjlPos(0),
     nLastObjl(0),
-    pasRecords(NULL)
+    pasRecords(nullptr)
 {}
 
 /************************************************************************/
@@ -84,7 +83,7 @@ void DDFRecordIndex::Clear()
     nLastObjl = 0;
 
     CPLFree( pasRecords );
-    pasRecords = NULL;
+    pasRecords = nullptr;
 }
 
 /************************************************************************/
@@ -110,7 +109,7 @@ void DDFRecordIndex::AddRecord( int nKey, DDFRecord * poRecord )
 
     pasRecords[nRecordCount].nKey = nKey;
     pasRecords[nRecordCount].poRecord = poRecord;
-    pasRecords[nRecordCount].pClientData = NULL;
+    pasRecords[nRecordCount].pClientData = nullptr;
 
     nRecordCount++;
 }
@@ -147,7 +146,7 @@ DDFRecord * DDFRecordIndex::FindRecord( int nKey )
             return pasRecords[nTestIndex].poRecord;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -184,14 +183,14 @@ DDFRecord * DDFRecordIndex::FindRecordByObjl( int nObjl )
     nLastObjlPos=0;
     nLastObjl=0;
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
 /*                            RemoveRecord()                            */
 /************************************************************************/
 
-int DDFRecordIndex::RemoveRecord( int nKey )
+bool DDFRecordIndex::RemoveRecord( int nKey )
 
 {
     if( !bSorted )
@@ -217,7 +216,7 @@ int DDFRecordIndex::RemoveRecord( int nKey )
     }
 
     if( nMinIndex > nMaxIndex )
-        return FALSE;
+        return false;
 
 /* -------------------------------------------------------------------- */
 /*      Delete this record.                                             */
@@ -234,7 +233,7 @@ int DDFRecordIndex::RemoveRecord( int nKey )
 
     nRecordCount--;
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -284,7 +283,7 @@ DDFRecord * DDFRecordIndex::GetByIndex( int nIndex )
         Sort();
 
     if( nIndex < 0 || nIndex >= nRecordCount )
-        return NULL;
+        return nullptr;
 
     return pasRecords[nIndex].poRecord;
 }
@@ -300,7 +299,7 @@ void * DDFRecordIndex::GetClientInfoByIndex( int nIndex )
         Sort();
 
     if( nIndex < 0 || nIndex >= nRecordCount )
-        return NULL;
+        return nullptr;
 
     return pasRecords[nIndex].pClientData;
 }

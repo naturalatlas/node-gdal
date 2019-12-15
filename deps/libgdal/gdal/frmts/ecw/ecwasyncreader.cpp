@@ -1,7 +1,6 @@
 /******************************************************************************
- * $Id: ecwdataset.cpp 21486 2011-01-13 17:38:17Z warmerdam $
  *
- * Project:  GDAL 
+ * Project:  GDAL
  * Purpose:  ECWAsyncReader implementation
  * Author:   Frank Warmerdam, warmerdam@pobox.com
  *
@@ -28,9 +27,12 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+// ncsjpcbuffer.h needs the min and max macros.
+#undef NOMINMAX
+
 #include "gdal_ecw.h"
 
-CPL_CVSID("$Id: ecwdataset.cpp 21486 2011-01-13 17:38:17Z warmerdam $");
+CPL_CVSID("$Id: ecwasyncreader.cpp d4681234b337b14e215ae6b4d3ca7dc5e48d0a17 2019-03-24 15:50:26 +0100 Even Rouault $")
 
 #if defined(FRMT_ecw) && (ECWSDK_VERSION >= 40)
 
@@ -38,8 +40,8 @@ CPL_CVSID("$Id: ecwdataset.cpp 21486 2011-01-13 17:38:17Z warmerdam $");
 /*                          BeginAsyncReader()                          */
 /************************************************************************/
 
-GDALAsyncReader* 
-ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize, 
+GDALAsyncReader*
+ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
                               void *pBuf, int nBufXSize, int nBufYSize,
                               GDALDataType eBufType,
                               int nBandCount, int* panBandMap,
@@ -58,19 +60,19 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
         nLineSpace = nPixelSpace * nBufXSize;
     if( nBandSpace == 0 )
         nBandSpace = nLineSpace * nBufYSize;
-    
+
 /* -------------------------------------------------------------------- */
 /*      Do a bit of validation.                                         */
 /* -------------------------------------------------------------------- */
     if( nXSize < 1 || nYSize < 1 || nBufXSize < 1 || nBufYSize < 1 )
     {
-        CPLDebug( "GDAL", 
+        CPLDebug( "GDAL",
                   "BeginAsyncReader() skipped for odd window or buffer size.\n"
                   "  Window = (%d,%d)x%dx%d\n"
                   "  Buffer = %dx%d\n",
-                  nXOff, nYOff, nXSize, nYSize, 
+                  nXOff, nYOff, nXSize, nYSize,
                   nBufXSize, nBufYSize );
-        return NULL;
+        return nullptr;
     }
 
     if( nXOff < 0 || nXOff > INT_MAX - nXSize || nXOff + nXSize > nRasterXSize
@@ -80,16 +82,16 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
                   "Access window out of range in RasterIO().  Requested\n"
                   "(%d,%d) of size %dx%d on raster of %dx%d.",
                   nXOff, nYOff, nXSize, nYSize, nRasterXSize, nRasterYSize );
-        return NULL;
+        return nullptr;
     }
 
     if( nBandCount <= 0 || nBandCount > nBands )
     {
         ReportError( CE_Failure, CPLE_IllegalArg, "Invalid band count" );
-        return NULL;
+        return nullptr;
     }
 
-    if( panBandMap != NULL )
+    if( panBandMap != nullptr )
     {
         for( i = 0; i < nBandCount; i++ )
         {
@@ -98,7 +100,7 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
                 ReportError( CE_Failure, CPLE_IllegalArg,
                       "panBandMap[%d] = %d, this band does not exist on dataset.",
                       i, panBandMap[i] );
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -121,7 +123,7 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
     poReader->eBufType = eBufType;
     poReader->nBandCount = nBandCount;
     poReader->panBandMap = (int *) CPLCalloc(sizeof(int),nBandCount);
-    if( panBandMap != NULL )
+    if( panBandMap != nullptr )
     {
         memcpy( poReader->panBandMap, panBandMap, sizeof(int) * nBandCount );
     }
@@ -138,13 +140,13 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
 /* -------------------------------------------------------------------- */
 /*      Create a new view for this request.                             */
 /* -------------------------------------------------------------------- */
-    poReader->poFileView = OpenFileView( GetDescription(), true, 
+    poReader->poFileView = OpenFileView( GetDescription(), true,
                                          poReader->bUsingCustomStream );
 
-    if( poReader->poFileView == NULL )
+    if( poReader->poFileView == nullptr )
     {
         delete poReader;
-        return NULL;
+        return nullptr;
     }
 
     poReader->poFileView->SetClientData( poReader );
@@ -156,24 +158,24 @@ ECWDataset::BeginAsyncReader( int nXOff, int nYOff, int nXSize, int nYSize,
     std::vector<UINT32> anBandIndices;
     NCSError     eNCSErr;
     CNCSError    oErr;
-    
+
     for( i = 0; i < nBandCount; i++ )
-        anBandIndices.push_back( panBandMap[i] - 1 );
+        anBandIndices.push_back( poReader->panBandMap[i] - 1 );
 
     oErr = poReader->poFileView->SetView( nBandCount, &(anBandIndices[0]),
-                                          nXOff, nYOff, 
-                                          nXOff + nXSize - 1, 
+                                          nXOff, nYOff,
+                                          nXOff + nXSize - 1,
                                           nYOff + nYSize - 1,
                                           nBufXSize, nBufYSize );
     eNCSErr = oErr.GetErrorNumber();
-    
+
     if( eNCSErr != NCS_SUCCESS )
     {
         delete poReader;
-        CPLError( CE_Failure, CPLE_AppDefined, 
+        CPLError( CE_Failure, CPLE_AppDefined,
                   "%s", NCSGetErrorText(eNCSErr) );
-        
-        return NULL;
+
+        return nullptr;
     }
 
     return poReader;
@@ -197,11 +199,6 @@ ECWAsyncReader::ECWAsyncReader()
 {
     hMutex = CPLCreateMutex();
     CPLReleaseMutex( hMutex );
-
-    poFileView = NULL;
-    bUpdateReady = FALSE;
-    bComplete = FALSE;
-    panBandMap = NULL;
 }
 
 /************************************************************************/
@@ -214,17 +211,17 @@ ECWAsyncReader::~ECWAsyncReader()
     {
         CPLMutexHolderD( &hMutex );
 
-        // cancel? 
+        // cancel?
 
         delete poFileView;
         // we should also consider cleaning up the io stream if needed.
     }
 
     CPLFree(panBandMap);
-    panBandMap = NULL;
+    panBandMap = nullptr;
 
     CPLDestroyMutex( hMutex );
-    hMutex = NULL;
+    hMutex = nullptr;
 }
 
 /************************************************************************/
@@ -241,12 +238,12 @@ ECWAsyncReader::~ECWAsyncReader()
 NCSEcwReadStatus ECWAsyncReader::RefreshCB( NCSFileView *pFileView )
 
 {
-    NCSFileViewSetInfo *psVSI = NULL;
+    NCSFileViewSetInfo *psVSI = nullptr;
 
     NCScbmGetViewInfo( pFileView, &psVSI );
-    if( psVSI != NULL )
+    if( psVSI != nullptr )
     {
-        CPLDebug( "ECW", "RefreshCB(): BlockCounts=%d/%d/%d/%d", 
+        CPLDebug( "ECW", "RefreshCB(): BlockCounts=%d/%d/%d/%d",
                   psVSI->nBlocksAvailableAtSetView,
                   psVSI->nBlocksAvailable,
                   psVSI->nMissedBlocksDuringRead,
@@ -258,7 +255,7 @@ NCSEcwReadStatus ECWAsyncReader::RefreshCB( NCSFileView *pFileView )
 /* -------------------------------------------------------------------- */
     CNCSJP2FileView *poFileView = (CNCSJP2FileView *) pFileView;
     ECWAsyncReader *poReader = (ECWAsyncReader *)poFileView->GetClientData();
-    
+
 /* -------------------------------------------------------------------- */
 /*      Acquire the async reader mutex.  Currently we make no           */
 /*      arrangements for failure to acquire it.                         */
@@ -277,7 +274,8 @@ NCSEcwReadStatus ECWAsyncReader::RefreshCB( NCSFileView *pFileView )
         if( !poReader->bComplete )
             poReader->bUpdateReady = TRUE;
 
-        if( psVSI->nBlocksAvailable == psVSI->nBlocksInView )
+        if( psVSI != nullptr &&
+            psVSI->nBlocksAvailable == psVSI->nBlocksInView )
             poReader->bComplete = TRUE;
     }
 
@@ -304,23 +302,23 @@ NCSEcwReadStatus ECWAsyncReader::ReadToBuffer()
     ECWDataset *poECWDS = (ECWDataset *) poDS;
     int i;
     int nDataTypeSize = (GDALGetDataTypeSize(poECWDS->eRasterDataType) / 8);
-    GByte *pabyBILScanline = (GByte *) 
+    GByte *pabyBILScanline = (GByte *)
         CPLMalloc(nBufXSize * nDataTypeSize * nBandCount);
     GByte **papabyBIL = (GByte**)CPLMalloc(nBandCount*sizeof(void*));
 
     for( i = 0; i < nBandCount; i++ )
-        papabyBIL[i] = pabyBILScanline 
+        papabyBIL[i] = pabyBILScanline
             + i * nBufXSize * nDataTypeSize;
 
 /* -------------------------------------------------------------------- */
 /*      Read back the imagery into the buffer.                          */
-/* -------------------------------------------------------------------- */ 
+/* -------------------------------------------------------------------- */
     for( int iScanline = 0; iScanline < nBufYSize; iScanline++ )
     {
         NCSEcwReadStatus  eRStatus;
 
-        eRStatus = 
-            poFileView->ReadLineBIL( poECWDS->eNCSRequestDataType, 
+        eRStatus =
+            poFileView->ReadLineBIL( poECWDS->eNCSRequestDataType,
                                                (UINT16) nBandCount,
                                                (void **) papabyBIL );
         if( eRStatus != NCSECW_READ_OK )
@@ -334,14 +332,14 @@ NCSEcwReadStatus ECWAsyncReader::ReadToBuffer()
 
         for( i = 0; i < nBandCount; i++ )
         {
-            GDALCopyWords( 
+            GDALCopyWords(
                 pabyBILScanline + i * nDataTypeSize * nBufXSize,
-                poECWDS->eRasterDataType, nDataTypeSize, 
-                ((GByte *) pBuf) 
-                + nLineSpace * iScanline 
-                + nBandSpace * i, 
-                eBufType, 
-                nPixelSpace, 
+                poECWDS->eRasterDataType, nDataTypeSize,
+                ((GByte *) pBuf)
+                + nLineSpace * iScanline
+                + nBandSpace * i,
+                eBufType,
+                nPixelSpace,
                 nBufXSize );
         }
     }
@@ -356,7 +354,7 @@ NCSEcwReadStatus ECWAsyncReader::ReadToBuffer()
 /*                        GetNextUpdatedRegion()                        */
 /************************************************************************/
 
-GDALAsyncStatusType 
+GDALAsyncStatusType
 ECWAsyncReader::GetNextUpdatedRegion( double dfTimeout,
                                       int* pnXBufOff, int* pnYBufOff,
                                       int* pnXBufSize, int* pnYBufSize )
@@ -378,7 +376,7 @@ ECWAsyncReader::GetNextUpdatedRegion( double dfTimeout,
         CPLDebug( "ECW", "return GARIO_COMPLETE" );
         return GARIO_COMPLETE;
     }
-        
+
 /* -------------------------------------------------------------------- */
 /*      Wait till our timeout, or until we are notified there is        */
 /*      data ready.  We are trusting the CPLSleep() to be pretty        */
@@ -387,7 +385,7 @@ ECWAsyncReader::GetNextUpdatedRegion( double dfTimeout,
 /* -------------------------------------------------------------------- */
     if( dfTimeout < 0.0 )
         dfTimeout = 100000.0;
-    
+
     while( !bUpdateReady && dfTimeout > 0.0 )
     {
         CPLSleep( MIN(0.1, dfTimeout) );

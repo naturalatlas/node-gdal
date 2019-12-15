@@ -1,6 +1,5 @@
 %{
 /******************************************************************************
- * $Id: ods_formula_parser.y 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Component: OGR ODS Formula Engine
  * Purpose: expression and select parser grammar.
@@ -33,6 +32,8 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 #include "ods_formula.h"
+
+CPL_CVSID("$Id$")
 
 #define YYSTYPE  ods_formula_node*
 
@@ -243,7 +244,9 @@ value_expr:
 
     | '-' value_expr %prec ODST_UMINUS
         {
-            if ($2->eNodeType == SNT_CONSTANT)
+            if ($2->eNodeType == SNT_CONSTANT &&
+                !($2->field_type == ODS_FIELD_TYPE_INTEGER &&
+                  $2->int_value == INT_MIN))
             {
                 $$ = $2;
                 $$->int_value *= -1;

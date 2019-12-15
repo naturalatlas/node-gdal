@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -36,16 +36,16 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Coordinate;
-		class CoordinateSequence;
-		class Geometry;
-		class LineString;
-		class LinearRing;
-	}
-	namespace simplify {
-		class TaggedLineSegment;
-	}
+namespace geom {
+class Coordinate;
+class CoordinateSequence;
+class Geometry;
+class LineString;
+class LinearRing;
+}
+namespace simplify {
+class TaggedLineSegment;
+}
 }
 
 namespace geos {
@@ -61,63 +61,63 @@ class GEOS_DLL TaggedLineString {
 
 public:
 
-	typedef std::vector<geom::Coordinate> CoordVect;
-	
-	typedef std::auto_ptr<CoordVect> CoordVectPtr;
+    typedef std::vector<geom::Coordinate> CoordVect;
 
-	typedef geom::CoordinateSequence CoordSeq;
+    typedef std::unique_ptr<CoordVect> CoordVectPtr;
 
-	typedef std::auto_ptr<geom::CoordinateSequence> CoordSeqPtr;
+    typedef geom::CoordinateSequence CoordSeq;
 
-	TaggedLineString(const geom::LineString* nParentLine,
-			std::size_t minimumSize=2);
+    typedef std::unique_ptr<geom::CoordinateSequence> CoordSeqPtr;
 
-	~TaggedLineString();
+    TaggedLineString(const geom::LineString* nParentLine,
+                     std::size_t minimumSize = 2);
 
-	std::size_t getMinimumSize() const;
+    ~TaggedLineString();
 
-	const geom::LineString* getParent() const;
+    std::size_t getMinimumSize() const;
 
-	const CoordSeq* getParentCoordinates() const;
+    const geom::LineString* getParent() const;
 
-	CoordSeqPtr getResultCoordinates() const;
+    const CoordSeq* getParentCoordinates() const;
 
-	std::size_t getResultSize() const;
+    CoordSeqPtr getResultCoordinates() const;
 
-	TaggedLineSegment* getSegment(std::size_t i);
+    std::size_t getResultSize() const;
 
-	const TaggedLineSegment* getSegment(std::size_t i) const;
+    TaggedLineSegment* getSegment(std::size_t i);
 
-	std::vector<TaggedLineSegment*>& getSegments();
+    const TaggedLineSegment* getSegment(std::size_t i) const;
 
-	const std::vector<TaggedLineSegment*>& getSegments() const;
+    std::vector<TaggedLineSegment*>& getSegments();
 
-	void addToResult(std::auto_ptr<TaggedLineSegment> seg);
+    const std::vector<TaggedLineSegment*>& getSegments() const;
 
-	std::auto_ptr<geom::Geometry> asLineString() const;
+    void addToResult(std::unique_ptr<TaggedLineSegment> seg);
 
-	std::auto_ptr<geom::Geometry> asLinearRing() const;
+    std::unique_ptr<geom::Geometry> asLineString() const;
+
+    std::unique_ptr<geom::Geometry> asLinearRing() const;
 
 private:
 
-	const geom::LineString* parentLine;
+    const geom::LineString* parentLine;
 
-	// TaggedLineSegments owned by this object
-	std::vector<TaggedLineSegment*> segs;
+    // TaggedLineSegments owned by this object
+    std::vector<TaggedLineSegment*> segs;
 
-	// TaggedLineSegments owned by this object
-	std::vector<TaggedLineSegment*> resultSegs;
+    // TaggedLineSegments owned by this object
+    std::vector<TaggedLineSegment*> resultSegs;
 
-	std::size_t minimumSize;
+    std::size_t minimumSize;
 
-	void init();
+    void init();
 
-	static CoordVectPtr extractCoordinates(
-			const std::vector<TaggedLineSegment*>& segs);
+    static CoordVectPtr extractCoordinates(
+        const std::vector<TaggedLineSegment*>& segs);
 
-	// Copying is turned off
-	TaggedLineString(const TaggedLineString&);
-	TaggedLineString& operator= (const TaggedLineString&);
+    // Copying is turned off
+    TaggedLineString(const TaggedLineString&);
+    TaggedLineString& operator= (const TaggedLineString&);
 
 };
 

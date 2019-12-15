@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -38,80 +38,96 @@
 
 // Forward declarations
 namespace geos {
-	namespace geomgraph {
-		class Node;
-		class EdgeEnd;
-		class NodeFactory;
-	}
+namespace geomgraph {
+class Node;
+class EdgeEnd;
+class NodeFactory;
+}
 }
 
 namespace geos {
 namespace geomgraph { // geos.geomgraph
 
-class GEOS_DLL NodeMap{
+class GEOS_DLL NodeMap {
 public:
 
-	typedef std::map<geom::Coordinate*,Node*,geom::CoordinateLessThen> container;
+    typedef std::map<geom::Coordinate*, Node*, geom::CoordinateLessThen> container;
 
-	typedef container::iterator iterator;
+    typedef container::iterator iterator;
 
-	typedef container::const_iterator const_iterator;
+    typedef container::const_iterator const_iterator;
 
-	typedef std::pair<geom::Coordinate*,Node*> pair;
+    typedef std::pair<geom::Coordinate*, Node*> pair;
 
-	container nodeMap;
+    container nodeMap;
 
-	const NodeFactory &nodeFact;
+    const NodeFactory& nodeFact;
 
-	/// \brief
-	/// NodeMap will keep a reference to the NodeFactory,
-	/// keep it alive for the whole NodeMap lifetime
-	NodeMap(const NodeFactory &newNodeFact);
+    /// \brief
+    /// NodeMap will keep a reference to the NodeFactory,
+    /// keep it alive for the whole NodeMap lifetime
+    NodeMap(const NodeFactory& newNodeFact);
 
-	virtual ~NodeMap();
+    virtual ~NodeMap();
 
-	Node* addNode(const geom::Coordinate& coord);
+    Node* addNode(const geom::Coordinate& coord);
 
-	Node* addNode(Node *n);
+    Node* addNode(Node* n);
 
-	void add(EdgeEnd *e);
+    void add(EdgeEnd* e);
 
-	Node *find(const geom::Coordinate& coord) const;
+    Node* find(const geom::Coordinate& coord) const;
 
-	const_iterator begin() const { return nodeMap.begin(); }
+    const_iterator
+    begin() const
+    {
+        return nodeMap.begin();
+    }
 
-	const_iterator end() const { return nodeMap.end(); }
+    const_iterator
+    end() const
+    {
+        return nodeMap.end();
+    }
 
-	iterator begin() { return nodeMap.begin(); }
+    iterator
+    begin()
+    {
+        return nodeMap.begin();
+    }
 
-	iterator end() { return nodeMap.end(); }
+    iterator
+    end()
+    {
+        return nodeMap.end();
+    }
 
-	void getBoundaryNodes(int geomIndex,
-		std::vector<Node*>&bdyNodes) const;
+    void getBoundaryNodes(int geomIndex,
+                          std::vector<Node*>& bdyNodes) const;
 
-	std::string print() const;
+    std::string print() const;
 
-	void testInvariant()
-	{
+    void
+    testInvariant()
+    {
 #ifndef NDEBUG
-		// Each Coordinate key is a pointer inside the Node value
-		for (iterator it=begin(), itEnd=end(); it != itEnd; ++it)
-		{
-			pair p = *it;
-			geomgraph::Node* n = p.second;
-			geom::Coordinate* c = const_cast<geom::Coordinate*>(
-				&(n->getCoordinate())
-			);
-			assert(p.first == c);
-		}
+        // Each Coordinate key is a pointer inside the Node value
+        for(iterator it = begin(), itEnd = end(); it != itEnd; ++it) {
+            pair p = *it;
+            geomgraph::Node* n = p.second;
+            geom::Coordinate* c = const_cast<geom::Coordinate*>(
+                                      &(n->getCoordinate())
+                                  );
+            assert(p.first == c);
+        }
 #endif
-	}
+    }
 
 private:
 
     // Declare type as noncopyable
-    NodeMap(const NodeMap& other);
-    NodeMap& operator=(const NodeMap& rhs);
+    NodeMap(const NodeMap& other) = delete;
+    NodeMap& operator=(const NodeMap& rhs) = delete;
 };
 
 } // namespace geos.geomgraph

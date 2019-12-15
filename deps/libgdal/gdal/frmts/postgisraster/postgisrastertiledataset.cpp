@@ -5,7 +5,7 @@
  * Author:   Jorge Arevalo, jorge.arevalo@deimos-space.com
  *                          jorgearevalo@libregis.org
  *
- * Last changes: $Id: $
+ * Last changes: $Id: postgisrastertiledataset.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $
  *
  ***********************************************************************
  * Copyright (c) 2013, Jorge Arevalo
@@ -33,17 +33,19 @@
  ************************************************************************/
 #include "postgisraster.h"
 
+CPL_CVSID("$Id: postgisrastertiledataset.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $")
+
 /************************
  * \brief Constructor
  ************************/
-PostGISRasterTileDataset::PostGISRasterTileDataset(PostGISRasterDataset* poRDSIn,
-                                                   int nXSize,
-                                                   int nYSize)
+PostGISRasterTileDataset::PostGISRasterTileDataset( PostGISRasterDataset* poRDSIn,
+                                                    int nXSize,
+                                                    int nYSize ) :
+    poRDS(poRDSIn),
+    pszPKID(nullptr)
 {
-    this->poRDS = poRDSIn;
-    this->pszPKID = NULL;
-    this->nRasterXSize = nXSize;
-    this->nRasterYSize = nYSize;
+    nRasterXSize = nXSize;
+    nRasterYSize = nYSize;
 
     adfGeoTransform[GEOTRSFRM_TOPLEFT_X] = 0;
     adfGeoTransform[GEOTRSFRM_WE_RES] = 1;
@@ -53,7 +55,6 @@ PostGISRasterTileDataset::PostGISRasterTileDataset(PostGISRasterDataset* poRDSIn
     adfGeoTransform[GEOTRSFRM_NS_RES] = 1;
 }
 
-
 /************************
  * \brief Destructor
  ************************/
@@ -61,7 +62,7 @@ PostGISRasterTileDataset::~PostGISRasterTileDataset()
 {
     if (pszPKID) {
         CPLFree(pszPKID);
-        pszPKID = NULL;
+        pszPKID = nullptr;
     }
 }
 
@@ -84,7 +85,7 @@ CPLErr PostGISRasterTileDataset::GetGeoTransform(double * padfTransform) {
  * \brief Return spatial extent of tile
  ********************************************************/
 void PostGISRasterTileDataset::GetExtent(double* pdfMinX, double* pdfMinY,
-                                         double* pdfMaxX, double* pdfMaxY)
+                                         double* pdfMaxX, double* pdfMaxY) const
 {
     // FIXME; incorrect in case of non 0 rotation terms
 

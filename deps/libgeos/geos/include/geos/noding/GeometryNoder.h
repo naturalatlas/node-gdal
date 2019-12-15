@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2012  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2012  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,48 +22,47 @@
 #include <geos/export.h>
 #include <geos/noding/SegmentString.h> // for NonConstVect
 
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-    class Geometry;
-  }
-	namespace noding {
-		class Noder;
-	}
+namespace geom {
+class Geometry;
+}
+namespace noding {
+class Noder;
+}
 }
 
 namespace geos {
 namespace noding { // geos.noding
 
-class GEOS_DLL GeometryNoder
-{
+class GEOS_DLL GeometryNoder {
 public:
 
-  static std::auto_ptr<geom::Geometry> node(const geom::Geometry& geom);
+    static std::unique_ptr<geom::Geometry> node(const geom::Geometry& geom);
 
-  GeometryNoder(const geom::Geometry& g);
+    GeometryNoder(const geom::Geometry& g);
 
-  std::auto_ptr<geom::Geometry> getNoded();
+    std::unique_ptr<geom::Geometry> getNoded();
 
 private:
 
-  const geom::Geometry& argGeom;
+    const geom::Geometry& argGeom;
 
-  SegmentString::NonConstVect lineList;
+    SegmentString::NonConstVect lineList;
 
-  static void extractSegmentStrings(const geom::Geometry& g,
-                                    SegmentString::NonConstVect& to);
+    static void extractSegmentStrings(const geom::Geometry& g,
+                                      SegmentString::NonConstVect& to);
 
-  Noder& getNoder();
+    Noder& getNoder();
 
-  std::auto_ptr<Noder> noder;
+    std::unique_ptr<Noder> noder;
 
-  std::auto_ptr<geom::Geometry> toGeometry(SegmentString::NonConstVect& noded);
+    std::unique_ptr<geom::Geometry> toGeometry(SegmentString::NonConstVect& noded);
 
-  GeometryNoder(GeometryNoder const&); /*= delete*/
-  GeometryNoder& operator=(GeometryNoder const&); /*= delete*/
+    GeometryNoder(GeometryNoder const&); /*= delete*/
+    GeometryNoder& operator=(GeometryNoder const&); /*= delete*/
 };
 
 } // namespace geos.noding

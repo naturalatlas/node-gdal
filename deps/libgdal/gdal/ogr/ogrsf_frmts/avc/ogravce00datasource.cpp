@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogravce00datasource.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCE00DataSource class.
@@ -33,16 +32,18 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravce00datasource.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogravce00datasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                        OGRAVCE00DataSource()                         */
 /************************************************************************/
 
-OGRAVCE00DataSource::OGRAVCE00DataSource()
-    : nLayers(0), pszName(NULL), psE00(NULL), papoLayers(NULL)
-{
-}
+OGRAVCE00DataSource::OGRAVCE00DataSource() :
+    nLayers(0),
+    pszName(nullptr),
+    psE00(nullptr),
+    papoLayers(nullptr)
+{}
 
 /************************************************************************/
 /*                        ~OGRAVCE00DataSource()                        */
@@ -54,7 +55,7 @@ OGRAVCE00DataSource::~OGRAVCE00DataSource()
     if( psE00 )
     {
         AVCE00ReadCloseE00( psE00 );
-        psE00 = NULL;
+        psE00 = nullptr;
     }
 
     CPLFree( pszName );
@@ -84,7 +85,7 @@ int OGRAVCE00DataSource::Open( const char * pszNewName, int bTestOpen )
     psE00 = AVCE00ReadOpenE00(pszNewName);
 
     if( CPLGetLastErrorNo() == CPLE_OpenFailed
-        && strstr(CPLGetLastErrorMsg(), "compressed E00") != NULL )
+        && strstr(CPLGetLastErrorMsg(), "compressed E00") != nullptr )
     {
         bCompressed = true;
     }
@@ -95,7 +96,7 @@ int OGRAVCE00DataSource::Open( const char * pszNewName, int bTestOpen )
         CPLErrorReset();
     }
 
-    if( psE00 == NULL )
+    if( psE00 == nullptr )
     {
         if( bCompressed )
         {
@@ -145,6 +146,7 @@ int OGRAVCE00DataSource::Open( const char * pszNewName, int bTestOpen )
           {
 #if 0
               poSRS = new OGRSpatialReference();
+              poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
               AVCE00File *hFile
                   = AVCE00ReadOpen( psE00->pszCoverPath,
                                     psSec->pszFilename,
@@ -156,6 +158,7 @@ int OGRAVCE00DataSource::Open( const char * pszNewName, int bTestOpen )
                   char **papszPRJ = AVCE00ReadNextPrj( hFile );
 
                   poSRS = new OGRSpatialReference();
+                  poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
                   if( poSRS->importFromESRI( papszPRJ ) != OGRERR_NONE )
                   {
                       CPLError( CE_Warning, CPLE_AppDefined,
@@ -182,7 +185,7 @@ int OGRAVCE00DataSource::CheckAddTable( AVCE00Section *psTblSection )
     int nCount = 0;
     for (int i = 0; i < nLayers; ++i)
     {
-        if (papoLayers[i]->CheckSetupTable(psTblSection))
+        if( papoLayers[i]->CheckSetupTable(psTblSection) )
             ++nCount;
     }
     return nCount;
@@ -205,7 +208,7 @@ OGRLayer *OGRAVCE00DataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
@@ -213,29 +216,36 @@ OGRLayer *OGRAVCE00DataSource::GetLayer( int iLayer )
 /************************************************************************/
 /*                           GetSpatialRef()                            */
 /************************************************************************/
-OGRSpatialReference *OGRAVCE00DataSource::GetSpatialRef()
+OGRSpatialReference *OGRAVCE00DataSource::DSGetSpatialRef()
 {
-    if (poSRS != NULL)
+    if (m_bSRSFetched)
         return poSRS;
-    if (psE00 == NULL)
-        return NULL;
-
+    m_bSRSFetched = true;
+    if (psE00 == nullptr)
+        return nullptr;
 
     for( int iSection = 0; iSection < psE00->numSections; iSection++ )
     {
         AVCE00Section *psSec = psE00->pasSections + iSection;
-        if (psSec->eType == AVCFilePRJ)
+        if (psSec->eType == AVCFilePRJ )
         {
             AVCE00ReadGotoSectionE00(psE00, psSec, 0);
-            char **pszPRJ
-                = static_cast<char **>( AVCE00ReadNextObjectE00(psE00) );
-            poSRS = new OGRSpatialReference();
-            if( poSRS->importFromESRI( pszPRJ ) != OGRERR_NONE )
+            void* obj = AVCE00ReadNextObjectE00(psE00);
+            if( psE00->hParseInfo->eFileType == AVCFilePRJ )
             {
-                CPLError( CE_Warning, CPLE_AppDefined,
-                          "Failed to parse PRJ section, ignoring." );
-                delete poSRS;
-                poSRS = NULL;
+                char **pszPRJ = static_cast<char **>(obj);
+                if( pszPRJ )
+                {
+                    poSRS = new OGRSpatialReference();
+                    poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+                    if( poSRS->importFromESRI( pszPRJ ) != OGRERR_NONE )
+                    {
+                        CPLError( CE_Warning, CPLE_AppDefined,
+                                "Failed to parse PRJ section, ignoring." );
+                        delete poSRS;
+                        poSRS = nullptr;
+                    }
+                }
             }
             break;
         }

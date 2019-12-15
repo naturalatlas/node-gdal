@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,22 +29,22 @@
 #pragma warning(disable: 4251) // warning C4251: needs to have dll-interface to be used by clients of class
 #endif
 
-// Forward declarations 
+// Forward declarations
 namespace geos {
-	namespace geom { 
-		class LineString;
-		class GeometryFactory;
-		class Geometry;
-	}
-	namespace planargraph {
-		class Node;
-	}
-	namespace operation { 
-		namespace linemerge { 
-			class EdgeString;
-			class LineMergeDirectedEdge;
-		}
-	}
+namespace geom {
+class LineString;
+class GeometryFactory;
+class Geometry;
+}
+namespace planargraph {
+class Node;
+}
+namespace operation {
+namespace linemerge {
+class EdgeString;
+class LineMergeDirectedEdge;
+}
+}
 }
 
 
@@ -62,11 +62,11 @@ namespace linemerge { // geos::operation::linemerge
  * in which case a node is simply chosen as a starting point.
  * The direction of each merged LineString will be that of the majority
  * of the LineStrings from which it was derived.
- * 
+ *
  * Any dimension of Geometry is handled.
  * The constituent linework is extracted to form the edges.
  * The edges must be correctly noded; that is, they must only meet
- * at their endpoints. 
+ * at their endpoints.
  *
  * The LineMerger will still run on incorrectly noded input
  * but will not form polygons from incorrected noded edges.
@@ -76,61 +76,61 @@ class GEOS_DLL LineMerger {
 
 private:
 
-	LineMergeGraph graph;
+    LineMergeGraph graph;
 
-	std::vector<geom::LineString*> *mergedLineStrings;
+    std::vector<geom::LineString*>* mergedLineStrings;
 
-	std::vector<EdgeString*> edgeStrings;
+    std::vector<EdgeString*> edgeStrings;
 
-	const geom::GeometryFactory *factory;
+    const geom::GeometryFactory* factory;
 
-	void merge();
+    void merge();
 
-	void buildEdgeStringsForObviousStartNodes();
+    void buildEdgeStringsForObviousStartNodes();
 
-	void buildEdgeStringsForIsolatedLoops();
+    void buildEdgeStringsForIsolatedLoops();
 
-	void buildEdgeStringsForUnprocessedNodes();
+    void buildEdgeStringsForUnprocessedNodes();
 
-	void buildEdgeStringsForNonDegree2Nodes();
+    void buildEdgeStringsForNonDegree2Nodes();
 
-	void buildEdgeStringsStartingAt(planargraph::Node *node);
+    void buildEdgeStringsStartingAt(planargraph::Node* node);
 
-	EdgeString* buildEdgeStringStartingWith(LineMergeDirectedEdge *start);
+    EdgeString* buildEdgeStringStartingWith(LineMergeDirectedEdge* start);
 
 public:
-	LineMerger();
-	~LineMerger();
+    LineMerger();
+    ~LineMerger();
 
-	/**
-	 * \brief
-	 * Adds a collection of Geometries to be processed.
-	 * May be called multiple times.
-	 *
-	 * Any dimension of Geometry may be added; the constituent
-	 * linework will be extracted.
-	 */
-	void add(std::vector<geom::Geometry*> *geometries);
+    /**
+     * \brief
+     * Adds a collection of Geometries to be processed.
+     * May be called multiple times.
+     *
+     * Any dimension of Geometry may be added; the constituent
+     * linework will be extracted.
+     */
+    void add(std::vector<const geom::Geometry*>* geometries);
 
-	/**
-	 * \brief
-	 * Adds a Geometry to be processed.
-	 * May be called multiple times.
-	 *
-	 * Any dimension of Geometry may be added; the constituent
-	 * linework will be extracted.
-	 */  
-	void add(const geom::Geometry *geometry);
+    /**
+     * \brief
+     * Adds a Geometry to be processed.
+     * May be called multiple times.
+     *
+     * Any dimension of Geometry may be added; the constituent
+     * linework will be extracted.
+     */
+    void add(const geom::Geometry* geometry);
 
-	/**
-	 * \brief
-	 * Returns the LineStrings built by the merging process.
-	 *
-	 * Ownership of vector _and_ its elements to caller.
-	 */
-	std::vector<geom::LineString*>* getMergedLineStrings();
+    /**
+     * \brief
+     * Returns the LineStrings built by the merging process.
+     *
+     * Ownership of vector _and_ its elements to caller.
+     */
+    std::vector<geom::LineString*>* getMergedLineStrings();
 
-	void add(const geom::LineString *lineString);
+    void add(const geom::LineString* lineString);
 
 };
 

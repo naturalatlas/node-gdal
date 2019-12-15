@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmysqlresultlayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLResultLayer class.
@@ -32,7 +31,7 @@
 #include "cpl_conv.h"
 #include "ogr_mysql.h"
 
-CPL_CVSID("$Id: ogrmysqlresultlayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrmysqlresultlayer.cpp d80c4b49b7f6477247bd5afefc0973d6bb7ec05b 2018-04-12 21:49:40 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                        OGRMySQLResultLayer()                         */
@@ -40,18 +39,13 @@ CPL_CVSID("$Id: ogrmysqlresultlayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
 
 OGRMySQLResultLayer::OGRMySQLResultLayer( OGRMySQLDataSource *poDSIn,
                                           const char * pszRawQueryIn,
-                                          MYSQL_RES *hResultSetIn )
+                                          MYSQL_RES *hResultSetIn ) :
+    pszRawStatement(CPLStrdup(pszRawQueryIn))
 {
     poDS = poDSIn;
-
     iNextShapeId = 0;
-
-    pszRawStatement = CPLStrdup(pszRawQueryIn);
-
     hResultSet = hResultSetIn;
-
     BuildFullQueryStatement();
-
     poFeatureDefn = ReadResultDefinition();
 }
 
@@ -74,25 +68,21 @@ OGRMySQLResultLayer::~OGRMySQLResultLayer()
 OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
 
 {
-
 /* -------------------------------------------------------------------- */
 /*      Parse the returned table information.                           */
 /* -------------------------------------------------------------------- */
     OGRFeatureDefn *poDefn = new OGRFeatureDefn( "sql_statement" );
     SetDescription( poDefn->GetName() );
-    int            iRawField;
 
     poDefn->Reference();
-    int width;
-    int precision;
 
     mysql_field_seek( hResultSet, 0 );
-    for( iRawField = 0;
+    for( int iRawField = 0;
          iRawField < (int) mysql_num_fields(hResultSet);
          iRawField++ )
     {
         MYSQL_FIELD *psMSField = mysql_fetch_field( hResultSet );
-        OGRFieldDefn    oField( psMSField->name, OFTString);
+        OGRFieldDefn oField( psMSField->name, OFTString);
 
         switch( psMSField->type )
         {
@@ -101,22 +91,24 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
           case FIELD_TYPE_LONG:
           case FIELD_TYPE_INT24:
           case FIELD_TYPE_LONGLONG:
+          {
             oField.SetType( OFTInteger );
-            width = (int)psMSField->length;
+            const int width = (int)psMSField->length;
             oField.SetWidth(width);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_DECIMAL:
 #ifdef FIELD_TYPE_NEWDECIMAL
           case FIELD_TYPE_NEWDECIMAL:
 #endif
+          {
             oField.SetType( OFTReal );
 
             // a bunch of hackery to munge the widths that MySQL gives
             // us into corresponding widths and precisions for OGR
-            precision =    (int)psMSField->decimals;
-            width = (int)psMSField->length;
+            const int precision = (int)psMSField->decimals;
+            int width = (int)psMSField->length;
             if (!precision)
                 width = width - 1;
             width = width - precision;
@@ -125,7 +117,7 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
             oField.SetPrecision(precision);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_FLOAT:
           case FIELD_TYPE_DOUBLE:
          /* MYSQL_FIELD is always reporting ->length = 22 and ->decimals = 31
@@ -135,8 +127,9 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
             as 31. */
          /* Assuming that a length of 22 means no particular width and 31
             decimals means no particular precision. */
-            width = (int)psMSField->length;
-            precision = (int)psMSField->decimals;
+          {
+            const int width = (int)psMSField->length;
+            const int precision = (int)psMSField->decimals;
             oField.SetType( OFTReal );
             if( width != 22 )
                 oField.SetWidth(width);
@@ -144,38 +137,43 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
                 oField.SetPrecision(precision);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_DATE:
+          {
             oField.SetType( OFTDate );
             oField.SetWidth(0);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_TIME:
+          {
             oField.SetType( OFTTime );
             oField.SetWidth(0);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_TIMESTAMP:
           case FIELD_TYPE_DATETIME:
+          {
             oField.SetType( OFTDateTime );
             oField.SetWidth(0);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_YEAR:
           case FIELD_TYPE_STRING:
           case FIELD_TYPE_VAR_STRING:
+          {
             oField.SetType( OFTString );
             oField.SetWidth((int)psMSField->length);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_TINY_BLOB:
           case FIELD_TYPE_MEDIUM_BLOB:
           case FIELD_TYPE_LONG_BLOB:
           case FIELD_TYPE_BLOB:
+          {
             if( psMSField->charsetnr == 63 )
                 oField.SetType( OFTBinary );
             else
@@ -183,15 +181,16 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
             oField.SetWidth((int)psMSField->max_length);
             poDefn->AddFieldDefn( &oField );
             break;
-
+          }
           case FIELD_TYPE_GEOMETRY:
-            if (pszGeomColumn == NULL)
+          {
+            if (pszGeomColumn == nullptr)
             {
                 pszGeomColumnTable = CPLStrdup( psMSField->table);
                 pszGeomColumn = CPLStrdup( psMSField->name);
             }
             break;
-
+          }
           default:
             // any other field we ignore.
             break;
@@ -224,35 +223,34 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
         }
     }
 
-
     poDefn->SetGeomType( wkbNone );
 
     if (pszGeomColumn)
     {
-        char*        pszType=NULL;
+        char*        pszType=nullptr;
         CPLString    osCommand;
         char           **papszRow;
 
         // set to unknown first
         poDefn->SetGeomType( wkbUnknown );
+        poDefn->GetGeomFieldDefn(0)->SetName( pszGeomColumn );
 
         osCommand.Printf(
                 "SELECT type FROM geometry_columns WHERE f_table_name='%s'",
                 pszGeomColumnTable );
 
-        if( hResultSet != NULL )
+        if( hResultSet != nullptr )
             mysql_free_result( hResultSet );
-     		hResultSet = NULL;
+        hResultSet = nullptr;
 
         if( !mysql_query( poDS->GetConn(), osCommand ) )
             hResultSet = mysql_store_result( poDS->GetConn() );
 
-        papszRow = NULL;
-        if( hResultSet != NULL )
+        papszRow = nullptr;
+        if( hResultSet != nullptr )
             papszRow = mysql_fetch_row( hResultSet );
 
-
-        if( papszRow != NULL && papszRow[0] != NULL )
+        if( papszRow != nullptr && papszRow[0] != nullptr )
         {
             pszType = papszRow[0];
 
@@ -261,9 +259,8 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
             poDefn->SetGeomType( l_nGeomType );
         }
 
-		nSRSId = FetchSRSId();
+        nSRSId = FetchSRSId();
     }
-
 
     return poDefn;
 }
@@ -275,10 +272,10 @@ OGRFeatureDefn *OGRMySQLResultLayer::ReadResultDefinition()
 void OGRMySQLResultLayer::BuildFullQueryStatement()
 
 {
-    if( pszQueryStatement != NULL )
+    if( pszQueryStatement != nullptr )
     {
         CPLFree( pszQueryStatement );
-        pszQueryStatement = NULL;
+        pszQueryStatement = nullptr;
     }
 
     pszQueryStatement = CPLStrdup(pszRawStatement);

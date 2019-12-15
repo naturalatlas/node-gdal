@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -25,14 +25,14 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Envelope;
-	}
-	namespace index {
-		namespace quadtree {
-			class Node;
-		}
-	}
+namespace geom {
+class Envelope;
+}
+namespace index {
+namespace quadtree {
+class Node;
+}
+}
 }
 
 namespace geos {
@@ -51,32 +51,34 @@ class GEOS_DLL Root: public NodeBase {
 
 private:
 
-	static const geom::Coordinate origin;
+    static const geom::Coordinate origin;
 
-	/**
-	 * insert an item which is known to be contained in the tree rooted at
-	 * the given QuadNode root.  Lower levels of the tree will be created
-	 * if necessary to hold the item.
-	 */
-	void insertContained(Node *tree, const geom::Envelope *itemEnv,
-	                     void* item);
+    /**
+     * insert an item which is known to be contained in the tree rooted at
+     * the given QuadNode root.  Lower levels of the tree will be created
+     * if necessary to hold the item.
+     */
+    void insertContained(Node* tree, const geom::Envelope* itemEnv,
+                         void* item);
 
 public:
 
-	Root() {}
+    Root() {}
 
-	virtual ~Root() {}
+    ~Root() override {}
 
-	/**
-	 * Insert an item into the quadtree this is the root of.
-	 */
-	void insert(const geom::Envelope *itemEnv, void* item);
+    /**
+     * Insert an item into the quadtree this is the root of.
+     */
+    void insert(const geom::Envelope* itemEnv, void* item);
 
 protected:
 
-	bool isSearchMatch(const geom::Envelope& /* searchEnv */) const {
-		return true;
-	}
+    bool
+    isSearchMatch(const geom::Envelope& /* searchEnv */) const override
+    {
+        return true;
+    }
 
 };
 

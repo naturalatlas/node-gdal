@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -38,39 +38,31 @@ namespace noding { // geos::noding
  * public:
  */
 FastSegmentSetIntersectionFinder::
-FastSegmentSetIntersectionFinder( noding::SegmentString::ConstVect * baseSegStrings)
-:	segSetMutInt( new MCIndexSegmentSetMutualIntersector()),
-	lineIntersector( new LineIntersector())
+FastSegmentSetIntersectionFinder(noding::SegmentString::ConstVect* baseSegStrings)
+    :	segSetMutInt(new MCIndexSegmentSetMutualIntersector()),
+      lineIntersector(new algorithm::LineIntersector())
 {
-	segSetMutInt->setBaseSegments( baseSegStrings);
+    segSetMutInt->setBaseSegments(baseSegStrings);
 }
 
+bool
 FastSegmentSetIntersectionFinder::
-~FastSegmentSetIntersectionFinder()
+intersects(noding::SegmentString::ConstVect* segStrings)
 {
-	delete lineIntersector;
-	delete segSetMutInt;
+    SegmentIntersectionDetector intFinder(lineIntersector.get());
+
+    return this->intersects(segStrings, &intFinder);
 }
 
-
-bool 
+bool
 FastSegmentSetIntersectionFinder::
-intersects( noding::SegmentString::ConstVect * segStrings)
+intersects(noding::SegmentString::ConstVect* segStrings,
+           SegmentIntersectionDetector* intDetector)
 {
-	SegmentIntersectionDetector intFinder( lineIntersector);
+    segSetMutInt->setSegmentIntersector(intDetector);
+    segSetMutInt->process(segStrings);
 
-	return this->intersects( segStrings, &intFinder);
-}
-
-bool 
-FastSegmentSetIntersectionFinder::
-intersects( noding::SegmentString::ConstVect * segStrings, 
-			SegmentIntersectionDetector * intDetector)
-{
-	segSetMutInt->setSegmentIntersector( intDetector);
-	segSetMutInt->process( segStrings);
-
-	return intDetector->hasIntersection();
+    return intDetector->hasIntersection();
 }
 
 } // geos::noding

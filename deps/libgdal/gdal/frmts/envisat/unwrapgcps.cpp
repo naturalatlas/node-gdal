@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: unwrapgcps.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  GCPs Unwrapping for products crossing the WGS84 date-line
@@ -31,19 +30,21 @@
 #include <cmath>
 #include <cstdio>
 
+CPL_CVSID("$Id: unwrapgcps.cpp 01037e400d90e8bc4a74f8d886ea5a27ecce02c5 2018-01-12 23:49:31Z Kurt Schwehr $")
+
 // number of histogram bins (36 a 10dg)
-static const int NBIN = 36;
+constexpr int NBIN = 36;
 // number of empty bins to guess the flip-point
-static const int NEMPY = 7;
+constexpr int NEMPY = 7;
 
 // WGS84 bounds
-static const double XMIN = -180.0;
-// static const double XMAX = 180.0;
-static const double XDIF = 360.0;
-static const double XCNT = 0.0;
+constexpr double XMIN = -180.0;
+// constexpr double XMAX = 180.0;
+constexpr double XDIF = 360.0;
+constexpr double XCNT = 0.0;
 
 // max. allowed longitude extent of the GCP set
-static const double XLIM = XDIF*(1.0-NEMPY*(1.0/NBIN));
+constexpr double XLIM = XDIF*(1.0-NEMPY*(1.0/NBIN));
 
 /* used by envisatdataset.cpp */
 extern void EnvisatUnwrapGCPs( int cnt, GDAL_GCP *gcp );
@@ -78,9 +79,11 @@ static double _suggest_flip_point( const int cnt, GDAL_GCP *gcp )
         hist[idx] += 1 ;
     }
 
-    // find a middle of at least NEMPTY consecutive empty bins and get its middle
-    int i0 = -1 , i1 = -1 , last_is_empty = 0 ;
-    for( int i = 0 ; i < (2*NBIN-1) ; i++ )
+    // Find middle of at least NEMPTY consecutive empty bins and get its middle.
+    int i0 = -1;
+    int i1 = -1;
+    int last_is_empty = 0;
+    for( int i = 0; i < (2*NBIN-1); i++ )
     {
         if ( 0 == hist[i%NBIN] ) // empty
         {
@@ -110,9 +113,8 @@ static double _suggest_flip_point( const int cnt, GDAL_GCP *gcp )
 
     double tmp = ((i1-i0)*0.5+i0)/((float)NBIN) ;
 
-    return (tmp-floor(tmp))*XDIF + XMIN ;
+    return (tmp-floor(tmp))*XDIF + XMIN;
 }
-
 
 void EnvisatUnwrapGCPs( int cnt, GDAL_GCP *gcp )
 {
@@ -127,13 +129,18 @@ void EnvisatUnwrapGCPs( int cnt, GDAL_GCP *gcp )
     double x0_dif , x1_dif ;
 
     {
-        double x0_min, x0_max, x1_min, x1_max ;
+        double x0_min;
+        double x0_max;
+        double x1_min;
+        double x1_max;
 
         {
-            double x0 = gcp[0].dfGCPX ;
+            double x0 = gcp[0].dfGCPX;
             int  flip = (x0>x_flip) ;
-            x0_min = x0_max = x0 ;
-            x1_min = x1_max = x0 - flip*XDIF ;
+            x0_min = x0;
+            x0_max = x0;
+            x1_min = x0 - flip*XDIF;
+            x1_max = x1_min;
             cnt_flip += flip ; // count the flipped values
         }
 

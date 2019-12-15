@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrregisterall.cpp 32427 2015-12-22 11:18:32Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Function to register all known OGR drivers.
@@ -30,7 +29,7 @@
 
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrregisterall.cpp 32427 2015-12-22 11:18:32Z rouault $");
+CPL_CVSID("$Id: ogrregisterall.cpp de39c020a4aa8ff766062676ac17f3be4bbcf0ec 2019-04-24 12:21:16 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRRegisterAll()                           */
@@ -49,7 +48,7 @@ void OGRRegisterAllInternal()
 #ifdef SHAPE_ENABLED
     RegisterOGRShape();
 #endif
-#ifdef TAB_ENABLED
+#ifdef MITAB_ENABLED
     RegisterOGRTAB();
 #endif
 #ifdef NTF_ENABLED
@@ -96,6 +95,9 @@ void OGRRegisterAllInternal()
 #endif
 #ifdef GEOJSON_ENABLED
     RegisterOGRGeoJSON();
+    RegisterOGRGeoJSONSeq();
+    RegisterOGRESRIJSON();
+    RegisterOGRTopoJSON();
 #endif
 #ifdef ILI_ENABLED
     RegisterOGRILI1();
@@ -104,8 +106,10 @@ void OGRRegisterAllInternal()
 #ifdef GMT_ENABLED
     RegisterOGRGMT();
 #endif
-#ifdef SQLITE_ENABLED
+#ifdef GPKG_ENABLED
     RegisterOGRGeoPackage();
+#endif
+#ifdef SQLITE_ENABLED
     RegisterOGRSQLite();
 #endif
 #ifdef DODS_ENABLED
@@ -158,11 +162,17 @@ void OGRRegisterAllInternal()
 #ifdef XPLANE_ENABLED
     RegisterOGRXPlane();
 #endif
-#ifdef DWGDIRECT_ENABLED
-    RegisterOGRDXFDWG();
+#ifdef DWG_ENABLED
+    RegisterOGRDWG();
+#endif
+#ifdef DGNV8_ENABLED
+    RegisterOGRDGNV8();
 #endif
 #ifdef DXF_ENABLED
     RegisterOGRDXF();
+#endif
+#ifdef CAD_ENABLED
+    RegisterOGRCAD();
 #endif
 #ifdef GRASS_ENABLED
     RegisterOGRGRASS();
@@ -206,6 +216,7 @@ void OGRRegisterAllInternal()
 #endif
 #ifdef WFS_ENABLED
     RegisterOGRWFS();
+    RegisterOGRWFS3();
 #endif
 #ifdef SOSI_ENABLED
     RegisterOGRSOSI();
@@ -246,7 +257,7 @@ void OGRRegisterAllInternal()
 #ifdef SEGY_ENABLED
     RegisterOGRSEGY();
 #endif
-#ifdef FREEXL_ENABLED
+#ifdef XLS_ENABLED
     RegisterOGRXLS();
 #endif
 #ifdef ODS_ENABLED
@@ -261,8 +272,8 @@ void OGRRegisterAllInternal()
 #ifdef WALK_ENABLED
     RegisterOGRWalk();
 #endif
-#ifdef CARTODB_ENABLED
-    RegisterOGRCartoDB();
+#ifdef CARTO_ENABLED
+    RegisterOGRCarto();
 #endif
 #ifdef AMIGOCLOUD_ENABLED
     RegisterOGRAmigoCloud();
@@ -282,20 +293,33 @@ void OGRRegisterAllInternal()
 #ifdef CSW_ENABLED
     RegisterOGRCSW();
 #endif
+#ifdef MONGODBV3_ENABLED
+    RegisterOGRMongoDBv3();
+#endif
 #ifdef MONGODB_ENABLED
     RegisterOGRMongoDB();
 #endif
 #ifdef VDV_ENABLED
     RegisterOGRVDV();
 #endif
+#ifdef GMLAS_ENABLED
+    RegisterOGRGMLAS();
+#endif
+#ifdef MVT_ENABLED
+    RegisterOGRMVT();
+#endif
 
 /* Put TIGER and AVCBIN at end since they need poOpenInfo->GetSiblingFiles() */
 #ifdef TIGER_ENABLED
     RegisterOGRTiger();
 #endif
-#ifdef AVCBIN_ENABLED
+#ifdef AVC_ENABLED
     RegisterOGRAVCBin();
     RegisterOGRAVCE00();
 #endif
+
+#ifdef NGW_ENABLED
+    RegisterOGRNGW();
+#endif // NGW_ENABLED
 
 } /* OGRRegisterAll */

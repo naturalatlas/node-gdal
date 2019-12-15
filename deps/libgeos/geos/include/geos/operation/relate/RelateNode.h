@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -25,13 +25,13 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class IntersectionMatrix;
-		class Coordinate;
-	}
-	namespace geomgraph {
-		class EdgeEndStar;
-	}
+namespace geom {
+class IntersectionMatrix;
+class Coordinate;
+}
+namespace geomgraph {
+class EdgeEndStar;
+}
 }
 
 
@@ -47,18 +47,18 @@ class GEOS_DLL RelateNode: public geomgraph::Node {
 
 public:
 
-	RelateNode(const geom::Coordinate& coord, geomgraph::EdgeEndStar *edges);
+    RelateNode(const geom::Coordinate& coord, geomgraph::EdgeEndStar* edges);
 
-	virtual ~RelateNode();
+    ~RelateNode() override = default;
 
-	/**
-	 * Update the IM with the contribution for the EdgeEnds incident on this node.
-	 */
-	void updateIMFromEdges(geom::IntersectionMatrix& im);
+    /**
+     * Update the IM with the contribution for the EdgeEnds incident on this node.
+     */
+    void updateIMFromEdges(geom::IntersectionMatrix& im);
 
 protected:
 
-	void computeIM(geom::IntersectionMatrix& im);
+    void computeIM(geom::IntersectionMatrix& im) override;
 };
 
 

@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -32,13 +32,13 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Coordinate;
-		class LinearRing;
-	}
-	namespace geomgraph {
-		class GeometryGraph;
-	}
+namespace geom {
+class Coordinate;
+class LinearRing;
+}
+namespace geomgraph {
+class GeometryGraph;
+}
 }
 
 namespace geos {
@@ -46,42 +46,47 @@ namespace operation { // geos::operation
 namespace valid { // geos::operation::valid
 
 /** \brief
- * Tests whether any of a set of {@link LinearRing}s are
+ * Tests whether any of a set of [LinearRings](@ref geom::LinearRing) are
  * nested inside another ring in the set, using a simple O(n^2)
  * comparison.
  *
  */
 class GEOS_DLL SimpleNestedRingTester {
 private:
-	geomgraph::GeometryGraph *graph;  // used to find non-node vertices
-	std::vector<geom::LinearRing*> rings;
-	geom::Coordinate *nestedPt;
+    geomgraph::GeometryGraph* graph;  // used to find non-node vertices
+    std::vector<geom::LinearRing*> rings;
+    geom::Coordinate* nestedPt;
 public:
-	SimpleNestedRingTester(geomgraph::GeometryGraph *newGraph)
-		:
-		graph(newGraph),
-		rings(),
-		nestedPt(NULL)
-	{}
+    SimpleNestedRingTester(geomgraph::GeometryGraph* newGraph)
+        :
+        graph(newGraph),
+        rings(),
+        nestedPt(nullptr)
+    {}
 
-	~SimpleNestedRingTester() {
-	}
+    ~SimpleNestedRingTester()
+    {
+    }
 
-	void add(geom::LinearRing *ring) {
-		rings.push_back(ring);
-	}
+    void
+    add(geom::LinearRing* ring)
+    {
+        rings.push_back(ring);
+    }
 
-	/*
-	 * Be aware that the returned Coordinate (if != NULL)
-	 * will point to storage owned by one of the LinearRing
-	 * previously added. If you destroy them, this
-	 * will point to an invalid memory address.
-	 */
-	geom::Coordinate *getNestedPoint() {
-		return nestedPt;
-	}
+    /*
+     * Be aware that the returned Coordinate (if != NULL)
+     * will point to storage owned by one of the LinearRing
+     * previously added. If you destroy them, this
+     * will point to an invalid memory address.
+     */
+    geom::Coordinate*
+    getNestedPoint()
+    {
+        return nestedPt;
+    }
 
-	bool isNonNested();
+    bool isNonNested();
 };
 
 } // namespace geos.operation.valid

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: cplstring.cpp 33646 2016-03-05 15:54:03Z goatbar $
  *
  * Project:  GDAL
  * Purpose:  CPLString implementation.
@@ -28,10 +27,23 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "cpl_string.h"
+
+#include <cctype>
+#include <cstdarg>
+#include <cstddef>
+#include <cstring>
 #include <string>
 
-CPL_CVSID("$Id: cplstring.cpp 33646 2016-03-05 15:54:03Z goatbar $");
+#include "cpl_config.h"
+#include "cpl_conv.h"
+
+#if !defined(va_copy) && defined(__va_copy)
+#define va_copy __va_copy
+#endif
+
+CPL_CVSID("$Id: cplstring.cpp e12a0fc61edef91a039e13c7baff2ce58288a552 2018-08-10 00:53:29 +0200 Juergen E. Fischer $")
 
 /*
  * The CPLString class is derived from std::string, so the vast majority
@@ -43,7 +55,8 @@ CPL_CVSID("$Id: cplstring.cpp 33646 2016-03-05 15:54:03Z goatbar $");
 /*                               Printf()                               */
 /************************************************************************/
 
-CPLString &CPLString::Printf( const char *pszFormat, ... )
+/** Assign the content of the string using sprintf() */
+CPLString &CPLString::Printf( CPL_FORMAT_STRING(const char *pszFormat), ... )
 
 {
     va_list args;
@@ -59,7 +72,9 @@ CPLString &CPLString::Printf( const char *pszFormat, ... )
 /*                              vPrintf()                               */
 /************************************************************************/
 
-CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
+/** Assign the content of the string using vsprintf() */
+CPLString &CPLString::vPrintf( CPL_FORMAT_STRING(const char *pszFormat),
+                               va_list args )
 
 {
 /* -------------------------------------------------------------------- */
@@ -68,7 +83,7 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
 /* -------------------------------------------------------------------- */
 
 #if !defined(HAVE_VSNPRINTF)
-    char *pszBuffer = (char *) CPLMalloc(30000);
+    char *pszBuffer = static_cast<char *>(CPLMalloc(30000));
     if( CPLvsnprintf( pszBuffer, 30000, pszFormat, args) > 29998 )
     {
         CPLError( CE_Fatal, CPLE_AppDefined,
@@ -90,14 +105,14 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
     wrk_args = args;
 #endif
 
-    char szModestBuffer[500];
+    char szModestBuffer[500] = {};
     szModestBuffer[0] = '\0';
     int nPR = CPLvsnprintf( szModestBuffer, sizeof(szModestBuffer), pszFormat,
                              wrk_args );
-    if( nPR == -1 || nPR >= (int) sizeof(szModestBuffer)-1 )
+    if( nPR == -1 || nPR >= static_cast<int>(sizeof(szModestBuffer))-1 )
     {
         int nWorkBufferSize = 2000;
-        char *pszWorkBuffer = reinterpret_cast<char *>(
+        char *pszWorkBuffer = static_cast<char *>(
             CPLMalloc(nWorkBufferSize));
 
 #ifdef va_copy
@@ -106,13 +121,14 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
 #else
         wrk_args = args;
 #endif
-        while( (nPR=CPLvsnprintf( pszWorkBuffer, nWorkBufferSize, pszFormat,wrk_args))
+        while( (nPR = CPLvsnprintf(pszWorkBuffer, nWorkBufferSize, pszFormat,
+                                   wrk_args))
                >= nWorkBufferSize-1
                || nPR == -1 )
         {
             nWorkBufferSize *= 4;
-            pszWorkBuffer = (char *) CPLRealloc(pszWorkBuffer,
-                                                nWorkBufferSize );
+            pszWorkBuffer = static_cast<char *>(
+                CPLRealloc(pszWorkBuffer, nWorkBufferSize));
 #ifdef va_copy
             va_end( wrk_args );
             va_copy( wrk_args, args );
@@ -157,12 +173,12 @@ CPLString &CPLString::vPrintf( const char *pszFormat, va_list args )
 CPLString &CPLString::FormatC( double dfValue, const char *pszFormat )
 
 {
-    if( pszFormat == NULL )
+    if( pszFormat == nullptr )
         pszFormat = "%g";
 
     // presumably long enough for any number.
     const size_t buf_size = 512;
-    char szWork[buf_size];
+    char szWork[buf_size] = {};
 
     CPLsnprintf( szWork, buf_size, pszFormat, dfValue );
 
@@ -179,7 +195,7 @@ CPLString &CPLString::FormatC( double dfValue, const char *pszFormat )
  * Trim white space.
  *
  * Trims white space off the let and right of the string.  White space
- * is any of a space, a tab, a newline ('\n') or a carriage control ('\r').
+ * is any of a space, a tab, a newline ('\\n') or a carriage control ('\\r').
  *
  * @return a reference to the CPLString.
  */
@@ -187,7 +203,7 @@ CPLString &CPLString::FormatC( double dfValue, const char *pszFormat )
 CPLString &CPLString::Trim()
 
 {
-    static const char szWhitespace[] = " \t\r\n";
+    constexpr char szWhitespace[] = " \t\r\n";
 
     const size_t iLeft = find_first_not_of( szWhitespace );
     const size_t iRight = find_last_not_of( szWhitespace );
@@ -207,23 +223,24 @@ CPLString &CPLString::Trim()
 /*                               Recode()                               */
 /************************************************************************/
 
+/** Recode the string */
 CPLString &CPLString::Recode( const char *pszSrcEncoding,
                               const char *pszDstEncoding )
 
 {
-    if( pszSrcEncoding == NULL )
+    if( pszSrcEncoding == nullptr )
         pszSrcEncoding = CPL_ENC_UTF8;
-    if( pszDstEncoding == NULL )
+    if( pszDstEncoding == nullptr )
         pszDstEncoding = CPL_ENC_UTF8;
 
-    if( strcmp(pszSrcEncoding,pszDstEncoding) == 0 )
+    if( strcmp(pszSrcEncoding, pszDstEncoding) == 0 )
         return *this;
 
     char *pszRecoded = CPLRecode( c_str(),
                                   pszSrcEncoding,
                                   pszDstEncoding );
 
-    if( pszRecoded == NULL )
+    if( pszRecoded == nullptr )
         return *this;
 
     assign( pszRecoded );
@@ -256,7 +273,8 @@ size_t CPLString::ifind( const std::string & str, size_t pos ) const
  *
  * @param s substring to find.
  * @param nPos offset in the string at which the search starts.
- * @return the position of the substring in the string or std::string::npos if not found.
+ * @return the position of the substring in the string or std::string::npos if
+ * not found.
  * @since GDAL 1.9.0
  */
 
@@ -264,8 +282,8 @@ size_t CPLString::ifind( const char *s, size_t nPos ) const
 
 {
     const char *pszHaystack = c_str();
-    char chFirst = (char) ::tolower( s[0] );
-    size_t nTargetLen = strlen(s);
+    const char chFirst = static_cast<char>(::tolower(s[0]));
+    const size_t nTargetLen = strlen(s);
 
     if( nPos > size() )
         nPos = size();
@@ -276,7 +294,7 @@ size_t CPLString::ifind( const char *s, size_t nPos ) const
     {
         if( chFirst == ::tolower(*pszHaystack) )
         {
-            if( EQUALN(pszHaystack,s,nTargetLen) )
+            if( EQUALN(pszHaystack, s, nTargetLen) )
                 return nPos;
         }
 
@@ -299,7 +317,7 @@ CPLString &CPLString::toupper()
 
 {
     for( size_t i = 0; i < size(); i++ )
-        (*this)[i] = (char) ::toupper( (*this)[i] );
+        (*this)[i] = static_cast<char>(::toupper((*this)[i]));
 
     return *this;
 }
@@ -315,10 +333,78 @@ CPLString &CPLString::toupper()
 CPLString &CPLString::tolower()
 
 {
-    for(size_t i = 0; i < size(); i++ )
-        (*this)[i] = (char) ::tolower( (*this)[i] );
+    for( size_t i = 0; i < size(); i++ )
+        (*this)[i] = static_cast<char>(::tolower((*this)[i]));
 
     return *this;
+}
+
+/************************************************************************/
+/*                             replaceAll()                             */
+/************************************************************************/
+
+/**
+ * Replace all occurrences of osBefore with osAfter.
+ */
+CPLString &CPLString::replaceAll( const std::string &osBefore,
+                                  const std::string &osAfter )
+{
+    const size_t nBeforeSize = osBefore.size();
+    const size_t nAfterSize = osAfter.size();
+    if( nBeforeSize )
+    {
+        size_t nStartPos = 0;
+        while( (nStartPos = find(osBefore, nStartPos)) != std::string::npos )
+        {
+            replace(nStartPos, nBeforeSize, osAfter);
+            nStartPos += nAfterSize;
+        }
+    }
+    return *this;
+}
+
+/**
+ * Replace all occurrences of chBefore with osAfter.
+ */
+CPLString &CPLString::replaceAll( char chBefore,
+                                  const std::string &osAfter )
+{
+    return replaceAll(std::string(&chBefore, 1), osAfter);
+}
+
+/**
+ * Replace all occurrences of osBefore with chAfter.
+ */
+CPLString &CPLString::replaceAll( const std::string &osBefore,
+                                  char chAfter )
+{
+    return replaceAll(osBefore, std::string(&chAfter, 1));
+}
+
+/**
+ * Replace all occurrences of chBefore with chAfter.
+ */
+CPLString &CPLString::replaceAll( char chBefore,
+                                  char chAfter )
+{
+    return replaceAll(std::string(&chBefore, 1), std::string(&chAfter, 1));
+}
+
+
+/************************************************************************/
+/*                             endsWith()                              */
+/************************************************************************/
+
+/**
+ * Returns whether the string ends with another string
+ * @param osStr other string.
+ * @return true if the string ends wit osStr.
+ */
+bool CPLString::endsWith( const std::string& osStr ) const
+{
+    if( size() < osStr.size() )
+        return false;
+    return substr(size() - osStr.size()) == osStr;
 }
 
 /************************************************************************/
@@ -338,13 +424,13 @@ CPLString CPLURLGetValue(const char* pszURL, const char* pszKey)
     CPLString osKey(pszKey);
     osKey += "=";
     size_t nKeyPos = CPLString(pszURL).ifind(osKey);
-    if (nKeyPos != std::string::npos && nKeyPos > 0 &&
-        (pszURL[nKeyPos-1] == '?' || pszURL[nKeyPos-1] == '&'))
+    if( nKeyPos != std::string::npos && nKeyPos > 0 &&
+        (pszURL[nKeyPos-1] == '?' || pszURL[nKeyPos-1] == '&') )
     {
-        CPLString osValue(pszURL + nKeyPos + strlen(osKey));
+        CPLString osValue(pszURL + nKeyPos + osKey.size());
         const char* pszValue = osValue.c_str();
         const char* pszSep = strchr(pszValue, '&');
-        if (pszSep)
+        if( pszSep )
         {
             osValue.resize(pszSep - pszValue);
         }
@@ -370,28 +456,28 @@ CPLString CPLURLAddKVP(const char* pszURL, const char* pszKey,
                        const char* pszValue)
 {
     CPLString osURL(pszURL);
-    if (strchr(osURL, '?') == NULL)
+    if( strchr(osURL, '?') == nullptr )
         osURL += "?";
     pszURL = osURL.c_str();
 
     CPLString osKey(pszKey);
     osKey += "=";
     size_t nKeyPos = osURL.ifind(osKey);
-    if (nKeyPos != std::string::npos && nKeyPos > 0 &&
-        (pszURL[nKeyPos-1] == '?' || pszURL[nKeyPos-1] == '&'))
+    if( nKeyPos != std::string::npos && nKeyPos > 0 &&
+        (pszURL[nKeyPos-1] == '?' || pszURL[nKeyPos-1] == '&') )
     {
         CPLString osNewURL(osURL);
         osNewURL.resize(nKeyPos);
-        if (pszValue)
+        if( pszValue )
         {
             osNewURL += osKey;
             osNewURL += pszValue;
         }
         const char* pszNext = strchr(pszURL + nKeyPos, '&');
-        if (pszNext)
+        if( pszNext )
         {
-            if (osNewURL[osNewURL.size()-1] == '&'
-                || osNewURL[osNewURL.size()-1] == '?' )
+            if( osNewURL.back() == '&'
+                || osNewURL.back() == '?' )
                 osNewURL += pszNext + 1;
             else
                 osNewURL += pszNext;
@@ -400,9 +486,9 @@ CPLString CPLURLAddKVP(const char* pszURL, const char* pszKey,
     }
     else
     {
-        if (pszValue)
+        if( pszValue )
         {
-            if (osURL[osURL.size()-1] != '&' && osURL[osURL.size()-1] != '?')
+            if( osURL.back() != '&' && osURL.back() != '?' )
                 osURL += '&';
             osURL += osKey;
             osURL += pszValue;
@@ -415,7 +501,8 @@ CPLString CPLURLAddKVP(const char* pszURL, const char* pszKey,
 /*                            CPLOPrintf()                              */
 /************************************************************************/
 
-CPLString CPLOPrintf( const char *pszFormat, ... )
+/** Return a CPLString with the content of sprintf() */
+CPLString CPLOPrintf( CPL_FORMAT_STRING(const char *pszFormat), ... )
 
 {
     va_list args;
@@ -433,10 +520,31 @@ CPLString CPLOPrintf( const char *pszFormat, ... )
 /*                            CPLOvPrintf()                             */
 /************************************************************************/
 
-CPLString CPLOvPrintf( const char *pszFormat, va_list args )
+/** Return a CPLString with the content of vsprintf() */
+CPLString CPLOvPrintf( CPL_FORMAT_STRING(const char *pszFormat), va_list args )
 
 {
     CPLString osTarget;
     osTarget.vPrintf( pszFormat, args);
     return osTarget;
+}
+
+/************************************************************************/
+/*                            CPLQuotedSQLIdentifer()                   */
+/************************************************************************/
+
+/** Return a CPLString of the SQL quoted identifier */
+CPLString CPLQuotedSQLIdentifier(const char *pszIdent)
+
+{
+    CPLString osIdent;
+
+    if(pszIdent)
+    {
+        char *pszQuotedIdent = CPLEscapeString(pszIdent, -1, CPLES_SQLI);
+        osIdent.Printf("\"%s\"", pszQuotedIdent);
+        CPLFree(pszQuotedIdent);
+    }
+
+    return osIdent;
 }

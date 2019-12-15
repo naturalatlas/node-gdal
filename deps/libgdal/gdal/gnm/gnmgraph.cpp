@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  GNM graph implementation.
@@ -30,18 +29,17 @@
  ****************************************************************************/
 
 #include "gnmgraph.h"
+#include "gnm_priv.h"
 #include <algorithm>
 #include <limits>
 #include <set>
 
-GNMGraph::GNMGraph()
-{
-}
+CPL_CVSID("$Id: gnmgraph.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
-GNMGraph::~GNMGraph()
-{
+//! @cond Doxygen_Suppress
+GNMGraph::GNMGraph() {}
 
-}
+GNMGraph::~GNMGraph() {}
 
 void GNMGraph::AddVertex(GNMGFID nFID)
 {
@@ -244,7 +242,7 @@ std::vector<GNMPATH> GNMGraph::KShortestPaths(GNMGFID nStartFID, GNMGFID nEndFID
     // A will be sorted by the path costs' descending.
     std::vector<GNMPATH> A;
 
-    if (nK <= 0)
+    if (nK == 0)
         return A; // return empty array if K is incorrect.
 
     // Temporary array for storing paths-candidates.
@@ -275,7 +273,7 @@ std::vector<GNMPATH> GNMGraph::KShortestPaths(GNMGFID nStartFID, GNMGFID nEndFID
 
     for (k = 0; k < nK - 1; ++k) // -1 because we have already found one
     {
-        std::map<GNMGFID, double> mDeletedEdges; // for infinity costs assignement
+        std::map<GNMGFID, double> mDeletedEdges; // for infinity costs assignment
         itAk = A[k].begin();
 
         for (i = 0; i < A[k].size() - 1; ++i) // avoid end node
@@ -492,7 +490,7 @@ void GNMGraph::DijkstraShortestPathTree(GNMGFID nFID,
 
         // For all neighbours for the current vertex.
         panOutcomeEdgeId = GetOutEdges(nCurrenVertId);
-        if(NULL == panOutcomeEdgeId)
+        if(nullptr == panOutcomeEdgeId)
             continue;
 
         for (i = 0; i < panOutcomeEdgeId->size(); ++i)
@@ -537,7 +535,7 @@ LPGNMCONSTVECTOR GNMGraph::GetOutEdges(GNMGFID nFID) const
     std::map<GNMGFID,GNMStdVertex>::const_iterator it = m_mstVertices.find(nFID);
     if (it != m_mstVertices.end())
         return &it->second.anOutEdgeFIDs;
-    return NULL;
+    return nullptr;
 }
 
 GNMGFID GNMGraph::GetOppositVertex(GNMGFID nEdgeFID, GNMGFID nVertexFID) const
@@ -578,7 +576,7 @@ void GNMGraph::TraceTargets(std::queue<GNMGFID> &vertexQueue,
             // vertex of each edge. Add it to the queue, which will be recursively
             // seen the same way on the next iteration.
             LPGNMCONSTVECTOR panOutcomeEdgeIDs = GetOutEdges(nCurVertID);
-            if(NULL != panOutcomeEdgeIDs)
+            if(nullptr != panOutcomeEdgeIDs)
             {
                 for (it = panOutcomeEdgeIDs->begin(); it != panOutcomeEdgeIDs->end(); ++it)
                 {
@@ -620,3 +618,4 @@ void GNMGraph::TraceTargets(std::queue<GNMGFID> &vertexQueue,
     if (!neighbours_queue.empty())
         TraceTargets(neighbours_queue, markedVertIds, connectedIds);
 }
+//! @endcond

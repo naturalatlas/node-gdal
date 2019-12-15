@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -26,27 +26,19 @@
 namespace geos {
 namespace geomgraph { // geos::geomgraph
 
-INLINE index::SegmentIntersector*
-GeometryGraph::computeSelfNodes(
-		algorithm::LineIntersector& li,
-		bool computeRingSelfNodes)
-{
-	return computeSelfNodes(&li, computeRingSelfNodes);
-}
-
 INLINE void
-GeometryGraph::getBoundaryNodes(std::vector<Node*>&bdyNodes)
+GeometryGraph::getBoundaryNodes(std::vector<Node*>& bdyNodes)
 {
-	nodes->getBoundaryNodes(argIndex, bdyNodes);
+    nodes->getBoundaryNodes(argIndex, bdyNodes);
 }
 
 INLINE const geom::Geometry*
 GeometryGraph::getGeometry()
 {
-	return parentGeom;
+    return parentGeom;
 }
 
-INLINE 
+INLINE
 GeometryGraph::~GeometryGraph()
 {
 }

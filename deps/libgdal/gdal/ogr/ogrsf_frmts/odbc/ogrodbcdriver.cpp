@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrodbcdriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRODBCDriver class.
@@ -30,7 +29,7 @@
 #include "ogr_odbc.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrodbcdriver.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrodbcdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                            ~OGRODBCDriver()                            */
@@ -59,21 +58,19 @@ OGRDataSource *OGRODBCDriver::Open( const char * pszFilename,
                                      int bUpdate )
 
 {
-    OGRODBCDataSource     *poDS;
-
     if( !STARTS_WITH_CI(pszFilename, "ODBC:")
 #ifdef WIN32
         && !EQUAL(CPLGetExtension(pszFilename), "MDB")
 #endif
         )
-        return NULL;
+        return nullptr;
 
-    poDS = new OGRODBCDataSource();
+    OGRODBCDataSource *poDS = new OGRODBCDataSource();
 
     if( !poDS->Open( pszFilename, bUpdate, TRUE ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -87,13 +84,10 @@ OGRDataSource *OGRODBCDriver::CreateDataSource( const char * pszName,
                                               char ** /* papszOptions */ )
 
 {
-    OGRODBCDataSource     *poDS;
-
     if( !STARTS_WITH_CI(pszName, "ODBC:") )
-        return NULL;
+        return nullptr;
 
-    poDS = new OGRODBCDataSource();
-
+    OGRODBCDataSource *poDS = new OGRODBCDataSource();
 
     if( !poDS->Open( pszName, TRUE, TRUE ) )
     {
@@ -101,7 +95,7 @@ OGRDataSource *OGRODBCDriver::CreateDataSource( const char * pszName,
         CPLError( CE_Failure, CPLE_AppDefined,
          "ODBC driver doesn't currently support database creation.\n"
                   "Please create database with the `createdb' command." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -127,5 +121,7 @@ int OGRODBCDriver::TestCapability( const char * pszCap )
 void RegisterOGRODBC()
 
 {
-    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( new OGRODBCDriver );
+    OGRSFDriver* poDriver = new OGRODBCDriver;
+    poDriver->SetMetadataItem( GDAL_DMD_CONNECTION_PREFIX, "ODBC:");
+    OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }

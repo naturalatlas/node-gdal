@@ -1,5 +1,5 @@
 /*
- * $Id: keacopy.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: keacopy.h bde879dd6c2dd67ecf317ad588846089f0905cb9 2016-03-15 00:39:53Z Kurt Schwehr $
  *  keacopy.h
  *
  *  Created by Pete Bunting on 01/08/2012.

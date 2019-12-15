@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2012 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2012 Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -16,10 +16,10 @@
 #include <geos/util/GEOSException.h> // for inheritance
 
 namespace {
-  /* Could these be portably stored in thread-specific space ? */
-  bool requested = false;
+/* Could these be portably stored in thread-specific space ? */
+bool requested = false;
 
-  geos::util::Interrupt::Callback *callback = 0;
+geos::util::Interrupt::Callback* callback = nullptr;
 }
 
 namespace geos {
@@ -31,21 +31,39 @@ public:
         GEOSException("InterruptedException", "Interrupted!") {}
 };
 
-void Interrupt::request() { requested = true; }
+void
+Interrupt::request()
+{
+    requested = true;
+}
 
-void Interrupt::cancel() { requested = false; }
+void
+Interrupt::cancel()
+{
+    requested = false;
+}
 
-bool Interrupt::check() { return requested; }
+bool
+Interrupt::check()
+{
+    return requested;
+}
 
-Interrupt::Callback* Interrupt::registerCallback(Interrupt::Callback *cb) {
+Interrupt::Callback*
+Interrupt::registerCallback(Interrupt::Callback* cb)
+{
     Callback* prev = callback;
     callback = cb;
     return prev;
-  }
+}
 
-void Interrupt::process() {
-    if ( callback ) (*callback)();
-    if ( requested ) {
+void
+Interrupt::process()
+{
+    if(callback) {
+        (*callback)();
+    }
+    if(requested) {
         requested = false;
         interrupt();
     }
@@ -53,9 +71,10 @@ void Interrupt::process() {
 
 
 void
-Interrupt::interrupt() {
-  requested = false;
-  throw InterruptedException();
+Interrupt::interrupt()
+{
+    requested = false;
+    throw InterruptedException();
 }
 
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: kmlutility.h 33339 2016-02-03 11:48:06Z rouault $
+ * $Id: kmlutility.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  KML Driver
  * Purpose:  KML driver utilities
@@ -54,10 +54,13 @@ struct Coordinate
     double dfLongitude;
     double dfLatitude;
     double dfAltitude;
-    int    bHasZ;
+    bool   bHasZ;
 
-    Coordinate()
-        : dfLongitude(0), dfLatitude(0), dfAltitude(0), bHasZ(FALSE)
+    Coordinate() :
+        dfLongitude(0),
+        dfLatitude(0),
+        dfAltitude(0),
+        bHasZ(false)
     {}
 };
 
@@ -69,7 +72,7 @@ struct Feature
     OGRGeometry* poGeom;
 
     Feature()
-        : eType(Unknown), poGeom(NULL)
+        : eType(Unknown), poGeom(nullptr)
     {}
 
     ~Feature()

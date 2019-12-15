@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrkmldriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  KML Driver
  * Purpose:  Implementation of OGRKMLDriver class.
@@ -29,9 +28,17 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
+#include "ogr_kml.h"
+
+#include <cstring>
+
 #include "cpl_conv.h"
 #include "cpl_error.h"
-#include "ogr_kml.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+
+CPL_CVSID("$Id: ogrkmldriver.cpp d8a77a7ae5788883e9231e02e52c0ae06c649a4b 2018-02-23 02:34:03Z Kurt Schwehr $")
 
 /************************************************************************/
 /*                         OGRKMLDriverIdentify()                       */
@@ -40,10 +47,13 @@
 static int OGRKMLDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL )
+    if( poOpenInfo->fpL == nullptr )
         return FALSE;
 
-    return( strstr((const char*)poOpenInfo->pabyHeader, "<kml") != NULL );
+    return strstr(reinterpret_cast<char *>(poOpenInfo->pabyHeader),
+                  "<kml") != nullptr ||
+           strstr(reinterpret_cast<char *>(poOpenInfo->pabyHeader),
+                  "<kml:kml") != nullptr;
 }
 
 /************************************************************************/
@@ -54,34 +64,36 @@ static GDALDataset *OGRKMLDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update )
-        return NULL;
+        return nullptr;
 
     if( !OGRKMLDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
 #ifdef HAVE_EXPAT
     OGRKMLDataSource* poDS = new OGRKMLDataSource();
 
     if( poDS->Open( poOpenInfo->pszFilename, TRUE ) )
     {
-        /*if( poDS->GetLayerCount() == 0 )
+#ifdef DEBUG_VERBOSE
+        if( poDS->GetLayerCount() == 0 )
         {
             CPLError( CE_Failure, CPLE_OpenFailed,
-                "No layers in KML file: %s.", pszName );
+                "No layers in KML file: %s.", poOpenInfo->pszFilename );
 
             delete poDS;
-            poDS = NULL;
-        }*/
+            poDS = nullptr;
+        }
+#endif
     }
     else
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -96,7 +108,7 @@ static GDALDataset *OGRKMLDriverCreate( const char * pszName,
                                         GDALDataType /* eDT */,
                                         char **papszOptions )
 {
-    CPLAssert( NULL != pszName );
+    CPLAssert( nullptr != pszName );
     CPLDebug( "KML", "Attempt to create: %s", pszName );
 
     OGRKMLDataSource *poDS = new OGRKMLDataSource();
@@ -104,7 +116,7 @@ static GDALDataset *OGRKMLDriverCreate( const char * pszName,
     if( !poDS->Create( pszName, papszOptions ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -116,7 +128,7 @@ static GDALDataset *OGRKMLDriverCreate( const char * pszName,
 
 void RegisterOGRKML()
 {
-    if( GDALGetDriverByName( "KML" ) != NULL )
+    if( GDALGetDriverByName( "KML" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -130,6 +142,7 @@ void RegisterOGRKML()
 
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
 "<CreationOptionList>"
+"  <Option name='DOCUMENT_ID' type='string' description='Id of the root &lt;Document&gt; node' default='root_doc'/>'"
 "  <Option name='GPX_USE_EXTENSIONS' type='boolean' description='Whether to write non-GPX attributes in an <extensions> tag' default='NO'/>"
 "  <Option name='NameField' type='string' description='Field to use to fill the KML <name> element' default='Name'/>"
 "  <Option name='DescriptionField' type='string' description='Field to use to fill the KML <description> element' default='Description'/>"
@@ -145,6 +158,7 @@ void RegisterOGRKML()
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,
                                "Integer Real String" );
+    poDriver->SetMetadataItem( GDAL_DCAP_FEATURE_STYLES, "YES" );
 
     poDriver->pfnOpen = OGRKMLDriverOpen;
     poDriver->pfnIdentify = OGRKMLDriverIdentify;

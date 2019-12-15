@@ -1,5 +1,3 @@
-/* $Id: tif_dirinfo.c,v 1.125 2016-01-23 21:20:34 erouault Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -721,7 +719,7 @@ _TIFFCreateAnonField(TIFF *tif, uint32 tag, TIFFDataType field_type)
 	 * note that this name is a special sign to TIFFClose() and
 	 * _TIFFSetupFields() to free the field
 	 */
-	snprintf(fld->field_name, 32, "Tag %d", (int) tag);
+	(void) snprintf(fld->field_name, 32, "Tag %d", (int) tag);
 
 	return fld;    
 }
@@ -953,6 +951,122 @@ TIFFMergeFieldInfo(TIFF* tif, const TIFFFieldInfo info[], uint32 n)
 		return -1;
 	}
 
+	return 0;
+}
+
+int
+_TIFFCheckFieldIsValidForCodec(TIFF *tif, ttag_t tag)
+{
+	/* Filter out non-codec specific tags */
+	switch (tag) {
+	    /* Shared tags */
+	    case TIFFTAG_PREDICTOR:
+	    /* JPEG tags */
+	    case TIFFTAG_JPEGTABLES:
+	    /* OJPEG tags */
+	    case TIFFTAG_JPEGIFOFFSET:
+	    case TIFFTAG_JPEGIFBYTECOUNT:
+	    case TIFFTAG_JPEGQTABLES:
+	    case TIFFTAG_JPEGDCTABLES:
+	    case TIFFTAG_JPEGACTABLES:
+	    case TIFFTAG_JPEGPROC:
+	    case TIFFTAG_JPEGRESTARTINTERVAL:
+	    /* CCITT* */
+	    case TIFFTAG_BADFAXLINES:
+	    case TIFFTAG_CLEANFAXDATA:
+	    case TIFFTAG_CONSECUTIVEBADFAXLINES:
+	    case TIFFTAG_GROUP3OPTIONS:
+	    case TIFFTAG_GROUP4OPTIONS:
+	    /* LERC */
+	    case TIFFTAG_LERC_PARAMETERS:
+		break;
+	    default:
+		return 1;
+	}
+	/* Check if codec specific tags are allowed for the current
+	 * compression scheme (codec) */
+	switch (tif->tif_dir.td_compression) {
+	    case COMPRESSION_LZW:
+		if (tag == TIFFTAG_PREDICTOR)
+		    return 1;
+		break;
+	    case COMPRESSION_PACKBITS:
+		/* No codec-specific tags */
+		break;
+	    case COMPRESSION_THUNDERSCAN:
+		/* No codec-specific tags */
+		break;
+	    case COMPRESSION_NEXT:
+		/* No codec-specific tags */
+		break;
+	    case COMPRESSION_JPEG:
+		if (tag == TIFFTAG_JPEGTABLES)
+		    return 1;
+		break;
+	    case COMPRESSION_OJPEG:
+		switch (tag) {
+		    case TIFFTAG_JPEGIFOFFSET:
+		    case TIFFTAG_JPEGIFBYTECOUNT:
+		    case TIFFTAG_JPEGQTABLES:
+		    case TIFFTAG_JPEGDCTABLES:
+		    case TIFFTAG_JPEGACTABLES:
+		    case TIFFTAG_JPEGPROC:
+		    case TIFFTAG_JPEGRESTARTINTERVAL:
+			return 1;
+		}
+		break;
+	    case COMPRESSION_CCITTRLE:
+	    case COMPRESSION_CCITTRLEW:
+	    case COMPRESSION_CCITTFAX3:
+	    case COMPRESSION_CCITTFAX4:
+		switch (tag) {
+		    case TIFFTAG_BADFAXLINES:
+		    case TIFFTAG_CLEANFAXDATA:
+		    case TIFFTAG_CONSECUTIVEBADFAXLINES:
+			return 1;
+		    case TIFFTAG_GROUP3OPTIONS:
+			if (tif->tif_dir.td_compression == COMPRESSION_CCITTFAX3)
+			    return 1;
+			break;
+		    case TIFFTAG_GROUP4OPTIONS:
+			if (tif->tif_dir.td_compression == COMPRESSION_CCITTFAX4)
+			    return 1;
+			break;
+		}
+		break;
+	    case COMPRESSION_JBIG:
+		/* No codec-specific tags */
+		break;
+	    case COMPRESSION_DEFLATE:
+	    case COMPRESSION_ADOBE_DEFLATE:
+		if (tag == TIFFTAG_PREDICTOR)
+		    return 1;
+		break;
+	   case COMPRESSION_PIXARLOG:
+		if (tag == TIFFTAG_PREDICTOR)
+		    return 1;
+		break;
+	    case COMPRESSION_SGILOG:
+	    case COMPRESSION_SGILOG24:
+		/* No codec-specific tags */
+		break;
+	    case COMPRESSION_LZMA:
+		if (tag == TIFFTAG_PREDICTOR)
+		    return 1;
+		break;
+	    case COMPRESSION_ZSTD:
+		if (tag == TIFFTAG_PREDICTOR)
+		    return 1;
+		break;
+	    case COMPRESSION_LERC:
+		if (tag == TIFFTAG_LERC_PARAMETERS)
+		    return 1;
+		break;
+		  case COMPRESSION_WEBP:
+		if (tag == TIFFTAG_PREDICTOR)
+				return 1;
+		break;
+	}
 	return 0;
 }
 

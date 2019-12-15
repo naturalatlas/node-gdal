@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsdtslayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  SDTSReader
  * Purpose:  Implements OGRSDTSLayer class.
@@ -31,7 +30,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsdtslayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrsdtslayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                            OGRSDTSLayer()                            */
@@ -42,25 +41,22 @@ CPL_CVSID("$Id: ogrsdtslayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
 
 OGRSDTSLayer::OGRSDTSLayer( SDTSTransfer * poTransferIn, int iLayerIn,
                             OGRSDTSDataSource * poDSIn ) :
-    bPolygonsBuilt(FALSE)
+    poFeatureDefn(nullptr),
+    poTransfer(poTransferIn),
+    iLayer(iLayerIn),
+    poReader(poTransferIn->GetLayerIndexedReader( iLayerIn )),
+    poDS(poDSIn)
 {
-    poDS = poDSIn;
-
-    poTransfer = poTransferIn;
-    iLayer = iLayerIn;
-
-    poReader = poTransfer->GetLayerIndexedReader( iLayer );
-
 /* -------------------------------------------------------------------- */
 /*      Define the feature.                                             */
 /* -------------------------------------------------------------------- */
-    int         iCATDEntry = poTransfer->GetLayerCATDEntry( iLayer );
+    const int iCATDEntry = poTransfer->GetLayerCATDEntry( iLayer );
 
     poFeatureDefn =
         new OGRFeatureDefn(poTransfer->GetCATD()->GetEntryModule(iCATDEntry));
     SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
-    poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poDS->GetSpatialRef());
+    poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(poDS->DSGetSpatialRef());
 
     OGRFieldDefn oRecId( "RCID", OFTInteger );
     poFeatureDefn->AddFieldDefn( &oRecId );
@@ -91,7 +87,7 @@ OGRSDTSLayer::OGRSDTSLayer( SDTSTransfer * poTransferIn, int iLayerIn,
 /* -------------------------------------------------------------------- */
 /*      Add schema from referenced attribute records.                   */
 /* -------------------------------------------------------------------- */
-    char        **papszATIDRefs = NULL;
+    char **papszATIDRefs = nullptr;
 
     if( poTransfer->GetLayerType(iLayer) != SLTAttr )
         papszATIDRefs = poReader->ScanModuleReferences();
@@ -100,47 +96,44 @@ OGRSDTSLayer::OGRSDTSLayer( SDTSTransfer * poTransferIn, int iLayerIn,
                                       poTransfer->GetCATD()->GetEntryModule(iCATDEntry) );
 
     for( int iTable = 0;
-         papszATIDRefs != NULL && papszATIDRefs[iTable] != NULL;
+         papszATIDRefs != nullptr && papszATIDRefs[iTable] != nullptr;
          iTable++ )
     {
-        SDTSAttrReader  *poAttrReader;
-        DDFFieldDefn    *poFDefn;
-
 /* -------------------------------------------------------------------- */
 /*      Get the attribute table reader, and the associated user         */
 /*      attribute field.                                                */
 /* -------------------------------------------------------------------- */
-        int nLayerIdx = poTransfer->FindLayer( papszATIDRefs[iTable] );
+        const int nLayerIdx = poTransfer->FindLayer( papszATIDRefs[iTable] );
         if( nLayerIdx < 0 )
             continue;
-        poAttrReader = (SDTSAttrReader *)
-            poTransfer->GetLayerIndexedReader(nLayerIdx);
+        SDTSAttrReader *poAttrReader = dynamic_cast<SDTSAttrReader *>(
+            poTransfer->GetLayerIndexedReader(nLayerIdx));
 
-        if( poAttrReader == NULL )
+        if( poAttrReader == nullptr )
             continue;
 
-        poFDefn = poAttrReader->GetModule()->FindFieldDefn( "ATTP" );
-        if( poFDefn == NULL )
+        DDFFieldDefn *poFDefn =
+            poAttrReader->GetModule()->FindFieldDefn( "ATTP" );
+        if( poFDefn == nullptr )
             poFDefn = poAttrReader->GetModule()->FindFieldDefn( "ATTS" );
-        if( poFDefn == NULL )
+        if( poFDefn == nullptr )
             continue;
 
 /* -------------------------------------------------------------------- */
 /*      Process each user subfield on the attribute table into an       */
 /*      OGR field definition.                                           */
 /* -------------------------------------------------------------------- */
-        for( int iSF=0; iSF < poFDefn->GetSubfieldCount(); iSF++ )
+        for( int iSF = 0; iSF < poFDefn->GetSubfieldCount(); iSF++ )
         {
-            DDFSubfieldDefn     *poSFDefn = poFDefn->GetSubfield( iSF );
-            int                 nWidth = poSFDefn->GetWidth();
-            char                *pszFieldName;
+            DDFSubfieldDefn *poSFDefn = poFDefn->GetSubfield( iSF );
+            const int nWidth = poSFDefn->GetWidth();
 
-            if( poFeatureDefn->GetFieldIndex( poSFDefn->GetName() ) != -1 )
-                pszFieldName = CPLStrdup( CPLSPrintf( "%s_%s",
-                                                      papszATIDRefs[iTable],
-                                                      poSFDefn->GetName() ) );
-            else
-                pszFieldName = CPLStrdup( poSFDefn->GetName() );
+            char *pszFieldName =
+                poFeatureDefn->GetFieldIndex( poSFDefn->GetName() ) != -1
+                ? CPLStrdup( CPLSPrintf( "%s_%s",
+                                         papszATIDRefs[iTable],
+                                         poSFDefn->GetName() ) )
+                : CPLStrdup( poSFDefn->GetName() );
 
             switch( poSFDefn->GetType() )
             {
@@ -183,7 +176,6 @@ OGRSDTSLayer::OGRSDTSLayer( SDTSTransfer * poTransferIn, int iLayerIn,
             }
 
             CPLFree( pszFieldName );
-
         } /* next iSF (subfield) */
     } /* next iTable */
     CSLDestroy( papszATIDRefs );
@@ -196,10 +188,10 @@ OGRSDTSLayer::OGRSDTSLayer( SDTSTransfer * poTransferIn, int iLayerIn,
 OGRSDTSLayer::~OGRSDTSLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "SDTS", "%d features read on layer '%s'.",
-                  (int) m_nFeaturesRead,
+                  static_cast<int>(m_nFeaturesRead),
                   poFeatureDefn->GetName() );
     }
 
@@ -231,17 +223,15 @@ AssignAttrRecordToFeature( OGRFeature * poFeature,
 /* -------------------------------------------------------------------- */
     DDFFieldDefn        *poFDefn = poSR->GetFieldDefn();
 
-    for( int iSF=0; iSF < poFDefn->GetSubfieldCount(); iSF++ )
+    for( int iSF = 0; iSF < poFDefn->GetSubfieldCount(); iSF++ )
     {
         DDFSubfieldDefn *poSFDefn = poFDefn->GetSubfield( iSF );
-        int                     iField;
-        int                     nMaxBytes;
-        const char *    pachData = poSR->GetSubfieldData(poSFDefn,
-                                                         &nMaxBytes);
+        int nMaxBytes = 0;
+        const char *pachData = poSR->GetSubfieldData(poSFDefn, &nMaxBytes);
 /* -------------------------------------------------------------------- */
-/*      Indentify this field on the feature.                            */
+/*      Identify this field on the feature.                            */
 /* -------------------------------------------------------------------- */
-        iField = poFeature->GetFieldIndex( poSFDefn->GetName() );
+        const int iField = poFeature->GetFieldIndex( poSFDefn->GetName() );
 
 /* -------------------------------------------------------------------- */
 /*      Handle each of the types.                                       */
@@ -249,34 +239,31 @@ AssignAttrRecordToFeature( OGRFeature * poFeature,
         switch( poSFDefn->GetType() )
         {
           case DDFString:
-            const char  *pszValue;
-
-            pszValue = poSFDefn->ExtractStringData(pachData, nMaxBytes,
-                                                   NULL);
+          {
+            const char  *pszValue =
+                poSFDefn->ExtractStringData(pachData, nMaxBytes, nullptr);
 
             if( iField != -1 )
                 poFeature->SetField( iField, pszValue );
             break;
-
+          }
           case DDFFloat:
-            double      dfValue;
-
-            dfValue = poSFDefn->ExtractFloatData(pachData, nMaxBytes,
-                                                 NULL);
+          {
+            double dfValue =
+                poSFDefn->ExtractFloatData(pachData, nMaxBytes, nullptr);
 
             if( iField != -1 )
                 poFeature->SetField( iField, dfValue );
             break;
-
+          }
           case DDFInt:
-            int         nValue;
-
-            nValue = poSFDefn->ExtractIntData(pachData, nMaxBytes, NULL);
+          {
+            int nValue = poSFDefn->ExtractIntData(pachData, nMaxBytes, nullptr);
 
             if( iField != -1 )
                 poFeature->SetField( iField, nValue );
             break;
-
+          }
           default:
             break;
         }
@@ -303,15 +290,18 @@ OGRFeature * OGRSDTSLayer::GetNextUnfilteredFeature()
 /*      Fetch the next sdts style feature object from the reader.       */
 /* -------------------------------------------------------------------- */
     SDTSFeature *poSDTSFeature = poReader->GetNextFeature();
-    OGRFeature  *poFeature;
+    // Retain now the IsIndexed state to determine if we must delete or
+    // not poSDTSFeature when done with it, because later calls might cause
+    // indexing.
+    const bool bIsIndexed = CPL_TO_BOOL(poReader->IsIndexed());
 
-    if( poSDTSFeature == NULL )
-        return NULL;
+    if( poSDTSFeature == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create the OGR feature.                                         */
 /* -------------------------------------------------------------------- */
-    poFeature = new OGRFeature( poFeatureDefn );
+    OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
 
     m_nFeaturesRead++;
 
@@ -357,13 +347,11 @@ OGRFeature * OGRSDTSLayer::GetNextUnfilteredFeature()
           for( int iRing = 0; iRing < poPoly->nRings; iRing++ )
           {
               OGRLinearRing *poRing = new OGRLinearRing();
-              int           nVertices;
-
-              if( iRing == poPoly->nRings - 1 )
-                  nVertices = poPoly->nVertices - poPoly->panRingStart[iRing];
-              else
-                  nVertices = poPoly->panRingStart[iRing+1]
-                            - poPoly->panRingStart[iRing];
+              const int nVertices =
+                  iRing == poPoly->nRings - 1
+                  ? poPoly->nVertices - poPoly->panRingStart[iRing]
+                  : (poPoly->panRingStart[iRing+1]
+                     - poPoly->panRingStart[iRing]);
 
               poRing->setPoints( nVertices,
                                  poPoly->padfX + poPoly->panRingStart[iRing],
@@ -384,16 +372,13 @@ OGRFeature * OGRSDTSLayer::GetNextUnfilteredFeature()
 /* -------------------------------------------------------------------- */
 /*      Set attributes for any indicated attribute records.             */
 /* -------------------------------------------------------------------- */
-    int         iAttrRecord;
-
-    for( iAttrRecord = 0;
+    for( int iAttrRecord = 0;
          iAttrRecord < poSDTSFeature->nAttributes;
          iAttrRecord++)
     {
-        DDFField        *poSR;
-
-        poSR = poTransfer->GetAttr( poSDTSFeature->paoATID+iAttrRecord );
-        if( poSR != NULL )
+        DDFField *poSR =
+            poTransfer->GetAttr( poSDTSFeature->paoATID+iAttrRecord );
+        if( poSR != nullptr )
             AssignAttrRecordToFeature( poFeature, poTransfer, poSR );
     }
 
@@ -412,16 +397,15 @@ OGRFeature * OGRSDTSLayer::GetNextUnfilteredFeature()
 /* -------------------------------------------------------------------- */
     poFeature->SetFID( poSDTSFeature->oModId.nRecord );
     poFeature->SetField( 0, (int) poSDTSFeature->oModId.nRecord );
-    if( poFeature->GetGeometryRef() != NULL )
+    if( poFeature->GetGeometryRef() != nullptr )
         poFeature->GetGeometryRef()->assignSpatialReference(
-            poDS->GetSpatialRef() );
+            poDS->DSGetSpatialRef() );
 
-    if( !poReader->IsIndexed() )
+    if( !bIsIndexed )
         delete poSDTSFeature;
 
     return poFeature;
 }
-
 
 /************************************************************************/
 /*                           GetNextFeature()                           */
@@ -430,7 +414,7 @@ OGRFeature * OGRSDTSLayer::GetNextUnfilteredFeature()
 OGRFeature *OGRSDTSLayer::GetNextFeature()
 
 {
-    OGRFeature  *poFeature = NULL;
+    OGRFeature  *poFeature = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read features till we find one that satisfies our current       */
@@ -439,12 +423,12 @@ OGRFeature *OGRSDTSLayer::GetNextFeature()
     while( true )
     {
         poFeature = GetNextUnfilteredFeature();
-        if( poFeature == NULL )
+        if( poFeature == nullptr )
             break;
 
-        if( (m_poFilterGeom == NULL
+        if( (m_poFilterGeom == nullptr
              || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature )) )
             break;
 
@@ -458,22 +442,8 @@ OGRFeature *OGRSDTSLayer::GetNextFeature()
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRSDTSLayer::TestCapability( const char * pszCap )
+int OGRSDTSLayer::TestCapability( const char * /* pszCap */ )
 
 {
-    if( EQUAL(pszCap,OLCRandomRead) )
-        return FALSE;
-
-    else if( EQUAL(pszCap,OLCSequentialWrite)
-             || EQUAL(pszCap,OLCRandomWrite) )
-        return FALSE;
-
-    else if( EQUAL(pszCap,OLCFastFeatureCount) )
-        return FALSE;
-
-    else if( EQUAL(pszCap,OLCFastSpatialFilter) )
-        return FALSE;
-
-    else
-        return FALSE;
+    return FALSE;
 }

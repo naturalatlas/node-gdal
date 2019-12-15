@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -24,8 +24,10 @@
 #define GEOS_SIMPLIFY_LINESEGMENTINDEX_H
 
 #include <geos/export.h>
+#include <geos/geom/Envelope.h>
+#include <geos/index/quadtree/Quadtree.h>
 #include <vector>
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -34,18 +36,12 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Envelope;
-		class LineSegment;
-	}
-	namespace simplify {
-		class TaggedLineString;
-	}
-	namespace index {
-		namespace quadtree {
-			class Quadtree;
-		}
-	}
+namespace geom {
+class LineSegment;
+}
+namespace simplify {
+class TaggedLineString;
+}
 }
 
 namespace geos {
@@ -55,28 +51,32 @@ class GEOS_DLL LineSegmentIndex {
 
 public:
 
-	LineSegmentIndex();
+    LineSegmentIndex() = default;
 
-	~LineSegmentIndex();
+    ~LineSegmentIndex() = default;
 
-	void add(const TaggedLineString& line);
+    void add(const TaggedLineString& line);
 
-	void add(const geom::LineSegment* seg);
+    void add(const geom::LineSegment* seg);
 
-	void remove(const geom::LineSegment* seg);
+    void remove(const geom::LineSegment* seg);
 
-	std::auto_ptr< std::vector<geom::LineSegment*> >
-			query(const geom::LineSegment* seg) const;
+    std::unique_ptr< std::vector<geom::LineSegment*> >
+    query(const geom::LineSegment* seg);
+
 
 private:
 
-	std::auto_ptr<index::quadtree::Quadtree> index;
+    index::quadtree::Quadtree index;
 
-	std::vector<geom::Envelope*> newEnvelopes;
-	
-	// Copying is turned off
-	LineSegmentIndex(const LineSegmentIndex&);
-	LineSegmentIndex& operator=(const LineSegmentIndex&);
+    std::vector<std::unique_ptr<geom::Envelope>> newEnvelopes;
+
+    /**
+     * Disable copy construction and assignment. Apparently needed to make this
+     * class compile under MSVC. (See https://stackoverflow.com/q/29565299)
+     */
+    LineSegmentIndex(const LineSegmentIndex&) = delete;
+    LineSegmentIndex& operator=(const LineSegmentIndex&) = delete;
 };
 
 } // namespace geos::simplify

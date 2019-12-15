@@ -1,5 +1,3 @@
-/* $Id: tiffiop.h,v 1.89 2016-01-23 21:20:34 erouault Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -72,6 +70,7 @@ extern int snprintf(char* str, size_t size, const char* format, ...);
 #endif
 
 #define    streq(a,b)      (strcmp(a,b) == 0)
+#define    strneq(a,b,n)   (strncmp(a,b,n) == 0)
 
 #ifndef TRUE
 #define	TRUE	1
@@ -238,8 +237,7 @@ struct tiff {
 	(TIFFReadFile((tif),(buf),(size))==(size))
 #endif
 #ifndef SeekOK
-#define SeekOK(tif, off) \
-	(TIFFSeekFile((tif),(off),SEEK_SET)==(off))
+#define SeekOK(tif, off) _TIFFSeekOK(tif, off)
 #endif
 #ifndef WriteOK
 #define WriteOK(tif, buf, size) \
@@ -250,6 +248,10 @@ struct tiff {
 #define TIFFhowmany_32(x, y) (((uint32)x < (0xffffffff - (uint32)(y-1))) ? \
 			   ((((uint32)(x))+(((uint32)(y))-1))/((uint32)(y))) : \
 			   0U)
+/* Variant of TIFFhowmany_32() that doesn't return 0 if x close to MAXUINT. */
+/* Caution: TIFFhowmany_32_maxuint_compat(x,y)*y might overflow */
+#define TIFFhowmany_32_maxuint_compat(x, y) \
+			   (((uint32)(x) / (uint32)(y)) + ((((uint32)(x) % (uint32)(y)) != 0) ? 1 : 0))
 #define TIFFhowmany8_32(x) (((x)&0x07)?((uint32)(x)>>3)+1:(uint32)(x)>>3)
 #define TIFFroundup_32(x, y) (TIFFhowmany_32(x,y)*(y))
 #define TIFFhowmany_64(x, y) ((((uint64)(x))+(((uint64)(y))-1))/((uint64)(y)))
@@ -311,6 +313,17 @@ typedef size_t TIFFIOSize_t;
 #define _TIFF_off_t off_t
 #endif
 
+#if defined(__has_attribute) && defined(__clang__)
+#if __has_attribute(no_sanitize)
+#define TIFF_NOSANITIZE_UNSIGNED_INT_OVERFLOW __attribute__((no_sanitize("unsigned-integer-overflow")))
+#else
+#define TIFF_NOSANITIZE_UNSIGNED_INT_OVERFLOW
+#endif
+#else
+#define TIFF_NOSANITIZE_UNSIGNED_INT_OVERFLOW
+#endif
+
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -361,6 +374,22 @@ extern void* _TIFFCheckRealloc(TIFF*, void*, tmsize_t, tmsize_t, const char*);
 extern double _TIFFUInt64ToDouble(uint64);
 extern float _TIFFUInt64ToFloat(uint64);
 
+extern float _TIFFClampDoubleToFloat(double);
+
+extern tmsize_t
+_TIFFReadEncodedStripAndAllocBuffer(TIFF* tif, uint32 strip,
+                                    void **buf, tmsize_t bufsizetoalloc,
+                                    tmsize_t size_to_read);
+extern tmsize_t
+_TIFFReadEncodedTileAndAllocBuffer(TIFF* tif, uint32 tile,
+                                    void **buf, tmsize_t bufsizetoalloc,
+                                    tmsize_t size_to_read);
+extern tmsize_t
+_TIFFReadTileAndAllocBuffer(TIFF* tif,
+                            void **buf, tmsize_t bufsizetoalloc,
+                            uint32 x, uint32 y, uint32 z, uint16 s);
+extern int _TIFFSeekOK(TIFF* tif, toff_t off);
+
 extern int TIFFInitDumpMode(TIFF*, int);
 #ifdef PACKBITS_SUPPORT
 extern int TIFFInitPackBits(TIFF*, int);
@@ -383,6 +412,7 @@ extern int TIFFInitOJPEG(TIFF*, int);
 #endif
 #ifdef JPEG_SUPPORT
 extern int TIFFInitJPEG(TIFF*, int);
+extern int TIFFJPEGIsFullStripRequired(TIFF*);
 #endif
 #ifdef JBIG_SUPPORT
 extern int TIFFInitJBIG(TIFF*, int);
@@ -398,6 +428,12 @@ extern int TIFFInitSGILog(TIFF*, int);
 #endif
 #ifdef LZMA_SUPPORT
 extern int TIFFInitLZMA(TIFF*, int);
+#endif
+#ifdef ZSTD_SUPPORT
+extern int TIFFInitZSTD(TIFF*, int);
+#endif
+#ifdef WEBP_SUPPORT
+extern int TIFFInitWebP(TIFF*, int);
 #endif
 #ifdef VMS
 extern const TIFFCodec _TIFFBuiltinCODECS[];

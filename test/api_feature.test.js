@@ -4,7 +4,7 @@ var assert = require('chai').assert;
 describe('gdal.Feature', function() {
 	afterEach(gc);
 
-	var ds, lyr, defn, fields, feature;
+	var ds, lyr, defn, fields;
 	before(function() {
 		ds = gdal.open('', 'w', 'Memory');
 		lyr = ds.layers.create('', null, gdal.Point);

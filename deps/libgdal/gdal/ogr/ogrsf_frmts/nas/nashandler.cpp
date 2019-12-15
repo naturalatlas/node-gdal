@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: nashandler.cpp 34462 2016-06-28 18:51:52Z jef $
  *
  * Project:  NAS Reader
  * Purpose:  Implementation of NASHandler class.
@@ -32,8 +31,9 @@
 #include "nasreaderp.h"
 #include "cpl_conv.h"
 #include "cpl_string.h"
+#include "ogr_xerces.h"
 
-static const int MAX_TOKEN_SIZE = 1000;
+CPL_CVSID("$Id: nashandler.cpp c54716eea353376511e06b8080f9e965cd94eafe 2018-03-17 16:02:58Z Even Rouault $")
 
 /*
   Update modes:
@@ -74,25 +74,27 @@ static const int MAX_TOKEN_SIZE = 1000;
         </geaenderteObjekte>
 */
 
-
 /************************************************************************/
 /*                             NASHandler()                             */
 /************************************************************************/
 
 NASHandler::NASHandler( NASReader *poReader ) :
     m_poReader(poReader),
-    m_pszCurField(NULL),
-    m_pszGeometry(NULL),
+    m_pszCurField(nullptr),
+    m_pszGeometry(nullptr),
     m_nGeomAlloc(0),
     m_nGeomLen(0),
     m_nGeometryDepth(0),
+    m_nGeometryPropertyIndex(-1),
     m_nDepth(0),
     m_nDepthFeature(0),
     m_bIgnoreFeature(false),
     m_bInUpdate(false),
     m_bInUpdateProperty(false),
-    m_nDepthElement(0)
-{ }
+    m_nUpdateOrDeleteDepth(0),
+    m_nUpdatePropertyDepth(0),
+    m_nNameOrValueDepth(0)
+{}
 
 /************************************************************************/
 /*                            ~NASHandler()                             */
@@ -116,18 +118,13 @@ CPLString NASHandler::GetAttributes(const Attributes* attrs)
     for(unsigned int i=0; i < attrs->getLength(); i++)
     {
         osRes += " ";
-        char *pszString = tr_strdup(attrs->getQName(i));
-        osRes += pszString;
-        CPLFree( pszString );
+        osRes += transcode(attrs->getQName(i), m_osAttrName);
         osRes += "=\"";
-        pszString = tr_strdup(attrs->getValue(i));
-        osRes += pszString;
-        CPLFree( pszString );
+        osRes += transcode(attrs->getValue(i), m_osAttrValue);
         osRes += "\"";
     }
     return osRes;
 }
-
 
 /************************************************************************/
 /*                            startElement()                            */
@@ -139,27 +136,18 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
                                const Attributes& attrs )
 
 {
-    char        szElementName[MAX_TOKEN_SIZE];
     GMLReadState *poState = m_poReader->GetState();
 
-    tr_strcpy( szElementName, localname );
+    transcode( localname, m_osElementName );
+#ifdef DEBUG_TRACE_ELEMENTS
+    for(int k=0;k<m_nDepth;k++)
+        printf(" "); /*ok*/
+    printf(">%s\n", m_osElementName.c_str()); /*ok*/
+#endif
 
-    if ( ( m_bIgnoreFeature && m_nDepth >= m_nDepthFeature ) ||
-         ( m_osIgnoredElement != "" && m_nDepth >= m_nDepthElement ) )
+    if ( m_bIgnoreFeature && m_nDepth >= m_nDepthFeature )
     {
         m_nDepth ++;
-        return;
-    }
-
-    // ignore attributes of external references and "objektkoordinaten"
-    // (see PostNAS #3 and #15)
-    if ( EQUAL( szElementName, "zeigtAufExternes" ) ||
-         EQUAL( szElementName, "objektkoordinaten" ) )
-    {
-        m_osIgnoredElement = szElementName;
-        m_nDepthElement    = m_nDepth;
-        m_nDepth ++;
-
         return;
     }
 
@@ -167,7 +155,7 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
     CPLDebug( "NAS",
               "%*sstartElement %s m_bIgnoreFeature:%d depth:%d "
               "depthFeature:%d featureClass:%s",
-              m_nDepth, "", szElementName,
+              m_nDepth, "", m_osElementName.c_str(),
               m_bIgnoreFeature, m_nDepth, m_nDepthFeature,
               poState->m_poFeature ? poState->m_poFeature->
                   GetClass()->GetElementName() : "(no feature)"
@@ -180,30 +168,38 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /*      try to collect for now, so just terminate the field             */
 /*      collection.                                                     */
 /* -------------------------------------------------------------------- */
-    if( m_pszCurField != NULL )
+    if( m_pszCurField != nullptr )
     {
         CPLFree( m_pszCurField );
-        m_pszCurField = NULL;
+        m_pszCurField = nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      If we are collecting geometry, or if we determine this is a     */
 /*      geometry element then append to the geometry info.              */
 /* -------------------------------------------------------------------- */
-    const char *pszLast = NULL;
+    const char *pszLast = nullptr;
 
-    if( m_pszGeometry != NULL
-        || IsGeometryElement( szElementName ) )
+    if( m_pszGeometry != nullptr
+        || IsGeometryElement( m_osElementName ) )
     {
-        const int nLNLen = tr_strlen( localname );
+        if( m_nGeometryPropertyIndex == -1 &&
+            poState->m_poFeature &&
+            poState->m_poFeature->GetClass() )
+        {
+          GMLFeatureClass* poClass = poState->m_poFeature->GetClass();
+          m_nGeometryPropertyIndex = poClass->GetGeometryPropertyIndexBySrcElement( poState->osPath.c_str() );
+        }
+
+        const int nLNLen = static_cast<int>(m_osElementName.size());
         CPLString osAttributes = GetAttributes( &attrs );
 
         /* should save attributes too! */
 
-        if( m_pszGeometry == NULL )
+        if( m_pszGeometry == nullptr )
             m_nGeometryDepth = poState->m_nPathLength;
 
-        if( m_pszGeometry == NULL ||
+        if( m_pszGeometry == nullptr ||
             m_nGeomLen + nLNLen + 4 + (int)osAttributes.size() > m_nGeomAlloc )
         {
             m_nGeomAlloc = (int) (m_nGeomAlloc * 1.3 + nLNLen + osAttributes.size() + 1000);
@@ -212,9 +208,9 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
         }
 
         strcpy( m_pszGeometry+m_nGeomLen, "<" );
-        tr_strcpy( m_pszGeometry+m_nGeomLen+1, localname );
+        strcpy( m_pszGeometry+m_nGeomLen+1, m_osElementName );
 
-        if( osAttributes.size() > 0 )
+        if( !osAttributes.empty() )
         {
             strcat( m_pszGeometry+m_nGeomLen, " " );
             strcat( m_pszGeometry+m_nGeomLen, osAttributes );
@@ -229,13 +225,14 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /*      (wfs:Delete, wfsext:Replace or wfs:Update)?                     */
 /*      specialized sort of feature.                                    */
 /* -------------------------------------------------------------------- */
-    else if( EQUAL(szElementName,"Filter")
-             && (pszLast = m_poReader->GetState()->GetLastComponent()) != NULL
+    else if( m_nDepthFeature == 0 &&
+             m_osElementName == "Filter"
+             && (pszLast = m_poReader->GetState()->GetLastComponent()) != nullptr
              && (EQUAL(pszLast,"Delete") || EQUAL(pszLast,"Replace") ||
                  EQUAL(pszLast,"Update")) )
     {
         const char* pszFilteredClassName = m_poReader->GetFilteredClassName();
-        if ( pszFilteredClassName != NULL &&
+        if ( pszFilteredClassName != nullptr &&
              strcmp("Delete", pszFilteredClassName) != 0 )
         {
             m_bIgnoreFeature = true;
@@ -269,11 +266,10 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
             return;
         }
 
-        if( EQUAL( pszLast, "Update" )  &&
-            ( m_osLastEnded == "" || m_LastOccasions.empty() ) )
+        if( EQUAL( pszLast, "Update" ) && m_osLastEnded == "" )
         {
             CPLError( CE_Failure, CPLE_AssertionFailed,
-                      "m_osLastEnded == \"\" || m_LastOccasions.empty()" );
+                      "m_osLastEnded == \"\"" );
 
             m_bIgnoreFeature = true;
             m_nDepthFeature = m_nDepth;
@@ -294,8 +290,8 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 
         if( EQUAL( pszLast, "Replace" ) )
         {
-            //CPLAssert( m_osLastReplacingFID != "" );
-            //CPLAssert( m_osLastSafeToIgnore != "" );
+            // CPLAssert( m_osLastReplacingFID != "" );
+            // CPLAssert( m_osLastSafeToIgnore != "" );
             m_poReader->SetFeaturePropertyDirectly(
                 "replacedBy", CPLStrdup(m_osLastReplacingFID) );
             m_poReader->SetFeaturePropertyDirectly(
@@ -303,8 +299,6 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
         }
         else if( EQUAL( pszLast, "Update" ) )
         {
-            //CPLAssert( m_osLastEnded != "" );
-            //CPLAssert( m_LastOccasions.empty() );
             m_poReader->SetFeaturePropertyDirectly(
                 "endet", CPLStrdup(m_osLastEnded) );
 
@@ -315,6 +309,7 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
               m_poReader->SetFeaturePropertyDirectly(
                   "anlass", CPLStrdup(*it) );
             }
+
             m_osLastEnded = "";
             m_LastOccasions.clear();
         }
@@ -325,19 +320,18 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /* -------------------------------------------------------------------- */
 /*      Is it a feature?  If so push a whole new state, and return.     */
 /* -------------------------------------------------------------------- */
-    else if( m_poReader->IsFeatureElement( szElementName ) )
+    else if( !m_bInUpdateProperty && m_nDepthFeature == 0 &&
+             m_poReader->IsFeatureElement( m_osElementName ) )
     {
-        m_osLastTypeName = szElementName;
+        m_osLastTypeName = m_osElementName;
 
         const char* pszFilteredClassName = m_poReader->GetFilteredClassName();
 
         pszLast = m_poReader->GetState()->GetLastComponent();
-        if( pszLast != NULL && EQUAL(pszLast,"Replace") )
+        if( pszLast != nullptr && EQUAL(pszLast,"Replace") )
         {
-            XMLCh  Name[100];
-
-            tr_strcpy( Name, "gml:id" );
-            int nIndex = attrs.getIndex( Name );
+            const XMLCh achFID[] = { 'g', 'm', 'l', ':', 'i', 'd', '\0' };
+            int nIndex = attrs.getIndex( achFID );
 
             if( nIndex == -1 || m_osLastReplacingFID !="" )
             {
@@ -353,9 +347,7 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 
             // Capture "gml:id" attribute as part of the property value -
             // primarily this is for the wfsext:Replace operation's attribute.
-            char *pszReplacingFID = tr_strdup( attrs.getValue( nIndex ) );
-            m_osLastReplacingFID = pszReplacingFID;
-            CPLFree( pszReplacingFID );
+            transcode( attrs.getValue( nIndex ), m_osLastReplacingFID );
 
 #ifdef DEBUG_VERBOSE
             CPLDebug( "NAS", "%*s### Replace typeName=%s replacedBy=%s",
@@ -364,8 +356,8 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 #endif
         }
 
-        if ( pszFilteredClassName != NULL &&
-             strcmp(szElementName, pszFilteredClassName) != 0 )
+        if ( pszFilteredClassName != nullptr &&
+             m_osElementName != pszFilteredClassName )
         {
             m_bIgnoreFeature = true;
             m_nDepthFeature = m_nDepth;
@@ -376,7 +368,7 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 
         m_bIgnoreFeature = false;
 
-        m_poReader->PushFeature( szElementName, attrs );
+        m_poReader->PushFeature( m_osElementName, attrs );
 
         m_nDepthFeature = m_nDepth;
         m_nDepth ++;
@@ -389,40 +381,43 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /*      the typeName attribute so we can assign it to the feature that  */
 /*      will be produced when we process the Filter element.            */
 /* -------------------------------------------------------------------- */
-    else if( EQUAL(szElementName,"Delete") || EQUAL(szElementName,"Update") )
+    else if( m_nUpdateOrDeleteDepth == 0 &&
+             (m_osElementName == "Delete" || m_osElementName == "Update") )
     {
-        XMLCh  Name[100];
+        const XMLCh Name[] = { 't', 'y', 'p', 'e', 'N', 'a', 'm', 'e', '\0' };
 
-        tr_strcpy( Name, "typeName" );
         int nIndex = attrs.getIndex( Name );
 
         if( nIndex != -1 )
         {
-            char *pszTypeName = tr_strdup( attrs.getValue( nIndex ) );
-            m_osLastTypeName = pszTypeName;
-            CPLFree( pszTypeName );
+            transcode( attrs.getValue( nIndex ), m_osLastTypeName );
         }
 
         m_osLastSafeToIgnore = "";
         m_osLastReplacingFID = "";
 
-        if( EQUAL(szElementName,"Update") )
+        if( m_osElementName == "Update" )
         {
             m_bInUpdate = true;
         }
+        m_nUpdateOrDeleteDepth = m_nDepth;
     }
 
-    else if ( m_bInUpdate && EQUAL(szElementName, "Property") )
+    else if ( m_nUpdatePropertyDepth  == 0 &&
+              m_bInUpdate && m_osElementName == "Property" )
     {
         m_bInUpdateProperty = true;
+        m_nUpdatePropertyDepth = m_nDepth;
     }
 
-    else if ( m_bInUpdateProperty && ( EQUAL(szElementName, "Name" ) ||
-                                       EQUAL(szElementName, "Value" ) ) )
+    else if ( m_nNameOrValueDepth == 0 &&
+              m_bInUpdateProperty && ( m_osElementName == "Name" ||
+                                       m_osElementName == "Value" ) )
     {
         // collect attribute name or value
         CPLFree( m_pszCurField );
         m_pszCurField = CPLStrdup("");
+        m_nNameOrValueDepth = m_nDepth;
     }
 
 /* -------------------------------------------------------------------- */
@@ -430,18 +425,15 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /*      safeToIgnore attribute so we can assign it to the feature       */
 /*      that will be produced when we process the Filter element.       */
 /* -------------------------------------------------------------------- */
-    else if( EQUAL(szElementName,"Replace") )
+    else if( m_osElementName ==  "Replace" )
     {
-        XMLCh  Name[100];
+        const XMLCh Name[] = { 's', 'a', 'f', 'e', 'T', 'o', 'I', 'g', 'n', 'o', 'r', 'e', '\0' };
 
-        tr_strcpy( Name, "safeToIgnore" );
         int nIndex = attrs.getIndex( Name );
 
         if( nIndex != -1 )
         {
-            char *pszSafeToIgnore = tr_strdup( attrs.getValue( nIndex ) );
-            m_osLastSafeToIgnore = pszSafeToIgnore;
-            CPLFree( pszSafeToIgnore );
+            transcode( attrs.getValue( nIndex ), m_osLastSafeToIgnore );
         }
         else
         {
@@ -457,24 +449,24 @@ void NASHandler::startElement( const XMLCh* const /* uri */,
 /*      If it is (or at least potentially is) a simple attribute,       */
 /*      then start collecting it.                                       */
 /* -------------------------------------------------------------------- */
-    else if( m_poReader->IsAttributeElement( szElementName ) )
+    else if( m_poReader->IsAttributeElement( m_osElementName ) )
     {
         CPLFree( m_pszCurField );
         m_pszCurField = CPLStrdup("");
 
         // Capture href as OB property.
-        m_poReader->CheckForRelations( szElementName, attrs, &m_pszCurField );
+        m_poReader->CheckForRelations( m_osElementName, attrs, &m_pszCurField );
 
         // Capture "fid" attribute as part of the property value -
         // primarily this is for wfs:Delete operation's FeatureId attribute.
-        if( EQUAL(szElementName,"FeatureId") )
+        if( m_osElementName == "FeatureId" )
             m_poReader->CheckForFID( attrs, &m_pszCurField );
     }
 
 /* -------------------------------------------------------------------- */
 /*      Push the element onto the current state's path.                 */
 /* -------------------------------------------------------------------- */
-    poState->PushPath( szElementName );
+    poState->PushPath( m_osElementName );
 
     m_nDepth ++;
 }
@@ -487,12 +479,16 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
                              const XMLCh* const /* qname */)
 
 {
-    char        szElementName[MAX_TOKEN_SIZE];
     GMLReadState *poState = m_poReader->GetState();
 
-    tr_strcpy( szElementName, localname );
+    transcode( localname, m_osElementName );
 
     m_nDepth --;
+#ifdef DEBUG_TRACE_ELEMENTS
+    for(int k=0;k<m_nDepth;k++)
+        printf(" "); /*ok*/
+    printf("<%s\n", m_osElementName.c_str()); /*ok*/
+#endif
 
     if (m_bIgnoreFeature && m_nDepth >= m_nDepthFeature)
     {
@@ -504,20 +500,10 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
         return;
     }
 
-    if ( m_osIgnoredElement != "" && m_nDepth >= m_nDepthElement )
-    {
-        if ( m_nDepth == m_nDepthElement )
-        {
-            m_osIgnoredElement = "";
-            m_nDepthElement    = 0;
-        }
-        return;
-    }
-
 #ifdef DEBUG_VERBOSE
     CPLDebug("NAS",
               "%*sendElement %s m_bIgnoreFeature:%d depth:%d depthFeature:%d featureClass:%s",
-              m_nDepth, "", szElementName,
+              m_nDepth, "", m_osElementName.c_str(),
               m_bIgnoreFeature, m_nDepth, m_nDepthFeature,
               poState->m_poFeature ? poState->m_poFeature->GetClass()->GetElementName() : "(no feature)"
             );
@@ -525,26 +511,30 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 
    if( m_bInUpdateProperty )
    {
-       if( EQUAL( szElementName, "Name" ) )
+       if( m_osElementName == "Name" && m_nDepth == m_nNameOrValueDepth )
        {
-           CPLAssert( m_osLastPropertyName == "" );
-           m_osLastPropertyName = m_pszCurField;
-           m_pszCurField = NULL;
+           m_osLastPropertyName = m_pszCurField ? m_pszCurField : "";
+           CPLFree(m_pszCurField);
+           m_pszCurField = nullptr;
+           m_nNameOrValueDepth = 0;
        }
-       else if( EQUAL( szElementName, "Value" ) )
+       else if( m_osElementName == "Value" && m_nDepth == m_nNameOrValueDepth )
        {
-           CPLAssert( m_osLastPropertyValue == "" );
-           m_osLastPropertyValue = m_pszCurField;
-           m_pszCurField = NULL;
+           m_osLastPropertyValue = m_pszCurField ? m_pszCurField : "";
+           CPLFree(m_pszCurField);
+           m_pszCurField = nullptr;
+           m_nNameOrValueDepth = 0;
        }
-       else if( EQUAL( szElementName, "Property" ) )
+       else if( m_nDepth == m_nUpdatePropertyDepth && m_osElementName == "Property" )
        {
-           if( EQUAL( m_osLastPropertyName, "adv:lebenszeitintervall/adv:AA_Lebenszeitintervall/adv:endet" ) )
+           if( EQUAL( m_osLastPropertyName, "adv:lebenszeitintervall/adv:AA_Lebenszeitintervall/adv:endet" ) ||
+               EQUAL( m_osLastPropertyName, "lebenszeitintervall/AA_Lebenszeitintervall/endet" ) )
            {
                CPLAssert( m_osLastPropertyValue != "" );
                m_osLastEnded = m_osLastPropertyValue;
            }
-           else if( EQUAL( m_osLastPropertyName, "adv:anlass" ) )
+           else if( EQUAL( m_osLastPropertyName, "adv:anlass" ) ||
+                    EQUAL( m_osLastPropertyName, "anlass" ) )
            {
                CPLAssert( m_osLastPropertyValue != "" );
                m_LastOccasions.push_back( m_osLastPropertyValue );
@@ -559,6 +549,7 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
            m_osLastPropertyName = "";
            m_osLastPropertyValue = "";
            m_bInUpdateProperty = false;
+           m_nUpdatePropertyDepth = 0;
        }
 
        poState->PopPath();
@@ -566,9 +557,14 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
        return;
    }
 
-   if ( m_bInUpdate && EQUAL( szElementName, "Update" ) )
+   if( m_nUpdateOrDeleteDepth > 0 &&
+             (m_osElementName == "Delete" || m_osElementName == "Update") )
    {
-       m_bInUpdate = false;
+        if ( m_bInUpdate && m_osElementName == "Update" )
+        {
+            m_bInUpdate = false;
+        }
+        m_nUpdateOrDeleteDepth = 0;
    }
 
 /* -------------------------------------------------------------------- */
@@ -577,21 +573,21 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 /*      We don't bother validating that the closing tag matches the     */
 /*      opening tag.                                                    */
 /* -------------------------------------------------------------------- */
-    if( m_pszCurField != NULL )
+    if( m_pszCurField != nullptr )
     {
-        CPLAssert( poState->m_poFeature != NULL );
+        CPLAssert( poState->m_poFeature != nullptr );
 
         m_poReader->SetFeaturePropertyDirectly( poState->osPath.c_str(), m_pszCurField );
-        m_pszCurField = NULL;
+        m_pszCurField = nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      If we are collecting Geometry than store it, and consider if    */
 /*      this is the end of the geometry.                                */
 /* -------------------------------------------------------------------- */
-    if( m_pszGeometry != NULL )
+    if( m_pszGeometry != nullptr )
     {
-        int nLNLen = tr_strlen( localname );
+        int nLNLen = static_cast<int>(m_osElementName.size());
 
         /* should save attributes too! */
 
@@ -603,13 +599,13 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
         }
 
         strcat( m_pszGeometry+m_nGeomLen, "</" );
-        tr_strcpy( m_pszGeometry+m_nGeomLen+2, localname );
+        strcpy( m_pszGeometry+m_nGeomLen+2, m_osElementName );
         strcat( m_pszGeometry+m_nGeomLen+nLNLen+2, ">" );
         m_nGeomLen += static_cast<int>(strlen(m_pszGeometry+m_nGeomLen));
 
         if( poState->m_nPathLength == m_nGeometryDepth+1 )
         {
-            if( poState->m_poFeature != NULL )
+            if( poState->m_poFeature != nullptr )
             {
                 CPLXMLNode* psNode = CPLParseXMLString(m_pszGeometry);
                 if (psNode)
@@ -622,20 +618,21 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
                      * </gml:Point>
                      *
                      */
-                    const char *pszPos;
-                    if( (pszPos = CPLGetXMLValue( psNode, "=Point.pos", NULL ) ) != NULL
-                        && strstr(pszPos, " ") == NULL )
+                    const char *pszPos =
+                        CPLGetXMLValue( psNode, "=Point.pos", nullptr );
+                    if( pszPos != nullptr && strstr(pszPos, " ") == nullptr )
                     {
                         CPLSetXMLValue( psNode, "pos", CPLSPrintf("0 0 %s", pszPos) );
                     }
 
-                    if ( poState->m_poFeature->GetGeometryList() &&
-                         poState->m_poFeature->GetGeometryList()[0] )
+                    if ( m_nGeometryPropertyIndex >= 0 &&
+                         m_nGeometryPropertyIndex < poState->m_poFeature->GetGeometryCount() &&
+                         poState->m_poFeature->GetGeometryList()[m_nGeometryPropertyIndex] )
                     {
                         int iId = poState->m_poFeature->GetClass()->GetPropertyIndex( "gml_id" );
                         const GMLProperty *poIdProp = poState->m_poFeature->GetProperty(iId);
 #ifdef DEBUG_VERBOSE
-                        char *pszOldGeom = CPLSerializeXMLTree( poState->m_poFeature->GetGeometryList()[0] );
+                        char *pszOldGeom = CPLSerializeXMLTree( poState->m_poFeature->GetGeometryList()[m_nGeometryPropertyIndex] );
 
                         CPLDebug("NAS", "Overwriting other geometry (%s; replace:%s; with:%s)",
                                  poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)",
@@ -650,7 +647,24 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 #endif
                     }
 
-                    poState->m_poFeature->SetGeometryDirectly( psNode );
+                    if( m_nGeometryPropertyIndex >= 0 )
+                        poState->m_poFeature->SetGeometryDirectly( m_nGeometryPropertyIndex, psNode );
+
+                    // no geometry property or property without element path
+                    else if( poState->m_poFeature->GetClass()->GetGeometryPropertyCount() == 0 ||
+                             ( poState->m_poFeature->GetClass()->GetGeometryPropertyCount() == 1 &&
+                               poState->m_poFeature->GetClass()->GetGeometryProperty(0)->GetSrcElement() &&
+                               *poState->m_poFeature->GetClass()->GetGeometryProperty(0)->GetSrcElement() == 0 ) )
+                        poState->m_poFeature->SetGeometryDirectly( psNode );
+
+                    else
+                    {
+                        CPLError( CE_Warning, CPLE_AppDefined, "NAS: Unexpected geometry skipped (class:%s path:%s geom:%s)",
+                                  poState->m_poFeature->GetClass()->GetName(),
+                                  poState->osPath.c_str(),
+                                  m_pszGeometry );
+                        CPLDestroyXMLNode( psNode );
+                    }
                 }
                 else
                     CPLError( CE_Warning, CPLE_AppDefined, "NAS: Invalid geometry skipped" );
@@ -659,8 +673,9 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
                 CPLError( CE_Warning, CPLE_AppDefined, "NAS: Skipping geometry without feature" );
 
             CPLFree( m_pszGeometry );
-            m_pszGeometry = NULL;
+            m_pszGeometry = nullptr;
             m_nGeomAlloc = m_nGeomLen = 0;
+            m_nGeometryPropertyIndex = -1;
         }
     }
 
@@ -669,11 +684,11 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 /*      element name for the class, then we have finished the           */
 /*      feature, and we pop the feature read state.                     */
 /* -------------------------------------------------------------------- */
-    const char *pszLast = NULL;
+    const char *pszLast = nullptr;
 
-    if( m_nDepth == m_nDepthFeature && poState->m_poFeature != NULL
-        && EQUAL(szElementName,
-                 poState->m_poFeature->GetClass()->GetElementName()) )
+    if( m_nDepth == m_nDepthFeature && poState->m_poFeature != nullptr
+        && m_osElementName ==
+                 poState->m_poFeature->GetClass()->GetElementName() )
     {
         m_nDepthFeature = 0;
         m_poReader->PopState();
@@ -684,10 +699,10 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 /*      close of the <Filter> element.                                  */
 /* -------------------------------------------------------------------- */
     else if( m_nDepth == m_nDepthFeature
-             && poState->m_poFeature != NULL
-             && EQUAL(szElementName,"Filter")
+             && poState->m_poFeature != nullptr
+             && m_osElementName == "Filter"
              && (pszLast=poState->m_poFeature->GetClass()->GetElementName())
-                != NULL
+                != nullptr
              && ( EQUAL(pszLast, "Delete") || EQUAL(pszLast, "Update") ) )
     {
         m_nDepthFeature = 0;
@@ -700,7 +715,7 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 /* -------------------------------------------------------------------- */
     else
     {
-        if( EQUAL(szElementName,poState->GetLastComponent()) )
+        if( m_osElementName == poState->GetLastComponent() )
             poState->PopPath();
         else
         {
@@ -713,54 +728,53 @@ void NASHandler::endElement( const XMLCh* const /* uri */ ,
 /*                             characters()                             */
 /************************************************************************/
 
-#if XERCES_VERSION_MAJOR >= 3
-void NASHandler::characters( const XMLCh *const chars_in,
-                             const XMLSize_t /* length */ )
-#else
-void NASHandler::characters( const XMLCh* const chars_in,
-                             const unsigned int /* length */ )
-#endif
+void NASHandler::characters( const XMLCh *const chars,
+                             const XMLSize_t length )
 {
-    const XMLCh *chars = chars_in;
-
-    if( m_pszCurField != NULL )
+    if( m_pszCurField != nullptr )
     {
         const int nCurFieldLength = static_cast<int>(strlen(m_pszCurField));
 
+        int nSkipped = 0;
         if (nCurFieldLength == 0)
         {
             // Ignore white space
-            while( *chars == ' ' || *chars == 10 || *chars == 13 ||
-                   *chars == '\t')
-                chars++;
+            while( chars[nSkipped] == ' ' || chars[nSkipped] == 10 || chars[nSkipped] == 13 ||
+                   chars[nSkipped] == '\t')
+                nSkipped++;
         }
 
-        char *pszTranslated = tr_strdup(chars);
+        transcode( chars + nSkipped, m_osCharacters,
+                   static_cast<int>(length) - nSkipped );
 
-        if( m_pszCurField == NULL )
+        if( m_pszCurField == nullptr )
         {
-            m_pszCurField = pszTranslated;
+            m_pszCurField = CPLStrdup(m_osCharacters);
         }
         else
         {
             m_pszCurField = static_cast<char *>(
                 CPLRealloc( m_pszCurField,
-                            nCurFieldLength+strlen(pszTranslated)+1 ) );
-            strcpy( m_pszCurField + nCurFieldLength, pszTranslated );
-            CPLFree( pszTranslated );
+                            nCurFieldLength+m_osCharacters.size()+1 ) );
+            memcpy( m_pszCurField + nCurFieldLength, m_osCharacters.c_str(),
+                    m_osCharacters.size() + 1 );
         }
     }
-    else if( m_pszGeometry != NULL )
+    else if( m_pszGeometry != nullptr )
     {
+        int nSkipped = 0;
         if (m_nGeomLen == 0)
         {
             // Ignore white space
-            while( *chars == ' ' || *chars == 10 || *chars == 13 ||
-                   *chars == '\t')
-                chars++;
+            while( chars[nSkipped] == ' ' || chars[nSkipped] == 10 || chars[nSkipped] == 13 ||
+                   chars[nSkipped] == '\t')
+                nSkipped++;
         }
 
-        const int nCharsLen = tr_strlen(chars);
+        transcode( chars + nSkipped, m_osCharacters,
+                   static_cast<int>(length) - nSkipped );
+
+        const int nCharsLen = static_cast<int>(m_osCharacters.size());
 
         if( m_nGeomLen + nCharsLen*4 + 4 > m_nGeomAlloc )
         {
@@ -769,7 +783,8 @@ void NASHandler::characters( const XMLCh* const chars_in,
                 CPLRealloc( m_pszGeometry, m_nGeomAlloc);
         }
 
-        tr_strcpy( m_pszGeometry+m_nGeomLen, chars );
+        memcpy( m_pszGeometry+m_nGeomLen, m_osCharacters.c_str(),
+                m_osCharacters.size() + 1 );
         m_nGeomLen += static_cast<int>(strlen(m_pszGeometry+m_nGeomLen));
     }
 }
@@ -781,14 +796,13 @@ void NASHandler::characters( const XMLCh* const chars_in,
 void NASHandler::fatalError( const SAXParseException &exception)
 
 {
-    char *pszErrorMessage = tr_strdup( exception.getMessage() );
+    CPLString osErrMsg;
+    transcode( exception.getMessage(), osErrMsg );
     CPLError( CE_Failure, CPLE_AppDefined,
               "XML Parsing Error: %s at line %d, column %d\n",
-              pszErrorMessage,
+              osErrMsg.c_str(),
               static_cast<int>(exception.getLineNumber()),
               static_cast<int>(exception.getColumnNumber()) );
-
-    CPLFree( pszErrorMessage );
 }
 
 /************************************************************************/

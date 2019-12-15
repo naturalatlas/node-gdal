@@ -1,5 +1,4 @@
 /*
- * $Id: kearat.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *  kearat.cpp
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -30,7 +29,10 @@
 
 #include "kearat.h"
 
-KEARasterAttributeTable::KEARasterAttributeTable(kealib::KEAAttributeTable *poKEATable)
+CPL_CVSID("$Id: kearat.cpp 2519a7eb0e1649dbf8625ae8ffc7bb7c3ef9514b 2018-07-10 12:05:23 +0100 Robert Coup $")
+
+KEARasterAttributeTable::KEARasterAttributeTable(kealib::KEAAttributeTable *poKEATable,
+                            KEARasterBand *poBand)
 {
     for( size_t nColumnIndex = 0; nColumnIndex < poKEATable->getMaxGlobalColIdx(); nColumnIndex++ )
     {
@@ -47,6 +49,7 @@ KEARasterAttributeTable::KEARasterAttributeTable(kealib::KEAAttributeTable *poKE
         m_aoFields.push_back(sKEAField);
     }
     m_poKEATable = poKEATable;
+    m_poBand = poBand;
 }
 
 KEARasterAttributeTable::~KEARasterAttributeTable()
@@ -58,7 +61,7 @@ KEARasterAttributeTable::~KEARasterAttributeTable()
 GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
 {
     if( ( GetRowCount() * GetColumnCount() ) > RAT_MAX_ELEM_FOR_CLONE )
-        return NULL;
+        return nullptr;
 
     GDALDefaultRasterAttributeTable *poRAT = new GDALDefaultRasterAttributeTable();
 
@@ -111,10 +114,10 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
         if( eGDALType == GFT_Integer )
         {
             int *panColData = (int*)VSI_MALLOC2_VERBOSE(sizeof(int), m_poKEATable->getSize());
-            if( panColData == NULL )
+            if( panColData == nullptr )
             {
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
 
             if( (const_cast<KEARasterAttributeTable*>(this))->
@@ -122,7 +125,7 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
             {
                 CPLFree(panColData);
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
 
             for( int iRow = 0; iRow < (int)m_poKEATable->getSize(); iRow++ )
@@ -134,17 +137,17 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
         if( eGDALType == GFT_Real )
         {
             double *padfColData = (double*)VSI_MALLOC2_VERBOSE(sizeof(double), m_poKEATable->getSize());
-            if( padfColData == NULL )
+            if( padfColData == nullptr )
             {
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
             if( (const_cast<KEARasterAttributeTable*>(this))->
                         ValuesIO(GF_Read, iCol, 0, static_cast<int>(m_poKEATable->getSize()), padfColData ) != CE_None )
             {
                 CPLFree(padfColData);
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
 
             for( int iRow = 0; iRow < (int)m_poKEATable->getSize(); iRow++ )
@@ -156,10 +159,10 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
         if( eGDALType == GFT_String )
         {
             char **papszColData = (char**)VSI_MALLOC2_VERBOSE(sizeof(char*), m_poKEATable->getSize());
-            if( papszColData == NULL )
+            if( papszColData == nullptr )
             {
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
 
             if( (const_cast<KEARasterAttributeTable*>(this))->
@@ -167,7 +170,7 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
             {
                 CPLFree(papszColData);
                 delete poRAT;
-                return NULL;
+                return nullptr;
             }
 
             for( int iRow = 0; iRow < (int)m_poKEATable->getSize(); iRow++ )
@@ -178,20 +181,21 @@ GDALDefaultRasterAttributeTable *KEARasterAttributeTable::Clone() const
             CPLFree(papszColData);
         }
     }
+
+    poRAT->SetTableType(this->GetTableType());
+
     return poRAT;
 }
-
 
 int KEARasterAttributeTable::GetColumnCount() const
 {
     return (int)m_aoFields.size();
 }
 
-
 const char *KEARasterAttributeTable::GetNameOfCol(int nCol) const
 {
      if( ( nCol < 0 ) || ( nCol >= (int)m_aoFields.size() ) )
-        return NULL;
+        return nullptr;
 
     return m_aoFields[nCol].name.c_str();
 }
@@ -249,7 +253,6 @@ GDALRATFieldType KEARasterAttributeTable::GetTypeOfCol( int nCol ) const
     }
     return eGDALType;
 }
-
 
 int KEARasterAttributeTable::GetColOfUsage( GDALRATFieldUsage eUsage ) const
 {
@@ -313,7 +316,7 @@ const char *KEARasterAttributeTable::GetValueAsString( int iRow, int iField ) co
 int KEARasterAttributeTable::GetValueAsInt( int iRow, int iField ) const
 {
     // Get ValuesIO do do the work
-    int nValue;
+    int nValue = 0;
     if( (const_cast<KEARasterAttributeTable*>(this))->
                 ValuesIO(GF_Read, iField, iRow, 1, &nValue ) != CE_None )
     {
@@ -326,7 +329,7 @@ int KEARasterAttributeTable::GetValueAsInt( int iRow, int iField ) const
 double KEARasterAttributeTable::GetValueAsDouble( int iRow, int iField ) const
 {
     // Get ValuesIO do do the work
-    double dfValue;
+    double dfValue = 0.0;
     if( (const_cast<KEARasterAttributeTable*>(this))->
                 ValuesIO(GF_Read, iField, iRow, 1, &dfValue ) != CE_None )
     {
@@ -386,7 +389,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for ints
             int *panColData = (int*)VSI_MALLOC2_VERBOSE(iLength, sizeof(int) );
-            if( panColData == NULL )
+            if( panColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -436,7 +439,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for string pointers
             char **papszColData = (char**)VSI_MALLOC2_VERBOSE(iLength, sizeof(char*));
-            if( papszColData == NULL )
+            if( papszColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -516,7 +519,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // need to convert to/from bools
             bool *panColData = (bool*)VSI_MALLOC2_VERBOSE(iLength, sizeof(bool) );
-            if( panColData == NULL )
+            if( panColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -556,7 +559,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // need to convert to/from int64_t
             int64_t *panColData = (int64_t*)VSI_MALLOC2_VERBOSE(iLength, sizeof(int64_t) );
-            if( panColData == NULL )
+            if( panColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -577,7 +580,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
             }
             catch(kealib::KEAException &e)
             {
-                fprintf(stderr,"Failed to read/write attribute table: %s %d %d %ld\n", e.what(), iStartRow, iLength, m_poKEATable->getSize() );
+                //fprintf(stderr,"Failed to read/write attribute table: %s %d %d %ld\n", e.what(), iStartRow, iLength, m_poKEATable->getSize() );
                 CPLError( CE_Failure, CPLE_AppDefined, "Failed to read/write attribute table: %s", e.what() );
                 return CE_Failure;
             }
@@ -595,7 +598,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for doubles
             double *padfColData = (double*)VSI_MALLOC2_VERBOSE(iLength, sizeof(double) );
-            if( padfColData == NULL )
+            if( padfColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -629,7 +632,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for string pointers
             char **papszColData = (char**)VSI_MALLOC2_VERBOSE(iLength, sizeof(char*));
-            if( papszColData == NULL )
+            if( papszColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -710,7 +713,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for ints
             int *panColData = (int*)VSI_MALLOC2_VERBOSE(iLength, sizeof(int) );
-            if( panColData == NULL )
+            if( panColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -729,7 +732,6 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
                 return eVal;
             }
 
-
             if( eRWFlag == GF_Read )
             {
                 // convert ints back to strings
@@ -746,7 +748,7 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
         {
             // allocate space for doubles
             double *padfColData = (double*)VSI_MALLOC2_VERBOSE(iLength, sizeof(double) );
-            if( padfColData == NULL )
+            if( padfColData == nullptr )
             {
                 return CE_Failure;
             }
@@ -776,7 +778,6 @@ CPLErr KEARasterAttributeTable::ValuesIO(GDALRWFlag eRWFlag, int iField, int iSt
                 }
             }
             CPLFree(padfColData);
-
         }
         break;
         case kealib::kea_att_string:
@@ -909,10 +910,67 @@ CPLErr KEARasterAttributeTable::CreateColumn( const char *pszFieldName,
     return CE_None;
 }
 
+CPLErr KEARasterAttributeTable::SetLinearBinning( double ldfRow0Min,
+                                            double ldfBinSize )
+{
+    size_t nRows = m_poKEATable->getSize();
+
+    osWorkingResult.Printf( "%.16g", ldfRow0Min);
+    m_poBand->SetMetadataItem("STATISTICS_HISTOMIN", osWorkingResult);
+    osWorkingResult.Printf( "%.16g", (nRows - 1) * ldfBinSize + ldfRow0Min);
+    m_poBand->SetMetadataItem("STATISTICS_HISTOMAX", osWorkingResult);
+
+    // STATISTICS_HISTONUMBINS now returned by metadata
+
+    return CE_None;
+}
+
+int KEARasterAttributeTable::GetLinearBinning( double *pdfRow0Min,
+                                            double *pdfBinSize ) const
+{
+    const char *pszMin = m_poBand->GetMetadataItem("STATISTICS_HISTOMIN");
+    const char *pszMax = m_poBand->GetMetadataItem("STATISTICS_HISTOMAX");
+    if( ( pszMin == nullptr ) || ( pszMax == nullptr ) )
+    {
+        return FALSE;
+    } 
+    *pdfRow0Min = atof(pszMin);
+    *pdfBinSize = (atof(pszMax) - *pdfRow0Min) / (m_poKEATable->getSize() - 1);
+
+    return TRUE;
+}
+
 CPLXMLNode *KEARasterAttributeTable::Serialize() const
 {
     if( ( GetRowCount() * GetColumnCount() ) > RAT_MAX_ELEM_FOR_CLONE )
-        return NULL;
+        return nullptr;
 
     return GDALRasterAttributeTable::Serialize();
+}
+
+GDALRATTableType KEARasterAttributeTable::GetTableType() const
+{
+    kealib::KEALayerType keaType = m_poBand->getLayerType();
+    if( keaType == kealib::kea_continuous )
+    {
+        return GRTT_ATHEMATIC;
+    }
+    else
+    {
+        return GRTT_THEMATIC;
+    }
+}
+
+CPLErr KEARasterAttributeTable::SetTableType(const GDALRATTableType eInTableType)
+{
+    kealib::KEALayerType keaType = (eInTableType == GRTT_ATHEMATIC) ? kealib::kea_continuous : kealib::kea_thematic;
+    try
+    {
+        m_poBand->setLayerType(keaType);
+        return CE_None;
+    }
+    catch (const kealib::KEAIOException &)
+    {
+        return CE_Failure;
+    }
 }

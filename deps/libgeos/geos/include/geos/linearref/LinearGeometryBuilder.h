@@ -28,77 +28,78 @@
 
 #include <vector>
 
-namespace geos
-{
-namespace linearref   // geos::linearref
-{
+namespace geos {
+namespace linearref { // geos::linearref
 
-/**
- * Builds a linear geometry ({@link LineString} or {@link MultiLineString})
- * incrementally (point-by-point).
+/** \brief
+ * Builds a linear geometry ([LineString](@ref geom::LineString) or
+ * [MultiLineString](@ref geom::MultiLineString)) incrementally (point-by-point).
  *
  * @version 1.7
  */
-class LinearGeometryBuilder
-{
+class LinearGeometryBuilder {
 private:
-	const geom::GeometryFactory* geomFact;
+    const geom::GeometryFactory* geomFact;
 
-	typedef std::vector<geom::Geometry *> GeomPtrVect;
+    typedef std::vector<const geom::Geometry*> GeomPtrVect;
 
-	// Geometry elements owned by this class
-	GeomPtrVect lines;
+    // Geometry elements owned by this class
+    GeomPtrVect lines;
 
-	bool ignoreInvalidLines;
-	bool fixInvalidLines;
-	geom::CoordinateSequence* coordList;
+    bool ignoreInvalidLines;
+    bool fixInvalidLines;
+    geom::CoordinateArraySequence* coordList;
 
-	geom::Coordinate lastPt;
+    geom::Coordinate lastPt;
 
 public:
-	LinearGeometryBuilder(const geom::GeometryFactory* geomFact);
+    LinearGeometryBuilder(const geom::GeometryFactory* geomFact);
 
-	~LinearGeometryBuilder();
+    ~LinearGeometryBuilder();
 
-	/**
-	 * Allows invalid lines to be ignored rather than causing Exceptions.
-	 * An invalid line is one which has only one unique point.
-	 *
-	 * @param ignoreShortLines <code>true</code> if short lines are
-	 *                         to be ignored
-	 */
-	void setIgnoreInvalidLines(bool ignoreInvalidLines);
+    /** \brief
+     * Allows invalid lines to be ignored rather than causing Exceptions.
+     *
+     * An invalid line is one which has only one unique point.
+     *
+     * @param ignoreInvalidLines `true` if short lines are
+     *                           to be ignored
+     */
+    void setIgnoreInvalidLines(bool ignoreInvalidLines);
 
-	/**
-	 * Allows invalid lines to be ignored rather than causing Exceptions.
-	 * An invalid line is one which has only one unique point.
-	 *
-	 * @param ignoreShortLines <code>true</code> if short lines are
-	 *                         to be ignored
-	 */
-	void setFixInvalidLines(bool fixInvalidLines);
+    /** \brief
+     * Allows invalid lines to be ignored rather than causing Exceptions.
+     *
+     * An invalid line is one which has only one unique point.
+     *
+     * @param fixInvalidLines `true` if short lines are
+     *                        to be ignored
+     */
+    void setFixInvalidLines(bool fixInvalidLines);
 
-	/**
-	 * Adds a point to the current line.
-	 *
-	 * @param pt the Coordinate to add
-	 */
-	void add(const geom::Coordinate& pt);
+    /** \brief
+     * Adds a point to the current line.
+     *
+     * @param pt the Coordinate to add
+     */
+    void add(const geom::Coordinate& pt);
 
-	/**
-	 * Adds a point to the current line.
-	 *
-	 * @param pt the Coordinate to add
-	 */
-	void add(const geom::Coordinate& pt, bool allowRepeatedPoints);
+    /** \brief
+     * Adds a point to the current line.
+     *
+     * @param pt the Coordinate to add
+     * @param allowRepeatedPoints if set to `false`, repeated coordinates are
+     *                            collapsed
+     */
+    void add(const geom::Coordinate& pt, bool allowRepeatedPoints);
 
-	/// NOTE strk: why return by value ?
-	geom::Coordinate getLastCoordinate() const;
+    // NOTE strk: why return by value ?
+    geom::Coordinate getLastCoordinate() const;
 
-	/// Terminate the current LineString.
-	void endLine();
+    /// Terminate the current LineString.
+    void endLine();
 
-	geom::Geometry *getGeometry();
+    geom::Geometry* getGeometry();
 };
 
 } // namespace geos.linearref

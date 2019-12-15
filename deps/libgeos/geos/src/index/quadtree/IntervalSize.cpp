@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -33,13 +33,15 @@ namespace quadtree { // geos.index.quadtree
 bool
 IntervalSize::isZeroWidth(double mn, double mx)
 {
-	double width = mx - mn;
-	if (width == 0.0) return true;
+    double width = mx - mn;
+    if(width == 0.0) {
+        return true;
+    }
 
-	double maxAbs = max(fabs(mn), fabs(mx));
-	double scaledInterval = width / maxAbs;
-	int level = DoubleBits::exponent(scaledInterval);
-	return level <= MIN_BINARY_EXPONENT;
+    double maxAbs = max(fabs(mn), fabs(mx));
+    double scaledInterval = width / maxAbs;
+    int level = DoubleBits::exponent(scaledInterval);
+    return level <= MIN_BINARY_EXPONENT;
 }
 
 } // namespace geos.index.quadtree

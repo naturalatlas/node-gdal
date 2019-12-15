@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogravclayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCLayer class.  This is the base class for E00
@@ -34,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogravclayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogravclayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRAVCLayer()                           */
@@ -42,7 +41,7 @@ CPL_CVSID("$Id: ogravclayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
 
 OGRAVCLayer::OGRAVCLayer( AVCFileType eSectionTypeIn,
                           OGRAVCDataSource *poDSIn ) :
-    poFeatureDefn(NULL),
+    poFeatureDefn(nullptr),
     poDS(poDSIn),
     eSectionType(eSectionTypeIn)
 {}
@@ -54,14 +53,14 @@ OGRAVCLayer::OGRAVCLayer( AVCFileType eSectionTypeIn,
 OGRAVCLayer::~OGRAVCLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "AVC", "%d features read on layer '%s'.",
                   static_cast<int>( m_nFeaturesRead ),
                   poFeatureDefn->GetName() );
     }
 
-    if( poFeatureDefn != NULL )
+    if( poFeatureDefn != nullptr )
         poFeatureDefn->Release();
 }
 
@@ -72,16 +71,6 @@ OGRAVCLayer::~OGRAVCLayer()
 int OGRAVCLayer::TestCapability( const char * /* pszCap */ )
 {
     return FALSE;
-}
-
-/************************************************************************/
-/*                           GetSpatialRef()                            */
-/************************************************************************/
-
-OGRSpatialReference *OGRAVCLayer::GetSpatialRef()
-
-{
-    return poDS->GetSpatialRef();
 }
 
 /************************************************************************/
@@ -183,8 +172,14 @@ int OGRAVCLayer::SetupFeatureDefinition( const char *pszName )
         }
 
       default:
-        poFeatureDefn = NULL;
+        poFeatureDefn = nullptr;
         break;
+    }
+
+    if( poFeatureDefn && poFeatureDefn->GetGeomFieldDefn(0) )
+    {
+        poFeatureDefn->GetGeomFieldDefn(0)->SetSpatialRef(
+            poDS->DSGetSpatialRef());
     }
 
     SetDescription( pszName );
@@ -231,6 +226,7 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
                                 psArc->pasVertices[iVert].x,
                                 psArc->pasVertices[iVert].y );
 
+          poLine->assignSpatialReference( GetSpatialRef() );
           poOGRFeature->SetGeometryDirectly( poLine );
 
 /* -------------------------------------------------------------------- */
@@ -289,8 +285,9 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
 /* -------------------------------------------------------------------- */
 /*      Apply Geometry                                                  */
 /* -------------------------------------------------------------------- */
-          poOGRFeature->SetGeometryDirectly(
-              new OGRPoint( psCNT->sCoord.x, psCNT->sCoord.y ) );
+          OGRPoint* poPoint = new OGRPoint( psCNT->sCoord.x, psCNT->sCoord.y );
+          poPoint->assignSpatialReference( GetSpatialRef() );
+          poOGRFeature->SetGeometryDirectly( poPoint );
 
 /* -------------------------------------------------------------------- */
 /*      Apply attributes.                                               */
@@ -316,8 +313,9 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
 /* -------------------------------------------------------------------- */
 /*      Apply Geometry                                                  */
 /* -------------------------------------------------------------------- */
-          poOGRFeature->SetGeometryDirectly(
-              new OGRPoint( psLAB->sCoord1.x, psLAB->sCoord1.y ) );
+          OGRPoint* poPoint = new OGRPoint( psLAB->sCoord1.x, psLAB->sCoord1.y );
+          poPoint->assignSpatialReference( GetSpatialRef() );
+          poOGRFeature->SetGeometryDirectly( poPoint );
 
 /* -------------------------------------------------------------------- */
 /*      Apply attributes.                                               */
@@ -346,9 +344,12 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
 /*      Apply Geometry                                                  */
 /* -------------------------------------------------------------------- */
           if( psTXT->numVerticesLine > 0 )
-              poOGRFeature->SetGeometryDirectly(
-                  new OGRPoint( psTXT->pasVertices[0].x,
-                                psTXT->pasVertices[0].y ) );
+          {
+              OGRPoint* poPoint = new OGRPoint( psTXT->pasVertices[0].x,
+                                                psTXT->pasVertices[0].y );
+              poPoint->assignSpatialReference( GetSpatialRef() );
+              poOGRFeature->SetGeometryDirectly( poPoint );
+          }
 
 /* -------------------------------------------------------------------- */
 /*      Apply attributes.                                               */
@@ -363,7 +364,7 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
       }
 
       default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -371,11 +372,11 @@ OGRFeature *OGRAVCLayer::TranslateFeature( void *pAVCFeature )
 /*                        MatchesSpatialFilter()                        */
 /************************************************************************/
 
-int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
+bool OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
 
 {
-    if( m_poFilterGeom == NULL )
-        return TRUE;
+    if( m_poFilterGeom == nullptr )
+        return true;
 
     switch( eSectionType )
     {
@@ -403,10 +404,10 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
                       && psV2->y > m_sFilterEnvelope.MaxY) )
                   /* This segment is completely outside extents */;
               else
-                  return TRUE;
+                  return true;
           }
 
-          return FALSE;
+          return false;
       }
 
 /* ==================================================================== */
@@ -424,9 +425,9 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
               || psPAL->sMax.x < m_sFilterEnvelope.MinX
               || psPAL->sMin.y > m_sFilterEnvelope.MaxY
               || psPAL->sMax.y < m_sFilterEnvelope.MinY )
-              return FALSE;
+              return false;
           else
-              return TRUE;
+              return true;
       }
 
 /* ==================================================================== */
@@ -440,9 +441,9 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
               || psCNT->sCoord.x > m_sFilterEnvelope.MaxX
               || psCNT->sCoord.y < m_sFilterEnvelope.MinY
               || psCNT->sCoord.y > m_sFilterEnvelope.MaxY )
-              return FALSE;
+              return false;
           else
-              return TRUE;
+              return true;
       }
 
 /* ==================================================================== */
@@ -456,9 +457,9 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
               || psLAB->sCoord1.x > m_sFilterEnvelope.MaxX
               || psLAB->sCoord1.y < m_sFilterEnvelope.MinY
               || psLAB->sCoord1.y > m_sFilterEnvelope.MaxY )
-              return FALSE;
+              return false;
           else
-              return TRUE;
+              return true;
       }
 
 /* ==================================================================== */
@@ -470,19 +471,19 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
           AVCTxt *psTXT = static_cast<AVCTxt *>( pFeature );
 
           if( psTXT->numVerticesLine == 0 )
-              return TRUE;
+              return true;
 
           if( psTXT->pasVertices[0].x < m_sFilterEnvelope.MinX
               || psTXT->pasVertices[0].x > m_sFilterEnvelope.MaxX
               || psTXT->pasVertices[0].y < m_sFilterEnvelope.MinY
               || psTXT->pasVertices[0].y > m_sFilterEnvelope.MaxY )
-              return FALSE;
+              return false;
 
-          return TRUE;
+          return true;
       }
 
       default:
-        return TRUE;
+        return true;
     }
 }
 
@@ -493,7 +494,7 @@ int OGRAVCLayer::MatchesSpatialFilter( void *pFeature )
 /*      definition from the coverage.                                   */
 /************************************************************************/
 
-int OGRAVCLayer::AppendTableDefinition( AVCTableDef *psTableDef )
+bool OGRAVCLayer::AppendTableDefinition( AVCTableDef *psTableDef )
 
 {
     for( int iField = 0; iField < psTableDef->numFields; iField++ )
@@ -503,7 +504,7 @@ int OGRAVCLayer::AppendTableDefinition( AVCTableDef *psTableDef )
 
         /* Strip off white space */
         strcpy( szFieldName, psFInfo->szName );
-        if( strstr(szFieldName," ") != NULL )
+        if( strstr(szFieldName," ") != nullptr )
             *(strstr(szFieldName," ")) = '\0';
 
         OGRFieldDefn oFDefn( szFieldName, OFTInteger );
@@ -542,7 +543,7 @@ int OGRAVCLayer::AppendTableDefinition( AVCTableDef *psTableDef )
 /*                        TranslateTableFields()                        */
 /************************************************************************/
 
-int OGRAVCLayer::TranslateTableFields( OGRFeature *poFeature,
+bool OGRAVCLayer::TranslateTableFields( OGRFeature *poFeature,
                                        int nFieldBase,
                                        AVCTableDef *psTableDef,
                                        AVCField *pasFields )
@@ -596,10 +597,10 @@ int OGRAVCLayer::TranslateTableFields( OGRFeature *poFeature,
         }
         else
         {
-            CPLAssert( FALSE );
-            return FALSE;
+            CPLAssert( false );
+            return false;
         }
     }
 
-    return TRUE;
+    return true;
 }

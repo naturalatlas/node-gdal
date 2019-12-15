@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xplane_fix_reader.cpp
+ * $Id: ogr_xplane_fix_reader.cpp$
  *
  * Project:  X-Plane fix.dat file reader header
  * Purpose:  Definition of classes for X-Plane fix.dat file reader
@@ -37,8 +37,7 @@
 /*                           OGRXPlaneFIXLayer                          */
 /************************************************************************/
 
-
-class OGRXPlaneFIXLayer : public OGRXPlaneLayer
+class OGRXPlaneFIXLayer final: public OGRXPlaneLayer
 {
   public:
                         OGRXPlaneFIXLayer();
@@ -51,7 +50,7 @@ class OGRXPlaneFIXLayer : public OGRXPlaneLayer
 /*                           OGRXPlaneFixReader                         */
 /************************************************************************/
 
-class OGRXPlaneFixReader : public OGRXPlaneReader
+class OGRXPlaneFixReader final: public OGRXPlaneReader
 {
     private:
         OGRXPlaneFIXLayer*       poFIXLayer;
@@ -61,12 +60,12 @@ class OGRXPlaneFixReader : public OGRXPlaneReader
         void                     ParseRecord();
 
     protected:
-        virtual void             Read();
+        virtual void             Read() override;
 
     public:
-                                 OGRXPlaneFixReader( OGRXPlaneDataSource* poDataSource );
-        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer);
-        virtual int              IsRecognizedVersion( const char* pszVersionString);
+        explicit                 OGRXPlaneFixReader( OGRXPlaneDataSource* poDataSource );
+        virtual OGRXPlaneReader* CloneForLayer(OGRXPlaneLayer* poLayer) override;
+        virtual int              IsRecognizedVersion( const char* pszVersionString) override;
 };
 
 #endif

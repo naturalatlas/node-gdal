@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_dgn.h 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ogr_dgn.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGR Driver for DGN Reader.
@@ -48,7 +48,7 @@ class OGRDGNLayer : public OGRLayer
 
     char               *pszLinkFormat;
 
-    OGRFeature         *ElementToFeature( DGNElemCore * );
+    OGRFeature         *ElementToFeature( DGNElemCore *, int nRecLevel );
 
     void                ConsiderBrush( DGNElemCore *, const char *pszPen,
                                        OGRFeature *poFeature );
@@ -65,27 +65,26 @@ class OGRDGNLayer : public OGRLayer
   public:
                         OGRDGNLayer( const char * pszName, DGNHandle hDGN,
                                      int bUpdate );
-                        ~OGRDGNLayer();
+                        virtual ~OGRDGNLayer();
 
-    void                SetSpatialFilter( OGRGeometry * );
-    virtual void        SetSpatialFilter( int iGeomField, OGRGeometry *poGeom )
+    void                SetSpatialFilter( OGRGeometry * ) override;
+    virtual void        SetSpatialFilter( int iGeomField, OGRGeometry *poGeom ) override
                 { OGRLayer::SetSpatialFilter(iGeomField, poGeom); }
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
-    OGRFeature *        GetFeature( GIntBig nFeatureId );
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
+    OGRFeature *        GetFeature( GIntBig nFeatureId ) override;
 
-    virtual GIntBig     GetFeatureCount( int bForce = TRUE );
-    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE);
-    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce)
+    virtual GIntBig     GetFeatureCount( int bForce = TRUE ) override;
+    virtual OGRErr      GetExtent(OGREnvelope *psExtent, int bForce = TRUE) override;
+    virtual OGRErr      GetExtent(int iGeomField, OGREnvelope *psExtent, int bForce) override
                 { return OGRLayer::GetExtent(iGeomField, psExtent, bForce); }
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
-
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
 };
 
 /************************************************************************/
@@ -107,18 +106,18 @@ class OGRDGNDataSource : public OGRDataSource
                         ~OGRDGNDataSource();
 
     int                 Open( const char *, int bTestOpen, int bUpdate );
-    int                 PreCreate( const char *, char ** );
+    bool                PreCreate( const char *, char ** );
 
     OGRLayer           *ICreateLayer( const char *,
-                                     OGRSpatialReference * = NULL,
+                                     OGRSpatialReference * = nullptr,
                                      OGRwkbGeometryType = wkbUnknown,
-                                     char ** = NULL );
+                                     char ** = nullptr ) override;
 
-    const char          *GetName() { return pszName; }
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer            *GetLayer( int );
+    const char          *GetName() override { return pszName; }
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer            *GetLayer( int ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 #endif /* ndef OGR_DGN_H_INCLUDED */

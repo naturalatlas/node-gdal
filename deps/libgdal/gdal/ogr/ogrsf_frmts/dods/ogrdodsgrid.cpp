@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdodsgrid.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OGR/DODS Interface
  * Purpose:  Implements OGRDODSGridLayer class, which implements the
@@ -32,7 +31,7 @@
 #include "ogr_dods.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrdodsgrid.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrdodsgrid.cpp 46d63b3dbe3f4fe13dcfe85d44fd24be1428da08 2019-03-23 14:45:07 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRDODSGridLayer()                          */
@@ -42,23 +41,21 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
                                     const char *pszTargetIn,
                                     AttrTable *poOGRLayerInfoIn ) :
     OGRDODSLayer( poDSIn, pszTargetIn, poOGRLayerInfoIn ),
-    poTargetGrid(NULL),
-    poTargetArray(NULL),
+    poTargetGrid(nullptr),
+    poTargetArray(nullptr),
     nArrayRefCount(0),
-    paoArrayRefs(NULL),
+    paoArrayRefs(nullptr),
     nDimCount(0),
-    paoDimensions(NULL),
-    nMaxRawIndex(0),
-    pRawData(NULL)
+    paoDimensions(nullptr),
+    nMaxRawIndex(0)
 {
-
 /* -------------------------------------------------------------------- */
 /*      What is the layer name?                                         */
 /* -------------------------------------------------------------------- */
     string oLayerName;
     const char *pszLayerName = pszTargetIn;
 
-    if( poOGRLayerInfo != NULL )
+    if( poOGRLayerInfo != nullptr )
     {
         oLayerName = poOGRLayerInfo->get_attr( "layer_name" );
         if( strlen(oLayerName.c_str()) > 0 )
@@ -76,29 +73,31 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
     if( poTargVar->type() == dods_grid_c )
     {
         poTargetGrid = dynamic_cast<Grid *>( poTargVar );
-        poTargetArray = dynamic_cast<Array *>(poTargetGrid->array_var());
+        if( poTargetGrid )
+            poTargetArray = dynamic_cast<Array *>(poTargetGrid->array_var());
     }
     else if( poTargVar->type() == dods_array_c )
     {
-        poTargetGrid = NULL;
+        poTargetGrid = nullptr;
         poTargetArray = dynamic_cast<Array *>( poTargVar );
     }
-    else
+
+    if( !poTargetArray )
     {
-        CPLAssert( FALSE );
+        CPLAssert( false );
         return;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Count arrays in use.                                            */
 /* -------------------------------------------------------------------- */
-    AttrTable *poExtraContainers = NULL;
+    AttrTable *poExtraContainers = nullptr;
     nArrayRefCount = 1; // primary target.
 
-    if( poOGRLayerInfo != NULL )
+    if( poOGRLayerInfo != nullptr )
         poExtraContainers = poOGRLayerInfo->find_container("extra_containers");
 
-    if( poExtraContainers != NULL )
+    if( poExtraContainers != nullptr )
     {
         AttrTable::Attr_iter dv_i;
 
@@ -118,17 +117,18 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
 
     nArrayRefCount = 1;
 
-    if( poExtraContainers != NULL )
+    if( poExtraContainers != nullptr )
     {
         AttrTable::Attr_iter dv_i;
 
         for( dv_i = poExtraContainers->attr_begin();
              dv_i != poExtraContainers->attr_end(); dv_i++ )
         {
-            const char *pszTargetName=poExtraContainers->get_attr(dv_i).c_str();
+            auto osTargetName(poExtraContainers->get_attr(dv_i));
+            const char *pszTargetName = osTargetName.c_str();
             BaseType *poExtraTarget = poDS->poDDS->var( pszTargetName );
 
-            if( poExtraTarget == NULL )
+            if( poExtraTarget == nullptr )
             {
                 CPLError( CE_Warning, CPLE_AppDefined,
                           "Unable to find extra_container '%s', skipping.",
@@ -179,7 +179,7 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
             poTargetArray->dimension_stop(iterDim);
         paoDimensions[iDim].nDimStride =
             poTargetArray->dimension_stride(iterDim);
-        paoDimensions[iDim].poMap = NULL;
+        paoDimensions[iDim].poMap = nullptr;
 
         paoDimensions[iDim].nDimEntries =
             (paoDimensions[iDim].nDimEnd + 1 - paoDimensions[iDim].nDimStart
@@ -192,7 +192,7 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
 /* -------------------------------------------------------------------- */
 /*      If we are working with a grid, collect the maps.                */
 /* -------------------------------------------------------------------- */
-    if( poTargetGrid != NULL )
+    if( poTargetGrid != nullptr )
     {
         int iMap;
         Grid::Map_iter iterMap;
@@ -219,7 +219,7 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
         if( EQUAL(oField.GetNameRef(), poTargetArray->name().c_str()) )
             oField.SetName(CPLSPrintf("%s_i",paoDimensions[iDim].pszDimName));
 
-        if( paoDimensions[iDim].poMap != NULL )
+        if( paoDimensions[iDim].poMap != nullptr )
         {
             switch( paoDimensions[iDim].poMap->var()->type() )
             {
@@ -291,10 +291,10 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
 /* -------------------------------------------------------------------- */
 /*      X/Y/Z fields.                                                   */
 /* -------------------------------------------------------------------- */
-    if( poOGRLayerInfo != NULL )
+    if( poOGRLayerInfo != nullptr )
     {
         AttrTable *poField = poOGRLayerInfo->find_container("x_field");
-        if( poField != NULL )
+        if( poField != nullptr )
         {
             oXField.Initialize( poField );
             oXField.iFieldIndex =
@@ -302,7 +302,7 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
         }
 
         poField = poOGRLayerInfo->find_container("y_field");
-        if( poField != NULL )
+        if( poField != nullptr )
         {
             oYField.Initialize( poField );
             oYField.iFieldIndex =
@@ -310,13 +310,12 @@ OGRDODSGridLayer::OGRDODSGridLayer( OGRDODSDataSource *poDSIn,
         }
 
         poField = poOGRLayerInfo->find_container("z_field");
-        if( poField != NULL )
+        if( poField != nullptr )
         {
             oZField.Initialize( poField );
             oZField.iFieldIndex =
                 poFeatureDefn->GetFieldIndex( oZField.pszFieldName );
         }
-
     }
 
 /* -------------------------------------------------------------------- */
@@ -369,67 +368,67 @@ OGRDODSGridLayer::~OGRDODSGridLayer()
 /*                         ArrayEntryToField()                          */
 /************************************************************************/
 
-int OGRDODSGridLayer::ArrayEntryToField( Array *poArray, void *pRawData,
-                                         int iArrayIndex,
-                                         OGRFeature *poFeature, int iField)
+bool OGRDODSGridLayer::ArrayEntryToField( Array *poArray, void *pRawDataIn,
+                                          int iArrayIndex,
+                                          OGRFeature *poFeature, int iField )
 
 {
     switch( poArray->var()->type() )
     {
       case dods_byte_c:
       {
-          GByte *pabyRawData = (GByte *) pRawData;
+          GByte *pabyRawData = (GByte *) pRawDataIn;
           poFeature->SetField( iField, pabyRawData[iArrayIndex] );
       }
       break;
 
       case dods_int16_c:
       {
-          GInt16 *panRawData = (GInt16 *) pRawData;
+          GInt16 *panRawData = (GInt16 *) pRawDataIn;
           poFeature->SetField( iField, panRawData[iArrayIndex] );
       }
       break;
 
       case dods_uint16_c:
       {
-          GUInt16 *panRawData = (GUInt16 *) pRawData;
+          GUInt16 *panRawData = (GUInt16 *) pRawDataIn;
           poFeature->SetField( iField, panRawData[iArrayIndex] );
       }
       break;
 
       case dods_int32_c:
       {
-          GInt32 *panRawData = (GInt32 *) pRawData;
+          GInt32 *panRawData = (GInt32 *) pRawDataIn;
           poFeature->SetField( iField, panRawData[iArrayIndex] );
       }
       break;
 
       case dods_uint32_c:
       {
-          GUInt32 *panRawData = (GUInt32 *) pRawData;
+          GUInt32 *panRawData = (GUInt32 *) pRawDataIn;
           poFeature->SetField( iField, (int) panRawData[iArrayIndex] );
       }
       break;
 
       case dods_float32_c:
       {
-          float * pafRawData = (float *) pRawData;
+          float * pafRawData = (float *) pRawDataIn;
           poFeature->SetField( iField, pafRawData[iArrayIndex] );
       }
       break;
 
       case dods_float64_c:
       {
-          double * padfRawData = (double *) pRawData;
+          double * padfRawData = (double *) pRawDataIn;
           poFeature->SetField( iField, padfRawData[iArrayIndex] );
       }
       break;
 
       default:
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -440,20 +439,18 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
 
 {
     if( nFeatureId < 0 || nFeatureId >= nMaxRawIndex )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Ensure we have the dataset.                                     */
 /* -------------------------------------------------------------------- */
     if( !ProvideDataDDS() )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create the feature being read.                                  */
 /* -------------------------------------------------------------------- */
-    OGRFeature *poFeature;
-
-    poFeature = new OGRFeature( poFeatureDefn );
+    OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
     poFeature->SetFID( nFeatureId );
     m_nFeaturesRead++;
 
@@ -461,7 +458,7 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
 /*      Establish the values for the various dimension indices.         */
 /* -------------------------------------------------------------------- */
     int iDim;
-    int nRemainder = nFeatureId;
+    int nRemainder = static_cast<int>(nFeatureId);
 
     for( iDim = nDimCount-1; iDim >= 0; iDim-- )
     {
@@ -471,7 +468,7 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
             + paoDimensions[iDim].nDimStart;
         nRemainder = nRemainder / paoDimensions[iDim].nDimEntries;
 
-        if( poTargetGrid == NULL )
+        if( poTargetGrid == nullptr )
             poFeature->SetField( iDim, paoDimensions[iDim].iLastValue );
     }
     CPLAssert( nRemainder == 0 );
@@ -480,7 +477,7 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
 /*      For grids, we need to apply the values of the dimensions        */
 /*      looked up in the corresponding map.                             */
 /* -------------------------------------------------------------------- */
-    if( poTargetGrid != NULL )
+    if( poTargetGrid != nullptr )
     {
         for( iDim = 0; iDim < nDimCount; iDim++ )
         {
@@ -499,7 +496,8 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
     {
         OGRDODSArrayRef *poRef = paoArrayRefs + iArray;
 
-        ArrayEntryToField( poRef->poArray, poRef->pRawData, nFeatureId,
+        ArrayEntryToField( poRef->poArray, poRef->pRawData,
+                           static_cast<int>(nFeatureId),
                            poFeature, poRef->iFieldIndex );
     }
 
@@ -526,28 +524,29 @@ OGRFeature *OGRDODSGridLayer::GetFeature( GIntBig nFeatureId )
 /*                           ProvideDataDDS()                           */
 /************************************************************************/
 
-int OGRDODSGridLayer::ProvideDataDDS()
+bool OGRDODSGridLayer::ProvideDataDDS()
 
 {
     if( bDataLoaded )
-        return poTargetVar != NULL;
+        return poTargetVar != nullptr;
 
-    int bResult = OGRDODSLayer::ProvideDataDDS();
+    const bool  bResult = OGRDODSLayer::ProvideDataDDS();
 
     if( !bResult )
         return bResult;
 
-    int iArray;
-    for( iArray=0; iArray < nArrayRefCount; iArray++ )
+    for( int iArray=0; iArray < nArrayRefCount; iArray++ )
     {
         OGRDODSArrayRef *poRef = paoArrayRefs + iArray;
         BaseType *poTarget = poDataDDS->var( poRef->pszName );
 
         // Reset ref array pointer to point in DataDDS result.
+        poRef->poArray = nullptr;
         if( poTarget->type() == dods_grid_c )
         {
             Grid *poGrid = dynamic_cast<Grid *>( poTarget );
-            poRef->poArray = dynamic_cast<Array *>(poGrid->array_var());
+            if( poGrid )
+                poRef->poArray = dynamic_cast<Array *>(poGrid->array_var());
 
             if( iArray == 0 )
                 poTargetGrid = poGrid;
@@ -556,10 +555,11 @@ int OGRDODSGridLayer::ProvideDataDDS()
         {
             poRef->poArray = dynamic_cast<Array *>( poTarget );
         }
-        else
+
+        if( !(poRef->poArray) )
         {
-            CPLAssert( FALSE );
-            return FALSE;
+            CPLAssert( false );
+            return false;
         }
 
         if( iArray == 0 )
@@ -571,16 +571,18 @@ int OGRDODSGridLayer::ProvideDataDDS()
     }
 
     // Setup pointers to each of the map objects.
-    if( poTargetGrid != NULL )
+    if( poTargetGrid != nullptr )
     {
-        int iMap;
+        int iMap = 0;
         Grid::Map_iter iterMap;
 
-        for( iterMap = poTargetGrid->map_begin(), iMap = 0;
+        for( iterMap = poTargetGrid->map_begin();
              iterMap != poTargetGrid->map_end();
              iterMap++, iMap++ )
         {
             paoDimensions[iMap].poMap = dynamic_cast<Array *>(*iterMap);
+            if( paoDimensions[iMap].poMap == nullptr )
+                return false;
             paoDimensions[iMap].pRawData =
                 CPLMalloc( paoDimensions[iMap].poMap->width() );
             paoDimensions[iMap].poMap->buf2val( &(paoDimensions[iMap].pRawData) );
@@ -597,7 +599,7 @@ int OGRDODSGridLayer::ProvideDataDDS()
 GIntBig OGRDODSGridLayer::GetFeatureCount( int bForce )
 
 {
-    if( m_poFilterGeom == NULL && m_poAttrQuery == NULL )
+    if( m_poFilterGeom == nullptr && m_poAttrQuery == nullptr )
         return nMaxRawIndex;
     else
         return OGRDODSLayer::GetFeatureCount( bForce );

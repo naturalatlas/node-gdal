@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: rikdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  RIK Reader
  * Purpose:  All code for RIK Reader
@@ -33,7 +32,7 @@
 #include "gdal_frmts.h"
 #include "gdal_pam.h"
 
-CPL_CVSID("$Id: rikdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: rikdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 #define RIK_HEADER_DEBUG 0
 #define RIK_CLEAR_DEBUG 0
@@ -109,7 +108,7 @@ typedef struct
 
 /************************************************************************/
 /* ==================================================================== */
-/*				RIKDataset				*/
+/*                              RIKDataset                              */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -121,7 +120,7 @@ class RIKDataset : public GDALPamDataset
 
     VSILFILE        *fp;
 
-    double      fTransform[6];
+    double      adfTransform[6];
 
     GUInt32     nBlockXSize;
     GUInt32     nBlockYSize;
@@ -134,13 +133,17 @@ class RIKDataset : public GDALPamDataset
     GDALColorTable *poColorTable;
 
   public:
+     RIKDataset();
     ~RIKDataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
     static int Identify( GDALOpenInfo * );
 
-    CPLErr 	GetGeoTransform( double * padfTransform );
-    const char *GetProjectionRef();
+    CPLErr      GetGeoTransform( double * padfTransform ) override;
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 };
 
 /************************************************************************/
@@ -157,9 +160,9 @@ class RIKRasterBand : public GDALPamRasterBand
 
     RIKRasterBand( RIKDataset *, int );
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual GDALColorTable *GetColorTable();
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual GDALColorInterp GetColorInterpretation() override;
+    virtual GDALColorTable *GetColorTable() override;
 };
 
 /************************************************************************/
@@ -183,7 +186,8 @@ RIKRasterBand::RIKRasterBand( RIKDataset *poDSIn, int nBandIn )
 /************************************************************************/
 
 static int GetNextLZWCode( int codeBits,
-                           GByte *blockData,
+                           const GByte *blockData,
+                           const GUInt32 blockSize,
                            GUInt32 &filePos,
                            GUInt32 &fileAlign,
                            int &bitsTaken )
@@ -203,6 +207,9 @@ static int GetNextLZWCode( int codeBits,
 
     while( bitsLeftToGo > 0 )
     {
+        if( filePos >= blockSize )
+            return -1;
+
         int tmp = blockData[filePos];
         tmp = tmp >> bitsTaken;
 
@@ -224,7 +231,7 @@ static int GetNextLZWCode( int codeBits,
     }
 
 #if RIK_PIXEL_DEBUG
-    printf( "c%03X\n", ret );
+    printf( "c%03X\n", ret );/*ok*/
 #endif
 
     return ret;
@@ -249,7 +256,7 @@ static void OutputPixel( GByte pixel,
     imagePos++;
 
 #if RIK_PIXEL_DEBUG
-    printf( "_%02X %d\n", pixel, imagePos );
+    printf( "_%02X %d\n", pixel, imagePos );/*ok*/
 #endif
 
     // Check if we need to change line
@@ -257,7 +264,7 @@ static void OutputPixel( GByte pixel,
     if( imagePos == lineBreak )
     {
 #if RIK_PIXEL_DEBUG
-        printf( "\n%d\n", imageLine );
+        printf( "\n%d\n", imageLine );/*ok*/
 #endif
 
         imagePos = 0;
@@ -301,8 +308,7 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 #endif
         )
     {
-        for( GUInt32 i = 0; i < pixels; i++ )
-            reinterpret_cast<GByte *>( pImage )[i] = 0;
+        memset(pImage, 0, pixels);
         return CE_None;
     }
 
@@ -320,13 +326,14 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 
     // Read block to memory
     GByte *blockData = reinterpret_cast<GByte *>( VSI_MALLOC_VERBOSE(nBlockSize) );
-    if( blockData == NULL )
+    if( blockData == nullptr )
         return CE_Failure;
     if( VSIFReadL( blockData, 1, nBlockSize, poRDS->fp ) != nBlockSize )
     {
         VSIFree(blockData);
         return CE_Failure;
     }
+    memset(pImage, 0, pixels);
 
 /* -------------------------------------------------------------------- */
 /*      Read RLE block.                                                 */
@@ -355,15 +362,18 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 
     else if( poRDS->options == 0x0b )
     {
+      try
+      {
+        if( nBlockSize < 5 )
+        {
+            throw "Not enough bytes";
+        }
+
         const bool LZW_HAS_CLEAR_CODE = !!(blockData[4] & 0x80);
         const int LZW_MAX_BITS = blockData[4] & 0x1f; // Max 13
         if( LZW_MAX_BITS > 13 )
         {
-            CPLFree( blockData );
-            CPLError( CE_Failure, CPLE_AppDefined,
-                      "RIK decompression failed. "
-                      "Invalid LZW_MAX_BITS." );
-            return CE_Failure;
+            throw "Invalid LZW_MAX_BITS";
         }
         const int LZW_BITS_PER_PIXEL = 8;
         const int LZW_OFFSET = 5;
@@ -398,8 +408,12 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
         lineBreak += 3;
         lineBreak &= 0xfffffffc;
 
-        code = GetNextLZWCode( codeBits, blockData, filePos,
+        code = GetNextLZWCode( codeBits, blockData, nBlockSize, filePos,
                                fileAlign, bitsTaken );
+        if( code < 0 )
+        {
+            throw "Not enough bytes";
+        }
 
         OutputPixel( static_cast<GByte>( code ), pImage, poRDS->nBlockXSize,
                      lineBreak, imageLine, imagePos );
@@ -407,18 +421,14 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 
         while( imageLine >= 0 &&
                (imageLine || imagePos < poRDS->nBlockXSize) &&
-               filePos < nBlockSize ) try
+               filePos < nBlockSize )
         {
             lastCode = code;
-            code = GetNextLZWCode( codeBits, blockData,
+            code = GetNextLZWCode( codeBits, blockData, nBlockSize,
                                    filePos, fileAlign, bitsTaken );
-            if( VSIFEofL( poRDS->fp ) )
+            if( code < 0 )
             {
-                CPLFree( blockData );
-                CPLError( CE_Failure, CPLE_AppDefined,
-                          "RIK decompression failed. "
-                          "Read past end of file.\n" );
-                return CE_Failure;
+                throw "Not enough bytes";
             }
 
             if( LZW_HAS_CLEAR_CODE && code == LZW_CLEAR )
@@ -442,8 +452,12 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                 filePos = fileAlign;
                 bitsTaken = 0;
 
-                code = GetNextLZWCode( codeBits, blockData,
+                code = GetNextLZWCode( codeBits, blockData, nBlockSize,
                                        filePos, fileAlign, bitsTaken );
+                if( code < 0 )
+                {
+                    throw "Not enough bytes";
+                }
 
                 if( code > lastAdded )
                 {
@@ -469,7 +483,7 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                     *stack = lastOutput;
                     stackPtr = 1;
                     decodeCode = lastCode;
-       	        }
+                }
                 else if( code > lastAdded + 1 )
                 {
                     throw "Too high code";
@@ -479,8 +493,8 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 
                 int i = 0;
                 while( ++i < LZW_CODES &&
-       	               decodeCode >= LZW_CLEAR &&
-       	               decodeCode < LZW_NO_SUCH_CODE )
+                       decodeCode >= LZW_CLEAR &&
+                       decodeCode < LZW_NO_SUCH_CODE )
                 {
                     stack[stackPtr++] = character[decodeCode];
                     decodeCode = prefix[decodeCode];
@@ -507,7 +521,12 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                 if( lastCode != LZW_NO_SUCH_CODE &&
                     lastAdded != LZW_CODES - 1 )
                 {
-                    prefix[++lastAdded] = lastCode;
+                    ++lastAdded;
+                    if( lastAdded >= 8192 )
+                    {
+                        throw "Decode error";
+                    }
+                    prefix[lastAdded] = lastCode;
                     character[lastAdded] = lastOutput;
                 }
 
@@ -523,8 +542,9 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                 }
             }
         }
-        catch (const char *errStr)
-        {
+      }
+      catch (const char *errStr)
+      {
 #if RIK_ALLOW_BLOCK_ERRORS
                 CPLDebug( "RIK",
                           "LZW Decompress Failed: %s\n"
@@ -534,15 +554,14 @@ CPLErr RIKRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
                           " blocksize: %d\n",
                           errStr, blocks, nBlockIndex,
                           nBlockOffset, nBlockSize );
-                break;
 #else
                 CPLFree( blockData );
                 CPLError( CE_Failure, CPLE_AppDefined,
-                          "RIK decompression failed. "
-                          "Corrupt image block." );
+                          "RIK decompression failed: %s",
+                          errStr );
                 return CE_Failure;
 #endif
-        }
+      }
     }
 
 /* -------------------------------------------------------------------- */
@@ -596,9 +615,28 @@ GDALColorTable *RIKRasterBand::GetColorTable()
 
 /************************************************************************/
 /* ==================================================================== */
-/*				RIKDataset				*/
+/*                              RIKDataset                              */
 /* ==================================================================== */
 /************************************************************************/
+
+/************************************************************************/
+/*                             RIKDataset()                             */
+/************************************************************************/
+
+RIKDataset::RIKDataset() :
+    fp( nullptr ),
+    nBlockXSize( 0 ),
+    nBlockYSize( 0 ),
+    nHorBlocks( 0 ),
+    nVertBlocks( 0 ),
+    nFileSize( 0 ),
+    pOffsets( nullptr ),
+    options( 0 ),
+    poColorTable( nullptr )
+
+{
+    memset( adfTransform, 0, sizeof(adfTransform) );
+}
 
 /************************************************************************/
 /*                            ~RIKDataset()                             */
@@ -609,7 +647,7 @@ RIKDataset::~RIKDataset()
 {
     FlushCache();
     CPLFree( pOffsets );
-    if( fp != NULL )
+    if( fp != nullptr )
         VSIFCloseL( fp );
     delete poColorTable;
 }
@@ -621,7 +659,7 @@ RIKDataset::~RIKDataset()
 CPLErr RIKDataset::GetGeoTransform( double * padfTransform )
 
 {
-    memcpy( padfTransform, &fTransform, sizeof(double) * 6 );
+    memcpy( padfTransform, &adfTransform, sizeof(double) * 6 );
 
     return CE_None;
 }
@@ -630,7 +668,7 @@ CPLErr RIKDataset::GetGeoTransform( double * padfTransform )
 /*                          GetProjectionRef()                          */
 /************************************************************************/
 
-const char *RIKDataset::GetProjectionRef()
+const char *RIKDataset::_GetProjectionRef()
 
 {
   return( "PROJCS[\"RT90 2.5 gon V\",GEOGCS[\"RT90\",DATUM[\"Rikets_koordinatsystem_1990\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],TOWGS84[414.1055246174,41.3265500042,603.0582474221,-0.8551163377,2.1413174055,-7.0227298286,0],AUTHORITY[\"EPSG\",\"6124\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4124\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",15.80827777777778],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",1500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"3021\"]]" );
@@ -671,7 +709,7 @@ static GUInt16 GetRikString( VSILFILE *fp,
 int RIKDataset::Identify( GDALOpenInfo * poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 50 )
+    if( poOpenInfo->fpL == nullptr || poOpenInfo->nHeaderBytes < 50 )
         return FALSE;
 
     if( STARTS_WITH_CI((const char *) poOpenInfo->pabyHeader, "RIK3") )
@@ -714,7 +752,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
     if( Identify(poOpenInfo) == FALSE )
-        return NULL;
+        return nullptr;
 
     bool rik3header = false;
 
@@ -736,13 +774,13 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 
     if( nameLength > sizeof(name) - 1 )
     {
-        return NULL;
+        return nullptr;
     }
 
     if( !rik3header )
     {
         if( nameLength == 0 || nameLength != strlen(name) )
-            return NULL;
+            return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -770,7 +808,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         if( projLength > sizeof(projection) - 1 )
         {
             // Unreasonable string length, assume wrong format
-            return NULL;
+            return nullptr;
         }
 
         // Read unknown string
@@ -787,7 +825,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         if( tmpLength > sizeof(tmpStr) - 1 )
         {
             // Unreasonable string length, assume wrong format
-            return NULL;
+            return nullptr;
         }
 
         header.fNorth = CPLAtof( tmpStr );
@@ -800,7 +838,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         if( tmpLength > sizeof(tmpStr) - 1 )
         {
             // Unreasonable string length, assume wrong format
-            return NULL;
+            return nullptr;
         }
 
         header.fWest = CPLAtof( tmpStr );
@@ -821,6 +859,8 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         CPL_SWAP32PTR( &header.iHorBlocks );
         CPL_SWAP32PTR( &header.iVertBlocks );
 #endif
+        if ( header.iMPPNum == 0 )
+            return nullptr;
 
         VSIFReadL( &header.iBitsPerPixel, 1, sizeof(header.iBitsPerPixel), poOpenInfo->fpL );
         VSIFReadL( &header.iOptions, 1, sizeof(header.iOptions), poOpenInfo->fpL );
@@ -859,8 +899,11 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         if (!CPLIsFinite(header.fSouth) ||
             !CPLIsFinite(header.fWest) ||
             !CPLIsFinite(header.fNorth) ||
-            !CPLIsFinite(header.fEast))
-            return NULL;
+            !CPLIsFinite(header.fEast) ||
+            header.iMPPNum == 0)
+        {
+            return nullptr;
+        }
 
         const bool offsetBounds = header.fSouth < 4000000;
 
@@ -877,6 +920,8 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 #ifdef CPL_MSB
             CPL_SWAP32PTR( &header.iMPPDen );
 #endif
+            if( header.iMPPDen == 0 )
+                return nullptr;
 
             headerType = "RIK1";
         }
@@ -898,7 +943,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 
         if(( header.iBlockWidth > 2000 ) || ( header.iBlockWidth < 10 ) ||
            ( header.iBlockHeight > 2000 ) || ( header.iBlockHeight < 10 ))
-           return NULL;
+           return nullptr;
 
         if( !offsetBounds )
         {
@@ -913,7 +958,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
             double dfVertBlocks = ceil( (header.fNorth - header.fSouth) /
                       (header.iBlockHeight * metersPerPixel) );
             if( dfVertBlocks < 1 || dfVertBlocks > INT_MAX )
-                return NULL;
+                return nullptr;
             header.iVertBlocks = static_cast<GUInt32>(dfVertBlocks);
         }
 
@@ -930,7 +975,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
             CPLError( CE_Failure, CPLE_OpenFailed,
                       "File %s has unsupported number of bits per pixel.\n",
                       poOpenInfo->pszFilename );
-            return NULL;
+            return nullptr;
         }
 
         VSIFReadL( &header.iOptions, 1, sizeof(header.iOptions), poOpenInfo->fpL );
@@ -945,7 +990,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
             CPLError( CE_Failure, CPLE_OpenFailed,
                       "File %s. Unknown map options.\n",
                       poOpenInfo->pszFilename );
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -959,7 +1004,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         header.iVertBlocks >= INT_MAX / (int)sizeof(GUInt32) ||
         header.iHorBlocks >= INT_MAX / (header.iVertBlocks * (int)sizeof(GUInt32)) )
     {
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -988,7 +1033,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "File %s. Unable to allocate offset table.\n",
                   poOpenInfo->pszFilename );
-        return NULL;
+        return nullptr;
     }
 
     if( header.iOptions == 0x00 )
@@ -1001,13 +1046,13 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
                     "File %s. Read past end of file.\n",
                     poOpenInfo->pszFilename );
             CPLFree(offsets);
-            return NULL;
+            return nullptr;
         }
 
         VSIFSeekL( poOpenInfo->fpL, 0, SEEK_END );
         vsi_l_offset nBigFileSize = VSIFTellL( poOpenInfo->fpL );
-        if( nBigFileSize > 0xFFFFFFFFU )
-            nBigFileSize = 0xFFFFFFFFU;
+        if( nBigFileSize > UINT_MAX )
+            nBigFileSize = UINT_MAX;
         GUInt32 fileSize = static_cast<GUInt32>(nBigFileSize);
 
         GUInt32 nBlocksFromFileSize = (fileSize - offsets[0]) / (header.iBlockWidth * header.iBlockHeight);
@@ -1023,7 +1068,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
                         "File %s too short.\n",
                         poOpenInfo->pszFilename );
             CPLFree( offsets );
-            return NULL;
+            return nullptr;
         }
 
         for( GUInt32 i = 1; i < blocks; i++ )
@@ -1065,7 +1110,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
                   "File %s. Read past end of file.\n",
                   poOpenInfo->pszFilename );
         CPLFree(offsets);
-        return NULL;
+        return nullptr;
     }
 
     VSIFSeekL( poOpenInfo->fpL, 0, SEEK_END );
@@ -1098,7 +1143,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
                               "File %s too short.\n",
                               poOpenInfo->pszFilename );
                     CPLFree( offsets );
-                    return NULL;
+                    return nullptr;
                 }
                 header.iVertBlocks = y;
                 break;
@@ -1112,7 +1157,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
                               "File %s. Corrupt offset table.\n",
                               poOpenInfo->pszFilename );
                     CPLFree( offsets );
-                    return NULL;
+                    return nullptr;
                 }
                 header.iVertBlocks = y;
                 break;
@@ -1169,17 +1214,17 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
 
-    RIKDataset 	*poDS = new RIKDataset();
+    RIKDataset *poDS = new RIKDataset();
 
     poDS->fp = poOpenInfo->fpL;
-    poOpenInfo->fpL = NULL;
+    poOpenInfo->fpL = nullptr;
 
-    poDS->fTransform[0] = header.fWest - metersPerPixel / 2.0;
-    poDS->fTransform[1] = metersPerPixel;
-    poDS->fTransform[2] = 0.0;
-    poDS->fTransform[3] = header.fNorth + metersPerPixel / 2.0;
-    poDS->fTransform[4] = 0.0;
-    poDS->fTransform[5] = -metersPerPixel;
+    poDS->adfTransform[0] = header.fWest - metersPerPixel / 2.0;
+    poDS->adfTransform[1] = metersPerPixel;
+    poDS->adfTransform[2] = 0.0;
+    poDS->adfTransform[3] = header.fNorth + metersPerPixel / 2.0;
+    poDS->adfTransform[4] = 0.0;
+    poDS->adfTransform[5] = -metersPerPixel;
 
     poDS->nBlockXSize = header.iBlockWidth;
     poDS->nBlockYSize = header.iBlockHeight;
@@ -1233,10 +1278,10 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The RIK driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -1246,7 +1291,7 @@ GDALDataset *RIKDataset::Open( GDALOpenInfo * poOpenInfo )
 void GDALRegister_RIK()
 
 {
-    if( GDALGetDriverByName( "RIK" ) != NULL )
+    if( GDALGetDriverByName( "RIK" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

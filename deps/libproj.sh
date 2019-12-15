@@ -5,42 +5,32 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libproj"
 
-PROJ_VERSION=4.9.2
+PROJ_VERSION=6.2.1
 dir_proj=./proj
 
 #
-# download proj4 source
+# download proj source
 #
 
 rm -rf $dir_proj
-if [[ ! -f proj.tar.gz ]]; then
-	curl -L http://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz -o proj.tar.gz
+if [[ ! -f proj-${PROJ_VERSION}.tar.gz ]]; then
+	curl -L http://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz -o proj-${PROJ_VERSION}.tar.gz
 fi
-tar -xzf proj.tar.gz
+tar -xzf proj-${PROJ_VERSION}.tar.gz
 mv proj-${PROJ_VERSION} $dir_proj
 
-rm -rf $dir_proj/config*
-rm -rf $dir_proj/makefile*
-rm -rf $dir_proj/missing
-rm -rf $dir_proj/depcomp
-rm -rf $dir_proj/ChangeLog
-rm -rf $dir_proj/NEWS
-rm -rf $dir_proj/INSTALL
-rm -rf $dir_proj/README
-rm -rf $dir_proj/ltconfig
-rm -rf $dir_proj/install*
-rm -rf $dir_proj/mkinstalldirs
-rm -rf $dir_proj/*.sh
-rm -rf $dir_proj/*.opt
-rm -rf $dir_proj/*.in
-rm -rf $dir_proj/*/*.in
-rm -rf $dir_proj/*.am
-rm -rf $dir_proj/*/*.am
-rm -rf $dir_proj/*.m4
-rm -rf $dir_proj/*/*.m4
-rm -rf $dir_proj/*/*.def
-rm -rf $dir_proj/man
-rm -rf $dir_proj/jniwrap
-rm -rf $dir_proj/nad/test*
-rm -rf $dir_proj/nad/makefile*
-rm -rf $dir_proj/nad/*_out*
+# Fix for error:
+# static library deps/libproj/libproj.gyp:libproj#target has several files with the same basename:
+#   geocent: proj/src/geocent.cpp proj/src/conversions/geocent.cpp
+#   utils: proj/src/utils.cpp proj/src/apps/utils.cpp
+#   internal: proj/src/internal.cpp proj/src/iso19111/internal.cpp
+# libtool on Mac cannot handle that. Use --no-duplicate-basename-check to disable this validation.
+
+mv $dir_proj/src/apps/utils.cpp $dir_proj/src/apps/utils_apps.cpp
+mv $dir_proj/src/conversions/geocent.cpp $dir_proj/src/conversions/geocent_conversions.cpp
+mv $dir_proj/src/iso19111/internal.cpp $dir_proj/src/iso19111/internal_iso19111.cpp
+
+# build proj.db
+cd $dir_proj/data
+../configure
+make proj.db

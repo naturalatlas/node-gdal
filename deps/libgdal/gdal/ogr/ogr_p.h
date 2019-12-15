@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_p.h 33631 2016-03-04 06:28:09Z goatbar $
+ * $Id: ogr_p.h 205ab0157961d02098fa1955ed353d617b0a73bc 2017-05-15 10:29:33Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Some private helper functions and stuff for OGR implementation.
@@ -109,8 +109,8 @@ char CPL_DLL * OGRGetRFC822DateTime(const OGRField* psField);
 char CPL_DLL * OGRGetXMLDateTime(const OGRField* psField);
 char CPL_DLL * OGRGetXML_UTF8_EscapedString(const char* pszString);
 
-int OGRCompareDate(   OGRField *psFirstTuple,
-                      OGRField *psSecondTuple ); /* used by ogr_gensql.cpp and ogrfeaturequery.cpp */
+int OGRCompareDate(const OGRField *psFirstTuple,
+                   const OGRField *psSecondTuple ); /* used by ogr_gensql.cpp and ogrfeaturequery.cpp */
 
 /* General utility option processing. */
 int CPL_DLL OGRGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions );
@@ -167,7 +167,7 @@ char CPL_DLL * OGRGeometryToHexEWKB( OGRGeometry * poGeometry, int nSRSId,
 /*                        WKB Type Handling encoding                    */
 /************************************************************************/
 
-OGRErr OGRReadWKBGeometryType( unsigned char * pabyData,
+OGRErr OGRReadWKBGeometryType( const unsigned char * pabyData,
                                OGRwkbVariant wkbVariant,
                                OGRwkbGeometryType *eGeometryType );
 

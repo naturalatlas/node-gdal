@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmutexedlayer.cpp 31705 2015-11-21 22:57:18Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMutexedLayer class
@@ -27,23 +26,22 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#ifndef DOXYGEN_SKIP
+
 #include "ogrmutexedlayer.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmutexedlayer.cpp 31705 2015-11-21 22:57:18Z rouault $");
+CPL_CVSID("$Id: ogrmutexedlayer.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
-OGRMutexedLayer::OGRMutexedLayer(OGRLayer* poDecoratedLayer,
-                                 int bTakeOwnership,
-                                 CPLMutex* hMutex) :
-        OGRLayerDecorator(poDecoratedLayer, bTakeOwnership), m_hMutex(hMutex)
+OGRMutexedLayer::OGRMutexedLayer( OGRLayer* poDecoratedLayer,
+                                  int bTakeOwnership,
+                                  CPLMutex* hMutex ) :
+    OGRLayerDecorator(poDecoratedLayer, bTakeOwnership), m_hMutex(hMutex)
 {
     SetDescription( poDecoratedLayer->GetDescription() );
 }
 
-OGRMutexedLayer::~OGRMutexedLayer()
-{
-}
-
+OGRMutexedLayer::~OGRMutexedLayer() {}
 
 OGRGeometry *OGRMutexedLayer::GetSpatialFilter()
 {
@@ -292,7 +290,9 @@ CPLErr      OGRMutexedLayer::SetMetadataItem( const char * pszName,
 void OGRRegisterMutexedLayer();
 void OGRRegisterMutexedLayer()
 {
-    CPLAssert(FALSE); // Never call this function: it will segfault
+    CPLAssert(false); // Never call this function: it will segfault
     delete new OGRMutexedLayer(NULL, FALSE, NULL);
 }
 #endif
+
+#endif /* #ifndef DOXYGEN_SKIP */

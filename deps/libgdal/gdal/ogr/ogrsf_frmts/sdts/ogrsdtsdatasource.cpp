@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsdtsdatasource.cpp 32177 2015-12-14 07:25:30Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implements OGRSDTSDataSource class
@@ -31,23 +30,19 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrsdtsdatasource.cpp 32177 2015-12-14 07:25:30Z goatbar $");
+CPL_CVSID("$Id: ogrsdtsdatasource.cpp 4e20d026b0f2811345a6deadfec651ae764416ee 2019-03-20 20:53:23 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRSDTSDataSource()                          */
 /************************************************************************/
 
-OGRSDTSDataSource::OGRSDTSDataSource()
-
-{
-    nLayers = 0;
-    papoLayers = NULL;
-
-    pszName = NULL;
-    poSRS = NULL;
-
-    poTransfer = NULL;
-}
+OGRSDTSDataSource::OGRSDTSDataSource() :
+    poTransfer(nullptr),
+    pszName(nullptr),
+    nLayers(0),
+    papoLayers(nullptr),
+    poSRS(nullptr)
+{}
 
 /************************************************************************/
 /*                         ~OGRSDTSDataSource()                          */
@@ -56,9 +51,7 @@ OGRSDTSDataSource::OGRSDTSDataSource()
 OGRSDTSDataSource::~OGRSDTSDataSource()
 
 {
-    int         i;
-
-    for( i = 0; i < nLayers; i++ )
+    for( int i = 0; i < nLayers; i++ )
         delete papoLayers[i];
 
     CPLFree( papoLayers );
@@ -90,7 +83,7 @@ OGRLayer *OGRSDTSDataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
     else
         return papoLayers[iLayer];
 }
@@ -117,24 +110,22 @@ int OGRSDTSDataSource::Open( const char * pszFilename, int bTestOpen )
 /* -------------------------------------------------------------------- */
     if( bTestOpen )
     {
-        FILE    *fp;
-        char    pachLeader[10];
-
-        fp = VSIFOpen( pszFilename, "rb" );
-        if( fp == NULL )
+        VSILFILE *fp = VSIFOpenL( pszFilename, "rb" );
+        if( fp == nullptr )
             return FALSE;
 
-        if( VSIFRead( pachLeader, 1, 10, fp ) != 10
+        char pachLeader[10] = {};
+        if( VSIFReadL( pachLeader, 1, 10, fp ) != 10
             || (pachLeader[5] != '1' && pachLeader[5] != '2'
                 && pachLeader[5] != '3' )
             || pachLeader[6] != 'L'
             || (pachLeader[8] != '1' && pachLeader[8] != ' ') )
         {
-            VSIFClose( fp );
+            VSIFCloseL( fp );
             return FALSE;
         }
 
-        VSIFClose( fp );
+        VSIFCloseL( fp );
     }
 
 /* -------------------------------------------------------------------- */
@@ -142,10 +133,12 @@ int OGRSDTSDataSource::Open( const char * pszFilename, int bTestOpen )
 /* -------------------------------------------------------------------- */
     poTransfer = new SDTSTransfer();
 
-    if( !poTransfer->Open( pszFilename ) )
+    GUInt32 nInitialErrorCounter = CPLGetErrorCounter();
+    if( !poTransfer->Open( pszFilename ) ||
+        CPLGetErrorCounter() > nInitialErrorCounter + 100 )
     {
         delete poTransfer;
-        poTransfer = NULL;
+        poTransfer = nullptr;
 
         return FALSE;
     }
@@ -156,6 +149,7 @@ int OGRSDTSDataSource::Open( const char * pszFilename, int bTestOpen )
     SDTS_XREF   *poXREF = poTransfer->GetXREF();
 
     poSRS = new OGRSpatialReference();
+    poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     if( EQUAL(poXREF->pszSystemName,"UTM") )
     {
@@ -173,29 +167,25 @@ int OGRSDTSDataSource::Open( const char * pszFilename, int bTestOpen )
     else if( EQUAL(poXREF->pszDatum,"WGC") )
         poSRS->SetGeogCS("WGS 72", "WGS_1972", "NWL 10D", 6378135, 298.26 );
 
-    else if( EQUAL(poXREF->pszDatum,"WGE") )
+    else /* if( EQUAL(poXREF->pszDatum,"WGE") ) or default case */
         poSRS->SetGeogCS("WGS 84", "WGS_1984",
                          "WGS 84", 6378137, 298.257223563 );
-
-    else
-        poSRS->SetGeogCS("WGS 84", "WGS_1984",
-                         "WGS 84", 6378137, 298.257223563 );
-
-    poSRS->Fixup();
 
 /* -------------------------------------------------------------------- */
 /*      Initialize a layer for each source dataset layer.               */
 /* -------------------------------------------------------------------- */
+
     for( int iLayer = 0; iLayer < poTransfer->GetLayerCount(); iLayer++ )
     {
-        SDTSIndexedReader       *poReader;
-
         if( poTransfer->GetLayerType( iLayer ) == SLTRaster )
             continue;
 
-        poReader = poTransfer->GetLayerIndexedReader( iLayer );
-        if( poReader == NULL )
+        SDTSIndexedReader *poReader =
+            poTransfer->GetLayerIndexedReader( iLayer );
+        if( poReader == nullptr )
             continue;
+        if( CPLGetErrorCounter() > nInitialErrorCounter + 100 )
+            return FALSE;
 
         papoLayers = (OGRSDTSLayer **)
             CPLRealloc( papoLayers, sizeof(void*) * ++nLayers );
@@ -204,4 +194,3 @@ int OGRSDTSDataSource::Open( const char * pszFilename, int bTestOpen )
 
     return TRUE;
 }
-

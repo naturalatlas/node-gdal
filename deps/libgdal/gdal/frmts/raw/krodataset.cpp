@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: krodataset.cpp 33862 2016-04-02 11:17:23Z goatbar $
  *
  * Project:  KRO format reader/writer
  * Purpose:  Implementation of KOLOR Raw Format
@@ -32,9 +31,9 @@
 #include "gdal_frmts.h"
 #include "rawdataset.h"
 
-CPL_CVSID("$Id: krodataset.cpp 33862 2016-04-02 11:17:23Z goatbar $");
+CPL_CVSID("$Id: krodataset.cpp b2723bb9ee29fb36de5c3afec9e9a6b757ef743c 2018-05-10 21:21:26 +0200 Even Rouault $")
 
-/* http://www.autopano.net/wiki-en/Format_KRO */
+// http://www.autopano.net/wiki-en/Format_KRO
 
 /************************************************************************/
 /* ==================================================================== */
@@ -42,13 +41,14 @@ CPL_CVSID("$Id: krodataset.cpp 33862 2016-04-02 11:17:23Z goatbar $");
 /* ==================================================================== */
 /************************************************************************/
 
-class KRODataset : public RawDataset
+class KRODataset final: public RawDataset
 {
-  public:
     VSILFILE    *fpImage;  // image data file.
 
+    CPL_DISALLOW_COPY_ASSIGN(KRODataset)
+
   public:
-                    KRODataset() : fpImage(NULL) {};
+                    KRODataset() : fpImage(nullptr) {}
                    ~KRODataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
@@ -73,11 +73,11 @@ KRODataset::~KRODataset()
 {
     FlushCache();
 
-    if( fpImage != NULL )
+    if( fpImage != nullptr )
     {
         if( VSIFCloseL( fpImage ) != 0 )
         {
-            CPLError(CE_Failure, CPLE_FileIO, "I/O error");
+          CPLError( CE_Failure, CPLE_FileIO, "I/O error" );
         }
     }
 }
@@ -92,7 +92,8 @@ int KRODataset::Identify( GDALOpenInfo *poOpenInfo )
     if( poOpenInfo->nHeaderBytes < 20 )
         return FALSE;
 
-    if( !STARTS_WITH_CI((const char *)poOpenInfo->pabyHeader, "KRO\x01") )
+    if( !STARTS_WITH_CI( reinterpret_cast<char *>(poOpenInfo->pabyHeader),
+                         "KRO\x01") )
         return FALSE;
 
     return TRUE;
@@ -105,74 +106,68 @@ int KRODataset::Identify( GDALOpenInfo *poOpenInfo )
 GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
-    if( !Identify( poOpenInfo ) )
-        return NULL;
+    if( !Identify( poOpenInfo ) || poOpenInfo->fpL == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
     KRODataset *poDS = new KRODataset();
     poDS->eAccess = poOpenInfo->eAccess;
-
-/* -------------------------------------------------------------------- */
-/*      Open the file.                                                  */
-/* -------------------------------------------------------------------- */
-    if( poOpenInfo->eAccess == GA_ReadOnly )
-        poDS->fpImage = VSIFOpenL( poOpenInfo->pszFilename, "rb" );
-    else
-        poDS->fpImage = VSIFOpenL( poOpenInfo->pszFilename, "rb+" );
-
-    if( poDS->fpImage == NULL )
-    {
-        delete poDS;
-        return NULL;
-    }
+    poDS->fpImage = poOpenInfo->fpL;
+    poOpenInfo->fpL = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Read the file header.                                           */
 /* -------------------------------------------------------------------- */
-    char  achHeader[20];
+    char achHeader[20] = { '\0' };
     CPL_IGNORE_RET_VAL(VSIFReadL( achHeader, 1, 20, poDS->fpImage ));
 
     int nXSize;
     memcpy(&nXSize, achHeader + 4, 4);
     CPL_MSBPTR32( &nXSize );
 
-    int nYSize;
+    int nYSize = 0;
     memcpy(&nYSize, achHeader + 8, 4);
     CPL_MSBPTR32( &nYSize );
 
-    int nDepth;
+    int nDepth = 0;
     memcpy(&nDepth, achHeader + 12, 4);
     CPL_MSBPTR32( &nDepth );
 
-    int nComp;
+    int nComp = 0;
     memcpy(&nComp, achHeader + 16, 4);
     CPL_MSBPTR32( &nComp );
 
-    if (!GDALCheckDatasetDimensions(nXSize, nYSize) ||
-        !GDALCheckBandCount(nComp, FALSE))
+    if( !GDALCheckDatasetDimensions(nXSize, nYSize) ||
+        !GDALCheckBandCount(nComp, FALSE) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     poDS->nRasterXSize = nXSize;
     poDS->nRasterYSize = nYSize;
 
-    GDALDataType eDT;
+    GDALDataType eDT = GDT_Unknown;
     if( nDepth == 8 )
+    {
         eDT = GDT_Byte;
+    }
     else if( nDepth == 16 )
+    {
         eDT = GDT_UInt16;
+    }
     else if( nDepth == 32 )
+    {
         eDT = GDT_Float32;
+    }
     else
     {
-        CPLError(CE_Failure, CPLE_AppDefined,
-                 "Unhandled depth : %d", nDepth);
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Unhandled depth : %d", nDepth );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     const int nDataTypeSize = nDepth / 8;
@@ -180,10 +175,21 @@ GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
     if( nComp == 0 || nDataTypeSize == 0 ||
         poDS->nRasterXSize > INT_MAX / (nComp * nDataTypeSize) )
     {
-        CPLError(CE_Failure, CPLE_AppDefined,
-                 "Too large width / number of bands");
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Too large width / number of bands" );
         delete poDS;
-        return NULL;
+        return nullptr;
+    }
+
+    vsi_l_offset nExpectedSize = static_cast<vsi_l_offset>(poDS->nRasterXSize)
+        * poDS->nRasterYSize * nComp * nDataTypeSize + 20;
+    VSIFSeekL(poDS->fpImage, 0, SEEK_END);
+    if( VSIFTellL(poDS->fpImage) < nExpectedSize )
+    {
+        CPLError( CE_Failure, CPLE_FileIO,
+                  "File too short" );
+        delete poDS;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -197,16 +203,16 @@ GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
                                20 + nDataTypeSize * iBand,
                                nComp * nDataTypeSize,
                                poDS->nRasterXSize * nComp * nDataTypeSize,
-                               eDT, !CPL_IS_LSB, TRUE, FALSE );
+                               eDT, !CPL_IS_LSB, RawRasterBand::OwnFP::NO );
         if( nComp == 3 || nComp == 4 )
         {
-            poBand->SetColorInterpretation( (GDALColorInterp) (GCI_RedBand + iBand) );
+            poBand->SetColorInterpretation( static_cast<GDALColorInterp>(GCI_RedBand + iBand) );
         }
         poDS->SetBand( iBand+1, poBand );
         if( CPLGetLastErrorType() != CE_None )
         {
             delete poDS;
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -224,7 +230,7 @@ GDALDataset *KRODataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -236,26 +242,30 @@ GDALDataset *KRODataset::Create( const char * pszFilename,
                                  int nYSize,
                                  int nBands,
                                  GDALDataType eType,
-                                 CPL_UNUSED char ** papszOptions )
+                                 char ** /* papszOptions */ )
 {
     if( eType != GDT_Byte && eType != GDT_UInt16 && eType != GDT_Float32 )
     {
-        CPLError(CE_Failure, CPLE_AppDefined,
-                 "Attempt to create KRO file with unsupported data type '%s'.",
-                 GDALGetDataTypeName( eType ) );
-        return NULL;
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Attempt to create KRO file with unsupported data type '%s'.",
+                  GDALGetDataTypeName( eType ) );
+        return nullptr;
+    }
+    if( nXSize == 0 || nYSize == 0 || nBands == 0 )
+    {
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Try to create file.                                             */
 /* -------------------------------------------------------------------- */
     VSILFILE *fp = VSIFOpenL( pszFilename, "wb" );
-    if( fp == NULL )
+    if( fp == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
-                  "Attempt to create file `%s' failed.\n",
+                  "Attempt to create file `%s' failed.",
                   pszFilename );
-        return NULL;
+        return nullptr;
     }
 
     size_t nRet = VSIFWriteL("KRO\01", 4, 1, fp);
@@ -271,7 +281,7 @@ GDALDataset *KRODataset::Create( const char * pszFilename,
     CPL_MSBPTR32(&nTmp);
     nRet += VSIFWriteL(&nTmp, 4, 1, fp);
 
-    nTmp = GDALGetDataTypeSize(eType);
+    nTmp = GDALGetDataTypeSizeBits(eType);
     CPL_MSBPTR32(&nTmp);
     nRet += VSIFWriteL(&nTmp, 4, 1, fp);
 
@@ -283,20 +293,24 @@ GDALDataset *KRODataset::Create( const char * pszFilename,
 /*      Zero out image data                                             */
 /* -------------------------------------------------------------------- */
 
-    CPL_IGNORE_RET_VAL(VSIFSeekL(fp, (vsi_l_offset)nXSize * nYSize * (GDALGetDataTypeSize(eType) / 8) * nBands - 1,
+    CPL_IGNORE_RET_VAL(
+        VSIFSeekL( fp,
+                   static_cast<vsi_l_offset>(nXSize) * nYSize *
+                   GDALGetDataTypeSizeBytes(eType) * nBands - 1,
               SEEK_CUR));
     GByte byNul = 0;
     nRet += VSIFWriteL(&byNul, 1, 1, fp);
     if( VSIFCloseL(fp) != 0 )
     {
-        CPLError(CE_Failure, CPLE_FileIO, "I/O error");
-        return NULL;
+        CPLError( CE_Failure, CPLE_FileIO, "I/O error" );
+        return nullptr;
     }
 
     if( nRet != 6 )
-        return NULL;
+        return nullptr;
 
-    return reinterpret_cast<GDALDataset *>( GDALOpen( pszFilename, GA_Update ) );
+    return
+        reinterpret_cast<GDALDataset *>( GDALOpen( pszFilename, GA_Update ) );
 }
 
 /************************************************************************/
@@ -306,7 +320,7 @@ GDALDataset *KRODataset::Create( const char * pszFilename,
 void GDALRegister_KRO()
 
 {
-    if( GDALGetDriverByName( "KRO" ) != NULL )
+    if( GDALGetDriverByName( "KRO" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

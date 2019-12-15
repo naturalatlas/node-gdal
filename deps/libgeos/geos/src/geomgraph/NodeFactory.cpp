@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -25,17 +25,17 @@ using namespace geos::geom;
 namespace geos {
 namespace geomgraph { // geos.geomgraph
 
-Node *
-NodeFactory::createNode(const Coordinate &coord) const
+Node*
+NodeFactory::createNode(const Coordinate& coord) const
 {
-	return new Node(coord,NULL);
+    return new Node(coord, nullptr);
 }
 
-const NodeFactory &
-NodeFactory::instance() 
+const NodeFactory&
+NodeFactory::instance()
 {
-	static const NodeFactory nf;
-	return nf;
+    static const NodeFactory nf;
+    return nf;
 }
 
 

@@ -41,12 +41,15 @@ class PThreadMutex : public PCIDSK::Mutex
 private:
     pthread_mutex_t *hMutex;
 
+    PThreadMutex(const PThreadMutex&) = delete;
+    PThreadMutex& operator=(const PThreadMutex&) = delete;
+
 public:
     PThreadMutex();
     ~PThreadMutex();
 
-    int Acquire(void);
-    int Release(void);
+    int Acquire(void) override;
+    int Release(void) override;
 };
 
 /************************************************************************/

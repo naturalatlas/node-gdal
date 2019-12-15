@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  * Copyright (C) 2005 2006 Refractions Research Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -23,8 +23,8 @@
 
 #include <geos/export.h>
 #include <geos/geom/GeometryCollection.h> // for inheritance
-#include <geos/geom/Lineal.h> // for inheritance
 #include <geos/geom/Dimension.h>
+#include <geos/geom/LineString.h>
 
 #include <string>
 #include <vector>
@@ -33,10 +33,10 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom { // geos::geom
-		class Coordinate;
-		class CoordinateArraySequence;
-	}
+namespace geom { // geos::geom
+class Coordinate;
+class CoordinateArraySequence;
+}
 }
 
 namespace geos {
@@ -47,74 +47,89 @@ namespace geom { // geos::geom
 #pragma warning(disable:4250) // T1 inherits T2 via dominance
 #endif
 
-/// Models a collection of (@link LineString}s.
-class GEOS_DLL MultiLineString: public GeometryCollection, public Lineal {
+/// Models a collection of [LineStrings](@ref geom::LineString).
+class GEOS_DLL MultiLineString: public GeometryCollection {
 
 public:
 
-	friend class GeometryFactory;
+    friend class GeometryFactory;
 
-	virtual ~MultiLineString();
+    ~MultiLineString() override = default;
 
-	/// Returns line dimension (1)
-	Dimension::DimensionType getDimension() const;
+    /// Returns line dimension (1)
+    Dimension::DimensionType getDimension() const override;
 
-	/**
-	 * \brief
-	 * Returns Dimension::False if all LineStrings in the collection
-	 * are closed, 0 otherwise.
-	 */
-	int getBoundaryDimension() const;
+    bool isDimensionStrict(Dimension::DimensionType d) const override {
+        return d == Dimension::L;
+    }
 
-	/// Returns a (possibly empty) MultiPoint 
-	Geometry* getBoundary() const;
+    /**
+     * \brief
+     * Returns Dimension::False if all [LineStrings](@ref geom::LineString) in the collection
+     * are closed, 0 otherwise.
+     */
+    int getBoundaryDimension() const override;
 
-	std::string getGeometryType() const;
+    /// Returns a (possibly empty) [MultiPoint](@ref geom::MultiPoint)
+    std::unique_ptr<Geometry> getBoundary() const override;
 
-	virtual GeometryTypeId getGeometryTypeId() const;
+    std::string getGeometryType() const override;
 
-	bool isClosed() const;
+    GeometryTypeId getGeometryTypeId() const override;
 
-	bool equalsExact(const Geometry *other, double tolerance=0) const;
+    bool isClosed() const;
 
-	Geometry *clone() const;
+    bool equalsExact(const Geometry* other, double tolerance = 0) const override;
 
-	/**
-	 * Creates a MultiLineString in the reverse
-	 * order to this object.
-	 * Both the order of the component LineStrings
-	 * and the order of their coordinate sequences
-	 * are reversed.
-	 *
-	 * @return a MultiLineString in the reverse order
-	 */
-	MultiLineString* reverse() const;
+    std::unique_ptr<Geometry> clone() const override;
+
+    /**
+     * Creates a MultiLineString in the reverse
+     * order to this object.
+     * Both the order of the component LineStrings
+     * and the order of their coordinate sequences
+     * are reversed.
+     *
+     * @return a MultiLineString in the reverse order
+     */
+    std::unique_ptr<Geometry> reverse() const override;
 
 protected:
 
-	/**
-	 * \brief Constructs a <code>MultiLineString</code>.
-	 *
-	 * @param  newLines
-	 *	The <code>LineStrings</code>s for this
-	 *	<code>MultiLineString</code>, or <code>null</code>
-	 *	or an empty array to create the empty geometry.
-	 *	Elements may be empty <code>LineString</code>s,
-	 *	but not <code>null</code>s.
-	 *
-	 *	Constructed object will take ownership of
-	 *	the vector and its elements.
-	 *
-	 * @param newFactory
-	 * 	The GeometryFactory used to create this geometry.
-	 *	Caller must keep the factory alive for the life-time
-	 *	of the constructed MultiLineString.
-	 * 	
-	 */
-	MultiLineString(std::vector<Geometry *> *newLines,
-			const GeometryFactory *newFactory);
+    /**
+     * \brief Constructs a MultiLineString.
+     *
+     * @param  newLines The [LineStrings](@ref geom::LineString) for this
+     *                  MultiLineString, or `null`
+     *                  or an empty array to create the empty geometry.
+     *                  Elements may be empty LineString,
+     *                  but not `null`s.
+     *
+     * @param newFactory The GeometryFactory used to create this geometry.
+     *                   Caller must keep the factory alive for the life-time
+     *                   of the constructed MultiLineString.
+     *
+     * @note Constructed object will take ownership of
+     *       the vector and its elements.
+     *
+     */
+    MultiLineString(std::vector<Geometry*>* newLines,
+                    const GeometryFactory* newFactory);
 
-	MultiLineString(const MultiLineString &mp);
+    MultiLineString(std::vector<std::unique_ptr<LineString>> && newLines,
+            const GeometryFactory& newFactory);
+
+    MultiLineString(std::vector<std::unique_ptr<Geometry>> && newLines,
+                    const GeometryFactory& newFactory);
+
+    MultiLineString(const MultiLineString& mp);
+
+    int
+    getSortIndex() const override
+    {
+        return SORTINDEX_MULTILINESTRING;
+    };
+
 };
 
 #ifdef _MSC_VER

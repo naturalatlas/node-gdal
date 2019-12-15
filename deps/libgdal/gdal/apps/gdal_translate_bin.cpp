@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdal_translate_bin.cpp 33615 2016-03-02 20:19:22Z goatbar $
  *
  * Project:  GDAL Utilities
  * Purpose:  GDAL Image Translator Program
@@ -29,24 +28,23 @@
  ****************************************************************************/
 
 #include "cpl_string.h"
+#include "gdal_version.h"
 #include "gdal_priv.h"
 #include "ogr_spatialref.h"
 #include "commonutils.h"
 #include "gdal_utils_priv.h"
 
-CPL_CVSID("$Id: gdal_translate_bin.cpp 33615 2016-03-02 20:19:22Z goatbar $");
+CPL_CVSID("$Id: gdal_translate_bin.cpp 743d0ce0d7ea6bdc710b6b2950d1e8c34243797f 2019-04-23 08:10:30 -0400 fechen123 $")
 
 /*  ******************************************************************* */
 /*                               Usage()                                */
 /* ******************************************************************** */
 
-static void Usage(const char* pszErrorMsg = NULL, int bShort = TRUE) CPL_NO_RETURN;
+static void Usage(const char* pszErrorMsg = nullptr, int bShort = TRUE) CPL_NO_RETURN;
 
 static void Usage(const char* pszErrorMsg, int bShort)
 
 {
-    int iDr;
-
     printf( "Usage: gdal_translate [--help-general] [--long-usage]\n"
             "       [-ot {Byte/Int16/UInt16/UInt32/Int32/Float32/Float64/\n"
             "             CInt16/CInt32/CFloat32/CFloat64}] [-strict]\n"
@@ -57,7 +55,10 @@ static void Usage(const char* pszErrorMsg, int bShort)
             "       [-srcwin xoff yoff xsize ysize] [-epo] [-eco]\n"
             "       [-projwin ulx uly lrx lry] [-projwin_srs srs_def]\n"
             "       [-a_srs srs_def] [-a_ullr ulx uly lrx lry] [-a_nodata value]\n"
-            "       [-gcp pixel line easting northing [elevation]]*\n"
+            "       [-a_scale value] [-a_offset value]\n"
+            "       [-nogcp] [-gcp pixel line easting northing [elevation]]*\n"
+            "       |-colorinterp{_bn} {red|green|blue|alpha|gray|undefined}]\n"
+            "       |-colorinterp {red|green|blue|alpha|gray|undefined},...]\n"
             "       [-mo \"META-TAG=VALUE\"]* [-q] [-sds]\n"
             "       [-co \"NAME=VALUE\"]* [-stats] [-norat]\n"
             "       [-oo NAME=VALUE]*\n"
@@ -67,13 +68,13 @@ static void Usage(const char* pszErrorMsg, int bShort)
     {
         printf( "\n%s\n\n", GDALVersionInfo( "--version" ) );
         printf( "The following format drivers are configured and support output:\n" );
-        for( iDr = 0; iDr < GDALGetDriverCount(); iDr++ )
+        for( int iDr = 0; iDr < GDALGetDriverCount(); iDr++ )
         {
             GDALDriverH hDriver = GDALGetDriver(iDr);
 
-            if( GDALGetMetadataItem( hDriver, GDAL_DCAP_RASTER, NULL) != NULL &&
-                (GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATE, NULL ) != NULL
-                || GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATECOPY, NULL ) != NULL) )
+            if( GDALGetMetadataItem( hDriver, GDAL_DCAP_RASTER, nullptr) != nullptr &&
+                (GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATE, nullptr ) != nullptr
+                || GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATECOPY, nullptr ) != nullptr) )
             {
                 printf( "  %s: %s\n",
                         GDALGetDriverShortName( hDriver ),
@@ -82,7 +83,7 @@ static void Usage(const char* pszErrorMsg, int bShort)
         }
     }
 
-    if( pszErrorMsg != NULL )
+    if( pszErrorMsg != nullptr )
         fprintf(stderr, "\nFAILURE: %s\n", pszErrorMsg);
 
     exit(1);
@@ -94,7 +95,8 @@ static void Usage(const char* pszErrorMsg, int bShort)
 
 static GDALTranslateOptionsForBinary *GDALTranslateOptionsForBinaryNew(void)
 {
-    return (GDALTranslateOptionsForBinary*) CPLCalloc(  1, sizeof(GDALTranslateOptionsForBinary) );
+    return static_cast<GDALTranslateOptionsForBinary *>(
+        CPLCalloc(1, sizeof(GDALTranslateOptionsForBinary)));
 }
 
 /************************************************************************/
@@ -103,26 +105,23 @@ static GDALTranslateOptionsForBinary *GDALTranslateOptionsForBinaryNew(void)
 
 static void GDALTranslateOptionsForBinaryFree( GDALTranslateOptionsForBinary* psOptionsForBinary )
 {
-    if( psOptionsForBinary )
-    {
-        CPLFree(psOptionsForBinary->pszSource);
-        CPLFree(psOptionsForBinary->pszDest);
-        CSLDestroy(psOptionsForBinary->papszOpenOptions);
-        CPLFree(psOptionsForBinary->pszFormat);
-        CPLFree(psOptionsForBinary);
-    }
+    if( psOptionsForBinary == nullptr )
+        return;
+
+    CPLFree(psOptionsForBinary->pszSource);
+    CPLFree(psOptionsForBinary->pszDest);
+    CSLDestroy(psOptionsForBinary->papszOpenOptions);
+    CPLFree(psOptionsForBinary->pszFormat);
+    CPLFree(psOptionsForBinary);
 }
 
 /************************************************************************/
 /*                                main()                                */
 /************************************************************************/
 
-int main( int argc, char ** argv )
+MAIN_START(argc, argv)
 
 {
-    GDALDatasetH    hDataset, hOutDS;
-    int bUsageError;
-
     /* Check strict compilation and runtime library version as we use C++ API */
     if (! GDAL_CHECK_VERSION(argv[0]))
         exit(1);
@@ -138,7 +137,7 @@ int main( int argc, char ** argv )
     if( argc < 1 )
         exit( -argc );
 
-    for( int i = 0; argv != NULL && argv[i] != NULL; i++ )
+    for( int i = 0; argv != nullptr && argv[i] != nullptr; i++ )
     {
         if( EQUAL(argv[i], "--utility_version") )
         {
@@ -149,11 +148,11 @@ int main( int argc, char ** argv )
         }
         else if( EQUAL(argv[i],"--help") )
         {
-            Usage(NULL);
+            Usage(nullptr);
         }
         else if ( EQUAL(argv[i], "--long-usage") )
         {
-            Usage(NULL, FALSE);
+            Usage(nullptr, FALSE);
         }
     }
 
@@ -165,26 +164,32 @@ int main( int argc, char ** argv )
 /*      And some datasets may need 2 file descriptors, so divide by 2   */
 /*      for security.                                                   */
 /* -------------------------------------------------------------------- */
-    if( CPLGetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", NULL) == NULL )
+    if( CPLGetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", nullptr) == nullptr )
     {
+#if defined(__MACH__) && defined(__APPLE__)
+        // On Mach, the default limit is 256 files per process
+        // TODO We should eventually dynamically query the limit for all OS
+        CPLSetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", "100");
+#else
         CPLSetConfigOption("GDAL_MAX_DATASET_POOL_SIZE", "450");
+#endif
     }
 
     GDALTranslateOptionsForBinary* psOptionsForBinary = GDALTranslateOptionsForBinaryNew();
     GDALTranslateOptions *psOptions = GDALTranslateOptionsNew(argv + 1, psOptionsForBinary);
     CSLDestroy( argv );
 
-    if( psOptions == NULL )
+    if( psOptions == nullptr )
     {
-        Usage(NULL);
+        Usage(nullptr);
     }
 
-    if( psOptionsForBinary->pszSource == NULL )
+    if( psOptionsForBinary->pszSource == nullptr )
     {
         Usage("No source dataset specified.");
     }
 
-    if( psOptionsForBinary->pszDest == NULL )
+    if( psOptionsForBinary->pszDest == nullptr )
     {
         Usage("No target dataset specified.");
     }
@@ -196,20 +201,49 @@ int main( int argc, char ** argv )
 
     if( !(psOptionsForBinary->bQuiet) )
     {
-        GDALTranslateOptionsSetProgress(psOptions, GDALTermProgress, NULL);
+        GDALTranslateOptionsSetProgress(psOptions, GDALTermProgress, nullptr);
     }
 
-    if (!psOptionsForBinary->bQuiet && !psOptionsForBinary->bFormatExplicitlySet)
-        CheckExtensionConsistency(psOptionsForBinary->pszDest, psOptionsForBinary->pszFormat);
+    if( psOptionsForBinary->pszFormat )
+    {
+        GDALDriverH hDriver = GDALGetDriverByName( psOptionsForBinary->pszFormat );
+        if( hDriver == nullptr )
+        {
+            fprintf(stderr, "Output driver `%s' not recognised.\n",
+                    psOptionsForBinary->pszFormat);
+            fprintf(stderr, "The following format drivers are configured and support output:\n" );
+            for( int iDr = 0; iDr < GDALGetDriverCount(); iDr++ )
+            {
+                hDriver = GDALGetDriver(iDr);
+
+                if( GDALGetMetadataItem( hDriver, GDAL_DCAP_RASTER, nullptr) != nullptr &&
+                    (GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATE, nullptr ) != nullptr
+                    || GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATECOPY, nullptr ) != nullptr) )
+                {
+                    fprintf(stderr, "  %s: %s\n",
+                            GDALGetDriverShortName( hDriver  ),
+                            GDALGetDriverLongName( hDriver ) );
+                }
+            }
+
+            GDALTranslateOptionsFree(psOptions);
+            GDALTranslateOptionsForBinaryFree(psOptionsForBinary);
+
+            GDALDestroyDriverManager();
+            exit(1);
+        }
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Attempt to open source file.                                    */
 /* -------------------------------------------------------------------- */
 
-    hDataset = GDALOpenEx( psOptionsForBinary->pszSource, GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR, NULL,
-                           (const char* const* )psOptionsForBinary->papszOpenOptions, NULL );
+    GDALDatasetH hDataset =
+        GDALOpenEx(psOptionsForBinary->pszSource,
+                   GDAL_OF_RASTER | GDAL_OF_VERBOSE_ERROR, nullptr,
+                   psOptionsForBinary->papszOpenOptions, nullptr);
 
-    if( hDataset == NULL )
+    if( hDataset == nullptr )
     {
         GDALDestroyDriverManager();
         exit( 1 );
@@ -219,8 +253,8 @@ int main( int argc, char ** argv )
 /*      Handle subdatasets.                                             */
 /* -------------------------------------------------------------------- */
     if( !psOptionsForBinary->bCopySubDatasets
-        && CSLCount(GDALGetMetadata( hDataset, "SUBDATASETS" )) > 0
-        && GDALGetRasterCount(hDataset) == 0 )
+        && GDALGetRasterCount(hDataset) == 0
+        && CSLCount(GDALGetMetadata( hDataset, "SUBDATASETS" )) > 0 )
     {
         fprintf( stderr,
                  "Input file contains subdatasets. Please, select one of them for reading.\n" );
@@ -229,61 +263,96 @@ int main( int argc, char ** argv )
         exit( 1 );
     }
 
-    if( CSLCount(GDALGetMetadata( hDataset, "SUBDATASETS" )) > 0
-        && psOptionsForBinary->bCopySubDatasets )
+    int bUsageError = FALSE;
+    GDALDatasetH hOutDS = nullptr;
+    GDALDriverH hOutDriver = nullptr;
+
+    if ( psOptionsForBinary->pszFormat == nullptr )
     {
-        char **papszSubdatasets = GDALGetMetadata(hDataset,"SUBDATASETS");
-        char *pszSubDest = (char *) CPLMalloc(strlen(psOptionsForBinary->pszDest)+32);
-        int i;
+        hOutDriver = GDALGetDriverByName(
+                GetOutputDriverForRaster( psOptionsForBinary->pszDest )
+            );
+    }
+    else
+    {
+        hOutDriver = GDALGetDriverByName( psOptionsForBinary->pszFormat );
+    }
 
-        CPLString osPath = CPLGetPath(psOptionsForBinary->pszDest);
-        CPLString osBasename = CPLGetBasename(psOptionsForBinary->pszDest);
-        CPLString osExtension = CPLGetExtension(psOptionsForBinary->pszDest);
-        CPLString osTemp;
+    if ( hOutDriver == nullptr )
+    {
+        fprintf( stderr, "Output driver not found.\n");
+        GDALClose( hDataset );
+        GDALDestroyDriverManager();
+        exit( 1 );
+    }
 
-        const char* pszFormat = NULL;
-        if ( CSLCount(papszSubdatasets)/2 < 10 )
+    bool bCopyCreateSubDatasets = ( GDALGetMetadataItem( hOutDriver, GDAL_DCAP_SUBCREATECOPY, nullptr ) != nullptr );
+
+    if( psOptionsForBinary->bCopySubDatasets &&
+        CSLCount(GDALGetMetadata( hDataset, "SUBDATASETS" )) > 0 )
+    {
+        if ( bCopyCreateSubDatasets )
         {
-            pszFormat = "%s_%d";
-        }
-        else if ( CSLCount(papszSubdatasets)/2 < 100 )
-        {
-            pszFormat = "%s_%002d";
+            // GDAL sets the size of the dataset with subdatasets to 512x512
+            // this removes the srcwin function from this operation
+            hOutDS = GDALTranslate(psOptionsForBinary->pszDest, hDataset, psOptions, &bUsageError);
+            GDALClose(hOutDS);
         }
         else
         {
-            pszFormat = "%s_%003d";
+            char **papszSubdatasets = GDALGetMetadata(hDataset,"SUBDATASETS");
+            char *pszSubDest = static_cast<char *>(
+                CPLMalloc(strlen(psOptionsForBinary->pszDest) + 32));
+
+            CPLString osPath = CPLGetPath(psOptionsForBinary->pszDest);
+            CPLString osBasename = CPLGetBasename(psOptionsForBinary->pszDest);
+            CPLString osExtension = CPLGetExtension(psOptionsForBinary->pszDest);
+            CPLString osTemp;
+
+            const char* pszFormat = nullptr;
+            if ( CSLCount(papszSubdatasets)/2 < 10 )
+            {
+                pszFormat = "%s_%d";
+            }
+            else if ( CSLCount(papszSubdatasets)/2 < 100 )
+            {
+                pszFormat = "%s_%002d";
+            }
+            else
+            {
+                pszFormat = "%s_%003d";
+            }
+
+            const char* pszDest = pszSubDest;
+
+            for( int i = 0; papszSubdatasets[i] != nullptr; i += 2 )
+            {
+                char* pszSource = CPLStrdup(strstr(papszSubdatasets[i],"=")+1);
+                osTemp = CPLSPrintf( pszFormat, osBasename.c_str(), i/2 + 1 );
+                osTemp = CPLFormFilename( osPath, osTemp, osExtension );
+                strcpy( pszSubDest, osTemp.c_str() );
+                hDataset = GDALOpenEx( pszSource, GDAL_OF_RASTER, nullptr,
+                            psOptionsForBinary->papszOpenOptions, nullptr );
+                CPLFree(pszSource);
+                if( !psOptionsForBinary->bQuiet )
+                    printf("Input file size is %d, %d\n", GDALGetRasterXSize(hDataset), GDALGetRasterYSize(hDataset));
+                hOutDS = GDALTranslate(pszDest, hDataset, psOptions, &bUsageError);
+                if (hOutDS == nullptr)
+                    break;
+                GDALClose(hOutDS);
+            }
+
+            CPLFree(pszSubDest);
         }
 
-        const char* pszDest = pszSubDest;
-
-        for( i = 0; papszSubdatasets[i] != NULL; i += 2 )
-        {
-            char* pszSource = CPLStrdup(strstr(papszSubdatasets[i],"=")+1);
-            osTemp = CPLSPrintf( pszFormat, osBasename.c_str(), i/2 + 1 );
-            osTemp = CPLFormFilename( osPath, osTemp, osExtension );
-            strcpy( pszSubDest, osTemp.c_str() );
-            hDataset = GDALOpenEx( pszSource, GDAL_OF_RASTER, NULL,
-                           (const char* const* )psOptionsForBinary->papszOpenOptions, NULL );
-            CPLFree(pszSource);
-            if( !psOptionsForBinary->bQuiet )
-                printf("Input file size is %d, %d\n", GDALGetRasterXSize(hDataset), GDALGetRasterYSize(hDataset));
-            hOutDS = GDALTranslate(pszDest, hDataset, psOptions, &bUsageError);
-            if(bUsageError == TRUE)
-                Usage();
-            if (hOutDS == NULL)
-                break;
-            GDALClose(hOutDS);
-        }
-
+        if(bUsageError == TRUE)
+            Usage();
         GDALClose(hDataset);
         GDALTranslateOptionsFree(psOptions);
         GDALTranslateOptionsForBinaryFree(psOptionsForBinary);
-        CPLFree(pszSubDest);
 
         GDALDestroyDriverManager();
         return 0;
-
     }
 
     if( !psOptionsForBinary->bQuiet )
@@ -292,7 +361,7 @@ int main( int argc, char ** argv )
     hOutDS = GDALTranslate(psOptionsForBinary->pszDest, hDataset, psOptions, &bUsageError);
     if(bUsageError == TRUE)
         Usage();
-    int nRetCode = (hOutDS) ? 0 : 1;
+    int nRetCode = hOutDS ? 0 : 1;
 
     /* Close hOutDS before hDataset for the -f VRT case */
     GDALClose(hOutDS);
@@ -304,3 +373,4 @@ int main( int argc, char ** argv )
 
     return nRetCode;
 }
+MAIN_END

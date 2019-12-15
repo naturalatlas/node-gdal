@@ -24,7 +24,7 @@ void Point::Initialize(Local<Object> target)
 	ATTR(lcons, "y", yGetter, ySetter);
 	ATTR(lcons, "z", zGetter, zSetter);
 
-	target->Set(Nan::New("Point").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Point").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -139,7 +139,7 @@ Local<Value> Point::New(OGRPoint *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Point::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Point::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -170,7 +170,7 @@ NAN_SETTER(Point::xSetter)
 		Nan::ThrowError("y must be a number");
 		return;
 	}
-	double x = value->NumberValue();
+	double x = Nan::To<double>(value).ToChecked();
 
 	((OGRPoint* )geom->this_)->setX(x);
 }
@@ -195,7 +195,7 @@ NAN_SETTER(Point::ySetter)
 		Nan::ThrowError("y must be a number");
 		return;
 	}
-	double y = value->NumberValue();
+	double y = Nan::To<double>(value).ToChecked();
 
 	((OGRPoint* )geom->this_)->setY(y);
 }
@@ -219,7 +219,7 @@ NAN_SETTER(Point::zSetter)
 		Nan::ThrowError("z must be a number");
 		return;
 	}
-	double z = value->NumberValue();
+	double z = Nan::To<double>(value).ToChecked();
 
 	((OGRPoint* )geom->this_)->setZ(z);
 }

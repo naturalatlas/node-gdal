@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: org_sxf_defs.h  $
+ * $Id: org_sxf_defs.h 5112c658224b15f39f273fc70a7206df16155405 2016-10-24 15:03:26Z Kurt Schwehr $
  *
  * Project:  SXF Translator
  * Purpose:  Include file defining Records Structures for file reading and
@@ -214,13 +214,11 @@ typedef struct
 
 } SXFMapDescription;
 
-
 enum SXFCoordinateType
 {
     SXF_CT_RECTANGULAR = 0,
     SXF_CT_GEODETIC
 };
-
 
 /*
  * List of SXF file format geometry types.
@@ -316,7 +314,6 @@ typedef struct
     GByte nFormatVersion[4]; //the format version (e.g. 4)
     GUInt32 nCheckSum; //check sum
 }  SXFHeader;
-
 
 /************************************************************************/
 /*                         RSCInfo                                      */

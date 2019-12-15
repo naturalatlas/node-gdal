@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -16,7 +16,7 @@
  *
  **********************************************************************/
 
-#include <geos/platform.h>
+#include <geos/constants.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/operation/overlay/ElevationMatrixCell.h>
 
@@ -36,54 +36,47 @@ ElevationMatrixCell::ElevationMatrixCell(): ztot(0)
 {
 }
 
-ElevationMatrixCell::~ElevationMatrixCell()
-{
-}
-
 void
-ElevationMatrixCell::add(const Coordinate &c)
+ElevationMatrixCell::add(const Coordinate& c)
 {
-	if ( !ISNAN(c.z) )
-	{
-		if ( zvals.insert(c.z).second )
-		{
-			ztot+=c.z;
-		}
-	}
+    if(!std::isnan(c.z)) {
+        if(zvals.insert(c.z).second) {
+            ztot += c.z;
+        }
+    }
 }
 
 void
 ElevationMatrixCell::add(double z)
 {
-	if ( !ISNAN(z) )
-	{
-		if ( zvals.insert(z).second )
-		{
-			ztot+=z;
-		}
-	}
+    if(!std::isnan(z)) {
+        if(zvals.insert(z).second) {
+            ztot += z;
+        }
+    }
 }
 
 double
 ElevationMatrixCell::getTotal() const
 {
-	return ztot;
+    return ztot;
 }
 
 double
 ElevationMatrixCell::getAvg() const
 {
-	if ( ! zvals.size() ) return DoubleNotANumber;
-	return (ztot/zvals.size());
+    return  zvals.size() ?
+            ztot / static_cast<double>(zvals.size()) :
+            DoubleNotANumber;
 }
 
 string
 ElevationMatrixCell::print() const
 {
-	ostringstream ret;
-	//ret<<"["<<ztot<<"/"<<zvals.size()<<"]";
-	ret<<"["<<ztot/zvals.size()<<"]";
-	return ret.str();
+    ostringstream ret;
+    //ret<<"["<<ztot<<"/"<<zvals.size()<<"]";
+    ret << "[" << getAvg() << "]";
+    return ret.str();
 }
 
 } // namespace geos.operation.overlay

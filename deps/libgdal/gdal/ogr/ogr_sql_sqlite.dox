@@ -11,7 +11,9 @@ is available through the GDALDataset::ExecuteSQL() method by specifying the pszD
 utility, you must specify the "-dialect SQLITE" option.<p>
 
 This is mainly aimed to execute SELECT statements, but, for datasources that support
-update, INSERT/UPDATE/DELETE statements can also be run.<p>
+update, INSERT/UPDATE/DELETE statements can also be run. GDAL is internally using  
+<b><a href="https://sqlite.org/vtab.html">the Virtual Table Mechanism of SQLite</a></b> 
+and therefore operations like ALTER TABLE are not supported.<p>
 
 The syntax of the SQL statements is fully the one of the SQLite SQL engine. You can
 refer to the following pages:
@@ -26,7 +28,7 @@ refer to the following pages:
 
 The SELECT statement is used to fetch layer features (analogous to table
 rows in an RDBMS) with the result of the query represented as a temporary layer
-of features.   The layers of the datasource are analogous to tables in an 
+of features.   The layers of the datasource are analogous to tables in an
 RDBMS and feature attributes are analogous to column values.  The simplest
 form of OGR SQLITE SELECT statement looks like this:
 
@@ -56,6 +58,24 @@ translated, as far as possible, as attribute filters that are applied on the
 underlying OGR layers. Joins can be very expensive operations if the secondary table is not
 indexed on the key field being used.<p>
 
+\subsection ogr_sql_sqlite_delimited_identifiers Delimited identifiers
+
+If names of layers or attributes are reserved keywords in SQL like 'FROM' or they
+begin with a number or underscore they must be handled as "delimited identifiers" and
+enclosed between double quotation marks in queries. Double quotas can be used even when
+they are not strictly needed.
+
+\code
+SELECT "p"."geometry", "p"."FROM", "p"."3D" FROM "poly" p
+\endcode
+
+When SQL statements are used in the command shell and the statement itself is put
+between double quotes, the internal double quotes must be escaped with \
+
+\code
+ogrinfo p.shp -sql "SELECT geometry \"FROM\", \"3D\" FROM p"
+\endcode
+
 \subsection ogr_sql_sqlite_geometry Geometry field
 
 The <b>GEOMETRY</b> special field represents the geometry of the feature
@@ -75,7 +95,7 @@ returns:
 OGRFeature(SELECT):0
   EAS_ID (Real) = 168
   POLYGON ((479819.84375 4765180.5,479690.1875 4765259.5,[...],479819.84375 4765180.5))
-\endcode 
+\endcode
 
 \code
 SELECT * FROM poly
@@ -87,7 +107,7 @@ OGRFeature(SELECT):0
   EAS_ID (Real) = 168
   PRFEDEA (String) = 35043411
   POLYGON ((479819.84375 4765180.5,479690.1875 4765259.5,[...],479819.84375 4765180.5))
-\endcode 
+\endcode
 
 \subsection ogr_sql_sqlite_style OGR_STYLE special field
 
@@ -98,12 +118,12 @@ For example we can select the annotation features as:
 
 \code
 SELECT * FROM nation WHERE OGR_STYLE LIKE 'LABEL%'
-\endcode 
+\endcode
 
 \subsection ogr_sql_sqlite_spatialite Spatialite SQL functions
 
 When GDAL/OGR is build with support for the <a href="http://www.gaia-gis.it/spatialite/">Spatialite</a> library,
-a lot of <a href="http://www.gaia-gis.it/gaia-sins/spatialite-sql-3.0.0.html">extra SQL functions</a>,
+a lot of <a href="http://www.gaia-gis.it/gaia-sins/spatialite-sql-4.3.0.html">extra SQL functions</a>,
 in particular spatial functions, can be used in results column fields, WHERE clauses, etc....<p>
 
 \code
@@ -289,7 +309,7 @@ of the layers to limit the number of actual geometry intersection computations :
 SELECT city_name, region_name FROM cities, regions WHERE
     ST_Area(ST_Intersection(cities.geometry, regions.geometry)) > 0 AND
     regions.rowid IN (
-        SELECT pkid FROM idx_regions_geometry WHERE 
+        SELECT pkid FROM idx_regions_geometry WHERE
             xmax >= MbrMinX(cities.geometry) AND xmin <= MbrMaxX(cities.geometry) AND
             ymax >= MbrMinY(cities.geometry) AND ymin <= MbrMaxY(cities.geometry))
 \endcode

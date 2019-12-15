@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdal_rpc.cpp 34067 2016-04-23 17:56:51Z rouault $
  *
  * Project:  Image Warper
  * Purpose:  Implements a rational polynomial (RPC) based transformer.
@@ -28,38 +27,57 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "gdal_priv.h"
+#include "cpl_port.h"
 #include "gdal_alg.h"
-#include "ogr_spatialref.h"
+
+#include <cmath>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+
+#include <algorithm>
+#include <string>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
 #include "cpl_minixml.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "gdal.h"
 #include "gdal_mdreader.h"
-
-#if (defined(__x86_64) || defined(_M_X64))
-#define USE_SSE2_OPTIM
-#include "gdalsse_priv.h"
+#include "gdal_priv.h"
+#if defined(__x86_64) || defined(_M_X64)
+#  define USE_SSE2_OPTIM
+#  include "gdalsse_priv.h"
 #endif
+#include "ogr_api.h"
+#include "ogr_geometry.h"
+#include "ogr_spatialref.h"
+#include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gdal_rpc.cpp 34067 2016-04-23 17:56:51Z rouault $");
+// #define DEBUG_VERBOSE_EXTRACT_DEM
+
+CPL_CVSID("$Id: gdal_rpc.cpp 32d7ee9c6858066d6bf7986860d2ed2742c7220c 2019-02-16 10:50:28 +0100 Even Rouault $")
 
 CPL_C_START
 CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg );
 void *GDALDeserializeRPCTransformer( CPLXMLNode *psTree );
 CPL_C_END
 
-static const int MAX_ABS_VALUE_WARNINGS = 20;
+constexpr int MAX_ABS_VALUE_WARNINGS = 20;
+constexpr double DEFAULT_PIX_ERR_THRESHOLD = 0.1;
 
 /************************************************************************/
 /*                            RPCInfoToMD()                             */
 /*                                                                      */
-/*      Turn an RPCInfo structure back into it's metadata format.       */
+/*      Turn an RPCInfo structure back into its metadata format.        */
 /************************************************************************/
 
 char ** RPCInfoToMD( GDALRPCInfo *psRPCInfo )
 
 {
-    char **papszMD = NULL;
+    char **papszMD = nullptr;
     CPLString osField, osMultiField;
-    int i;
 
     osField.Printf( "%.15g", psRPCInfo->dfLINE_OFF );
     papszMD = CSLSetNameValue( papszMD, RPC_LINE_OFF, osField );
@@ -92,18 +110,18 @@ char ** RPCInfoToMD( GDALRPCInfo *psRPCInfo )
     papszMD = CSLSetNameValue( papszMD, RPC_HEIGHT_SCALE, osField );
 
     osField.Printf( "%.15g", psRPCInfo->dfMIN_LONG );
-    papszMD = CSLSetNameValue( papszMD, "MIN_LONG", osField );
+    papszMD = CSLSetNameValue( papszMD, RPC_MIN_LONG, osField );
 
     osField.Printf( "%.15g", psRPCInfo->dfMIN_LAT );
-    papszMD = CSLSetNameValue( papszMD, "MIN_LAT", osField );
+    papszMD = CSLSetNameValue( papszMD, RPC_MIN_LAT, osField );
 
     osField.Printf( "%.15g", psRPCInfo->dfMAX_LONG );
-    papszMD = CSLSetNameValue( papszMD, "MAX_LONG", osField );
+    papszMD = CSLSetNameValue( papszMD, RPC_MAX_LONG, osField );
 
     osField.Printf( "%.15g", psRPCInfo->dfMAX_LAT );
-    papszMD = CSLSetNameValue( papszMD, "MAX_LAT", osField );
+    papszMD = CSLSetNameValue( papszMD, RPC_MAX_LAT, osField );
 
-    for( i = 0; i < 20; i++ )
+    for( int i = 0; i < 20; i++ )
     {
         osField.Printf( "%.15g", psRPCInfo->adfLINE_NUM_COEFF[i] );
         if( i > 0 )
@@ -114,7 +132,7 @@ char ** RPCInfoToMD( GDALRPCInfo *psRPCInfo )
     }
     papszMD = CSLSetNameValue( papszMD, "LINE_NUM_COEFF", osMultiField );
 
-    for( i = 0; i < 20; i++ )
+    for( int i = 0; i < 20; i++ )
     {
         osField.Printf( "%.15g", psRPCInfo->adfLINE_DEN_COEFF[i] );
         if( i > 0 )
@@ -125,7 +143,7 @@ char ** RPCInfoToMD( GDALRPCInfo *psRPCInfo )
     }
     papszMD = CSLSetNameValue( papszMD, "LINE_DEN_COEFF", osMultiField );
 
-    for( i = 0; i < 20; i++ )
+    for( int i = 0; i < 20; i++ )
     {
         osField.Printf( "%.15g", psRPCInfo->adfSAMP_NUM_COEFF[i] );
         if( i > 0 )
@@ -136,7 +154,7 @@ char ** RPCInfoToMD( GDALRPCInfo *psRPCInfo )
     }
     papszMD = CSLSetNameValue( papszMD, "SAMP_NUM_COEFF", osMultiField );
 
-    for( i = 0; i < 20; i++ )
+    for( int i = 0; i < 20; i++ )
     {
         osField.Printf( "%.15g", psRPCInfo->adfSAMP_DEN_COEFF[i] );
         if( i > 0 )
@@ -183,7 +201,7 @@ static void RPCComputeTerms( double dfLong, double dfLat, double dfHeight,
 
 /************************************************************************/
 /* ==================================================================== */
-/*			     GDALRPCTransformer                         */
+/*                           GDALRPCTransformer                         */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -219,8 +237,17 @@ typedef struct {
     double      dfDEMMissingValue;
     int         bApplyDEMVDatumShift;
 
-    int         bHasTriedOpeningDS;
     GDALDataset *poDS;
+    double     *padfDEMBuffer;
+    int         nDEMExtractions;
+    int         nBufferMaxRadius;
+    int         nHitsInBuffer;
+    int         nBufferX;
+    int         nBufferY;
+    int         nBufferWidth;
+    int         nBufferHeight;
+    int         nLastQueriedX;
+    int         nLastQueriedY;
 
     OGRCoordinateTransformation *poCT;
 
@@ -231,12 +258,20 @@ typedef struct {
 
 #ifdef USE_SSE2_OPTIM
     double      adfDoubles[20 * 4 + 1];
-    double     *padfCoeffs; // LINE_NUM_COEFF, LINE_DEN_COEFF, SAMP_NUM_COEFF and then SAMP_DEN_COEFF
+     // LINE_NUM_COEFF, LINE_DEN_COEFF, SAMP_NUM_COEFF and then SAMP_DEN_COEFF.
+    double     *padfCoeffs;
 #endif
 
     bool        bRPCInverseVerbose;
     char       *pszRPCInverseLog;
+
+    char       *pszRPCFootprint;
+    OGRGeometry *poRPCFootprintGeom;
+    OGRPreparedGeometry *poRPCFootprintPreparedGeom;
+
 } GDALRPCTransformInfo;
+
+static bool GDALRPCOpenDEM( GDALRPCTransformInfo* psTransform );
 
 /************************************************************************/
 /*                            RPCEvaluate()                             */
@@ -249,32 +284,40 @@ static void RPCEvaluate4( const double *padfTerms,
                           double& dfSum3, double& dfSum4 )
 
 {
-    int i;
-    XMMReg2Double terms, coefs1, coefs2, coefs3, coefs4,
-                  sum1 = XMMReg2Double::Zero(),
-                  sum2 = XMMReg2Double::Zero(),
-                  sum3 = XMMReg2Double::Zero(),
-                  sum4 = XMMReg2Double::Zero();
-    for( i = 0; i < 20; i+=2 )
+    XMMReg2Double sum1 = XMMReg2Double::Zero();
+    XMMReg2Double sum2 = XMMReg2Double::Zero();
+    XMMReg2Double sum3 = XMMReg2Double::Zero();
+    XMMReg2Double sum4 = XMMReg2Double::Zero();
+    for( int i = 0; i < 20; i += 2 )
     {
-        terms = XMMReg2Double::Load2ValAligned(padfTerms + i);
-        coefs1 = XMMReg2Double::Load2ValAligned(padfCoefs + i);       // LINE_NUM_COEFF
-        coefs2 = XMMReg2Double::Load2ValAligned(padfCoefs + i + 20);  // LINE_DEN_COEFF
-        coefs3 = XMMReg2Double::Load2ValAligned(padfCoefs + i + 40);  // SAMP_NUM_COEFF
-        coefs4 = XMMReg2Double::Load2ValAligned(padfCoefs + i + 60);  // SAMP_DEN_COEFF
+        const XMMReg2Double terms =
+            XMMReg2Double::Load2ValAligned(padfTerms + i);
+
+        // LINE_NUM_COEFF.
+        const XMMReg2Double coefs1 =
+            XMMReg2Double::Load2ValAligned(padfCoefs + i);
+
+        // LINE_DEN_COEFF.
+        const XMMReg2Double coefs2 =
+            XMMReg2Double::Load2ValAligned(padfCoefs + i + 20);
+
+        // SAMP_NUM_COEFF.
+        const XMMReg2Double coefs3 =
+            XMMReg2Double::Load2ValAligned(padfCoefs + i + 40);
+
+        // SAMP_DEN_COEFF.
+        const XMMReg2Double coefs4 =
+            XMMReg2Double::Load2ValAligned(padfCoefs + i + 60);
+
         sum1 += terms * coefs1;
         sum2 += terms * coefs2;
         sum3 += terms * coefs3;
         sum4 += terms * coefs4;
     }
-    sum1.AddLowAndHigh();
-    sum2.AddLowAndHigh();
-    sum3.AddLowAndHigh();
-    sum4.AddLowAndHigh();
-    dfSum1 = (double)sum1;
-    dfSum2 = (double)sum2;
-    dfSum3 = (double)sum3;
-    dfSum4 = (double)sum4;
+    dfSum1 = sum1.GetHorizSum();
+    dfSum2 = sum2.GetHorizSum();
+    dfSum3 = sum3.GetHorizSum();
+    dfSum4 = sum4.GetHorizSum();
 }
 
 #else
@@ -282,10 +325,10 @@ static void RPCEvaluate4( const double *padfTerms,
 static double RPCEvaluate( const double *padfTerms, const double *padfCoefs )
 
 {
-    double dfSum1 = 0.0, dfSum2 = 0.0;
-    int i;
+    double dfSum1 = 0.0;
+    double dfSum2 = 0.0;
 
-    for( i = 0; i < 20; i+=2 )
+    for( int i = 0; i < 20; i += 2 )
     {
         dfSum1 += padfTerms[i] * padfCoefs[i];
         dfSum2 += padfTerms[i+1] * padfCoefs[i+1];
@@ -305,12 +348,12 @@ static void RPCTransformPoint( const GDALRPCTransformInfo *psRPCTransformInfo,
                                double *pdfPixel, double *pdfLine )
 
 {
-    double dfResultX, dfResultY;
-    double adfTermsWithMargin[20+1];
-    // Make sure padfTerms is aligned on a 16-byte boundary for SSE2 aligned loads
-    double* padfTerms = adfTermsWithMargin + (((size_t)adfTermsWithMargin) % 16) / 8;
+    double adfTermsWithMargin[20+1] = {};
+    // Make padfTerms aligned on 16-byte boundary for SSE2 aligned loads.
+    double* padfTerms =
+        adfTermsWithMargin + (reinterpret_cast<GUIntptr_t>(adfTermsWithMargin) % 16) / 8;
 
-    // Avoid dateline issues
+    // Avoid dateline issues.
     double diffLong = dfLong - psRPCTransformInfo->sRPC.dfLONG_OFF;
     if( diffLong < -270 )
     {
@@ -324,13 +367,15 @@ static void RPCTransformPoint( const GDALRPCTransformInfo *psRPCTransformInfo,
     const double dfNormalizedLong =
       diffLong / psRPCTransformInfo->sRPC.dfLONG_SCALE;
     const double dfNormalizedLat =
-      (dfLat    - psRPCTransformInfo->sRPC.dfLAT_OFF) / psRPCTransformInfo->sRPC.dfLAT_SCALE;
+        (dfLat - psRPCTransformInfo->sRPC.dfLAT_OFF) /
+        psRPCTransformInfo->sRPC.dfLAT_SCALE;
     const double dfNormalizedHeight =
-      (dfHeight - psRPCTransformInfo->sRPC.dfHEIGHT_OFF) / psRPCTransformInfo->sRPC.dfHEIGHT_SCALE;
+        (dfHeight - psRPCTransformInfo->sRPC.dfHEIGHT_OFF) /
+        psRPCTransformInfo->sRPC.dfHEIGHT_SCALE;
 
     // The absolute values of the 3 above normalized values are supposed to be
     // below 1. Warn (as debug message) if it is not the case. We allow for some
-    // margin above 1 (1.5, somewhat arbitrary chosen) before warning
+    // margin above 1 (1.5, somewhat arbitrary chosen) before warning.
     static int nCountWarningsAboutAboveOneNormalizedValues = 0;
     if( nCountWarningsAboutAboveOneNormalizedValues < MAX_ABS_VALUE_WARNINGS )
     {
@@ -338,56 +383,71 @@ static void RPCTransformPoint( const GDALRPCTransformInfo *psRPCTransformInfo,
         if( fabs(dfNormalizedLong) > 1.5 )
         {
             bWarned = true;
-            CPLDebug("RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
-                    "ie with an absolute value of > 1, which may cause numeric stability problems",
-                    "longitude", dfLong, dfLat, dfHeight, dfNormalizedLong);
+            CPLDebug(
+                "RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
+                "i.e. with an absolute value of > 1, which may cause numeric "
+                "stability problems",
+                "longitude", dfLong, dfLat, dfHeight, dfNormalizedLong );
         }
         if( fabs(dfNormalizedLat) > 1.5 )
         {
             bWarned = true;
-            CPLDebug("RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
-                    "ie with an absolute value of > 1, which may cause numeric stability problems",
-                    "latitude", dfLong, dfLat, dfHeight, dfNormalizedLat);
+            CPLDebug(
+                "RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
+                "ie with an absolute value of > 1, which may cause numeric "
+                "stability problems",
+                "latitude", dfLong, dfLat, dfHeight, dfNormalizedLat );
         }
         if( fabs(dfNormalizedHeight) > 1.5 )
         {
             bWarned = true;
-            CPLDebug("RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
-                    "ie with an absolute value of > 1, which may cause numeric stability problems",
-                    "height", dfLong, dfLat, dfHeight, dfNormalizedHeight);
+            CPLDebug(
+                "RPC", "Normalized %s for (lon,lat,height)=(%f,%f,%f) is %f, "
+                "i.e. with an absolute value of > 1, which may cause numeric "
+                "stability problems",
+                "height", dfLong, dfLat, dfHeight, dfNormalizedHeight);
         }
         if( bWarned )
         {
-            // Limit the number of warnings
-            nCountWarningsAboutAboveOneNormalizedValues ++;
-            if( nCountWarningsAboutAboveOneNormalizedValues == MAX_ABS_VALUE_WARNINGS )
+            // Limit the number of warnings.
+            nCountWarningsAboutAboveOneNormalizedValues++;
+            if( nCountWarningsAboutAboveOneNormalizedValues ==
+                MAX_ABS_VALUE_WARNINGS )
             {
                 CPLDebug("RPC", "No more such debug warnings will be emitted");
             }
         }
     }
 
-    RPCComputeTerms( dfNormalizedLong, dfNormalizedLat, dfNormalizedHeight, padfTerms );
+    RPCComputeTerms( dfNormalizedLong, dfNormalizedLat,
+                     dfNormalizedHeight, padfTerms );
 
 #ifdef USE_SSE2_OPTIM
-    double dfSampNum, dfSampDen, dfLineNum, dfLineDen;
+    double dfSampNum = 0.0;
+    double dfSampDen = 0.0;
+    double dfLineNum = 0.0;
+    double dfLineDen = 0.0;
     RPCEvaluate4( padfTerms,
                   psRPCTransformInfo->padfCoeffs,
                   dfLineNum, dfLineDen, dfSampNum, dfSampDen );
-    dfResultX = dfSampNum / dfSampDen;
-    dfResultY = dfLineNum / dfLineDen;
+    const double dfResultX = dfSampNum / dfSampDen;
+    const double dfResultY = dfLineNum / dfLineDen;
 #else
-    dfResultX = RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfSAMP_NUM_COEFF )
+    const double dfResultX =
+        RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfSAMP_NUM_COEFF )
         / RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfSAMP_DEN_COEFF );
 
-    dfResultY = RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfLINE_NUM_COEFF )
+    const double dfResultY =
+        RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfLINE_NUM_COEFF )
         / RPCEvaluate( padfTerms, psRPCTransformInfo->sRPC.adfLINE_DEN_COEFF );
 #endif
 
     // RPCs are using the center of upper left pixel = 0,0 convention
-    // convert to top left corner = 0,0 convention used in GDAL
-    *pdfPixel = dfResultX * psRPCTransformInfo->sRPC.dfSAMP_SCALE + psRPCTransformInfo->sRPC.dfSAMP_OFF + 0.5;
-    *pdfLine = dfResultY * psRPCTransformInfo->sRPC.dfLINE_SCALE + psRPCTransformInfo->sRPC.dfLINE_OFF + 0.5;
+    // convert to top left corner = 0,0 convention used in GDAL.
+    *pdfPixel = dfResultX * psRPCTransformInfo->sRPC.dfSAMP_SCALE
+        + psRPCTransformInfo->sRPC.dfSAMP_OFF + 0.5;
+    *pdfLine = dfResultY * psRPCTransformInfo->sRPC.dfLINE_SCALE
+        + psRPCTransformInfo->sRPC.dfLINE_OFF + 0.5;
 }
 
 /************************************************************************/
@@ -413,11 +473,13 @@ static const char* GDALSerializeRPCDEMResample(DEMResampleAlg eResampleAlg)
 /************************************************************************/
 
 static
-void* GDALCreateSimilarRPCTransformer( void *hTransformArg, double dfRatioX, double dfRatioY )
+void* GDALCreateSimilarRPCTransformer( void *hTransformArg,
+                                       double dfRatioX, double dfRatioY )
 {
-    VALIDATE_POINTER1( hTransformArg, "GDALCreateSimilarRPCTransformer", NULL );
+    VALIDATE_POINTER1( hTransformArg, "GDALCreateSimilarRPCTransformer", nullptr );
 
-    GDALRPCTransformInfo *psInfo = (GDALRPCTransformInfo *) hTransformArg;
+    GDALRPCTransformInfo *psInfo =
+        static_cast<GDALRPCTransformInfo *>(hTransformArg);
 
     GDALRPCInfo sRPC;
     memcpy(&sRPC, &(psInfo->sRPC), sizeof(GDALRPCInfo));
@@ -430,27 +492,32 @@ void* GDALCreateSimilarRPCTransformer( void *hTransformArg, double dfRatioX, dou
         sRPC.dfSAMP_SCALE /= dfRatioX;
     }
 
-    char** papszOptions = NULL;
+    char** papszOptions = nullptr;
     papszOptions = CSLSetNameValue(papszOptions, "RPC_HEIGHT",
                                    CPLSPrintf("%.18g", psInfo->dfHeightOffset));
     papszOptions = CSLSetNameValue(papszOptions, "RPC_HEIGHT_SCALE",
                                    CPLSPrintf("%.18g", psInfo->dfHeightScale));
-    if( psInfo->pszDEMPath != NULL )
+    if( psInfo->pszDEMPath != nullptr )
     {
-        papszOptions = CSLSetNameValue(papszOptions, "RPC_DEM", psInfo->pszDEMPath);
-        papszOptions = CSLSetNameValue(papszOptions, "RPC_DEMINTERPOLATION",
-                                       GDALSerializeRPCDEMResample(psInfo->eResampleAlg));
+        papszOptions =
+            CSLSetNameValue(papszOptions, "RPC_DEM", psInfo->pszDEMPath);
+        papszOptions =
+            CSLSetNameValue(papszOptions, "RPC_DEMINTERPOLATION",
+                            GDALSerializeRPCDEMResample(psInfo->eResampleAlg));
         if( psInfo->bHasDEMMissingValue )
-            papszOptions = CSLSetNameValue(papszOptions, "RPC_DEM_MISSING_VALUE",
-                                           CPLSPrintf("%.18g", psInfo->dfDEMMissingValue)) ;
-        papszOptions = CSLSetNameValue(papszOptions, "RPC_DEM_APPLY_VDATUM_SHIFT",
-                                           (psInfo->bApplyDEMVDatumShift) ? "TRUE" : "FALSE") ;
+            papszOptions =
+                CSLSetNameValue(papszOptions, "RPC_DEM_MISSING_VALUE",
+                                CPLSPrintf("%.18g", psInfo->dfDEMMissingValue));
+        papszOptions =
+            CSLSetNameValue(papszOptions, "RPC_DEM_APPLY_VDATUM_SHIFT",
+                            (psInfo->bApplyDEMVDatumShift) ? "TRUE" : "FALSE") ;
     }
     papszOptions = CSLSetNameValue(papszOptions, "RPC_MAX_ITERATIONS",
                                    CPLSPrintf("%d", psInfo->nMaxIterations));
 
-    GDALRPCTransformInfo* psNewInfo = (GDALRPCTransformInfo*) GDALCreateRPCTransformer( &sRPC,
-           psInfo->bReversed, psInfo->dfPixErrThreshold, papszOptions );
+    GDALRPCTransformInfo* psNewInfo =
+        static_cast<GDALRPCTransformInfo*>(GDALCreateRPCTransformer(
+            &sRPC, psInfo->bReversed, psInfo->dfPixErrThreshold, papszOptions));
     CSLDestroy(papszOptions);
 
     return psNewInfo;
@@ -461,41 +528,45 @@ void* GDALCreateSimilarRPCTransformer( void *hTransformArg, double dfRatioX, dou
 /************************************************************************/
 
 static
-int GDALRPCGetDEMHeight( const GDALRPCTransformInfo *psTransform,
-                         const double dfXIn, const double dfYIn, double* pdfDEMH );
+int GDALRPCGetDEMHeight( GDALRPCTransformInfo *psTransform,
+                         const double dfXIn, const double dfYIn,
+                         double* pdfDEMH );
 
-static bool GDALRPCGetHeightAtLongLat( const GDALRPCTransformInfo *psTransform,
+static bool GDALRPCGetHeightAtLongLat( GDALRPCTransformInfo *psTransform,
                                        const double dfXIn, const double dfYIn,
                                        double* pdfHeight,
-                                       double* pdfDEMPixel = NULL, double* pdfDEMLine = NULL)
+                                       double* pdfDEMPixel = nullptr,
+                                       double* pdfDEMLine = nullptr )
 {
     double dfVDatumShift = 0.0;
-    double dfDEMH = 0;
-    if(psTransform->poDS)
+    double dfDEMH = 0.0;
+    if( psTransform->poDS )
     {
-        double dfX, dfY;
+        double dfX = 0.0;
+        double dfY = 0.0;
         double dfXTemp = dfXIn;
         double dfYTemp = dfYIn;
-        //check if dem is not in WGS84 and transform points padfX[i], padfY[i]
-        if(psTransform->poCT)
+        // Check if dem is not in WGS84 and transform points padfX[i], padfY[i].
+        if( psTransform->poCT )
         {
-            double dfZ = 0;
-            if (!psTransform->poCT->Transform(1, &dfXTemp, &dfYTemp, &dfZ))
+            double dfZ = 0.0;
+            if( !psTransform->poCT->Transform(1, &dfXTemp, &dfYTemp, &dfZ) )
             {
                 return false;
             }
 
             // We must take the opposite since poCT transforms from
             // WGS84 to geoid. And we are going to do the reverse:
-            // take an elevation over the geoid and transforms it to WGS84
+            // take an elevation over the geoid and transforms it to WGS84.
             if( psTransform->bApplyDEMVDatumShift )
                 dfVDatumShift = -dfZ;
         }
 
         bool bRetried = false;
 retry:
-        GDALApplyGeoTransform( (double*)(psTransform->adfDEMReverseGeoTransform),
-                                dfXTemp, dfYTemp, &dfX, &dfY );
+        GDALApplyGeoTransform(
+            psTransform->adfDEMReverseGeoTransform,
+            dfXTemp, dfYTemp, &dfX, &dfY );
         if( pdfDEMPixel )
             *pdfDEMPixel = dfX;
         if( pdfDEMLine )
@@ -503,15 +574,20 @@ retry:
 
         if( !GDALRPCGetDEMHeight( psTransform, dfX, dfY, &dfDEMH) )
         {
-            // Try to handle the case where the DEM is in LL WGS84 and spans over [-180,180],
-            // (or very close to it ), presumably with much hole in the middle if using VRT,
-            // and the longitude goes beyond that interval
-            if( !bRetried && psTransform->poCT == NULL && (dfXIn >= 180 || dfXIn <= -180) )
+            // Try to handle the case where the DEM is in LL WGS84 and spans
+            // over [-180,180], (or very close to it ), presumably with much
+            // hole in the middle if using VRT, and the longitude goes beyond
+            // that interval.
+            if( !bRetried && psTransform->poCT == nullptr &&
+                (dfXIn >= 180.0 || dfXIn <= -180.0) )
             {
-                int nRasterXSize = psTransform->poDS->GetRasterXSize();
-                double dfMinDEMLong = psTransform->adfDEMGeoTransform[0];
-                double dfMaxDEMLong = psTransform->adfDEMGeoTransform[0] + nRasterXSize * psTransform->adfDEMGeoTransform[1];
-                if( fabs( dfMinDEMLong - -180 ) < 0.1 && fabs( dfMaxDEMLong - 180 ) < 0.1 )
+                const int nRasterXSize = psTransform->poDS->GetRasterXSize();
+                const double dfMinDEMLong = psTransform->adfDEMGeoTransform[0];
+                const double dfMaxDEMLong =
+                    psTransform->adfDEMGeoTransform[0]
+                    + nRasterXSize * psTransform->adfDEMGeoTransform[1];
+                if( fabs( dfMinDEMLong - -180 ) < 0.1 &&
+                    fabs( dfMaxDEMLong - 180 ) < 0.1 )
                 {
                     if( dfXIn >= 180 )
                     {
@@ -535,9 +611,13 @@ retry:
                 return false;
             }
         }
+#ifdef DEBUG_VERBOSE_EXTRACT_DEM
+        CPLDebug("RPC_DEM", "X=%f, Y=%f -> Z=%f", dfX, dfY, dfDEMH);
+#endif
     }
 
-    *pdfHeight = dfVDatumShift + (psTransform->dfHeightOffset + dfDEMH * psTransform->dfHeightScale);
+    *pdfHeight = dfVDatumShift + (psTransform->dfHeightOffset +
+                                  dfDEMH * psTransform->dfHeightScale);
     return true;
 }
 
@@ -577,8 +657,10 @@ retry:
  * and the GeoTIFF RPC document http://geotiff.maptools.org/rpc_prop.html .
  *
  * <ul>
- * <li>ERR_BIAS: Error - Bias. The RMS bias error in meters per horizontal axis of all points in the image (-1.0 if unknown)
- * <li>ERR_RAND: Error - Random. RMS random error in meters per horizontal axis of each point in the image (-1.0 if unknown)
+ * <li>ERR_BIAS: Error - Bias. The RMS bias error in meters per horizontal axis
+ * of all points in the image (-1.0 if unknown)
+ * <li>ERR_RAND: Error - Random. RMS random error in meters per horizontal axis
+ * of each point in the image (-1.0 if unknown)
  * <li>LINE_OFF: Line Offset
  * <li>SAMP_OFF: Sample Offset
  * <li>LAT_OFF: Geodetic Latitude Offset
@@ -589,10 +671,16 @@ retry:
  * <li>LAT_SCALE: Geodetic Latitude Scale
  * <li>LONG_SCALE: Geodetic Longitude Scale
  * <li>HEIGHT_SCALE: Geodetic Height Scale
- * <li>LINE_NUM_COEFF (1-20): Line Numerator Coefficients. Twenty coefficients for the polynomial in the Numerator of the rn equation. (space separated)
- * <li>LINE_DEN_COEFF (1-20): Line Denominator Coefficients. Twenty coefficients for the polynomial in the Denominator of the rn equation. (space separated)
- * <li>SAMP_NUM_COEFF (1-20): Sample Numerator Coefficients. Twenty coefficients for the polynomial in the Numerator of the cn equation. (space separated)
- * <li>SAMP_DEN_COEFF (1-20): Sample Denominator Coefficients. Twenty coefficients for the polynomial in the Denominator of the cn equation. (space separated)
+
+ * <li>LINE_NUM_COEFF (1-20): Line Numerator Coefficients. Twenty coefficients
+ * for the polynomial in the Numerator of the rn equation. (space separated)
+ * <li>LINE_DEN_COEFF (1-20): Line Denominator Coefficients. Twenty coefficients
+ * for the polynomial in the Denominator of the rn equation. (space separated)
+ * <li>SAMP_NUM_COEFF (1-20): Sample Numerator Coefficients. Twenty coefficients
+ * for the polynomial in the Numerator of the cn equation. (space separated)
+ * <li>SAMP_DEN_COEFF (1-20): Sample Denominator Coefficients. Twenty
+ * coefficients for the polynomial in the Denominator of the cn equation. (space
+ * separated)
  * </ul>
  *
  * The transformer normally maps from pixel/line/height to long/lat/height space
@@ -607,13 +695,13 @@ retry:
  * will not avoid all error, but will cause the operation to run for the maximum
  * number of iterations.
  *
- * Starting with GDAL 2.1, debugging of the RPC inverse transformer can be done by setting the
- * RPC_INVERSE_VERBOSE configuration option to YES (in which case extra debug
- * information will be displayed in the "RPC" debug category, so requiring CPL_DEBUG
- * to be also set) and/or by setting RPC_INVERSE_LOG to a filename that will
- * contain the content of iterations (this last option only makes sense when
- * debugging point by point, since each time RPCInverseTransformPoint() is called,
- * the file is rewritten)
+ * Starting with GDAL 2.1, debugging of the RPC inverse transformer can be done
+ * by setting the RPC_INVERSE_VERBOSE configuration option to YES (in which case
+ * extra debug information will be displayed in the "RPC" debug category, so
+ * requiring CPL_DEBUG to be also set) and/or by setting RPC_INVERSE_LOG to a
+ * filename that will contain the content of iterations (this last option only
+ * makes sense when debugging point by point, since each time
+ * RPCInverseTransformPoint() is called, the file is rewritten).
  *
  * Additional options to the transformer can be supplied in papszOptions.
  *
@@ -626,7 +714,8 @@ retry:
  * an average height above sea level for ground in the target scene.
  *
  * <li> RPC_HEIGHT_SCALE: a factor used to multiply heights above ground.
- * Useful when elevation offsets of the DEM are not expressed in meters. (GDAL >= 1.8.0)
+ * Useful when elevation offsets of the DEM are not expressed in meters. (GDAL
+ * >= 1.8.0)
  *
  * <li> RPC_DEM: the name of a GDAL dataset (a DEM file typically) used to
  * extract elevation offsets from. In this situation the Z passed into the
@@ -641,11 +730,12 @@ retry:
  * cover the requested coordinate. When not specified, missing values will cause
  * a failed transform. (GDAL >= 1.11.2)
  *
- * <li> RPC_DEM_APPLY_VDATUM_SHIFT: whether the vertical component of a compound SRS
- * for the DEM should be used (when it is present). This is useful so as to be able to transform the
- * "raw" values from the DEM expressed with respect to a geoid to the heights with
- * respect to the WGS84 ellipsoid. When this is enabled, the GTIFF_REPORT_COMPD_CS configuration
- * option will be also set temporarily so as to get the vertical information from GeoTIFF
+ * <li> RPC_DEM_APPLY_VDATUM_SHIFT: whether the vertical component of a compound
+ * SRS for the DEM should be used (when it is present). This is useful so as to
+ * be able to transform the "raw" values from the DEM expressed with respect to
+ * a geoid to the heights with respect to the WGS84 ellipsoid. When this is
+ * enabled, the GTIFF_REPORT_COMPD_CS configuration option will be also set
+ * temporarily so as to get the vertical information from GeoTIFF
  * files. Defaults to TRUE. (GDAL >= 2.1.0)
  *
  * <li> RPC_PIXEL_ERROR_THRESHOLD: overrides the dfPixErrThreshold parameter, ie
@@ -653,9 +743,17 @@ retry:
  * iterative solution of pixel/line to lat/long computations (the other way
  * is always exact given the equations).  (GDAL >= 2.1.0)
  *
- * <li> RPC_MAX_ITERATIONS: maximum number of iterations allowed in the iterative
- * solution of pixel/line to lat/long computations. Default value is 10
- * in the absence of a DEM, or 20 if there is a DEM.  (GDAL >= 2.1.0)
+ * <li> RPC_MAX_ITERATIONS: maximum number of iterations allowed in the
+ * iterative solution of pixel/line to lat/long computations. Default value is
+ * 10 in the absence of a DEM, or 20 if there is a DEM.  (GDAL >= 2.1.0)
+ * 
+ * <li> RPC_FOOTPRINT: WKT or GeoJSON polygon (in long / lat coordinate space)
+ * with a validity footprint for the RPC. Any coordinate transformation that
+ * goes from or arrive outside this footprint will be considered invalid. This
+ * is useful in situations where the RPC values become highly unstable outside
+ * of the area on which they have been computed for, potentially leading to
+ * undesirable "echoes" / false positives. This requires GDAL to be built against
+ * GEOS.
  *
  * </ul>
  *
@@ -668,8 +766,9 @@ retry:
  * iterative solution of pixel/line to lat/long computations (the other way
  * is always exact given the equations). Starting with GDAL 2.1, this may also
  * be set through the RPC_PIXEL_ERROR_THRESHOLD transformer option.
+ * If a negative or null value is provided, then this defaults to 0.1 pixel.
  *
- * @param papszOptions Other transformer options (i.e. RPC_HEIGHT=<z>).
+ * @param papszOptions Other transformer options (i.e. RPC_HEIGHT=z).
  *
  * @return transformer callback data (deallocate with GDALDestroyTransformer()).
  */
@@ -679,27 +778,28 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
                                 char **papszOptions )
 
 {
-    GDALRPCTransformInfo *psTransform;
-
 /* -------------------------------------------------------------------- */
 /*      Initialize core info.                                           */
 /* -------------------------------------------------------------------- */
-    psTransform = (GDALRPCTransformInfo *)
-        CPLCalloc(sizeof(GDALRPCTransformInfo),1);
+    GDALRPCTransformInfo *psTransform = static_cast<GDALRPCTransformInfo *>(
+        CPLCalloc(sizeof(GDALRPCTransformInfo), 1));
 
     memcpy( &(psTransform->sRPC), psRPCInfo, sizeof(GDALRPCInfo) );
     psTransform->bReversed = bReversed;
-    const char* pszPixErrThreshold = CSLFetchNameValue( papszOptions, "RPC_PIXEL_ERROR_THRESHOLD" );
-    if( pszPixErrThreshold != NULL )
+    const char* pszPixErrThreshold =
+        CSLFetchNameValue( papszOptions, "RPC_PIXEL_ERROR_THRESHOLD" );
+    if( pszPixErrThreshold != nullptr )
         psTransform->dfPixErrThreshold = CPLAtof(pszPixErrThreshold);
     else if( dfPixErrThreshold > 0 )
         psTransform->dfPixErrThreshold = dfPixErrThreshold;
     else
-        psTransform->dfPixErrThreshold = 0.1;
+        psTransform->dfPixErrThreshold = DEFAULT_PIX_ERR_THRESHOLD;
     psTransform->dfHeightOffset = 0.0;
     psTransform->dfHeightScale = 1.0;
 
-    memcpy( psTransform->sTI.abySignature, GDAL_GTI2_SIGNATURE, strlen(GDAL_GTI2_SIGNATURE) );
+    memcpy( psTransform->sTI.abySignature,
+            GDAL_GTI2_SIGNATURE,
+            strlen(GDAL_GTI2_SIGNATURE) );
     psTransform->sTI.pszClassName = "GDALRPCTransformer";
     psTransform->sTI.pfnTransform = GDALRPCTransform;
     psTransform->sTI.pfnCleanup = GDALDestroyRPCTransformer;
@@ -707,12 +807,23 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
     psTransform->sTI.pfnCreateSimilar = GDALCreateSimilarRPCTransformer;
 
 #ifdef USE_SSE2_OPTIM
-    // Make sure padfCoeffs is aligned on a 16-byte boundary for SSE2 aligned loads
-    psTransform->padfCoeffs = psTransform->adfDoubles + (((size_t)psTransform->adfDoubles) % 16) / 8;
-    memcpy(psTransform->padfCoeffs, psRPCInfo->adfLINE_NUM_COEFF, 20 * sizeof(double));
-    memcpy(psTransform->padfCoeffs+20, psRPCInfo->adfLINE_DEN_COEFF, 20 * sizeof(double));
-    memcpy(psTransform->padfCoeffs+40, psRPCInfo->adfSAMP_NUM_COEFF, 20 * sizeof(double));
-    memcpy(psTransform->padfCoeffs+60, psRPCInfo->adfSAMP_DEN_COEFF, 20 * sizeof(double));
+    // Make sure padfCoeffs is aligned on a 16-byte boundary for SSE2 aligned
+    // loads.
+    psTransform->padfCoeffs =
+        psTransform->adfDoubles +
+        (reinterpret_cast<GUIntptr_t>(psTransform->adfDoubles) % 16) / 8;
+    memcpy(psTransform->padfCoeffs,
+           psRPCInfo->adfLINE_NUM_COEFF,
+           20 * sizeof(double));
+    memcpy(psTransform->padfCoeffs+20,
+           psRPCInfo->adfLINE_DEN_COEFF,
+           20 * sizeof(double));
+    memcpy(psTransform->padfCoeffs+40,
+           psRPCInfo->adfSAMP_NUM_COEFF,
+           20 * sizeof(double));
+    memcpy(psTransform->padfCoeffs+60,
+           psRPCInfo->adfSAMP_DEN_COEFF,
+           20 * sizeof(double));
 #endif
 
 /* -------------------------------------------------------------------- */
@@ -720,44 +831,56 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 /*      elevations to be relative to?                                   */
 /* -------------------------------------------------------------------- */
     const char *pszHeight = CSLFetchNameValue( papszOptions, "RPC_HEIGHT" );
-    if( pszHeight != NULL )
+    if( pszHeight != nullptr )
         psTransform->dfHeightOffset = CPLAtof(pszHeight);
 
 /* -------------------------------------------------------------------- */
 /*                       The "height scale"                             */
 /* -------------------------------------------------------------------- */
-    const char *pszHeightScale = CSLFetchNameValue( papszOptions, "RPC_HEIGHT_SCALE" );
-    if( pszHeightScale != NULL )
+    const char *pszHeightScale =
+        CSLFetchNameValue(papszOptions, "RPC_HEIGHT_SCALE");
+    if( pszHeightScale != nullptr )
         psTransform->dfHeightScale = CPLAtof(pszHeightScale);
 
 /* -------------------------------------------------------------------- */
 /*                       The DEM file name                              */
 /* -------------------------------------------------------------------- */
     const char *pszDEMPath = CSLFetchNameValue( papszOptions, "RPC_DEM" );
-    if( pszDEMPath != NULL )
+    if( pszDEMPath != nullptr )
+    {
         psTransform->pszDEMPath = CPLStrdup(pszDEMPath);
+    }
 
 /* -------------------------------------------------------------------- */
 /*                      The DEM interpolation                           */
 /* -------------------------------------------------------------------- */
-    const char *pszDEMInterpolation = CSLFetchNameValueDef( papszOptions, "RPC_DEMINTERPOLATION", "bilinear" );
-    if(EQUAL(pszDEMInterpolation, "near" ))
+    const char *pszDEMInterpolation =
+        CSLFetchNameValueDef(papszOptions, "RPC_DEMINTERPOLATION", "bilinear");
+    if( EQUAL(pszDEMInterpolation, "near" ) )
+    {
         psTransform->eResampleAlg = DRA_NearestNeighbour;
-    else if(EQUAL(pszDEMInterpolation, "bilinear" ))
+    }
+    else if( EQUAL(pszDEMInterpolation, "bilinear" ) )
+    {
         psTransform->eResampleAlg = DRA_Bilinear;
-    else if(EQUAL(pszDEMInterpolation, "cubic" ))
+    }
+    else if( EQUAL(pszDEMInterpolation, "cubic") )
+    {
         psTransform->eResampleAlg = DRA_Cubic;
+    }
     else
     {
-        CPLDebug("RPC", "Unknown interpolation %s. Defaulting to bilinear", pszDEMInterpolation);
+        CPLDebug("RPC", "Unknown interpolation %s. Defaulting to bilinear",
+                 pszDEMInterpolation);
         psTransform->eResampleAlg = DRA_Bilinear;
     }
 
 /* -------------------------------------------------------------------- */
 /*                       The DEM missing value                          */
 /* -------------------------------------------------------------------- */
-    const char *pszDEMMissingValue = CSLFetchNameValue( papszOptions, "RPC_DEM_MISSING_VALUE" );
-    if( pszDEMMissingValue != NULL )
+    const char *pszDEMMissingValue =
+        CSLFetchNameValue(papszOptions, "RPC_DEM_MISSING_VALUE");
+    if( pszDEMMissingValue != nullptr )
     {
         psTransform->bHasDEMMissingValue = TRUE;
         psTransform->dfDEMMissingValue = CPLAtof(pszDEMMissingValue);
@@ -766,9 +889,8 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 /* -------------------------------------------------------------------- */
 /*      Whether to apply vdatum shift                                   */
 /* -------------------------------------------------------------------- */
-    psTransform->bApplyDEMVDatumShift = CSLFetchBoolean(
-        papszOptions, "RPC_DEM_APPLY_VDATUM_SHIFT", TRUE );
-
+    psTransform->bApplyDEMVDatumShift =
+        CPLFetchBool( papszOptions, "RPC_DEM_APPLY_VDATUM_SHIFT", true );
 
     psTransform->nMaxIterations = atoi( CSLFetchNameValueDef(
         papszOptions, "RPC_MAX_ITERATIONS", "0" ) );
@@ -776,17 +898,64 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 /* -------------------------------------------------------------------- */
 /*      Debug                                                           */
 /* -------------------------------------------------------------------- */
-    psTransform->bRPCInverseVerbose = CPLTestBool( CPLGetConfigOption("RPC_INVERSE_VERBOSE", "NO") );
-    const char* pszRPCInverseLog = CPLGetConfigOption("RPC_INVERSE_LOG", NULL);
-    if( pszRPCInverseLog != NULL )
+    psTransform->bRPCInverseVerbose =
+        CPLTestBool( CPLGetConfigOption("RPC_INVERSE_VERBOSE", "NO") );
+    const char* pszRPCInverseLog = CPLGetConfigOption("RPC_INVERSE_LOG", nullptr);
+    if( pszRPCInverseLog != nullptr )
         psTransform->pszRPCInverseLog = CPLStrdup(pszRPCInverseLog);
+
+/* -------------------------------------------------------------------- */
+/*      Footprint                                                       */
+/* -------------------------------------------------------------------- */
+    const char* pszFootprint = CSLFetchNameValue(papszOptions, "RPC_FOOTPRINT");
+    if( pszFootprint != nullptr )
+    {
+        psTransform->pszRPCFootprint = CPLStrdup(pszFootprint);
+        if( pszFootprint[0] == '{' )
+        {
+            psTransform->poRPCFootprintGeom =
+                OGRGeometryFactory::createFromGeoJson(pszFootprint);
+        }
+        else
+        {
+            OGRGeometryFactory::createFromWkt(pszFootprint, nullptr,
+                                              &(psTransform->poRPCFootprintGeom));
+        }
+        if( psTransform->poRPCFootprintGeom )
+        {
+            if( OGRHasPreparedGeometrySupport() )
+            {
+                psTransform->poRPCFootprintPreparedGeom =
+                    OGRCreatePreparedGeometry(psTransform->poRPCFootprintGeom);
+            }
+            else
+            {
+                CPLError(CE_Warning, CPLE_AppDefined,
+                         "GEOS not available. RPC_FOOTPRINT will be ignored");
+            }
+        }
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Open DEM if needed.                                             */
+/* -------------------------------------------------------------------- */
+
+    if( psTransform->pszDEMPath != nullptr &&
+        !GDALRPCOpenDEM(psTransform) )
+    {
+        GDALDestroyRPCTransformer( psTransform );
+        return nullptr;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Establish a reference point for calcualating an affine          */
 /*      geotransform approximate transformation.                        */
 /* -------------------------------------------------------------------- */
-    double adfGTFromLL[6], dfRefPixel = -1.0, dfRefLine = -1.0;
-    double dfRefLong = 0.0, dfRefLat = 0.0;
+    double adfGTFromLL[6] = {};
+    double dfRefPixel = -1.0;
+    double dfRefLine = -1.0;
+    double dfRefLong = 0.0;
+    double dfRefLat = 0.0;
 
     if( psRPCInfo->dfMIN_LONG != -180 || psRPCInfo->dfMAX_LONG != 180 )
     {
@@ -795,11 +964,11 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 
         double dfX = dfRefLong;
         double dfY = dfRefLat;
-        double dfZ = 0;
-        int nSuccess;
-        // Try with DEM first
+        double dfZ = 0.0;
+        int nSuccess = 0;
+        // Try with DEM first.
         if( GDALRPCTransform( psTransform, !(psTransform->bReversed), 1,
-                          &dfX, &dfY, &dfZ, &nSuccess) )
+                          &dfX, &dfY, &dfZ, &nSuccess) && nSuccess )
         {
             dfRefPixel = dfX;
             dfRefLine = dfY;
@@ -821,11 +990,11 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 
         double dfX = dfRefLong;
         double dfY = dfRefLat;
-        double dfZ = 0;
-        int nSuccess;
-        // Try with DEM first
+        double dfZ = 0.0;
+        int nSuccess = 0;
+        // Try with DEM first.
         if( GDALRPCTransform( psTransform, !(psTransform->bReversed), 1,
-                               &dfX, &dfY, &dfZ, &nSuccess) )
+                               &dfX, &dfY, &dfZ, &nSuccess) && nSuccess )
         {
             dfRefPixel = dfX;
             dfRefLine = dfY;
@@ -838,20 +1007,25 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
     }
 
     psTransform->dfRefZ = 0.0;
-    GDALRPCGetHeightAtLongLat(psTransform, dfRefLong, dfRefLat, &psTransform->dfRefZ);
+    GDALRPCGetHeightAtLongLat(psTransform, dfRefLong, dfRefLat,
+                              &psTransform->dfRefZ);
 
 /* -------------------------------------------------------------------- */
 /*      Transform nearby locations to establish affine direction        */
 /*      vectors.                                                        */
 /* -------------------------------------------------------------------- */
-    double dfRefPixelDelta, dfRefLineDelta, dfLLDelta = 0.0001;
+    double dfRefPixelDelta = 0.0;
+    double dfRefLineDelta = 0.0;
+    double dfLLDelta = 0.0001;
 
-    RPCTransformPoint( psTransform, dfRefLong+dfLLDelta, dfRefLat, psTransform->dfRefZ,
+    RPCTransformPoint( psTransform, dfRefLong+dfLLDelta, dfRefLat,
+                       psTransform->dfRefZ,
                        &dfRefPixelDelta, &dfRefLineDelta );
     adfGTFromLL[1] = (dfRefPixelDelta - dfRefPixel) / dfLLDelta;
     adfGTFromLL[4] = (dfRefLineDelta - dfRefLine) / dfLLDelta;
 
-    RPCTransformPoint( psTransform, dfRefLong, dfRefLat+dfLLDelta, psTransform->dfRefZ,
+    RPCTransformPoint( psTransform, dfRefLong, dfRefLat+dfLLDelta,
+                       psTransform->dfRefZ,
                        &dfRefPixelDelta, &dfRefLineDelta );
     adfGTFromLL[2] = (dfRefPixelDelta - dfRefPixel) / dfLLDelta;
     adfGTFromLL[5] = (dfRefLineDelta - dfRefLine) / dfLLDelta;
@@ -861,12 +1035,14 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
     adfGTFromLL[3] = dfRefLine
         - adfGTFromLL[4] * dfRefLong - adfGTFromLL[5] * dfRefLat;
 
-    if( !GDALInvGeoTransform( adfGTFromLL, psTransform->adfPLToLatLongGeoTransform) )
+    if( !GDALInvGeoTransform(adfGTFromLL,
+                             psTransform->adfPLToLatLongGeoTransform) )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "Cannot invert geotransform");
         GDALDestroyRPCTransformer(psTransform);
-        return NULL;
+        return nullptr;
     }
+
     return psTransform;
 }
 
@@ -874,21 +1050,29 @@ void *GDALCreateRPCTransformer( GDALRPCInfo *psRPCInfo, int bReversed,
 /*                 GDALDestroyReprojectionTransformer()                 */
 /************************************************************************/
 
+/** Destroy RPC tranformer */
 void GDALDestroyRPCTransformer( void *pTransformAlg )
 
 {
-    if( pTransformAlg == NULL )
+    if( pTransformAlg == nullptr )
         return;
 
-    GDALRPCTransformInfo *psTransform = (GDALRPCTransformInfo *) pTransformAlg;
+    GDALRPCTransformInfo *psTransform =
+        static_cast<GDALRPCTransformInfo *>(pTransformAlg);
 
     CPLFree( psTransform->pszDEMPath );
 
-    if(psTransform->poDS)
+    if( psTransform->poDS )
         GDALClose(psTransform->poDS);
-    if(psTransform->poCT)
-        OCTDestroyCoordinateTransformation((OGRCoordinateTransformationH)psTransform->poCT);
+    CPLFree(psTransform->padfDEMBuffer);
+    if( psTransform->poCT )
+        OCTDestroyCoordinateTransformation(
+            reinterpret_cast<OGRCoordinateTransformationH>(psTransform->poCT));
     CPLFree( psTransform->pszRPCInverseLog );
+
+    CPLFree( psTransform->pszRPCFootprint );
+    delete psTransform->poRPCFootprintGeom;
+    OGRDestroyPreparedGeometry(psTransform->poRPCFootprintPreparedGeom);
 
     CPLFree( pTransformAlg );
 }
@@ -898,80 +1082,92 @@ void GDALDestroyRPCTransformer( void *pTransformAlg )
 /************************************************************************/
 
 static bool
-RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
+RPCInverseTransformPoint( GDALRPCTransformInfo *psTransform,
                           double dfPixel, double dfLine, double dfUserHeight,
                           double *pdfLong, double *pdfLat )
 
 {
     // Memo:
-    // Known to work with 40 iterations with DEM on all points (int coord and +0.5,+0.5 shift)
-    // of flock1.20160216_041050_0905.tif, especially on (0,0)
-
-    double dfResultX, dfResultY;
-    int    iIter;
+    // Known to work with 40 iterations with DEM on all points (int coord and
+    // +0.5,+0.5 shift) of flock1.20160216_041050_0905.tif, especially on (0,0).
 
 /* -------------------------------------------------------------------- */
 /*      Compute an initial approximation based on linear                */
 /*      interpolation from our reference point.                         */
 /* -------------------------------------------------------------------- */
-    dfResultX = psTransform->adfPLToLatLongGeoTransform[0]
-        + psTransform->adfPLToLatLongGeoTransform[1] * dfPixel
-        + psTransform->adfPLToLatLongGeoTransform[2] * dfLine;
+    double dfResultX =
+        psTransform->adfPLToLatLongGeoTransform[0] +
+        psTransform->adfPLToLatLongGeoTransform[1] * dfPixel +
+        psTransform->adfPLToLatLongGeoTransform[2] * dfLine;
 
-    dfResultY = psTransform->adfPLToLatLongGeoTransform[3]
-        + psTransform->adfPLToLatLongGeoTransform[4] * dfPixel
-        + psTransform->adfPLToLatLongGeoTransform[5] * dfLine;
+    double dfResultY =
+        psTransform->adfPLToLatLongGeoTransform[3] +
+        psTransform->adfPLToLatLongGeoTransform[4] * dfPixel +
+        psTransform->adfPLToLatLongGeoTransform[5] * dfLine;
 
     if( psTransform->bRPCInverseVerbose )
     {
         CPLDebug("RPC", "Computing inverse transform for (pixel,line)=(%f,%f)",
                  dfPixel, dfLine);
     }
-    VSILFILE* fpLog = NULL;
+    VSILFILE* fpLog = nullptr;
     if( psTransform->pszRPCInverseLog )
     {
-        fpLog = VSIFOpenL( CPLResetExtension(psTransform->pszRPCInverseLog, "csvt"), "wb" );
-        if( fpLog != NULL )
+        fpLog =
+            VSIFOpenL( CPLResetExtension(psTransform->pszRPCInverseLog, "csvt"),
+                       "wb" );
+        if( fpLog != nullptr )
         {
             VSIFPrintfL( fpLog, "Integer,Real,Real,Real,String,Real,Real\n" );
             VSIFCloseL( fpLog );
         }
         fpLog = VSIFOpenL( psTransform->pszRPCInverseLog, "wb" );
-        if( fpLog != NULL )
-            VSIFPrintfL( fpLog, "iter,long,lat,height,WKT,error_pixel_x,error_pixel_y\n" );
+        if( fpLog != nullptr )
+            VSIFPrintfL(
+                fpLog,
+                "iter,long,lat,height,WKT,error_pixel_x,error_pixel_y\n" );
     }
 
 /* -------------------------------------------------------------------- */
 /*      Now iterate, trying to find a closer LL location that will      */
 /*      back transform to the indicated pixel and line.                 */
 /* -------------------------------------------------------------------- */
-    double dfPixelDeltaX=0.0, dfPixelDeltaY=0.0;
-    double dfLastResultX = 0.0, dfLastResultY = 0.0;
-    double dfLastPixelDeltaX = 0.0, dfLastPixelDeltaY = 0.0;
+    double dfPixelDeltaX = 0.0;
+    double dfPixelDeltaY = 0.0;
+    double dfLastResultX = 0.0;
+    double dfLastResultY = 0.0;
+    double dfLastPixelDeltaX = 0.0;
+    double dfLastPixelDeltaY = 0.0;
     double dfDEMH = 0.0;
     bool bLastPixelDeltaValid = false;
-    const int nMaxIterations = (psTransform->nMaxIterations > 0) ? psTransform->nMaxIterations :
-                               (psTransform->poDS != NULL) ? 20 : 10;
+    const int nMaxIterations =
+        (psTransform->nMaxIterations > 0) ? psTransform->nMaxIterations :
+        (psTransform->poDS != nullptr) ? 20 : 10;
     int nCountConsecutiveErrorBelow2 = 0;
 
-    for( iIter = 0; iIter < nMaxIterations; iIter++ )
+    int iIter = 0;  // Used after for.
+    for( ; iIter < nMaxIterations; iIter++ )
     {
-        double dfBackPixel, dfBackLine;
+        double dfBackPixel = 0.0;
+        double dfBackLine = 0.0;
 
-        // Update DEMH
-        dfDEMH = 0;
-        double dfDEMPixel = 0.0, dfDEMLine = 0.0;
+        // Update DEMH.
+        dfDEMH = 0.0;
+        double dfDEMPixel = 0.0;
+        double dfDEMLine = 0.0;
         if( !GDALRPCGetHeightAtLongLat(psTransform, dfResultX, dfResultY,
-                                        &dfDEMH, &dfDEMPixel, &dfDEMLine) )
+                                       &dfDEMH, &dfDEMPixel, &dfDEMLine) )
         {
             if( psTransform->poDS )
             {
-                CPLDebug("RPC", "DEM (pixel, line) = (%g, %g)", dfDEMPixel, dfDEMLine);
+                CPLDebug(
+                    "RPC", "DEM (pixel, line) = (%g, %g)",
+                    dfDEMPixel, dfDEMLine);
             }
 
             // The first time, the guess might be completely out of the
             // validity of the DEM, so pickup the "reference Z" as the
-            // first guess or the closest point of the DEM by snapping to it
+            // first guess or the closest point of the DEM by snapping to it.
             if( iIter == 0 )
             {
                 bool bUseRefZ = true;
@@ -985,26 +1181,30 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
                         dfDEMLine = psTransform->poDS->GetRasterYSize() - 0.5;
                     else if( dfDEMPixel < 0 )
                         dfDEMPixel = 0.5;
-                    if( GDALRPCGetDEMHeight( psTransform, dfDEMPixel, dfDEMLine, &dfDEMH) )
+                    if( GDALRPCGetDEMHeight( psTransform, dfDEMPixel,
+                                             dfDEMLine, &dfDEMH) )
                     {
                         bUseRefZ = false;
-                        CPLDebug("RPC", "Iteration %d for (pixel, line) = (%g, %g): "
-                                "No elevation value at %.15g %.15g. "
-                                "Using elevation %g at DEM (pixel, line) = (%g, %g) (snapping to boundaries) instead",
-                                iIter, dfPixel, dfLine,
-                                dfResultX, dfResultY,
-                                dfDEMH, dfDEMPixel, dfDEMLine );
+                        CPLDebug(
+                            "RPC", "Iteration %d for (pixel, line) = (%g, %g): "
+                            "No elevation value at %.15g %.15g. "
+                            "Using elevation %g at DEM (pixel, line) = "
+                            "(%g, %g) (snapping to boundaries) instead",
+                            iIter, dfPixel, dfLine,
+                            dfResultX, dfResultY,
+                            dfDEMH, dfDEMPixel, dfDEMLine );
                     }
                 }
                 if( bUseRefZ )
                 {
                     dfDEMH = psTransform->dfRefZ;
-                    CPLDebug("RPC", "Iteration %d for (pixel, line) = (%g, %g): "
-                            "No elevation value at %.15g %.15g. "
-                            "Using elevation %g of reference point instead",
-                            iIter, dfPixel, dfLine,
-                            dfResultX, dfResultY,
-                            dfDEMH);
+                    CPLDebug(
+                        "RPC", "Iteration %d for (pixel, line) = (%g, %g): "
+                        "No elevation value at %.15g %.15g. "
+                        "Using elevation %g of reference point instead",
+                        iIter, dfPixel, dfLine,
+                        dfResultX, dfResultY,
+                        dfDEMH);
                 }
             }
             else
@@ -1027,18 +1227,22 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
 
         if( psTransform->bRPCInverseVerbose )
         {
-            CPLDebug( "RPC", "Iter %d: dfPixelDeltaX=%.02f, dfPixelDeltaY=%.02f, long=%f, lat=%f, height=%f",
-                      iIter, dfPixelDeltaX, dfPixelDeltaY,
-                      dfResultX, dfResultY, dfUserHeight + dfDEMH);
+            CPLDebug(
+                "RPC", "Iter %d: dfPixelDeltaX=%.02f, dfPixelDeltaY=%.02f, "
+                "long=%f, lat=%f, height=%f",
+                iIter, dfPixelDeltaX, dfPixelDeltaY,
+                dfResultX, dfResultY, dfUserHeight + dfDEMH);
         }
-        if( fpLog != NULL )
+        if( fpLog != nullptr )
         {
-            VSIFPrintfL( fpLog, "%d,%.12f,%.12f,%f,\"POINT(%.12f %.12f)\",%f,%f\n",
-                         iIter, dfResultX, dfResultY, dfUserHeight + dfDEMH,
-                         dfResultX, dfResultY, dfPixelDeltaX, dfPixelDeltaY);
+            VSIFPrintfL(
+                fpLog, "%d,%.12f,%.12f,%f,\"POINT(%.12f %.12f)\",%f,%f\n",
+                iIter, dfResultX, dfResultY, dfUserHeight + dfDEMH,
+                dfResultX, dfResultY, dfPixelDeltaX, dfPixelDeltaY);
         }
 
-        double dfError = MAX(ABS(dfPixelDeltaX), ABS(dfPixelDeltaY));
+        const double dfError =
+            std::max(std::abs(dfPixelDeltaX), std::abs(dfPixelDeltaY));
         if( dfError < psTransform->dfPixErrThreshold )
         {
             iIter = -1;
@@ -1048,32 +1252,40 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
             }
             break;
         }
-        else if( psTransform->poDS != NULL &&
-                 bLastPixelDeltaValid && dfPixelDeltaX * dfLastPixelDeltaX < 0 &&
+        else if( psTransform->poDS != nullptr &&
+                 bLastPixelDeltaValid &&
+                 dfPixelDeltaX * dfLastPixelDeltaX < 0 &&
                  dfPixelDeltaY * dfLastPixelDeltaY < 0 )
         {
-            // When there is a DEM, if the error changes sign, we might oscillate
-            // forever, so take a mean position as a new guess
+            // When there is a DEM, if the error changes sign, we might
+            // oscillate forever, so take a mean position as a new guess.
             if( psTransform->bRPCInverseVerbose )
             {
-                CPLDebug( "RPC", "Oscillation detected. Taking mean of 2 previous results as new guess" );
+                CPLDebug(
+                    "RPC", "Oscillation detected. "
+                    "Taking mean of 2 previous results as new guess" );
             }
-            dfResultX = ( fabs(dfPixelDeltaX) * dfLastResultX + fabs(dfLastPixelDeltaX) * dfResultX ) /
-                          (fabs(dfPixelDeltaX) + fabs(dfLastPixelDeltaX));
-            dfResultY = ( fabs(dfPixelDeltaY) * dfLastResultY + fabs(dfLastPixelDeltaY) * dfResultY ) /
-                          (fabs(dfPixelDeltaY) + fabs(dfLastPixelDeltaY));
+            dfResultX =
+                ( fabs(dfPixelDeltaX) * dfLastResultX +
+                  fabs(dfLastPixelDeltaX) * dfResultX ) /
+                (fabs(dfPixelDeltaX) + fabs(dfLastPixelDeltaX));
+            dfResultY =
+                ( fabs(dfPixelDeltaY) * dfLastResultY +
+                  fabs(dfLastPixelDeltaY) * dfResultY ) /
+                (fabs(dfPixelDeltaY) + fabs(dfLastPixelDeltaY));
             bLastPixelDeltaValid = false;
             nCountConsecutiveErrorBelow2 = 0;
             continue;
         }
 
         double dfBoostFactor = 1.0;
-        if( psTransform->poDS != NULL && nCountConsecutiveErrorBelow2 >= 5 && dfError < 2 )
+        if( psTransform->poDS != nullptr &&
+            nCountConsecutiveErrorBelow2 >= 5 && dfError < 2 )
         {
           // When there is a DEM, if we remain below a given threshold (somewhat
           // arbitrarily set to 2 pixels) for some time, apply a "boost factor"
           // for the new guessed result, in the hope we will go out of the
-          // somewhat current stuck situation
+          // somewhat current stuck situation.
           dfBoostFactor = 10;
           if( psTransform->bRPCInverseVerbose )
           {
@@ -1081,17 +1293,21 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
           }
         }
 
-        if ( dfError < 2 )
-            nCountConsecutiveErrorBelow2 ++;
+        if( dfError < 2 )
+            nCountConsecutiveErrorBelow2++;
         else
             nCountConsecutiveErrorBelow2 = 0;
 
-        double dfNewResultX = dfResultX
-            - dfPixelDeltaX * psTransform->adfPLToLatLongGeoTransform[1] * dfBoostFactor
-            - dfPixelDeltaY * psTransform->adfPLToLatLongGeoTransform[2] * dfBoostFactor;
-        double dfNewResultY = dfResultY
-            - dfPixelDeltaX * psTransform->adfPLToLatLongGeoTransform[4] * dfBoostFactor
-            - dfPixelDeltaY * psTransform->adfPLToLatLongGeoTransform[5] * dfBoostFactor;
+        const double dfNewResultX = dfResultX
+            - ( dfPixelDeltaX * psTransform->adfPLToLatLongGeoTransform[1] *
+                dfBoostFactor )
+            - ( dfPixelDeltaY * psTransform->adfPLToLatLongGeoTransform[2] *
+                dfBoostFactor );
+        const double dfNewResultY = dfResultY
+            - ( dfPixelDeltaX * psTransform->adfPLToLatLongGeoTransform[4] *
+                dfBoostFactor )
+            - ( dfPixelDeltaY * psTransform->adfPLToLatLongGeoTransform[5] *
+                dfBoostFactor );
 
         dfLastResultX = dfResultX;
         dfLastResultY = dfResultY;
@@ -1101,7 +1317,7 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
         dfLastPixelDeltaY = dfPixelDeltaY;
         bLastPixelDeltaValid = true;
     }
-    if( fpLog != NULL )
+    if( fpLog != nullptr )
         VSIFCloseL( fpLog );
 
     if( iIter != -1 )
@@ -1118,24 +1334,142 @@ RPCInverseTransformPoint( const GDALRPCTransformInfo *psTransform,
     return true;
 }
 
-
 static
-double BiCubicKernel(double dfVal)
+double BiCubicKernel( double dfVal )
 {
-	if ( dfVal > 2.0 )
-		return 0.0;
+    if( dfVal > 2.0 )
+        return 0.0;
 
-	double a, b, c, d;
-	double xm1 = dfVal - 1.0;
-	double xp1 = dfVal + 1.0;
-	double xp2 = dfVal + 2.0;
+    const double xm1 = dfVal - 1.0;
+    const double xp1 = dfVal + 1.0;
+    const double xp2 = dfVal + 2.0;
 
-	a = ( xp2 <= 0.0 ) ? 0.0 : xp2 * xp2 * xp2;
-	b = ( xp1 <= 0.0 ) ? 0.0 : xp1 * xp1 * xp1;
-	c = ( dfVal   <= 0.0 ) ? 0.0 : dfVal * dfVal * dfVal;
-	d = ( xm1 <= 0.0 ) ? 0.0 : xm1 * xm1 * xm1;
+    const double a = xp2 <= 0.0 ? 0.0 : xp2 * xp2 * xp2;
+    const double b = xp1 <= 0.0 ? 0.0 : xp1 * xp1 * xp1;
+    const double c = dfVal <= 0.0 ? 0.0 : dfVal * dfVal * dfVal;
+    const double d = xm1 <= 0.0 ? 0.0 : xm1 * xm1 * xm1;
 
-	return ( 0.16666666666666666667 * ( a - ( 4.0 * b ) + ( 6.0 * c ) - ( 4.0 * d ) ) );
+    return
+        0.16666666666666666667 * (a - (4.0 * b) + (6.0 * c) - (4.0 * d));
+}
+
+/************************************************************************/
+/*                        GDALRPCExtractDEMWindow()                     */
+/************************************************************************/
+
+static bool GDALRPCExtractDEMWindow( GDALRPCTransformInfo *psTransform,
+                                     int nX, int nY, int nWidth, int nHeight,
+                                     double* padfOut )
+{
+    psTransform->nDEMExtractions++;
+    if( psTransform->padfDEMBuffer == nullptr )
+    {
+        // Should only happen in case of failed memory allocation.
+        return psTransform->poDS->GetRasterBand(1)->
+                                  RasterIO(GF_Read, nX, nY, nWidth, nHeight,
+                                           padfOut, nWidth, nHeight,
+                                           GDT_Float64, 0, 0,
+                                           nullptr) == CE_None;
+    }
+
+    // Instead of reading just nWidth * nHeight pixels (with those being <= 4),
+    // target a larger buffer since small extractions can be costly, particular
+    // with VRT.
+    if( !(nX >= psTransform->nBufferX &&
+          nX + nWidth <= psTransform->nBufferX + psTransform->nBufferWidth &&
+          nY >= psTransform->nBufferY &&
+          nY + nHeight <= psTransform->nBufferY + psTransform->nBufferHeight ) )
+    {
+#ifdef DEBUG_VERBOSE_EXTRACT_DEM
+        CPLDebug("RPC", "Current request: %d,%d-%dx%d",
+                  nX, nY, nWidth, nHeight);
+        CPLDebug("RPC", "Hits in last DEM buffer: %d (%d pixels)",
+                 psTransform->nHitsInBuffer,
+                 psTransform->nBufferWidth * psTransform->nBufferHeight);
+        CPLDebug("RPC", "Last DEM buffer: %d,%d-%dx%d",
+                 psTransform->nBufferX,
+                 psTransform->nBufferY,
+                 psTransform->nBufferWidth,
+                 psTransform->nBufferHeight);
+#endif
+        const int nRasterXSize = psTransform->poDS->GetRasterXSize();
+        const int nRasterYSize = psTransform->poDS->GetRasterYSize();
+        // If we have only queried a few points, no need to extract on a large
+        // window We will progressively extend the window up to its maximum size
+        // if we extract a significant number of points.
+        int nRadius = psTransform->nBufferMaxRadius;
+        if( psTransform->nDEMExtractions <
+            psTransform->nBufferMaxRadius * psTransform->nBufferMaxRadius )
+        {
+            nRadius = static_cast<int> (
+                  sqrt(static_cast<double>(psTransform->nDEMExtractions)) );
+            CPLAssert( nRadius <= psTransform->nBufferMaxRadius );
+        }
+        // Check if there's some overlap between consecutive requests to decide
+        // if we must have a buffer around the interest window.
+        const int nDiffX = nX - psTransform->nLastQueriedX;
+        const int nDiffY = nY - psTransform->nLastQueriedY;
+        if( psTransform->nLastQueriedX >= 0 &&
+            (nDiffX > nRadius || -nDiffX > nRadius ||
+             nDiffY > nRadius || -nDiffY > nRadius) )
+        {
+            nRadius = 0;
+        }
+        psTransform->nBufferX = nX - nRadius;
+        if( psTransform->nBufferX < 0 )
+            psTransform->nBufferX = 0;
+        psTransform->nBufferY = nY - nRadius;
+        if( psTransform->nBufferY < 0 )
+            psTransform->nBufferY = 0;
+        psTransform->nBufferWidth = nWidth + 2 * nRadius;
+        if( psTransform->nBufferX + psTransform->nBufferWidth > nRasterXSize )
+            psTransform->nBufferWidth = nRasterXSize - psTransform->nBufferX;
+        psTransform->nBufferHeight = nHeight + 2 * nRadius;
+        if( psTransform->nBufferY + psTransform->nBufferHeight > nRasterYSize )
+            psTransform->nBufferHeight = nRasterYSize - psTransform->nBufferY;
+#ifdef DEBUG_VERBOSE_EXTRACT_DEM
+        CPLDebug("RPC", "New DEM buffer: %d,%d-%dx%d",
+                 psTransform->nBufferX,
+                 psTransform->nBufferY,
+                 psTransform->nBufferWidth,
+                 psTransform->nBufferHeight);
+#endif
+        CPLErr eErr = psTransform->poDS->GetRasterBand(1)->RasterIO(GF_Read,
+                        psTransform->nBufferX, psTransform->nBufferY,
+                        psTransform->nBufferWidth, psTransform->nBufferHeight,
+                        psTransform->padfDEMBuffer,
+                        psTransform->nBufferWidth, psTransform->nBufferHeight,
+                        GDT_Float64, 0, 0, nullptr);
+        if( eErr != CE_None )
+        {
+            psTransform->nBufferX = -1;
+            psTransform->nBufferY = -1;
+            psTransform->nBufferWidth = -1;
+            psTransform->nBufferHeight = -1;
+            return false;
+        }
+#ifdef DEBUG_VERBOSE_EXTRACT_DEM
+         psTransform->nHitsInBuffer = 1;
+#endif
+    }
+    else
+    {
+#ifdef DEBUG_VERBOSE
+        psTransform->nHitsInBuffer++;
+#endif
+    }
+    psTransform->nLastQueriedX = nX;
+    psTransform->nLastQueriedY = nY;
+
+    for( int i=0; i<nHeight; i++)
+    {
+        memcpy( padfOut + i * nWidth,
+                psTransform->padfDEMBuffer + (nY - psTransform->nBufferY + i) *
+                    psTransform->nBufferWidth + nX - psTransform->nBufferX,
+                nWidth * sizeof(double) );
+    }
+
+    return true;
 }
 
 /************************************************************************/
@@ -1143,58 +1477,61 @@ double BiCubicKernel(double dfVal)
 /************************************************************************/
 
 static
-int GDALRPCGetDEMHeight( const GDALRPCTransformInfo *psTransform,
-                         const double dfXIn, const double dfYIn, double* pdfDEMH )
+int GDALRPCGetDEMHeight( GDALRPCTransformInfo *psTransform,
+                         const double dfXIn, const double dfYIn,
+                         double* pdfDEMH )
 {
-    int nRasterXSize = psTransform->poDS->GetRasterXSize();
-    int nRasterYSize = psTransform->poDS->GetRasterYSize();
+    const int nRasterXSize = psTransform->poDS->GetRasterXSize();
+    const int nRasterYSize = psTransform->poDS->GetRasterYSize();
     int bGotNoDataValue = FALSE;
-    double dfNoDataValue = psTransform->poDS->GetRasterBand(1)->GetNoDataValue( &bGotNoDataValue );
-    int bands[1] = {1};
+    const double dfNoDataValue =
+        psTransform->poDS->GetRasterBand(1)->GetNoDataValue( &bGotNoDataValue );
 
-    if(psTransform->eResampleAlg == DRA_Cubic)
+    if( psTransform->eResampleAlg == DRA_Cubic )
     {
-        // convert from upper left corner of pixel coordinates to center of pixel coordinates:
-        double dfX = dfXIn - 0.5;
-        double dfY = dfYIn - 0.5;
-        int dX = int(dfX);
-        int dY = int(dfY);
-        double dfDeltaX = dfX - dX;
-        double dfDeltaY = dfY - dY;
+        // Convert from upper left corner of pixel coordinates to center of
+        // pixel coordinates:
+        const double dfX = dfXIn - 0.5;
+        const double dfY = dfYIn - 0.5;
+        const int dX = int(dfX);
+        const int dY = int(dfY);
+        const double dfDeltaX = dfX - dX;
+        const double dfDeltaY = dfY - dY;
 
-        int dXNew = dX - 1;
-        int dYNew = dY - 1;
-        if (!(dXNew >= 0 && dYNew >= 0 && dXNew + 4 <= nRasterXSize && dYNew + 4 <= nRasterYSize))
+        const int dXNew = dX - 1;
+        const int dYNew = dY - 1;
+        if( !(dXNew >= 0 && dYNew >= 0 &&
+              dXNew + 4 <= nRasterXSize && dYNew + 4 <= nRasterYSize) )
         {
             goto bilinear_fallback;
         }
-        //cubic interpolation
-        double adfElevData[16] = {0};
-        CPLErr eErr = psTransform->poDS->RasterIO(GF_Read, dXNew, dYNew, 4, 4,
-                                                    &adfElevData, 4, 4,
-                                                    GDT_Float64, 1, bands, 0, 0, 0,
-                                                    NULL);
-        if(eErr != CE_None)
+        // Cubic interpolation.
+        double adfElevData[16] = { 0.0 };
+        if( !GDALRPCExtractDEMWindow( psTransform, dXNew, dYNew,
+                                      4, 4, adfElevData ) )
         {
             return FALSE;
         }
 
-        double dfSumH(0), dfSumWeight(0);
-        for ( int k_i = 0; k_i < 4; k_i++ )
+        double dfSumH = 0.0;
+        double dfSumWeight = 0.0;
+        for( int k_i = 0; k_i < 4; k_i++ )
         {
-            // Loop across the X axis
-            for ( int k_j = 0; k_j < 4; k_j++ )
+            // Loop across the X axis.
+            for( int k_j = 0; k_j < 4; k_j++ )
             {
                 // Calculate the weight for the specified pixel according
                 // to the bicubic b-spline kernel we're using for
-                // interpolation
-                int dKernIndX = k_j - 1;
-                int dKernIndY = k_i - 1;
-                double dfPixelWeight = BiCubicKernel(dKernIndX - dfDeltaX) * BiCubicKernel(dKernIndY - dfDeltaY);
+                // interpolation.
+                const int dKernIndX = k_j - 1;
+                const int dKernIndY = k_i - 1;
+                const double dfPixelWeight =
+                    BiCubicKernel(dKernIndX - dfDeltaX) *
+                    BiCubicKernel(dKernIndY - dfDeltaY);
 
                 // Create a sum of all values
-                // adjusted for the pixel's calculated weight
-                double dfElev = adfElevData[k_j + k_i * 4];
+                // adjusted for the pixel's calculated weight.
+                const double dfElev = adfElevData[k_j + k_i * 4];
                 if( bGotNoDataValue && ARE_REAL_EQUAL(dfNoDataValue, dfElev) )
                     continue;
 
@@ -1211,51 +1548,53 @@ int GDALRPCGetDEMHeight( const GDALRPCTransformInfo *psTransform,
 
         return TRUE;
     }
-    else if(psTransform->eResampleAlg == DRA_Bilinear)
+    else if( psTransform->eResampleAlg == DRA_Bilinear )
     {
 bilinear_fallback:
-        // convert from upper left corner of pixel coordinates to center of pixel coordinates:
-        double dfX = dfXIn - 0.5;
-        double dfY = dfYIn - 0.5;
-        int dX = int(dfX);
-        int dY = int(dfY);
-        double dfDeltaX = dfX - dX;
-        double dfDeltaY = dfY - dY;
+        // Convert from upper left corner of pixel coordinates to center of
+        // pixel coordinates:
+        const double dfX = dfXIn - 0.5;
+        const double dfY = dfYIn - 0.5;
+        const int dX = static_cast<int>(dfX);
+        const int dY = static_cast<int>(dfY);
+        const double dfDeltaX = dfX - dX;
+        const double dfDeltaY = dfY - dY;
 
-        if (!(dX >= 0 && dY >= 0 && dX + 2 <= nRasterXSize && dY + 2 <= nRasterYSize))
+        if( !(dX >= 0 && dY >= 0 &&
+              dX + 2 <= nRasterXSize && dY + 2 <= nRasterYSize) )
         {
             goto near_fallback;
         }
-        //bilinear interpolation
-        double adfElevData[4] = {0,0,0,0};
-        CPLErr eErr = psTransform->poDS->RasterIO(GF_Read, dX, dY, 2, 2,
-                                                    &adfElevData, 2, 2,
-                                                    GDT_Float64, 1, bands, 0, 0, 0,
-                                                  NULL);
-        if(eErr != CE_None)
+
+        // Bilinear interpolation.
+        double adfElevData[4] = { 0.0, 0.0, 0.0, 0.0 };
+        if( !GDALRPCExtractDEMWindow( psTransform, dX, dY, 2, 2, adfElevData ) )
         {
             return FALSE;
         }
+
         if( bGotNoDataValue )
         {
-            // TODO: we could perhaps use a valid sample if there's one
-            int bFoundNoDataElev = FALSE;
-            for(int k_i=0;k_i<4;k_i++)
+            // TODO: We could perhaps use a valid sample if there's one.
+            bool bFoundNoDataElev = false;
+            for( int k_i = 0; k_i < 4; k_i++ )
             {
                 if( ARE_REAL_EQUAL(dfNoDataValue, adfElevData[k_i]) )
-                    bFoundNoDataElev = TRUE;
+                    bFoundNoDataElev = true;
             }
             if( bFoundNoDataElev )
             {
                 return FALSE;
             }
         }
-        double dfDeltaX1 = 1.0 - dfDeltaX;
-        double dfDeltaY1 = 1.0 - dfDeltaY;
+        const double dfDeltaX1 = 1.0 - dfDeltaX;
+        const double dfDeltaY1 = 1.0 - dfDeltaY;
 
-        double dfXZ1 = adfElevData[0] * dfDeltaX1 + adfElevData[1] * dfDeltaX;
-        double dfXZ2 = adfElevData[2] * dfDeltaX1 + adfElevData[3] * dfDeltaX;
-        double dfYZ = dfXZ1 * dfDeltaY1 + dfXZ2 * dfDeltaY;
+        const double dfXZ1 =
+            adfElevData[0] * dfDeltaX1 + adfElevData[1] * dfDeltaX;
+        const double dfXZ2 =
+            adfElevData[2] * dfDeltaX1 + adfElevData[3] * dfDeltaX;
+        const double dfYZ = dfXZ1 * dfDeltaY1 + dfXZ2 * dfDeltaY;
 
         *pdfDEMH = dfYZ;
 
@@ -1264,18 +1603,14 @@ bilinear_fallback:
     else
     {
 near_fallback:
-        int dX = (int) (dfXIn);
-        int dY = (int) (dfYIn);
-        if (!(dX >= 0 && dY >= 0 && dX < nRasterXSize && dY < nRasterYSize))
+        const int dX = static_cast<int>(dfXIn);
+        const int dY = static_cast<int>(dfYIn);
+        if( !(dX >= 0 && dY >= 0 && dX < nRasterXSize && dY < nRasterYSize) )
         {
             return FALSE;
         }
-        double dfDEMH(0);
-        CPLErr eErr = psTransform->poDS->RasterIO(GF_Read, dX, dY, 1, 1,
-                                                    &dfDEMH, 1, 1,
-                                                    GDT_Float64, 1, bands, 0, 0, 0,
-                                                    NULL);
-        if(eErr != CE_None ||
+        double dfDEMH = 0.0;
+        if( !GDALRPCExtractDEMWindow( psTransform, dX, dY, 1, 1, &dfDEMH ) ||
             (bGotNoDataValue && ARE_REAL_EQUAL(dfNoDataValue, dfDEMH)) )
         {
             return FALSE;
@@ -1288,79 +1623,105 @@ near_fallback:
 }
 
 /************************************************************************/
+/*                           RPCIsValidLongLat()                        */
+/************************************************************************/
+
+static bool RPCIsValidLongLat( const GDALRPCTransformInfo *psTransform,
+                               double dfLong, double dfLat )
+{
+    if( !psTransform->poRPCFootprintPreparedGeom )
+        return true;
+
+    OGRPoint p(dfLong, dfLat);
+    return CPL_TO_BOOL(
+        OGRPreparedGeometryContains(psTransform->poRPCFootprintPreparedGeom,
+                                       &p));
+}
+
+/************************************************************************/
 /*                    GDALRPCTransformWholeLineWithDEM()                */
 /************************************************************************/
 
-static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTransform,
-                                             int nPointCount,
-                                             double *padfX, double *padfY, double *padfZ,
-                                             int *panSuccess,
-                                             int nXLeft, int nXWidth,
-                                             int nYTop, int nYHeight )
+static int
+GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTransform,
+                                  int nPointCount,
+                                  double *padfX, double *padfY, double *padfZ,
+                                  int *panSuccess,
+                                  int nXLeft, int nXWidth,
+                                  int nYTop, int nYHeight )
 {
-    int i;
-
-    double* padfDEMBuffer = (double*) VSI_MALLOC2_VERBOSE(sizeof(double), nXWidth * nYHeight);
-    if( padfDEMBuffer == NULL )
+    double* padfDEMBuffer = static_cast<double *>(
+        VSI_MALLOC2_VERBOSE(sizeof(double), nXWidth * nYHeight));
+    if( padfDEMBuffer == nullptr )
     {
-        for( i = 0; i < nPointCount; i++ )
+        for( int i = 0; i < nPointCount; i++ )
             panSuccess[i] = FALSE;
         return FALSE;
     }
     CPLErr eErr = psTransform->poDS->GetRasterBand(1)->
-            RasterIO(GF_Read, nXLeft, nYTop, nXWidth, nYHeight,
-                        padfDEMBuffer, nXWidth, nYHeight,
-                        GDT_Float64, 0, 0, NULL);
+        RasterIO(GF_Read, nXLeft, nYTop, nXWidth, nYHeight,
+                 padfDEMBuffer, nXWidth, nYHeight,
+                 GDT_Float64, 0, 0, nullptr);
     if( eErr != CE_None )
     {
-        for( i = 0; i < nPointCount; i++ )
+        for( int i = 0; i < nPointCount; i++ )
             panSuccess[i] = FALSE;
         VSIFree(padfDEMBuffer);
         return FALSE;
     }
 
-
     int bGotNoDataValue = FALSE;
-    double dfNoDataValue = 0;
-    dfNoDataValue = psTransform->poDS->GetRasterBand(1)->GetNoDataValue( &bGotNoDataValue );
+    const double dfNoDataValue =
+        psTransform->poDS->GetRasterBand(1)->GetNoDataValue( &bGotNoDataValue );
 
-    // dfY in pixel center convention
-    double dfY = psTransform->adfDEMReverseGeoTransform[3] +
-                        padfY[0] * psTransform->adfDEMReverseGeoTransform[5] - 0.5;
-    int nY = int(dfY);
-    double dfDeltaY = dfY - nY;
+    // dfY in pixel center convention.
+    const double dfY =
+        psTransform->adfDEMReverseGeoTransform[3] +
+        padfY[0] * psTransform->adfDEMReverseGeoTransform[5] - 0.5;
+    const int nY = static_cast<int>(dfY);
+    const double dfDeltaY = dfY - nY;
 
-    for( i = 0; i < nPointCount; i++ )
+    for( int i = 0; i < nPointCount; i++ )
     {
-        double dfDEMH(0);
+        if( padfX[i] == HUGE_VAL )
+            continue;
 
-        if(psTransform->eResampleAlg == DRA_Cubic)
+        double dfDEMH = 0.0;
+        const double dfZ_i = padfZ ? padfZ[i] : 0.0;
+
+        if( psTransform->eResampleAlg == DRA_Cubic )
         {
-            // dfX in pixel center convention
-            double dfX = psTransform->adfDEMReverseGeoTransform[0] +
-                            padfX[i] * psTransform->adfDEMReverseGeoTransform[1] - 0.5;
-            int nX = int(dfX);
-            double dfDeltaX = dfX - nX;
+            // dfX in pixel center convention.
+            const double dfX =
+                psTransform->adfDEMReverseGeoTransform[0] +
+                padfX[i] * psTransform->adfDEMReverseGeoTransform[1] - 0.5;
+            const int nX = static_cast<int>(dfX);
+            const double dfDeltaX = dfX - nX;
 
-            int nXNew = nX - 1;
+            const int nXNew = nX - 1;
 
-            double dfSumH(0), dfSumWeight(0);
-            for ( int k_i = 0; k_i < 4; k_i++ )
+            double dfSumH = 0.0;
+            double dfSumWeight = 0.0;
+            for( int k_i = 0; k_i < 4; k_i++ )
             {
-                // Loop across the X axis
-                for ( int k_j = 0; k_j < 4; k_j++ )
+                // Loop across the X axis.
+                for( int k_j = 0; k_j < 4; k_j++ )
                 {
                     // Calculate the weight for the specified pixel according
                     // to the bicubic b-spline kernel we're using for
-                    // interpolation
-                    int dKernIndX = k_j - 1;
-                    int dKernIndY = k_i - 1;
-                    double dfPixelWeight = BiCubicKernel(dKernIndX - dfDeltaX) * BiCubicKernel(dKernIndY - dfDeltaY);
+                    // interpolation.
+                    const int dKernIndX = k_j - 1;
+                    const int dKernIndY = k_i - 1;
+                    const double dfPixelWeight =
+                        BiCubicKernel(dKernIndX - dfDeltaX) *
+                        BiCubicKernel(dKernIndY - dfDeltaY);
 
                     // Create a sum of all values
-                    // adjusted for the pixel's calculated weight
-                    double dfElev = padfDEMBuffer[k_i * nXWidth + nXNew - nXLeft + k_j];
-                    if( bGotNoDataValue && ARE_REAL_EQUAL(dfNoDataValue, dfElev) )
+                    // adjusted for the pixel's calculated weight.
+                    const double dfElev =
+                        padfDEMBuffer[k_i * nXWidth + nXNew - nXLeft + k_j];
+                    if( bGotNoDataValue &&
+                        ARE_REAL_EQUAL(dfNoDataValue, dfElev) )
                         continue;
 
                     dfSumH += dfElev * dfPixelWeight;
@@ -1380,39 +1741,53 @@ static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTrans
             else
                 dfDEMH = dfSumH / dfSumWeight;
         }
-        else if(psTransform->eResampleAlg == DRA_Bilinear)
+        else if( psTransform->eResampleAlg == DRA_Bilinear )
         {
-            // dfX in pixel center convention
-            double dfX = psTransform->adfDEMReverseGeoTransform[0] +
-                            padfX[i] * psTransform->adfDEMReverseGeoTransform[1] - 0.5;
-            int nX = int(dfX);
-            double dfDeltaX = dfX - nX;
+            // dfX in pixel center convention.
+            const double dfX =
+                psTransform->adfDEMReverseGeoTransform[0] +
+                padfX[i] * psTransform->adfDEMReverseGeoTransform[1] - 0.5;
+            const int nX = static_cast<int>(dfX);
+            const double dfDeltaX = dfX - nX;
 
-            //bilinear interpolation
-            double adfElevData[4];
-            memcpy(adfElevData, padfDEMBuffer + nX - nXLeft, 2 * sizeof(double));
-            memcpy(adfElevData + 2, padfDEMBuffer + nXWidth + nX - nXLeft, 2 * sizeof(double));
+            // Bilinear interpolation.
+            double adfElevData[4] = {};
+            memcpy(adfElevData,
+                   padfDEMBuffer + nX - nXLeft,
+                   2 * sizeof(double));
+            memcpy(adfElevData + 2,
+                   padfDEMBuffer + nXWidth + nX - nXLeft,
+                   2 * sizeof(double));
 
             int bFoundNoDataElev = FALSE;
             if( bGotNoDataValue )
             {
                 int k_valid_sample = -1;
-                for(int k_i=0;k_i<4;k_i++)
+                for( int k_i = 0; k_i < 4; k_i++ )
                 {
                     if( ARE_REAL_EQUAL(dfNoDataValue, adfElevData[k_i]) )
                     {
                         bFoundNoDataElev = TRUE;
                     }
                     else if( k_valid_sample < 0 )
+                    {
                         k_valid_sample = k_i;
+                    }
                 }
                 if( bFoundNoDataElev )
                 {
                     if( k_valid_sample >= 0 )
                     {
+                        if( !RPCIsValidLongLat(psTransform, padfX[i], padfY[i]) )
+                        {
+                            panSuccess[i] = FALSE;
+                            padfX[i] = HUGE_VAL;
+                            padfY[i] = HUGE_VAL;
+                            continue;
+                        }
                         dfDEMH = adfElevData[k_valid_sample];
                         RPCTransformPoint( psTransform, padfX[i], padfY[i],
-                            padfZ[i] + (psTransform->dfHeightOffset + dfDEMH) *
+                            dfZ_i + (psTransform->dfHeightOffset + dfDEMH) *
                                         psTransform->dfHeightScale,
                             padfX + i, padfY + i );
 
@@ -1421,9 +1796,16 @@ static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTrans
                     }
                     else if( psTransform->bHasDEMMissingValue )
                     {
+                        if( !RPCIsValidLongLat(psTransform, padfX[i], padfY[i]) )
+                        {
+                            panSuccess[i] = FALSE;
+                            padfX[i] = HUGE_VAL;
+                            padfY[i] = HUGE_VAL;
+                            continue;
+                        }
                         dfDEMH = psTransform->dfDEMMissingValue;
                         RPCTransformPoint( psTransform, padfX[i], padfY[i],
-                            padfZ[i] + (psTransform->dfHeightOffset + dfDEMH) *
+                            dfZ_i + (psTransform->dfHeightOffset + dfDEMH) *
                                         psTransform->dfHeightScale,
                             padfX + i, padfY + i );
 
@@ -1433,23 +1815,28 @@ static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTrans
                     else
                     {
                         panSuccess[i] = FALSE;
+                        padfX[i] = HUGE_VAL;
+                        padfY[i] = HUGE_VAL;
                         continue;
                     }
                 }
             }
-            double dfDeltaX1 = 1.0 - dfDeltaX;
-            double dfDeltaY1 = 1.0 - dfDeltaY;
+            const double dfDeltaX1 = 1.0 - dfDeltaX;
+            const double dfDeltaY1 = 1.0 - dfDeltaY;
 
-            double dfXZ1 = adfElevData[0] * dfDeltaX1 + adfElevData[1] * dfDeltaX;
-            double dfXZ2 = adfElevData[2] * dfDeltaX1 + adfElevData[3] * dfDeltaX;
-            double dfYZ = dfXZ1 * dfDeltaY1 + dfXZ2 * dfDeltaY;
+            const double dfXZ1 =
+                adfElevData[0] * dfDeltaX1 + adfElevData[1] * dfDeltaX;
+            const double dfXZ2 =
+                adfElevData[2] * dfDeltaX1 + adfElevData[3] * dfDeltaX;
+            const double dfYZ = dfXZ1 * dfDeltaY1 + dfXZ2 * dfDeltaY;
             dfDEMH = dfYZ;
         }
         else
         {
-            double dfX = psTransform->adfDEMReverseGeoTransform[0] +
-                            padfX[i] * psTransform->adfDEMReverseGeoTransform[1];
-            int nX = int(dfX);
+            const double dfX =
+                psTransform->adfDEMReverseGeoTransform[0] +
+                padfX[i] * psTransform->adfDEMReverseGeoTransform[1];
+            const int nX = int(dfX);
 
             dfDEMH = padfDEMBuffer[nX - nXLeft];
             if( bGotNoDataValue && ARE_REAL_EQUAL(dfNoDataValue, dfDEMH) )
@@ -1459,13 +1846,22 @@ static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTrans
                 else
                 {
                     panSuccess[i] = FALSE;
+                    padfX[i] = HUGE_VAL;
+                    padfY[i] = HUGE_VAL;
                     continue;
                 }
             }
         }
 
+        if( !RPCIsValidLongLat(psTransform, padfX[i], padfY[i]) )
+        {
+            panSuccess[i] = FALSE;
+            padfX[i] = HUGE_VAL;
+            padfY[i] = HUGE_VAL;
+            continue;
+        }
         RPCTransformPoint( psTransform, padfX[i], padfY[i],
-                            padfZ[i] + (psTransform->dfHeightOffset + dfDEMH) *
+                            dfZ_i + (psTransform->dfHeightOffset + dfDEMH) *
                                         psTransform->dfHeightScale,
                             padfX + i, padfY + i );
 
@@ -1478,9 +1874,160 @@ static int GDALRPCTransformWholeLineWithDEM( const GDALRPCTransformInfo *psTrans
 }
 
 /************************************************************************/
+/*                           GDALRPCOpenDEM()                           */
+/************************************************************************/
+
+static bool GDALRPCOpenDEM( GDALRPCTransformInfo* psTransform )
+{
+    CPLAssert( psTransform->pszDEMPath != nullptr );
+
+    bool bIsValid = false;
+
+    CPLString osPrevValueConfigOption;
+    if( psTransform->bApplyDEMVDatumShift )
+    {
+        osPrevValueConfigOption
+            = CPLGetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS", "");
+        CPLSetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS", "YES");
+    }
+    CPLConfigOptionSetter oSetter("CPL_ALLOW_VSISTDIN", "NO", true);
+    psTransform->poDS = reinterpret_cast<GDALDataset *>(
+        GDALOpen(psTransform->pszDEMPath, GA_ReadOnly));
+    if( psTransform->poDS != nullptr &&
+        psTransform->poDS->GetRasterCount() >= 1 )
+    {
+        psTransform->nBufferMaxRadius =
+            atoi(CPLGetConfigOption("GDAL_RPC_DEM_BUFFER_MAX_RADIUS", "2"));
+        psTransform->nHitsInBuffer = 0;
+        const int nMaxWindowSize = 4;
+        psTransform->padfDEMBuffer = static_cast<double*>(VSIMalloc(
+            (nMaxWindowSize + 2 * psTransform->nBufferMaxRadius) *
+            (nMaxWindowSize + 2 * psTransform->nBufferMaxRadius) *
+            sizeof(double) ));
+        psTransform->nBufferX = -1;
+        psTransform->nBufferY = -1;
+        psTransform->nBufferWidth = -1;
+        psTransform->nBufferHeight = -1;
+        psTransform->nLastQueriedX = -1;
+        psTransform->nLastQueriedY = -1;
+        auto poDSSpaRefSrc = psTransform->poDS->GetSpatialRef();
+        if( poDSSpaRefSrc )
+        {
+            auto poDSSpaRef = poDSSpaRefSrc->Clone();
+
+            if( !psTransform->bApplyDEMVDatumShift )
+                poDSSpaRef->StripVertical();
+
+            auto wkt_EPSG_4979 =
+            "GEODCRS[\"WGS 84\",\n"
+            "    DATUM[\"World Geodetic System 1984\",\n"
+            "        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
+            "            LENGTHUNIT[\"metre\",1]]],\n"
+            "    PRIMEM[\"Greenwich\",0,\n"
+            "        ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+            "    CS[ellipsoidal,3],\n"
+            "        AXIS[\"geodetic latitude (Lat)\",north,\n"
+            "            ORDER[1],\n"
+            "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+            "        AXIS[\"geodetic longitude (Lon)\",east,\n"
+            "            ORDER[2],\n"
+            "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+            "        AXIS[\"ellipsoidal height (h)\",up,\n"
+            "            ORDER[3],\n"
+            "            LENGTHUNIT[\"metre\",1]],\n"
+            "    AREA[\"World (by country)\"],\n"
+            "    BBOX[-90,-180,90,180],\n"
+            "    ID[\"EPSG\",4979]]";
+            OGRSpatialReference* poWGSSpaRef =
+                    new OGRSpatialReference(
+                        poDSSpaRef->IsCompound() ? wkt_EPSG_4979 : SRS_WKT_WGS84_LAT_LONG);
+            poWGSSpaRef->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+            if( !poWGSSpaRef->IsSame(poDSSpaRef) )
+                psTransform->poCT =
+                    OGRCreateCoordinateTransformation(poWGSSpaRef,
+                                                        poDSSpaRef);
+
+            if( psTransform->poCT != nullptr && !poDSSpaRef->IsCompound() )
+            {
+                // Empiric attempt to guess if the coordinate transformation
+                // to WGS84 is a no-op. For example for NED13 datasets in
+                // NAD83.
+                double adfX[] = { -179.0, 179.0, 179.0, -179.0, 0.0, 0.0 };
+                double adfY[] = { 89.0, 89.0, -89.0, -89.0, 0.0, 0.0 };
+                double adfZ[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+                // Also test with a "reference point" from the RPC values.
+                double dfRefLong = 0.0;
+                double dfRefLat = 0.0;
+                if( psTransform->sRPC.dfMIN_LONG != -180 ||
+                    psTransform->sRPC.dfMAX_LONG != 180 )
+                {
+                    dfRefLong = (psTransform->sRPC.dfMIN_LONG +
+                                    psTransform->sRPC.dfMAX_LONG) * 0.5;
+                    dfRefLat  = (psTransform->sRPC.dfMIN_LAT +
+                                    psTransform->sRPC.dfMAX_LAT ) * 0.5;
+                }
+                else
+                {
+                    dfRefLong = psTransform->sRPC.dfLONG_OFF;
+                    dfRefLat  = psTransform->sRPC.dfLAT_OFF;
+                }
+                adfX[5] = dfRefLong;
+                adfY[5] = dfRefLat;
+
+                if( psTransform->poCT->Transform(
+                                            6, adfX, adfY, adfZ) &&
+                    fabs(adfX[0] - -179.0) < 1.0e-12 &&
+                    fabs(adfY[0] -   89.0) < 1.0e-12 &&
+                    fabs(adfX[1] -  179.0) < 1.0e-12 &&
+                    fabs(adfY[1] -   89.0) < 1.0e-12 &&
+                    fabs(adfX[2] -  179.0) < 1.0e-12 &&
+                    fabs(adfY[2] -  -89.0) < 1.0e-12 &&
+                    fabs(adfX[3] - -179.0) < 1.0e-12 &&
+                    fabs(adfY[3] -  -89.0) < 1.0e-12 &&
+                    fabs(adfX[4] -    0.0) < 1.0e-12 &&
+                    fabs(adfY[4] -    0.0) < 1.0e-12 &&
+                    fabs(adfX[5] - dfRefLong) < 1.0e-12 &&
+                    fabs(adfY[5] - dfRefLat) < 1.0e-12 )
+                {
+                    CPLDebug("RPC",
+                                "Short-circuiting coordinate transformation "
+                                "from DEM SRS to WGS 84 due to apparent nop");
+                    delete psTransform->poCT;
+                    psTransform->poCT = nullptr;
+                }
+            }
+
+            delete poWGSSpaRef;
+            delete poDSSpaRef;
+        }
+
+        if( psTransform->poDS->GetGeoTransform(
+                            psTransform->adfDEMGeoTransform) == CE_None &&
+            GDALInvGeoTransform( psTransform->adfDEMGeoTransform,
+                                    psTransform->adfDEMReverseGeoTransform ) )
+        {
+            bIsValid = true;
+        }
+    }
+
+    if( psTransform->bApplyDEMVDatumShift )
+    {
+        CPLSetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS",
+                                        !osPrevValueConfigOption.empty()
+                                            ? osPrevValueConfigOption.c_str()
+                                            : nullptr);
+    }
+
+    return bIsValid;
+}
+
+/************************************************************************/
 /*                          GDALRPCTransform()                          */
 /************************************************************************/
 
+/** RPC transform */
 int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
                       int nPointCount,
                       double *padfX, double *padfY, double *padfZ,
@@ -1489,109 +2036,11 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
 {
     VALIDATE_POINTER1( pTransformArg, "GDALRPCTransform", 0 );
 
-    GDALRPCTransformInfo *psTransform = (GDALRPCTransformInfo *) pTransformArg;
-    int i;
+    GDALRPCTransformInfo *psTransform =
+        static_cast<GDALRPCTransformInfo *>(pTransformArg);
 
     if( psTransform->bReversed )
         bDstToSrc = !bDstToSrc;
-
-/* -------------------------------------------------------------------- */
-/*      Lazy opening of the optional DEM file.                          */
-/* -------------------------------------------------------------------- */
-    if(psTransform->pszDEMPath != NULL &&
-       psTransform->bHasTriedOpeningDS == FALSE)
-    {
-        int bIsValid = FALSE;
-        psTransform->bHasTriedOpeningDS = TRUE;
-        CPLString osPrevValueConfigOption;
-        if( psTransform->bApplyDEMVDatumShift )
-        {
-            osPrevValueConfigOption
-                = CPLGetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS", "");
-            CPLSetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS", "YES");
-        }
-        psTransform->poDS = (GDALDataset *)
-                                GDALOpen( psTransform->pszDEMPath, GA_ReadOnly );
-        if(psTransform->poDS != NULL && psTransform->poDS->GetRasterCount() >= 1)
-        {
-            const char* pszSpatialRef = psTransform->poDS->GetProjectionRef();
-            if (pszSpatialRef != NULL && pszSpatialRef[0] != '\0')
-            {
-                OGRSpatialReference* poWGSSpaRef =
-                        new OGRSpatialReference(SRS_WKT_WGS84);
-
-                OGRSpatialReference* poDSSpaRef =
-                        new OGRSpatialReference(pszSpatialRef);
-                if( !psTransform->bApplyDEMVDatumShift )
-                    poDSSpaRef->StripVertical();
-
-                if(!poWGSSpaRef->IsSame(poDSSpaRef))
-                    psTransform->poCT =OGRCreateCoordinateTransformation(
-                                                    poWGSSpaRef, poDSSpaRef );
-
-                if( psTransform->poCT != NULL && !poDSSpaRef->IsCompound() )
-                {
-                    // Empiric attempt to guess if the coordinate transformation
-                    // to WGS84 is a no-op. For example for NED13 datasets in NAD83
-                    double adfX[] = { -179, 179, 179, -179, 0, 0 };
-                    double adfY[] = { 89, 89, -89, -89, 0, 0 };
-                    double adfZ[] = { 0, 0, 0, 0, 0, 0 };
-
-                    // Also test with a "reference point" from the RPC values
-                    double dfRefLong, dfRefLat;
-                    if( psTransform->sRPC.dfMIN_LONG != -180 || psTransform->sRPC.dfMAX_LONG != 180 )
-                    {
-                        dfRefLong = (psTransform->sRPC.dfMIN_LONG + psTransform->sRPC.dfMAX_LONG) * 0.5;
-                        dfRefLat  = (psTransform->sRPC.dfMIN_LAT  + psTransform->sRPC.dfMAX_LAT ) * 0.5;
-                    }
-                    else
-                    {
-                        dfRefLong = psTransform->sRPC.dfLONG_OFF;
-                        dfRefLat  = psTransform->sRPC.dfLAT_OFF;
-                    }
-                    adfX[5] = dfRefLong;
-                    adfY[5] = dfRefLat;
-
-                    if( psTransform->poCT->Transform(
-                                                6, adfX, adfY, adfZ) &&
-                        fabs(adfX[0] - -179) < 1e-12 && fabs(adfY[0] -  89) < 1e-12 &&
-                        fabs(adfX[1] -  179) < 1e-12 && fabs(adfY[1] -  89) < 1e-12 &&
-                        fabs(adfX[2] -  179) < 1e-12 && fabs(adfY[2] - -89) < 1e-12 &&
-                        fabs(adfX[3] - -179) < 1e-12 && fabs(adfY[3] - -89) < 1e-12 &&
-                        fabs(adfX[4] -    0) < 1e-12 && fabs(adfY[4] -   0) < 1e-12 &&
-                        fabs(adfX[5] - dfRefLong) < 1e-12 && fabs(adfY[5] - dfRefLat) < 1e-12 )
-                    {
-                        CPLDebug("RPC", "Short-circuiting coordinate transformation from DEM SRS to WGS 84 due to apparent nop");
-                        delete psTransform->poCT;
-                        psTransform->poCT = NULL;
-                    }
-                }
-
-                delete poWGSSpaRef;
-                delete poDSSpaRef;
-            }
-
-            if (psTransform->poDS->GetGeoTransform(
-                                psTransform->adfDEMGeoTransform) == CE_None &&
-                GDALInvGeoTransform( psTransform->adfDEMGeoTransform,
-                                     psTransform->adfDEMReverseGeoTransform ))
-            {
-                bIsValid = TRUE;
-            }
-        }
-
-        if( psTransform->bApplyDEMVDatumShift )
-        {
-            CPLSetThreadLocalConfigOption("GTIFF_REPORT_COMPD_CS",
-                osPrevValueConfigOption.size() ? osPrevValueConfigOption.c_str() : NULL);
-        }
-
-        if (!bIsValid && psTransform->poDS != NULL)
-        {
-            GDALClose(psTransform->poDS);
-            psTransform->poDS = NULL;
-        }
-    }
 
 /* -------------------------------------------------------------------- */
 /*      The simple case is transforming from lat/long to pixel/line.    */
@@ -1599,27 +2048,28 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
 /* -------------------------------------------------------------------- */
     if( bDstToSrc )
     {
-        /* Optimization to avoid doing too many picking in DEM in the particular */
-        /* case where each point to transform is on a single line of the DEM */
-        /* To make it simple and fast we check that all input latitudes are */
-        /* identical, that the DEM is in WGS84 geodetic and that it has no rotation. */
-        /* Such case is for example triggered when doing gdalwarp with a target SRS */
-        /* of EPSG:4326 or EPSG:3857 */
-        if( nPointCount >= 10 && psTransform->poDS != NULL &&
-            psTransform->poCT == NULL && padfY[0] == padfY[nPointCount-1] &&
+        // Optimization to avoid doing too many picking in DEM in the particular
+        // case where each point to transform is on a single line of the DEM.
+        // To make it simple and fast we check that all input latitudes are
+        // identical, that the DEM is in WGS84 geodetic and that it has no
+        // rotation.  Such case is for example triggered when doing gdalwarp
+        // with a target SRS of EPSG:4326 or EPSG:3857.
+        if( nPointCount >= 10 && psTransform->poDS != nullptr &&
+            psTransform->poCT == nullptr && padfY[0] == padfY[nPointCount-1] &&
             padfY[0] == padfY[nPointCount/ 2] &&
             psTransform->adfDEMReverseGeoTransform[1] > 0.0 &&
             psTransform->adfDEMReverseGeoTransform[2] == 0.0 &&
             psTransform->adfDEMReverseGeoTransform[4] == 0.0 &&
             CPLTestBool(CPLGetConfigOption("GDAL_RPC_DEM_OPTIM", "YES")) )
         {
-            int bUseOptimized = TRUE;
-            double dfMinX = padfX[0], dfMaxX = padfX[0];
-            for(i = 1; i < nPointCount; i++)
+            bool bUseOptimized = true;
+            double dfMinX = padfX[0];
+            double dfMaxX = padfX[0];
+            for( int i = 1; i < nPointCount; i++ )
             {
                 if( padfY[i] != padfY[0] )
                 {
-                    bUseOptimized = FALSE;
+                    bUseOptimized = false;
                     break;
                 }
                 if( padfX[i] < dfMinX ) dfMinX = padfX[i];
@@ -1627,71 +2077,88 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
             }
             if( bUseOptimized )
             {
-                double dfX1, dfY1, dfX2, dfY2;
+                double dfX1 = 0.0;
+                double dfY1 = 0.0;
+                double dfX2 = 0.0;
+                double dfY2 = 0.0;
                 GDALApplyGeoTransform( psTransform->adfDEMReverseGeoTransform,
                                     dfMinX, padfY[0], &dfX1, &dfY1 );
                 GDALApplyGeoTransform( psTransform->adfDEMReverseGeoTransform,
                                     dfMaxX, padfY[0], &dfX2, &dfY2 );
 
-                // convert to center of pixel convention for reading the image data
+                // Convert to center of pixel convention for reading the image
+                // data.
                 if( psTransform->eResampleAlg != DRA_NearestNeighbour )
                 {
                     dfX1 -= 0.5;
                     dfY1 -= 0.5;
                     dfX2 -= 0.5;
-                    dfY2 -= 0.5;
+                    // dfY2 -= 0.5;
                 }
-                int nXLeft = int(floor(dfX1));
-                int nXRight = int(floor(dfX2));
+                int nXLeft = static_cast<int>(floor(dfX1));
+                int nXRight = static_cast<int>(floor(dfX2));
                 int nXWidth = nXRight - nXLeft + 1;
-                int nYTop = int(floor(dfY1));
+                int nYTop = static_cast<int>(floor(dfY1));
                 int nYHeight;
                 if( psTransform->eResampleAlg == DRA_Cubic )
                 {
-                    nXLeft --;
+                    nXLeft--;
                     nXWidth += 3;
-                    nYTop --;
+                    nYTop--;
                     nYHeight = 4;
                 }
                 else if( psTransform->eResampleAlg == DRA_Bilinear )
                 {
-                    nXWidth ++;
+                    nXWidth++;
                     nYHeight = 2;
                 }
                 else
                 {
                     nYHeight = 1;
                 }
-                if( nXLeft >= 0 && nXLeft + nXWidth <= psTransform->poDS->GetRasterXSize() &&
-                    nYTop >= 0 && nYTop + nYHeight <= psTransform->poDS->GetRasterYSize() )
+                if( nXLeft >= 0 &&
+                    nXLeft + nXWidth <= psTransform->poDS->GetRasterXSize() &&
+                    nYTop >= 0 &&
+                    nYTop + nYHeight <= psTransform->poDS->GetRasterYSize() )
                 {
-                    static int bOnce = FALSE;
+                    static bool bOnce = false;
                     if( !bOnce )
                     {
-                        bOnce = TRUE;
-                        CPLDebug("RPC", "Using GDALRPCTransformWholeLineWithDEM");
+                        bOnce = true;
+                        CPLDebug("RPC",
+                                 "Using GDALRPCTransformWholeLineWithDEM");
                     }
-                    return GDALRPCTransformWholeLineWithDEM( psTransform, nPointCount,
-                                                             padfX, padfY, padfZ,
-                                                             panSuccess,
-                                                             nXLeft, nXWidth,
-                                                             nYTop, nYHeight );
+                    return GDALRPCTransformWholeLineWithDEM(psTransform,
+                                                            nPointCount,
+                                                            padfX, padfY, padfZ,
+                                                            panSuccess,
+                                                            nXLeft, nXWidth,
+                                                            nYTop, nYHeight);
                 }
             }
         }
 
-        for( i = 0; i < nPointCount; i++ )
+        for( int i = 0; i < nPointCount; i++ )
         {
+            if( !RPCIsValidLongLat(psTransform, padfX[i], padfY[i]) )
+            {
+                panSuccess[i] = FALSE;
+                padfX[i] = HUGE_VAL;
+                padfY[i] = HUGE_VAL;
+                continue;
+            }
             double dfHeight = 0.0;
             if( !GDALRPCGetHeightAtLongLat( psTransform, padfX[i], padfY[i],
                                             &dfHeight ) )
             {
                 panSuccess[i] = FALSE;
+                padfX[i] = HUGE_VAL;
+                padfY[i] = HUGE_VAL;
                 continue;
             }
 
             RPCTransformPoint( psTransform, padfX[i], padfY[i],
-                                padfZ[i] + dfHeight,
+                               (padfZ ? padfZ[i] : 0.0) + dfHeight,
                                 padfX + i, padfY + i );
             panSuccess[i] = TRUE;
         }
@@ -1699,20 +2166,37 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
         return TRUE;
     }
 
+    if( padfZ == nullptr )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Z array should be provided for reverse RPC computation");
+        return FALSE;
+    }
+
 /* -------------------------------------------------------------------- */
 /*      Compute the inverse (pixel/line/height to lat/long).  This      */
 /*      function uses an iterative method from an initial linear        */
 /*      approximation.                                                  */
 /* -------------------------------------------------------------------- */
-    for( i = 0; i < nPointCount; i++ )
+    for( int i = 0; i < nPointCount; i++ )
     {
-        double dfResultX, dfResultY;
+        double dfResultX = 0.0;
+        double dfResultY = 0.0;
 
         if( !RPCInverseTransformPoint( psTransform, padfX[i], padfY[i],
                     padfZ[i],
                     &dfResultX, &dfResultY ) )
         {
             panSuccess[i] = FALSE;
+            padfX[i] = HUGE_VAL;
+            padfY[i] = HUGE_VAL;
+            continue;
+        }
+        if( !RPCIsValidLongLat(psTransform, padfX[i], padfY[i]) )
+        {
+            panSuccess[i] = FALSE;
+            padfX[i] = HUGE_VAL;
+            padfY[i] = HUGE_VAL;
             continue;
         }
 
@@ -1732,13 +2216,12 @@ int GDALRPCTransform( void *pTransformArg, int bDstToSrc,
 CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
 
 {
-    VALIDATE_POINTER1( pTransformArg, "GDALSerializeRPCTransformer", NULL );
+    VALIDATE_POINTER1( pTransformArg, "GDALSerializeRPCTransformer", nullptr );
 
-    CPLXMLNode *psTree;
     GDALRPCTransformInfo *psInfo =
-        (GDALRPCTransformInfo *)(pTransformArg);
+        static_cast<GDALRPCTransformInfo *>(pTransformArg);
 
-    psTree = CPLCreateXMLNode( NULL, CXT_Element, "RPCTransformer" );
+    CPLXMLNode *psTree = CPLCreateXMLNode(nullptr, CXT_Element, "RPCTransformer");
 
 /* -------------------------------------------------------------------- */
 /*      Serialize bReversed.                                            */
@@ -1757,7 +2240,7 @@ CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
 /* -------------------------------------------------------------------- */
 /*      Serialize Height Scale.                                         */
 /* -------------------------------------------------------------------- */
-    if (psInfo->dfHeightScale != 1.0)
+    if( psInfo->dfHeightScale != 1.0 )
         CPLCreateXMLElementAndValue(
             psTree, "HeightScale",
             CPLString().Printf( "%.15g", psInfo->dfHeightScale ) );
@@ -1765,7 +2248,7 @@ CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
 /* -------------------------------------------------------------------- */
 /*      Serialize DEM path.                                             */
 /* -------------------------------------------------------------------- */
-    if (psInfo->pszDEMPath != NULL)
+    if( psInfo->pszDEMPath != nullptr )
     {
         CPLCreateXMLElementAndValue(
             psTree, "DEMPath",
@@ -1775,16 +2258,19 @@ CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
 /*      Serialize DEM interpolation                                     */
 /* -------------------------------------------------------------------- */
         CPLCreateXMLElementAndValue(
-            psTree, "DEMInterpolation", GDALSerializeRPCDEMResample(psInfo->eResampleAlg) );
+            psTree, "DEMInterpolation",
+            GDALSerializeRPCDEMResample(psInfo->eResampleAlg) );
 
         if( psInfo->bHasDEMMissingValue )
         {
             CPLCreateXMLElementAndValue(
-                psTree, "DEMMissingValue", CPLSPrintf("%.18g", psInfo->dfDEMMissingValue) );
+                psTree, "DEMMissingValue",
+                CPLSPrintf("%.18g", psInfo->dfDEMMissingValue) );
         }
 
         CPLCreateXMLElementAndValue(
-                psTree, "DEMApplyVDatumShift", ( psInfo->bApplyDEMVDatumShift ) ? "true" : "false" );
+                psTree, "DEMApplyVDatumShift",
+                psInfo->bApplyDEMVDatumShift ? "true" : "false" );
     }
 
 /* -------------------------------------------------------------------- */
@@ -1801,15 +2287,13 @@ CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
     CPLXMLNode *psMD= CPLCreateXMLNode( psTree, CXT_Element,
                                         "Metadata" );
 
-    for( int i = 0; papszMD != NULL && papszMD[i] != NULL; i++ )
+    for( int i = 0; papszMD != nullptr && papszMD[i] != nullptr; i++ )
     {
-        const char *pszRawValue;
-        char *pszKey;
-        CPLXMLNode *psMDI;
+        char *pszKey = nullptr;
 
-        pszRawValue = CPLParseNameValue( papszMD[i], &pszKey );
+        const char *pszRawValue = CPLParseNameValue( papszMD[i], &pszKey );
 
-        psMDI = CPLCreateXMLNode( psMD, CXT_Element, "MDI" );
+        CPLXMLNode *psMDI = CPLCreateXMLNode( psMD, CXT_Element, "MDI" );
         CPLSetXMLValue( psMDI, "#key", pszKey );
         CPLCreateXMLNode( psMDI, CXT_Text, pszRawValue );
 
@@ -1828,32 +2312,29 @@ CPLXMLNode *GDALSerializeRPCTransformer( void *pTransformArg )
 void *GDALDeserializeRPCTransformer( CPLXMLNode *psTree )
 
 {
-    void *pResult;
-    char **papszOptions = NULL;
+    char **papszOptions = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Collect metadata.                                               */
 /* -------------------------------------------------------------------- */
-    char **papszMD = NULL;
-    CPLXMLNode *psMDI, *psMetadata;
-    GDALRPCInfo sRPC;
+    CPLXMLNode *psMetadata = CPLGetXMLNode( psTree, "Metadata" );
 
-    psMetadata = CPLGetXMLNode( psTree, "Metadata" );
-
-    if( psMetadata == NULL
+    if( psMetadata == nullptr
         || psMetadata->eType != CXT_Element
-        || !EQUAL(psMetadata->pszValue,"Metadata") )
-        return NULL;
+        || !EQUAL(psMetadata->pszValue, "Metadata") )
+        return nullptr;
 
-    for( psMDI = psMetadata->psChild; psMDI != NULL;
+    char **papszMD = nullptr;
+    for( CPLXMLNode *psMDI = psMetadata->psChild;
+         psMDI != nullptr;
          psMDI = psMDI->psNext )
     {
-        if( !EQUAL(psMDI->pszValue,"MDI")
+        if( !EQUAL(psMDI->pszValue, "MDI")
             || psMDI->eType != CXT_Element
-            || psMDI->psChild == NULL
-            || psMDI->psChild->psNext == NULL
+            || psMDI->psChild == nullptr
+            || psMDI->psChild->psNext == nullptr
             || psMDI->psChild->eType != CXT_Attribute
-            || psMDI->psChild->psChild == NULL )
+            || psMDI->psChild->psChild == nullptr )
             continue;
 
         papszMD =
@@ -1862,12 +2343,13 @@ void *GDALDeserializeRPCTransformer( CPLXMLNode *psTree )
                              psMDI->psChild->psNext->pszValue );
     }
 
+    GDALRPCInfo sRPC;
     if( !GDALExtractRPCInfo( papszMD, &sRPC ) )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Failed to reconstitute RPC transformer." );
         CSLDestroy( papszMD );
-        return NULL;
+        return nullptr;
     }
 
     CSLDestroy( papszMD );
@@ -1875,43 +2357,46 @@ void *GDALDeserializeRPCTransformer( CPLXMLNode *psTree )
 /* -------------------------------------------------------------------- */
 /*      Get other flags.                                                */
 /* -------------------------------------------------------------------- */
-    double dfPixErrThreshold;
-    int bReversed;
+    const int bReversed = atoi(CPLGetXMLValue(psTree, "Reversed", "0"));
 
-    bReversed = atoi(CPLGetXMLValue(psTree,"Reversed","0"));
+    const double dfPixErrThreshold =
+        CPLAtof(CPLGetXMLValue(psTree, "PixErrThreshold",
+                               CPLSPrintf( "%f", DEFAULT_PIX_ERR_THRESHOLD )));
 
-    dfPixErrThreshold =
-        CPLAtof(CPLGetXMLValue(psTree,"PixErrThreshold","0.25"));
-
-    papszOptions = CSLSetNameValue( papszOptions, "RPC_HEIGHT",
-                                    CPLGetXMLValue(psTree,"HeightOffset","0"));
-    papszOptions = CSLSetNameValue( papszOptions, "RPC_HEIGHT_SCALE",
-                                    CPLGetXMLValue(psTree,"HeightScale","1"));
-    const char* pszDEMPath = CPLGetXMLValue(psTree,"DEMPath",NULL);
-    if (pszDEMPath != NULL)
+    papszOptions = CSLSetNameValue(papszOptions,  "RPC_HEIGHT",
+                                   CPLGetXMLValue(psTree, "HeightOffset", "0"));
+    papszOptions = CSLSetNameValue(papszOptions, "RPC_HEIGHT_SCALE",
+                                   CPLGetXMLValue(psTree, "HeightScale", "1"));
+    const char* pszDEMPath = CPLGetXMLValue(psTree, "DEMPath", nullptr);
+    if( pszDEMPath != nullptr )
         papszOptions = CSLSetNameValue( papszOptions, "RPC_DEM",
                                         pszDEMPath);
 
-    const char* pszDEMInterpolation = CPLGetXMLValue(psTree,"DEMInterpolation", "bilinear");
-    if (pszDEMInterpolation != NULL)
+    const char* pszDEMInterpolation =
+        CPLGetXMLValue(psTree, "DEMInterpolation", "bilinear");
+    if( pszDEMInterpolation != nullptr )
         papszOptions = CSLSetNameValue( papszOptions, "RPC_DEMINTERPOLATION",
                                         pszDEMInterpolation);
 
-    const char* pszDEMMissingValue = CPLGetXMLValue(psTree,"DEMMissingValue", NULL);
-    if (pszDEMMissingValue != NULL)
+    const char* pszDEMMissingValue =
+        CPLGetXMLValue(psTree, "DEMMissingValue", nullptr);
+    if( pszDEMMissingValue != nullptr )
         papszOptions = CSLSetNameValue( papszOptions, "RPC_DEM_MISSING_VALUE",
                                         pszDEMMissingValue);
 
-    const char* pszDEMApplyVDatumShift = CPLGetXMLValue(psTree,"DEMApplyVDatumShift", NULL);
-    if (pszDEMApplyVDatumShift != NULL)
-        papszOptions = CSLSetNameValue( papszOptions, "RPC_DEM_APPLY_VDATUM_SHIFT",
-                                        pszDEMApplyVDatumShift);
+    const char* pszDEMApplyVDatumShift =
+        CPLGetXMLValue(psTree, "DEMApplyVDatumShift", nullptr);
+    if( pszDEMApplyVDatumShift != nullptr )
+        papszOptions = CSLSetNameValue(papszOptions,
+                                       "RPC_DEM_APPLY_VDATUM_SHIFT",
+                                       pszDEMApplyVDatumShift);
 
 /* -------------------------------------------------------------------- */
 /*      Generate transformation.                                        */
 /* -------------------------------------------------------------------- */
-    pResult = GDALCreateRPCTransformer( &sRPC, bReversed, dfPixErrThreshold,
-                                        papszOptions );
+    void *pResult =
+        GDALCreateRPCTransformer( &sRPC, bReversed, dfPixErrThreshold,
+                                  papszOptions );
 
     CSLDestroy( papszOptions );
 

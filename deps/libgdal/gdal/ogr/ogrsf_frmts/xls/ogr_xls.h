@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xls.h 31777 2015-11-26 14:14:41Z rouault $
+ * $Id: ogr_xls.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  XLS Translator
  * Purpose:  Definition of classes for OGR .xls driver.
@@ -45,7 +45,7 @@ class OGRXLSLayer : public OGRLayer
 
     char              *pszName;
     int                iSheet;
-    int                bFirstLineIsHeaders;
+    bool               bFirstLineIsHeaders;
     int                nRows;
     unsigned short     nCols;
 
@@ -63,22 +63,20 @@ class OGRXLSLayer : public OGRLayer
                                     int iSheetIn,
                                     int nRowsIn,
                                     unsigned short nColsIn);
-                        ~OGRXLSLayer();
+                        virtual ~OGRXLSLayer();
 
+    virtual void                ResetReading() override;
+    virtual OGRFeature *        GetNextFeature() override;
 
-    virtual void                ResetReading();
-    virtual OGRFeature *        GetNextFeature();
+    virtual OGRFeatureDefn *    GetLayerDefn() override;
+    virtual GIntBig             GetFeatureCount( int bForce = TRUE ) override;
 
-    virtual OGRFeatureDefn *    GetLayerDefn();
-    virtual GIntBig             GetFeatureCount( int bForce = TRUE );
+    virtual const char         *GetName() override { return pszName; }
+    virtual OGRwkbGeometryType  GetGeomType() override { return wkbNone; }
 
-    virtual const char         *GetName() { return pszName; }
-    virtual OGRwkbGeometryType  GetGeomType() { return wkbNone; }
+    virtual int                 TestCapability( const char * ) override;
 
-    virtual int                 TestCapability( const char * );
-
-    virtual OGRSpatialReference *GetSpatialRef() { return NULL; }
-
+    virtual OGRSpatialReference *GetSpatialRef() override { return nullptr; }
 };
 
 /************************************************************************/
@@ -94,19 +92,23 @@ class OGRXLSDataSource : public OGRDataSource
 
     const void*         xlshandle;
 
+    CPLString           m_osANSIFilename;
+#ifdef WIN32
+    CPLString           m_osTempFilename;
+#endif
   public:
                         OGRXLSDataSource();
-                        ~OGRXLSDataSource();
+                        virtual ~OGRXLSDataSource();
 
     int                 Open( const char * pszFilename,
                               int bUpdate );
 
-    virtual const char*         GetName() { return pszName; }
+    virtual const char*         GetName() override { return pszName; }
 
-    virtual int                 GetLayerCount() { return nLayers; }
-    virtual OGRLayer*           GetLayer( int );
+    virtual int                 GetLayerCount() override { return nLayers; }
+    virtual OGRLayer*           GetLayer( int ) override;
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 
     const void                 *GetXLSHandle();
 };
@@ -118,12 +120,11 @@ class OGRXLSDataSource : public OGRDataSource
 class OGRXLSDriver : public OGRSFDriver
 {
   public:
-                ~OGRXLSDriver();
+                virtual ~OGRXLSDriver();
 
-    virtual const char*         GetName();
-    virtual OGRDataSource*      Open( const char *, int );
-    virtual int                 TestCapability( const char * );
+    virtual const char*         GetName() override;
+    virtual OGRDataSource*      Open( const char *, int ) override;
+    virtual int                 TestCapability( const char * ) override;
 };
-
 
 #endif /* ndef OGR_XLS_H_INCLUDED */

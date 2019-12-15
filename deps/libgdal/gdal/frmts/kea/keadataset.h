@@ -1,5 +1,5 @@
 /*
- * $Id: keadataset.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: keadataset.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *  keadataset.h
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -36,7 +36,7 @@
 #include "libkea_headers.h"
 
 // class that implements a GDAL dataset
-class KEADataset : public GDALPamDataset
+class KEADataset final: public GDALPamDataset
 {
     static H5::H5File *CreateLL( const char * pszFilename,
                                   int nXSize, int nYSize, int nBands,
@@ -61,36 +61,50 @@ public:
                                 GDALProgressFunc pfnProgress, void *pProgressData );
 
     // virtual methods for dealing with transform and projection
-    CPLErr      GetGeoTransform( double * padfTransform );
-    const char *GetProjectionRef();
+    CPLErr      GetGeoTransform( double * padfTransform ) override;
+    const char *_GetProjectionRef() override;
+    const OGRSpatialReference* GetSpatialRef() const override {
+        return GetSpatialRefFromOldGetProjectionRef();
+    }
 
-    CPLErr  SetGeoTransform (double *padfTransform );
-    CPLErr SetProjection( const char *pszWKT );
+    CPLErr  SetGeoTransform (double *padfTransform ) override;
+    CPLErr _SetProjection( const char *pszWKT ) override;
+    CPLErr SetSpatialRef(const OGRSpatialReference* poSRS) override {
+        return OldSetProjectionFromSetSpatialRef(poSRS);
+    }
 
     // method to get a pointer to the imageio class
-    void *GetInternalHandle (const char *);
+    void *GetInternalHandle (const char *) override;
 
     // virtual methods for dealing with metadata
-    CPLErr SetMetadataItem (const char *pszName, const char *pszValue, const char *pszDomain="");
-    const char *GetMetadataItem (const char *pszName, const char *pszDomain="");
+    CPLErr SetMetadataItem (const char *pszName, const char *pszValue, const char *pszDomain="") override;
+    const char *GetMetadataItem (const char *pszName, const char *pszDomain="") override;
 
-    char **GetMetadata(const char *pszDomain="");
-    CPLErr SetMetadata(char **papszMetadata, const char *pszDomain="");
+    char **GetMetadata(const char *pszDomain="") override;
+    CPLErr SetMetadata(char **papszMetadata, const char *pszDomain="") override;
 
     // virtual method for adding new image bands
-    CPLErr AddBand(GDALDataType eType, char **papszOptions = NULL);
+    CPLErr AddBand(GDALDataType eType, char **papszOptions = nullptr) override;
 
     // GCPs
-    int GetGCPCount();
-    const char* GetGCPProjection();
-    const GDAL_GCP* GetGCPs();
-    CPLErr SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection);
+    int GetGCPCount() override;
+    const char* _GetGCPProjection() override;
+    const OGRSpatialReference* GetGCPSpatialRef() const override {
+        return GetGCPSpatialRefFromOldGetGCPProjection();
+    }
+    const GDAL_GCP* GetGCPs() override;
+    CPLErr _SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection) override;
+    using GDALPamDataset::SetGCPs;
+    CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
+                    const OGRSpatialReference* poSRS ) override {
+        return OldSetGCPsFromNew(nGCPCount, pasGCPList, poSRS);
+    }
 
 protected:
     // this method builds overviews for the specified bands.
     virtual CPLErr IBuildOverviews(const char *pszResampling, int nOverviews, int *panOverviewList,
                                     int nListBands, int *panBandList, GDALProgressFunc pfnProgress,
-                                    void *pProgressData);
+                                    void *pProgressData) override;
 
     // internal method to update m_papszMetadataList
     void UpdateMetadataList();
@@ -109,5 +123,8 @@ private:
 // conversion functions
 GDALDataType KEA_to_GDAL_Type( kealib::KEADataType ekeaType );
 kealib::KEADataType GDAL_to_KEA_Type( GDALDataType egdalType );
+
+// For unloading the VFL
+void KEADatasetDriverUnload(GDALDriver*);
 
 #endif //KEADATASET_H

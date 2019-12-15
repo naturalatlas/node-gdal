@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  GNM generic driver.
@@ -33,6 +32,8 @@
 #include "gnm_priv.h"
 #include "gnmdb.h"
 
+CPL_CVSID("$Id: gnmdbdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 static int GNMDBDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
@@ -51,19 +52,18 @@ static GDALDataset *GNMDBDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !GNMDBDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     GNMDatabaseNetwork* poFN = new GNMDatabaseNetwork();
 
     if( poFN->Open( poOpenInfo ) != CE_None)
     {
         delete poFN;
-        poFN = NULL;
+        poFN = nullptr;
     }
 
     return poFN;
 }
-
 
 static GDALDataset *GNMDBDriverCreate( const char * pszName,
                                         CPL_UNUSED int nBands,
@@ -72,7 +72,7 @@ static GDALDataset *GNMDBDriverCreate( const char * pszName,
                                         CPL_UNUSED GDALDataType eDT,
                                         char **papszOptions )
 {
-    CPLAssert( NULL != pszName );
+    CPLAssert( nullptr != pszName );
     CPLDebug( "GNM", "Attempt to create network at: %s", pszName );
 
     GNMDatabaseNetwork *poFN = new GNMDatabaseNetwork();
@@ -80,7 +80,7 @@ static GDALDataset *GNMDBDriverCreate( const char * pszName,
     if( poFN->Create( pszName, papszOptions ) != CE_None )
     {
         delete poFN;
-        poFN = NULL;
+        poFN = nullptr;
     }
 
     return poFN;
@@ -95,7 +95,7 @@ static CPLErr GNMDBDriverDelete( const char *pszDataSource )
     if( poFN->Open( &oOpenInfo ) != CE_None)
     {
         delete poFN;
-        poFN = NULL;
+        poFN = nullptr;
 
         return CE_Failure;
     }
@@ -105,7 +105,7 @@ static CPLErr GNMDBDriverDelete( const char *pszDataSource )
 
 void RegisterGNMDatabase()
 {
-    if( GDALGetDriverByName( "GNMDatabase" ) == NULL )
+    if( GDALGetDriverByName( "GNMDatabase" ) == nullptr )
     {
         GDALDriver  *poDriver = new GDALDriver();
 

@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  * Last port: planargraph/Subgraph.java rev. 1.3 (JTS-1.7)
@@ -27,17 +27,19 @@ namespace geos {
 namespace planargraph {
 
 pair<Edge::NonConstSet::iterator, bool>
-Subgraph::add(Edge *e)
+Subgraph::add(Edge* e)
 {
-	pair<Edge::NonConstSet::iterator,bool> p = edges.insert(e);
-	if (!p.second) return p;
+    pair<Edge::NonConstSet::iterator, bool> p = edges.insert(e);
+    if(!p.second) {
+        return p;
+    }
 
-	dirEdges.push_back(e->getDirEdge(0));
-	dirEdges.push_back(e->getDirEdge(1));
-	nodeMap.add(e->getDirEdge(0)->getFromNode());
-	nodeMap.add(e->getDirEdge(1)->getFromNode());
+    dirEdges.push_back(e->getDirEdge(0));
+    dirEdges.push_back(e->getDirEdge(1));
+    nodeMap.add(e->getDirEdge(0)->getFromNode());
+    nodeMap.add(e->getDirEdge(1)->getFromNode());
 
-	return p;
+    return p;
 }
 
 } // namespace planargraph

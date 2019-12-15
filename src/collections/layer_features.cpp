@@ -26,7 +26,7 @@ void LayerFeatures::Initialize(Local<Object> target)
 
 	ATTR_DONT_ENUM(lcons, "layer", layerGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("LayerFeatures").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("LayerFeatures").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -71,7 +71,7 @@ Local<Value> LayerFeatures::New(Local<Value> layer_obj)
 	LayerFeatures *wrapped = new LayerFeatures();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(LayerFeatures::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LayerFeatures::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);

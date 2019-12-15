@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,17 +22,17 @@
 #include <geos/geom/LineSegment.h> // for composition
 
 namespace geos {
-	namespace algorithm {
-		namespace distance {
-			class PointPairDistance;
-		}
-	}
-	namespace geom {
-		class Geometry;
-		class Coordinate; 
-		class LineString; 
-		class Polygon; 
-	}
+namespace algorithm {
+namespace distance {
+class PointPairDistance;
+}
+}
+namespace geom {
+class Geometry;
+class Coordinate;
+class LineString;
+class Polygon;
+}
 }
 
 namespace geos {
@@ -44,27 +44,26 @@ namespace distance { // geos::algorithm::distance
  *
  * Also computes two points which are separated by the distance.
  */
-class DistanceToPoint
-{
+class DistanceToPoint {
 public:
 
-	DistanceToPoint() {}
+    DistanceToPoint() {}
 
-	static void computeDistance(const geom::Geometry& geom,
-			            const geom::Coordinate& pt,
-	                            PointPairDistance& ptDist);
+    static void computeDistance(const geom::Geometry& geom,
+                                const geom::Coordinate& pt,
+                                PointPairDistance& ptDist);
 
-	static void computeDistance(const geom::LineString& geom,
-			            const geom::Coordinate& pt,
-	                            PointPairDistance& ptDist);
+    static void computeDistance(const geom::LineString& geom,
+                                const geom::Coordinate& pt,
+                                PointPairDistance& ptDist);
 
-	static void computeDistance(const geom::LineSegment& geom,
-			            const geom::Coordinate& pt,
-	                            PointPairDistance& ptDist);
+    static void computeDistance(const geom::LineSegment& geom,
+                                const geom::Coordinate& pt,
+                                PointPairDistance& ptDist);
 
-	static void computeDistance(const geom::Polygon& geom,
-			            const geom::Coordinate& pt,
-	                            PointPairDistance& ptDist);
+    static void computeDistance(const geom::Polygon& geom,
+                                const geom::Coordinate& pt,
+                                PointPairDistance& ptDist);
 
 };
 

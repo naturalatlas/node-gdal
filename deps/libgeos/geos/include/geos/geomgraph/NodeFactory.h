@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -26,12 +26,12 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Coordinate;
-	}
-	namespace geomgraph {
-		class Node;
-	}
+namespace geom {
+class Coordinate;
+}
+namespace geomgraph {
+class Node;
+}
 }
 
 namespace geos {
@@ -39,11 +39,12 @@ namespace geomgraph { // geos.geomgraph
 
 class GEOS_DLL NodeFactory {
 public:
-	virtual Node* createNode(const geom::Coordinate &coord) const;
-	static const NodeFactory &instance();
-	virtual ~NodeFactory() {}
+    virtual Node* createNode(const geom::Coordinate& coord) const;
+    static const NodeFactory& instance();
+    virtual
+    ~NodeFactory() {}
 protected:
-	NodeFactory() {}
+    NodeFactory() {}
 };
 
 

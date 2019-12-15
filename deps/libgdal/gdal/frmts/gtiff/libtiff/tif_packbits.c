@@ -1,5 +1,3 @@
-/* $Id: tif_packbits.c,v 1.23 2015-11-22 15:31:03 erouault Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -82,7 +80,9 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 		/*
 		 * Find the longest string of identical bytes.
 		 */
-		b = *bp++, cc--, n = 1;
+		b = *bp++;
+		cc--;
+		n = 1;
 		for (; cc > 0 && b == *bp; cc--, bp++)
 			n++;
 	again:
@@ -97,7 +97,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 				slop = (long)(op - lastliteral);
 				tif->tif_rawcc += (tmsize_t)(lastliteral - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 				while (slop-- > 0)
 					*op++ = *lastliteral++;
@@ -105,7 +105,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 			} else {
 				tif->tif_rawcc += (tmsize_t)(op - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 			}
 		}
@@ -223,7 +223,8 @@ PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 	bp = (char*) tif->tif_rawcp;
 	cc = tif->tif_rawcc;
 	while (cc > 0 && occ > 0) {
-		n = (long) *bp++, cc--;
+		n = (long) *bp++;
+		cc--;
 		/*
 		 * Watch out for compilers that
 		 * don't sign extend chars...
@@ -241,8 +242,15 @@ PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 				    (unsigned long) ((tmsize_t)n - occ));
 				n = (long)occ;
 			}
+			if( cc == 0 )
+			{
+				TIFFWarningExt(tif->tif_clientdata, module,
+					       "Terminating PackBitsDecode due to lack of data.");
+				break;
+			}
 			occ -= n;
-			b = *bp++, cc--;
+			b = *bp++;
+			cc--;
 			while (n-- > 0)
 				*op++ = (uint8) b;
 		} else {		/* copy next n+1 bytes literally */

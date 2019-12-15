@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -23,7 +23,7 @@
 
 #include <geos/export.h>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <iostream>
 
@@ -38,19 +38,19 @@
 
 // Forward declarations
 namespace geos {
-	namespace index {
-		class SpatialIndex;
-	}
-	namespace geomgraph {
-		class Edge;
-	}
+namespace index {
+class SpatialIndex;
+}
+namespace geomgraph {
+class Edge;
+}
 }
 
 namespace geos {
 namespace geomgraph { // geos.geomgraph
 
-/** 
- * A EdgeList is a list of Edges. 
+/**
+ * A EdgeList is a list of Edges.
  *
  * It supports locating edges
  * that are pointwise equals to a target edge.
@@ -59,57 +59,59 @@ class GEOS_DLL EdgeList {
 
 private:
 
-	std::vector<Edge*> edges;
+    std::vector<Edge*> edges;
 
-	struct OcaCmp {
-		bool operator()(
-			const noding::OrientedCoordinateArray *oca1,
-			const noding::OrientedCoordinateArray *oca2) const
-		{
-			return *oca1 < *oca2;
-		}
-	};
+    struct OcaCmp {
+        bool
+        operator()(
+            const noding::OrientedCoordinateArray* oca1,
+            const noding::OrientedCoordinateArray* oca2) const
+        {
+            return *oca1 < *oca2;
+        }
+    };
 
-	/**
-	 * An index of the edges, for fast lookup.
-	 * 
-	 * OrientedCoordinateArray objects are owned by us.
-	 * TODO: optimize by dropping the OrientedCoordinateArray
-	 *       construction as a whole, and use CoordinateSequence
-	 *       directly instead..
-	 */
-	typedef std::map<noding::OrientedCoordinateArray*, Edge*, OcaCmp> EdgeMap;
-	EdgeMap ocaMap;
+    /**
+     * An index of the edges, for fast lookup.
+     */
+    typedef std::unordered_map<noding::OrientedCoordinateArray,
+                               Edge*,
+                               noding::OrientedCoordinateArray::HashCode> EdgeMap;
+    EdgeMap ocaMap;
 
 public:
-	friend std::ostream& operator<< (std::ostream& os, const EdgeList& el);
+    friend std::ostream& operator<< (std::ostream& os, const EdgeList& el);
 
-	EdgeList()
-		:
-		edges(),
-		ocaMap()
-	{}
+    EdgeList()
+        :
+        edges(),
+        ocaMap()
+    {}
 
-	virtual ~EdgeList();
+    virtual ~EdgeList() = default;
 
-	/**
-	 * Insert an edge unless it is already in the list
-	 */
-	void add(Edge *e);
+    /**
+     * Insert an edge unless it is already in the list
+     */
+    void add(Edge* e);
 
-	void addAll(const std::vector<Edge*> &edgeColl);
+    void addAll(const std::vector<Edge*>& edgeColl);
 
-	std::vector<Edge*> &getEdges() { return edges; }
+    std::vector<Edge*>&
+    getEdges()
+    {
+        return edges;
+    }
 
-	Edge* findEqualEdge(Edge* e);
+    Edge* findEqualEdge(const Edge* e) const;
 
-	Edge* get(int i);
+    Edge* get(int i);
 
-	int findEdgeIndex(Edge *e);
+    int findEdgeIndex(const Edge* e) const;
 
-	std::string print();
+    std::string print();
 
-        void clearList();
+    void clearList();
 
 };
 

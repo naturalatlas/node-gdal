@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrcouchdbtablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  CouchDB Translator
  * Purpose:  Implements OGRCouchDBTableLayer class.
@@ -34,7 +33,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrcouchdbtablelayer.cpp 8924aa1cb27afa6091666df2862a53e001bb3581 2019-02-26 15:48:17 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                       OGRCouchDBTableLayer()                         */
@@ -44,20 +43,20 @@ OGRCouchDBTableLayer::OGRCouchDBTableLayer( OGRCouchDBDataSource* poDSIn,
                                             const char* pszName) :
     OGRCouchDBLayer(poDSIn),
     nNextFIDForCreate(-1),
-    bInTransaction(FALSE),
+    bInTransaction(false),
     bHasOGRSpatial(-1),
-    bHasGeocouchUtilsMinimalSpatialView(FALSE),
-    bServerSideAttributeFilteringWorks(TRUE),
-    bHasInstalledAttributeFilter(FALSE),
+    bHasGeocouchUtilsMinimalSpatialView(false),
+    bServerSideAttributeFilteringWorks(true),
+    bHasInstalledAttributeFilter(false),
     nUpdateSeq(-1),
-    bAlwaysValid(FALSE),
+    bAlwaysValid(false),
     osName(pszName),
-    bMustWriteMetadata(FALSE),
-    bMustRunSpatialFilter(FALSE),
-    bServerSideSpatialFilteringWorks(TRUE),
-    bHasLoadedMetadata(FALSE),
-    bExtentValid(FALSE),
-    bExtentSet(FALSE),
+    bMustWriteMetadata(false),
+    bMustRunSpatialFilter(false),
+    bServerSideSpatialFilteringWorks(true),
+    bHasLoadedMetadata(false),
+    bExtentValid(false),
+    bExtentSet(false),
     dfMinX(0),
     dfMinY(0),
     dfMaxX(0),
@@ -82,7 +81,15 @@ OGRCouchDBTableLayer::~OGRCouchDBTableLayer()
 
 {
     if( bMustWriteMetadata )
-        WriteMetadata();
+    {
+        if (poFeatureDefn == nullptr)
+        {
+            OGRCouchDBTableLayer::LoadMetadata();
+            if( poFeatureDefn == nullptr )
+                BuildLayerDefn();
+        }
+        OGRCouchDBTableLayer::WriteMetadata();
+    }
 
     for(int i=0;i<(int)aoTransactionFeatures.size();i++)
     {
@@ -100,10 +107,10 @@ void OGRCouchDBTableLayer::ResetReading()
     OGRCouchDBLayer::ResetReading();
 
     json_object_put(poFeatures);
-    poFeatures = NULL;
+    poFeatures = nullptr;
     aoFeatures.resize(0);
 
-    bMustRunSpatialFilter = m_poFilterGeom != NULL;
+    bMustRunSpatialFilter = m_poFilterGeom != nullptr;
     aosIdsToFetch.resize(0);
 }
 
@@ -115,7 +122,7 @@ int OGRCouchDBTableLayer::TestCapability( const char * pszCap )
 
 {
     if( EQUAL(pszCap,OLCFastFeatureCount) )
-        return m_poFilterGeom == NULL && m_poAttrQuery == NULL;
+        return m_poFilterGeom == nullptr && m_poAttrQuery == nullptr;
 
     else if( EQUAL(pszCap,OLCFastGetExtent) )
         return bExtentValid;
@@ -141,21 +148,21 @@ int OGRCouchDBTableLayer::TestCapability( const char * pszCap )
 /*                   RunSpatialFilterQueryIfNecessary()                 */
 /************************************************************************/
 
-int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
+bool OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
 {
-    if (!bMustRunSpatialFilter)
-        return TRUE;
+    if( !bMustRunSpatialFilter )
+        return true;
 
-    bMustRunSpatialFilter = FALSE;
+    bMustRunSpatialFilter = false;
 
     CPLAssert(nOffset == 0);
 
     aosIdsToFetch.resize(0);
 
-    const char* pszSpatialFilter = NULL;
-    if (bHasOGRSpatial < 0 || bHasOGRSpatial == FALSE)
+    const char* pszSpatialFilter = nullptr;
+    if( bHasOGRSpatial < 0 || bHasOGRSpatial == FALSE )
     {
-        pszSpatialFilter = CPLGetConfigOption("COUCHDB_SPATIAL_FILTER" , NULL);
+        pszSpatialFilter = CPLGetConfigOption("COUCHDB_SPATIAL_FILTER" , nullptr);
         if (pszSpatialFilter)
             bHasOGRSpatial = FALSE;
     }
@@ -167,9 +174,9 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
         osURI += "/_design/ogr_spatial";
 
         json_object* poAnswerObj = poDS->GET(osURI);
-        bHasOGRSpatial = (poAnswerObj != NULL &&
+        bHasOGRSpatial = (poAnswerObj != nullptr &&
             json_object_is_type(poAnswerObj, json_type_object) &&
-            json_object_object_get(poAnswerObj, "spatial") != NULL);
+            CPL_json_object_object_get(poAnswerObj, "spatial") != nullptr);
         json_object_put(poAnswerObj);
 
         if (!bHasOGRSpatial)
@@ -179,21 +186,25 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
             osURI += osEscapedName;
             osURI += "/_design/geo";
 
-            json_object* poSpatialObj;
+            json_object* poSpatialObj = nullptr;
             poAnswerObj = poDS->GET(osURI);
-            bHasGeocouchUtilsMinimalSpatialView = (poAnswerObj != NULL &&
+            bHasGeocouchUtilsMinimalSpatialView =
+                poAnswerObj != nullptr &&
                 json_object_is_type(poAnswerObj, json_type_object) &&
-                (poSpatialObj = json_object_object_get(poAnswerObj, "spatial")) != NULL &&
+                (poSpatialObj = CPL_json_object_object_get(poAnswerObj,
+                                                       "spatial")) != nullptr &&
                 json_object_is_type(poSpatialObj, json_type_object) &&
-                json_object_object_get(poSpatialObj, "minimal") != NULL);
+                CPL_json_object_object_get(poSpatialObj, "minimal") != nullptr;
+
             json_object_put(poAnswerObj);
 
-            if (!bHasGeocouchUtilsMinimalSpatialView)
+            if( !bHasGeocouchUtilsMinimalSpatialView )
             {
-                CPLDebug("CouchDB",
-                            "Geocouch not working --> client-side spatial filtering");
-                bServerSideSpatialFilteringWorks = FALSE;
-                return FALSE;
+                CPLDebug(
+                    "CouchDB",
+                    "Geocouch not working --> client-side spatial filtering");
+                bServerSideSpatialFilteringWorks = false;
+                return false;
             }
         }
     }
@@ -203,7 +214,7 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
 
     if (bHasOGRSpatial)
         pszSpatialFilter = "_design/ogr_spatial/_spatial/spatial";
-    else if (bHasGeocouchUtilsMinimalSpatialView)
+    else if( bHasGeocouchUtilsMinimalSpatialView )
         pszSpatialFilter = "_design/geo/_spatial/minimal";
 
     CPLString osURI("/");
@@ -216,28 +227,28 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
                         sEnvelope.MaxX, sEnvelope.MaxY);
 
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
     {
         CPLDebug("CouchDB",
                     "Geocouch not working --> client-side spatial filtering");
-        bServerSideSpatialFilteringWorks = FALSE;
-        return FALSE;
+        bServerSideSpatialFilteringWorks = false;
+        return false;
     }
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
     {
         CPLDebug("CouchDB",
                     "Geocouch not working --> client-side spatial filtering");
-        bServerSideSpatialFilteringWorks = FALSE;
+        bServerSideSpatialFilteringWorks = false;
         CPLError(CE_Failure, CPLE_AppDefined,
                     "FetchNextRowsSpatialFilter() failed");
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
     /* Catch error for a non geocouch database */
-    json_object* poError = json_object_object_get(poAnswerObj, "error");
-    json_object* poReason = json_object_object_get(poAnswerObj, "reason");
+    json_object* poError = CPL_json_object_object_get(poAnswerObj, "error");
+    json_object* poReason = CPL_json_object_object_get(poAnswerObj, "reason");
 
     const char* pszError = json_object_get_string(poError);
     const char* pszReason = json_object_get_string(poReason);
@@ -247,49 +258,49 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
     {
         CPLDebug("CouchDB",
                     "Geocouch not working --> client-side spatial filtering");
-        bServerSideSpatialFilteringWorks = FALSE;
+        bServerSideSpatialFilteringWorks = false;
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
     if (poDS->IsError(poAnswerObj, "FetchNextRowsSpatialFilter() failed"))
     {
         CPLDebug("CouchDB",
                     "Geocouch not working --> client-side spatial filtering");
-        bServerSideSpatialFilteringWorks = FALSE;
+        bServerSideSpatialFilteringWorks = false;
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
-    json_object* poRows = json_object_object_get(poAnswerObj, "rows");
-    if (poRows == NULL ||
+    json_object* poRows = CPL_json_object_object_get(poAnswerObj, "rows");
+    if (poRows == nullptr ||
         !json_object_is_type(poRows, json_type_array))
     {
         CPLDebug("CouchDB",
                     "Geocouch not working --> client-side spatial filtering");
-        bServerSideSpatialFilteringWorks = FALSE;
+        bServerSideSpatialFilteringWorks = false;
         CPLError(CE_Failure, CPLE_AppDefined,
                     "FetchNextRowsSpatialFilter() failed");
         json_object_put(poAnswerObj);
-        return FALSE;
+        return false;
     }
 
-    int nRows = json_object_array_length(poRows);
-    for(int i=0;i<nRows;i++)
+    const auto nRows = json_object_array_length(poRows);
+    for(auto i=decltype(nRows){0};i<nRows;i++)
     {
         json_object* poRow = json_object_array_get_idx(poRows, i);
-        if ( poRow == NULL ||
+        if ( poRow == nullptr ||
             !json_object_is_type(poRow, json_type_object) )
         {
             CPLError(CE_Failure, CPLE_AppDefined,
-                        "FetchNextRowsSpatialFilter() failed");
+                     "FetchNextRowsSpatialFilter() failed");
             json_object_put(poAnswerObj);
-            return FALSE;
+            return false;
         }
 
-        json_object* poId = json_object_object_get(poRow, "id");
+        json_object* poId = CPL_json_object_object_get(poRow, "id");
         const char* pszId = json_object_get_string(poId);
-        if (pszId != NULL)
+        if (pszId != nullptr)
         {
             aosIdsToFetch.push_back(pszId);
         }
@@ -299,20 +310,21 @@ int OGRCouchDBTableLayer::RunSpatialFilterQueryIfNecessary()
 
     json_object_put(poAnswerObj);
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
 /*                   FetchNextRowsSpatialFilter()                       */
 /************************************************************************/
 
-int OGRCouchDBTableLayer::FetchNextRowsSpatialFilter()
+bool OGRCouchDBTableLayer::FetchNextRowsSpatialFilter()
 {
-    if (!RunSpatialFilterQueryIfNecessary())
-        return FALSE;
+    if( !RunSpatialFilterQueryIfNecessary() )
+        return false;
 
     CPLString osContent("{\"keys\":[");
-    int nLimit = MIN(nOffset + GetFeaturesToFetch(), (int)aosIdsToFetch.size());
+    const int nLimit =
+        std::min(nOffset + GetFeaturesToFetch(), (int)aosIdsToFetch.size());
     for(int i=nOffset;i<nLimit;i++)
     {
         if (i > nOffset)
@@ -334,6 +346,7 @@ int OGRCouchDBTableLayer::FetchNextRowsSpatialFilter()
 /*                HasFilterOnFieldOrCreateIfNecessary()                 */
 /************************************************************************/
 
+// TODO(schwehr): What is the return type supposed to be?  Can it be a bool?
 int OGRCouchDBTableLayer::HasFilterOnFieldOrCreateIfNecessary(const char* pszFieldName)
 {
     std::map<CPLString, int>::iterator oIter = oMapFilterFields.find(pszFieldName);
@@ -345,18 +358,18 @@ int OGRCouchDBTableLayer::HasFilterOnFieldOrCreateIfNecessary(const char* pszFie
     osURI += "/_design/ogr_filter_";
     osURI += pszFieldName;
 
-    int bFoundFilter = FALSE;
+    bool bFoundFilter = false;
 
     json_object* poAnswerObj = poDS->GET(osURI);
     if (poAnswerObj &&
         json_object_is_type(poAnswerObj, json_type_object) &&
-        json_object_object_get(poAnswerObj, "views") != NULL)
+        CPL_json_object_object_get(poAnswerObj, "views") != nullptr)
     {
-        bFoundFilter = TRUE;
+        bFoundFilter = true;
     }
     json_object_put(poAnswerObj);
 
-    if (!bFoundFilter)
+    if( !bFoundFilter )
     {
         json_object* poDoc = json_object_new_object();
         json_object* poViews = json_object_new_object();
@@ -370,7 +383,7 @@ int OGRCouchDBTableLayer::HasFilterOnFieldOrCreateIfNecessary(const char* pszFie
         int bIsNumeric = poFieldDefn->GetType() == OFTInteger ||
                          poFieldDefn->GetType() == OFTReal;
 
-        if (bGeoJSONDocument)
+        if( bGeoJSONDocument )
         {
             osMap = "function(doc) { if (doc.properties && doc.properties.";
             osMap += pszFieldName;
@@ -431,11 +444,11 @@ int OGRCouchDBTableLayer::HasFilterOnFieldOrCreateIfNecessary(const char* pszFie
 
         json_object_put(poDoc);
 
-        if (poDS->IsOK(poAnswerObj, "Filter creation failed"))
+        if( poDS->IsOK(poAnswerObj, "Filter creation failed") )
         {
-            bFoundFilter = TRUE;
-            if (!bAlwaysValid)
-                bMustWriteMetadata = TRUE;
+            bFoundFilter = true;
+            if( !bAlwaysValid )
+                bMustWriteMetadata = true;
             nUpdateSeq++;
         }
 
@@ -452,17 +465,17 @@ int OGRCouchDBTableLayer::HasFilterOnFieldOrCreateIfNecessary(const char* pszFie
 /************************************************************************/
 
 static const char* OGRCouchDBGetOpStr(int nOperation,
-                                      int& bOutHasStrictComparisons)
+                                      bool &bOutHasStrictComparisons)
 {
-    bOutHasStrictComparisons = FALSE;
+    bOutHasStrictComparisons = false;
 
-    switch(nOperation)
+    switch( nOperation )
     {
         case SWQ_EQ: return "=";
         case SWQ_GE: return ">=";
         case SWQ_LE: return "<=";
-        case SWQ_GT: bOutHasStrictComparisons = TRUE; return ">";
-        case SWQ_LT: bOutHasStrictComparisons = TRUE; return "<";
+        case SWQ_GT: bOutHasStrictComparisons = true; return ">";
+        case SWQ_LT: bOutHasStrictComparisons = true; return "<";
         default:     return "unknown op";
     }
 }
@@ -530,13 +543,13 @@ static const char* OGRCouchDBGetKeyName(int nOperation)
 /*                         BuildAttrQueryURI()                          */
 /************************************************************************/
 
-CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
+CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(bool &bOutHasStrictComparisons)
 {
     CPLString osURI = "";
 
-    bOutHasStrictComparisons = FALSE;
+    bOutHasStrictComparisons = false;
 
-    int bCanHandleFilter = FALSE;
+    bool bCanHandleFilter = false;
 
     swq_expr_node * pNode = (swq_expr_node *) m_poAttrQuery->GetSWQExpr();
     if (pNode->eNodeType == SNT_OPERATION &&
@@ -556,7 +569,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
         if (pNode->nOperation == SWQ_EQ &&
             nIndex == COUCHDB_ID_FIELD && eType == SWQ_STRING)
         {
-            bCanHandleFilter = TRUE;
+            bCanHandleFilter = true;
 
             osURI = "/";
             osURI += osEscapedName;
@@ -566,10 +579,11 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             (eType == SWQ_STRING || eType == SWQ_INTEGER ||
              eType == SWQ_INTEGER64 || eType == SWQ_FLOAT))
         {
-            int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
-            if (bFoundFilter)
+            const bool bFoundFilter = CPL_TO_BOOL(
+                HasFilterOnFieldOrCreateIfNecessary(pszFieldName));
+            if( bFoundFilter )
             {
-                bCanHandleFilter = TRUE;
+                bCanHandleFilter = true;
 
                 osURI = "/";
                 osURI += osEscapedName;
@@ -579,9 +593,10 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             }
         }
 
-        if (bCanHandleFilter)
+        if( bCanHandleFilter )
         {
-            const char* pszOp = OGRCouchDBGetOpStr(pNode->nOperation, bOutHasStrictComparisons);
+            const char* pszOp =
+                OGRCouchDBGetOpStr(pNode->nOperation, bOutHasStrictComparisons);
             CPLString osVal = OGRCouchDBGetValue(eType, pNode->papoSubExpr[1]);
             CPLDebug("CouchDB", "Evaluating %s %s %s", pszFieldName, pszOp, osVal.c_str());
 
@@ -619,7 +634,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
         if (nIndex0 == nIndex1 && eType0 == eType1 &&
             nIndex0 == COUCHDB_ID_FIELD && eType0 == SWQ_STRING)
         {
-            bCanHandleFilter = TRUE;
+            bCanHandleFilter = true;
 
             osURI = "/";
             osURI += osEscapedName;
@@ -630,10 +645,11 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             (eType0 == SWQ_STRING || eType0 == SWQ_INTEGER ||
              eType0 == SWQ_INTEGER64 || eType0 == SWQ_FLOAT))
         {
-            int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
-            if (bFoundFilter)
+            const bool bFoundFilter = CPL_TO_BOOL(
+                HasFilterOnFieldOrCreateIfNecessary(pszFieldName));
+            if( bFoundFilter )
             {
-                bCanHandleFilter = TRUE;
+                bCanHandleFilter = true;
 
                 osURI = "/";
                 osURI += osEscapedName;
@@ -643,7 +659,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             }
         }
 
-        if (bCanHandleFilter)
+        if( bCanHandleFilter )
         {
             swq_field_type eType = eType0;
             CPLString osVal0 = OGRCouchDBGetValue(eType, pNode->papoSubExpr[0]->papoSubExpr[1]);
@@ -652,8 +668,10 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             int nOperation0 = pNode->papoSubExpr[0]->nOperation;
             int nOperation1 = pNode->papoSubExpr[1]->nOperation;
 
-            const char* pszOp0 = OGRCouchDBGetOpStr(nOperation0, bOutHasStrictComparisons);
-            const char* pszOp1 = OGRCouchDBGetOpStr(nOperation1, bOutHasStrictComparisons);
+            const char* pszOp0 =
+                OGRCouchDBGetOpStr(nOperation0, bOutHasStrictComparisons);
+            const char* pszOp1 =
+                OGRCouchDBGetOpStr(nOperation1, bOutHasStrictComparisons);
 
             CPLDebug("CouchDB", "Evaluating %s %s %s AND %s %s %s",
                             pszFieldName, pszOp0, osVal0.c_str(),
@@ -681,7 +699,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
 
         if (nIndex == COUCHDB_ID_FIELD && eType == SWQ_STRING)
         {
-            bCanHandleFilter = TRUE;
+            bCanHandleFilter = true;
 
             osURI = "/";
             osURI += osEscapedName;
@@ -691,10 +709,11 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             (eType == SWQ_STRING || eType == SWQ_INTEGER ||
              eType == SWQ_INTEGER64 || eType == SWQ_FLOAT))
         {
-            int bFoundFilter = HasFilterOnFieldOrCreateIfNecessary(pszFieldName);
-            if (bFoundFilter)
+            const bool bFoundFilter = CPL_TO_BOOL(
+                HasFilterOnFieldOrCreateIfNecessary(pszFieldName));
+            if( bFoundFilter )
             {
-                bCanHandleFilter = TRUE;
+                bCanHandleFilter = true;
 
                 osURI = "/";
                 osURI += osEscapedName;
@@ -704,7 +723,7 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
             }
         }
 
-        if (bCanHandleFilter)
+        if( bCanHandleFilter )
         {
             CPLString osVal0 = OGRCouchDBGetValue(eType, pNode->papoSubExpr[1]);
             CPLString osVal1 = OGRCouchDBGetValue(eType, pNode->papoSubExpr[2]);
@@ -729,30 +748,30 @@ CPLString OGRCouchDBTableLayer::BuildAttrQueryURI(int& bOutHasStrictComparisons)
 /*                   FetchNextRowsAttributeFilter()                     */
 /************************************************************************/
 
-int OGRCouchDBTableLayer::FetchNextRowsAttributeFilter()
+bool OGRCouchDBTableLayer::FetchNextRowsAttributeFilter()
 {
-    if (bHasInstalledAttributeFilter)
+    if( bHasInstalledAttributeFilter )
     {
-        bHasInstalledAttributeFilter = FALSE;
+        bHasInstalledAttributeFilter = false;
 
         CPLAssert(nOffset == 0);
 
-        int bOutHasStrictComparisons = FALSE;
+        bool bOutHasStrictComparisons = false;
         osURIAttributeFilter = BuildAttrQueryURI(bOutHasStrictComparisons);
 
-        if (osURIAttributeFilter.size() == 0)
+        if (osURIAttributeFilter.empty())
         {
             CPLDebug("CouchDB",
                      "Turning to client-side attribute filtering");
-            bServerSideAttributeFilteringWorks = FALSE;
-            return FALSE;
+            bServerSideAttributeFilteringWorks = false;
+            return false;
         }
     }
 
     CPLString osURI(osURIAttributeFilter);
     osURI += CPLSPrintf("&limit=%d&skip=%d&include_docs=true",
                         GetFeaturesToFetch(), nOffset);
-    if (strstr(osURI, "/_all_docs?") == NULL)
+    if (strstr(osURI, "/_all_docs?") == nullptr)
         osURI += "&reduce=false";
     json_object* poAnswerObj = poDS->GET(osURI);
     return FetchNextRowsAnalyseDocs(poAnswerObj);
@@ -762,23 +781,23 @@ int OGRCouchDBTableLayer::FetchNextRowsAttributeFilter()
 /*                           FetchNextRows()                            */
 /************************************************************************/
 
-int OGRCouchDBTableLayer::FetchNextRows()
+bool OGRCouchDBTableLayer::FetchNextRows()
 {
     json_object_put(poFeatures);
-    poFeatures = NULL;
+    poFeatures = nullptr;
     aoFeatures.resize(0);
 
-    if( m_poFilterGeom != NULL && bServerSideSpatialFilteringWorks )
+    if( m_poFilterGeom != nullptr && bServerSideSpatialFilteringWorks )
     {
-        int bRet = FetchNextRowsSpatialFilter();
-        if (bRet || bServerSideSpatialFilteringWorks)
+        const bool bRet = FetchNextRowsSpatialFilter();
+        if( bRet || bServerSideSpatialFilteringWorks )
             return bRet;
     }
 
-    if( m_poAttrQuery != NULL && bServerSideAttributeFilteringWorks )
+    if( m_poAttrQuery != nullptr && bServerSideAttributeFilteringWorks )
     {
-        int bRet = FetchNextRowsAttributeFilter();
-        if (bRet || bServerSideAttributeFilteringWorks)
+        const bool bRet = FetchNextRowsAttributeFilter();
+        if( bRet || bServerSideAttributeFilteringWorks )
             return bRet;
     }
 
@@ -789,7 +808,6 @@ int OGRCouchDBTableLayer::FetchNextRows()
     json_object* poAnswerObj = poDS->GET(osURI);
     return FetchNextRowsAnalyseDocs(poAnswerObj);
 }
-
 
 /************************************************************************/
 /*                            GetFeature()                              */
@@ -815,21 +833,21 @@ OGRFeature * OGRCouchDBTableLayer::GetFeature( const char* pszId )
     osURI += "/";
     osURI += pszId;
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj == NULL)
-        return NULL;
+    if (poAnswerObj == nullptr)
+        return nullptr;
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "GetFeature(%s) failed",
                  pszId);
         json_object_put(poAnswerObj);
-        return NULL;
+        return nullptr;
     }
 
     if ( poDS->IsError(poAnswerObj, CPLSPrintf("GetFeature(%s) failed", pszId)) )
     {
         json_object_put(poAnswerObj);
-        return NULL;
+        return nullptr;
     }
 
     OGRFeature* poFeature = TranslateFeature( poAnswerObj );
@@ -845,42 +863,51 @@ OGRFeature * OGRCouchDBTableLayer::GetFeature( const char* pszId )
 
 OGRFeatureDefn * OGRCouchDBTableLayer::GetLayerDefn()
 {
-    if (poFeatureDefn == NULL)
-        LoadMetadata();
+    if (poFeatureDefn != nullptr)
+        return poFeatureDefn;
 
-    if (poFeatureDefn == NULL)
+    LoadMetadata();
+    if( poFeatureDefn == nullptr)
+        BuildLayerDefn();
+    return poFeatureDefn;
+}
+
+/************************************************************************/
+/*                           BuildLayerDefn()                           */
+/************************************************************************/
+
+void OGRCouchDBTableLayer::BuildLayerDefn()
+{
+    CPLAssert(poFeatureDefn == nullptr);
+
+    poFeatureDefn = new OGRFeatureDefn( osName );
+    poFeatureDefn->Reference();
+
+    poFeatureDefn->SetGeomType(eGeomType);
+
+    OGRFieldDefn oFieldId("_id", OFTString);
+    poFeatureDefn->AddFieldDefn(&oFieldId);
+
+    OGRFieldDefn oFieldRev("_rev", OFTString);
+    poFeatureDefn->AddFieldDefn(&oFieldRev);
+
+    if (nNextFIDForCreate == 0)
     {
-        poFeatureDefn = new OGRFeatureDefn( osName );
-        poFeatureDefn->Reference();
-
-        poFeatureDefn->SetGeomType(eGeomType);
-
-        OGRFieldDefn oFieldId("_id", OFTString);
-        poFeatureDefn->AddFieldDefn(&oFieldId);
-
-        OGRFieldDefn oFieldRev("_rev", OFTString);
-        poFeatureDefn->AddFieldDefn(&oFieldRev);
-
-        if (nNextFIDForCreate == 0)
-        {
-            return poFeatureDefn;
-        }
-
-        CPLString osURI("/");
-        osURI += osEscapedName;
-        osURI += "/_all_docs?limit=10&include_docs=true";
-        json_object* poAnswerObj = poDS->GET(osURI);
-        if (poAnswerObj == NULL)
-            return poFeatureDefn;
-
-        BuildFeatureDefnFromRows(poAnswerObj);
-
-        eGeomType = poFeatureDefn->GetGeomType();
-
-        json_object_put(poAnswerObj);
+        return;
     }
 
-    return poFeatureDefn;
+    CPLString osURI("/");
+    osURI += osEscapedName;
+    osURI += "/_all_docs?limit=10&include_docs=true";
+    json_object* poAnswerObj = poDS->GET(osURI);
+    if (poAnswerObj == nullptr)
+        return;
+
+    BuildFeatureDefnFromRows(poAnswerObj);
+
+    eGeomType = poFeatureDefn->GetGeomType();
+
+    json_object_put(poAnswerObj);
 }
 
 /************************************************************************/
@@ -891,22 +918,22 @@ GIntBig OGRCouchDBTableLayer::GetFeatureCount(int bForce)
 {
     GetLayerDefn();
 
-    if (m_poFilterGeom == NULL && m_poAttrQuery != NULL)
+    if (m_poFilterGeom == nullptr && m_poAttrQuery != nullptr)
     {
-        int bOutHasStrictComparisons = FALSE;
+        bool bOutHasStrictComparisons = false;
         CPLString osURI = BuildAttrQueryURI(bOutHasStrictComparisons);
-        if (!bOutHasStrictComparisons && osURI.size() != 0 &&
-            strstr(osURI, "/_all_docs?") == NULL)
+        if( !bOutHasStrictComparisons && !osURI.empty() &&
+            strstr(osURI, "/_all_docs?") == nullptr )
         {
             osURI += "&reduce=true";
             json_object* poAnswerObj = poDS->GET(osURI);
-            json_object* poRows = NULL;
-            if (poAnswerObj != NULL &&
+            json_object* poRows = nullptr;
+            if (poAnswerObj != nullptr &&
                 json_object_is_type(poAnswerObj, json_type_object) &&
-                (poRows = json_object_object_get(poAnswerObj, "rows")) != NULL &&
+                (poRows = CPL_json_object_object_get(poAnswerObj, "rows")) != nullptr &&
                 json_object_is_type(poRows, json_type_array))
             {
-                int nLength = json_object_array_length(poRows);
+                const auto nLength = json_object_array_length(poRows);
                 if (nLength == 0)
                 {
                     json_object_put(poAnswerObj);
@@ -918,18 +945,18 @@ GIntBig OGRCouchDBTableLayer::GetFeatureCount(int bForce)
                     if (poRow && json_object_is_type(poRow, json_type_object))
                     {
                         /* for string fields */
-                        json_object* poValue = json_object_object_get(poRow, "value");
-                        if (poValue != NULL && json_object_is_type(poValue, json_type_int))
+                        json_object* poValue = CPL_json_object_object_get(poRow, "value");
+                        if (poValue != nullptr && json_object_is_type(poValue, json_type_int))
                         {
                             int nVal = json_object_get_int(poValue);
                             json_object_put(poAnswerObj);
                             return nVal;
                         }
-                        else if (poValue != NULL && json_object_is_type(poValue, json_type_object))
+                        else if (poValue != nullptr && json_object_is_type(poValue, json_type_object))
                         {
                             /* for numeric fields */
-                            json_object* poCount = json_object_object_get(poValue, "count");
-                            if (poCount != NULL && json_object_is_type(poCount, json_type_int))
+                            json_object* poCount = CPL_json_object_object_get(poValue, "count");
+                            if (poCount != nullptr && json_object_is_type(poCount, json_type_int))
                             {
                                 int nVal = json_object_get_int(poCount);
                                 json_object_put(poAnswerObj);
@@ -943,7 +970,7 @@ GIntBig OGRCouchDBTableLayer::GetFeatureCount(int bForce)
         }
     }
 
-    if (m_poFilterGeom != NULL && m_poAttrQuery == NULL &&
+    if (m_poFilterGeom != nullptr && m_poAttrQuery == nullptr &&
         wkbFlatten(eGeomType) == wkbPoint)
     {
         /* Only optimize for wkbPoint case. Otherwise the result might be higher */
@@ -951,13 +978,13 @@ GIntBig OGRCouchDBTableLayer::GetFeatureCount(int bForce)
         /* geometry of a feature does not necessary mean the intersection of the */
         /* geometry itself */
         RunSpatialFilterQueryIfNecessary();
-        if (bServerSideSpatialFilteringWorks)
+        if( bServerSideSpatialFilteringWorks )
         {
             return (int)aosIdsToFetch.size();
         }
     }
 
-    if (m_poFilterGeom != NULL || m_poAttrQuery != NULL)
+    if (m_poFilterGeom != nullptr || m_poAttrQuery != nullptr)
         return OGRCouchDBLayer::GetFeatureCount(bForce);
 
     return GetTotalFeatureCount();
@@ -975,7 +1002,7 @@ int OGRCouchDBTableLayer::GetTotalFeatureCount()
     osURI += osEscapedName;
     osURI += "/_all_docs?startkey_docid=_&endkey_docid=_zzzzzzzzzzzzzzz";
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return nTotalRows;
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
@@ -984,16 +1011,16 @@ int OGRCouchDBTableLayer::GetTotalFeatureCount()
         return nTotalRows;
     }
 
-    json_object* poTotalRows = json_object_object_get(poAnswerObj,
+    json_object* poTotalRows = CPL_json_object_object_get(poAnswerObj,
                                                         "total_rows");
-    if (poTotalRows != NULL &&
+    if (poTotalRows != nullptr &&
         json_object_is_type(poTotalRows, json_type_int))
     {
         nTotalRows = json_object_get_int(poTotalRows);
     }
 
-    json_object* poRows = json_object_object_get(poAnswerObj, "rows");
-    if (poRows == NULL ||
+    json_object* poRows = CPL_json_object_object_get(poAnswerObj, "rows");
+    if (poRows == nullptr ||
         !json_object_is_type(poRows, json_type_array))
     {
         json_object_put(poAnswerObj);
@@ -1002,14 +1029,14 @@ int OGRCouchDBTableLayer::GetTotalFeatureCount()
 
     bHasOGRSpatial = FALSE;
 
-    int nSpecialRows = json_object_array_length(poRows);
-    for(int i=0;i<nSpecialRows;i++)
+    const auto nSpecialRows = json_object_array_length(poRows);
+    for(auto i=decltype(nSpecialRows){0};i<nSpecialRows;i++)
     {
         json_object* poRow = json_object_array_get_idx(poRows, i);
-        if ( poRow != NULL &&
+        if ( poRow != nullptr &&
              json_object_is_type(poRow, json_type_object) )
         {
-            json_object* poId = json_object_object_get(poRow, "id");
+            json_object* poId = CPL_json_object_object_get(poRow, "id");
             const char* pszId = json_object_get_string(poId);
             if ( pszId && strcmp(pszId, "_design/ogr_spatial") == 0)
             {
@@ -1020,10 +1047,10 @@ int OGRCouchDBTableLayer::GetTotalFeatureCount()
 
     if (!bHasOGRSpatial)
     {
-        bServerSideSpatialFilteringWorks = FALSE;
+        bServerSideSpatialFilteringWorks = false;
     }
 
-    if (nTotalRows >= nSpecialRows)
+    if (nTotalRows >= static_cast<int>(nSpecialRows))
         nTotalRows -= nSpecialRows;
 
     json_object_put(poAnswerObj);
@@ -1039,7 +1066,7 @@ OGRErr OGRCouchDBTableLayer::CreateField( OGRFieldDefn *poField,
                                           CPL_UNUSED int bApproxOK )
 {
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
@@ -1050,7 +1077,7 @@ OGRErr OGRCouchDBTableLayer::CreateField( OGRFieldDefn *poField,
 
     poFeatureDefn->AddFieldDefn(poField);
 
-    bMustWriteMetadata = TRUE;
+    bMustWriteMetadata = true;
 
     return OGRERR_NONE;
 }
@@ -1061,15 +1088,15 @@ OGRErr OGRCouchDBTableLayer::CreateField( OGRFieldDefn *poField,
 
 static json_object* OGRCouchDBWriteFeature( OGRFeature* poFeature,
                                             OGRwkbGeometryType eGeomType,
-                                            int bGeoJSONDocument,
+                                            bool bGeoJSONDocument,
                                             int nCoordPrecision )
 {
-    CPLAssert( NULL != poFeature );
+    CPLAssert( nullptr != poFeature );
 
     json_object* poObj = json_object_new_object();
-    CPLAssert( NULL != poObj );
+    CPLAssert( nullptr != poObj );
 
-    if (poFeature->IsFieldSet(COUCHDB_ID_FIELD))
+    if (poFeature->IsFieldSetAndNotNull(COUCHDB_ID_FIELD))
     {
         const char* pszId = poFeature->GetFieldAsString(COUCHDB_ID_FIELD);
         json_object_object_add( poObj, "_id",
@@ -1090,14 +1117,14 @@ static json_object* OGRCouchDBWriteFeature( OGRFeature* poFeature,
                                 json_object_new_string(CPLSPrintf("%09ld", (long)poFeature->GetFID())) );
     }
 
-    if (poFeature->IsFieldSet(COUCHDB_REV_FIELD))
+    if (poFeature->IsFieldSetAndNotNull(COUCHDB_REV_FIELD))
     {
         const char* pszRev = poFeature->GetFieldAsString(COUCHDB_REV_FIELD);
         json_object_object_add( poObj, "_rev",
                                 json_object_new_string(pszRev) );
     }
 
-    if (bGeoJSONDocument)
+    if( bGeoJSONDocument )
     {
         json_object_object_add( poObj, "type",
                                 json_object_new_string("Feature") );
@@ -1106,25 +1133,23 @@ static json_object* OGRCouchDBWriteFeature( OGRFeature* poFeature,
 /* -------------------------------------------------------------------- */
 /*      Write feature attributes to GeoJSON "properties" object.        */
 /* -------------------------------------------------------------------- */
-    json_object* poObjProps = NULL;
-
-    poObjProps = OGRGeoJSONWriteAttributes( poFeature, -1 );
+    json_object* poObjProps = OGRGeoJSONWriteAttributes( poFeature );
     if (poObjProps)
     {
         json_object_object_del(poObjProps, "_id");
         json_object_object_del(poObjProps, "_rev");
     }
 
-    if (bGeoJSONDocument)
+    if( bGeoJSONDocument )
     {
         json_object_object_add( poObj, "properties", poObjProps );
     }
     else
     {
         json_object_iter it;
-        it.key = NULL;
-        it.val = NULL;
-        it.entry = NULL;
+        it.key = nullptr;
+        it.val = nullptr;
+        it.entry = nullptr;
         json_object_object_foreachC( poObjProps, it )
         {
             json_object_object_add( poObj, it.key, json_object_get(it.val) );
@@ -1138,13 +1163,13 @@ static json_object* OGRCouchDBWriteFeature( OGRFeature* poFeature,
 /* -------------------------------------------------------------------- */
     if (eGeomType != wkbNone)
     {
-        json_object* poObjGeom = NULL;
+        json_object* poObjGeom = nullptr;
 
         OGRGeometry* poGeometry = poFeature->GetGeometryRef();
-        if ( NULL != poGeometry )
+        if ( nullptr != poGeometry )
         {
             poObjGeom = OGRGeoJSONWriteGeometry( poGeometry, nCoordPrecision, -1 );
-            if ( poObjGeom != NULL &&
+            if ( poObjGeom != nullptr &&
                  wkbFlatten(poGeometry->getGeometryType()) != wkbPoint &&
                  !poGeometry->IsEmpty() )
             {
@@ -1176,7 +1201,7 @@ int OGRCouchDBTableLayer::GetMaximumId()
     osURI += osEscapedName;
     osURI += "/_all_docs?startkey_docid=999999999&endkey_docid=000000000&descending=true&limit=1";
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return -1;
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
@@ -1192,8 +1217,8 @@ int OGRCouchDBTableLayer::GetMaximumId()
         return -1;
     }
 
-    json_object* poRows = json_object_object_get(poAnswerObj, "rows");
-    if (poRows == NULL ||
+    json_object* poRows = CPL_json_object_object_get(poAnswerObj, "rows");
+    if (poRows == nullptr ||
         !json_object_is_type(poRows, json_type_array))
     {
         CPLError(CE_Failure, CPLE_AppDefined, "GetMaximumId() failed");
@@ -1201,7 +1226,7 @@ int OGRCouchDBTableLayer::GetMaximumId()
         return -1;
     }
 
-    int nRows = json_object_array_length(poRows);
+    const auto nRows = json_object_array_length(poRows);
     if (nRows != 1)
     {
         CPLError(CE_Failure, CPLE_AppDefined, "GetMaximumId() failed");
@@ -1210,7 +1235,7 @@ int OGRCouchDBTableLayer::GetMaximumId()
     }
 
     json_object* poRow = json_object_array_get_idx(poRows, 0);
-    if ( poRow == NULL ||
+    if ( poRow == nullptr ||
             !json_object_is_type(poRow, json_type_object) )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "GetMaximumId() failed");
@@ -1218,9 +1243,9 @@ int OGRCouchDBTableLayer::GetMaximumId()
         return -1;
     }
 
-    json_object* poId = json_object_object_get(poRow, "id");
+    json_object* poId = CPL_json_object_object_get(poRow, "id");
     const char* pszId = json_object_get_string(poId);
-    if (pszId != NULL)
+    if (pszId != nullptr)
     {
         int nId = atoi(pszId);
         json_object_put(poAnswerObj);
@@ -1240,7 +1265,7 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
 {
     GetLayerDefn();
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
@@ -1249,11 +1274,14 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
 
     if (poFeature->IsFieldSet(COUCHDB_REV_FIELD))
     {
-        static int bOnce = FALSE;
-        if (!bOnce)
+        static bool bOnce = false;
+        if( !bOnce )
         {
-            bOnce = TRUE;
-            CPLDebug("CouchDB", "CreateFeature() should be called with an unset _rev field. Ignoring it");
+            bOnce = true;
+            CPLDebug(
+                "CouchDB",
+                "CreateFeature() should be called with an unset _rev field. "
+                "Ignoring it");
         }
         poFeature->UnsetField(COUCHDB_REV_FIELD);
     }
@@ -1268,17 +1296,17 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
     }
 
     OGRGeometry* poGeom = poFeature->GetGeometryRef();
-    if (bExtentValid && poGeom != NULL && !poGeom->IsEmpty())
+    if( bExtentValid && poGeom != nullptr && !poGeom->IsEmpty() )
     {
         OGREnvelope sEnvelope;
         poGeom->getEnvelope(&sEnvelope);
-        if (!bExtentSet)
+        if( !bExtentSet )
         {
             dfMinX = sEnvelope.MinX;
             dfMinY = sEnvelope.MinY;
             dfMaxX = sEnvelope.MaxX;
             dfMaxY = sEnvelope.MaxY;
-            bExtentSet = TRUE;
+            bExtentSet = true;
         }
         if (sEnvelope.MinX < dfMinX)
             dfMinX = sEnvelope.MinX;
@@ -1290,13 +1318,14 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
             dfMaxY = sEnvelope.MaxY;
     }
 
-    if (bExtentValid && eGeomType != wkbNone)
-        bMustWriteMetadata = TRUE;
+    if( bExtentValid && eGeomType != wkbNone )
+        bMustWriteMetadata = true;
 
     int nFID = nNextFIDForCreate ++;
     CPLString osFID;
-    if (!poFeature->IsFieldSet(COUCHDB_ID_FIELD) ||
-        !CPLTestBool(CPLGetConfigOption("COUCHDB_PRESERVE_ID_ON_INSERT", "FALSE")))
+    if( !poFeature->IsFieldSetAndNotNull(COUCHDB_ID_FIELD) ||
+        !CPLTestBool(CPLGetConfigOption("COUCHDB_PRESERVE_ID_ON_INSERT",
+                                        "FALSE")) )
     {
         if (poFeature->GetFID() != OGRNullFID)
         {
@@ -1317,7 +1346,7 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
                                                 bGeoJSONDocument,
                                                 nCoordPrecision);
 
-    if (bInTransaction)
+    if( bInTransaction )
     {
         aoTransactionFeatures.push_back(poObj);
 
@@ -1332,17 +1361,17 @@ OGRErr OGRCouchDBTableLayer::ICreateFeature( OGRFeature *poFeature )
     json_object* poAnswerObj = poDS->PUT(osURI, pszJson);
     json_object_put( poObj );
 
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return OGRERR_FAILURE;
 
-    if (!poDS->IsOK(poAnswerObj, "Feature creation failed"))
+    if( !poDS->IsOK(poAnswerObj, "Feature creation failed") )
     {
         json_object_put(poAnswerObj);
         return OGRERR_FAILURE;
     }
 
-    json_object* poId = json_object_object_get(poAnswerObj, "id");
-    json_object* poRev = json_object_object_get(poAnswerObj, "rev");
+    json_object* poId = CPL_json_object_object_get(poAnswerObj, "id");
+    json_object* poRev = CPL_json_object_object_get(poAnswerObj, "rev");
 
     const char* pszId = json_object_get_string(poId);
     const char* pszRev = json_object_get_string(poRev);
@@ -1378,14 +1407,14 @@ OGRErr      OGRCouchDBTableLayer::ISetFeature( OGRFeature *poFeature )
 {
     GetLayerDefn();
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
         return OGRERR_FAILURE;
     }
 
-    if (!poFeature->IsFieldSet(COUCHDB_ID_FIELD))
+    if (!poFeature->IsFieldSetAndNotNull(COUCHDB_ID_FIELD))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "SetFeature() requires non null _id field");
@@ -1404,25 +1433,25 @@ OGRErr      OGRCouchDBTableLayer::ISetFeature( OGRFeature *poFeature )
     json_object* poAnswerObj = poDS->PUT(osURI, pszJson);
     json_object_put( poObj );
 
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return OGRERR_FAILURE;
 
-    if (!poDS->IsOK(poAnswerObj, "Feature update failed"))
+    if( !poDS->IsOK(poAnswerObj, "Feature update failed") )
     {
         json_object_put(poAnswerObj);
         return OGRERR_FAILURE;
     }
 
-    json_object* poRev = json_object_object_get(poAnswerObj, "rev");
+    json_object* poRev = CPL_json_object_object_get(poAnswerObj, "rev");
     const char* pszRev = json_object_get_string(poRev);
     poFeature->SetField(COUCHDB_REV_FIELD, pszRev);
 
     json_object_put(poAnswerObj);
 
-    if (bExtentValid && eGeomType != wkbNone)
+    if( bExtentValid && eGeomType != wkbNone )
     {
-        bExtentValid = FALSE;
-        bMustWriteMetadata = TRUE;
+        bExtentValid = false;
+        bMustWriteMetadata = true;
     }
     nUpdateSeq ++;
 
@@ -1437,7 +1466,7 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( GIntBig nFID )
 {
     GetLayerDefn();
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
@@ -1445,7 +1474,7 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( GIntBig nFID )
     }
 
     OGRFeature* poFeature = GetFeature(nFID);
-    if (poFeature == NULL)
+    if (poFeature == nullptr)
         return OGRERR_FAILURE;
 
     return DeleteFeature(poFeature);
@@ -1459,7 +1488,7 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( const char* pszId )
 {
     GetLayerDefn();
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
@@ -1467,7 +1496,7 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( const char* pszId )
     }
 
     OGRFeature* poFeature = GetFeature(pszId);
-    if (poFeature == NULL)
+    if (poFeature == nullptr)
         return OGRERR_FAILURE;
 
     return DeleteFeature(poFeature);
@@ -1479,8 +1508,8 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( const char* pszId )
 
 OGRErr OGRCouchDBTableLayer::DeleteFeature( OGRFeature* poFeature )
 {
-    if (!poFeature->IsFieldSet(COUCHDB_ID_FIELD) ||
-        !poFeature->IsFieldSet(COUCHDB_REV_FIELD))
+    if (!poFeature->IsFieldSetAndNotNull(COUCHDB_ID_FIELD) ||
+        !poFeature->IsFieldSetAndNotNull(COUCHDB_REV_FIELD))
     {
         delete poFeature;
         return OGRERR_FAILURE;
@@ -1494,11 +1523,11 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( OGRFeature* poFeature )
     osURI += "/";
     osURI += CPLSPrintf("%s?rev=%s", pszId, pszRev);
 
-    if (bExtentValid && eGeomType != wkbNone)
-        bMustWriteMetadata = TRUE;
+    if( bExtentValid && eGeomType != wkbNone )
+        bMustWriteMetadata = true;
 
     OGRGeometry* poGeom = poFeature->GetGeometryRef();
-    if (bExtentValid && bExtentSet && poGeom != NULL && !poGeom->IsEmpty())
+    if( bExtentValid && bExtentSet && poGeom != nullptr && !poGeom->IsEmpty() )
     {
         OGREnvelope sEnvelope;
         poGeom->getEnvelope(&sEnvelope);
@@ -1507,7 +1536,7 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( OGRFeature* poFeature )
             dfMaxX == sEnvelope.MaxX ||
             dfMaxY == sEnvelope.MaxY)
         {
-            bExtentValid = FALSE;
+            bExtentValid = false;
         }
     }
 
@@ -1515,10 +1544,10 @@ OGRErr OGRCouchDBTableLayer::DeleteFeature( OGRFeature* poFeature )
 
     json_object* poAnswerObj = poDS->DELETE(osURI);
 
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return OGRERR_FAILURE;
 
-    if (!poDS->IsOK(poAnswerObj, "Feature deletion failed"))
+    if( !poDS->IsOK(poAnswerObj, "Feature deletion failed") )
     {
         json_object_put(poAnswerObj);
         return OGRERR_FAILURE;
@@ -1539,20 +1568,20 @@ OGRErr OGRCouchDBTableLayer::StartTransaction()
 {
     GetLayerDefn();
 
-    if (bInTransaction)
+    if( bInTransaction )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "Already in transaction");
         return OGRERR_FAILURE;
     }
 
-    if (!poDS->IsReadWrite())
+    if( !poDS->IsReadWrite() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Operation not available in read-only mode");
         return OGRERR_FAILURE;
     }
 
-    bInTransaction = TRUE;
+    bInTransaction = true;
 
     return OGRERR_NONE;
 }
@@ -1565,15 +1594,15 @@ OGRErr OGRCouchDBTableLayer::CommitTransaction()
 {
     GetLayerDefn();
 
-    if (!bInTransaction)
+    if( !bInTransaction )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "Should be in transaction");
         return OGRERR_FAILURE;
     }
 
-    bInTransaction = FALSE;
+    bInTransaction = false;
 
-    if (aoTransactionFeatures.size() == 0)
+    if (aoTransactionFeatures.empty())
         return OGRERR_NONE;
 
     CPLString osPost("{ \"docs\": [");
@@ -1592,7 +1621,7 @@ OGRErr OGRCouchDBTableLayer::CommitTransaction()
     osURI += "/_bulk_docs";
     json_object* poAnswerObj = poDS->POST(osURI, osPost);
 
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return OGRERR_FAILURE;
 
     if ( json_object_is_type(poAnswerObj, json_type_object) )
@@ -1611,21 +1640,21 @@ OGRErr OGRCouchDBTableLayer::CommitTransaction()
         return OGRERR_FAILURE;
     }
 
-    int nRows = json_object_array_length(poAnswerObj);
-    for(int i=0;i<nRows;i++)
+    const auto nRows = json_object_array_length(poAnswerObj);
+    for(auto i=decltype(nRows){0};i<nRows;i++)
     {
         json_object* poRow = json_object_array_get_idx(poAnswerObj, i);
-        if ( poRow != NULL &&
+        if ( poRow != nullptr &&
              json_object_is_type(poRow, json_type_object) )
         {
-            json_object* poId = json_object_object_get(poRow, "id");
-            json_object* poRev = json_object_object_get(poRow, "rev");
-            json_object* poError = json_object_object_get(poRow, "error");
-            json_object* poReason = json_object_object_get(poRow, "reason");
+            json_object* poId = CPL_json_object_object_get(poRow, "id");
+            json_object* poRev = CPL_json_object_object_get(poRow, "rev");
+            json_object* poError = CPL_json_object_object_get(poRow, "error");
+            json_object* poReason = CPL_json_object_object_get(poRow, "reason");
 
             const char* pszId = json_object_get_string(poId);
 
-            if (poError != NULL)
+            if (poError != nullptr)
             {
                 const char* pszError = json_object_get_string(poError);
                 const char* pszReason = json_object_get_string(poReason);
@@ -1636,7 +1665,7 @@ OGRErr OGRCouchDBTableLayer::CommitTransaction()
                          pszError ? pszError : "",
                          pszReason ? pszReason : "");
             }
-            else if (poRev != NULL)
+            else if (poRev != nullptr)
             {
                 /*const char* pszRev = json_object_get_string(poRev);
                 CPLDebug("CouchDB", "id = %s, rev = %s",
@@ -1660,12 +1689,12 @@ OGRErr OGRCouchDBTableLayer::RollbackTransaction()
 {
     GetLayerDefn();
 
-    if (!bInTransaction)
+    if( !bInTransaction )
     {
         CPLError(CE_Failure, CPLE_AppDefined, "Should be in transaction");
         return OGRERR_FAILURE;
     }
-    bInTransaction = FALSE;
+    bInTransaction = false;
     for(int i=0;i<(int)aoTransactionFeatures.size();i++)
     {
         json_object_put(aoTransactionFeatures[i]);
@@ -1683,18 +1712,17 @@ OGRErr OGRCouchDBTableLayer::SetAttributeFilter( const char *pszQuery )
 {
     GetLayerDefn();
 
-    bServerSideAttributeFilteringWorks = TRUE;
+    bServerSideAttributeFilteringWorks = true;
 
     OGRErr eErr = OGRCouchDBLayer::SetAttributeFilter(pszQuery);
 
     if (eErr == OGRERR_NONE)
     {
-        bHasInstalledAttributeFilter = TRUE;
+        bHasInstalledAttributeFilter = true;
     }
 
     return eErr;
 }
-
 
 /************************************************************************/
 /*                          SetSpatialFilter()                          */
@@ -1707,7 +1735,7 @@ void OGRCouchDBTableLayer::SetSpatialFilter( OGRGeometry * poGeomIn )
 
     if( InstallFilter( poGeomIn ) )
     {
-        bMustRunSpatialFilter = TRUE;
+        bMustRunSpatialFilter = true;
 
         ResetReading();
     }
@@ -1720,20 +1748,22 @@ void OGRCouchDBTableLayer::SetSpatialFilter( OGRGeometry * poGeomIn )
 void OGRCouchDBTableLayer::SetInfoAfterCreation(OGRwkbGeometryType eGType,
                                                 OGRSpatialReference* poSRSIn,
                                                 int nUpdateSeqIn,
-                                                int bGeoJSONDocumentIn)
+                                                bool bGeoJSONDocumentIn)
 {
     eGeomType = eGType;
     nNextFIDForCreate = 0;
-    bMustWriteMetadata = TRUE;
-    bExtentValid = TRUE;
-    bHasLoadedMetadata = TRUE;
+    bMustWriteMetadata = true;
+    bExtentValid = true;
+    bHasLoadedMetadata = true;
     nUpdateSeq = nUpdateSeqIn;
     bGeoJSONDocument = bGeoJSONDocumentIn;
 
-    CPLAssert(poSRS == NULL);
-    poSRS = poSRSIn;
-    if (poSRS)
-        poSRS->Reference();
+    CPLAssert(poSRS == nullptr);
+    if (poSRSIn)
+    {
+        poSRS = poSRSIn->Clone();
+        poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+    }
 }
 
 /************************************************************************/
@@ -1752,16 +1782,16 @@ static int OGRCouchDBIsNumericObject(json_object* poObj)
 
 void OGRCouchDBTableLayer::LoadMetadata()
 {
-    if (bHasLoadedMetadata)
+    if( bHasLoadedMetadata )
         return;
 
-    bHasLoadedMetadata = TRUE;
+    bHasLoadedMetadata = true;
 
     CPLString osURI("/");
     osURI += osEscapedName;
     osURI += "/_design/ogr_metadata";
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj == NULL)
+    if (poAnswerObj == nullptr)
         return;
 
     if ( !json_object_is_type(poAnswerObj, json_type_object) )
@@ -1771,12 +1801,12 @@ void OGRCouchDBTableLayer::LoadMetadata()
         return;
     }
 
-    json_object* poRev = json_object_object_get(poAnswerObj, "_rev");
+    json_object* poRev = CPL_json_object_object_get(poAnswerObj, "_rev");
     const char* pszRev = json_object_get_string(poRev);
     if (pszRev)
         osMetadataRev = pszRev;
 
-    json_object* poError = json_object_object_get(poAnswerObj, "error");
+    json_object* poError = CPL_json_object_object_get(poAnswerObj, "error");
     const char* pszError = json_object_get_string(poError);
     if (pszError && strcmp(pszError, "not_found") == 0)
     {
@@ -1790,19 +1820,20 @@ void OGRCouchDBTableLayer::LoadMetadata()
         return;
     }
 
-    json_object* poJsonSRS = json_object_object_get(poAnswerObj, "srs");
+    json_object* poJsonSRS = CPL_json_object_object_get(poAnswerObj, "srs");
     const char* pszSRS = json_object_get_string(poJsonSRS);
-    if (pszSRS != NULL)
+    if (pszSRS != nullptr)
     {
         poSRS = new OGRSpatialReference();
-        if (poSRS->importFromWkt((char**)&pszSRS) != OGRERR_NONE)
+        poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        if (poSRS->importFromWkt(pszSRS) != OGRERR_NONE)
         {
             delete poSRS;
-            poSRS = NULL;
+            poSRS = nullptr;
         }
     }
 
-    json_object* poGeomType = json_object_object_get(poAnswerObj, "geomtype");
+    json_object* poGeomType = CPL_json_object_object_get(poAnswerObj, "geomtype");
     const char* pszGeomType = json_object_get_string(poGeomType);
 
     if (pszGeomType)
@@ -1810,27 +1841,27 @@ void OGRCouchDBTableLayer::LoadMetadata()
         if (EQUAL(pszGeomType, "NONE"))
         {
             eGeomType = wkbNone;
-            bExtentValid = TRUE;
+            bExtentValid = true;
         }
         else
         {
             eGeomType = OGRFromOGCGeomType(pszGeomType);
 
-            json_object* poIs25D = json_object_object_get(poAnswerObj, "is_25D");
+            json_object* poIs25D = CPL_json_object_object_get(poAnswerObj, "is_25D");
             if (poIs25D && json_object_get_boolean(poIs25D))
                 eGeomType = wkbSetZ(eGeomType);
 
-            json_object* poExtent = json_object_object_get(poAnswerObj, "extent");
+            json_object* poExtent = CPL_json_object_object_get(poAnswerObj, "extent");
             if (poExtent && json_object_get_type(poExtent) == json_type_object)
             {
                 json_object* poUpdateSeq =
-                    json_object_object_get(poExtent, "validity_update_seq");
+                    CPL_json_object_object_get(poExtent, "validity_update_seq");
                 if (poUpdateSeq && json_object_get_type(poUpdateSeq) == json_type_int)
                 {
                     int nValidityUpdateSeq = json_object_get_int(poUpdateSeq);
                     if (nValidityUpdateSeq <= 0)
                     {
-                        bAlwaysValid = TRUE;
+                        bAlwaysValid = true;
                     }
                     else
                     {
@@ -1841,14 +1872,14 @@ void OGRCouchDBTableLayer::LoadMetadata()
                             CPLDebug("CouchDB",
                                     "_design/ogr_metadata.extent.validity_update_seq "
                                     "doesn't match database update_seq --> ignoring stored extent");
-                            poUpdateSeq = NULL;
+                            poUpdateSeq = nullptr;
                         }
                     }
                 }
                 else
-                    poUpdateSeq = NULL;
+                    poUpdateSeq = nullptr;
 
-                json_object* poBbox = json_object_object_get(poExtent, "bbox");
+                json_object* poBbox = CPL_json_object_object_get(poExtent, "bbox");
                 if (poUpdateSeq && poBbox &&
                     json_object_get_type(poBbox) == json_type_array &&
                     json_object_array_length(poBbox) == 4 &&
@@ -1861,17 +1892,19 @@ void OGRCouchDBTableLayer::LoadMetadata()
                     dfMinY = json_object_get_double(json_object_array_get_idx(poBbox, 1));
                     dfMaxX = json_object_get_double(json_object_array_get_idx(poBbox, 2));
                     dfMaxY = json_object_get_double(json_object_array_get_idx(poBbox, 3));
-                    bExtentValid = bExtentSet = TRUE;
+                    bExtentValid = true;
+                    bExtentSet = true;
                 }
             }
         }
     }
 
-    json_object* poGeoJSON = json_object_object_get(poAnswerObj, "geojson_documents");
+    json_object* poGeoJSON =
+        CPL_json_object_object_get(poAnswerObj, "geojson_documents");
     if (poGeoJSON && json_object_is_type(poGeoJSON, json_type_boolean))
-        bGeoJSONDocument = json_object_get_boolean(poGeoJSON);
+        bGeoJSONDocument = CPL_TO_BOOL(json_object_get_boolean(poGeoJSON));
 
-    json_object* poFields = json_object_object_get(poAnswerObj, "fields");
+    json_object* poFields = CPL_json_object_object_get(poAnswerObj, "fields");
     if (poFields && json_object_is_type(poFields, json_type_array))
     {
         poFeatureDefn = new OGRFeatureDefn( osName );
@@ -1887,17 +1920,17 @@ void OGRCouchDBTableLayer::LoadMetadata()
         OGRFieldDefn oFieldRev("_rev", OFTString);
         poFeatureDefn->AddFieldDefn(&oFieldRev);
 
-        int nFields = json_object_array_length(poFields);
-        for(int i=0;i<nFields;i++)
+        const auto nFields = json_object_array_length(poFields);
+        for(auto i=decltype(nFields){0};i<nFields;i++)
         {
             json_object* poField = json_object_array_get_idx(poFields, i);
             if (poField && json_object_is_type(poField, json_type_object))
             {
-                json_object* poName = json_object_object_get(poField, "name");
+                json_object* poName = CPL_json_object_object_get(poField, "name");
                 const char* pszName = json_object_get_string(poName);
                 if (pszName)
                 {
-                    json_object* poType = json_object_object_get(poField, "type");
+                    json_object* poType = CPL_json_object_object_get(poField, "type");
                     const char* pszType = json_object_get_string(poType);
                     OGRFieldType eType = OFTString;
                     if (pszType)
@@ -1934,8 +1967,6 @@ void OGRCouchDBTableLayer::LoadMetadata()
 
 void OGRCouchDBTableLayer::WriteMetadata()
 {
-    GetLayerDefn();
-
     CPLString osURI;
     osURI = "/";
     osURI += osEscapedName;
@@ -1943,7 +1974,7 @@ void OGRCouchDBTableLayer::WriteMetadata()
 
     json_object* poDoc = json_object_new_object();
 
-    if (osMetadataRev.size() > 0)
+    if (!osMetadataRev.empty())
     {
         json_object_object_add(poDoc, "_rev",
                                json_object_new_string(osMetadataRev));
@@ -1951,7 +1982,7 @@ void OGRCouchDBTableLayer::WriteMetadata()
 
     if (poSRS)
     {
-        char* pszWKT = NULL;
+        char* pszWKT = nullptr;
         poSRS->exportToWkt(&pszWKT);
         if (pszWKT)
         {
@@ -1971,13 +2002,14 @@ void OGRCouchDBTableLayer::WriteMetadata()
                                json_object_new_boolean(TRUE));
         }
 
-        if (bExtentValid && bExtentSet && nUpdateSeq >= 0)
+        if( bExtentValid && bExtentSet && nUpdateSeq >= 0 )
         {
             json_object* poExtent = json_object_new_object();
             json_object_object_add(poDoc, "extent", poExtent);
 
-            json_object_object_add(poExtent, "validity_update_seq",
-                                   json_object_new_int((bAlwaysValid) ? -1 : nUpdateSeq + 1));
+            json_object_object_add(
+                poExtent, "validity_update_seq",
+                json_object_new_int(bAlwaysValid ? -1 : nUpdateSeq + 1));
 
             json_object* poBbox = json_object_new_array();
             json_object_object_add(poExtent, "bbox", poBbox);
@@ -1999,7 +2031,6 @@ void OGRCouchDBTableLayer::WriteMetadata()
     json_object* poFields = json_object_new_array();
     json_object_object_add(poDoc, "fields", poFields);
 
-
     for(int i=COUCHDB_FIRST_FIELD;i<poFeatureDefn->GetFieldCount();i++)
     {
         json_object* poField = json_object_new_object();
@@ -2008,7 +2039,7 @@ void OGRCouchDBTableLayer::WriteMetadata()
         json_object_object_add(poField, "name",
             json_object_new_string(poFeatureDefn->GetFieldDefn(i)->GetNameRef()));
 
-        const char* pszType = NULL;
+        const char* pszType = nullptr;
         switch (poFeatureDefn->GetFieldDefn(i)->GetType())
         {
             case OFTInteger: pszType = "integer"; break;
@@ -2029,11 +2060,11 @@ void OGRCouchDBTableLayer::WriteMetadata()
 
     json_object_put(poDoc);
 
-    if (poDS->IsOK(poAnswerObj, "Metadata creation failed"))
+    if( poDS->IsOK(poAnswerObj, "Metadata creation failed") )
     {
         nUpdateSeq++;
 
-        json_object* poRev = json_object_object_get(poAnswerObj, "_rev");
+        json_object* poRev = CPL_json_object_object_get(poAnswerObj, "_rev");
         const char* pszRev = json_object_get_string(poRev);
         if (pszRev)
             osMetadataRev = pszRev;
@@ -2050,7 +2081,7 @@ OGRErr OGRCouchDBTableLayer::GetExtent(OGREnvelope *psExtent, int bForce)
 {
     LoadMetadata();
 
-    if (!bExtentValid)
+    if( !bExtentValid )
         return OGRCouchDBLayer::GetExtent(psExtent, bForce);
 
     psExtent->MinX = 0.0;
@@ -2058,7 +2089,7 @@ OGRErr OGRCouchDBTableLayer::GetExtent(OGREnvelope *psExtent, int bForce)
     psExtent->MinY = 0.0;
     psExtent->MaxY = 0.0;
 
-    if (!bExtentSet)
+    if( !bExtentSet )
         return OGRERR_FAILURE;
 
     psExtent->MinX = dfMinX;
@@ -2083,11 +2114,11 @@ int OGRCouchDBTableLayer::FetchUpdateSeq()
     osURI += "/";
 
     json_object* poAnswerObj = poDS->GET(osURI);
-    if (poAnswerObj != NULL &&
+    if (poAnswerObj != nullptr &&
         json_object_is_type(poAnswerObj, json_type_object) &&
-        json_object_object_get(poAnswerObj, "update_seq") != NULL)
+        CPL_json_object_object_get(poAnswerObj, "update_seq") != nullptr)
     {
-        nUpdateSeq = json_object_get_int(json_object_object_get(poAnswerObj,
+        nUpdateSeq = json_object_get_int(CPL_json_object_object_get(poAnswerObj,
                                                                 "update_seq"));
     }
     else

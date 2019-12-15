@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -24,9 +24,9 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom { 
-		class Coordinate;
-	}
+namespace geom {
+class Coordinate;
+}
 }
 
 
@@ -37,89 +37,100 @@ namespace geom { // geos.geom
 class GEOS_DLL CoordinateArraySequence : public CoordinateSequence {
 public:
 
-	CoordinateArraySequence(const CoordinateArraySequence &cl);
+    CoordinateArraySequence(const CoordinateArraySequence& cl);
 
-	CoordinateArraySequence(const CoordinateSequence &cl);
+    CoordinateArraySequence(const CoordinateSequence& cl);
 
-	CoordinateSequence *clone() const;
+    std::unique_ptr<CoordinateSequence> clone() const override;
 
-	//const Coordinate& getCoordinate(int pos) const;
-	const Coordinate& getAt(std::size_t pos) const;
+    const Coordinate& getAt(std::size_t pos) const override;
 
-	/// Copy Coordinate at position i to Coordinate c
-	virtual void getAt(std::size_t i, Coordinate& c) const;
+    /// Copy Coordinate at position i to Coordinate c
+    void getAt(std::size_t i, Coordinate& c) const override;
 
-	//int size() const;
-	size_t getSize() const;
+    size_t getSize() const override;
 
-	// @deprecated
-	const std::vector<Coordinate>* toVector() const;
+    // See dox in CoordinateSequence.h
+    void toVector(std::vector<Coordinate>&) const override;
 
-	// See dox in CoordinateSequence.h
-	void toVector(std::vector<Coordinate>&) const;
+    /// Construct an empty sequence
+    CoordinateArraySequence();
 
-	/// Construct an empty sequence
-	CoordinateArraySequence();
+    /// Construct sequence moving from given Coordinate vector
+    CoordinateArraySequence(std::vector<Coordinate> && coords,
+                            std::size_t dimension = 0);
 
-	/// Construct sequence taking ownership of given Coordinate vector
-	CoordinateArraySequence(std::vector<Coordinate> *coords,
-                                std::size_t dimension = 0);
-        
-	/// Construct sequence allocating space for n coordinates
-	CoordinateArraySequence(std::size_t n, std::size_t dimension = 0);
+    /// Construct sequence taking ownership of given Coordinate vector
+    CoordinateArraySequence(std::vector<Coordinate>* coords,
+                            std::size_t dimension = 0);
 
-	~CoordinateArraySequence();
+    /// Construct sequence allocating space for n coordinates
+    CoordinateArraySequence(std::size_t n, std::size_t dimension = 0);
 
-	bool isEmpty() const { return empty(); }
+    ~CoordinateArraySequence() override = default;
 
-	bool empty() const { return vect->empty(); }
+    bool
+    isEmpty() const override
+    {
+        return empty();
+    }
 
-	/// Reset this CoordinateArraySequence to the empty state
-	void clear() { vect->clear(); }
+    bool
+    empty() const
+    {
+        return vect.empty();
+    }
 
-	void add(const Coordinate& c);
+    /// Reset this CoordinateArraySequence to the empty state
+    void
+    clear()
+    {
+        vect.clear();
+    }
 
-	virtual void add(const Coordinate& c, bool allowRepeated);
+    /// Add a Coordinate to the list
+    void add(const Coordinate& c);
 
-	/** \brief
-	 * Inserts the specified coordinate at the specified position in
-	 * this list.
-	 *
-	 * @param i the position at which to insert
-	 * @param coord the coordinate to insert
-	 * @param allowRepeated if set to false, repeated coordinates are
-	 *                      collapsed
-	 *
-	 * NOTE: this is a CoordinateList interface in JTS
-	 */
-	virtual void add(std::size_t i, const Coordinate& coord, bool allowRepeated);
+    /**
+     * \brief Add a coordinate
+     * @param c the coordinate to add
+     * @param allowRepeated if set to false, repeated coordinates
+     *                      are collapsed
+     */
+    void add(const Coordinate& c, bool allowRepeated);
 
-	void setAt(const Coordinate& c, std::size_t pos);
+    /** \brief
+     * Inserts the specified coordinate at the specified position in
+     * this list.
+     *
+     * @param i the position at which to insert
+     * @param coord the coordinate to insert
+     * @param allowRepeated if set to false, repeated coordinates are
+     *                      collapsed
+     *
+     * @note this is a CoordinateList interface in JTS
+     */
+    void add(std::size_t i, const Coordinate& coord, bool allowRepeated);
 
-	void deleteAt(std::size_t pos);
+    void add(const CoordinateSequence* cl, bool allowRepeated, bool direction);
 
-	std::string toString() const;
+    void setAt(const Coordinate& c, std::size_t pos) override;
 
-	void setPoints(const std::vector<Coordinate> &v);
+    void setPoints(const std::vector<Coordinate>& v) override;
 
-	double getOrdinate(std::size_t index,
-			size_t ordinateIndex) const;
+    void setOrdinate(std::size_t index, std::size_t ordinateIndex,
+                     double value) override;
 
-	void setOrdinate(std::size_t index, std::size_t ordinateIndex,
-			double value);
+    void expandEnvelope(Envelope& env) const override;
 
-	void expandEnvelope(Envelope &env) const;
+    std::size_t getDimension() const override;
 
-    std::size_t getDimension() const;
+    void apply_rw(const CoordinateFilter* filter) override;
 
-	void apply_rw(const CoordinateFilter *filter); 
-
-	void apply_ro(CoordinateFilter *filter) const; 
-
-	virtual CoordinateSequence& removeRepeatedPoints();
+    void apply_ro(CoordinateFilter* filter) const override;
 
 private:
-	std::vector<Coordinate> *vect;
+    std::vector<Coordinate> vect;
     mutable std::size_t dimension;
 };
 

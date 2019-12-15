@@ -20,7 +20,7 @@ describe('gdal', function() {
 
 			// warp options
 			var s_srs = src.srs;
-			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
+			var t_srs = gdal.SpatialReference.fromProj4('+init=epsg:4326');
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 
 			// compute output extent
@@ -110,7 +110,7 @@ describe('gdal', function() {
 
 			// warp options
 			var s_srs = src.srs;
-			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
+			var t_srs = gdal.SpatialReference.fromProj4('+init=epsg:4326');
 			var tr = {x: 0.0005, y: 0.0005}; // target resolution
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 			var cutline = cutline_ds.layers.get(0).features.get(0).getGeometry();
@@ -478,7 +478,7 @@ describe('gdal', function() {
 
 				assert.throws(function() {
 					gdal.suggestedWarpOutput(options);
-				}, 'Mercator_1SP with scale != 1.0 and latitude of origin != 0, not supported by PROJ.4.');
+				}, /Cannot find coordinate operations from/);
 			});
 		} else {
 			it.skip('should throw error if GDAL can\'t create transformer', function() {});

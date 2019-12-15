@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gridlib.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: gridlib.c 5c54326d96d23b2fee099383897b85c15bef9a6a 2017-12-30 09:14:05Z Even Rouault $
  *
  * Project:  Arc/Info Binary Grid Translator
  * Purpose:  Grid file reading code.
@@ -30,7 +30,7 @@
 
 #include "aigrid.h"
 
-CPL_CVSID("$Id: gridlib.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: gridlib.c 5c54326d96d23b2fee099383897b85c15bef9a6a 2017-12-30 09:14:05Z Even Rouault $")
 
 CPL_INLINE static void CPL_IGNORE_RET_VAL_INT(CPL_UNUSED int unused) {}
 
@@ -106,21 +106,17 @@ CPLErr AIGProcessIntConstBlock( GByte *pabyCur, int nDataSize, int nMin,
     return( CE_None );
 }
 
-/**********************************************************************
- *                       AIGSaturatedAdd()
- ***********************************************************************/
+/************************************************************************/
+/*                         AIGRolloverSignedAdd()                       */
+/************************************************************************/
 
-static GInt32 AIGSaturatedAdd(GInt32 nVal, GInt32 nAdd)
+CPL_NOSANITIZE_UNSIGNED_INT_OVERFLOW
+static GInt32 AIGRolloverSignedAdd(GInt32 a, GInt32 b)
 {
-    if( nAdd >= 0 && nVal > INT_MAX - nAdd )
-        nVal = INT_MAX;
-    else if( nAdd == INT_MIN && nVal < 0 )
-        nVal = INT_MIN;
-    else if( nAdd != INT_MIN && nAdd < 0 && nVal < INT_MIN - nAdd )
-        nVal = INT_MIN;
-    else
-        nVal += nAdd;
-    return nVal;
+    // Not really portable as assumes complement to 2 representation
+    // but AIG assumes typical unsigned rollover on signed
+    // integer operations.
+    return (GInt32)((GUInt32)(a) + (GUInt32)(b));
 }
 
 /************************************************************************/
@@ -150,7 +146,7 @@ CPLErr AIGProcessRaw32BitBlock( GByte *pabyCur, int nDataSize, int nMin,
     {
         memcpy(panData + i, pabyCur, 4);
         panData[i] = CPL_MSBWORD32(panData[i]);
-        panData[i] = AIGSaturatedAdd(panData[i], nMin);
+        panData[i] = AIGRolloverSignedAdd(panData[i], nMin);
         pabyCur += 4;
     }
 
@@ -182,7 +178,7 @@ CPLErr AIGProcessRaw16BitBlock( GByte *pabyCur, int nDataSize, int nMin,
 /* -------------------------------------------------------------------- */
     for( i = 0; i < nBlockXSize * nBlockYSize; i++ )
     {
-        panData[i] = pabyCur[0] * 256 + pabyCur[1] + nMin;
+        panData[i] = AIGRolloverSignedAdd(pabyCur[0] * 256 + pabyCur[1], nMin);
         pabyCur += 2;
     }
 
@@ -215,9 +211,9 @@ CPLErr AIGProcessRaw4BitBlock( GByte *pabyCur, int nDataSize, int nMin,
     for( i = 0; i < nBlockXSize * nBlockYSize; i++ )
     {
         if( i % 2 == 0 )
-            panData[i] = ((*(pabyCur) & 0xf0) >> 4) + nMin;
+            panData[i] = AIGRolloverSignedAdd((*(pabyCur) & 0xf0) >> 4, nMin);
         else
-            panData[i] = (*(pabyCur++) & 0xf) + nMin;
+            panData[i] = AIGRolloverSignedAdd(*(pabyCur++) & 0xf, nMin);
     }
 
     return( CE_None );
@@ -249,7 +245,7 @@ CPLErr AIGProcessRaw1BitBlock( GByte *pabyCur, int nDataSize, int nMin,
     for( i = 0; i < nBlockXSize * nBlockYSize; i++ )
     {
         if( pabyCur[i>>3] & (0x80 >> (i&0x7)) )
-            panData[i] = 1 + nMin;
+            panData[i] = AIGRolloverSignedAdd(1, nMin);
         else
             panData[i] = 0 + nMin;
     }
@@ -281,7 +277,7 @@ CPLErr AIGProcessRawBlock( GByte *pabyCur, int nDataSize, int nMin,
 /* -------------------------------------------------------------------- */
     for( i = 0; i < nBlockXSize * nBlockYSize; i++ )
     {
-        panData[i] = *(pabyCur++) + nMin;
+        panData[i] = AIGRolloverSignedAdd(*(pabyCur++), nMin);
     }
 
     return( CE_None );
@@ -328,7 +324,7 @@ CPLErr AIGProcessFFBlock( GByte *pabyCur, int nDataSize, int nMin,
     for( i = 0; i < nBlockXSize * nBlockYSize; i++ )
     {
         if( pabyIntermediate[i>>3] & (0x80 >> (i&0x7)) )
-            panData[i] = nMin+1;
+            panData[i] = AIGRolloverSignedAdd(nMin, 1);
         else
             panData[i] = nMin;
     }
@@ -393,8 +389,7 @@ CPLErr AIGProcessBlock( GByte *pabyCur, int nDataSize, int nMin, int nMagic,
             nDataSize -= 4;
 
             nValue = CPL_MSBWORD32( nValue );
-
-            nValue += nMin;
+            nValue = AIGRolloverSignedAdd(nValue, nMin);
             for( i = 0; i < nMarker; i++ )
                 panData[nPixels++] = nValue;
         }
@@ -488,7 +483,7 @@ CPLErr AIGProcessBlock( GByte *pabyCur, int nDataSize, int nMin, int nMagic,
 
             while( nMarker > 0 && nDataSize > 0 )
             {
-                panData[nPixels++] = *(pabyCur++) + nMin;
+                panData[nPixels++] = AIGRolloverSignedAdd(*(pabyCur++), nMin);
                 nMarker--;
                 nDataSize--;
             }
@@ -511,7 +506,7 @@ CPLErr AIGProcessBlock( GByte *pabyCur, int nDataSize, int nMin, int nMagic,
 
             while( nMarker > 0 && nDataSize >= 2 )
             {
-                nValue = pabyCur[0] * 256 + pabyCur[1] + nMin;
+                nValue = AIGRolloverSignedAdd(pabyCur[0] * 256 + pabyCur[1], nMin);
                 panData[nPixels++] = nValue;
                 pabyCur += 2;
 
@@ -974,6 +969,19 @@ CPLErr AIGReadBlockIndex( AIGInfo_t * psInfo, AIGTileInfo *psTInfo,
 /*      into the buffer.                                                */
 /* -------------------------------------------------------------------- */
     psTInfo->nBlocks = (nLength-100) / 8;
+    if( psTInfo->nBlocks >= 1000000 )
+    {
+        // Avoid excessive memory consumption.
+        vsi_l_offset nFileSize;
+        VSIFSeekL(fp, 0, SEEK_END);
+        nFileSize = VSIFTellL(fp);
+        if( nFileSize < 100 ||
+            (vsi_l_offset)psTInfo->nBlocks > (nFileSize - 100) / 8 )
+        {
+            CPL_IGNORE_RET_VAL_INT(VSIFCloseL( fp ));
+            return CE_Failure;
+        }
+    }
     panIndex = (GUInt32 *) VSI_MALLOC2_VERBOSE(psTInfo->nBlocks, 8);
     if (panIndex == NULL)
     {
@@ -1122,11 +1130,12 @@ CPLErr AIGReadStatistics( const char * pszCoverName, AIGInfo_t * psInfo )
     VSILFILE	*fp;
     double	adfStats[4];
     const size_t nHDRFilenameLen = strlen(pszCoverName)+40;
+    size_t nRead;
 
     psInfo->dfMin = 0.0;
     psInfo->dfMax = 0.0;
     psInfo->dfMean = 0.0;
-    psInfo->dfStdDev = 0.0;
+    psInfo->dfStdDev = -1.0;
 
 /* -------------------------------------------------------------------- */
 /*      Open the file sta.adf file.                                     */
@@ -1146,30 +1155,47 @@ CPLErr AIGReadStatistics( const char * pszCoverName, AIGInfo_t * psInfo )
         return( CE_Failure );
     }
 
-    CPLFree( pszHDRFilename );
-
 /* -------------------------------------------------------------------- */
-/*      Get the contents - four doubles.                                */
+/*      Get the contents - 3 or 4 doubles.                              */
 /* -------------------------------------------------------------------- */
-    if( VSIFReadL( adfStats, 1, 32, fp ) != 32 )
-    {
-        CPL_IGNORE_RET_VAL_INT(VSIFCloseL( fp ));
-        return CE_Failure;
-    }
+    nRead = VSIFReadL( adfStats, 1, 32, fp );
 
     CPL_IGNORE_RET_VAL_INT(VSIFCloseL( fp ));
 
+    if( nRead == 32 )
+    {
 #ifdef CPL_LSB
-    CPL_SWAPDOUBLE(adfStats+0);
-    CPL_SWAPDOUBLE(adfStats+1);
-    CPL_SWAPDOUBLE(adfStats+2);
-    CPL_SWAPDOUBLE(adfStats+3);
+        CPL_SWAPDOUBLE(adfStats+0);
+        CPL_SWAPDOUBLE(adfStats+1);
+        CPL_SWAPDOUBLE(adfStats+2);
+        CPL_SWAPDOUBLE(adfStats+3);
 #endif
 
-    psInfo->dfMin = adfStats[0];
-    psInfo->dfMax = adfStats[1];
-    psInfo->dfMean = adfStats[2];
-    psInfo->dfStdDev = adfStats[3];
+        psInfo->dfMin = adfStats[0];
+        psInfo->dfMax = adfStats[1];
+        psInfo->dfMean = adfStats[2];
+        psInfo->dfStdDev = adfStats[3];
+    }
+    else if( nRead == 24 )
+    {
+        /* See dataset at https://trac.osgeo.org/gdal/ticket/6633 */
+        /* In that case, we have only min, max and mean, in LSB ordering */
+        CPL_LSBPTR64(adfStats+0);
+        CPL_LSBPTR64(adfStats+1);
+        CPL_LSBPTR64(adfStats+2);
 
-    return( CE_None );
+        psInfo->dfMin = adfStats[0];
+        psInfo->dfMax = adfStats[1];
+        psInfo->dfMean = adfStats[2];
+    }
+    else
+    {
+        CPLError( CE_Failure, CPLE_AppDefined, "Wrong content for %s",
+                  pszHDRFilename );
+        CPLFree( pszHDRFilename );
+        return CE_Failure;
+    }
+
+    CPLFree( pszHDRFilename );
+    return CE_None;
 }

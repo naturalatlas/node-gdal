@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gmlutils.h 33702 2016-03-11 06:20:16Z goatbar $
+ * $Id: gmlutils.h 7063b8664855306154d97a05b35c968c8d8b81d0 2018-05-09 21:24:13 +0200 Even Rouault $
  *
  * Project:  GML Utils
  * Purpose:  GML reader
@@ -36,11 +36,26 @@
 
 #include "ogr_geometry.h"
 
+typedef enum
+{
+    GML_SWAP_AUTO,
+    GML_SWAP_YES,
+    GML_SWAP_NO,
+} GMLSwapCoordinatesEnum;
+
+typedef enum
+{
+    SRSNAME_SHORT,
+    SRSNAME_OGC_URN,
+    SRSNAME_OGC_URL
+} OGRGMLSRSNameFormat;
+
 const char* GML_ExtractSrsNameFromGeometry(const CPLXMLNode* const * papsGeometry,
                                      std::string& osWork,
                                      bool bConsiderEPSGAsURN);
 
 bool GML_IsSRSLatLongOrder(const char* pszSRSName);
+bool GML_IsLegitSRSName(const char* pszSRSName);
 
 void* GML_BuildOGRGeometryFromList_CreateCache();
 void GML_BuildOGRGeometryFromList_DestroyCache(void* hCacheSRS);
@@ -50,10 +65,11 @@ OGRGeometry* GML_BuildOGRGeometryFromList(const CPLXMLNode* const * papsGeometry
                                           bool bInvertAxisOrderIfLatLong,
                                           const char* pszDefaultSRSName,
                                           bool bConsiderEPSGAsURN,
+                                          GMLSwapCoordinatesEnum eSwapCoordinates,
                                           int nPseudoBoolGetSecondaryGeometryOption,
                                           void* hCacheSRS,
                                           bool bFaceHoleNegative = false );
 
-char* GML_GetSRSName(const OGRSpatialReference* poSRS, bool bLongSRS, bool *pbCoordSwap);
+char* GML_GetSRSName(const OGRSpatialReference* poSRS, OGRGMLSRSNameFormat eSRSNameFormat, bool *pbCoordSwap);
 
 #endif /* _CPL_GMLREADERP_H_INCLUDED */

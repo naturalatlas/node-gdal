@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdes.c 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: nitfdes.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Module responsible for implementation of DE segments.
@@ -33,7 +33,7 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: nitfdes.c 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: nitfdes.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 CPL_INLINE static void CPL_IGNORE_RET_VAL_INT(CPL_UNUSED int unused) {}
 
@@ -509,8 +509,8 @@ void NITFDESFreeTREData( char* pabyTREData )
 int NITFDESExtractShapefile(NITFDES* psDES, const char* pszRadixFileName)
 {
     NITFSegmentInfo* psSegInfo;
-    const char* apszExt[3];
-    int anOffset[4];
+    const char* apszExt[3] = { NULL };
+    int anOffset[4] = { 0 };
     int iShpFile;
     char* pszFilename;
     size_t nFilenameLen;

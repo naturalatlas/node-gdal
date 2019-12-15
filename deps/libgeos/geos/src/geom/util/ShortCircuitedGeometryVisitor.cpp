@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,24 +28,25 @@ namespace geom { // geos.geom
 namespace util { // geos.geom.util
 
 void
-ShortCircuitedGeometryVisitor::applyTo(const Geometry &geom)
+ShortCircuitedGeometryVisitor::applyTo(const Geometry& geom)
 {
-	for (unsigned int i=0, n=geom.getNumGeometries(); i<n; ++i)
-	{
-		const Geometry *element = geom.getGeometryN(i);
-		if (dynamic_cast<const GeometryCollection*>(element))
-		{
-			applyTo(*element);
-		}
-		else
-		{
-			// calls the abstract virtual
-			visit(*element);
-			if (isDone()) done = true;
-		}
+    for(std::size_t i = 0, n = geom.getNumGeometries(); i < n; ++i) {
+        const Geometry* element = geom.getGeometryN(i);
+        if(dynamic_cast<const GeometryCollection*>(element)) {
+            applyTo(*element);
+        }
+        else {
+            // calls the abstract virtual
+            visit(*element);
+            if(isDone()) {
+                done = true;
+            }
+        }
 
-		if ( done ) return;
-	}
+        if(done) {
+            return;
+        }
+    }
 }
 
 

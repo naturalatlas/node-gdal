@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrrecdatasource.cpp 33089 2016-01-22 15:02:53Z goatbar $
  *
  * Project:  Epiinfo .REC Translator
  * Purpose:  Implements OGRRECDataSource class
@@ -31,15 +30,15 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrrecdatasource.cpp 33089 2016-01-22 15:02:53Z goatbar $");
+CPL_CVSID("$Id: ogrrecdatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRRECDataSource()                          */
 /************************************************************************/
 
 OGRRECDataSource::OGRRECDataSource() :
-    pszName(NULL),
-    poLayer(NULL)
+    pszName(nullptr),
+    poLayer(nullptr)
 {}
 
 /************************************************************************/
@@ -49,7 +48,7 @@ OGRRECDataSource::OGRRECDataSource() :
 OGRRECDataSource::~OGRRECDataSource()
 
 {
-    if( poLayer != NULL )
+    if( poLayer != nullptr )
         delete poLayer;
 
     CPLFree( pszName );
@@ -75,7 +74,7 @@ OGRLayer *OGRRECDataSource::GetLayer( int iLayer )
     if( iLayer == 0 )
         return poLayer;
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -98,7 +97,7 @@ int OGRRECDataSource::Open( const char * pszFilename )
 /*      Open the file.                                                  */
 /* -------------------------------------------------------------------- */
     FILE *fp = VSIFOpen( pszFilename, "rb" );
-    if( fp == NULL )
+    if( fp == nullptr )
         return FALSE;
 
 /* -------------------------------------------------------------------- */
@@ -106,6 +105,11 @@ int OGRRECDataSource::Open( const char * pszFilename )
 /*      field that is a number greater than zero.                       */
 /* -------------------------------------------------------------------- */
     const char * pszLine = CPLReadLine( fp );
+    if( pszLine == nullptr )
+    {
+        VSIFClose( fp );
+        return FALSE;
+    }
 
     const int nFieldCount = atoi(pszLine);
     if( nFieldCount < 1 || nFieldCount > 1000 )

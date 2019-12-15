@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -25,7 +25,7 @@
  * It has interfaces for C++, C and python (though swig).
  *
  * \section getstart_sec Getting Started
- *	
+ *
  * The recommended low-level interface to the GEOS library
  * is the simplified \ref c_iface. This will ensure stability of the
  * API and the ABI of the library during performance improvements
@@ -37,7 +37,7 @@
 
 /** \page c_iface C wrapper interface
  *
- * \section Overview
+ * \section overview_c Overview
  *
  * This is the preferred access method for GEOS.
  *
@@ -53,7 +53,7 @@
 
 /** \page cpp_iface C++ interface
  *
- * \section Overview
+ * \section overview_cpp Overview
  *
  * Main class is geos::geom::Geometry, from which all geometry types
  * derive.
@@ -85,7 +85,7 @@
  * Note that prior to version 3.0.0, GEOSException were thrown by
  * pointer, and did not derive from std::exception.
  *
- */ 
+ */
 
 
 namespace geos {

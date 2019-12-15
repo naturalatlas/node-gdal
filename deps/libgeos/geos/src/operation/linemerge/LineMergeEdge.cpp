@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,18 +28,19 @@ namespace linemerge { // geos.operation.linemerge
 /**
 * Constructs a LineMergeEdge with vertices given by the specified LineString.
 */
-LineMergeEdge::LineMergeEdge(const LineString *newLine):
-	line(newLine)
+LineMergeEdge::LineMergeEdge(const LineString* newLine):
+    line(newLine)
 {
-	//line=newLine;
+    //line=newLine;
 }
 
 /**
  * Returns the LineString specifying the vertices of this edge.
  */
-const LineString *
-LineMergeEdge::getLine() const {
-	return line;
+const LineString*
+LineMergeEdge::getLine() const
+{
+    return line;
 }
 
 } // namespace geos.operation.linemerge

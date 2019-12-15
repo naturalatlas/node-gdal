@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  Function to register all known OGR drivers.
@@ -31,18 +30,15 @@
 
 #include "gnm_frmts.h"
 
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: gnmregisterall.cpp 98a60d744b13223d27fa49e36781d99c949a3cdd 2019-01-21 15:18:45Z Robert Coup $")
 
 void GNMRegisterAllInternal()
 {
-    CPLDebug("GNM", "GNMRegisterAllInternal");
 #ifdef GNMFILE_ENABLED
-    CPLDebug("GNM", "RegisterGNMFile");
     RegisterGNMFile();
 #endif
 
 #ifdef GNMDB_ENABLED
-    CPLDebug("GNM", "RegisterGNMdatabase");
     RegisterGNMDatabase();
 #endif
 

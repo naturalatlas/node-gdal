@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -26,15 +26,15 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		//class Coordinate;
-		class CoordinateSequence;
-		class Geometry;
-		class Polygon;
-		class MultiPolygon;
-		class MultiLineString;
-		class GeometryCollection;
-	}
+namespace geom {
+//class Coordinate;
+class CoordinateSequence;
+class Geometry;
+class Polygon;
+class MultiPolygon;
+class MultiLineString;
+class GeometryCollection;
+}
 }
 
 namespace geos {
@@ -48,16 +48,16 @@ namespace valid { // geos::operation::valid
  */
 class GEOS_DLL RepeatedPointTester {
 public:
-	RepeatedPointTester() {}
-	geom::Coordinate& getCoordinate();
-	bool hasRepeatedPoint(const geom::Geometry *g);
-	bool hasRepeatedPoint(const geom::CoordinateSequence *coord);
+    RepeatedPointTester() {}
+    geom::Coordinate& getCoordinate();
+    bool hasRepeatedPoint(const geom::Geometry* g);
+    bool hasRepeatedPoint(const geom::CoordinateSequence* coord);
 private:
-	geom::Coordinate repeatedCoord;
-	bool hasRepeatedPoint(const geom::Polygon *p);
-	bool hasRepeatedPoint(const geom::GeometryCollection *gc);
-	bool hasRepeatedPoint(const geom::MultiPolygon *gc);
-	bool hasRepeatedPoint(const geom::MultiLineString *gc);
+    geom::Coordinate repeatedCoord;
+    bool hasRepeatedPoint(const geom::Polygon* p);
+    bool hasRepeatedPoint(const geom::GeometryCollection* gc);
+    bool hasRepeatedPoint(const geom::MultiPolygon* gc);
+    bool hasRepeatedPoint(const geom::MultiLineString* gc);
 };
 
 

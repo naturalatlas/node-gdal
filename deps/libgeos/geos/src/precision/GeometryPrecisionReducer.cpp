@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -41,103 +41,103 @@ namespace precision { // geos.precision
 
 
 /* private */
-auto_ptr<Geometry>
-GeometryPrecisionReducer::reducePointwise(const Geometry &geom)
+unique_ptr<Geometry>
+GeometryPrecisionReducer::reducePointwise(const Geometry& geom)
 {
-	auto_ptr<GeometryEditor> geomEdit;
+    GeometryEditor geomEdit(newFactory);
 
-  if ( newFactory ) {
-      geomEdit.reset( new GeometryEditor(newFactory) );
-  } else {
-      geomEdit.reset( new GeometryEditor() );
-  }
+    /**
+     * For polygonal geometries, collapses are always removed, in order
+     * to produce correct topology
+     */
+    bool finalRemoveCollapsed = removeCollapsed;
+    if(geom.getDimension() >= 2) {
+        finalRemoveCollapsed = true;
+    }
 
-  /**
-   * For polygonal geometries, collapses are always removed, in order
-   * to produce correct topology
-   */
-  bool finalRemoveCollapsed = removeCollapsed;
-  if (geom.getDimension() >= 2)
-    finalRemoveCollapsed = true;
+    PrecisionReducerCoordinateOperation prco(targetPM, finalRemoveCollapsed);
 
-	PrecisionReducerCoordinateOperation prco(targetPM, finalRemoveCollapsed);
+    std::unique_ptr<Geometry> g(geomEdit.edit(&geom, &prco));
 
-	std::auto_ptr<Geometry> g ( geomEdit->edit(&geom, &prco) );
-
-	return g;
+    return g;
 }
 
 /* public */
-auto_ptr<Geometry>
-GeometryPrecisionReducer::reduce(const Geometry &geom)
+unique_ptr<Geometry>
+GeometryPrecisionReducer::reduce(const Geometry& geom)
 {
-  auto_ptr<Geometry> reducePW = reducePointwise(geom);
+    unique_ptr<Geometry> reducePW = reducePointwise(geom);
 
-  if ( isPointwise ) return reducePW;
+    if(isPointwise) {
+        return reducePW;
+    }
 
-  //TODO: handle GeometryCollections containing polys
-  if (! (dynamic_cast<const Polygonal*>(reducePW.get())) )
-    return reducePW;
+    //TODO: handle GeometryCollections containing polys
+    if(!reducePW->isPolygonal()) {
+        return reducePW;
+    }
 
-  // Geometry is polygonal - test if topology needs to be fixed
-  if (reducePW->isValid()) return reducePW;
+    // Geometry is polygonal - test if topology needs to be fixed
+    if(reducePW->isValid()) {
+        return reducePW;
+    }
 
-  // hack to fix topology.
-  // TODO: implement snap-rounding and use that.
-  return fixPolygonalTopology(*reducePW);
-  
+    // hack to fix topology.
+    // TODO: implement snap-rounding and use that.
+    return fixPolygonalTopology(*reducePW);
+
 }
 
 
 /* public */
-GeometryPrecisionReducer::GeometryPrecisionReducer(const GeometryFactory &changeFactory)
-      :
-      newFactory(&changeFactory),
-      targetPM(*(changeFactory.getPrecisionModel())),
-      removeCollapsed(true),
-      isPointwise(false)
+GeometryPrecisionReducer::GeometryPrecisionReducer(const GeometryFactory& changeFactory)
+    :
+    newFactory(&changeFactory),
+    targetPM(*(changeFactory.getPrecisionModel())),
+    removeCollapsed(true),
+    isPointwise(false)
 {}
 
 /* private */
-auto_ptr<Geometry>
-GeometryPrecisionReducer::fixPolygonalTopology(const geom::Geometry& geom )
+unique_ptr<Geometry>
+GeometryPrecisionReducer::fixPolygonalTopology(const geom::Geometry& geom)
 {
-  /**
-   * If precision model was *not* changed, need to flip
-   * geometry to targetPM, buffer in that model, then flip back
-   */
-  auto_ptr<Geometry> tmp;
-  auto_ptr<GeometryFactory> tmpFactory;
+    /**
+     * If precision model was *not* changed, need to flip
+     * geometry to targetPM, buffer in that model, then flip back
+     */
+    unique_ptr<Geometry> tmp;
+    GeometryFactory::Ptr tmpFactory;
 
-  const Geometry* geomToBuffer = &geom;
+    const Geometry* geomToBuffer = &geom;
 
-  if ( ! newFactory ) {
-    tmpFactory = createFactory(*geom.getFactory(), targetPM);
-    tmp.reset( tmpFactory->createGeometry(&geom) );
-    geomToBuffer = tmp.get();
-  }
+    if(! newFactory) {
+        tmpFactory = createFactory(*geom.getFactory(), targetPM);
+        tmp.reset(tmpFactory->createGeometry(&geom));
+        geomToBuffer = tmp.get();
+    }
 
-  auto_ptr<Geometry> bufGeom ( geomToBuffer->buffer(0) );
+    unique_ptr<Geometry> bufGeom(geomToBuffer->buffer(0));
 
-  if ( ! newFactory ) {
-    // a slick way to copy the geometry with the original precision factory
-    bufGeom.reset( geom.getFactory()->createGeometry(bufGeom.get()) );
-  }
+    if(! newFactory) {
+        // a slick way to copy the geometry with the original precision factory
+        bufGeom.reset(geom.getFactory()->createGeometry(bufGeom.get()));
+    }
 
-  return bufGeom;
+    return bufGeom;
 }
 
 /* private */
-auto_ptr<GeometryFactory>
-GeometryPrecisionReducer::createFactory( const GeometryFactory& oldGF,
-                                         const PrecisionModel& newPM )
+GeometryFactory::Ptr
+GeometryPrecisionReducer::createFactory(const GeometryFactory& oldGF,
+                                        const PrecisionModel& newPM)
 {
-  auto_ptr<GeometryFactory> newFactory(
-    new GeometryFactory(&newPM,
-                        oldGF.getSRID(),
-                        const_cast<CoordinateSequenceFactory*>(oldGF.getCoordinateSequenceFactory()))
-  );
-  return newFactory;
+    GeometryFactory::Ptr p_newFactory(
+        GeometryFactory::create(&newPM,
+                                oldGF.getSRID(),
+                                const_cast<CoordinateSequenceFactory*>(oldGF.getCoordinateSequenceFactory()))
+    );
+    return p_newFactory;
 }
 
 } // namespace geos.precision

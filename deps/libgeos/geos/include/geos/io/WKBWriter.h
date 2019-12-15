@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -27,21 +27,21 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
+namespace geom {
 
-		class CoordinateSequence;
-		class Geometry;
-		class GeometryCollection;
-		class Point;
-		class LineString;
-		class LinearRing;
-		class Polygon;
-		class MultiPoint;
-		class MultiLineString;
-		class MultiPolygon;
-		class PrecisionModel;
+class CoordinateSequence;
+class Geometry;
+class GeometryCollection;
+class Point;
+class LineString;
+class LinearRing;
+class Polygon;
+class MultiPoint;
+class MultiLineString;
+class MultiPolygon;
+class PrecisionModel;
 
-	} // namespace geom
+} // namespace geom
 } // namespace geos
 
 namespace geos {
@@ -62,7 +62,7 @@ namespace io {
  * IllegalArgumentException will be thrown if one is
  * written. The WKB specification does not support representing LinearRing
  * they will be written as LineString
- * 
+ *
  * This class is designed to support reuse of a single instance to read multiple
  * geometries. This class is not thread-safe; each thread should create its own
  * instance.
@@ -72,130 +72,146 @@ namespace io {
 class GEOS_DLL WKBWriter {
 
 public:
-	/*
-	 * \brief
-	 * Initializes writer with target coordinate dimension, endianness 
+    /*
+     * \brief
+     * Initializes writer with target coordinate dimension, endianness
      * flag and SRID value.
      *
      * @param dims Supported values are 2 or 3.  Note that 3 indicates
      * up to 3 dimensions will be written but 2D WKB is still produced for 2D geometries.
-     * @param bo output byte order - default to native machine byte order. 
+     * @param bo output byte order - default to native machine byte order.
      * Legal values include 0 (big endian/xdr) and 1 (little endian/ndr).
-     * @param incudeSRID true if SRID should be included in WKB (an 
+     * @param incudeSRID true if SRID should be included in WKB (an
      * extension).
      */
-	WKBWriter(int dims=2, int bo=getMachineByteOrder(), bool includeSRID=false);
+    WKBWriter(int dims = 2, int bo = getMachineByteOrder(), bool includeSRID = false);
 
-        /*
-         * \brief
-         * Destructor.
-         */
-	virtual ~WKBWriter();
+    /*
+     * \brief
+     * Destructor.
+     */
+    virtual ~WKBWriter() = default;
 
-	/*
-	 * \brief
-	 * Returns the output dimension used by the
-	 * <code>WKBWriter</code>.
-	 */
-	virtual int getOutputDimension() const { return defaultOutputDimension; }
+    /*
+     * \brief
+     * Returns the output dimension used by the
+     * <code>WKBWriter</code>.
+     */
+    virtual int
+    getOutputDimension() const
+    {
+        return defaultOutputDimension;
+    }
 
-	/*
-	 * Sets the output dimension used by the <code>WKBWriter</code>.  
-	 *
-	 * @param newOutputDimension Supported values are 2 or 3. 
-	 * Note that 3 indicates up to 3 dimensions will be written but
-	 * 2D WKB is still produced for 2D geometries.
-	 */
-	virtual void setOutputDimension(int newOutputDimension);
-	
-	/*
-	 * \brief
-	 * Returns the byte order used by the
-	 * <code>WKBWriter</code>.
-	 */
-	virtual int getByteOrder() const { return byteOrder; }
+    /*
+     * Sets the output dimension used by the <code>WKBWriter</code>.
+     *
+     * @param newOutputDimension Supported values are 2 or 3.
+     * Note that 3 indicates up to 3 dimensions will be written but
+     * 2D WKB is still produced for 2D geometries.
+     */
+    virtual void setOutputDimension(int newOutputDimension);
 
-	/*
-	 * Sets the byte order used by the
-	 * <code>WKBWriter</code>.
-	 */
-	virtual void setByteOrder(int newByteOrder);
+    /*
+     * \brief
+     * Returns the byte order used by the
+     * <code>WKBWriter</code>.
+     */
+    virtual int
+    getByteOrder() const
+    {
+        return byteOrder;
+    }
 
-	/*
-	 * \brief
-	 * Returns whether SRID values are output by the
-	 * <code>WKBWriter</code>.
-	 */
-	virtual int getIncludeSRID() const { return includeSRID; }
+    /*
+     * Sets the byte order used by the
+     * <code>WKBWriter</code>.
+     */
+    virtual void setByteOrder(int newByteOrder);
 
-	/*
-	 * Sets whether SRID values should be output by the
-	 * <code>WKBWriter</code>.
-	 */
-	virtual void setIncludeSRID(int newIncludeSRID) { includeSRID = (0 == newIncludeSRID ? false : true); }
+    /*
+     * \brief
+     * Returns whether SRID values are output by the
+     * <code>WKBWriter</code>.
+     */
+    virtual int
+    getIncludeSRID() const
+    {
+        return includeSRID;
+    }
 
-	/**
-	 * \brief Write a Geometry to an ostream.
-	 *
-	 * @param g the geometry to write
-	 * @param os the output stream
-	 * @throws IOException
-	 */
-	void write(const geom::Geometry &g, std::ostream &os);
-		// throws IOException, ParseException
+    /*
+     * Sets whether SRID values should be output by the
+     * <code>WKBWriter</code>.
+     */
+    virtual void
+    setIncludeSRID(int newIncludeSRID)
+    {
+        includeSRID = (0 == newIncludeSRID ? false : true);
+    }
 
-	/**
-	 * \brief Write a Geometry to an ostream in binary hex format.
-	 *
-	 * @param g the geometry to write
-	 * @param os the output stream
-	 * @throws IOException
-	 */
-	void writeHEX(const geom::Geometry &g, std::ostream &os);
-		// throws IOException, ParseException
+    /**
+     * \brief Write a Geometry to an ostream.
+     *
+     * @param g the geometry to write
+     * @param os the output stream
+     * @throws IOException
+     */
+    void write(const geom::Geometry& g, std::ostream& os);
+    // throws IOException, ParseException
+
+    /**
+     * \brief Write a Geometry to an ostream in binary hex format.
+     *
+     * @param g the geometry to write
+     * @param os the output stream
+     * @throws IOException
+     */
+    void writeHEX(const geom::Geometry& g, std::ostream& os);
+    // throws IOException, ParseException
 
 private:
 
-	int defaultOutputDimension;
+    int defaultOutputDimension;
     int outputDimension;
 
-	int byteOrder;
-	
-	bool includeSRID;
+    int byteOrder;
 
-	std::ostream *outStream;
+    bool includeSRID;
 
-	unsigned char buf[8];
+    std::ostream* outStream;
 
-	void writePoint(const geom::Point &p);
-		// throws IOException
+    unsigned char buf[8];
 
-	void writeLineString(const geom::LineString &ls);
-		// throws IOException
+    void writePoint(const geom::Point& p);
+    // throws IOException
 
-	void writePolygon(const geom::Polygon &p);
-		// throws IOException
+    void writeLineString(const geom::LineString& ls);
+    // throws IOException
 
-	void writeGeometryCollection(const geom::GeometryCollection &c, int wkbtype);
-		// throws IOException, ParseException
+    void writePolygon(const geom::Polygon& p);
+    // throws IOException
 
-	void writeCoordinateSequence(const geom::CoordinateSequence &cs, bool sized);
-		// throws IOException
+    void writeGeometryCollection(const geom::GeometryCollection& c, int wkbtype);
+    // throws IOException, ParseException
 
-	void writeCoordinate(const geom::CoordinateSequence &cs, int idx, bool is3d);
-		// throws IOException
+    void writeCoordinateSequence(const geom::CoordinateSequence& cs, bool sized);
+    // throws IOException
 
-	void writeGeometryType(int geometryType, int SRID);
-		// throws IOException
+    void writeCoordinate(const geom::CoordinateSequence& cs, size_t idx, bool is3d);
+    // throws IOException
 
-	void writeSRID(int SRID);
-		// throws IOException
+    void writeGeometryType(int geometryType, int SRID);
+    // throws IOException
 
-	void writeByteOrder();
-		// throws IOException
+    void writeSRID(int SRID);
+    // throws IOException
 
-	void writeInt(int intValue);
-		// throws IOException
+    void writeByteOrder();
+    // throws IOException
+
+    void writeInt(int intValue);
+    // throws IOException
 
 };
 

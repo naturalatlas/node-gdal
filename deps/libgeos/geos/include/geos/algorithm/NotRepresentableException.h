@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -34,9 +34,9 @@ namespace algorithm { // geos::algorithm
  */
 class GEOS_DLL NotRepresentableException: public util::GEOSException {
 public:
-	NotRepresentableException();
-	NotRepresentableException(std::string msg);
-	~NotRepresentableException() throw() {}
+    NotRepresentableException();
+    NotRepresentableException(std::string msg);
+    ~NotRepresentableException() throw() override {}
 };
 
 } // namespace geos::algorithm

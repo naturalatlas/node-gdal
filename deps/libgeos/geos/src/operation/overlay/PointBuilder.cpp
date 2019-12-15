@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -46,8 +46,8 @@ namespace overlay { // geos.operation.overlay
 vector<Point*>*
 PointBuilder::build(OverlayOp::OpCode opCode)
 {
-	extractNonCoveredResultNodes(opCode);
-	return resultPointList;
+    extractNonCoveredResultNodes(opCode);
+    return resultPointList;
 }
 
 /*
@@ -61,44 +61,45 @@ PointBuilder::build(OverlayOp::OpCode opCode)
 void
 PointBuilder::extractNonCoveredResultNodes(OverlayOp::OpCode opCode)
 {
-	map<Coordinate*,Node*,CoordinateLessThen> &nodeMap =
-		op->getGraph().getNodeMap()->nodeMap;
-	map<Coordinate*,Node*,CoordinateLessThen>::iterator it=nodeMap.begin();
-	for (; it!=nodeMap.end(); ++it)
-	{
-		Node *n=it->second;
+    auto& nodeMap = op->getGraph().getNodeMap()->nodeMap;
+    for(auto& entry : nodeMap) {
+        Node* n = entry.second;
 
-		// filter out nodes which are known to be in the result
-		if (n->isInResult()) continue;
+        // filter out nodes which are known to be in the result
+        if(n->isInResult()) {
+            continue;
+        }
 
-		// if an incident edge is in the result, then
-		// the node coordinate is included already
-		if (n->isIncidentEdgeInResult()) continue;
+        // if an incident edge is in the result, then
+        // the node coordinate is included already
+        if(n->isIncidentEdgeInResult()) {
+            continue;
+        }
 
-		if ( n->getEdges()->getDegree() == 0 ||
-			opCode == OverlayOp::opINTERSECTION )
-		{
+        if(n->getEdges()->getDegree() == 0 ||
+                opCode == OverlayOp::opINTERSECTION) {
 
-			/**
-			 * For nodes on edges, only INTERSECTION can result 
-			 * in edge nodes being included even
-			 * if none of their incident edges are included
-			 */
-			const Label& label=n->getLabel();
-			if (OverlayOp::isResultOfOp(label, opCode)) 
-				filterCoveredNodeToPoint(n);
-		}
-	}
+            /**
+             * For nodes on edges, only INTERSECTION can result
+             * in edge nodes being included even
+             * if none of their incident edges are included
+             */
+            const Label& label = n->getLabel();
+            if(OverlayOp::isResultOfOp(label, opCode)) {
+                filterCoveredNodeToPoint(n);
+            }
+        }
+    }
 }
 
 void
-PointBuilder::filterCoveredNodeToPoint(const Node *n)
+PointBuilder::filterCoveredNodeToPoint(const Node* n)
 {
-	const Coordinate& coord=n->getCoordinate();
-	if(!op->isCoveredByLA(coord)) {
-		Point *pt=geometryFactory->createPoint(coord);
-		resultPointList->push_back(pt);
-	}
+    const Coordinate& coord = n->getCoordinate();
+    if(!op->isCoveredByLA(coord)) {
+        Point* pt = geometryFactory->createPoint(coord);
+        resultPointList->push_back(pt);
+    }
 }
 
 } // namespace geos.operation.overlay

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdal_misc.cpp 33873 2016-04-03 14:13:37Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Free standing functions for GDAL.
@@ -28,20 +27,90 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "cpl_string.h"
-#include "cpl_minixml.h"
-#include "cpl_multiproc.h"
-#include "gdal_mdreader.h"
-#include "gdal_priv.h"
-#include "ogr_spatialref.h"
+#include "cpl_port.h"
 
 #include <cctype>
+#include <cerrno>
+#include <clocale>
+#include <cmath>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
 
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <string>
 
-CPL_CVSID("$Id: gdal_misc.cpp 33873 2016-04-03 14:13:37Z rouault $");
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_multiproc.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "gdal_version.h"
+#include "gdal.h"
+#include "gdal_mdreader.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+#include "ogr_spatialref.h"
+#include "ogr_geos.h"
+
+CPL_CVSID("$Id: gdal_misc.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+
+static int GetMinBitsForPair(
+    const bool pabSigned[], const bool pabFloating[], const int panBits[])
+{
+    if(pabFloating[0] != pabFloating[1])
+    {
+        const int nNotFloatingTypeIndex = pabFloating[0] ? 1 : 0;
+        const int nFloatingTypeIndex = pabFloating[0] ? 0 : 1;
+
+        return std::max(panBits[nFloatingTypeIndex],
+                        2 * panBits[nNotFloatingTypeIndex]);
+    }
+
+    if( pabSigned[0] != pabSigned[1] )
+    {
+        const int nUnsignedTypeIndex = pabSigned[0] ? 1 : 0;
+        const int nSignedTypeIndex = pabSigned[0] ? 0 : 1;
+
+        return std::max(panBits[nSignedTypeIndex],
+                        2 * panBits[nUnsignedTypeIndex]);
+    }
+
+    return std::max(panBits[0], panBits[1]);
+}
+
+static int GetDataTypeElementSizeBits( GDALDataType eDataType )
+{
+    switch( eDataType )
+    {
+      case GDT_Byte:
+        return 8;
+
+      case GDT_UInt16:
+      case GDT_Int16:
+      case GDT_CInt16:
+        return 16;
+
+      case GDT_UInt32:
+      case GDT_Int32:
+      case GDT_Float32:
+      case GDT_CInt32:
+      case GDT_CFloat32:
+        return 32;
+
+      case GDT_Float64:
+      case GDT_CFloat64:
+        return 64;
+
+      default:
+        return 0;
+    }
+}
 
 /************************************************************************/
 /*                         GDALDataTypeUnion()                          */
@@ -61,131 +130,163 @@ GDALDataType CPL_STDCALL
 GDALDataTypeUnion( GDALDataType eType1, GDALDataType eType2 )
 
 {
-    int         bFloating, nBits, bSigned;
+    const int panBits[] = {
+        GetDataTypeElementSizeBits( eType1 ),
+        GetDataTypeElementSizeBits( eType2 )
+    };
 
-    int bComplex = GDALDataTypeIsComplex(eType1) | GDALDataTypeIsComplex(eType2);
-
-    switch( eType1 )
-    {
-      case GDT_Byte:
-        nBits = 8;
-        bSigned = FALSE;
-        bFloating = FALSE;
-        break;
-
-      case GDT_Int16:
-      case GDT_CInt16:
-        nBits = 16;
-        bSigned = TRUE;
-        bFloating = FALSE;
-        break;
-
-      case GDT_UInt16:
-        nBits = 16;
-        bSigned = FALSE;
-        bFloating = FALSE;
-        break;
-
-      case GDT_Int32:
-      case GDT_CInt32:
-        nBits = 32;
-        bSigned = TRUE;
-        bFloating = FALSE;
-        break;
-
-      case GDT_UInt32:
-        nBits = 32;
-        bSigned = FALSE;
-        bFloating = FALSE;
-        break;
-
-      case GDT_Float32:
-      case GDT_CFloat32:
-        nBits = 32;
-        bSigned = TRUE;
-        bFloating = TRUE;
-        break;
-
-      case GDT_Float64:
-      case GDT_CFloat64:
-        nBits = 64;
-        bSigned = TRUE;
-        bFloating = TRUE;
-        break;
-
-      default:
-        CPLAssert( FALSE );
+    if( panBits[0] == 0 || panBits[1] == 0 )
         return GDT_Unknown;
-    }
 
-    switch( eType2 )
-    {
-      case GDT_Byte:
-        break;
+    const bool pabSigned[] = {
+        CPL_TO_BOOL( GDALDataTypeIsSigned( eType1 ) ),
+        CPL_TO_BOOL( GDALDataTypeIsSigned( eType2 ) )
+    };
 
-      case GDT_Int16:
-      case GDT_CInt16:
-        nBits = MAX(nBits,16);
-        bSigned = TRUE;
-        break;
+    const bool bSigned = pabSigned[0] || pabSigned[1];
+    const bool pabFloating[] = {
+        CPL_TO_BOOL(GDALDataTypeIsFloating(eType1)),
+        CPL_TO_BOOL(GDALDataTypeIsFloating(eType2))
+    };
+    const bool bFloating = pabFloating[0] || pabFloating[1];
+    const bool bComplex =
+        CPL_TO_BOOL( GDALDataTypeIsComplex( eType1 ) ) ||
+        CPL_TO_BOOL( GDALDataTypeIsComplex( eType2 ) );
 
-      case GDT_UInt16:
-        nBits = MAX(nBits,16);
-        break;
+    const int nBits = GetMinBitsForPair(pabSigned, pabFloating, panBits);
 
-      case GDT_Int32:
-      case GDT_CInt32:
-        nBits = MAX(nBits,32);
-        bSigned = TRUE;
-        break;
-
-      case GDT_UInt32:
-        nBits = MAX(nBits,32);
-        break;
-
-      case GDT_Float32:
-      case GDT_CFloat32:
-        nBits = MAX(nBits,32);
-        bSigned = TRUE;
-        bFloating = TRUE;
-        break;
-
-      case GDT_Float64:
-      case GDT_CFloat64:
-        nBits = MAX(nBits,64);
-        bSigned = TRUE;
-        bFloating = TRUE;
-        break;
-
-      default:
-        CPLAssert( FALSE );
-        return GDT_Unknown;
-    }
-
-    if( nBits == 8 )
-        return GDT_Byte;
-    else if( nBits == 16 && bComplex )
-        return GDT_CInt16;
-    else if( nBits == 16 && bSigned )
-        return GDT_Int16;
-    else if( nBits == 16 && !bSigned )
-        return GDT_UInt16;
-    else if( nBits == 32 && bFloating && bComplex )
-        return GDT_CFloat32;
-    else if( nBits == 32 && bFloating )
-        return GDT_Float32;
-    else if( nBits == 32 && bComplex )
-        return GDT_CInt32;
-    else if( nBits == 32 && bSigned )
-        return GDT_Int32;
-    else if( nBits == 32 && !bSigned )
-        return GDT_UInt32;
-    else if( nBits == 64 && bComplex )
-        return GDT_CFloat64;
-    else
-        return GDT_Float64;
+    return GDALFindDataType(nBits, bSigned, bFloating, bComplex);
 }
 
+/************************************************************************/
+/*                        GDALDataTypeUnionWithValue()                  */
+/************************************************************************/
+
+/**
+ * \brief Union a data type with the one found for a value
+ *
+ * @param eDT the first data type
+ * @param dValue the value for which to find a data type and union with eDT
+ * @param bComplex if the value is complex
+ *
+ * @return a data type able to express eDT and dValue.
+ * @since GDAL 2.3
+ */
+GDALDataType CPL_STDCALL GDALDataTypeUnionWithValue(
+    GDALDataType eDT, double dValue, int bComplex )
+{
+    const GDALDataType eDT2 = GDALFindDataTypeForValue(dValue, bComplex);
+    return GDALDataTypeUnion(eDT, eDT2);
+}
+
+/************************************************************************/
+/*                        GetMinBitsForValue()                          */
+/************************************************************************/
+static int GetMinBitsForValue(double dValue)
+{
+    if( round(dValue) == dValue )
+    {
+        if( dValue <= std::numeric_limits<GByte>::max() &&
+            dValue >= std::numeric_limits<GByte>::min() )
+            return 8;
+
+        if( dValue <= std::numeric_limits<GInt16>::max() &&
+            dValue >= std::numeric_limits<GInt16>::min() )
+            return 16;
+
+        if( dValue <= std::numeric_limits<GUInt16>::max() &&
+            dValue >= std::numeric_limits<GUInt16>::min() )
+            return 16;
+
+        if( dValue <= std::numeric_limits<GInt32>::max() &&
+            dValue >= std::numeric_limits<GInt32>::min() )
+            return 32;
+
+        if( dValue <= std::numeric_limits<GUInt32>::max() &&
+            dValue >= std::numeric_limits<GUInt32>::min() )
+            return 32;
+    }
+    else if( static_cast<float>(dValue) == dValue )
+    {
+        return 32;
+    }
+
+    return 64;
+}
+
+/************************************************************************/
+/*                        GDALFindDataType()                            */
+/************************************************************************/
+
+/**
+ * \brief Finds the smallest data type able to support the given
+ *  requirements
+ *
+ * @param nBits number of bits necessary
+ * @param bSigned if negative values are necessary
+ * @param bFloating if non-integer values necessary
+ * @param bComplex if complex values are necessary
+ *
+ * @return a best fit GDALDataType for supporting the requirements
+ * @since GDAL 2.3
+ */
+GDALDataType CPL_STDCALL GDALFindDataType(
+    int nBits, int bSigned, int bFloating, int bComplex )
+{
+    if( bSigned ) { nBits = std::max(nBits, 16); }
+    if( bComplex ) { nBits = std::max(nBits, !bSigned ? 32 : 16); }
+    if( bFloating ) { nBits = std::max(nBits, !bSigned ? 64 : 32); }
+
+    if( nBits <= 8 ) { return GDT_Byte; }
+
+    if( nBits <= 16 )
+    {
+        if( bComplex ) return GDT_CInt16;
+        if( bSigned ) return GDT_Int16;
+        return GDT_UInt16;
+    }
+
+    if( nBits <= 32 )
+    {
+        if( bFloating )
+        {
+            if( bComplex ) return GDT_CFloat32;
+            return GDT_Float32;
+        }
+
+        if( bComplex ) return GDT_CInt32;
+        if( bSigned ) return GDT_Int32;
+        return GDT_UInt32;
+    }
+
+    if( bComplex )
+        return GDT_CFloat64;
+
+    return GDT_Float64;
+}
+
+/************************************************************************/
+/*                        GDALFindDataTypeForValue()                    */
+/************************************************************************/
+
+/**
+ * \brief Finds the smallest data type able to support the provided value
+ *
+ * @param dValue value to support
+ * @param bComplex is the value complex
+ *
+ * @return a best fit GDALDataType for supporting the value
+ * @since GDAL 2.3
+ */
+GDALDataType CPL_STDCALL GDALFindDataTypeForValue(
+    double dValue, int bComplex )
+{
+    const bool bFloating = round(dValue) != dValue;
+    const bool bSigned = bFloating || dValue < 0;
+    const int nBits = GetMinBitsForValue(dValue);
+
+    return GDALFindDataType(nBits, bSigned, bFloating, bComplex);
+}
 
 /************************************************************************/
 /*                        GDALGetDataTypeSizeBytes()                    */
@@ -195,7 +296,7 @@ GDALDataTypeUnion( GDALDataType eType1, GDALDataType eType2 )
  * \brief Get data type size in <b>bytes</b>.
  *
  * Returns the size of a GDT_* type in bytes.  In contrast,
- * GDALGetDataTypeBits() returns the size in <b>bits</b>.
+ * GDALGetDataTypeSize() returns the size in <b>bits</b>.
  *
  * @param eDataType type, such as GDT_Byte.
  * @return the number of bytes or zero if it is not recognised.
@@ -303,6 +404,147 @@ int CPL_STDCALL GDALDataTypeIsComplex( GDALDataType eDataType )
 }
 
 /************************************************************************/
+/*                       GDALDataTypeIsFloating()                       */
+/************************************************************************/
+
+/**
+ * \brief Is data type floating? (might be complex)
+ *
+ * @return TRUE if the passed type is floating (one of GDT_Float32, GDT_Float64,
+ * GDT_CFloat32, GDT_CFloat64)
+ * @since GDAL 2.3
+ */
+
+int CPL_STDCALL GDALDataTypeIsFloating( GDALDataType eDataType )
+{
+    switch( eDataType )
+    {
+      case GDT_Float32:
+      case GDT_Float64:
+      case GDT_CFloat32:
+      case GDT_CFloat64:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
+}
+
+/************************************************************************/
+/*                       GDALDataTypeIsInteger()                        */
+/************************************************************************/
+
+/**
+ * \brief Is data type integer? (might be complex)
+ *
+ * @return TRUE if the passed type is integer (one of GDT_Byte, GDT_Int16,
+ * GDT_UInt16, GDT_Int32, GDT_UInt32, GDT_CInt16, GDT_CInt32).
+ * @since GDAL 2.3
+ */
+
+int CPL_STDCALL GDALDataTypeIsInteger( GDALDataType eDataType )
+
+{
+    switch( eDataType )
+    {
+      case GDT_Byte:
+      case GDT_Int16:
+      case GDT_UInt16:
+      case GDT_Int32:
+      case GDT_UInt32:
+      case GDT_CInt16:
+      case GDT_CInt32:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
+}
+
+/************************************************************************/
+/*                       GDALDataTypeIsSigned()                         */
+/************************************************************************/
+
+/**
+ * \brief Is data type signed?
+ *
+ * @return TRUE if the passed type is signed.
+ * @since GDAL 2.3
+ */
+
+int CPL_STDCALL GDALDataTypeIsSigned( GDALDataType eDataType )
+{
+    switch( eDataType )
+    {
+      case GDT_Byte:
+      case GDT_UInt16:
+      case GDT_UInt32:
+        return FALSE;
+
+      default:
+        return TRUE;
+    }
+}
+
+/************************************************************************/
+/*                    GDALDataTypeIsConversionLossy()                   */
+/************************************************************************/
+
+/**
+ * \brief Is conversion from eTypeFrom to eTypeTo potentially lossy
+ *
+ * @param eTypeFrom input datatype
+ * @param eTypeTo output datatype
+ * @return TRUE if conversion from eTypeFrom to eTypeTo potentially lossy.
+ * @since GDAL 2.3
+ */
+
+int CPL_STDCALL GDALDataTypeIsConversionLossy( GDALDataType eTypeFrom,
+                                               GDALDataType eTypeTo )
+{
+    // E.g cfloat32 -> float32
+    if( GDALDataTypeIsComplex(eTypeFrom) && !GDALDataTypeIsComplex(eTypeTo) )
+        return TRUE;
+
+    eTypeFrom = GDALGetNonComplexDataType(eTypeFrom);
+    eTypeTo = GDALGetNonComplexDataType(eTypeTo);
+
+    if( GDALDataTypeIsInteger(eTypeTo) )
+    {
+        // E.g. float32 -> int32 
+        if( GDALDataTypeIsFloating(eTypeFrom) )
+            return TRUE;
+
+        // E.g. Int16 to UInt16
+        const int bIsFromSigned = GDALDataTypeIsSigned(eTypeFrom);
+        const int bIsToSigned = GDALDataTypeIsSigned(eTypeTo);
+        if( bIsFromSigned && !bIsToSigned )
+            return TRUE;
+
+        // E.g UInt32 to UInt16
+        const int nFromSize =  GDALGetDataTypeSize(eTypeFrom);
+        const int nToSize = GDALGetDataTypeSize(eTypeTo);
+        if( nFromSize > nToSize )
+            return TRUE;
+
+        // E.g UInt16 to Int16
+        if( nFromSize == nToSize && !bIsFromSigned && bIsToSigned )
+            return TRUE;
+
+        return FALSE;
+    }
+
+    if( eTypeTo == GDT_Float32 && (eTypeFrom == GDT_Int32 ||
+                                   eTypeFrom == GDT_UInt32 ||
+                                   eTypeFrom == GDT_Float64) )
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/************************************************************************/
 /*                        GDALGetDataTypeName()                         */
 /************************************************************************/
 
@@ -362,7 +604,7 @@ const char * CPL_STDCALL GDALGetDataTypeName( GDALDataType eDataType )
         return "CFloat64";
 
       default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -388,10 +630,11 @@ GDALDataType CPL_STDCALL GDALGetDataTypeByName( const char *pszName )
 
     for( int iType = 1; iType < GDT_TypeCount; iType++ )
     {
-        if( GDALGetDataTypeName((GDALDataType)iType) != NULL
-            && EQUAL(GDALGetDataTypeName((GDALDataType)iType), pszName) )
+        const auto eType = static_cast<GDALDataType>(iType);
+        if( GDALGetDataTypeName(eType) != nullptr
+            && EQUAL(GDALGetDataTypeName(eType), pszName) )
         {
-            return (GDALDataType)iType;
+            return eType;
         }
     }
 
@@ -402,21 +645,24 @@ GDALDataType CPL_STDCALL GDALGetDataTypeByName( const char *pszName )
 /*                      GDALAdjustValueToDataType()                     */
 /************************************************************************/
 
-template<class T> static inline void ClampAndRound(double& dfValue, int& bClamped, int &bRounded)
+template<class T> static inline void ClampAndRound(
+    double& dfValue, bool& bClamped, bool &bRounded )
 {
+    // TODO(schwehr): Rework this template.  ::min() versus ::lowest.
+
     if (dfValue < std::numeric_limits<T>::min())
     {
-        bClamped = TRUE;
+        bClamped = true;
         dfValue = static_cast<double>(std::numeric_limits<T>::min());
     }
     else if (dfValue > std::numeric_limits<T>::max())
     {
-        bClamped = TRUE;
+        bClamped = true;
         dfValue = static_cast<double>(std::numeric_limits<T>::max());
     }
     else if (dfValue != static_cast<double>(static_cast<T>(dfValue)))
     {
-        bRounded = TRUE;
+        bRounded = true;
         dfValue = static_cast<double>(static_cast<T>(floor(dfValue + 0.5)));
     }
 }
@@ -436,9 +682,11 @@ template<class T> static inline void ClampAndRound(double& dfValue, int& bClampe
  * @since GDAL 2.1
  */
 
-double GDALAdjustValueToDataType( GDALDataType eDT, double dfValue, int* pbClamped, int* pbRounded )
+double GDALAdjustValueToDataType(
+    GDALDataType eDT, double dfValue, int* pbClamped, int* pbRounded )
 {
-    int bClamped = FALSE, bRounded = FALSE;
+    bool bClamped = false;
+    bool bRounded = false;
     switch(eDT)
     {
         case GDT_Byte:
@@ -458,18 +706,28 @@ double GDALAdjustValueToDataType( GDALDataType eDT, double dfValue, int* pbClamp
             break;
         case GDT_Float32:
         {
+            if( !CPLIsFinite(dfValue) )
+                break;
+
+            // TODO(schwehr): ::min() versus ::lowest.
+            // Use ClampAndRound after it has been fixed.
             if ( dfValue < -std::numeric_limits<float>::max())
             {
                 bClamped = TRUE;
-                dfValue = static_cast<double>(-std::numeric_limits<float>::max());
+                dfValue = static_cast<double>(
+                    -std::numeric_limits<float>::max());
             }
             else if (dfValue > std::numeric_limits<float>::max())
             {
                 bClamped = TRUE;
-                dfValue = static_cast<double>(std::numeric_limits<float>::max());
+                dfValue = static_cast<double>(
+                    std::numeric_limits<float>::max());
             }
             else
             {
+                // Intentionaly loose precision.
+                // TODO(schwehr): Is the double cast really necessary?
+                // If so, why?  What will fail?
                 dfValue = static_cast<double>(static_cast<float>(dfValue));
             }
             break;
@@ -485,6 +743,38 @@ double GDALAdjustValueToDataType( GDALDataType eDT, double dfValue, int* pbClamp
 }
 
 /************************************************************************/
+/*                        GDALGetNonComplexDataType()                */
+/************************************************************************/
+/**
+ * \brief Return the base data type for the specified input.
+ *
+ * If the input data type is complex this function returns the base type
+ * i.e. the data type of the real and imaginary parts (non-complex).
+ * If the input data type is already non-complex, then it is returned
+ * unchanged.
+ *
+ * @param eDataType type, such as GDT_CFloat32.
+ *
+ * @return GDAL data type.
+ */
+GDALDataType CPL_STDCALL GDALGetNonComplexDataType( GDALDataType eDataType )
+{
+    switch( eDataType )
+    {
+      case GDT_CInt16:
+        return GDT_Int16;
+      case GDT_CInt32:
+        return GDT_Int32;
+      case GDT_CFloat32:
+        return GDT_Float32;
+      case GDT_CFloat64:
+        return GDT_Float64;
+      default:
+        return eDataType;
+    }
+}
+
+/************************************************************************/
 /*                        GDALGetAsyncStatusTypeByName()                */
 /************************************************************************/
 /**
@@ -497,24 +787,23 @@ double GDALAdjustValueToDataType( GDALDataType eDT, double dfValue, int* pbClamp
  *
  * @return GDAL AsyncStatus type.
  */
-GDALAsyncStatusType CPL_DLL CPL_STDCALL GDALGetAsyncStatusTypeByName( const char *pszName )
+GDALAsyncStatusType CPL_DLL CPL_STDCALL GDALGetAsyncStatusTypeByName(
+    const char *pszName )
 {
     VALIDATE_POINTER1( pszName, "GDALGetAsyncStatusTypeByName", GARIO_ERROR);
 
-    int	iType;
-
-    for( iType = 1; iType < GARIO_TypeCount; iType++ )
+    for( int iType = 0; iType < GARIO_TypeCount; iType++ )
     {
-        if( GDALGetAsyncStatusTypeName((GDALAsyncStatusType)iType) != NULL
-            && EQUAL(GDALGetAsyncStatusTypeName((GDALAsyncStatusType)iType), pszName) )
+        const auto eType = static_cast<GDALAsyncStatusType>(iType);
+        if( GDALGetAsyncStatusTypeName(eType) != nullptr
+            && EQUAL(GDALGetAsyncStatusTypeName(eType), pszName) )
         {
-            return (GDALAsyncStatusType)iType;
+            return eType;
         }
     }
 
     return GARIO_ERROR;
 }
-
 
 /************************************************************************/
 /*                        GDALGetAsyncStatusTypeName()                 */
@@ -533,7 +822,8 @@ GDALAsyncStatusType CPL_DLL CPL_STDCALL GDALGetAsyncStatusTypeByName( const char
  * @return string corresponding to type.
  */
 
- const char * CPL_STDCALL GDALGetAsyncStatusTypeName( GDALAsyncStatusType eAsyncStatusType )
+ const char * CPL_STDCALL GDALGetAsyncStatusTypeName(
+     GDALAsyncStatusType eAsyncStatusType )
 
 {
     switch( eAsyncStatusType )
@@ -549,8 +839,9 @@ GDALAsyncStatusType CPL_DLL CPL_STDCALL GDALGetAsyncStatusTypeByName( const char
 
       case GARIO_COMPLETE:
         return "COMPLETE";
+
       default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -692,13 +983,15 @@ const char *GDALGetColorInterpretationName( GDALColorInterp eInterp )
 GDALColorInterp GDALGetColorInterpretationByName( const char *pszName )
 
 {
-    VALIDATE_POINTER1( pszName, "GDALGetColorInterpretationByName", GCI_Undefined );
+    VALIDATE_POINTER1( pszName, "GDALGetColorInterpretationByName",
+                       GCI_Undefined );
 
     for( int iType = 0; iType <= GCI_Max; iType++ )
     {
-        if( EQUAL(GDALGetColorInterpretationName((GDALColorInterp)iType), pszName) )
+        if( EQUAL(GDALGetColorInterpretationName(static_cast<GDALColorInterp>(iType)),
+                  pszName) )
         {
-            return (GDALColorInterp)iType;
+            return static_cast<GDALColorInterp>(iType);
         }
     }
 
@@ -709,6 +1002,12 @@ GDALColorInterp GDALGetColorInterpretationByName( const char *pszName )
 /*                     GDALGetRandomRasterSample()                      */
 /************************************************************************/
 
+/** Undocumented
+ * @param hBand undocumented.
+ * @param nSamples undocumented.
+ * @param pafSampleBuf undocumented.
+ * @return undocumented
+ */
 int CPL_STDCALL
 GDALGetRandomRasterSample( GDALRasterBandH hBand, int nSamples,
                            float *pafSampleBuf )
@@ -718,30 +1017,28 @@ GDALGetRandomRasterSample( GDALRasterBandH hBand, int nSamples,
 
     GDALRasterBand *poBand;
 
-    poBand = (GDALRasterBand *) GDALGetRasterSampleOverview( hBand, nSamples );
-    CPLAssert( NULL != poBand );
+    poBand = GDALRasterBand::FromHandle(GDALGetRasterSampleOverview( hBand, nSamples ));
+    CPLAssert( nullptr != poBand );
 
 /* -------------------------------------------------------------------- */
 /*      Figure out the ratio of blocks we will read to get an           */
 /*      approximate value.                                              */
 /* -------------------------------------------------------------------- */
-    int         nBlockXSize, nBlockYSize;
-    int         nBlocksPerRow, nBlocksPerColumn;
-    int         nSampleRate;
-    int         bGotNoDataValue;
-    int         nActualSamples = 0;
-    int         nBlockSampleRate;
-    int         nBlockPixels, nBlockCount;
+    int bGotNoDataValue = FALSE;
 
     double dfNoDataValue = poBand->GetNoDataValue( &bGotNoDataValue );
 
+    int nBlockXSize = 0;
+    int nBlockYSize = 0;
     poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
 
-    nBlocksPerRow = (poBand->GetXSize() + nBlockXSize - 1) / nBlockXSize;
-    nBlocksPerColumn = (poBand->GetYSize() + nBlockYSize - 1) / nBlockYSize;
+    const int nBlocksPerRow =
+        (poBand->GetXSize() + nBlockXSize - 1) / nBlockXSize;
+    const int nBlocksPerColumn =
+        (poBand->GetYSize() + nBlockYSize - 1) / nBlockYSize;
 
-    nBlockPixels = nBlockXSize * nBlockYSize;
-    nBlockCount = nBlocksPerRow * nBlocksPerColumn;
+    const int nBlockPixels = nBlockXSize * nBlockYSize;
+    const int nBlockCount = nBlocksPerRow * nBlocksPerColumn;
 
     if( nBlocksPerRow == 0 || nBlocksPerColumn == 0 || nBlockPixels == 0
         || nBlockCount == 0 )
@@ -753,7 +1050,8 @@ GDALGetRandomRasterSample( GDALRasterBandH hBand, int nSamples,
         return FALSE;
     }
 
-    nSampleRate = (int) MAX(1,sqrt((double) nBlockCount)-2.0);
+    int nSampleRate = static_cast<int>(
+        std::max(1.0, sqrt( static_cast<double>(nBlockCount) ) - 2.0));
 
     if( nSampleRate == nBlocksPerRow && nSampleRate > 1 )
         nSampleRate--;
@@ -762,97 +1060,109 @@ GDALGetRandomRasterSample( GDALRasterBandH hBand, int nSamples,
            && ((nBlockCount-1) / nSampleRate + 1) * nBlockPixels < nSamples )
         nSampleRate--;
 
-    if ((nSamples / ((nBlockCount-1) / nSampleRate + 1)) == 0)
-        nBlockSampleRate = 1;
-    else
+    int nBlockSampleRate = 1;
+
+    if ((nSamples / ((nBlockCount-1) / nSampleRate + 1)) != 0)
         nBlockSampleRate =
-            MAX(1,nBlockPixels / (nSamples / ((nBlockCount-1) / nSampleRate + 1)));
+            std::max( 1,
+                 nBlockPixels /
+                 (nSamples / ((nBlockCount-1) / nSampleRate + 1)));
+
+    int nActualSamples = 0;
 
     for( int iSampleBlock = 0;
          iSampleBlock < nBlockCount;
          iSampleBlock += nSampleRate )
     {
-        double dfValue = 0.0, dfReal, dfImag;
-        int  iXBlock, iYBlock, iX, iY, iXValid, iYValid, iRemainder = 0;
-        GDALRasterBlock *poBlock;
 
-        iYBlock = iSampleBlock / nBlocksPerRow;
-        iXBlock = iSampleBlock - nBlocksPerRow * iYBlock;
+        const int iYBlock = iSampleBlock / nBlocksPerRow;
+        const int iXBlock = iSampleBlock - nBlocksPerRow * iYBlock;
 
-        poBlock = poBand->GetLockedBlockRef( iXBlock, iYBlock );
-        if( poBlock == NULL )
+        GDALRasterBlock * const poBlock =
+            poBand->GetLockedBlockRef( iXBlock, iYBlock );
+        if( poBlock == nullptr )
             continue;
         void* pDataRef = poBlock->GetDataRef();
 
+        int iXValid = nBlockXSize;
         if( (iXBlock + 1) * nBlockXSize > poBand->GetXSize() )
             iXValid = poBand->GetXSize() - iXBlock * nBlockXSize;
-        else
-            iXValid = nBlockXSize;
 
+        int iYValid = nBlockYSize;
         if( (iYBlock + 1) * nBlockYSize > poBand->GetYSize() )
             iYValid = poBand->GetYSize() - iYBlock * nBlockYSize;
-        else
-            iYValid = nBlockYSize;
 
-        for( iY = 0; iY < iYValid; iY++ )
+        int iRemainder = 0;
+
+        for( int iY = 0; iY < iYValid; iY++ )
         {
-            for( iX = iRemainder; iX < iXValid; iX += nBlockSampleRate )
+            int iX = iRemainder;  // Used after for.
+            for( ; iX < iXValid; iX += nBlockSampleRate )
             {
-                int     iOffset;
+                double dfValue = 0.0;
+                const int iOffset = iX + iY * nBlockXSize;
 
-                iOffset = iX + iY * nBlockXSize;
                 switch( poBlock->GetDataType() )
                 {
                   case GDT_Byte:
-                    dfValue = ((GByte *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const GByte*>(pDataRef)[iOffset];
                     break;
                   case GDT_UInt16:
-                    dfValue = ((GUInt16 *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const GUInt16*>(pDataRef)[iOffset];
                     break;
                   case GDT_Int16:
-                    dfValue = ((GInt16 *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const GInt16*>(pDataRef)[iOffset];
                     break;
                   case GDT_UInt32:
-                    dfValue = ((GUInt32 *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const GUInt32*>(pDataRef)[iOffset];
                     break;
                   case GDT_Int32:
-                    dfValue = ((GInt32 *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const GInt32*>(pDataRef)[iOffset];
                     break;
                   case GDT_Float32:
-                    dfValue = ((float *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const float*>(pDataRef)[iOffset];
                     break;
                   case GDT_Float64:
-                    dfValue = ((double *) pDataRef)[iOffset];
+                    dfValue = reinterpret_cast<const double*>(pDataRef)[iOffset];
                     break;
                   case GDT_CInt16:
-                    dfReal = ((GInt16 *) pDataRef)[iOffset*2];
-                    dfImag = ((GInt16 *) pDataRef)[iOffset*2+1];
+                  {
+                    // TODO(schwehr): Clean up casts.
+                    const double dfReal = reinterpret_cast<const GInt16*>(pDataRef)[iOffset*2];
+                    const double dfImag = reinterpret_cast<const GInt16*>(pDataRef)[iOffset*2+1];
                     dfValue = sqrt(dfReal*dfReal + dfImag*dfImag);
                     break;
+                  }
                   case GDT_CInt32:
-                    dfReal = ((GInt32 *) pDataRef)[iOffset*2];
-                    dfImag = ((GInt32 *) pDataRef)[iOffset*2+1];
+                  {
+                    const double dfReal = reinterpret_cast<const GInt32*>(pDataRef)[iOffset*2];
+                    const double dfImag = reinterpret_cast<const GInt32*>(pDataRef)[iOffset*2+1];
                     dfValue = sqrt(dfReal*dfReal + dfImag*dfImag);
                     break;
+                  }
                   case GDT_CFloat32:
-                    dfReal = ((float *) pDataRef)[iOffset*2];
-                    dfImag = ((float *) pDataRef)[iOffset*2+1];
+                  {
+                    const double dfReal = reinterpret_cast<const float*>(pDataRef)[iOffset*2];
+                    const double dfImag = reinterpret_cast<const float*>(pDataRef)[iOffset*2+1];
                     dfValue = sqrt(dfReal*dfReal + dfImag*dfImag);
                     break;
+                  }
                   case GDT_CFloat64:
-                    dfReal = ((double *) pDataRef)[iOffset*2];
-                    dfImag = ((double *) pDataRef)[iOffset*2+1];
+                  {
+                    const double dfReal = reinterpret_cast<const double*>(pDataRef)[iOffset*2];
+                    const double dfImag = reinterpret_cast<const double*>(pDataRef)[iOffset*2+1];
                     dfValue = sqrt(dfReal*dfReal + dfImag*dfImag);
                     break;
+                  }
                   default:
-                    CPLAssert( FALSE );
+                    CPLAssert( false );
                 }
 
                 if( bGotNoDataValue && dfValue == dfNoDataValue )
                     continue;
 
                 if( nActualSamples < nSamples )
-                    pafSampleBuf[nActualSamples++] = (float) dfValue;
+                    pafSampleBuf[nActualSamples++] = static_cast<float>(dfValue);
             }
 
             iRemainder = iX - iXValid;
@@ -868,7 +1178,17 @@ GDALGetRandomRasterSample( GDALRasterBandH hBand, int nSamples,
 /*                            GDALInitGCPs()                            */
 /************************************************************************/
 
-void CPL_STDCALL GDALInitGCPs( int nCount, GDAL_GCP * psGCP )
+/** Initialize an array of GCPs.
+ *
+ * Numeric values are initialized to 0 and strings to the empty string ""
+ * allocated with CPLStrdup()
+ * An array initialized with GDALInitGCPs() must be de-initialized with
+ * GDALDeinitGCPs().
+ *
+ * @param nCount number of GCPs in psGCP
+ * @param psGCP array of GCPs of size nCount.
+ */
+void CPL_STDCALL GDALInitGCPs( int nCount, GDAL_GCP *psGCP )
 
 {
     if( nCount > 0 )
@@ -889,7 +1209,12 @@ void CPL_STDCALL GDALInitGCPs( int nCount, GDAL_GCP * psGCP )
 /*                           GDALDeinitGCPs()                           */
 /************************************************************************/
 
-void CPL_STDCALL GDALDeinitGCPs( int nCount, GDAL_GCP * psGCP )
+/** De-initialize an array of GCPs (initialized with GDALInitGCPs())
+ *
+ * @param nCount number of GCPs in psGCP
+ * @param psGCP array of GCPs of size nCount.
+ */
+void CPL_STDCALL GDALDeinitGCPs( int nCount, GDAL_GCP *psGCP )
 
 {
     if ( nCount > 0 )
@@ -909,11 +1234,18 @@ void CPL_STDCALL GDALDeinitGCPs( int nCount, GDAL_GCP * psGCP )
 /*                         GDALDuplicateGCPs()                          */
 /************************************************************************/
 
-GDAL_GCP * CPL_STDCALL
-GDALDuplicateGCPs( int nCount, const GDAL_GCP *pasGCPList )
+/** Duplicate an array of GCPs
+ *
+ * The return must be freed with GDALDeinitGCPs() followed by CPLFree()
+ *
+ * @param nCount number of GCPs in psGCP
+ * @param pasGCPList array of GCPs of size nCount.
+ */
+GDAL_GCP * CPL_STDCALL GDALDuplicateGCPs( int nCount, const GDAL_GCP *pasGCPList )
 
 {
-    GDAL_GCP *pasReturn = (GDAL_GCP *) CPLMalloc(sizeof(GDAL_GCP) * nCount);
+    GDAL_GCP *pasReturn = static_cast<GDAL_GCP *>(
+        CPLMalloc(sizeof(GDAL_GCP) * nCount) );
     GDALInitGCPs( nCount, pasReturn );
 
     for( int iGCP = 0; iGCP < nCount; iGCP++ )
@@ -939,6 +1271,7 @@ GDALDuplicateGCPs( int nCount, const GDAL_GCP *pasGCPList )
 /************************************************************************/
 
 /**
+ * \fn GDALFindAssociatedFile(const char*, const char*, char**, int)
  * Find file with alternate extension.
  *
  * Finds the file with the indicated extension, substituting it in place
@@ -964,15 +1297,18 @@ GDALDuplicateGCPs( int nCount, const GDAL_GCP *pasGCPList )
  * file with similar path style as the pszBaseFilename.
  */
 
+/**/
+/**/
+
 CPLString GDALFindAssociatedFile( const char *pszBaseFilename,
                                   const char *pszExt,
-                                  char **papszSiblingFiles,
+                                  CSLConstList papszSiblingFiles,
                                   int /* nFlags */ )
 
 {
     CPLString osTarget = CPLResetExtension( pszBaseFilename, pszExt );
 
-    if( papszSiblingFiles == NULL )
+    if( papszSiblingFiles == nullptr )
     {
         VSIStatBufL sStatBuf;
 
@@ -993,8 +1329,8 @@ CPLString GDALFindAssociatedFile( const char *pszBaseFilename,
     }
     else
     {
-        int iSibling = CSLFindString( papszSiblingFiles,
-                                      CPLGetFilename(osTarget) );
+        const int iSibling = CSLFindString( papszSiblingFiles,
+                                            CPLGetFilename(osTarget) );
         if( iSibling < 0 )
             return "";
 
@@ -1009,23 +1345,26 @@ CPLString GDALFindAssociatedFile( const char *pszBaseFilename,
 /*                         GDALLoadOziMapFile()                         */
 /************************************************************************/
 
-
+/** Helper function for translator implementer wanting support for OZI .map
+ *
+ * @param pszFilename filename of .tab file
+ * @param padfGeoTransform output geotransform. Must hold 6 doubles.
+ * @param ppszWKT output pointer to a string that will be allocated with CPLMalloc().
+ * @param pnGCPCount output pointer to GCP count.
+ * @param ppasGCPs outputer pointer to an array of GCPs.
+ * @return TRUE in case of success, FALSE otherwise.
+ */
 int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
                                     double *padfGeoTransform, char **ppszWKT,
                                     int *pnGCPCount, GDAL_GCP **ppasGCPs )
 
-
 {
-    int	        nCoordinateCount = 0;
-    static const int MAX_GCP = 30;
-    GDAL_GCP    asGCPs[MAX_GCP];
-
     VALIDATE_POINTER1( pszFilename, "GDALLoadOziMapFile", FALSE );
     VALIDATE_POINTER1( padfGeoTransform, "GDALLoadOziMapFile", FALSE );
     VALIDATE_POINTER1( pnGCPCount, "GDALLoadOziMapFile", FALSE );
     VALIDATE_POINTER1( ppasGCPs, "GDALLoadOziMapFile", FALSE );
 
-    char **papszLines = CSLLoad2( pszFilename, 1000, 200, NULL );
+    char **papszLines = CSLLoad2( pszFilename, 1000, 200, nullptr );
 
     if ( !papszLines )
         return FALSE;
@@ -1054,8 +1393,7 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
     /* is explained at http://tech.groups.yahoo.com/group/OziUsers-L/message/12484 */
     double dfMSF = 1;
 
-    int	iLine;
-    for ( iLine = 5; iLine < nLines; iLine++ )
+    for ( int iLine = 5; iLine < nLines; iLine++ )
     {
         if ( STARTS_WITH_CI(papszLines[iLine], "MSF,") )
         {
@@ -1071,19 +1409,21 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
     eErr = oSRS.importFromOzi( papszLines );
     if ( eErr == OGRERR_NONE )
     {
-        if ( ppszWKT != NULL )
+        if ( ppszWKT != nullptr )
             oSRS.exportToWkt( ppszWKT );
     }
 
-    // Iterate all lines in the MAP-file
-    for ( iLine = 5; iLine < nLines; iLine++ )
-    {
-        char    **papszTok = NULL;
+    int nCoordinateCount = 0;
+    // TODO(schwehr): Initialize asGCPs.
+    GDAL_GCP asGCPs[30];
 
-        papszTok = CSLTokenizeString2( papszLines[iLine], ",",
-                                       CSLT_ALLOWEMPTYTOKENS
-                                       | CSLT_STRIPLEADSPACES
-                                       | CSLT_STRIPENDSPACES );
+    // Iterate all lines in the MAP-file
+    for ( int iLine = 5; iLine < nLines; iLine++ )
+    {
+        char **papszTok = CSLTokenizeString2( papszLines[iLine], ",",
+                                              CSLT_ALLOWEMPTYTOKENS
+                                              | CSLT_STRIPLEADSPACES
+                                              | CSLT_STRIPENDSPACES );
 
         if ( CSLCount(papszTok) < 12 )
         {
@@ -1095,10 +1435,12 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
              && STARTS_WITH_CI(papszTok[0], "Point")
              && !EQUAL(papszTok[2], "")
              && !EQUAL(papszTok[3], "")
-             && nCoordinateCount < MAX_GCP )
+             && nCoordinateCount <
+             static_cast<int>(CPL_ARRAYSIZE(asGCPs)) )
         {
             bool bReadOk = false;
-            double  dfLon = 0., dfLat = 0.;
+            double dfLon = 0.0;
+            double dfLat = 0.0;
 
             if ( !EQUAL(papszTok[6], "")
                  && !EQUAL(papszTok[7], "")
@@ -1117,16 +1459,17 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
                 // coordinates.
                 if ( eErr == OGRERR_NONE )
                 {
-                    OGRSpatialReference *poLatLong = NULL;
-                    OGRCoordinateTransformation *poTransform = NULL;
+                    OGRSpatialReference *poLatLong = oSRS.CloneGeogCS();
 
-                    poLatLong = oSRS.CloneGeogCS();
                     if ( poLatLong )
                     {
-                        poTransform = OGRCreateCoordinateTransformation( poLatLong, &oSRS );
+                        OGRCoordinateTransformation *poTransform =
+                            OGRCreateCoordinateTransformation( poLatLong,
+                                                               &oSRS );
                         if ( poTransform )
                         {
-                            bReadOk = CPL_TO_BOOL(poTransform->Transform( 1, &dfLon, &dfLat ));
+                            bReadOk = CPL_TO_BOOL(
+                                poTransform->Transform( 1, &dfLon, &dfLat ));
                             delete poTransform;
                         }
                         delete poLatLong;
@@ -1150,8 +1493,10 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
                 GDALInitGCPs( 1, asGCPs + nCoordinateCount );
 
                 // Set pixel/line part
-                asGCPs[nCoordinateCount].dfGCPPixel = CPLAtofM(papszTok[2]) / dfMSF;
-                asGCPs[nCoordinateCount].dfGCPLine = CPLAtofM(papszTok[3]) / dfMSF;
+                asGCPs[nCoordinateCount].dfGCPPixel =
+                    CPLAtofM(papszTok[2]) / dfMSF;
+                asGCPs[nCoordinateCount].dfGCPLine =
+                    CPLAtofM(papszTok[3]) / dfMSF;
 
                 asGCPs[nCoordinateCount].dfGCPX = dfLon;
                 asGCPs[nCoordinateCount].dfGCPY = dfLat;
@@ -1176,8 +1521,9 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
 /*      Try to convert the GCPs into a geotransform definition, if      */
 /*      possible.  Otherwise we will need to use them as GCPs.          */
 /* -------------------------------------------------------------------- */
-    if( !GDALGCPsToGeoTransform( nCoordinateCount, asGCPs, padfGeoTransform,
-                                 CPLTestBool(CPLGetConfigOption("OZI_APPROX_GEOTRANSFORM", "NO")) ) )
+    if( !GDALGCPsToGeoTransform(
+            nCoordinateCount, asGCPs, padfGeoTransform,
+            CPLTestBool(CPLGetConfigOption("OZI_APPROX_GEOTRANSFORM", "NO")) ) )
     {
         if ( pnGCPCount && ppasGCPs )
         {
@@ -1186,8 +1532,8 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
                 "first order geotransform.  Using points as GCPs.",
                 pszFilename );
 
-            *ppasGCPs = (GDAL_GCP *)
-                CPLCalloc( sizeof(GDAL_GCP),nCoordinateCount );
+            *ppasGCPs = static_cast<GDAL_GCP *>(
+                CPLCalloc( sizeof(GDAL_GCP), nCoordinateCount ) );
             memcpy( *ppasGCPs, asGCPs, sizeof(GDAL_GCP) * nCoordinateCount );
             *pnGCPCount = nCoordinateCount;
         }
@@ -1204,10 +1550,18 @@ int CPL_STDCALL GDALLoadOziMapFile( const char *pszFilename,
 /*                       GDALReadOziMapFile()                           */
 /************************************************************************/
 
+/** Helper function for translator implementer wanting support for OZI .map
+ *
+ * @param pszBaseFilename filename whose basename will help building the .map filename.
+ * @param padfGeoTransform output geotransform. Must hold 6 doubles.
+ * @param ppszWKT output pointer to a string that will be allocated with CPLMalloc().
+ * @param pnGCPCount output pointer to GCP count.
+ * @param ppasGCPs outputer pointer to an array of GCPs.
+ * @return TRUE in case of success, FALSE otherwise.
+ */
 int CPL_STDCALL GDALReadOziMapFile( const char * pszBaseFilename,
                                     double *padfGeoTransform, char **ppszWKT,
                                     int *pnGCPCount, GDAL_GCP **ppasGCPs )
-
 
 {
 /* -------------------------------------------------------------------- */
@@ -1217,13 +1571,13 @@ int CPL_STDCALL GDALReadOziMapFile( const char * pszBaseFilename,
 
     VSILFILE *fpOzi = VSIFOpenL( pszOzi, "rt" );
 
-    if ( fpOzi == NULL && VSIIsCaseSensitiveFS(pszOzi) )
+    if ( fpOzi == nullptr && VSIIsCaseSensitiveFS(pszOzi) )
     {
         pszOzi = CPLResetExtension( pszBaseFilename, "MAP" );
         fpOzi = VSIFOpenL( pszOzi, "rt" );
     }
 
-    if ( fpOzi == NULL )
+    if ( fpOzi == nullptr )
         return FALSE;
 
     CPL_IGNORE_RET_VAL(VSIFCloseL( fpOzi ));
@@ -1238,34 +1592,37 @@ int CPL_STDCALL GDALReadOziMapFile( const char * pszBaseFilename,
 /************************************************************************/
 /*                         GDALLoadTabFile()                            */
 /*                                                                      */
-/*      Helper function for translator implementer wanting              */
-/*      support for MapInfo .tab-files.                                 */
 /************************************************************************/
 
-#define MAX_GCP 256
-
+/** Helper function for translator implementer wanting support for MapInfo
+ * .tab files.
+ *
+ * @param pszFilename filename of .tab
+ * @param padfGeoTransform output geotransform. Must hold 6 doubles.
+ * @param ppszWKT output pointer to a string that will be allocated with CPLMalloc().
+ * @param pnGCPCount output pointer to GCP count.
+ * @param ppasGCPs outputer pointer to an array of GCPs.
+ * @return TRUE in case of success, FALSE otherwise.
+ */
 int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
                                  double *padfGeoTransform, char **ppszWKT,
                                  int *pnGCPCount, GDAL_GCP **ppasGCPs )
 
-
 {
-    char        **papszTok=NULL;
-    bool        bTypeRasterFound = false;
-    bool        bInsideTableDef = false;
-    int	        nCoordinateCount = 0;
-    GDAL_GCP    asGCPs[MAX_GCP];
-
-    char **papszLines = CSLLoad2( pszFilename, 1000, 200, NULL );
+    char **papszLines = CSLLoad2( pszFilename, 1000, 200, nullptr );
 
     if ( !papszLines )
         return FALSE;
 
-    int numLines = CSLCount(papszLines);
+    char **papszTok = nullptr;
+    bool bTypeRasterFound = false;
+    bool bInsideTableDef = false;
+    int nCoordinateCount = 0;
+    GDAL_GCP asGCPs[256];  // TODO(schwehr): Initialize.
+    const int numLines = CSLCount(papszLines);
 
     // Iterate all lines in the TAB-file
-    int iLine;
-    for(iLine=0; iLine<numLines; iLine++)
+    for( int iLine=0; iLine<numLines; iLine++ )
     {
         CSLDestroy(papszTok);
         papszTok = CSLTokenizeStringComplex(papszLines[iLine], " \t(),;",
@@ -1296,7 +1653,8 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
         else if (bTypeRasterFound && bInsideTableDef
                  && CSLCount(papszTok) > 4
                  && EQUAL(papszTok[4], "Label")
-                 && nCoordinateCount < MAX_GCP )
+                 && nCoordinateCount <
+                 static_cast<int>(CPL_ARRAYSIZE(asGCPs)) )
         {
             GDALInitGCPs( 1, asGCPs + nCoordinateCount );
 
@@ -1304,7 +1662,7 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
             asGCPs[nCoordinateCount].dfGCPLine = CPLAtofM(papszTok[3]);
             asGCPs[nCoordinateCount].dfGCPX = CPLAtofM(papszTok[0]);
             asGCPs[nCoordinateCount].dfGCPY = CPLAtofM(papszTok[1]);
-            if( papszTok[5] != NULL )
+            if( papszTok[5] != nullptr )
             {
                 CPLFree( asGCPs[nCoordinateCount].pszId );
                 asGCPs[nCoordinateCount].pszId = CPLStrdup(papszTok[5]);
@@ -1314,7 +1672,7 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
         }
         else if( bTypeRasterFound && bInsideTableDef
                  && EQUAL(papszTok[0],"CoordSys")
-                 && ppszWKT != NULL )
+                 && ppszWKT != nullptr )
         {
             OGRSpatialReference oSRS;
 
@@ -1329,19 +1687,19 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
             ** If we have units of "degree", but a projected coordinate
             ** system we need to convert it to geographic.  See to01_02.TAB.
             */
-            if( ppszWKT != NULL && *ppszWKT != NULL
+            if( ppszWKT != nullptr && *ppszWKT != nullptr
                 && STARTS_WITH_CI(*ppszWKT, "PROJCS") )
             {
-                OGRSpatialReference oSRS, oSRSGeogCS;
-                char *pszSrcWKT = *ppszWKT;
+                OGRSpatialReference oSRS;
+                oSRS.importFromWkt( *ppszWKT );
 
-                oSRS.importFromWkt( &pszSrcWKT );
+                OGRSpatialReference oSRSGeogCS;
                 oSRSGeogCS.CopyGeogCSFrom( &oSRS );
                 CPLFree( *ppszWKT );
+
                 oSRSGeogCS.exportToWkt( ppszWKT );
             }
         }
-
     }
 
     CSLDestroy(papszTok);
@@ -1358,18 +1716,19 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
 /*      Try to convert the GCPs into a geotransform definition, if      */
 /*      possible.  Otherwise we will need to use them as GCPs.          */
 /* -------------------------------------------------------------------- */
-    if( !GDALGCPsToGeoTransform( nCoordinateCount, asGCPs, padfGeoTransform,
-                                 CPLTestBool(CPLGetConfigOption("TAB_APPROX_GEOTRANSFORM", "NO")) ) )
+    if( !GDALGCPsToGeoTransform(
+            nCoordinateCount, asGCPs, padfGeoTransform,
+            CPLTestBool(CPLGetConfigOption("TAB_APPROX_GEOTRANSFORM", "NO")) ) )
     {
         if (pnGCPCount && ppasGCPs)
         {
             CPLDebug( "GDAL",
-                "GDALLoadTabFile(%s) found file, was not able to derive a\n"
+                "GDALLoadTabFile(%s) found file, was not able to derive a "
                 "first order geotransform.  Using points as GCPs.",
                 pszFilename );
 
-            *ppasGCPs = (GDAL_GCP *)
-                CPLCalloc( sizeof(GDAL_GCP),nCoordinateCount );
+            *ppasGCPs = static_cast<GDAL_GCP *>(
+                CPLCalloc( sizeof(GDAL_GCP), nCoordinateCount ) );
             memcpy( *ppasGCPs, asGCPs, sizeof(GDAL_GCP) * nCoordinateCount );
             *pnGCPCount = nCoordinateCount;
         }
@@ -1382,42 +1741,42 @@ int CPL_STDCALL GDALLoadTabFile( const char *pszFilename,
     return TRUE;
 }
 
-#undef MAX_GCP
-
 /************************************************************************/
 /*                         GDALReadTabFile()                            */
-/*                                                                      */
-/*      Helper function for translator implementer wanting              */
-/*      support for MapInfo .tab-files.                                 */
 /************************************************************************/
 
+/** Helper function for translator implementer wanting support for MapInfo
+ * .tab files.
+ *
+ * @param pszBaseFilename filename whose basename will help building the .tab filename.
+ * @param padfGeoTransform output geotransform. Must hold 6 doubles.
+ * @param ppszWKT output pointer to a string that will be allocated with CPLMalloc().
+ * @param pnGCPCount output pointer to GCP count.
+ * @param ppasGCPs outputer pointer to an array of GCPs.
+ * @return TRUE in case of success, FALSE otherwise.
+ */
 int CPL_STDCALL GDALReadTabFile( const char * pszBaseFilename,
                                  double *padfGeoTransform, char **ppszWKT,
                                  int *pnGCPCount, GDAL_GCP **ppasGCPs )
 
-
 {
-    return GDALReadTabFile2(pszBaseFilename, padfGeoTransform,
-                            ppszWKT, pnGCPCount, ppasGCPs,
-                            NULL, NULL);
+    return GDALReadTabFile2( pszBaseFilename, padfGeoTransform,
+                             ppszWKT, pnGCPCount, ppasGCPs,
+                             nullptr, nullptr );
 }
-
 
 int GDALReadTabFile2( const char * pszBaseFilename,
                       double *padfGeoTransform, char **ppszWKT,
                       int *pnGCPCount, GDAL_GCP **ppasGCPs,
                       char** papszSiblingFiles, char** ppszTabFileNameOut )
 {
-    const char	*pszTAB;
-    VSILFILE	*fpTAB;
-
     if (ppszTabFileNameOut)
-        *ppszTabFileNameOut = NULL;
+        *ppszTabFileNameOut = nullptr;
 
     if( !GDALCanFileAcceptSidecarFile(pszBaseFilename) )
         return FALSE;
 
-    pszTAB = CPLResetExtension( pszBaseFilename, "tab" );
+    const char *pszTAB = CPLResetExtension( pszBaseFilename, "tab" );
 
     if (papszSiblingFiles)
     {
@@ -1443,15 +1802,15 @@ int GDALReadTabFile2( const char * pszBaseFilename,
 /*      Try lower case, then upper case.                                */
 /* -------------------------------------------------------------------- */
 
-    fpTAB = VSIFOpenL( pszTAB, "rt" );
+    VSILFILE *fpTAB = VSIFOpenL( pszTAB, "rt" );
 
-    if( fpTAB == NULL && VSIIsCaseSensitiveFS(pszTAB) )
+    if( fpTAB == nullptr && VSIIsCaseSensitiveFS(pszTAB) )
     {
         pszTAB = CPLResetExtension( pszBaseFilename, "TAB" );
         fpTAB = VSIFOpenL( pszTAB, "rt" );
     }
 
-    if( fpTAB == NULL )
+    if( fpTAB == nullptr )
         return FALSE;
 
     CPL_IGNORE_RET_VAL(VSIFCloseL( fpTAB ));
@@ -1502,21 +1861,21 @@ int CPL_STDCALL
 GDALLoadWorldFile( const char *pszFilename, double *padfGeoTransform )
 
 {
-    char        **papszLines;
-
     VALIDATE_POINTER1( pszFilename, "GDALLoadWorldFile", FALSE );
     VALIDATE_POINTER1( padfGeoTransform, "GDALLoadWorldFile", FALSE );
 
-    papszLines = CSLLoad2( pszFilename, 100, 100, NULL );
+    char **papszLines = CSLLoad2( pszFilename, 100, 100, nullptr );
 
     if ( !papszLines )
         return FALSE;
 
-   double world[6];
+    double world[6] = { 0.0 };
     // reads the first 6 non-empty lines
     int nLines = 0;
-    int nLinesCount = CSLCount(papszLines);
-    for( int i = 0; i < nLinesCount && nLines < 6; ++i )
+    const int nLinesCount = CSLCount(papszLines);
+    for( int i = 0;
+         i < nLinesCount && nLines < static_cast<int>(CPL_ARRAYSIZE(world));
+         ++i )
     {
         CPLString line(papszLines[i]);
         if( line.Trim().empty() )
@@ -1597,23 +1956,19 @@ GDALReadWorldFile( const char *pszBaseFilename, const char *pszExtension,
                    double *padfGeoTransform )
 
 {
-    return GDALReadWorldFile2(pszBaseFilename, pszExtension,
-                              padfGeoTransform, NULL, NULL);
+    return GDALReadWorldFile2( pszBaseFilename, pszExtension,
+                               padfGeoTransform, nullptr, nullptr );
 }
 
 int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
                         double *padfGeoTransform, char** papszSiblingFiles,
                         char** ppszWorldFileNameOut )
 {
-    const char  *pszTFW;
-    char        szExtUpper[32], szExtLower[32];
-    int         i;
-
     VALIDATE_POINTER1( pszBaseFilename, "GDALReadWorldFile", FALSE );
     VALIDATE_POINTER1( padfGeoTransform, "GDALReadWorldFile", FALSE );
 
     if (ppszWorldFileNameOut)
-        *ppszWorldFileNameOut = NULL;
+        *ppszWorldFileNameOut = nullptr;
 
     if( !GDALCanFileAcceptSidecarFile(pszBaseFilename) )
         return FALSE;
@@ -1622,15 +1977,15 @@ int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
 /*      If we aren't given an extension, try both the unix and          */
 /*      windows style extensions.                                       */
 /* -------------------------------------------------------------------- */
-    if( pszExtension == NULL )
+    if( pszExtension == nullptr )
     {
-        char szDerivedExtension[100];
-        std::string  oBaseExt = CPLGetExtension( pszBaseFilename );
+        const std::string oBaseExt = CPLGetExtension( pszBaseFilename );
 
         if( oBaseExt.length() < 2 )
             return FALSE;
 
         // windows version - first + last + 'w'
+        char szDerivedExtension[100] = { '\0' };
         szDerivedExtension[0] = oBaseExt[0];
         szDerivedExtension[1] = oBaseExt[oBaseExt.length()-1];
         szDerivedExtension[2] = 'w';
@@ -1645,10 +2000,11 @@ int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
         if( oBaseExt.length() > sizeof(szDerivedExtension)-2 )
             return FALSE;
 
-        snprintf( szDerivedExtension, sizeof(szDerivedExtension), "%sw", oBaseExt.c_str() );
+        snprintf( szDerivedExtension, sizeof(szDerivedExtension),
+                  "%sw", oBaseExt.c_str() );
         return GDALReadWorldFile2( pszBaseFilename, szDerivedExtension,
-                                  padfGeoTransform, papszSiblingFiles,
-                                  ppszWorldFileNameOut );
+                                   padfGeoTransform, papszSiblingFiles,
+                                   ppszWorldFileNameOut );
     }
 
 /* -------------------------------------------------------------------- */
@@ -1660,22 +2016,23 @@ int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
 /* -------------------------------------------------------------------- */
 /*      Generate upper and lower case versions of the extension.        */
 /* -------------------------------------------------------------------- */
+    char szExtUpper[32] = { '\0' };
+    char szExtLower[32] = { '\0' };
     CPLStrlcpy( szExtUpper, pszExtension, sizeof(szExtUpper) );
     CPLStrlcpy( szExtLower, pszExtension, sizeof(szExtLower) );
 
-    for( i = 0; szExtUpper[i] != '\0'; i++ )
+    for( int i = 0; szExtUpper[i] != '\0'; i++ )
     {
-        szExtUpper[i] = (char) toupper(szExtUpper[i]);
-        szExtLower[i] = (char) tolower(szExtLower[i]);
+        szExtUpper[i] = static_cast<char>( toupper(szExtUpper[i]) );
+        szExtLower[i] = static_cast<char>( tolower(szExtLower[i]) );
     }
 
-    VSIStatBufL sStatBuf;
-
-    pszTFW = CPLResetExtension( pszBaseFilename, szExtLower );
+    const char *pszTFW = CPLResetExtension( pszBaseFilename, szExtLower );
 
     if (papszSiblingFiles)
     {
-        int iSibling = CSLFindString(papszSiblingFiles, CPLGetFilename(pszTFW));
+        const int iSibling =
+            CSLFindString(papszSiblingFiles, CPLGetFilename(pszTFW));
         if (iSibling >= 0)
         {
             CPLString osTFWFilename = pszBaseFilename;
@@ -1696,6 +2053,7 @@ int GDALReadWorldFile2( const char *pszBaseFilename, const char *pszExtension,
 /*      Try lower case, then upper case.                                */
 /* -------------------------------------------------------------------- */
 
+    VSIStatBufL sStatBuf;
     bool bGotTFW = VSIStatExL( pszTFW, &sStatBuf, VSI_STAT_EXISTS_FLAG ) == 0;
 
     if( !bGotTFW  && VSIIsCaseSensitiveFS(pszTFW) )
@@ -1780,17 +2138,16 @@ GDALWriteWorldFile( const char * pszBaseFilename, const char *pszExtension,
 /* -------------------------------------------------------------------- */
 /*      Update extension, and write to disk.                            */
 /* -------------------------------------------------------------------- */
-    const char  *pszTFW;
-    VSILFILE    *fpTFW;
-
-    pszTFW = CPLResetExtension( pszBaseFilename, pszExtension );
-    fpTFW = VSIFOpenL( pszTFW, "wt" );
-    if( fpTFW == NULL )
+    const char *pszTFW = CPLResetExtension( pszBaseFilename, pszExtension );
+    VSILFILE * const fpTFW = VSIFOpenL( pszTFW, "wt" );
+    if( fpTFW == nullptr )
         return FALSE;
 
-    int bRet = ( VSIFWriteL( (void *) osTFWText.c_str(), osTFWText.size(), 1, fpTFW ) == 1 );
+    const int bRet =
+        VSIFWriteL( osTFWText.c_str(), osTFWText.size(), 1, fpTFW )
+        == 1;
     if( VSIFCloseL( fpTFW ) != 0 )
-        bRet = FALSE;
+        return FALSE;
 
     return bRet;
 }
@@ -1829,7 +2186,7 @@ const char * CPL_STDCALL GDALVersionInfo( const char *pszRequest )
 /* -------------------------------------------------------------------- */
 /*      Try to capture as much build information as practical.          */
 /* -------------------------------------------------------------------- */
-    if( pszRequest != NULL && EQUAL(pszRequest,"BUILD_INFO") )
+    if( pszRequest != nullptr && EQUAL(pszRequest,"BUILD_INFO") )
     {
         CPLString osBuildInfo;
 
@@ -1839,42 +2196,52 @@ const char * CPL_STDCALL GDALVersionInfo( const char *pszRequest )
 #ifdef PAM_ENABLED
         osBuildInfo += "PAM_ENABLED=YES\n";
 #endif
-        osBuildInfo += "OGR_ENABLED=YES\n";
-
+        osBuildInfo += "OGR_ENABLED=YES\n";  // Deprecated.  Always yes.
+#ifdef HAVE_GEOS
+        osBuildInfo += "GEOS_ENABLED=YES\n";
+#ifdef GEOS_CAPI_VERSION
+        osBuildInfo += CPLString("GEOS_VERSION=") + GEOS_CAPI_VERSION + "\n";
+#endif
+#endif
         CPLFree(CPLGetTLS(CTLS_VERSIONINFO));
         CPLSetTLS(CTLS_VERSIONINFO, CPLStrdup(osBuildInfo), TRUE );
-        return (char *) CPLGetTLS(CTLS_VERSIONINFO);
+        return static_cast<char *>( CPLGetTLS(CTLS_VERSIONINFO) );
     }
 
 /* -------------------------------------------------------------------- */
 /*      LICENSE is a special case. We try to find and read the          */
 /*      LICENSE.TXT file from the GDAL_DATA directory and return it     */
 /* -------------------------------------------------------------------- */
-    if( pszRequest != NULL && EQUAL(pszRequest,"LICENSE") )
+    if( pszRequest != nullptr && EQUAL(pszRequest,"LICENSE") )
     {
-        char* pszResultLicence = (char*) CPLGetTLS( CTLS_VERSIONINFO_LICENCE );
-        if( pszResultLicence != NULL )
+        char* pszResultLicence = reinterpret_cast<char *>(
+            CPLGetTLS( CTLS_VERSIONINFO_LICENCE ) );
+        if( pszResultLicence != nullptr )
         {
             return pszResultLicence;
         }
 
         const char *pszFilename = CPLFindFile( "etc", "LICENSE.TXT" );
-        VSILFILE *fp = NULL;
-        int  nLength;
+        VSILFILE *fp = nullptr;
 
-        if( pszFilename != NULL )
+        if( pszFilename != nullptr )
             fp = VSIFOpenL( pszFilename, "r" );
 
-        if( fp != NULL )
+        if( fp != nullptr )
         {
             if( VSIFSeekL( fp, 0, SEEK_END ) == 0 )
             {
-                nLength = (int) VSIFTellL( fp ) + 1;
+                // TODO(schwehr): Handle if VSITellL returns a value too large
+                // for size_t.
+                const size_t nLength =
+                    static_cast<size_t>( VSIFTellL( fp ) + 1 );
                 if( VSIFSeekL( fp, SEEK_SET, 0 ) == 0 )
                 {
-                    pszResultLicence = (char *) VSICalloc(1,nLength);
+                    pszResultLicence = static_cast<char *>(
+                        VSICalloc(1, nLength) );
                     if (pszResultLicence)
-                        CPL_IGNORE_RET_VAL(VSIFReadL( pszResultLicence, 1, nLength-1, fp ));
+                        CPL_IGNORE_RET_VAL(
+                            VSIFReadL( pszResultLicence, 1, nLength - 1, fp ) );
                 }
             }
 
@@ -1898,7 +2265,7 @@ const char * CPL_STDCALL GDALVersionInfo( const char *pszRequest )
 /* -------------------------------------------------------------------- */
     CPLString osVersionInfo;
 
-    if( pszRequest == NULL || EQUAL(pszRequest,"VERSION_NUM") )
+    if( pszRequest == nullptr || EQUAL(pszRequest,"VERSION_NUM") )
         osVersionInfo.Printf( "%d", GDAL_VERSION_NUM );
     else if( EQUAL(pszRequest,"RELEASE_DATE") )
         osVersionInfo.Printf( "%d", GDAL_RELEASE_DATE );
@@ -1913,7 +2280,7 @@ const char * CPL_STDCALL GDALVersionInfo( const char *pszRequest )
 
     CPLFree(CPLGetTLS(CTLS_VERSIONINFO)); // clear old value.
     CPLSetTLS(CTLS_VERSIONINFO, CPLStrdup(osVersionInfo), TRUE );
-    return (char *) CPLGetTLS(CTLS_VERSIONINFO);
+    return static_cast<char *>( CPLGetTLS(CTLS_VERSIONINFO) );
 }
 
 /************************************************************************/
@@ -1945,7 +2312,8 @@ int CPL_STDCALL GDALCheckVersion( int nVersionMajor, int nVersionMinor,
     if (pszCallingComponentName)
     {
         CPLError( CE_Failure, CPLE_AppDefined,
-                  "%s was compiled against GDAL %d.%d but current library version is %d.%d\n",
+                  "%s was compiled against GDAL %d.%d, but "
+                  "the current library version is %d.%d",
                   pszCallingComponentName, nVersionMajor, nVersionMinor,
                   GDAL_VERSION_MAJOR, GDAL_VERSION_MINOR);
     }
@@ -1954,11 +2322,10 @@ int CPL_STDCALL GDALCheckVersion( int nVersionMajor, int nVersionMinor,
 
 /************************************************************************/
 /*                            GDALDecToDMS()                            */
-/*                                                                      */
-/*      Translate a decimal degrees value to a DMS string with          */
-/*      hemisphere.                                                     */
 /************************************************************************/
 
+/** Translate a decimal degrees value to a DMS string with hemisphere.
+ */
 const char * CPL_STDCALL GDALDecToDMS( double dfAngle, const char * pszAxis,
                           int nPrecision )
 
@@ -2013,6 +2380,13 @@ double CPL_STDCALL GDALDecToPackedDMS( double dfDec )
  * given in TL, TR, BR, BL order.  So when using this to get a geotransform
  * from 4 corner coordinates, pass them in this order.
  *
+ * Starting with GDAL 2.2.2, if bApproxOK = FALSE, the
+ * GDAL_GCPS_TO_GEOTRANSFORM_APPROX_OK configuration option will be read. If
+ * set to YES, then bApproxOK will be overridden with TRUE.
+ * Starting with GDAL 2.2.2, when exact fit is asked, the
+ * GDAL_GCPS_TO_GEOTRANSFORM_APPROX_THRESHOLD configuration option can be set to
+ * give the maximum error threshold in pixel. The default is 0.25.
+ *
  * @param nGCPCount the number of GCPs being passed in.
  * @param pasGCPs the list of GCP structures.
  * @param padfGeoTransform the six double array in which the affine
@@ -2025,12 +2399,25 @@ double CPL_STDCALL GDALDecToPackedDMS( double dfDec )
  * and the fit is poor.
  */
 
+// TODO(schwehr): Add consts to args.
 int CPL_STDCALL
 GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
                         double *padfGeoTransform, int bApproxOK )
 
 {
-    int    i;
+    double dfPixelThreshold = 0.25;
+    if( !bApproxOK )
+    {
+        bApproxOK =
+            CPLTestBool(CPLGetConfigOption(
+                            "GDAL_GCPS_TO_GEOTRANSFORM_APPROX_OK", "NO"));
+        if( !bApproxOK )
+        {
+            dfPixelThreshold =
+                CPLAtof(CPLGetConfigOption(
+                    "GDAL_GCPS_TO_GEOTRANSFORM_APPROX_THRESHOLD", "0.25"));
+        }
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Recognise a few special cases.                                  */
@@ -2110,23 +2497,23 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
     double min_geoy = pasGCPs[0].dfGCPY;
     double max_geoy = pasGCPs[0].dfGCPY;
 
-    for (i = 1; i < nGCPCount; ++i) {
-        min_pixel = MIN(min_pixel, pasGCPs[i].dfGCPPixel);
-        max_pixel = MAX(max_pixel, pasGCPs[i].dfGCPPixel);
-        min_line = MIN(min_line, pasGCPs[i].dfGCPLine);
-        max_line = MAX(max_line, pasGCPs[i].dfGCPLine);
-        min_geox = MIN(min_geox, pasGCPs[i].dfGCPX);
-        max_geox = MAX(max_geox, pasGCPs[i].dfGCPX);
-        min_geoy = MIN(min_geoy, pasGCPs[i].dfGCPY);
-        max_geoy = MAX(max_geoy, pasGCPs[i].dfGCPY);
+    for( int i = 1; i < nGCPCount; ++i ) {
+        min_pixel = std::min(min_pixel, pasGCPs[i].dfGCPPixel);
+        max_pixel = std::max(max_pixel, pasGCPs[i].dfGCPPixel);
+        min_line = std::min(min_line, pasGCPs[i].dfGCPLine);
+        max_line = std::max(max_line, pasGCPs[i].dfGCPLine);
+        min_geox = std::min(min_geox, pasGCPs[i].dfGCPX);
+        max_geox = std::max(max_geox, pasGCPs[i].dfGCPX);
+        min_geoy = std::min(min_geoy, pasGCPs[i].dfGCPY);
+        max_geoy = std::max(max_geoy, pasGCPs[i].dfGCPY);
     }
 
     double EPS = 1.0e-12;
 
-    if( ABS(max_pixel - min_pixel) < EPS
-        || ABS(max_line - min_line) < EPS
-        || ABS(max_geox - min_geox) < EPS
-        || ABS(max_geoy - min_geoy) < EPS)
+    if( std::abs(max_pixel - min_pixel) < EPS
+        || std::abs(max_line - min_line) < EPS
+        || std::abs(max_geox - min_geox) < EPS
+        || std::abs(max_geoy - min_geoy) < EPS)
     {
         return FALSE;  // degenerate in at least one dimension.
     }
@@ -2149,15 +2536,22 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
 
 /* -------------------------------------------------------------------- */
 /* In the general case, do a least squares error approximation by       */
-/* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum		*/
+/* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
 /* -------------------------------------------------------------------- */
 
-    double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0, sum_xx = 0.0, sum_yy = 0.0;
-    double sum_Lon = 0.0, sum_Lonx = 0.0, sum_Lony = 0.0;
-    double sum_Lat = 0.0, sum_Latx = 0.0, sum_Laty = 0.0;
-    double divisor;
+    double sum_x = 0.0;
+    double sum_y = 0.0;
+    double sum_xy = 0.0;
+    double sum_xx = 0.0;
+    double sum_yy = 0.0;
+    double sum_Lon = 0.0;
+    double sum_Lonx = 0.0;
+    double sum_Lony = 0.0;
+    double sum_Lat = 0.0;
+    double sum_Latx = 0.0;
+    double sum_Laty = 0.0;
 
-    for (i = 0; i < nGCPCount; ++i) {
+    for ( int i = 0; i < nGCPCount; ++i ) {
         double pixel, line, geox, geoy;
 
         GDALApplyGeoTransform(pl_normalize,
@@ -2182,7 +2576,8 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
         sum_Laty += geoy * line;
     }
 
-    divisor = nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
+    const double divisor =
+        nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
         + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
         - sum_x * sum_x * sum_yy;
 
@@ -2195,7 +2590,7 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
 /* -------------------------------------------------------------------- */
 /*      Compute top/left origin.                                        */
 /* -------------------------------------------------------------------- */
-    double gt_normalized[6];
+  double gt_normalized[6] = { 0.0 };
     gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
                   + sum_Lonx * (sum_y * sum_xy - sum_x *  sum_yy)
                   + sum_Lony * (sum_x * sum_xy - sum_y * sum_xx))
@@ -2236,7 +2631,8 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
 /*      Compose the resulting transformation with the normalization     */
 /*      geotransformations.                                             */
 /* -------------------------------------------------------------------- */
-    double gt1p2[6], inv_geo_normalize[6];
+    double gt1p2[6] = { 0.0 };
+    double inv_geo_normalize[6] = { 0.0 };
     if( !GDALInvGeoTransform(geo_normalize, inv_geo_normalize))
         return FALSE;
 
@@ -2250,31 +2646,37 @@ GDALGCPsToGeoTransform( int nGCPCount, const GDAL_GCP *pasGCPs,
     {
         // FIXME? Not sure if it is the more accurate way of computing
         // pixel size
-        double dfPixelSize = 0.5 * (ABS(padfGeoTransform[1])
-            + ABS(padfGeoTransform[2])
-            + ABS(padfGeoTransform[4])
-            + ABS(padfGeoTransform[5]));
-
-        for( i = 0; i < nGCPCount; i++ )
+        double dfPixelSize =
+            0.5 * (std::abs(padfGeoTransform[1])
+            + std::abs(padfGeoTransform[2])
+            + std::abs(padfGeoTransform[4])
+            + std::abs(padfGeoTransform[5]));
+        if( dfPixelSize == 0.0 )
         {
-            double      dfErrorX, dfErrorY;
+            CPLDebug("GDAL", "dfPixelSize = 0");
+            return FALSE;
+        }
 
-            dfErrorX =
+        for( int i = 0; i < nGCPCount; i++ )
+        {
+            const double dfErrorX =
                 (pasGCPs[i].dfGCPPixel * padfGeoTransform[1]
                  + pasGCPs[i].dfGCPLine * padfGeoTransform[2]
                  + padfGeoTransform[0])
                 - pasGCPs[i].dfGCPX;
-            dfErrorY =
+            const double dfErrorY =
                 (pasGCPs[i].dfGCPPixel * padfGeoTransform[4]
                  + pasGCPs[i].dfGCPLine * padfGeoTransform[5]
                  + padfGeoTransform[3])
                 - pasGCPs[i].dfGCPY;
 
-            if( ABS(dfErrorX) > 0.25 * dfPixelSize
-                || ABS(dfErrorY) > 0.25 * dfPixelSize )
+            if( std::abs(dfErrorX) > dfPixelThreshold * dfPixelSize
+                || std::abs(dfErrorY) > dfPixelThreshold * dfPixelSize )
             {
-                CPLDebug("GDAL", "dfErrorX/dfPixelSize = %.2f, dfErrorY/dfPixelSize = %.2f",
-                         ABS(dfErrorX)/dfPixelSize, ABS(dfErrorY)/dfPixelSize);
+                CPLDebug("GDAL", "dfErrorX/dfPixelSize = %.2f, "
+                         "dfErrorY/dfPixelSize = %.2f",
+                         std::abs(dfErrorX)/dfPixelSize,
+                         std::abs(dfErrorY)/dfPixelSize);
                 return FALSE;
             }
         }
@@ -2303,7 +2705,7 @@ void GDALComposeGeoTransforms(const double *padfGT1, const double *padfGT2,
                               double *padfGTOut)
 
 {
-    double gtwrk[6];
+    double gtwrk[6] = { 0.0 };
     // We need to think of the geotransform in a more normal form to do
     // the matrix multiple:
     //
@@ -2338,7 +2740,69 @@ void GDALComposeGeoTransforms(const double *padfGT1, const double *padfGT2,
         padfGT2[4] * padfGT1[0]
         + padfGT2[5] * padfGT1[3]
         + padfGT2[3] * 1.0;
-    memcpy(padfGTOut, gtwrk, sizeof(double) * 6);
+    memcpy(padfGTOut, gtwrk, sizeof(gtwrk));
+}
+
+/************************************************************************/
+/*                      StripIrrelevantOptions()                        */
+/************************************************************************/
+
+static void StripIrrelevantOptions(CPLXMLNode* psCOL, int nOptions)
+{
+    if( nOptions == 0 )
+        nOptions = GDAL_OF_RASTER;
+    if( (nOptions & GDAL_OF_RASTER) != 0 && (nOptions & GDAL_OF_VECTOR) != 0 )
+        return;
+
+    CPLXMLNode* psPrev = nullptr;
+    for( CPLXMLNode* psIter = psCOL->psChild; psIter; )
+    {
+        if( psIter->eType == CXT_Element )
+        {
+            CPLXMLNode* psScope = CPLGetXMLNode(psIter, "scope");
+            bool bStrip = false;
+            if( nOptions == GDAL_OF_RASTER &&
+                psScope && psScope->psChild &&
+                psScope->psChild->pszValue &&
+                EQUAL(psScope->psChild->pszValue, "vector") )
+            {
+                bStrip = true;
+            }
+            else if( nOptions == GDAL_OF_VECTOR &&
+                psScope && psScope->psChild &&
+                psScope->psChild->pszValue &&
+                EQUAL(psScope->psChild->pszValue, "raster") )
+            {
+                bStrip = true;
+            }
+            if( psScope )
+            {
+                CPLRemoveXMLChild(psIter, psScope);
+                CPLDestroyXMLNode(psScope);
+            }
+
+            CPLXMLNode* psNext = psIter->psNext;
+            if( bStrip )
+            {
+                if( psPrev )
+                    psPrev->psNext = psNext;
+                else if( psCOL->psChild == psIter )
+                    psCOL->psChild = psNext;
+                psIter->psNext = nullptr;
+                CPLDestroyXMLNode(psIter);
+                psIter = psNext;
+            }
+            else
+            {
+                psPrev = psIter;
+                psIter = psNext;
+            }
+        }
+        else
+        {
+            psIter = psIter->psNext;
+        }
+    }
 }
 
 /************************************************************************/
@@ -2392,7 +2856,7 @@ int CPL_STDCALL
 GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 
 {
-    char **papszReturn = NULL;
+    char **papszReturn = nullptr;
     int  iArg;
     char **papszArgv = *ppapszArgv;
 
@@ -2411,7 +2875,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
         if( EQUAL(papszArgv[iArg],"--version") )
         {
-            printf( "%s\n", GDALVersionInfo( "--version" ) );
+            printf( "%s\n", GDALVersionInfo( "--version" ) );/*ok*/
             CSLDestroy( papszReturn );
             return 0;
         }
@@ -2421,7 +2885,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
         else if( EQUAL(papszArgv[iArg],"--build") )
         {
-            printf( "%s", GDALVersionInfo( "BUILD_INFO" ) );
+            printf( "%s", GDALVersionInfo( "BUILD_INFO" ) );/*ok*/
             CSLDestroy( papszReturn );
             return 0;
         }
@@ -2431,7 +2895,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
         else if( EQUAL(papszArgv[iArg],"--license") )
         {
-            printf( "%s\n", GDALVersionInfo( "LICENSE" ) );
+            printf( "%s\n", GDALVersionInfo( "LICENSE" ) );/*ok*/
             CSLDestroy( papszReturn );
             return 0;
         }
@@ -2476,14 +2940,14 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
                 return -1;
             }
 
-            for( int i = 0; papszFiles[i] != NULL; i++ )
+            for( int i = 0; papszFiles[i] != nullptr; i++ )
             {
                 if( EQUAL(papszFiles[i],".") || EQUAL(papszFiles[i],"..") )
                     continue;
 
                 CPLString osOldPath, osNewPath;
                 osOldPath = CPLFormFilename( papszArgv[iArg+1],
-                                             papszFiles[i], NULL );
+                                             papszFiles[i], nullptr );
                 osNewPath.Printf( "/vsimem/%s", papszFiles[i] );
 
                 VSIStatBufL sStatBuf;
@@ -2531,9 +2995,6 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 
 /* -------------------------------------------------------------------- */
 /*      --optfile                                                       */
-/*                                                                      */
-/*      Annoyingly the options inserted by --optfile will *not* be      */
-/*      processed properly if they are general options.                 */
 /* -------------------------------------------------------------------- */
         else if( EQUAL(papszArgv[iArg],"--optfile") )
         {
@@ -2547,7 +3008,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 
             VSILFILE *fpOptFile = VSIFOpenL( papszArgv[iArg+1], "rb" );
 
-            if( fpOptFile == NULL )
+            if( fpOptFile == nullptr )
             {
                 CPLError( CE_Failure, CPLE_AppDefined,
                           "Unable to open optfile '%s'.\n%s",
@@ -2557,18 +3018,52 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             }
 
             const char *pszLine;
-            while( (pszLine = CPLReadLineL( fpOptFile )) != NULL )
+            // dummy value as first argument to please
+            // GDALGeneralCmdLineProcessor()
+            char** papszArgvOptfile = CSLAddString(nullptr, "");
+            bool bHasOptfile = false;
+            while( (pszLine = CPLReadLineL( fpOptFile )) != nullptr )
             {
                 if( pszLine[0] == '#' || strlen(pszLine) == 0 )
                     continue;
 
                 char **papszTokens = CSLTokenizeString( pszLine );
-                for( int i = 0; papszTokens != NULL && papszTokens[i] != NULL; i++)
-                    papszReturn = CSLAddString( papszReturn, papszTokens[i] );
+                for( int i = 0; papszTokens != nullptr && papszTokens[i] != nullptr; i++)
+                {
+                    if( EQUAL( papszTokens[i], "--optfile") )
+                    {
+                        // To avoid potential recursion
+                        CPLError(CE_Warning, CPLE_AppDefined,
+                                 "--optfile not supported in a option file");
+                        bHasOptfile = true;
+                    }
+                    papszArgvOptfile = CSLAddString( papszArgvOptfile, papszTokens[i] );
+                }
                 CSLDestroy( papszTokens );
             }
 
             VSIFCloseL( fpOptFile );
+
+            char** papszArgvOptfileMod = papszArgvOptfile;
+            if( !bHasOptfile )
+            {
+                if( GDALGeneralCmdLineProcessor(CSLCount(papszArgvOptfile),
+                                        &papszArgvOptfileMod, nOptions) < 0 )
+                {
+                    CSLDestroy( papszReturn );
+                    CSLDestroy(papszArgvOptfile);
+                    return -1;
+                }
+            }
+
+            char** papszIter = papszArgvOptfileMod + 1;
+            while( *papszIter )
+            {
+                papszReturn = CSLAddString(papszReturn, *papszIter);
+                ++ papszIter;
+            }
+            CSLDestroy(papszArgvOptfile);
+            CSLDestroy(papszArgvOptfileMod);
 
             iArg += 1;
         }
@@ -2581,57 +3076,57 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             if( nOptions == 0 )
                 nOptions = GDAL_OF_RASTER;
 
-            printf( "Supported Formats:\n" );
+            printf( "Supported Formats:\n" );/*ok*/
             for( int iDr = 0; iDr < GDALGetDriverCount(); iDr++ )
             {
                 GDALDriverH hDriver = GDALGetDriver(iDr);
 
                 const char *pszRFlag = "", *pszWFlag, *pszVirtualIO, *pszSubdatasets, *pszKind;
-                char** papszMD = GDALGetMetadata( hDriver, NULL );
+                char** papszMD = GDALGetMetadata( hDriver, nullptr );
 
                 if( nOptions == GDAL_OF_RASTER &&
-                    !CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+                    !CPLFetchBool( papszMD, GDAL_DCAP_RASTER, false ) )
                     continue;
                 if( nOptions == GDAL_OF_VECTOR &&
-                    !CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+                    !CPLFetchBool( papszMD, GDAL_DCAP_VECTOR, false ) )
                     continue;
                 if( nOptions == GDAL_OF_GNM &&
-                    !CSLFetchBoolean( papszMD, GDAL_DCAP_GNM, FALSE ) )
+                    !CPLFetchBool( papszMD, GDAL_DCAP_GNM, false ) )
                     continue;
 
-                if( CSLFetchBoolean( papszMD, GDAL_DCAP_OPEN, FALSE ) )
+                if( CPLFetchBool( papszMD, GDAL_DCAP_OPEN, false ) )
                     pszRFlag = "r";
 
-                if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATE, FALSE ) )
+                if( CPLFetchBool( papszMD, GDAL_DCAP_CREATE, false ) )
                     pszWFlag = "w+";
-                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATECOPY, FALSE ) )
+                else if( CPLFetchBool( papszMD, GDAL_DCAP_CREATECOPY, false ) )
                     pszWFlag = "w";
                 else
                     pszWFlag = "o";
 
-                if( CSLFetchBoolean( papszMD, GDAL_DCAP_VIRTUALIO, FALSE ) )
+                if( CPLFetchBool( papszMD, GDAL_DCAP_VIRTUALIO, false ) )
                     pszVirtualIO = "v";
                 else
                     pszVirtualIO = "";
 
-                if( CSLFetchBoolean( papszMD, GDAL_DMD_SUBDATASETS, FALSE ) )
+                if( CPLFetchBool( papszMD, GDAL_DMD_SUBDATASETS, false ) )
                     pszSubdatasets = "s";
                 else
                     pszSubdatasets = "";
 
-                if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) &&
-                    CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ))
+                if( CPLFetchBool( papszMD, GDAL_DCAP_RASTER, false ) &&
+                    CPLFetchBool( papszMD, GDAL_DCAP_VECTOR, false ))
                     pszKind = "raster,vector";
-                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+                else if( CPLFetchBool( papszMD, GDAL_DCAP_RASTER, false ) )
                     pszKind = "raster";
-                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+                else if( CPLFetchBool( papszMD, GDAL_DCAP_VECTOR, false ) )
                     pszKind = "vector";
-                else if( CSLFetchBoolean( papszMD, GDAL_DCAP_GNM, FALSE ) )
+                else if( CPLFetchBool( papszMD, GDAL_DCAP_GNM, false ) )
                     pszKind = "geography network";
                 else
                     pszKind = "unknown kind";
 
-                printf( "  %s -%s- (%s%s%s%s): %s\n",
+                printf( "  %s -%s- (%s%s%s%s): %s\n",/*ok*/
                         GDALGetDriverShortName( hDriver ),
                         pszKind,
                         pszRFlag, pszWFlag, pszVirtualIO, pszSubdatasets,
@@ -2660,7 +3155,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
             }
 
             hDriver = GDALGetDriverByName( papszArgv[iArg+1] );
-            if( hDriver == NULL )
+            if( hDriver == nullptr )
             {
                 CPLError( CE_Failure, CPLE_AppDefined,
                           "--format option given with format '%s', but that "
@@ -2672,64 +3167,72 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
                 return -1;
             }
 
-            printf( "Format Details:\n" );
-            printf( "  Short Name: %s\n", GDALGetDriverShortName( hDriver ) );
-            printf( "  Long Name: %s\n", GDALGetDriverLongName( hDriver ) );
+            printf( "Format Details:\n" );/*ok*/
+            printf( "  Short Name: %s\n", GDALGetDriverShortName( hDriver ) );/*ok*/
+            printf( "  Long Name: %s\n", GDALGetDriverLongName( hDriver ) );/*ok*/
 
-            papszMD = GDALGetMetadata( hDriver, NULL );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
-                printf( "  Supports: Raster\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
-                printf( "  Supports: Vector\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_GNM, FALSE ) )
-                printf( "  Supports: Geography Network\n" );
+            papszMD = GDALGetMetadata( hDriver, nullptr );
+            if( CPLFetchBool( papszMD, GDAL_DCAP_RASTER, false ) )
+                printf( "  Supports: Raster\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_VECTOR, false ) )
+                printf( "  Supports: Vector\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_GNM, false ) )
+                printf( "  Supports: Geography Network\n" );/*ok*/
 
             const char* pszExt = CSLFetchNameValue( papszMD, GDAL_DMD_EXTENSIONS );
-            if( pszExt != NULL )
-                printf( "  Extension%s: %s\n", (strchr(pszExt, ' ') ? "s" : ""),
+            if( pszExt != nullptr )
+                printf( "  Extension%s: %s\n", (strchr(pszExt, ' ') ? "s" : ""),/*ok*/
                         pszExt );
 
             if( CSLFetchNameValue( papszMD, GDAL_DMD_MIMETYPE ) )
-                printf( "  Mime Type: %s\n",
+                printf( "  Mime Type: %s\n",/*ok*/
                         CSLFetchNameValue( papszMD, GDAL_DMD_MIMETYPE ) );
             if( CSLFetchNameValue( papszMD, GDAL_DMD_HELPTOPIC ) )
-                printf( "  Help Topic: %s\n",
+                printf( "  Help Topic: %s\n",/*ok*/
                         CSLFetchNameValue( papszMD, GDAL_DMD_HELPTOPIC ) );
 
-            if( CSLFetchBoolean( papszMD, GDAL_DMD_SUBDATASETS, FALSE ) )
-                printf( "  Supports: Subdatasets\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_OPEN, FALSE ) )
-                printf( "  Supports: Open() - Open existing dataset.\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATE, FALSE ) )
-                printf( "  Supports: Create() - Create writable dataset.\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATECOPY, FALSE ) )
-                printf( "  Supports: CreateCopy() - Create dataset by copying another.\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_VIRTUALIO, FALSE ) )
-                printf( "  Supports: Virtual IO - eg. /vsimem/\n" );
+            if( CPLFetchBool( papszMD, GDAL_DMD_SUBDATASETS, false ) )
+                printf( "  Supports: Subdatasets\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_OPEN, false ) )
+                printf( "  Supports: Open() - Open existing dataset.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_CREATE, false ) )
+                printf( "  Supports: Create() - Create writable dataset.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_CREATECOPY, false ) )
+                printf( "  Supports: CreateCopy() - Create dataset by copying another.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_VIRTUALIO, false ) )
+                printf( "  Supports: Virtual IO - eg. /vsimem/\n" );/*ok*/
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONDATATYPES ) )
-                printf( "  Creation Datatypes: %s\n",
+                printf( "  Creation Datatypes: %s\n",/*ok*/
                         CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONDATATYPES ) );
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATATYPES ) )
-                printf( "  Creation Field Datatypes: %s\n",
+                printf( "  Creation Field Datatypes: %s\n",/*ok*/
                         CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATATYPES ) );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_NOTNULL_FIELDS, FALSE ) )
-                printf( "  Supports: Creating fields with NOT NULL constraint.\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_DEFAULT_FIELDS, FALSE ) )
-                printf( "  Supports: Creating fields with DEFAULT values.\n" );
-            if( CSLFetchBoolean( papszMD, GDAL_DCAP_NOTNULL_GEOMFIELDS, FALSE ) )
-                printf( "  Supports: Creating geometry fields with NOT NULL constraint.\n" );
+            if ( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATASUBTYPES ) )
+              printf( "  Creation Field Data Sub-types: %s\n",/*ok*/
+                      CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONFIELDDATASUBTYPES ) );
+            if( CPLFetchBool( papszMD, GDAL_DCAP_NOTNULL_FIELDS, false ) )
+                printf( "  Supports: Creating fields with NOT NULL constraint.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_DEFAULT_FIELDS, false ) )
+                printf( "  Supports: Creating fields with DEFAULT values.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_NOTNULL_GEOMFIELDS, false ) )
+                printf( "  Supports: Creating geometry fields with NOT NULL constraint.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_NONSPATIAL, false ) )
+                printf( "  No support for geometries.\n" );/*ok*/
+            if( CPLFetchBool( papszMD, GDAL_DCAP_FEATURE_STYLES, false ) )
+                printf( "  Supports: Feature styles.\n" );/*ok*/
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CREATIONOPTIONLIST ) )
             {
                 CPLXMLNode *psCOL =
                     CPLParseXMLString(
                         CSLFetchNameValue( papszMD,
                                            GDAL_DMD_CREATIONOPTIONLIST ) );
+                StripIrrelevantOptions(psCOL, nOptions);
                 char *pszFormattedXML =
                     CPLSerializeXMLTree( psCOL );
 
                 CPLDestroyXMLNode( psCOL );
 
-                printf( "\n%s\n", pszFormattedXML );
+                printf( "\n%s\n", pszFormattedXML );/*ok*/
                 CPLFree( pszFormattedXML );
             }
             if( CSLFetchNameValue( papszMD, GDAL_DS_LAYER_CREATIONOPTIONLIST ) )
@@ -2738,17 +3241,18 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
                     CPLParseXMLString(
                         CSLFetchNameValue( papszMD,
                                            GDAL_DS_LAYER_CREATIONOPTIONLIST ) );
+                StripIrrelevantOptions(psCOL, nOptions);
                 char *pszFormattedXML =
                     CPLSerializeXMLTree( psCOL );
 
                 CPLDestroyXMLNode( psCOL );
 
-                printf( "\n%s\n", pszFormattedXML );
+                printf( "\n%s\n", pszFormattedXML );/*ok*/
                 CPLFree( pszFormattedXML );
             }
 
             if( CSLFetchNameValue( papszMD, GDAL_DMD_CONNECTION_PREFIX ) )
-                printf( "  Connection prefix: %s\n",
+                printf( "  Connection prefix: %s\n",/*ok*/
                         CSLFetchNameValue( papszMD, GDAL_DMD_CONNECTION_PREFIX ) );
 
             if( CSLFetchNameValue( papszMD, GDAL_DMD_OPENOPTIONLIST ) )
@@ -2757,14 +3261,32 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
                     CPLParseXMLString(
                         CSLFetchNameValue( papszMD,
                                            GDAL_DMD_OPENOPTIONLIST ) );
+                StripIrrelevantOptions(psCOL, nOptions);
                 char *pszFormattedXML =
                     CPLSerializeXMLTree( psCOL );
 
                 CPLDestroyXMLNode( psCOL );
 
-                printf( "%s\n", pszFormattedXML );
+                printf( "%s\n", pszFormattedXML );/*ok*/
                 CPLFree( pszFormattedXML );
             }
+
+            bool bFirstOtherOption = true;
+            for( char** papszIter = papszMD;
+                 papszIter && *papszIter; ++papszIter )
+            {
+                if( !STARTS_WITH(*papszIter, "DCAP_") &&
+                    !STARTS_WITH(*papszIter, "DMD_") &&
+                    !STARTS_WITH(*papszIter, "DS_") &&
+                    !STARTS_WITH(*papszIter, "OGR_DRIVER=") )
+                {
+                    if( bFirstOtherOption )
+                        printf("  Other metadata items:\n"); /*ok*/
+                    bFirstOtherOption = false;
+                    printf("    %s\n", *papszIter); /*ok*/
+                }
+            }
+
             return 0;
         }
 
@@ -2773,18 +3295,18 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
         else if( EQUAL(papszArgv[iArg],"--help-general") )
         {
-            printf( "Generic GDAL utility command options:\n" );
-            printf( "  --version: report version of GDAL in use.\n" );
-            printf( "  --license: report GDAL license info.\n" );
-            printf( "  --formats: report all configured format drivers.\n" );
-            printf( "  --format [format]: details of one format.\n" );
-            printf( "  --optfile filename: expand an option file into the argument list.\n" );
-            printf( "  --config key value: set system configuration option.\n" );
-            printf( "  --debug [on/off/value]: set debug level.\n" );
-            printf( "  --pause: wait for user input, time to attach debugger\n" );
-            printf( "  --locale [locale]: install locale for debugging "
+            printf( "Generic GDAL utility command options:\n" );/*ok*/
+            printf( "  --version: report version of GDAL in use.\n" );/*ok*/
+            printf( "  --license: report GDAL license info.\n" );/*ok*/
+            printf( "  --formats: report all configured format drivers.\n" );/*ok*/
+            printf( "  --format [format]: details of one format.\n" );/*ok*/
+            printf( "  --optfile filename: expand an option file into the argument list.\n" );/*ok*/
+            printf( "  --config key value: set system configuration option.\n" );/*ok*/
+            printf( "  --debug [on/off/value]: set debug level.\n" );/*ok*/
+            printf( "  --pause: wait for user input, time to attach debugger\n" );/*ok*/
+            printf( "  --locale [locale]: install locale for debugging "/*ok*/
                     "(i.e. en_US.UTF-8)\n" );
-            printf( "  --help-general: report detailed help on general options.\n" );
+            printf( "  --help-general: report detailed help on general options.\n" );/*ok*/
             CSLDestroy( papszReturn );
             return 0;
         }
@@ -2792,7 +3314,7 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
 /*      --locale                                                        */
 /* -------------------------------------------------------------------- */
-        else if( EQUAL(papszArgv[iArg],"--locale") && iArg < nArgc-1 )
+        else if( iArg < nArgc-1 && EQUAL(papszArgv[iArg],"--locale") )
         {
             CPLsetlocale( LC_ALL, papszArgv[++iArg] );
         }
@@ -2821,12 +3343,11 @@ GDALGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
     return CSLCount( *ppapszArgv );
 }
 
-
 /************************************************************************/
 /*                          _FetchDblFromMD()                           */
 /************************************************************************/
 
-static bool _FetchDblFromMD( char **papszMD, const char *pszKey,
+static bool _FetchDblFromMD( CSLConstList papszMD, const char *pszKey,
                              double *padfTarget, int nCount, double dfDefault )
 
 {
@@ -2839,7 +3360,7 @@ static bool _FetchDblFromMD( char **papszMD, const char *pszKey,
     for( int i = 0; i < nCount; i++ )
         padfTarget[i] = dfDefault;
 
-    if( pszValue == NULL )
+    if( pszValue == nullptr )
         return false;
 
     if( nCount == 1 )
@@ -2867,22 +3388,26 @@ static bool _FetchDblFromMD( char **papszMD, const char *pszKey,
 
 /************************************************************************/
 /*                         GDALExtractRPCInfo()                         */
-/*                                                                      */
-/*      Extract RPC info from metadata, and apply to an RPCInfo         */
-/*      structure.  The inverse of this function is RPCInfoToMD() in    */
-/*      alg/gdal_rpc.cpp (should it be needed).                         */
 /************************************************************************/
 
-int CPL_STDCALL GDALExtractRPCInfo( char **papszMD, GDALRPCInfo *psRPC )
+/** Extract RPC info from metadata, and apply to an RPCInfo structure.
+ *
+ * The inverse of this function is RPCInfoToMD() in alg/gdal_rpc.cpp
+ *
+ * @param papszMD Dictionary of metadata representing RPC
+ * @param psRPC (output) Pointer to structure to hold the RPC values.
+ * @return TRUE in case of success. FALSE in case of failure.
+ */
+int CPL_STDCALL GDALExtractRPCInfo( CSLConstList papszMD, GDALRPCInfo *psRPC )
 
 {
-    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == NULL )
+    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == nullptr )
         return FALSE;
 
-    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == NULL
-        || CSLFetchNameValue( papszMD, RPC_LINE_DEN_COEFF ) == NULL
-        || CSLFetchNameValue( papszMD, RPC_SAMP_NUM_COEFF ) == NULL
-        || CSLFetchNameValue( papszMD, RPC_SAMP_DEN_COEFF ) == NULL )
+    if( CSLFetchNameValue( papszMD, RPC_LINE_NUM_COEFF ) == nullptr
+        || CSLFetchNameValue( papszMD, RPC_LINE_DEN_COEFF ) == nullptr
+        || CSLFetchNameValue( papszMD, RPC_SAMP_NUM_COEFF ) == nullptr
+        || CSLFetchNameValue( papszMD, RPC_SAMP_DEN_COEFF ) == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                  "Some required RPC metadata missing in GDALExtractRPCInfo()");
@@ -2909,10 +3434,10 @@ int CPL_STDCALL GDALExtractRPCInfo( char **papszMD, GDALRPCInfo *psRPC )
     _FetchDblFromMD( papszMD, RPC_SAMP_DEN_COEFF, psRPC->adfSAMP_DEN_COEFF,
                      20, 0.0 );
 
-    _FetchDblFromMD( papszMD, "MIN_LONG", &(psRPC->dfMIN_LONG), 1, -180.0 );
-    _FetchDblFromMD( papszMD, "MIN_LAT", &(psRPC->dfMIN_LAT), 1, -90.0 );
-    _FetchDblFromMD( papszMD, "MAX_LONG", &(psRPC->dfMAX_LONG), 1, 180.0 );
-    _FetchDblFromMD( papszMD, "MAX_LAT", &(psRPC->dfMAX_LAT), 1, 90.0 );
+    _FetchDblFromMD( papszMD, RPC_MIN_LONG, &(psRPC->dfMIN_LONG), 1, -180.0 );
+    _FetchDblFromMD( papszMD, RPC_MIN_LAT, &(psRPC->dfMIN_LAT), 1, -90.0 );
+    _FetchDblFromMD( papszMD, RPC_MAX_LONG, &(psRPC->dfMAX_LONG), 1, 180.0 );
+    _FetchDblFromMD( papszMD, RPC_MAX_LAT, &(psRPC->dfMAX_LAT), 1, 90.0 );
 
     return TRUE;
 }
@@ -2930,14 +3455,14 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
     const char *pszAuxSuffixUC = "AUX";
 
     if( EQUAL(CPLGetExtension(pszBasename), pszAuxSuffixLC) )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Don't even try to look for an .aux file if we don't have a      */
 /*      path of any kind.                                               */
 /* -------------------------------------------------------------------- */
     if( strlen(pszBasename) == 0 )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      We didn't find that, so try and find a corresponding aux        */
@@ -2948,30 +3473,30 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
 /* -------------------------------------------------------------------- */
     CPLString osJustFile = CPLGetFilename(pszBasename); // without dir
     CPLString osAuxFilename = CPLResetExtension(pszBasename, pszAuxSuffixLC);
-    GDALDataset *poODS = NULL;
+    GDALDataset *poODS = nullptr;
     GByte abyHeader[32];
 
     VSILFILE *fp = VSIFOpenL( osAuxFilename, "rb" );
 
-    if ( fp == NULL && VSIIsCaseSensitiveFS(osAuxFilename))
+    if ( fp == nullptr && VSIIsCaseSensitiveFS(osAuxFilename))
     {
         // Can't found file with lower case suffix. Try the upper case one.
         osAuxFilename = CPLResetExtension(pszBasename, pszAuxSuffixUC);
         fp = VSIFOpenL( osAuxFilename, "rb" );
     }
 
-    if( fp != NULL )
+    if( fp != nullptr )
     {
         if( VSIFReadL( abyHeader, 1, 32, fp ) == 32 &&
-            STARTS_WITH_CI((char *) abyHeader, "EHFA_HEADER_TAG") )
+            STARTS_WITH_CI(reinterpret_cast<const char *>(abyHeader), "EHFA_HEADER_TAG") )
         {
             /* Avoid causing failure in opening of main file from SWIG bindings */
             /* when auxiliary file cannot be opened (#3269) */
             CPLTurnFailureIntoWarning(TRUE);
-            if( poDependentDS != NULL && poDependentDS->GetShared() )
-                poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+            if( poDependentDS != nullptr && poDependentDS->GetShared() )
+                poODS = GDALDataset::FromHandle(GDALOpenShared( osAuxFilename, eAccess ));
             else
-                poODS = (GDALDataset *) GDALOpen( osAuxFilename, eAccess );
+                poODS = GDALDataset::FromHandle(GDALOpen( osAuxFilename, eAccess ));
             CPLTurnFailureIntoWarning(FALSE);
         }
         CPL_IGNORE_RET_VAL(VSIFCloseL( fp ));
@@ -2980,17 +3505,17 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
 /* -------------------------------------------------------------------- */
 /*      Try replacing extension with .aux                               */
 /* -------------------------------------------------------------------- */
-    if( poODS != NULL )
+    if( poODS != nullptr )
     {
         const char *pszDep
             = poODS->GetMetadataItem( "HFA_DEPENDENT_FILE", "HFA" );
-        if( pszDep == NULL  )
+        if( pszDep == nullptr  )
         {
             CPLDebug( "AUX",
                       "Found %s but it has no dependent file, ignoring.",
                       osAuxFilename.c_str() );
             GDALClose( poODS );
-            poODS = NULL;
+            poODS = nullptr;
         }
         else if( !EQUAL(pszDep,osJustFile) )
         {
@@ -3002,7 +3527,7 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
                           osAuxFilename.c_str(),
                           pszDep, osJustFile.c_str() );
                 GDALClose( poODS );
-                poODS = NULL;
+                poODS = nullptr;
             }
             else
             {
@@ -3018,7 +3543,7 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
 /*      Confirm that the aux file matches the configuration of the      */
 /*      dependent dataset.                                              */
 /* -------------------------------------------------------------------- */
-        if( poODS != NULL && poDependentDS != NULL
+        if( poODS != nullptr && poDependentDS != nullptr
             && (poODS->GetRasterCount() != poDependentDS->GetRasterCount()
                 || poODS->GetRasterXSize() != poDependentDS->GetRasterXSize()
                 || poODS->GetRasterYSize() != poDependentDS->GetRasterYSize()) )
@@ -3035,20 +3560,20 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
                       poDependentDS->GetRasterCount() );
 
             GDALClose( poODS );
-            poODS = NULL;
+            poODS = nullptr;
         }
     }
 
 /* -------------------------------------------------------------------- */
 /*      Try appending .aux to the end of the filename.                  */
 /* -------------------------------------------------------------------- */
-    if( poODS == NULL )
+    if( poODS == nullptr )
     {
         osAuxFilename = pszBasename;
         osAuxFilename += ".";
         osAuxFilename += pszAuxSuffixLC;
         fp = VSIFOpenL( osAuxFilename, "rb" );
-        if ( fp == NULL && VSIIsCaseSensitiveFS(osAuxFilename) )
+        if ( fp == nullptr && VSIIsCaseSensitiveFS(osAuxFilename) )
         {
             // Can't found file with lower case suffix. Try the upper case one.
             osAuxFilename = pszBasename;
@@ -3057,34 +3582,34 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
             fp = VSIFOpenL( osAuxFilename, "rb" );
         }
 
-        if( fp != NULL )
+        if( fp != nullptr )
         {
             if( VSIFReadL( abyHeader, 1, 32, fp ) == 32 &&
-                STARTS_WITH_CI((char *) abyHeader, "EHFA_HEADER_TAG") )
+                STARTS_WITH_CI(reinterpret_cast<const char *>(abyHeader), "EHFA_HEADER_TAG") )
             {
                 /* Avoid causing failure in opening of main file from SWIG bindings */
                 /* when auxiliary file cannot be opened (#3269) */
                 CPLTurnFailureIntoWarning(TRUE);
-                if( poDependentDS != NULL && poDependentDS->GetShared() )
-                    poODS = (GDALDataset *) GDALOpenShared( osAuxFilename, eAccess );
+                if( poDependentDS != nullptr && poDependentDS->GetShared() )
+                    poODS = GDALDataset::FromHandle(GDALOpenShared( osAuxFilename, eAccess ));
                 else
-                    poODS = (GDALDataset *) GDALOpen( osAuxFilename, eAccess );
+                    poODS = GDALDataset::FromHandle(GDALOpen( osAuxFilename, eAccess ));
                 CPLTurnFailureIntoWarning(FALSE);
             }
             CPL_IGNORE_RET_VAL(VSIFCloseL( fp ));
         }
 
-        if( poODS != NULL )
+        if( poODS != nullptr )
         {
             const char *pszDep
                 = poODS->GetMetadataItem( "HFA_DEPENDENT_FILE", "HFA" );
-            if( pszDep == NULL  )
+            if( pszDep == nullptr  )
             {
                 CPLDebug( "AUX",
                           "Found %s but it has no dependent file, ignoring.",
                           osAuxFilename.c_str() );
                 GDALClose( poODS );
-                poODS = NULL;
+                poODS = nullptr;
             }
             else if( !EQUAL(pszDep,osJustFile) )
             {
@@ -3096,7 +3621,7 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
                               osAuxFilename.c_str(),
                               pszDep, osJustFile.c_str() );
                     GDALClose( poODS );
-                    poODS = NULL;
+                    poODS = nullptr;
                 }
                 else
                 {
@@ -3114,7 +3639,7 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
 /*      Confirm that the aux file matches the configuration of the      */
 /*      dependent dataset.                                              */
 /* -------------------------------------------------------------------- */
-    if( poODS != NULL && poDependentDS != NULL
+    if( poODS != nullptr && poDependentDS != nullptr
         && (poODS->GetRasterCount() != poDependentDS->GetRasterCount()
             || poODS->GetRasterXSize() != poDependentDS->GetRasterXSize()
             || poODS->GetRasterYSize() != poDependentDS->GetRasterYSize()) )
@@ -3131,7 +3656,7 @@ GDALDataset *GDALFindAssociatedAuxFile( const char *pszBasename,
                   poDependentDS->GetRasterCount() );
 
         GDALClose( poODS );
-        poODS = NULL;
+        poODS = nullptr;
     }
 
     return poODS;
@@ -3199,7 +3724,6 @@ int GDALCheckBandCount( int nBands, int bIsZeroAllowed )
 
 CPL_C_END
 
-
 /************************************************************************/
 /*                     GDALSerializeGCPListToXML()                      */
 /************************************************************************/
@@ -3207,31 +3731,43 @@ CPL_C_END
 void GDALSerializeGCPListToXML( CPLXMLNode* psParentNode,
                                 GDAL_GCP* pasGCPList,
                                 int nGCPCount,
-                                const char* pszGCPProjection )
+                                const OGRSpatialReference* poGCP_SRS )
 {
     CPLString oFmt;
 
     CPLXMLNode *psPamGCPList = CPLCreateXMLNode( psParentNode, CXT_Element,
                                                  "GCPList" );
 
-    CPLXMLNode* psLastChild = NULL;
+    CPLXMLNode* psLastChild = nullptr;
 
-    if( pszGCPProjection != NULL
-        && strlen(pszGCPProjection) > 0 )
+    if( poGCP_SRS != nullptr && !poGCP_SRS->IsEmpty() )
     {
+        char* pszWKT = nullptr;
+        poGCP_SRS->exportToWkt(&pszWKT);
         CPLSetXMLValue( psPamGCPList, "#Projection",
-                        pszGCPProjection );
-        psLastChild = psPamGCPList->psChild;
+                        pszWKT );
+        CPLFree(pszWKT);
+        const auto& mapping = poGCP_SRS->GetDataAxisToSRSAxisMapping();
+        CPLString osMapping;
+        for( size_t i = 0; i < mapping.size(); ++i )
+        {
+            if( !osMapping.empty() )
+                osMapping += ",";
+            osMapping += CPLSPrintf("%d", mapping[i]);
+        }
+        CPLSetXMLValue(psPamGCPList, "#dataAxisToSRSAxisMapping",
+                      osMapping.c_str());
+
+        psLastChild = psPamGCPList->psChild->psNext;
     }
 
     for( int iGCP = 0; iGCP < nGCPCount; iGCP++ )
     {
-        CPLXMLNode *psXMLGCP;
         GDAL_GCP *psGCP = pasGCPList + iGCP;
 
-        psXMLGCP = CPLCreateXMLNode( NULL, CXT_Element, "GCP" );
+        CPLXMLNode *psXMLGCP = CPLCreateXMLNode( nullptr, CXT_Element, "GCP" );
 
-        if( psLastChild == NULL )
+        if( psLastChild == nullptr )
             psPamGCPList->psChild = psXMLGCP;
         else
             psLastChild->psNext = psXMLGCP;
@@ -3239,7 +3775,7 @@ void GDALSerializeGCPListToXML( CPLXMLNode* psParentNode,
 
         CPLSetXMLValue( psXMLGCP, "#Id", psGCP->pszId );
 
-        if( psGCP->pszInfo != NULL && strlen(psGCP->pszInfo) > 0 )
+        if( psGCP->pszInfo != nullptr && strlen(psGCP->pszInfo) > 0 )
             CPLSetXMLValue( psXMLGCP, "Info", psGCP->pszInfo );
 
         CPLSetXMLValue( psXMLGCP, "#Pixel",
@@ -3268,33 +3804,62 @@ void GDALSerializeGCPListToXML( CPLXMLNode* psParentNode,
 void GDALDeserializeGCPListFromXML( CPLXMLNode* psGCPList,
                                     GDAL_GCP** ppasGCPList,
                                     int* pnGCPCount,
-                                    char** ppszGCPProjection )
+                                    OGRSpatialReference** ppoGCP_SRS )
 {
-    CPLXMLNode *psXMLGCP;
-    OGRSpatialReference oSRS;
-
-    if( ppszGCPProjection )
+    if( ppoGCP_SRS )
     {
-        const char *pszRawProj = CPLGetXMLValue(psGCPList, "Projection", "");
+        const char *pszRawProj = CPLGetXMLValue(psGCPList, "Projection", nullptr);
 
-        if( strlen(pszRawProj) > 0
-            && oSRS.SetFromUserInput( pszRawProj ) == OGRERR_NONE )
-            oSRS.exportToWkt( ppszGCPProjection );
-        else
-            *ppszGCPProjection = CPLStrdup("");
+        *ppoGCP_SRS = nullptr;
+        if( pszRawProj && pszRawProj[0] )
+        {
+            *ppoGCP_SRS = new OGRSpatialReference();
+            (*ppoGCP_SRS)->SetFromUserInput( pszRawProj );
+
+            const char* pszMapping =
+                CPLGetXMLValue(psGCPList, "dataAxisToSRSAxisMapping", nullptr);
+            if( pszMapping )
+            {
+                char** papszTokens = CSLTokenizeStringComplex( pszMapping, ",", FALSE, FALSE);
+                std::vector<int> anMapping;
+                for( int i = 0; papszTokens && papszTokens[i]; i++ )
+                {
+                    anMapping.push_back(atoi(papszTokens[i]));
+                }
+                CSLDestroy(papszTokens);
+                (*ppoGCP_SRS)->SetDataAxisToSRSAxisMapping(anMapping);
+            }
+            else
+            {
+                (*ppoGCP_SRS)->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+            }
+        }
     }
 
     // Count GCPs.
-    int  nGCPMax = 0;
+    int nGCPMax = 0;
 
-    for( psXMLGCP = psGCPList->psChild; psXMLGCP != NULL;
+    for( CPLXMLNode *psXMLGCP = psGCPList->psChild;
+         psXMLGCP != nullptr;
          psXMLGCP = psXMLGCP->psNext )
-        nGCPMax++;
+    {
 
-    *ppasGCPList = (GDAL_GCP *) CPLCalloc(sizeof(GDAL_GCP),nGCPMax);
+        if( !EQUAL(psXMLGCP->pszValue,"GCP") ||
+            psXMLGCP->eType != CXT_Element )
+            continue;
+
+        nGCPMax++;
+    }
+
+    *ppasGCPList = static_cast<GDAL_GCP *>(
+        nGCPMax ? CPLCalloc(sizeof(GDAL_GCP), nGCPMax) : nullptr );
     *pnGCPCount = 0;
 
-    for( psXMLGCP = psGCPList->psChild; psXMLGCP != NULL;
+    if( nGCPMax == 0 )
+        return;
+
+    for( CPLXMLNode *psXMLGCP = psGCPList->psChild;
+         *ppasGCPList != nullptr && psXMLGCP != nullptr;
          psXMLGCP = psXMLGCP->psNext )
     {
         GDAL_GCP *psGCP = *ppasGCPList + *pnGCPCount;
@@ -3316,15 +3881,16 @@ void GDALDeserializeGCPListFromXML( CPLXMLNode* psGCPList,
 
         psGCP->dfGCPX = CPLAtof(CPLGetXMLValue(psXMLGCP,"X","0.0"));
         psGCP->dfGCPY = CPLAtof(CPLGetXMLValue(psXMLGCP,"Y","0.0"));
-        const char* pszZ = CPLGetXMLValue(psXMLGCP,"Z",NULL);
-        if( pszZ == NULL )
+        const char* pszZ = CPLGetXMLValue(psXMLGCP,"Z",nullptr);
+        if( pszZ == nullptr )
         {
-            /* Note: GDAL 1.10.1 and older generated #GCPZ, but could not read it back */
+            // Note: GDAL 1.10.1 and older generated #GCPZ,
+            // but could not read it back.
             pszZ = CPLGetXMLValue(psXMLGCP,"GCPZ","0.0");
         }
         psGCP->dfGCPZ = CPLAtof(pszZ);
 
-        (*pnGCPCount) ++;
+        (*pnGCPCount)++;
     }
 }
 
@@ -3334,21 +3900,21 @@ void GDALDeserializeGCPListFromXML( CPLXMLNode* psGCPList,
 
 void GDALSerializeOpenOptionsToXML( CPLXMLNode* psParentNode, char** papszOpenOptions)
 {
-    if( papszOpenOptions != NULL )
+    if( papszOpenOptions != nullptr )
     {
         CPLXMLNode* psOpenOptions = CPLCreateXMLNode( psParentNode, CXT_Element, "OpenOptions" );
-        CPLXMLNode* psLastChild = NULL;
+        CPLXMLNode* psLastChild = nullptr;
 
-        for(char** papszIter = papszOpenOptions; *papszIter != NULL; papszIter ++ )
+        for(char** papszIter = papszOpenOptions; *papszIter != nullptr; papszIter ++ )
         {
             const char *pszRawValue;
-            char *pszKey = NULL;
+            char *pszKey = nullptr;
             CPLXMLNode *psOOI;
 
             pszRawValue = CPLParseNameValue( *papszIter, &pszKey );
 
-            psOOI = CPLCreateXMLNode( NULL, CXT_Element, "OOI" );
-            if( psLastChild == NULL )
+            psOOI = CPLCreateXMLNode( nullptr, CXT_Element, "OOI" );
+            if( psLastChild == nullptr )
                 psOpenOptions->psChild = psOOI;
             else
                 psLastChild->psNext = psOOI;
@@ -3368,25 +3934,25 @@ void GDALSerializeOpenOptionsToXML( CPLXMLNode* psParentNode, char** papszOpenOp
 
 char** GDALDeserializeOpenOptionsFromXML( CPLXMLNode* psParentNode )
 {
-    char** papszOpenOptions = NULL;
+    char** papszOpenOptions = nullptr;
     CPLXMLNode* psOpenOptions = CPLGetXMLNode(psParentNode, "OpenOptions");
-    if( psOpenOptions != NULL )
+    if( psOpenOptions != nullptr )
     {
         CPLXMLNode* psOOI;
-        for( psOOI = psOpenOptions->psChild; psOOI != NULL;
+        for( psOOI = psOpenOptions->psChild; psOOI != nullptr;
                 psOOI = psOOI->psNext )
         {
             if( !EQUAL(psOOI->pszValue,"OOI")
                 || psOOI->eType != CXT_Element
-                || psOOI->psChild == NULL
-                || psOOI->psChild->psNext == NULL
+                || psOOI->psChild == nullptr
+                || psOOI->psChild->psNext == nullptr
                 || psOOI->psChild->eType != CXT_Attribute
-                || psOOI->psChild->psChild == NULL )
+                || psOOI->psChild->psChild == nullptr )
                 continue;
 
             char* pszName = psOOI->psChild->psChild->pszValue;
             char* pszValue = psOOI->psChild->psNext->pszValue;
-            if( pszName != NULL && pszValue != NULL )
+            if( pszName != nullptr && pszValue != nullptr )
                 papszOpenOptions = CSLSetNameValue( papszOpenOptions, pszName, pszValue );
         }
     }
@@ -3447,7 +4013,7 @@ const char* GDALRasterIOGetResampleAlg(GDALRIOResampleAlg eResampleAlg)
         case GRIORA_Gauss:
             return "Gauss";
         default:
-            CPLAssert(FALSE);
+            CPLAssert(false);
             return "Unknown";
     }
 }
@@ -3463,8 +4029,8 @@ void GDALRasterIOExtraArgSetResampleAlg(GDALRasterIOExtraArg* psExtraArg,
     if( (nBufXSize != nXSize || nBufYSize != nYSize) &&
         psExtraArg->eResampleAlg == GRIORA_NearestNeighbour  )
     {
-        const char* pszResampling = CPLGetConfigOption("GDAL_RASTERIO_RESAMPLING", NULL);
-        if( pszResampling != NULL )
+        const char* pszResampling = CPLGetConfigOption("GDAL_RASTERIO_RESAMPLING", nullptr);
+        if( pszResampling != nullptr )
         {
             psExtraArg->eResampleAlg = GDALRasterIOGetResampleAlg(pszResampling);
         }
@@ -3479,8 +4045,22 @@ int GDALCanFileAcceptSidecarFile(const char* pszFilename)
 {
     if( strstr(pszFilename, "/vsicurl/") && strchr(pszFilename, '?') )
         return FALSE;
-    /* Do no attempt reading side-car files on /vsisubfile/ (#6241) */
+    // Do no attempt reading side-car files on /vsisubfile/ (#6241)
     if( strncmp(pszFilename, "/vsisubfile/", strlen("/vsisubfile/")) == 0 )
         return FALSE;
     return TRUE;
+}
+
+/************************************************************************/
+/*                    GDALAdjustNoDataCloseToFloatMax()                 */
+/************************************************************************/
+
+double GDALAdjustNoDataCloseToFloatMax(double dfVal)
+{
+    const auto kMaxFloat = std::numeric_limits<float>::max();
+    if( std::fabs(dfVal - -kMaxFloat) < 1e-10 * kMaxFloat )
+        return -kMaxFloat;
+    if( std::fabs(dfVal - kMaxFloat) < 1e-10 * kMaxFloat )
+        return kMaxFloat;
+    return dfVal;
 }

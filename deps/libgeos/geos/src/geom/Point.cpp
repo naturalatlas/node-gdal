@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  * Copyright (C) 2005 2006 Refractions Research Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -43,221 +43,248 @@ namespace geom { // geos::geom
 
 
 /*protected*/
-Point::Point(CoordinateSequence *newCoords, const GeometryFactory *factory)
-	:
-	Geometry(factory),
-	coordinates(newCoords)
+Point::Point(CoordinateSequence* newCoords, const GeometryFactory* factory)
+    :
+    Geometry(factory),
+    empty(false)
 {
-	if (coordinates.get()==NULL) {
-		coordinates.reset(factory->getCoordinateSequenceFactory()->create(NULL));
-		return;
-	}        
-	if (coordinates->getSize() != 1)
-	{
-		throw util::IllegalArgumentException("Point coordinate list must contain a single element");
-	}
+    std::unique_ptr<CoordinateSequence> coords(newCoords);
+
+    if(coords == nullptr) {
+        empty = true;
+        return;
+    }
+
+    if (coords->getSize() == 1) {
+        coordinates.setAt(coords->getAt(0), 0);
+    } else if (coords->getSize() > 1) {
+        throw util::IllegalArgumentException("Point coordinate list must contain a single element");
+    } else {
+        empty = true;
+    }
+}
+
+Point::Point(const Coordinate & c, const GeometryFactory* factory) :
+    Geometry(factory),
+    empty(false)
+{
+    coordinates.setAt(c, 0);
 }
 
 /*protected*/
-Point::Point(const Point &p)
-	:
-	Geometry(p),
-	coordinates(p.coordinates->clone())
+Point::Point(const Point& p)
+    :
+    Geometry(p),
+    coordinates(p.coordinates),
+    empty(p.empty)
 {
 }
 
-CoordinateSequence *
+std::unique_ptr<CoordinateSequence>
 Point::getCoordinates() const
 {
-	return coordinates->clone();
+    return coordinates.clone();
 }
 
 size_t
 Point::getNumPoints() const
 {
-	return isEmpty() ? 0 : 1;
+    return empty ? 0 : 1;
 }
 
 bool
 Point::isEmpty() const
 {
-	return coordinates->isEmpty();
+    return empty;
 }
 
 bool
 Point::isSimple() const
 {
-	return true;
+    return true;
 }
 
 Dimension::DimensionType
 Point::getDimension() const
 {
-	return Dimension::P; // point
+    return Dimension::P; // point
 }
 
 int
 Point::getCoordinateDimension() const
 {
-    return (int) coordinates->getDimension();
+    return (int) coordinates.getDimension();
 }
 
 int
 Point::getBoundaryDimension() const
 {
-	return Dimension::False;
+    return Dimension::False;
 }
 
 double
 Point::getX() const
 {
-	if (isEmpty()) {
-		throw util::UnsupportedOperationException("getX called on empty Point\n");
-	}
-	return getCoordinate()->x;
+    if(isEmpty()) {
+        throw util::UnsupportedOperationException("getX called on empty Point\n");
+    }
+    return getCoordinate()->x;
 }
 
 double
 Point::getY() const
 {
-	if (isEmpty()) {
-		throw util::UnsupportedOperationException("getY called on empty Point\n");
-	}
-	return getCoordinate()->y;
+    if(isEmpty()) {
+        throw util::UnsupportedOperationException("getY called on empty Point\n");
+    }
+    return getCoordinate()->y;
 }
 
-const Coordinate *
+double
+Point::getZ() const
+{
+    if(isEmpty()) {
+        throw util::UnsupportedOperationException("getZ called on empty Point\n");
+    }
+    return getCoordinate()->z;
+}
+
+const Coordinate*
 Point::getCoordinate() const
 {
-	return coordinates->getSize()!=0 ? &(coordinates->getAt(0)) : NULL;
+    return empty ? nullptr : &coordinates[0];
 }
 
 string
 Point::getGeometryType() const
 {
-	return "Point";
+    return "Point";
 }
 
-Geometry *
+std::unique_ptr<Geometry>
 Point::getBoundary() const
 {
-	return getFactory()->createGeometryCollection(NULL);
+    return getFactory()->createGeometryCollection();
 }
 
-Envelope::AutoPtr
+Envelope::Ptr
 Point::computeEnvelopeInternal() const
 {
-	if (isEmpty()) {
-		return Envelope::AutoPtr(new Envelope());
-	}
+    if(isEmpty()) {
+        return Envelope::Ptr(new Envelope());
+    }
 
-	return Envelope::AutoPtr(new Envelope(getCoordinate()->x,
-			getCoordinate()->x, getCoordinate()->y,
-			getCoordinate()->y));
+    return Envelope::Ptr(new Envelope(getCoordinate()->x,
+                                      getCoordinate()->x, getCoordinate()->y,
+                                      getCoordinate()->y));
 }
 
 void
-Point::apply_ro(CoordinateFilter *filter) const
+Point::apply_ro(CoordinateFilter* filter) const
 {
-	if (isEmpty()) {return;}
-	filter->filter_ro(getCoordinate());
+    if(isEmpty()) {
+        return;
+    }
+    filter->filter_ro(getCoordinate());
 }
 
 void
-Point::apply_rw(const CoordinateFilter *filter)
+Point::apply_rw(const CoordinateFilter* filter)
 {
-	if (isEmpty()) {return;}
-	Coordinate newcoord = coordinates->getAt(0);
-	filter->filter_rw(&newcoord);
-	coordinates->setAt(newcoord, 0);
+    coordinates.apply_rw(filter);
 }
 
 void
-Point::apply_rw(GeometryFilter *filter)
+Point::apply_rw(GeometryFilter* filter)
 {
-	filter->filter_rw(this);
+    filter->filter_rw(this);
 }
 
 void
-Point::apply_ro(GeometryFilter *filter) const
+Point::apply_ro(GeometryFilter* filter) const
 {
-	filter->filter_ro(this);
+    filter->filter_ro(this);
 }
 
 void
-Point::apply_rw(GeometryComponentFilter *filter)
+Point::apply_rw(GeometryComponentFilter* filter)
 {
-	filter->filter_rw(this);
+    filter->filter_rw(this);
 }
 
 void
-Point::apply_ro(GeometryComponentFilter *filter) const
+Point::apply_ro(GeometryComponentFilter* filter) const
 {
-	filter->filter_ro(this);
+    filter->filter_ro(this);
 }
 
 void
 Point::apply_rw(CoordinateSequenceFilter& filter)
 {
-	if (isEmpty()) return;
-	filter.filter_rw(*coordinates, 0);
-	if (filter.isGeometryChanged()) geometryChanged();
+    if(isEmpty()) {
+        return;
+    }
+    filter.filter_rw(coordinates, 0);
+    if(filter.isGeometryChanged()) {
+        geometryChanged();
+    }
 }
 
 void
 Point::apply_ro(CoordinateSequenceFilter& filter) const
 {
-	if (isEmpty()) return;
-	filter.filter_ro(*coordinates, 0);
-	//if (filter.isGeometryChanged()) geometryChanged();
+    if(isEmpty()) {
+        return;
+    }
+    filter.filter_ro(coordinates, 0);
+    //if (filter.isGeometryChanged()) geometryChanged();
 }
 
 bool
-Point::equalsExact(const Geometry *other, double tolerance) const
+Point::equalsExact(const Geometry* other, double tolerance) const
 {
-	if (!isEquivalentClass(other)) {
-		return false;
-	}
+    if(!isEquivalentClass(other)) {
+        return false;
+    }
 
-	// assume the isEquivalentClass would return false 
-	// if other is not a point 
-	assert(dynamic_cast<const Point*>(other));
+    // assume the isEquivalentClass would return false
+    // if other is not a point
+    assert(dynamic_cast<const Point*>(other));
 
-	if ( isEmpty() ) return other->isEmpty();
-	else if ( other->isEmpty() ) return false;
+    if(isEmpty()) {
+        return other->isEmpty();
+    }
+    else if(other->isEmpty()) {
+        return false;
+    }
 
-	const Coordinate* this_coord = getCoordinate();
-	const Coordinate* other_coord = other->getCoordinate();
+    const Coordinate* this_coord = getCoordinate();
+    const Coordinate* other_coord = other->getCoordinate();
 
-	// assume the isEmpty checks above worked :)
-	assert(this_coord && other_coord);
+    // assume the isEmpty checks above worked :)
+    assert(this_coord && other_coord);
 
-	return equal(*this_coord, *other_coord, tolerance);
+    return equal(*this_coord, *other_coord, tolerance);
 }
 
 int
-Point::compareToSameClass(const Geometry *g) const
+Point::compareToSameClass(const Geometry* g) const
 {
-	const Point* p = dynamic_cast<const Point*>(g);
-	return getCoordinate()->compareTo(*(p->getCoordinate()));
-}
-
-Point::~Point()
-{
-	//delete coordinates;
+    const Point* p = dynamic_cast<const Point*>(g);
+    return getCoordinate()->compareTo(*(p->getCoordinate()));
 }
 
 GeometryTypeId
 Point::getGeometryTypeId() const
 {
-	return GEOS_POINT;
+    return GEOS_POINT;
 }
 
 /*public*/
 const CoordinateSequence*
 Point::getCoordinatesRO() const
 {
-	return coordinates.get();
+    return &coordinates;
 }
 
 } // namespace geos::geom

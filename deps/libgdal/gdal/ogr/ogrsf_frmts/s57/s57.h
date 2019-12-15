@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: s57.h 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: s57.h d4f24139fa19c874881af67308722ed71533bb74 2018-07-29 19:08:34 +0200 Even Rouault $
  *
  * Project:  S-57 Translator
  * Purpose:  Declarations for S-57 translator not including the
@@ -120,8 +120,8 @@ class CPL_DLL S57ClassRegistrar
     std::vector<S57AttrInfo*> aoAttrInfos;
     std::vector<int> anAttrIndex; // sorted by acronym.
 
-    int         FindFile( const char *pszTarget, const char *pszDirectory,
-                          int bReportErr, VSILFILE **fp );
+    static bool        FindFile( const char *pszTarget, const char *pszDirectory,
+                          bool bReportErr, VSILFILE **fp );
 
     const char *ReadLine( VSILFILE * fp );
     char      **papszNextLine;
@@ -130,17 +130,17 @@ public:
                 S57ClassRegistrar();
                ~S57ClassRegistrar();
 
-    int         LoadInfo( const char *, const char *, int );
+    bool        LoadInfo( const char *, const char *, bool );
 
     // attribute table methods.
     //int         GetMaxAttrIndex() { return nAttrMax; }
-    const S57AttrInfo *GetAttrInfo(int i);
+    const S57AttrInfo *GetAttrInfo( int i );
     const char *GetAttrName( int i )
-    { return GetAttrInfo(i) == NULL ? NULL : aoAttrInfos[i]->osName.c_str(); }
+    { return GetAttrInfo(i) == nullptr ? nullptr : aoAttrInfos[i]->osName.c_str(); }
     const char *GetAttrAcronym( int i )
-    { return GetAttrInfo(i) == NULL ? NULL : aoAttrInfos[i]->osAcronym.c_str(); }
+    { return GetAttrInfo(i) == nullptr ? nullptr : aoAttrInfos[i]->osAcronym.c_str(); }
     char        GetAttrType( int i )
-    { return GetAttrInfo(i) == NULL ? '\0' : aoAttrInfos[i]->chType; }
+    { return GetAttrInfo(i) == nullptr ? '\0' : aoAttrInfos[i]->chType; }
 #define SAT_ENUM        'E'
 #define SAT_LIST        'L'
 #define SAT_FLOAT       'F'
@@ -149,9 +149,8 @@ public:
 #define SAT_FREE_TEXT   'S'
 
     char        GetAttrClass( int i )
-    { return GetAttrInfo(i) == NULL ? '\0' : aoAttrInfos[i]->chClass; }
+    { return GetAttrInfo(i) == nullptr ? '\0' : aoAttrInfos[i]->chClass; }
     int         FindAttrByAcronym( const char * );
-
 };
 
 /************************************************************************/
@@ -171,21 +170,21 @@ class S57ClassContentExplorer
     char      **papszTempResult;
 
     public:
-        S57ClassContentExplorer(S57ClassRegistrar* poRegistrar);
+    explicit    S57ClassContentExplorer(S57ClassRegistrar* poRegistrar);
        ~S57ClassContentExplorer();
 
-    int         SelectClassByIndex( int );
-    int         SelectClass( int );
-    int         SelectClass( const char * );
+    bool        SelectClassByIndex( int );
+    bool        SelectClass( int );
+    bool        SelectClass( const char * );
 
-    int         Rewind() { return SelectClassByIndex(0); }
-    int         NextClass() { return SelectClassByIndex(iCurrentClass+1); }
+    bool        Rewind() { return SelectClassByIndex(0); }
+    bool        NextClass() { return SelectClassByIndex(iCurrentClass+1); }
 
     int         GetOBJL();
     const char *GetDescription() const;
     const char *GetAcronym() const;
 
-    char      **GetAttributeList( const char * = NULL );
+    char      **GetAttributeList( const char * = nullptr );
 
     char        GetClassCode() const;
     char      **GetPrimitives();
@@ -223,7 +222,7 @@ public:
                ~DDFRecordIndex();
 
     void        AddRecord( int nKey, DDFRecord * );
-    int         RemoveRecord( int nKey );
+    bool        RemoveRecord( int nKey );
 
     DDFRecord  *FindRecord( int nKey );
 
@@ -296,32 +295,35 @@ class CPL_DLL S57Reader
     OGRFeature         *AssembleFeature( DDFRecord  *, OGRFeatureDefn * );
 
     void                ApplyObjectClassAttributes( DDFRecord *, OGRFeature *);
+    // cppcheck-suppress functionStatic
     void                GenerateLNAMAndRefs( DDFRecord *, OGRFeature * );
     void                GenerateFSPTAttributes( DDFRecord *, OGRFeature * );
 
     void                AssembleSoundingGeometry( DDFRecord *, OGRFeature * );
+    // cppcheck-suppress functionStatic
     void                AssemblePointGeometry( DDFRecord *, OGRFeature * );
     void                AssembleLineGeometry( DDFRecord *, OGRFeature * );
     void                AssembleAreaGeometry( DDFRecord *, OGRFeature * );
 
-    int                 FetchPoint( int, int,
-                                    double *, double *, double * = NULL );
-    int                 FetchLine( DDFRecord *, int, int, OGRLineString * );
+    bool                FetchPoint( int, int,
+                                    double *, double *, double * = nullptr );
+    bool                FetchLine( DDFRecord *, int, int, OGRLineString * );
 
     OGRFeatureDefn     *FindFDefn( DDFRecord * );
-    int                 ParseName( DDFField *, int = 0, int * = NULL );
+    int                 ParseName( DDFField *, int = 0, int * = nullptr );
 
-    int                 ApplyRecordUpdate( DDFRecord *, DDFRecord * );
+    // cppcheck-suppress functionStatic
+    bool                ApplyRecordUpdate( DDFRecord *, DDFRecord * );
 
     bool                bMissingWarningIssued;
     bool                bAttrWarningIssued;
 
   public:
-                        S57Reader( const char * );
+    explicit            S57Reader( const char * );
                        ~S57Reader();
 
     void                SetClassBased( S57ClassRegistrar *, S57ClassContentExplorer* );
-    int                 SetOptions( char ** );
+    bool                SetOptions( char ** );
     int                 GetOptionFlags() { return nOptionFlags; }
 
     int                 Open( int bTestOpen );
@@ -329,27 +331,26 @@ class CPL_DLL S57Reader
     DDFModule           *GetModule() { return poModule; }
     const char          *GetDSNM() { return pszDSNM; }
 
-    int                 Ingest();
-    int                 ApplyUpdates( DDFModule * );
-    int                 FindAndApplyUpdates( const char *pszPath=NULL );
+    bool                Ingest();
+    bool                ApplyUpdates( DDFModule * );
+    bool                FindAndApplyUpdates( const char *pszPath=nullptr );
 
     void                Rewind();
-    OGRFeature          *ReadNextFeature( OGRFeatureDefn * = NULL );
-    OGRFeature          *ReadFeature( int nFID, OGRFeatureDefn * = NULL );
+    OGRFeature          *ReadNextFeature( OGRFeatureDefn * = nullptr );
+    OGRFeature          *ReadFeature( int nFID, OGRFeatureDefn * = nullptr );
     OGRFeature          *ReadVector( int nFID, int nRCNM );
-    OGRFeature          *ReadDSID( void );
+    OGRFeature          *ReadDSID();
 
     int                 GetNextFEIndex( int nRCNM = 100 );
     void                SetNextFEIndex( int nNewIndex, int nRCNM = 100 );
 
     void                AddFeatureDefn( OGRFeatureDefn * );
 
-    int                 CollectClassList(std::vector<int> &anClassCount);
+    bool                CollectClassList(std::vector<int> &anClassCount);
 
     OGRErr              GetExtent( OGREnvelope *psExtent, int bForce );
 
     char               *RecodeByDSSI(const char *SourceString, bool LookAtAALL_NALL);
-
  };
 
 /************************************************************************/
@@ -359,36 +360,50 @@ class CPL_DLL S57Reader
 class CPL_DLL S57Writer
 {
 public:
+    static const int nDEFAULT_EXPP = 1;
+    static const int nDEFAULT_INTU = 4;
+    static const int nDEFAULT_AGEN = 540;
+
+    static const int nDEFAULT_HDAT = 2;
+    static const int nDEFAULT_VDAT = 7;
+    static const int nDEFAULT_SDAT = 23;
+    static const int nDEFAULT_CSCL = 52000;
+    static const int nDEFAULT_COMF = 10000000;
+    static const int nDEFAULT_SOMF = 10;
+
                         S57Writer();
                         ~S57Writer();
 
     void                SetClassBased( S57ClassRegistrar *, S57ClassContentExplorer* );
-    int                 CreateS57File( const char *pszFilename );
-    int                 Close();
+    bool                CreateS57File( const char *pszFilename );
+    bool                Close();
 
-    int                 WriteGeometry( DDFRecord *, int, double *, double *,
+    bool                WriteGeometry( DDFRecord *, int, double *, double *,
                                        double * );
-    int                 WriteATTF( DDFRecord *, OGRFeature * );
-    int                 WritePrimitive( OGRFeature *poFeature );
-    int                 WriteCompleteFeature( OGRFeature *poFeature );
-    int                 WriteDSID( int nEXPP = 1,
-                                   int nINTU = 4,
-                                   const char *pszDSNM = NULL,
-                                   const char *pszEDTN = NULL,
-                                   const char *pszUPDN = NULL,
-                                   const char *pszUADT = NULL,
-                                   const char *pszISDT = NULL,
-                                   const char *pszSTED = NULL,
-                                   int nAGEN = 0,
-                                   const char *pszCOMT = NULL,
+    bool                WriteATTF( DDFRecord *, OGRFeature * );
+    bool                WritePrimitive( OGRFeature *poFeature );
+    bool                WriteCompleteFeature( OGRFeature *poFeature );
+    bool                WriteDSID( int nEXPP = nDEFAULT_EXPP,
+                                   int nINTU = nDEFAULT_INTU,
+                                   const char *pszDSNM = nullptr,
+                                   const char *pszEDTN = nullptr,
+                                   const char *pszUPDN = nullptr,
+                                   const char *pszUADT = nullptr,
+                                   const char *pszISDT = nullptr,
+                                   const char *pszSTED = nullptr,
+                                   int nAGEN = nDEFAULT_AGEN,
+                                   const char *pszCOMT = nullptr,
+                                   int nAALL = 0,
+                                   int nNALL = 0,
                                    int nNOMR = 0, int nNOGR = 0,
                                    int nNOLR = 0, int nNOIN = 0,
-                                   int nNOCN = 0, int nNOED = 0
-                                 );
-    int                 WriteDSPM( int nHDAT = 0,
-                                   int nVDAT = 0,
-                                   int nSDAT = 0,
-                                   int nCSCL = 0 );
+                                   int nNOCN = 0, int nNOED = 0 );
+    bool                WriteDSPM( int nHDAT = nDEFAULT_HDAT,
+                                   int nVDAT = nDEFAULT_VDAT,
+                                   int nSDAT = nDEFAULT_SDAT,
+                                   int nCSCL = nDEFAULT_CSCL,
+                                   int nCOMF = nDEFAULT_COMF,
+                                   int nSOMF = nDEFAULT_SOMF);
 
 // semi-private - for sophisticated writers.
     DDFRecord           *MakeRecord();
@@ -399,8 +414,8 @@ private:
     S57ClassRegistrar   *poRegistrar;
     S57ClassContentExplorer* poClassContentExplorer;
 
-    int                 nCOMF;  /* Coordinate multiplier */
-    int                 nSOMF;  /* Vertical (sounding) multiplier */
+    int                 m_nCOMF;  /* Coordinate multiplier */
+    int                 m_nSOMF;  /* Vertical (sounding) multiplier */
 };
 
 /* -------------------------------------------------------------------- */

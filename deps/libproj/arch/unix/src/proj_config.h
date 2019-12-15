@@ -44,19 +44,19 @@
 #define PACKAGE_BUGREPORT "warmerdam@pobox.com"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "PROJ.4 Projections"
+#define PACKAGE_NAME "PROJ Projections"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PROJ.4 Projections 4.8.0"
+#define PACKAGE_STRING "PROJ Projections 6.1.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "proj"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "4.8.0"
+#define PACKAGE_VERSION "6.1.0"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "4.8.0"
+#define VERSION "6.1.0"

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtstransfer.cpp 31955 2015-12-02 06:07:22Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTSTransfer class.
@@ -31,7 +30,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: sdtstransfer.cpp 31955 2015-12-02 06:07:22Z goatbar $");
+CPL_CVSID("$Id: sdtstransfer.cpp 2ace03ec48c36dae8ba74089d85617c095643428 2018-11-02 18:02:33 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                            SDTSTransfer()                            */
@@ -39,8 +38,8 @@ CPL_CVSID("$Id: sdtstransfer.cpp 31955 2015-12-02 06:07:22Z goatbar $");
 
 SDTSTransfer::SDTSTransfer() :
     nLayers(0),
-    panLayerCATDEntry(NULL),
-    papoLayerReader(NULL)
+    panLayerCATDEntry(nullptr),
+    papoLayerReader(nullptr)
 {}
 
 /************************************************************************/
@@ -52,7 +51,6 @@ SDTSTransfer::~SDTSTransfer()
 {
     Close();
 }
-
 
 /************************************************************************/
 /*                                Open()                                */
@@ -79,7 +77,7 @@ int SDTSTransfer::Open( const char * pszFilename )
 /* -------------------------------------------------------------------- */
 /*      Read the IREF file.                                             */
 /* -------------------------------------------------------------------- */
-    if( oCATD.GetModuleFilePath( "IREF" ) == NULL )
+    if( oCATD.GetModuleFilePath( "IREF" ) == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find IREF module in transfer `%s'.\n",
@@ -93,7 +91,7 @@ int SDTSTransfer::Open( const char * pszFilename )
 /* -------------------------------------------------------------------- */
 /*      Read the XREF file.                                             */
 /* -------------------------------------------------------------------- */
-    if( oCATD.GetModuleFilePath( "XREF" ) == NULL )
+    if( oCATD.GetModuleFilePath( "XREF" ) == nullptr )
     {
         CPLError( CE_Warning, CPLE_AppDefined,
                   "Can't find XREF module in transfer `%s'.\n",
@@ -148,13 +146,13 @@ void SDTSTransfer::Close()
 {
     for( int i = 0; i < nLayers; i++ )
     {
-        if( papoLayerReader[i] != NULL )
+        if( papoLayerReader[i] != nullptr )
             delete papoLayerReader[i];
     }
     CPLFree( papoLayerReader );
-    papoLayerReader = NULL;
+    papoLayerReader = nullptr;
     CPLFree( panLayerCATDEntry );
-    panLayerCATDEntry = NULL;
+    panLayerCATDEntry = nullptr;
     nLayers = 0;
 }
 
@@ -188,7 +186,7 @@ void SDTSTransfer::Close()
   </ul>
  */
 
-SDTSLayerType SDTSTransfer::GetLayerType( int iEntry )
+SDTSLayerType SDTSTransfer::GetLayerType( int iEntry ) const
 
 {
     if( iEntry < 0 || iEntry >= nLayers )
@@ -203,7 +201,7 @@ SDTSLayerType SDTSTransfer::GetLayerType( int iEntry )
 
 /**
   Fetch the CATD module index for a layer.   This can be used to fetch
-  details about the layer/module from the SDTS_CATD object, such as it's
+  details about the layer/module from the SDTS_CATD object, such as its
   filename, and description.
 
   @param iEntry the layer index from 0 to GetLayerCount()-1.
@@ -212,7 +210,7 @@ SDTSLayerType SDTSTransfer::GetLayerType( int iEntry )
   methods.
  */
 
-int SDTSTransfer::GetLayerCATDEntry( int iEntry )
+int SDTSTransfer::GetLayerCATDEntry( int iEntry ) const
 
 {
     if( iEntry < 0 || iEntry >= nLayers )
@@ -232,7 +230,7 @@ SDTSLineReader *SDTSTransfer::GetLayerLineReader( int iEntry )
         || iEntry >= nLayers
         || oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) != SLTLine )
     {
-        return NULL;
+        return nullptr;
     }
 
     SDTSLineReader *poLineReader = new SDTSLineReader( &oIREF );
@@ -240,8 +238,9 @@ SDTSLineReader *SDTSTransfer::GetLayerLineReader( int iEntry )
     if( !poLineReader->Open(
                         oCATD.GetEntryFilePath( panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poLineReader;
-        return NULL;
+        return nullptr;
     }
 
     return poLineReader;
@@ -258,7 +257,7 @@ SDTSPointReader *SDTSTransfer::GetLayerPointReader( int iEntry )
         || iEntry >= nLayers
         || oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) != SLTPoint )
     {
-        return NULL;
+        return nullptr;
     }
 
     SDTSPointReader *poPointReader = new SDTSPointReader( &oIREF );
@@ -266,8 +265,9 @@ SDTSPointReader *SDTSTransfer::GetLayerPointReader( int iEntry )
     if( !poPointReader->Open(
                         oCATD.GetEntryFilePath( panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poPointReader;
-        return NULL;
+        return nullptr;
     }
 
     return poPointReader;
@@ -284,7 +284,7 @@ SDTSPolygonReader *SDTSTransfer::GetLayerPolygonReader( int iEntry )
         || iEntry >= nLayers
         || oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) != SLTPoly )
     {
-        return NULL;
+        return nullptr;
     }
 
     SDTSPolygonReader *poPolyReader = new SDTSPolygonReader();
@@ -292,8 +292,9 @@ SDTSPolygonReader *SDTSTransfer::GetLayerPolygonReader( int iEntry )
     if( !poPolyReader->Open(
                         oCATD.GetEntryFilePath( panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poPolyReader;
-        return NULL;
+        return nullptr;
     }
 
     return poPolyReader;
@@ -310,7 +311,7 @@ SDTSAttrReader *SDTSTransfer::GetLayerAttrReader( int iEntry )
         || iEntry >= nLayers
         || oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) != SLTAttr )
     {
-        return NULL;
+        return nullptr;
     }
 
     SDTSAttrReader *poAttrReader = new SDTSAttrReader();
@@ -318,8 +319,9 @@ SDTSAttrReader *SDTSTransfer::GetLayerAttrReader( int iEntry )
     if( !poAttrReader->Open(
                         oCATD.GetEntryFilePath( panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poAttrReader;
-        return NULL;
+        return nullptr;
     }
 
     return poAttrReader;
@@ -351,7 +353,7 @@ SDTSRasterReader *SDTSTransfer::GetLayerRasterReader( int iEntry )
         || iEntry >= nLayers
         || oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) != SLTRaster )
     {
-        return NULL;
+        return nullptr;
     }
 
     SDTSRasterReader *poRasterReader = new SDTSRasterReader();
@@ -359,8 +361,9 @@ SDTSRasterReader *SDTSTransfer::GetLayerRasterReader( int iEntry )
     if( !poRasterReader->Open( &oCATD, &oIREF,
                          oCATD.GetEntryModule(panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poRasterReader;
-        return NULL;
+        return nullptr;
     }
 
     return poRasterReader;
@@ -375,7 +378,7 @@ DDFModule *SDTSTransfer::GetLayerModuleReader( int iEntry )
 {
     if( iEntry < 0 || iEntry >= nLayers )
     {
-        return NULL;
+        return nullptr;
     }
 
     DDFModule *poModuleReader = new DDFModule;
@@ -383,8 +386,9 @@ DDFModule *SDTSTransfer::GetLayerModuleReader( int iEntry )
     if( !poModuleReader->Open(
                         oCATD.GetEntryFilePath( panLayerCATDEntry[iEntry] ) ) )
     {
+        oCATD.SetEntryTypeUnknown(iEntry) ; // to prevent further attempt
         delete poModuleReader;
-        return NULL;
+        return nullptr;
     }
 
     return poModuleReader;
@@ -408,7 +412,7 @@ DDFModule *SDTSTransfer::GetLayerModuleReader( int iEntry )
   GetLayerIndexedReader(), it will be returned instead of creating a new
   reader.  Among other things this means that the returned reader may not
   be positioned to read from the beginning of the module, and may already
-  have it's index filled.
+  have its index filled.
 
   <li> The returned reader will be of a type appropriate to the layer.
   See SDTSTransfer::GetLayerType() to see what reader classes correspond
@@ -424,7 +428,7 @@ DDFModule *SDTSTransfer::GetLayerModuleReader( int iEntry )
 SDTSIndexedReader *SDTSTransfer::GetLayerIndexedReader( int iEntry )
 
 {
-    if( papoLayerReader[iEntry] == NULL )
+    if( papoLayerReader[iEntry] == nullptr )
     {
         switch( oCATD.GetEntryType( panLayerCATDEntry[iEntry] ) )
         {
@@ -495,19 +499,19 @@ SDTSFeature *SDTSTransfer::GetIndexedFeatureRef( SDTSModId *poModId,
 /* -------------------------------------------------------------------- */
     const int iLayer = FindLayer( poModId->szModule );
     if( iLayer == -1 )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Get the reader, and read a feature from it.                     */
 /* -------------------------------------------------------------------- */
     SDTSIndexedReader *poReader = GetLayerIndexedReader( iLayer );
-    if( poReader == NULL )
-        return NULL;
+    if( poReader == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      return type, if requested.                                      */
 /* -------------------------------------------------------------------- */
-    if( peType != NULL )
+    if( peType != nullptr )
         *peType = GetLayerType(iLayer);
 
     return poReader->GetIndexedFeatureRef( poModId->nRecord );
@@ -533,11 +537,11 @@ SDTSFeature *SDTSTransfer::GetIndexedFeatureRef( SDTSModId *poModId,
 DDFField *SDTSTransfer::GetAttr( SDTSModId *poModId )
 
 {
-    SDTSAttrRecord *poAttrRecord = reinterpret_cast<SDTSAttrRecord *>(
+    SDTSAttrRecord *poAttrRecord = dynamic_cast<SDTSAttrRecord *>(
         GetIndexedFeatureRef( poModId ) );
 
-    if( poAttrRecord == NULL )
-        return NULL;
+    if( poAttrRecord == nullptr )
+        return nullptr;
 
     return poAttrRecord->poATTR;
 }
@@ -576,14 +580,14 @@ int SDTSTransfer::GetBounds( double *pdfMinX, double *pdfMinY,
 
             SDTSPointReader *poLayer = reinterpret_cast<SDTSPointReader *>(
                 GetLayerIndexedReader( iLayer ) );
-            if( poLayer == NULL )
+            if( poLayer == nullptr )
                 continue;
 
             poLayer->Rewind();
 
-            SDTSRawPoint *poPoint;
+            SDTSRawPoint *poPoint = nullptr;
             while( (poPoint = reinterpret_cast<SDTSRawPoint *>(
-                      poLayer->GetNextFeature() ) ) != NULL )
+                      poLayer->GetNextFeature() ) ) != nullptr )
             {
                 if( bFirst )
                 {
@@ -608,7 +612,7 @@ int SDTSTransfer::GetBounds( double *pdfMinX, double *pdfMinY,
         else if( GetLayerType( iLayer ) == SLTRaster )
         {
             SDTSRasterReader *poRL = GetLayerRasterReader( iLayer );
-            if( poRL == NULL )
+            if( poRL == nullptr )
                 continue;
 
             double adfGeoTransform[6];

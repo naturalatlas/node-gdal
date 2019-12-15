@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: mitab_indfile.cpp,v 1.14 2010-07-07 19:00:15 aboudreault Exp $
  *
  * Name:     mitab_indfile.cpp
  * Project:  MapInfo TAB Read/Write library
@@ -29,79 +28,42 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- **********************************************************************
- *
- * $Log: mitab_indfile.cpp,v $
- * Revision 1.14  2010-07-07 19:00:15  aboudreault
- * Cleanup Win32 Compile Warnings (GDAL bug #2930)
- *
- * Revision 1.13  2008-01-29 20:46:32  dmorissette
- * Added support for v9 Time and DateTime fields (byg 1754)
- *
- * Revision 1.12  2007/12/11 03:43:03  dmorissette
- * Added reporting access mode to error message in TABINDFile::Open()
- * (GDAL changeset r12460, ticket 1620)
- *
- * Revision 1.11  2005/04/29 19:08:56  dmorissette
- * Produce an error if m_nSubtreeDepth > 255 when creating a .IND (OGR bug 839)
- *
- * Revision 1.10  2004/06/30 20:29:04  dmorissette
- * Fixed refs to old address danmo@videotron.ca
- *
- * Revision 1.9  2003/07/24 02:45:57  daniel
- * Fixed problem scanning node in TABINDNode::FindNext() - bug 2176, FW
- *
- * Revision 1.8  2001/05/01 03:38:23  daniel
- * Added update support (allows creating new index in existing IND files).
- *
- * Revision 1.7  2000/11/13 22:17:57  daniel
- * When a (child) node's first entry is replaced by InsertEntry() then make
- * sure that node's key is updated in its parent node.
- *
- * Revision 1.6  2000/03/01 00:32:00  daniel
- * Added support for float keys, and completed support for generating indexes
- *
- * Revision 1.5  2000/02/28 16:57:42  daniel
- * Added support for writing indexes
- *
- * Revision 1.4  2000/01/15 22:30:44  daniel
- * Switch to MIT/X-Consortium OpenSource license
- *
- * Revision 1.3  1999/12/14 05:52:05  daniel
- * Fixed compile error on Windows
- *
- * Revision 1.2  1999/12/14 02:19:42  daniel
- * Completed .IND support for simple TABViews
- *
- * Revision 1.1  1999/11/20 15:49:07  daniel
- * Initial version
- *
  **********************************************************************/
 
+#include "cpl_port.h"
 #include "mitab.h"
+
+#include <cctype>
+#include <cstring>
+#include <algorithm>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_vsi.h"
+#include "mitab_priv.h"
 #include "mitab_utils.h"
 
-#include <ctype.h>      /* toupper() */
+CPL_CVSID("$Id: mitab_indfile.cpp e42cbe72c215e11b47f6b30fe2f075279007508b 2019-01-31 11:07:40 +0100 Even Rouault $")
 
 /*=====================================================================
  *                      class TABINDFile
  *====================================================================*/
 
-#define IND_MAGIC_COOKIE  24242424
+constexpr GUInt32 IND_MAGIC_COOKIE = 24242424;
 
 /**********************************************************************
  *                   TABINDFile::TABINDFile()
  *
  * Constructor.
  **********************************************************************/
-TABINDFile::TABINDFile()
+TABINDFile::TABINDFile() :
+    m_pszFname(nullptr),
+    m_fp(nullptr),
+    m_eAccessMode(TABRead),
+    m_numIndexes(0),
+    m_papoIndexRootNodes(nullptr),
+    m_papbyKeyBuffers(nullptr)
 {
-    m_fp = NULL;
-    m_pszFname = NULL;
-    m_eAccessMode = TABRead;
-    m_numIndexes = 0;
-    m_papoIndexRootNodes = NULL;
-    m_papbyKeyBuffers = NULL;
     m_oBlockManager.SetName("IND");
     m_oBlockManager.SetBlockSize(512);
 }
@@ -136,8 +98,6 @@ TABINDFile::~TABINDFile()
 int TABINDFile::Open(const char *pszFname, const char *pszAccess,
                      GBool bTestOpenNoError /*=FALSE*/)
 {
-    int         nLen;
-
     if (m_fp)
     {
         CPLError(CE_Failure, CPLE_FileIO,
@@ -150,7 +110,7 @@ int TABINDFile::Open(const char *pszFname, const char *pszAccess,
      * Note that for write access, we actually need read/write access to
      * the file.
      *----------------------------------------------------------------*/
-    if (STARTS_WITH_CI(pszAccess, "r") && strchr(pszAccess, '+') != NULL)
+    if (STARTS_WITH_CI(pszAccess, "r") && strchr(pszAccess, '+') != nullptr)
     {
         m_eAccessMode = TABReadWrite;
         pszAccess = "rb+";
@@ -177,7 +137,7 @@ int TABINDFile::Open(const char *pszFname, const char *pszAccess,
      *----------------------------------------------------------------*/
     m_pszFname = CPLStrdup(pszFname);
 
-    nLen = static_cast<int>(strlen(m_pszFname));
+    const int nLen = static_cast<int>(strlen(m_pszFname));
     if (nLen > 4 && !EQUAL(m_pszFname+nLen-4, ".IND") )
         strcpy(m_pszFname+nLen-4, ".ind");
 
@@ -190,14 +150,14 @@ int TABINDFile::Open(const char *pszFname, const char *pszAccess,
      *----------------------------------------------------------------*/
     m_fp = VSIFOpenL(m_pszFname, pszAccess);
 
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
     {
         if (!bTestOpenNoError)
             CPLError(CE_Failure, CPLE_FileIO,
                      "Open() failed for %s (%s)", m_pszFname, pszAccess);
 
         CPLFree(m_pszFname);
-        m_pszFname = NULL;
+        m_pszFname = nullptr;
         return -1;
     }
 
@@ -246,7 +206,7 @@ int TABINDFile::Open(const char *pszFname, const char *pszAccess,
  **********************************************************************/
 int TABINDFile::Close()
 {
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
         return 0;
 
     /*-----------------------------------------------------------------
@@ -277,23 +237,22 @@ int TABINDFile::Close()
             CPLFree(m_papbyKeyBuffers[iIndex]);
     }
     CPLFree(m_papoIndexRootNodes);
-    m_papoIndexRootNodes = NULL;
+    m_papoIndexRootNodes = nullptr;
     CPLFree(m_papbyKeyBuffers);
-    m_papbyKeyBuffers = NULL;
+    m_papbyKeyBuffers = nullptr;
     m_numIndexes = 0;
 
     /*-----------------------------------------------------------------
      * Close file
      *----------------------------------------------------------------*/
     VSIFCloseL(m_fp);
-    m_fp = NULL;
+    m_fp = nullptr;
 
     CPLFree(m_pszFname);
-    m_pszFname = NULL;
+    m_pszFname = nullptr;
 
     return 0;
 }
-
 
 /**********************************************************************
  *                   TABINDFile::ReadHeader()
@@ -315,14 +274,13 @@ int TABINDFile::ReadHeader()
     VSIStatBufL  sStatBuf;
     if (m_eAccessMode == TABReadWrite && VSIStatL(m_pszFname, &sStatBuf) != -1)
     {
-        m_oBlockManager.SetLastPtr((int)(((sStatBuf.st_size-1)/512)*512));
+        m_oBlockManager.SetLastPtr(static_cast<int>(((sStatBuf.st_size-1)/512)*512));
     }
 
     /*-----------------------------------------------------------------
      * Read the header block
      *----------------------------------------------------------------*/
-    TABRawBinBlock *poHeaderBlock;
-    poHeaderBlock = new TABRawBinBlock(m_eAccessMode, TRUE);
+    TABRawBinBlock *poHeaderBlock = new TABRawBinBlock(m_eAccessMode, TRUE);
     if (poHeaderBlock->ReadFromFile(m_fp, 0, 512) != 0)
     {
         // CPLError() has already been called.
@@ -355,10 +313,10 @@ int TABINDFile::ReadHeader()
     /*-----------------------------------------------------------------
      * Alloc and init the array of index root nodes.
      *----------------------------------------------------------------*/
-    m_papoIndexRootNodes = (TABINDNode**)CPLCalloc(m_numIndexes,
-                                                   sizeof(TABINDNode*));
+    m_papoIndexRootNodes = static_cast<TABINDNode**>(CPLCalloc(m_numIndexes,
+                                                   sizeof(TABINDNode*)));
 
-    m_papbyKeyBuffers = (GByte **)CPLCalloc(m_numIndexes, sizeof(GByte*));
+    m_papbyKeyBuffers = static_cast<GByte **>(CPLCalloc(m_numIndexes, sizeof(GByte*)));
 
     /* First index def. starts at byte 48 */
     poHeaderBlock->GotoByteInBlock(48);
@@ -397,13 +355,13 @@ int TABINDFile::ReadHeader()
 
             // Alloc a temporary key buffer for this index.
             // This buffer will be used by the BuildKey() method
-            m_papbyKeyBuffers[iIndex] = (GByte *)CPLCalloc(nKeyLength+1,
-                                                           sizeof(GByte));
+            m_papbyKeyBuffers[iIndex] = static_cast<GByte*>(CPLCalloc(nKeyLength+1,
+                                                           sizeof(GByte)));
         }
         else
         {
-            m_papoIndexRootNodes[iIndex] = NULL;
-            m_papbyKeyBuffers[iIndex] = NULL;
+            m_papoIndexRootNodes[iIndex] = nullptr;
+            m_papbyKeyBuffers[iIndex] = nullptr;
         }
     }
 
@@ -414,7 +372,6 @@ int TABINDFile::ReadHeader()
 
     return 0;
 }
-
 
 /**********************************************************************
  *                   TABINDFile::WriteHeader()
@@ -432,8 +389,7 @@ int TABINDFile::WriteHeader()
     /*-----------------------------------------------------------------
      * Write the 48 bytes of file header
      *----------------------------------------------------------------*/
-    TABRawBinBlock *poHeaderBlock;
-    poHeaderBlock = new TABRawBinBlock(m_eAccessMode, TRUE);
+    TABRawBinBlock *poHeaderBlock = new TABRawBinBlock(m_eAccessMode, TRUE);
     poHeaderBlock->InitNewBlock(m_fp, 512, 0);
 
     poHeaderBlock->WriteInt32( IND_MAGIC_COOKIE );
@@ -442,7 +398,7 @@ int TABINDFile::WriteHeader()
     poHeaderBlock->WriteInt16( 512 );   // ???
     poHeaderBlock->WriteInt32( 0 );     // ???
 
-    poHeaderBlock->WriteInt16( (GInt16)m_numIndexes );
+    poHeaderBlock->WriteInt16( static_cast<GInt16>(m_numIndexes) );
 
     poHeaderBlock->WriteInt16( 0x15e7); // ???
 
@@ -464,9 +420,9 @@ int TABINDFile::WriteHeader()
              * Write next index definition
              *--------------------------------------------------------*/
             poHeaderBlock->WriteInt32(poRootNode->GetNodeBlockPtr());
-            poHeaderBlock->WriteInt16((GInt16)poRootNode->GetMaxNumEntries());
-            poHeaderBlock->WriteByte( (GByte)poRootNode->GetSubTreeDepth());
-            poHeaderBlock->WriteByte( (GByte)poRootNode->GetKeyLength());
+            poHeaderBlock->WriteInt16(static_cast<GInt16>(poRootNode->GetMaxNumEntries()));
+            poHeaderBlock->WriteByte(static_cast<GByte>(poRootNode->GetSubTreeDepth()));
+            poHeaderBlock->WriteByte(static_cast<GByte>(poRootNode->GetKeyLength()));
 
             poHeaderBlock->WriteZeros( 8 );
 
@@ -511,7 +467,7 @@ int TABINDFile::WriteHeader()
  **********************************************************************/
 int TABINDFile::ValidateIndexNo(int nIndexNumber)
 {
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "TABINDFile: File has not been opened yet!");
@@ -519,8 +475,8 @@ int TABINDFile::ValidateIndexNo(int nIndexNumber)
     }
 
     if (nIndexNumber < 1 || nIndexNumber > m_numIndexes ||
-        m_papoIndexRootNodes == NULL ||
-        m_papoIndexRootNodes[nIndexNumber-1] == NULL)
+        m_papoIndexRootNodes == nullptr ||
+        m_papoIndexRootNodes[nIndexNumber-1] == nullptr)
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "No field index number %d in %s: Valid range is [1..%d].",
@@ -578,13 +534,13 @@ int TABINDFile::SetIndexUnique(int nIndexNumber, GBool bUnique/*=TRUE*/)
  * next call to BuildKey().  (should not be freed by the caller).
  * Returns NULL if field index is invalid.
  *
- * The first flavour of the function handles integer type of values, this
+ * The first flavor of the function handles integer type of values, this
  * corresponds to MapInfo types: integer, smallint, logical and date
  **********************************************************************/
 GByte *TABINDFile::BuildKey(int nIndexNumber, GInt32 nValue)
 {
     if (ValidateIndexNo(nIndexNumber) != 0)
-        return NULL;
+        return nullptr;
 
     int nKeyLength = m_papoIndexRootNodes[nIndexNumber-1]->GetKeyLength();
 
@@ -598,19 +554,19 @@ GByte *TABINDFile::BuildKey(int nIndexNumber, GInt32 nValue)
     switch(nKeyLength)
     {
       case 1:
-        m_papbyKeyBuffers[nIndexNumber-1][0] = (GByte)(nValue & 0xff)+0x80;
+        m_papbyKeyBuffers[nIndexNumber-1][0] = static_cast<GByte>(nValue & 0xff)+0x80;
         break;
       case 2:
         m_papbyKeyBuffers[nIndexNumber-1][0] =
-                                       (GByte)(nValue/0x100 & 0xff)+0x80;
-        m_papbyKeyBuffers[nIndexNumber-1][1] = (GByte)(nValue & 0xff);
+                                       static_cast<GByte>(nValue/0x100 & 0xff)+0x80;
+        m_papbyKeyBuffers[nIndexNumber-1][1] = static_cast<GByte>(nValue & 0xff);
         break;
       case 4:
         m_papbyKeyBuffers[nIndexNumber-1][0] =
-                                       (GByte)(nValue/0x1000000 &0xff)+0x80;
-        m_papbyKeyBuffers[nIndexNumber-1][1] = (GByte)(nValue/0x10000 & 0xff);
-        m_papbyKeyBuffers[nIndexNumber-1][2] = (GByte)(nValue/0x100 &0xff);
-        m_papbyKeyBuffers[nIndexNumber-1][3] = (GByte)(nValue & 0xff);
+                                       static_cast<GByte>(nValue/0x1000000 &0xff)+0x80;
+        m_papbyKeyBuffers[nIndexNumber-1][1] = static_cast<GByte>(nValue/0x10000 & 0xff);
+        m_papbyKeyBuffers[nIndexNumber-1][2] = static_cast<GByte>(nValue/0x100 &0xff);
+        m_papbyKeyBuffers[nIndexNumber-1][3] = static_cast<GByte>(nValue & 0xff);
         break;
       default:
         CPLError(CE_Failure, CPLE_AssertionFailed,
@@ -629,8 +585,8 @@ GByte *TABINDFile::BuildKey(int nIndexNumber, GInt32 nValue)
  **********************************************************************/
 GByte *TABINDFile::BuildKey(int nIndexNumber, const char *pszStr)
 {
-    if (ValidateIndexNo(nIndexNumber) != 0 || pszStr == NULL)
-        return NULL;
+    if (ValidateIndexNo(nIndexNumber) != 0 || pszStr == nullptr)
+        return nullptr;
 
     int nKeyLength = m_papoIndexRootNodes[nIndexNumber-1]->GetKeyLength();
 
@@ -640,7 +596,7 @@ GByte *TABINDFile::BuildKey(int nIndexNumber, const char *pszStr)
     int i=0;
     for (i=0; i<nKeyLength && pszStr[i] != '\0'; i++)
     {
-        m_papbyKeyBuffers[nIndexNumber-1][i] = (GByte)toupper(pszStr[i]);
+        m_papbyKeyBuffers[nIndexNumber-1][i] = static_cast<GByte>(toupper(pszStr[i]));
     }
 
     /* Pad the end of the buffer with '\0' */
@@ -657,12 +613,12 @@ GByte *TABINDFile::BuildKey(int nIndexNumber, const char *pszStr)
  *
  * BuildKey() for float and decimal fields
  **********************************************************************/
-GByte *TABINDFile::BuildKey(int nIndexNumber, double dValue)
+GByte *TABINDFile::BuildKey( int nIndexNumber, double dValue )
 {
     if (ValidateIndexNo(nIndexNumber) != 0)
-        return NULL;
+        return nullptr;
 
-    int nKeyLength = m_papoIndexRootNodes[nIndexNumber-1]->GetKeyLength();
+    const int nKeyLength = m_papoIndexRootNodes[nIndexNumber-1]->GetKeyLength();
     CPLAssert(nKeyLength == 8 && sizeof(double) == 8);
 
     /*-----------------------------------------------------------------
@@ -675,11 +631,10 @@ GByte *TABINDFile::BuildKey(int nIndexNumber, double dValue)
     CPL_SWAPDOUBLE(&dValue);
 #endif
 
-    memcpy(m_papbyKeyBuffers[nIndexNumber-1], (GByte*)(&dValue), nKeyLength);
+    memcpy(m_papbyKeyBuffers[nIndexNumber-1], reinterpret_cast<GByte*>(&dValue), nKeyLength);
 
     return m_papbyKeyBuffers[nIndexNumber-1];
 }
-
 
 /**********************************************************************
  *                   TABINDFile::FindFirst()
@@ -723,7 +678,6 @@ GInt32 TABINDFile::FindNext(int nIndexNumber, GByte *pKeyValue)
     return m_papoIndexRootNodes[nIndexNumber-1]->FindNext(pKeyValue);
 }
 
-
 /**********************************************************************
  *                   TABINDFile::CreateIndex()
  *
@@ -742,7 +696,7 @@ int TABINDFile::CreateIndex(TABFieldType eType, int nFieldSize)
 {
     int i, nNewIndexNo = -1;
 
-    if (m_fp == NULL ||
+    if (m_fp == nullptr ||
         (m_eAccessMode != TABWrite && m_eAccessMode != TABReadWrite))
         return -1;
 
@@ -762,7 +716,7 @@ int TABINDFile::CreateIndex(TABFieldType eType, int nFieldSize)
      *----------------------------------------------------------------*/
     for(i=0; m_papoIndexRootNodes && i<m_numIndexes; i++)
     {
-        if (m_papoIndexRootNodes[i] == NULL)
+        if (m_papoIndexRootNodes[i] == nullptr)
         {
             nNewIndexNo = i;
             break;
@@ -783,12 +737,12 @@ int TABINDFile::CreateIndex(TABFieldType eType, int nFieldSize)
          * Add a slot for new index at the end of the nodes array.
          *------------------------------------------------------------*/
         m_numIndexes++;
-        m_papoIndexRootNodes = (TABINDNode**)CPLRealloc( m_papoIndexRootNodes,
+        m_papoIndexRootNodes = static_cast<TABINDNode**>(CPLRealloc( m_papoIndexRootNodes,
                                                          m_numIndexes*
-                                                         sizeof(TABINDNode*));
+                                                         sizeof(TABINDNode*)));
 
-        m_papbyKeyBuffers = (GByte **)CPLRealloc(m_papbyKeyBuffers,
-                                                 m_numIndexes*sizeof(GByte*));
+        m_papbyKeyBuffers = static_cast<GByte **>(CPLRealloc(m_papbyKeyBuffers,
+                                                 m_numIndexes*sizeof(GByte*)));
 
         nNewIndexNo = m_numIndexes-1;
     }
@@ -807,14 +761,14 @@ int TABINDFile::CreateIndex(TABFieldType eType, int nFieldSize)
                       (eType == TABFDate)     ? 4:
                       (eType == TABFTime)     ? 4:
                       /*(eType == TABFDateTime) ? 8: */
-                      (eType == TABFLogical)  ? 4: MIN(128,nFieldSize));
+                      (eType == TABFLogical)  ? 4: std::min(128, nFieldSize));
 
     m_papoIndexRootNodes[nNewIndexNo] = new TABINDNode(m_eAccessMode);
     if (m_papoIndexRootNodes[nNewIndexNo]->InitNode(m_fp, 0, nKeyLength,
                                                     1,  // subtree depth=1
                                                     FALSE, // not unique
                                                     &m_oBlockManager,
-                                                    NULL, 0, 0)!= 0)
+                                                    nullptr, 0, 0)!= 0)
     {
         // CPLError has already been called
         return -1;
@@ -822,13 +776,12 @@ int TABINDFile::CreateIndex(TABFieldType eType, int nFieldSize)
 
     // Alloc a temporary key buffer for this index.
     // This buffer will be used by the BuildKey() method
-    m_papbyKeyBuffers[nNewIndexNo] = (GByte *)CPLCalloc(nKeyLength+1,
-                                                        sizeof(GByte));
+    m_papbyKeyBuffers[nNewIndexNo] = static_cast<GByte *>(CPLCalloc(nKeyLength+1,
+                                                        sizeof(GByte)));
 
     // Return 1-based index number
     return nNewIndexNo+1;
 }
-
 
 /**********************************************************************
  *                   TABINDFile::AddEntry()
@@ -849,7 +802,6 @@ int TABINDFile::AddEntry(int nIndexNumber, GByte *pKeyValue, GInt32 nRecordNo)
     return m_papoIndexRootNodes[nIndexNumber-1]->AddEntry(pKeyValue,nRecordNo);
 }
 
-
 /**********************************************************************
  *                   TABINDFile::Dump()
  *
@@ -859,12 +811,12 @@ int TABINDFile::AddEntry(int nIndexNumber, GByte *pKeyValue, GInt32 nRecordNo)
 
 void TABINDFile::Dump(FILE *fpOut /*=NULL*/)
 {
-    if (fpOut == NULL)
+    if (fpOut == nullptr)
         fpOut = stdout;
 
     fprintf(fpOut, "----- TABINDFile::Dump() -----\n");
 
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
     {
         fprintf(fpOut, "File is not opened.\n");
     }
@@ -880,17 +832,12 @@ void TABINDFile::Dump(FILE *fpOut /*=NULL*/)
                 m_papoIndexRootNodes[i]->Dump(fpOut);
             }
         }
-
     }
 
     fflush(fpOut);
 }
 
 #endif // DEBUG
-
-
-
-
 
 /*=====================================================================
  *                      class TABINDNode
@@ -901,25 +848,23 @@ void TABINDFile::Dump(FILE *fpOut /*=NULL*/)
  *
  * Constructor.
  **********************************************************************/
-TABINDNode::TABINDNode(TABAccess eAccessMode /*=TABRead*/)
-{
-    m_fp = NULL;
-    m_poCurChildNode = NULL;
-    m_nSubTreeDepth = 0;
-    m_nKeyLength = 0;
-    m_eFieldType = TABFUnknown;
-    m_poDataBlock = NULL;
-    m_numEntriesInNode = 0;
-    m_nCurIndexEntry = 0;
-    m_nPrevNodePtr = 0;
-    m_nNextNodePtr = 0;
-    m_poBlockManagerRef = NULL;
-    m_poParentNodeRef = NULL;
-    m_bUnique = FALSE;
-
-    m_eAccessMode = eAccessMode;
-    m_nCurDataBlockPtr = 0;
-}
+TABINDNode::TABINDNode( TABAccess eAccessMode /*=TABRead*/ ) :
+    m_fp(nullptr),
+    m_eAccessMode(eAccessMode),
+    m_poCurChildNode(nullptr),
+    m_poParentNodeRef(nullptr),
+    m_poBlockManagerRef(nullptr),
+    m_nSubTreeDepth(0),
+    m_nKeyLength(0),
+    m_eFieldType(TABFUnknown),
+    m_bUnique(FALSE),
+    m_nCurDataBlockPtr(0),
+    m_nCurIndexEntry(0),
+    m_poDataBlock(nullptr),
+    m_numEntriesInNode(0),
+    m_nPrevNodePtr(0),
+    m_nNextNodePtr(0)
+{}
 
 /**********************************************************************
  *                   TABINDNode::~TABINDNode()
@@ -991,7 +936,7 @@ int TABINDNode::InitNode(VSILFILE *fp, int nBlockPtr,
      * The node's buffer has to be created with read/write access since
      * the index is a very dynamic structure!
      *----------------------------------------------------------------*/
-    if (m_poDataBlock == NULL)
+    if (m_poDataBlock == nullptr)
         m_poDataBlock = new TABRawBinBlock(TABReadWrite, TRUE);
 
     if ((m_eAccessMode == TABWrite || m_eAccessMode == TABReadWrite) &&
@@ -1030,7 +975,6 @@ int TABINDNode::InitNode(VSILFILE *fp, int nBlockPtr,
 
     return 0;
 }
-
 
 /**********************************************************************
  *                   TABINDNode::GotoNodePtr()
@@ -1101,14 +1045,17 @@ GInt32 TABINDNode::ReadIndexEntry(int nEntryNo, GByte *pKeyValue)
  * nEntryNo is the 0-based index of the index entry that we are interested
  * in inside the current node.
  **********************************************************************/
-int   TABINDNode::IndexKeyCmp(GByte *pKeyValue, int nEntryNo)
+int   TABINDNode::IndexKeyCmp(const GByte *pKeyValue, int nEntryNo)
 {
     CPLAssert(pKeyValue);
     CPLAssert(nEntryNo >= 0 && nEntryNo < m_numEntriesInNode);
 
     m_poDataBlock->GotoByteInBlock(12 + nEntryNo*(m_nKeyLength+4));
-
-    return memcmp(pKeyValue, m_poDataBlock->GetCurDataPtr(), m_nKeyLength);
+    CPLAssert( m_nKeyLength <= 255 );
+    GByte abyKey[255];
+    if( m_poDataBlock->ReadBytes(m_nKeyLength, abyKey) != 0 )
+        return -1;
+    return memcmp(pKeyValue, abyKey, m_nKeyLength);
 }
 
 /**********************************************************************
@@ -1122,7 +1069,7 @@ int   TABINDNode::IndexKeyCmp(GByte *pKeyValue, int nEntryNo)
  **********************************************************************/
 int TABINDNode::SetFieldType(TABFieldType eType)
 {
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "TABINDNode::SetFieldType(): File has not been opened yet!");
@@ -1170,9 +1117,16 @@ int TABINDNode::SetFieldType(TABFieldType eType)
  *  - 0 if the key was not found
  *  - or -1 if an error happened
  **********************************************************************/
-GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
+GInt32 TABINDNode::FindFirst(const GByte *pKeyValue)
 {
-    if (m_poDataBlock == NULL)
+    std::set<int> oSetVisitedNodePtr;
+    return FindFirst(pKeyValue, oSetVisitedNodePtr);
+}
+
+GInt32 TABINDNode::FindFirst(const GByte *pKeyValue,
+                             std::set<int>& oSetVisitedNodePtr)
+{
+    if (m_poDataBlock == nullptr)
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "TABINDNode::Search(): Node has not been initialized yet!");
@@ -1208,7 +1162,7 @@ GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
             else if (nCmpStatus == 0)
             {
                 /* Found it!  Return the record number */
-                return ReadIndexEntry(m_nCurIndexEntry, NULL);
+                return ReadIndexEntry(m_nCurIndexEntry, nullptr);
             }
             else
             {
@@ -1291,7 +1245,7 @@ GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
                 }
 
                 /*-----------------------------------------------------
-                 * OK, now it's time to load/access the candidate child nodes.
+                 * OK, now it is time to load/access the candidate child nodes.
                  *----------------------------------------------------*/
                 int nRetValue = 0;
                 for(int iChild=0; nRetValue==0 &&
@@ -1301,14 +1255,27 @@ GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
                     if (iChild > 0)
                         m_nCurIndexEntry++;
 
-                    int nChildNodePtr = ReadIndexEntry(m_nCurIndexEntry, NULL);
-                    if (nChildNodePtr == 0)
+                    int nChildNodePtr = ReadIndexEntry(m_nCurIndexEntry, nullptr);
+                    if (nChildNodePtr <= 0)
                     {
                         /* Invalid child node??? */
                         nRetValue = 0;
                         continue;
                     }
-                    else if (m_poCurChildNode == NULL)
+                    else if( oSetVisitedNodePtr.find(nChildNodePtr) !=
+                                oSetVisitedNodePtr.end() )
+                    {
+                        CPLError(CE_Failure, CPLE_AppDefined,
+                                 "Invalid child node pointer structure");
+                        return -1;
+                    }
+                    else if( (nChildNodePtr % 512) != 0 )
+                    {
+                        CPLError(CE_Failure, CPLE_AppDefined,
+                                 "Invalid child node pointer");
+                        return -1;
+                    }
+                    else if (m_poCurChildNode == nullptr)
                     {
                         /* Child node has never been initialized...do it now!*/
 
@@ -1332,18 +1299,18 @@ GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
                         return -1;
                     }
 
-                    nRetValue = m_poCurChildNode->FindFirst(pKeyValue);
+                    oSetVisitedNodePtr.insert(nChildNodePtr);
+                    nRetValue = m_poCurChildNode->FindFirst(pKeyValue,
+                                                            oSetVisitedNodePtr);
                 }/*for iChild*/
 
                 return nRetValue;
-
-            }/*else*/
-
-        }/*while numEntries*/
+            }  // else
+        }  // while numEntries
 
         // No node was found that contains the key value.
         // We should never get here... only leaf nodes should return 0
-        CPLAssert(FALSE);
+        CPLAssert(false);
         return 0;
     }
 
@@ -1363,7 +1330,7 @@ GInt32 TABINDNode::FindFirst(GByte *pKeyValue)
  **********************************************************************/
 GInt32 TABINDNode::FindNext(GByte *pKeyValue)
 {
-    if (m_poDataBlock == NULL)
+    if (m_poDataBlock == nullptr)
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "TABINDNode::Search(): Node has not been initialized yet!");
@@ -1392,7 +1359,7 @@ GInt32 TABINDNode::FindNext(GByte *pKeyValue)
             IndexKeyCmp(pKeyValue, m_nCurIndexEntry) == 0)
         {
            /* Found it!  Return the record number */
-            return ReadIndexEntry(m_nCurIndexEntry, NULL);
+            return ReadIndexEntry(m_nCurIndexEntry, nullptr);
         }
         else
         {
@@ -1407,7 +1374,7 @@ GInt32 TABINDNode::FindNext(GByte *pKeyValue)
          *------------------------------------------------------------*/
         while(m_nCurIndexEntry < m_numEntriesInNode)
         {
-            if (m_poCurChildNode != NULL)
+            if (m_poCurChildNode != nullptr)
                 return m_poCurChildNode->FindNext(pKeyValue);
         }
     }
@@ -1415,7 +1382,6 @@ GInt32 TABINDNode::FindNext(GByte *pKeyValue)
     // No more nodes were found that contain the key value.
     return 0;
 }
-
 
 /**********************************************************************
  *                   TABINDNode::CommitToFile()
@@ -1430,7 +1396,7 @@ GInt32 TABINDNode::FindNext(GByte *pKeyValue)
 int TABINDNode::CommitToFile()
 {
     if ((m_eAccessMode != TABWrite && m_eAccessMode != TABReadWrite) ||
-        m_poDataBlock == NULL)
+        m_poDataBlock == nullptr)
         return -1;
 
     if (m_poCurChildNode)
@@ -1475,14 +1441,14 @@ int TABINDNode::AddEntry(GByte *pKeyValue, GInt32 nRecordNo,
                          GBool bMakeNewEntryCurChild /*=FALSE*/)
 {
     if ((m_eAccessMode != TABWrite && m_eAccessMode != TABReadWrite) ||
-        m_poDataBlock == NULL)
+        m_poDataBlock == nullptr)
         return -1;
 
     /*-----------------------------------------------------------------
      * If I'm the root node, then do a FindFirst() to init all the nodes
-     * and to make all of them point ot the insertion point.
+     * and to make all of them point to the insertion point.
      *----------------------------------------------------------------*/
-    if (m_poParentNodeRef == NULL && !bAddInThisNodeOnly)
+    if (m_poParentNodeRef == nullptr && !bAddInThisNodeOnly)
     {
         if (FindFirst(pKeyValue) < 0)
             return -1;  // Error happened and has already been reported.
@@ -1513,7 +1479,7 @@ int TABINDNode::AddEntry(GByte *pKeyValue, GInt32 nRecordNo,
          *------------------------------------------------------------*/
         if (GetNumEntries() == GetMaxNumEntries())
         {
-            if (m_poParentNodeRef == NULL)
+            if (m_poParentNodeRef == nullptr)
             {
                 /*-----------------------------------------------------
                  * Splitting the root node adds one level to the tree, so
@@ -1608,7 +1574,6 @@ int TABINDNode::InsertEntry(GByte *pKeyValue, GInt32 nRecordNo,
         memmove(m_poDataBlock->GetCurDataPtr()+(m_nKeyLength+4),
                 m_poDataBlock->GetCurDataPtr(),
                 (m_numEntriesInNode-iInsertAt)*(m_nKeyLength+4));
-
     }
 
     /*-----------------------------------------------------------------
@@ -1639,7 +1604,6 @@ int TABINDNode::InsertEntry(GByte *pKeyValue, GInt32 nRecordNo,
 
     return 0;
 }
-
 
 /**********************************************************************
  *                   TABINDNode::UpdateCurChildEntry()
@@ -1672,8 +1636,6 @@ int TABINDNode::UpdateCurChildEntry(GByte *pKeyValue, GInt32 nRecordNo)
 
     return 0;
 }
-
-
 
 /**********************************************************************
  *                   TABINDNode::UpdateSplitChild()
@@ -1722,7 +1684,6 @@ int TABINDNode::UpdateSplitChild(GByte *pKeyValue1, GInt32 nRecordNo1,
     return 0;
 }
 
-
 /**********************************************************************
  *                   TABINDNode::SplitNode()
  *
@@ -1742,7 +1703,7 @@ int TABINDNode::UpdateSplitChild(GByte *pKeyValue1, GInt32 nRecordNo1,
  **********************************************************************/
 int TABINDNode::SplitNode()
 {
-    TABINDNode *poNewNode=NULL;
+    TABINDNode *poNewNode=nullptr;
     int numInNode1, numInNode2;
 
     CPLAssert(m_numEntriesInNode >= 2);
@@ -1821,7 +1782,6 @@ int TABINDNode::SplitNode()
                 return -1;
             }
         }
-
     }
     else
     {
@@ -1896,7 +1856,6 @@ int TABINDNode::SplitNode()
                 return -1;
             }
         }
-
     }
 
     /*-----------------------------------------------------------------
@@ -2034,8 +1993,8 @@ int TABINDNode::SetNodeBufferDirectly(int numEntries, GByte *pBuf,
  **********************************************************************/
 GByte* TABINDNode::GetNodeKey()
 {
-    if (m_poDataBlock == NULL || m_numEntriesInNode == 0)
-        return NULL;
+    if (m_poDataBlock == nullptr || m_numEntriesInNode == 0)
+        return nullptr;
 
     m_poDataBlock->GotoByteInBlock(12);
 
@@ -2052,7 +2011,7 @@ GByte* TABINDNode::GetNodeKey()
 int TABINDNode::SetPrevNodePtr(GInt32 nPrevNodePtr)
 {
     if ((m_eAccessMode != TABWrite && m_eAccessMode != TABReadWrite) ||
-        m_poDataBlock == NULL)
+        m_poDataBlock == nullptr)
         return -1;
 
     if (m_nPrevNodePtr == nPrevNodePtr)
@@ -2072,7 +2031,7 @@ int TABINDNode::SetPrevNodePtr(GInt32 nPrevNodePtr)
 int TABINDNode::SetNextNodePtr(GInt32 nNextNodePtr)
 {
     if ((m_eAccessMode != TABWrite && m_eAccessMode != TABReadWrite) ||
-        m_poDataBlock == NULL)
+        m_poDataBlock == nullptr)
         return -1;
 
     if (m_nNextNodePtr == nNextNodePtr)
@@ -2081,8 +2040,6 @@ int TABINDNode::SetNextNodePtr(GInt32 nNextNodePtr)
     m_poDataBlock->GotoByteInBlock(8);
     return m_poDataBlock->WriteInt32(nNextNodePtr);
 }
-
-
 
 /**********************************************************************
  *                   TABINDNode::Dump()
@@ -2093,12 +2050,12 @@ int TABINDNode::SetNextNodePtr(GInt32 nNextNodePtr)
 
 void TABINDNode::Dump(FILE *fpOut /*=NULL*/)
 {
-    if (fpOut == NULL)
+    if (fpOut == nullptr)
         fpOut = stdout;
 
     fprintf(fpOut, "----- TABINDNode::Dump() -----\n");
 
-    if (m_fp == NULL)
+    if (m_fp == nullptr)
     {
         fprintf(fpOut, "Node is not initialized.\n");
     }
@@ -2143,16 +2100,16 @@ void TABINDNode::Dump(FILE *fpOut /*=NULL*/)
               {
                   nRecordPtr = ReadIndexEntry(i, aKeyValBuf);
                   fprintf(fpOut, "   nRecordPtr = %d\n", nRecordPtr);
-                  fprintf(fpOut, "   Char Val= \"%s\"\n", (char*)aKeyValBuf);
+                  fprintf(fpOut, "   Char Val= \"%s\"\n", reinterpret_cast<char*>(aKeyValBuf));
               }
               else if (m_nKeyLength != 4)
               {
-                GInt32 nInt32;
-                GInt16 nInt16;
-                GUInt32 nUInt32;
                 nRecordPtr = ReadIndexEntry(i, aKeyValBuf);
+                GInt32 nInt32 = 0;
                 memcpy(&nInt32, aKeyValBuf, 4);
+                GInt16 nInt16 = 0;
                 memcpy(&nInt16, aKeyValBuf + 2, 2);
+                GUInt32 nUInt32 = 0;
                 memcpy(&nUInt32, aKeyValBuf, 4);
                 fprintf(fpOut, "   nRecordPtr = %d\n", nRecordPtr);
                 fprintf(fpOut, "   Int Value = %d\n", nInt32);
@@ -2161,7 +2118,7 @@ void TABINDNode::Dump(FILE *fpOut /*=NULL*/)
               }
               else
               {
-                nRecordPtr = ReadIndexEntry(i, (GByte*)&nValue);
+                nRecordPtr = ReadIndexEntry(i, reinterpret_cast<GByte*>(&nValue));
                 fprintf(fpOut, "   nRecordPtr = %d\n", nRecordPtr);
                 fprintf(fpOut, "   Int Value = %d\n", nValue);
                 fprintf(fpOut, "   Hex Value = 0x%8.8x\n",nValue);

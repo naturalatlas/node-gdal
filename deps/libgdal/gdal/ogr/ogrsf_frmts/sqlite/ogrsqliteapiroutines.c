@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrsqliteapiroutines.c 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: ogrsqliteapiroutines.c 722bc4c4c4f6ec3494bb2e4ee96b8742d72ac4c5 2018-02-14 22:51:15Z Kurt Schwehr $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Static registration of sqlite3 entry points
@@ -29,6 +29,8 @@
 
 #include "cpl_port.h"
 
+#include <stddef.h>
+
 #ifndef WIN32
 
 #ifdef HAVE_SPATIALITE
@@ -52,11 +54,6 @@
   #endif
 #else
 #include "sqlite3.h"
-#endif
-
-#if SQLITE_VERSION_NUMBER >= 3006000
-#define HAVE_SQLITE_VFS
-#define HAVE_SQLITE3_PREPARE_V2
 #endif
 
 #define DONT_UNDEF_SQLITE3_MACROS
@@ -189,17 +186,11 @@ const struct sqlite3_api_routines OGRSQLITE_static_routines =
   /* Added ??? */
  NULL, /*sqlite3_overload_function,*/
   /* Added by 3.3.13 */
-#ifdef HAVE_SQLITE3_PREPARE_V2
  sqlite3_prepare_v2, /* YES */
-#else
- NULL,
-#endif
  NULL, /*sqlite3_prepare16_v2,*/
  NULL, /*sqlite3_clear_bindings,*/
   /* Added by 3.4.1 */
-#ifdef HAVE_SQLITE_VFS
  sqlite3_create_module_v2,
-#endif
   /* Added by 3.5.0 */
  NULL, /*sqlite3_bind_zeroblob,*/
  NULL, /*sqlite3_blob_bytes,*/
@@ -216,25 +207,15 @@ const struct sqlite3_api_routines OGRSQLITE_static_routines =
   NULL, /*sqlite3_mutex_free,*/
   NULL, /*sqlite3_mutex_leave,*/
  NULL, /*sqlite3_mutex_try,*/
-#ifdef HAVE_SQLITE_VFS
  sqlite3_open_v2, /* YES */
-#else
- NULL,
-#endif
  NULL, /*sqlite3_release_memory,*/
   NULL, /*sqlite3_result_error_nomem,*/
   NULL, /*sqlite3_result_error_toobig,*/
  NULL, /*sqlite3_sleep,*/
   NULL, /*sqlite3_soft_heap_limit,*/
-#ifdef HAVE_SQLITE_VFS
-  sqlite3_vfs_find, /* YES */
+ sqlite3_vfs_find, /* YES */
  sqlite3_vfs_register, /* YES */
  sqlite3_vfs_unregister, /* YES */
-#else
- NULL,
- NULL,
- NULL,
-#endif
  NULL, /*sqlite3_threadsafe,*/
   NULL, /*sqlite3_result_zeroblob,*/
   NULL, /*sqlite3_result_error_code,*/

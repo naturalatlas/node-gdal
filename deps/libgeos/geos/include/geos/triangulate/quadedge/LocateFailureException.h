@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,7 +29,7 @@ namespace quadedge { //geos.triangulate.quadedge
 
 class GEOS_DLL LocateFailureException : public geos::util::GEOSException {
 public:
-	LocateFailureException(std::string const&msg);
+    LocateFailureException(std::string const& msg);
 };
 
 } //namespace geos.triangulate.quadedge

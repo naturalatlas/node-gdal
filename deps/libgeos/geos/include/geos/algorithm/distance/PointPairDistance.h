@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -19,10 +19,10 @@
 #ifndef GEOS_ALGORITHM_DISTANCE_POINTPAIRDISTANCE_H
 #define GEOS_ALGORITHM_DISTANCE_POINTPAIRDISTANCE_H
 
-#include <geos/platform.h> // for DoubleNotANumber
+#include <geos/constants.h> // for DoubleNotANumber
 #include <geos/geom/Coordinate.h> // for inlines
 
-#include <vector> // for composition
+#include <array>
 #include <cassert>
 
 namespace geos {
@@ -34,102 +34,116 @@ namespace distance { // geos::algorithm::distance
  * Provides methods to update with a new point pair with
  * either maximum or minimum distance.
  */
-class PointPairDistance
-{
+class PointPairDistance {
 public:
 
-	PointPairDistance()
-		:
-		pt(2),
-		distance(DoubleNotANumber),
-		isNull(true)
-	{
-		assert(pt.size() == 2);
-	}
+    PointPairDistance()
+        :
+        distanceSquared(DoubleNotANumber),
+        isNull(true)
+    {}
 
-	void initialize()
-	{
-		isNull = true;
-	}
+    void
+    initialize()
+    {
+        isNull = true;
+    }
 
-	void initialize(const geom::Coordinate& p0, const geom::Coordinate& p1)
-	{
-		pt[0] = p0;
-		pt[1] = p1;
-		distance = p0.distance(p1);
-		isNull = false;
-	}
+    void
+    initialize(const geom::Coordinate& p0, const geom::Coordinate& p1)
+    {
+        pt[0] = p0;
+        pt[1] = p1;
+        distanceSquared = p0.distanceSquared(p1);
+        isNull = false;
+    }
 
-	double getDistance() const
-	{
-		return distance;
-	}
+    double
+    getDistance() const
+    {
+        return std::sqrt(distanceSquared);
+    }
 
-	const std::vector<geom::Coordinate>& getCoordinates() const
-	{
-		return pt;
-	}
+    const std::array<geom::Coordinate, 2>&
+    getCoordinates() const
+    {
+        return pt;
+    }
 
-	const geom::Coordinate& getCoordinate(unsigned int i) const
-	{
-		assert(i<pt.size());
-		return pt[i];
-	}
+    const geom::Coordinate&
+    getCoordinate(size_t i) const
+    {
+        assert(i < pt.size());
+        return pt[i];
+    }
 
-	void setMaximum(const PointPairDistance& ptDist)
-	{
-		setMaximum(ptDist.pt[0], ptDist.pt[1]);
-	}
+    void
+    setMaximum(const PointPairDistance& ptDist)
+    {
+        setMaximum(ptDist.pt[0], ptDist.pt[1]);
+    }
 
-	void setMaximum(const geom::Coordinate& p0, const geom::Coordinate& p1)
-	{
-		if (isNull) {
-			initialize(p0, p1);
-			return;
-		}
-		double dist = p0.distance(p1);
-		if (dist > distance)
-			initialize(p0, p1, dist);
-	}
+    void
+    setMaximum(const geom::Coordinate& p0, const geom::Coordinate& p1)
+    {
+        if(isNull) {
+            initialize(p0, p1);
+            return;
+        }
+        double distSq = p0.distanceSquared(p1);
+        if(distSq > distanceSquared) {
+            initialize(p0, p1, distSq);
+        }
+    }
 
-	void setMinimum(const PointPairDistance& ptDist)
-	{
-		setMinimum(ptDist.pt[0], ptDist.pt[1]);
-	}
+    void
+    setMinimum(const PointPairDistance& ptDist)
+    {
+        setMinimum(ptDist.pt[0], ptDist.pt[1]);
+    }
 
-	void setMinimum(const geom::Coordinate& p0, const geom::Coordinate& p1)
-	{
-		if (isNull) {
-			initialize(p0, p1);
-			return;
-		}
-		double dist = p0.distance(p1);
-		if (dist < distance)
-			initialize(p0, p1, dist);
-	}
+    void
+    setMinimum(const geom::Coordinate& p0, const geom::Coordinate& p1)
+    {
+        if(isNull) {
+            initialize(p0, p1);
+            return;
+        }
+        double distSq = p0.distanceSquared(p1);
+        if(distSq < distanceSquared) {
+            initialize(p0, p1, distSq);
+        }
+    }
+
+    bool
+    getIsNull()
+    {
+        return isNull;
+    }
 
 private:
 
-	/**
-	 * Initializes the points, avoiding recomputing the distance.
-	 * @param p0
-	 * @param p1
-	 * @param dist the distance between p0 and p1
-	 */
-	void initialize(const geom::Coordinate& p0, const geom::Coordinate& p1,
-	                double dist)
-	{
-		pt[0] = p0;
-		pt[1] = p1;
-		distance = dist;
-		isNull = false;
-	}
+    /**
+     * Initializes the points, avoiding recomputing the distance.
+     * @param p0
+     * @param p1
+     * @param dist the distance between p0 and p1
+     */
+    void
+    initialize(const geom::Coordinate& p0, const geom::Coordinate& p1,
+               double distSquared)
+    {
+        pt[0] = p0;
+        pt[1] = p1;
+        distanceSquared = distSquared;
+        isNull = false;
+    }
 
-	std::vector<geom::Coordinate> pt;
+    std::array<geom::Coordinate, 2> pt;
 
-	double distance;
+    double distanceSquared;
 
-	bool isNull;
+    bool isNull;
 };
 
 } // geos::algorithm::distance

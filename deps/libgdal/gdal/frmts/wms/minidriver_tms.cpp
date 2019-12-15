@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: minidriver_tms.cpp 27745 2014-09-27 16:38:57Z goatbar $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -31,24 +30,21 @@
 #include "wmsdriver.h"
 #include "minidriver_tms.h"
 
+CPL_CVSID("$Id: minidriver_tms.cpp 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
-CPP_GDALWMSMiniDriverFactory(TMS)
+WMSMiniDriver_TMS::WMSMiniDriver_TMS() {}
 
-GDALWMSMiniDriver_TMS::GDALWMSMiniDriver_TMS() {
-}
+WMSMiniDriver_TMS::~WMSMiniDriver_TMS() {}
 
-GDALWMSMiniDriver_TMS::~GDALWMSMiniDriver_TMS() {
-}
-
-CPLErr GDALWMSMiniDriver_TMS::Initialize(CPLXMLNode *config) {
+CPLErr WMSMiniDriver_TMS::Initialize(CPLXMLNode *config, CPL_UNUSED char **papszOpenOptions) {
     CPLErr ret = CE_None;
 
-    if (ret == CE_None) {
+    {
         const char *base_url = CPLGetXMLValue(config, "ServerURL", "");
         if (base_url[0] != '\0') {
             m_base_url = base_url;
             if (m_base_url.find("${") == std::string::npos) {
-                if (m_base_url[m_base_url.size()-1] != '/') {
+                if (m_base_url.back() != '/') {
                     m_base_url += "/";
                 }
                 m_base_url += "${version}/${layer}/${z}/${x}/${y}.${format}";
@@ -59,48 +55,47 @@ CPLErr GDALWMSMiniDriver_TMS::Initialize(CPLXMLNode *config) {
         }
     }
 
-    m_dataset  = CPLGetXMLValue(config, "Layer", "");
-    m_version  = CPLGetXMLValue(config, "Version", "1.0.0");
-    m_format   = CPLGetXMLValue(config, "Format", "jpg");
+    // These never change
+    const char *dataset = CPLGetXMLValue(config, "Layer", "");
+    URLSearchAndReplace(&m_base_url, "${layer}", "%s", dataset);
+    const char *version = CPLGetXMLValue(config, "Version", "1.0.0");
+    URLSearchAndReplace(&m_base_url, "${version}", "%s", version);
+    const char *format = CPLGetXMLValue(config, "Format", "jpg");
+    URLSearchAndReplace(&m_base_url, "${format}", "%s", format);
 
     return ret;
 }
 
-void GDALWMSMiniDriver_TMS::GetCapabilities(GDALWMSMiniDriverCapabilities *caps) {
-    caps->m_capabilities_version = 1;
-    caps->m_has_arb_overviews = 0;
-    caps->m_has_image_request = 0;
-    caps->m_has_tiled_image_requeset = 1;
-    caps->m_max_overview_count = 32;
-}
-
-void GDALWMSMiniDriver_TMS::ImageRequest(CPL_UNUSED CPLString *url,
-                                         CPL_UNUSED const GDALWMSImageRequestInfo &iri) {
-}
-
-void GDALWMSMiniDriver_TMS::TiledImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri, const GDALWMSTiledImageRequestInfo &tiri) {
+CPLErr WMSMiniDriver_TMS::TiledImageRequest(WMSHTTPRequest &request,
+                                            const GDALWMSImageRequestInfo &iri,
+                                            const GDALWMSTiledImageRequestInfo &tiri)
+{
+    CPLString &url = request.URL;
     const GDALWMSDataWindow *data_window = m_parent_dataset->WMSGetDataWindow();
     int tms_y;
 
     if (data_window->m_y_origin != GDALWMSDataWindow::TOP) {
-        tms_y = static_cast<int>(floor(((data_window->m_y1 - data_window->m_y0)
-                                      / (iri.m_y1 - iri.m_y0)) + 0.5)) - tiri.m_y - 1;
+        if( iri.m_y0 == iri.m_y1 )
+            return CE_Failure;
+        const double dfTmp = floor(((data_window->m_y1 - data_window->m_y0)
+                                      / (iri.m_y1 - iri.m_y0)) + 0.5);
+        if( !(dfTmp >= 0 && dfTmp < INT_MAX) )
+            return CE_Failure;
+        tms_y = static_cast<int>(dfTmp) - tiri.m_y - 1;
     } else {
         tms_y = tiri.m_y;
     }
     // http://tms25.arc.nasa.gov/tile/tile.aspx?T=geocover2000&L=0&X=86&Y=39
-    *url = m_base_url;
+    url = m_base_url;
 
-    URLSearchAndReplace(url, "${version}", "%s", m_version.c_str());
-    URLSearchAndReplace(url, "${layer}", "%s", m_dataset.c_str());
-    URLSearchAndReplace(url, "${format}", "%s", m_format.c_str());
-    URLSearchAndReplace(url, "${x}", "%d", tiri.m_x);
-    URLSearchAndReplace(url, "${y}", "%d", tms_y);
-    URLSearchAndReplace(url, "${z}", "%d", tiri.m_level);
+    URLSearchAndReplace(&url, "${x}", "%d", tiri.m_x);
+    URLSearchAndReplace(&url, "${y}", "%d", tms_y);
+    URLSearchAndReplace(&url, "${z}", "%d", tiri.m_level);
 
     /* Hack for some TMS like servers that require tile numbers split into 3 groups of */
     /* 3 digits, like http://tile8.geo.admin.ch/geoadmin/ch.swisstopo.pixelkarte-farbe */
-    URLSearchAndReplace(url, "${xxx}", "%03d/%03d/%03d", tiri.m_x / 1000000, (tiri.m_x / 1000) % 1000, tiri.m_x % 1000);
-    URLSearchAndReplace(url, "${yyy}", "%03d/%03d/%03d", tms_y / 1000000, (tms_y / 1000) % 1000, tms_y % 1000);
+    URLSearchAndReplace(&url, "${xxx}", "%03d/%03d/%03d", tiri.m_x / 1000000, (tiri.m_x / 1000) % 1000, tiri.m_x % 1000);
+    URLSearchAndReplace(&url, "${yyy}", "%03d/%03d/%03d", tms_y / 1000000, (tms_y / 1000) % 1000, tms_y % 1000);
 
+    return CE_None;
 }

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogringresdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIngresDriver class.
@@ -30,7 +29,7 @@
 #include "ogr_ingres.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogringresdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogringresdriver.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 /************************************************************************/
 /*                          ~OGRIngresDriver()                           */
@@ -72,11 +71,9 @@ OGRDataSource *OGRIngresDriver::Open( const char * pszFilename,
                                      int bUpdate )
 
 {
-    OGRIngresDataSource     *poDS = NULL;
+    OGRIngresDataSource *poDS = NULL;
     char **papszOptions = ParseWrappedName( pszFilename );
-    const char *pszDriver;
-
-    pszDriver = CSLFetchNameValue( papszOptions, "driver" );
+    const char *pszDriver = CSLFetchNameValue( papszOptions, "driver" );
     if( pszDriver != NULL && EQUAL(pszDriver,"ingres") )
     {
         poDS = new OGRIngresDataSource();
@@ -93,7 +90,6 @@ OGRDataSource *OGRIngresDriver::Open( const char * pszFilename,
     return poDS;
 }
 
-
 /************************************************************************/
 /*                          CreateDataSource()                          */
 /************************************************************************/
@@ -102,13 +98,11 @@ OGRDataSource *OGRIngresDriver::CreateDataSource( const char * pszName,
                                                   char ** /* papszOptions */ )
 
 {
-    OGRIngresDataSource     *poDS = NULL;
-    char **papszOpenOptions;
-    const char *pszDriver;
+    OGRIngresDataSource *poDS = NULL;
 
-    papszOpenOptions = ParseWrappedName( pszName );
+    char **papszOpenOptions = ParseWrappedName( pszName );
 
-    pszDriver = CSLFetchNameValue( papszOpenOptions, "driver" );
+    const char *pszDriver = CSLFetchNameValue( papszOpenOptions, "driver" );
 
     if( pszDriver != NULL && EQUAL(pszDriver,"ingres") )
     {
@@ -127,7 +121,6 @@ OGRDataSource *OGRIngresDriver::CreateDataSource( const char * pszName,
 
     return poDS;
 }
-
 
 /************************************************************************/
 /*                           TestCapability()                           */

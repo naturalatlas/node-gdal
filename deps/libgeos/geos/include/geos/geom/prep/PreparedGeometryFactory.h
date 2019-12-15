@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -23,12 +23,14 @@
 #include <geos/export.h>
 #include <geos/geom/prep/PreparedGeometry.h>
 
+#include <memory>
+
 namespace geos {
-	namespace geom {
-        namespace prep {
-            class PreparedGeometry;
-		}
-	}
+namespace geom {
+namespace prep {
+class PreparedGeometry;
+}
+}
 }
 
 
@@ -40,48 +42,49 @@ namespace prep { // geos::geom::prep
 /**
  * \brief
  * A factory for creating {@link PreparedGeometry}s.
- * 
+ *
  * It chooses an appropriate implementation of PreparedGeometry
  * based on the geoemtric type of the input geometry.
  * In the future, the factory may accept hints that indicate
  * special optimizations which can be performed.
- * 
+ *
  * @author Martin Davis
  *
  */
-class GEOS_DLL PreparedGeometryFactory
-{
+class GEOS_DLL PreparedGeometryFactory {
 public:
 
-	/**
-	* Creates a new {@link PreparedGeometry} appropriate for the argument {@link Geometry}.
-	* 
-	* @param geom the geometry to prepare
-	* @return the prepared geometry
-	*/
-	static const PreparedGeometry * prepare(const geom::Geometry * geom) 
-	{
-		PreparedGeometryFactory pf;
-		return pf.create(geom); 
-	}
-    
     /**
- 	* Destroys {@link PreparedGeometry} allocated with the factory.
- 	* 
-	* @param geom to be deallocated
-	*/
-    static void destroy(const PreparedGeometry* geom)
+    * Creates a new {@link PreparedGeometry} appropriate for the argument {@link Geometry}.
+    *
+    * @param geom the geometry to prepare
+    * @return the prepared geometry
+    */
+    static std::unique_ptr<PreparedGeometry>
+    prepare(const geom::Geometry* geom)
+    {
+        PreparedGeometryFactory pf;
+        return pf.create(geom);
+    }
+
+    /**
+    * Destroys {@link PreparedGeometry} allocated with the factory.
+    *
+    * @param geom to be deallocated
+    */
+    static void
+    destroy(const PreparedGeometry* geom)
     {
         delete geom;
     }
 
-	/**
- 	* Creates a new {@link PreparedGeometry} appropriate for the argument {@link Geometry}.
- 	* 
-	* @param geom the geometry to prepare
-	* @return the prepared geometry
-	*/
-	const PreparedGeometry* create(const geom::Geometry* geom) const;
+    /**
+    * Creates a new {@link PreparedGeometry} appropriate for the argument {@link Geometry}.
+    *
+    * @param geom the geometry to prepare
+    * @return the prepared geometry
+    */
+    std::unique_ptr<PreparedGeometry> create(const geom::Geometry* geom) const;
 
 };
 

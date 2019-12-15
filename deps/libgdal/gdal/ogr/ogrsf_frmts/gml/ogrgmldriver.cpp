@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgmldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  OGR
  * Purpose:  OGRGMLDriver implementation
@@ -32,18 +31,7 @@
 #include "cpl_multiproc.h"
 #include "gmlreaderp.h"
 
-CPL_CVSID("$Id: ogrgmldriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
-
-/************************************************************************/
-/*                        OGRGMLDriverUnload()                          */
-/************************************************************************/
-
-static void OGRGMLDriverUnload(CPL_UNUSED GDALDriver* poDriver)
-{
-    if( GMLReader::hMutex != NULL )
-        CPLDestroyMutex( GMLReader::hMutex );
-    GMLReader::hMutex = NULL;
-}
+CPL_CVSID("$Id: ogrgmldriver.cpp efa2b50f96a33d250a43ce851e2314232cef1795 2017-12-12 07:57:09Z Even Rouault $")
 
 /************************************************************************/
 /*                         OGRGMLDriverIdentify()                       */
@@ -52,9 +40,9 @@ static void OGRGMLDriverUnload(CPL_UNUSED GDALDriver* poDriver)
 static int OGRGMLDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL )
+    if( poOpenInfo->fpL == nullptr )
     {
-        if( strstr(poOpenInfo->pszFilename, "xsd=") != NULL )
+        if( strstr(poOpenInfo->pszFilename, "xsd=") != nullptr )
             return -1; /* must be later checked */
         return FALSE;
     }
@@ -97,20 +85,18 @@ static int OGRGMLDriverIdentify( GDALOpenInfo* poOpenInfo )
 static GDALDataset *OGRGMLDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    OGRGMLDataSource    *poDS;
-
     if( poOpenInfo->eAccess == GA_Update )
-        return NULL;
+        return nullptr;
 
     if( OGRGMLDriverIdentify( poOpenInfo ) == FALSE )
-        return NULL;
+        return nullptr;
 
-    poDS = new OGRGMLDataSource();
+    OGRGMLDataSource *poDS = new OGRGMLDataSource();
 
     if( !poDS->Open(  poOpenInfo ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -132,7 +118,7 @@ static GDALDataset *OGRGMLDriverCreate( const char * pszName,
     if( !poDS->Create( pszName, papszOptions ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -145,7 +131,7 @@ static GDALDataset *OGRGMLDriverCreate( const char * pszName,
 void RegisterOGRGML()
 
 {
-    if( GDALGetDriverByName( "GML" ) != NULL )
+    if( GDALGetDriverByName( "GML" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -167,6 +153,13 @@ void RegisterOGRGML()
 "  <Option name='GML_ATTRIBUTES_TO_OGR_FIELDS' type='boolean' description='Whether GML attributes should be reported as OGR fields' default='NO'/>"
 "  <Option name='INVERT_AXIS_ORDER_IF_LAT_LONG' type='boolean' description='Whether to present SRS and coordinate ordering in traditional GIS order' default='YES'/>"
 "  <Option name='CONSIDER_EPSG_AS_URN' type='string-select' description='Whether to consider srsName like EPSG:XXXX as respecting EPSG axis order' default='AUTO'>"
+"    <Value>AUTO</Value>"
+"    <Value>YES</Value>"
+"    <Value>NO</Value>"
+"  </Option>"
+"  <Option name='SWAP_COORDINATES' type='string-select' "
+    "description='Whether the order of geometry coordinates should be inverted.' "
+    "default='AUTO'>"
 "    <Value>AUTO</Value>"
 "    <Value>YES</Value>"
 "    <Value>NO</Value>"
@@ -208,7 +201,13 @@ void RegisterOGRGML()
 "    <Value>GML3.2</Value>"
 "    <Value>GML3Deegree</Value>"
 "  </Option>"
+"  <Option name='GML_FEATURE_COLLECTION' type='boolean' description='Whether to use the gml:FeatureCollection. Only valid for FORMAT=GML3/GML3.2' default='NO'/>"
 "  <Option name='GML3_LONGSRS' type='boolean' description='Whether to write SRS with \"urn:ogc:def:crs:EPSG::\" prefix with GML3* versions' default='YES'/>"
+"  <Option name='SRSNAME_FORMAT' type='string-select' description='Format of srsName (for GML3* versions)' default='OGC_URL'>"
+"    <Value>SHORT</Value>"
+"    <Value>OGC_URN</Value>"
+"    <Value>OGC_URL</Value>"
+"  </Option>"
 "  <Option name='WRITE_FEATURE_BOUNDED_BY' type='boolean' description='Whether to write <gml:boundedBy> element for each feature with GML3* versions' default='YES'/>"
 "  <Option name='SPACE_INDENTATION' type='boolean' description='Whether to indent the output for readability' default='YES'/>"
 "  <Option name='SRSDIMENSION_LOC' type='string-select' description='(only valid for FORMAT=GML3xx) Location where to put srsDimension attribute' default='POSLIST'>"
@@ -223,6 +222,7 @@ void RegisterOGRGML()
 
     poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST, "<LayerCreationOptionList/>");
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES, "Integer Integer64 Real String Date DateTime IntegerList Integer64List RealList StringList" );
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATASUBTYPES, "Boolean Int16 Float32" );
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
@@ -230,7 +230,6 @@ void RegisterOGRGML()
     poDriver->pfnOpen = OGRGMLDriverOpen;
     poDriver->pfnIdentify = OGRGMLDriverIdentify;
     poDriver->pfnCreate = OGRGMLDriverCreate;
-    poDriver->pfnUnloadDriver = OGRGMLDriverUnload;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }

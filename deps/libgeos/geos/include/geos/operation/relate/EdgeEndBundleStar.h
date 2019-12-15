@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -25,12 +25,12 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class IntersectionMatrix;
-	}
-	namespace geomgraph {
-		class EdgeEnd;
-	}
+namespace geom {
+class IntersectionMatrix;
+}
+namespace geomgraph {
+class EdgeEnd;
+}
 }
 
 
@@ -48,16 +48,16 @@ namespace relate { // geos::operation::relate
 class GEOS_DLL EdgeEndBundleStar: public geomgraph::EdgeEndStar {
 public:
 
-	/// Creates a new empty EdgeEndBundleStar
-	EdgeEndBundleStar() {}
-	
-	virtual ~EdgeEndBundleStar();
-	void insert(geomgraph::EdgeEnd *e);
+    /// Creates a new empty EdgeEndBundleStar
+    EdgeEndBundleStar() {}
 
-	/**
-	 * Update the IM with the contribution for the EdgeStubs around the node.
-	 */
-	void updateIM(geom::IntersectionMatrix& im);
+    ~EdgeEndBundleStar() override;
+    void insert(geomgraph::EdgeEnd* e) override;
+
+    /**
+     * Update the IM with the contribution for the EdgeStubs around the node.
+     */
+    void updateIM(geom::IntersectionMatrix& im);
 };
 
 

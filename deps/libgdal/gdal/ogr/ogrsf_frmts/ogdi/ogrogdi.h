@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrogdi.h 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: ogrogdi.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
  *
  * Project:  OGDI Bridge
  * Purpose:  Private definitions within the OGDI driver to implement
@@ -34,17 +34,20 @@
 
 #include <math.h>
 extern "C" {
+/* Older versions of OGDI have register keywords as qualifier for arguments
+ * of functions, which is illegal in C++17 */
+#define register
 #include "ecs.h"
+#undef register
 }
 #include "ogrsf_frmts.h"
-
 
 /************************************************************************/
 /*                             OGROGDILayer                             */
 /************************************************************************/
 class OGROGDIDataSource;
 
-class OGROGDILayer : public OGRLayer
+class OGROGDILayer final: public OGRLayer
 {
     OGROGDIDataSource  *m_poODS;
     int                 m_nClientID;
@@ -64,23 +67,23 @@ class OGROGDILayer : public OGRLayer
   public:
                         OGROGDILayer(OGROGDIDataSource *, const char *,
                                      ecs_Family);
-                        ~OGROGDILayer();
+                        virtual ~OGROGDILayer();
 
-    virtual void        SetSpatialFilter( OGRGeometry * );
-    virtual void        SetSpatialFilter( int iGeomField, OGRGeometry *poGeom )
+    virtual void        SetSpatialFilter( OGRGeometry * ) override;
+    virtual void        SetSpatialFilter( int iGeomField, OGRGeometry *poGeom ) override
                 { OGRLayer::SetSpatialFilter(iGeomField, poGeom); }
-    virtual OGRErr      SetAttributeFilter( const char *pszQuery );
+    virtual OGRErr      SetAttributeFilter( const char *pszQuery ) override;
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
 
-    OGRFeature         *GetFeature( GIntBig nFeatureId );
+    OGRFeature         *GetFeature( GIntBig nFeatureId ) override;
 
-    OGRFeatureDefn *    GetLayerDefn() { return m_poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return m_poFeatureDefn; }
 
-    GIntBig             GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
   private:
     void                BuildFeatureDefn();
@@ -90,7 +93,7 @@ class OGROGDILayer : public OGRLayer
 /*                          OGROGDIDataSource                           */
 /************************************************************************/
 
-class OGROGDIDataSource : public OGRDataSource
+class OGROGDIDataSource final: public OGRDataSource
 {
     OGROGDILayer      **m_papoLayers;
     int                 m_nLayers;
@@ -113,16 +116,16 @@ class OGROGDIDataSource : public OGRDataSource
                         OGROGDIDataSource();
                         ~OGROGDIDataSource();
 
-    int                 Open( const char *, int bTestOpen );
+    int                 Open( const char * );
 
-    const char          *GetName() { return m_pszFullName; }
-    int                 GetLayerCount() { return m_nLayers; }
-    OGRLayer            *GetLayer( int );
+    const char          *GetName() override { return m_pszFullName; }
+    int                 GetLayerCount() override { return m_nLayers; }
+    OGRLayer            *GetLayer( int ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
     ecs_Region         *GetGlobalBounds() { return &m_sGlobalBounds; }
-    OGRSpatialReference*GetSpatialRef() { return m_poSpatialRef; }
+    OGRSpatialReference*DSGetSpatialRef() { return m_poSpatialRef; }
     int                 GetClientID() { return m_nClientID; }
 
     OGROGDILayer       *GetCurrentLayer() { return m_poCurrentLayer; }
@@ -135,16 +138,15 @@ class OGROGDIDataSource : public OGRDataSource
 /*                            OGROGDIDriver                             */
 /************************************************************************/
 
-class OGROGDIDriver : public OGRSFDriver
+class OGROGDIDriver final: public OGRSFDriver
 {
   public:
                 ~OGROGDIDriver();
 
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
+    const char *GetName() override;
+    OGRDataSource *Open( const char *, int ) override;
 
-    int         TestCapability( const char * );
+    int         TestCapability( const char * ) override;
 };
-
 
 #endif /* OGDOGDI_H_INCLUDED */

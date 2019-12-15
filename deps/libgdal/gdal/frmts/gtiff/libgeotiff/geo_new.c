@@ -14,6 +14,8 @@
  *
  **********************************************************************/
 
+#include <stdarg.h>
+
 #include "geotiffio.h"   /* public interface        */
 #include "geo_tiffp.h" /* external TIFF interface */
 #include "geo_keyp.h"  /* private interface       */
@@ -23,6 +25,21 @@
 static int ReadKey(GTIF* gt, TempKeyData* tempData,
                    KeyEntry* entptr, GeoKey* keyptr);
 
+
+static void GTIFErrorFunction(GTIF* gt, int level, const char* msg, ...)
+{
+    va_list list;
+    (void)gt;
+
+    va_start(list, msg);
+    if( level == LIBGEOTIFF_WARNING )
+        fprintf(stderr, "Warning :");
+    else if( level == LIBGEOTIFF_ERROR )
+        fprintf(stderr, "Error :");
+    vfprintf(stderr, msg, list);
+    fprintf(stderr, "\n");
+    va_end(list);
+}
 
 /**********************************************************************
  *
@@ -54,10 +71,18 @@ for new TIFF files that will have GeoTIFF tags written to them.<p>
 GTIF* GTIFNew(void *tif)
 
 {
+    return GTIFNewEx( tif, GTIFErrorFunction, NULL );
+}
+
+GTIF* GTIFNewEx(void *tif,
+                GTErrorCallback error_callback, void* user_data)
+
+{
     TIFFMethod default_methods;
     _GTIFSetDefaultTIFF( &default_methods );
 
-    return GTIFNewWithMethods( tif, &default_methods );
+    return GTIFNewWithMethodsEx( tif, &default_methods,
+                                 error_callback, user_data );
 }
 
 GTIF *GTIFNewSimpleTags( void *tif )
@@ -79,7 +104,13 @@ GTIF *GTIFNewSimpleTags( void *tif )
 
 GTIF* GTIFNewWithMethods(void *tif, TIFFMethod* methods)
 {
-    GTIF* gt=(GTIF*)0;
+    return GTIFNewWithMethodsEx(tif, methods, GTIFErrorFunction, NULL);
+}
+
+GTIF* GTIFNewWithMethodsEx(void *tif, TIFFMethod* methods,
+                           GTErrorCallback error_callback, void* user_data)
+{
+    GTIF* gt;
     int count,bufcount,nIndex;
     GeoKey *keyptr;
     pinfo_t *data;
@@ -90,6 +121,8 @@ GTIF* GTIFNewWithMethods(void *tif, TIFFMethod* methods)
     memset( &tempData, 0, sizeof(tempData) );
     gt = (GTIF*)_GTIFcalloc( sizeof(GTIF));
     if (!gt) goto failure;
+    gt->gt_error_callback = error_callback;
+    gt->gt_user_data = user_data;
 
     /* install TIFF file and I/O methods */
     gt->gt_tif = (tiff_t *)tif;
@@ -145,6 +178,8 @@ GTIF* GTIFNewWithMethods(void *tif, TIFFMethod* methods)
     }
     else
     {
+        if( gt->gt_ndoubles > MAX_VALUES )
+            goto failure;
         /* resize data array so it can be extended if needed */
         gt->gt_double = (double*) _GTIFrealloc(gt->gt_double,
                                                (MAX_VALUES)*sizeof(double));
@@ -284,4 +319,9 @@ static int ReadKey(GTIF* gt, TempKeyData* tempData,
     keyptr->gk_size = _gtiff_size[keyptr->gk_type];
 
     return 1; /* success */
+}
+
+void *GTIFGetUserData(GTIF *gtif)
+{
+    return gtif->gt_user_data;
 }

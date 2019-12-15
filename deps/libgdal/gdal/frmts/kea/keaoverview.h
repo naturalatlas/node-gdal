@@ -1,5 +1,5 @@
 /*
- * $Id: keaoverview.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: keaoverview.h 1dd8a744bbfec8b849371abec5cd44f729eecb03 2018-05-06 21:11:29 +0200 Even Rouault $
  *  keaoverview.h
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -36,7 +36,7 @@
 
 // overview class. Derives from our band class
 // and just overrides the read/write block functions
-class KEAOverview : public KEARasterBand
+class KEAOverview final: public KEARasterBand
 {
     int         m_nOverviewIndex; // the index of this overview
 public:
@@ -46,17 +46,17 @@ public:
     ~KEAOverview();
 
     // virtual methods for RATs - not implemented for overviews
-    GDALRasterAttributeTable *GetDefaultRAT();
+    GDALRasterAttributeTable *GetDefaultRAT() override;
 
-    CPLErr SetDefaultRAT(const GDALRasterAttributeTable *poRAT);
+    CPLErr SetDefaultRAT(const GDALRasterAttributeTable *poRAT) override;
 
     // note that Color Table stuff implemented in base class
     // so could be some duplication if overview asked for color table
 
 protected:
     // we just override these functions from KEARasterBand
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual CPLErr IWriteBlock( int, int, void * );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual CPLErr IWriteBlock( int, int, void * ) override;
 };
 
 #endif //KEAOVERVIEW_H

@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -19,11 +19,11 @@
 #include <geos/operation/overlay/snap/SnapOverlayOp.h>
 #include <geos/operation/overlay/snap/GeometrySnapper.h>
 #include <geos/precision/CommonBitsRemover.h>
-#include <geos/geom/Geometry.h> 
+#include <geos/geom/Geometry.h>
 
 #include <cassert>
 #include <limits> // for numeric_limits
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #ifndef GEOS_DEBUG
 #define GEOS_DEBUG 0
@@ -41,33 +41,33 @@ namespace snap { // geos.operation.overlay.snap
 void
 SnapOverlayOp::computeSnapTolerance()
 {
-	snapTolerance = GeometrySnapper::computeOverlaySnapTolerance(geom0,
-	                                                             geom1);
+    snapTolerance = GeometrySnapper::computeOverlaySnapTolerance(geom0,
+                    geom1);
 
-	// cout << "Snap tol = " <<  snapTolerance << endl;
+    // cout << "Snap tol = " <<  snapTolerance << endl;
 }
 
 /* public */
-auto_ptr<Geometry>
+unique_ptr<Geometry>
 SnapOverlayOp::getResultGeometry(OverlayOp::OpCode opCode)
 {
-	geom::GeomPtrPair prepGeom;
-	snap(prepGeom);
-	GeomPtr result ( OverlayOp::overlayOp(prepGeom.first.get(),
-	                                      prepGeom.second.get(), opCode) );
-	prepareResult(*result);
-	return result;
+    geom::GeomPtrPair prepGeom;
+    snap(prepGeom);
+    GeomPtr result(OverlayOp::overlayOp(prepGeom.first.get(),
+                                        prepGeom.second.get(), opCode));
+    prepareResult(*result);
+    return result;
 }
 
 /* private */
 void
 SnapOverlayOp::snap(geom::GeomPtrPair& snapGeom)
 {
-	geom::GeomPtrPair remGeom;
-	removeCommonBits(geom0, geom1, remGeom);
+    geom::GeomPtrPair remGeom;
+    removeCommonBits(geom0, geom1, remGeom);
 
-	GeometrySnapper::snap(*remGeom.first, *remGeom.second,
-	                      snapTolerance, snapGeom);
+    GeometrySnapper::snap(*remGeom.first, *remGeom.second,
+                          snapTolerance, snapGeom);
 
     // MD - may want to do this at some point, but it adds cycles
 //    checkValid(snapGeom[0]);
@@ -83,16 +83,18 @@ SnapOverlayOp::snap(geom::GeomPtrPair& snapGeom)
 
 /* private */
 void
-SnapOverlayOp::removeCommonBits(const geom::Geometry& geom0,
-                                const geom::Geometry& geom1,
-				geom::GeomPtrPair& remGeom)
+SnapOverlayOp::removeCommonBits(const geom::Geometry& p_geom0,
+                                const geom::Geometry& p_geom1,
+                                geom::GeomPtrPair& remGeom)
 {
-	cbr.reset(new precision::CommonBitsRemover());
-	cbr->add(&geom0);
-	cbr->add(&geom1);
+    cbr.reset(new precision::CommonBitsRemover());
+    cbr->add(&p_geom0);
+    cbr->add(&p_geom1);
 
-	remGeom.first.reset( cbr->removeCommonBits(geom0.clone()) );
-	remGeom.second.reset( cbr->removeCommonBits(geom1.clone()) );
+    remGeom.first = p_geom0.clone();
+    cbr->removeCommonBits(remGeom.first.get());
+    remGeom.second = p_geom1.clone();
+    cbr->removeCommonBits(remGeom.second.get());
 }
 
 /*private*/

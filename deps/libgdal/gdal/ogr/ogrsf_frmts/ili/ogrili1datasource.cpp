@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrili1datasource.cpp 32746 2016-01-05 05:18:43Z goatbar $
  *
  * Project:  Interlis 1 Translator
  * Purpose:  Implements OGRILI1DataSource class.
@@ -36,20 +35,20 @@
 
 #include <string>
 
-CPL_CVSID("$Id: ogrili1datasource.cpp 32746 2016-01-05 05:18:43Z goatbar $");
+CPL_CVSID("$Id: ogrili1datasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                         OGRILI1DataSource()                         */
 /************************************************************************/
 
 OGRILI1DataSource::OGRILI1DataSource() :
-    pszName(NULL),
+    pszName(nullptr),
     poImdReader(new ImdReader(1)),
-    poReader(NULL),
-    fpTransfer(NULL),
-    pszTopic(NULL),
+    poReader(nullptr),
+    fpTransfer(nullptr),
+    pszTopic(nullptr),
     nLayers(0),
-    papoLayers(NULL)
+    papoLayers(nullptr)
 {}
 
 /************************************************************************/
@@ -71,11 +70,11 @@ OGRILI1DataSource::~OGRILI1DataSource()
     delete poImdReader;
     if( fpTransfer )
     {
-        VSIFPrintf( fpTransfer, "ETAB\n" );
-        VSIFPrintf( fpTransfer, "ETOP\n" );
-        VSIFPrintf( fpTransfer, "EMOD\n" );
-        VSIFPrintf( fpTransfer, "ENDE\n" );
-        fclose(fpTransfer);
+        VSIFPrintfL( fpTransfer, "ETAB\n" );
+        VSIFPrintfL( fpTransfer, "ETOP\n" );
+        VSIFPrintfL( fpTransfer, "EMOD\n" );
+        VSIFPrintfL( fpTransfer, "ENDE\n" );
+        VSIFCloseL(fpTransfer);
     }
 }
 
@@ -94,7 +93,7 @@ int OGRILI1DataSource::Open( const char * pszNewName,
 
     std::string osBasename;
     std::string osModelFilename;
-    if( CSLFetchNameValue(papszOpenOptionsIn, "MODEL") != NULL )
+    if( CSLFetchNameValue(papszOpenOptionsIn, "MODEL") != nullptr )
     {
         osBasename = pszNewName;
         osModelFilename = CSLFetchNameValue(papszOpenOptionsIn, "MODEL");
@@ -102,10 +101,15 @@ int OGRILI1DataSource::Open( const char * pszNewName,
     else
     {
         char **filenames = CSLTokenizeString2( pszNewName, ",", 0 );
-
+        int nCount = CSLCount(filenames);
+        if( nCount == 0 )
+        {
+            CSLDestroy(filenames);
+            return FALSE;
+        }
         osBasename = filenames[0];
 
-        if( CSLCount(filenames) > 1 )
+        if( nCount > 1 )
             osModelFilename = filenames[1];
 
         CSLDestroy( filenames );
@@ -114,8 +118,8 @@ int OGRILI1DataSource::Open( const char * pszNewName,
 /* -------------------------------------------------------------------- */
 /*      Open the source file.                                           */
 /* -------------------------------------------------------------------- */
-    FILE *fp = VSIFOpen( osBasename.c_str(), "r" );
-    if( fp == NULL )
+    VSILFILE *fp = VSIFOpenL( osBasename.c_str(), "r" );
+    if( fp == nullptr )
     {
         if( !bTestOpen )
             CPLError( CE_Failure, CPLE_OpenFailed,
@@ -133,15 +137,15 @@ int OGRILI1DataSource::Open( const char * pszNewName,
 
     if( bTestOpen )
     {
-        int nLen = (int)VSIFRead( szHeader, 1, sizeof(szHeader), fp );
+        int nLen = (int)VSIFReadL( szHeader, 1, sizeof(szHeader), fp );
         if (nLen == sizeof(szHeader))
             szHeader[sizeof(szHeader)-1] = '\0';
         else
             szHeader[nLen] = '\0';
 
-        if( strstr(szHeader,"SCNT") == NULL )
+        if( strstr(szHeader,"SCNT") == nullptr )
         {
-            VSIFClose( fp );
+            VSIFCloseL( fp );
             return FALSE;
         }
     }
@@ -150,10 +154,10 @@ int OGRILI1DataSource::Open( const char * pszNewName,
 /*      We assume now that it is ILI1.  Close and instantiate a          */
 /*      ILI1Reader on it.                                                */
 /* -------------------------------------------------------------------- */
-    VSIFClose( fp );
+    VSIFCloseL( fp );
 
     poReader = CreateILI1Reader();
-    if( poReader == NULL )
+    if( poReader == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "File %s appears to be ILI1 but the ILI1 reader cannot\n"
@@ -181,7 +185,7 @@ int OGRILI1DataSource::Open( const char * pszNewName,
     poReader->ReadFeatures();
 
     if( bResetConfigOption )
-        CPLSetThreadLocalConfigOption("OGR_ARC_STEPSIZE", NULL);
+        CPLSetThreadLocalConfigOption("OGR_ARC_STEPSIZE", nullptr);
 
     return TRUE;
 }
@@ -206,9 +210,9 @@ int OGRILI1DataSource::Create( const char *pszFilename,
 /* -------------------------------------------------------------------- */
 /*      Create the empty file.                                          */
 /* -------------------------------------------------------------------- */
-    fpTransfer = VSIFOpen( osBasename.c_str(), "w+b" );
+    fpTransfer = VSIFOpenL( osBasename.c_str(), "w+b" );
 
-    if( fpTransfer == NULL )
+    if( fpTransfer == nullptr )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "Failed to create %s:\n%s",
@@ -233,13 +237,13 @@ int OGRILI1DataSource::Create( const char *pszFilename,
 /* -------------------------------------------------------------------- */
 /*      Write headers                                                   */
 /* -------------------------------------------------------------------- */
-    VSIFPrintf( fpTransfer, "SCNT\n" );
-    VSIFPrintf( fpTransfer, "OGR/GDAL %s, INTERLIS Driver\n",
-                GDAL_RELEASE_NAME );
-    VSIFPrintf( fpTransfer, "////\n" );
-    VSIFPrintf( fpTransfer, "MTID INTERLIS1\n" );
+    VSIFPrintfL( fpTransfer, "SCNT\n" );
+    VSIFPrintfL( fpTransfer, "OGR/GDAL %s, INTERLIS Driver\n",
+                 GDALVersionInfo("RELEASE_NAME") );
+    VSIFPrintfL( fpTransfer, "////\n" );
+    VSIFPrintfL( fpTransfer, "MTID INTERLIS1\n" );
     const char* modelname = poImdReader->mainModelName.c_str();
-    VSIFPrintf( fpTransfer, "MODL %s\n", modelname );
+    VSIFPrintfL( fpTransfer, "MODL %s\n", modelname );
 
     return TRUE;
 }
@@ -249,7 +253,7 @@ static char *ExtractTopic(const char * pszLayerName)
   const char *table = strchr(pszLayerName, '_');
   while (table && table[1] !=  '_') table = strchr(table+1, '_');
   return (table) ? CPLScanString(
-      pszLayerName, static_cast<int>(table-pszLayerName), FALSE, FALSE) : NULL;
+      pszLayerName, static_cast<int>(table-pszLayerName), FALSE, FALSE) : nullptr;
 }
 
 /************************************************************************/
@@ -258,27 +262,27 @@ static char *ExtractTopic(const char * pszLayerName)
 
 OGRLayer *
 OGRILI1DataSource::ICreateLayer( const char * pszLayerName,
-                               CPL_UNUSED OGRSpatialReference *poSRS,
-                               OGRwkbGeometryType eType,
-                               CPL_UNUSED char ** papszOptions )
+                                OGRSpatialReference * /*poSRS*/,
+                                OGRwkbGeometryType eType,
+                                char ** /* papszOptions */ )
 {
     FeatureDefnInfo featureDefnInfo
         = poImdReader->GetFeatureDefnInfo(pszLayerName);
     const char *table = pszLayerName;
     char * topic = ExtractTopic(pszLayerName);
-    if (nLayers) VSIFPrintf( fpTransfer, "ETAB\n" );
+    if (nLayers) VSIFPrintfL( fpTransfer, "ETAB\n" );
     if (topic)
     {
       table = pszLayerName+strlen(topic)+2; //after "__"
-      if (pszTopic == NULL || !EQUAL(topic, pszTopic))
+      if (pszTopic == nullptr || !EQUAL(topic, pszTopic))
       {
         if (pszTopic)
         {
-          VSIFPrintf( fpTransfer, "ETOP\n" );
+          VSIFPrintfL( fpTransfer, "ETOP\n" );
           CPLFree(pszTopic);
         }
         pszTopic = topic;
-        VSIFPrintf( fpTransfer, "TOPI %s\n", pszTopic );
+        VSIFPrintfL( fpTransfer, "TOPI %s\n", pszTopic );
       }
       else
       {
@@ -287,10 +291,10 @@ OGRILI1DataSource::ICreateLayer( const char * pszLayerName,
     }
     else
     {
-      if (pszTopic == NULL) pszTopic = CPLStrdup("Unknown");
-      VSIFPrintf( fpTransfer, "TOPI %s\n", pszTopic );
+      if (pszTopic == nullptr) pszTopic = CPLStrdup("Unknown");
+      VSIFPrintfL( fpTransfer, "TOPI %s\n", pszTopic );
     }
-    VSIFPrintf( fpTransfer, "TABL %s\n", table );
+    VSIFPrintfL( fpTransfer, "TABL %s\n", table );
 
     OGRFeatureDefn* poFeatureDefn = new OGRFeatureDefn(table);
     poFeatureDefn->SetGeomType( eType );
@@ -327,6 +331,12 @@ int OGRILI1DataSource::TestCapability( const char * pszCap )
 
 OGRLayer *OGRILI1DataSource::GetLayer( int iLayer )
 {
+  if( !poReader )
+  {
+      if( iLayer < 0 || iLayer >= nLayers )
+          return nullptr;
+      return papoLayers[iLayer];
+  }
   return poReader->GetLayer( iLayer );
 }
 
@@ -336,6 +346,12 @@ OGRLayer *OGRILI1DataSource::GetLayer( int iLayer )
 
 OGRILI1Layer *OGRILI1DataSource::GetLayerByName( const char* pszLayerName )
 {
+  if( !poReader )
+  {
+      return reinterpret_cast<OGRILI1Layer *>(
+          OGRDataSource::GetLayerByName(pszLayerName));
+  }
+
   return reinterpret_cast<OGRILI1Layer *>(
       poReader->GetLayerByName( pszLayerName ) );
 }

@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -22,16 +22,18 @@
 namespace geos {
 namespace geom { // geos::geom
 
-void GeometryComponentFilter::filter_rw(Geometry *geom)
+void
+GeometryComponentFilter::filter_rw(Geometry* geom)
 {
-	::geos::ignore_unused_variable_warning(geom);
-	assert(0);
+    ::geos::ignore_unused_variable_warning(geom);
+    assert(0);
 }
 
-void GeometryComponentFilter::filter_ro(const Geometry *geom)
+void
+GeometryComponentFilter::filter_ro(const Geometry* geom)
 {
-	::geos::ignore_unused_variable_warning(geom);
-	assert(0);
+    ::geos::ignore_unused_variable_warning(geom);
+    assert(0);
 }
 
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: EnvisatFile.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: EnvisatFile.c 4c86d24f4f400bc03425297f80fa72e62237b715 2019-03-23 23:54:29 +0100 Even Rouault $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Low Level Envisat file access (read/write) API.
@@ -35,7 +35,7 @@
 #  include "cpl_conv.h"
 #  include "EnvisatFile.h"
 
-CPL_CVSID("$Id: EnvisatFile.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: EnvisatFile.c 4c86d24f4f400bc03425297f80fa72e62237b715 2019-03-23 23:54:29 +0100 Even Rouault $")
 
 #else
 #  include "APP/app.h"
@@ -280,7 +280,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
 
     if( VSIFReadL( mph_data, 1, MPH_SIZE, fp ) != MPH_SIZE )
     {
-        CPLFree( self );
+        EnvisatFile_Close( self );
         SendError( "VSIFReadL() for mph failed." );
         return FAILURE;
     }
@@ -290,7 +290,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
                                &(self->mph_count),
                                &(self->mph_entries) ) == FAILURE )
     {
-        CPLFree( self );
+        EnvisatFile_Close( self );
         return FAILURE;
     }
 
@@ -322,17 +322,21 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
     {
         SendError( "File does not appear to have SPH,"
                    " SPH_SIZE not set, or zero." );
-        CPLFree( self );
+        EnvisatFile_Close( self );
         return FAILURE;
     }
 
     sph_data = (char *) CPLMalloc(sph_size + 1 );
     if( sph_data == NULL )
+    {
+        EnvisatFile_Close( self );
         return FAILURE;
+    }
 
     if( (int) VSIFReadL( sph_data, 1, sph_size, fp ) != sph_size )
     {
-        CPLFree( self );
+        CPLFree( sph_data );
+        EnvisatFile_Close( self );
         SendError( "VSIFReadL() for sph failed." );
         return FAILURE;
     }
@@ -349,9 +353,12 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
                                &(self->sph_count),
                                &(self->sph_entries) ) == FAILURE )
     {
-        CPLFree( self );
+        CPLFree( sph_data );
+        EnvisatFile_Close( self );
         return FAILURE;
     }
+
+    CPLFree( sph_data );
 
     /*
      * Parse the Dataset Definitions.
@@ -362,7 +369,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
     if( num_dsd > 0 && ds_data == NULL )
     {
         SendError( "DSDs indicated in MPH, but not found in SPH." );
-        CPLFree( self );
+        EnvisatFile_Close( self );
         return FAILURE;
     }
 
@@ -370,7 +377,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         CPLCalloc(sizeof(EnvisatDatasetInfo*),num_dsd);
     if( self->ds_info == NULL )
     {
-        CPLFree( self );
+        EnvisatFile_Close( self );
         return FAILURE;
     }
 
@@ -390,7 +397,7 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         if( S_NameValueList_Parse( dsd_data, 0,
                                    &dsdh_count, &dsdh_entries ) == FAILURE )
         {
-            CPLFree( self );
+            EnvisatFile_Close( self );
             return FAILURE;
         }
 
@@ -426,8 +433,6 @@ int EnvisatFile_Open( EnvisatFile **self_ptr,
         self->ds_info[i] = ds_info;
         self->ds_count++;
     }
-
-    CPLFree( sph_data );
 
     /*
      * Return successfully.
@@ -908,6 +913,8 @@ int EnvisatFile_SetKeyValueAsString( EnvisatFile *self,
 {
     int	entry_count, key_index;
     EnvisatNameValue **entries;
+    size_t nValueLen;
+    size_t nEntryValueLen;
 
     if( !self->updatable )
     {
@@ -946,16 +953,16 @@ int EnvisatFile_SetKeyValueAsString( EnvisatFile *self,
     }
 
     self->header_dirty = 1;
-    if( strlen(value) > strlen(entries[key_index]->value) )
+    nValueLen = strlen(value);
+    nEntryValueLen = strlen(entries[key_index]->value);
+    if( nValueLen >= nEntryValueLen )
     {
-        strncpy( entries[key_index]->value, value,
-                 strlen(entries[key_index]->value) );
+        memcpy( entries[key_index]->value, value, nEntryValueLen );
     }
     else
     {
-        memset( entries[key_index]->value, ' ',
-                strlen(entries[key_index]->value) );
-        strncpy( entries[key_index]->value, value, strlen(value) );
+        memcpy( entries[key_index]->value, value, nValueLen );
+        memset( entries[key_index]->value + nValueLen, ' ', nEntryValueLen - nValueLen );
     }
 
     return SUCCESS;
@@ -1234,7 +1241,7 @@ int EnvisatFile_GetDatasetIndex( EnvisatFile *self, const char *ds_name )
 
     /*
      * Padd the name.  While the normal product spec says the DS_NAME will
-     * be 28 characters, I try to pad more than this incase the specification
+     * be 28 characters, I try to pad more than this in case the specification
      * is changed.
      */
     strncpy( padded_ds_name, ds_name, sizeof(padded_ds_name) );
@@ -1752,6 +1759,8 @@ int S_NameValueList_Parse( const char *text, int text_offset,
         int     src_char = 0;
         int     line_offset = 0;
         EnvisatNameValue *entry = NULL;
+        /* workaround cppcheck false positive by using a pointer */
+        char* pszLine = line;
 
         /*
          * Extract one line of text into the "line" buffer, and remove the
@@ -1771,10 +1780,10 @@ int S_NameValueList_Parse( const char *text, int text_offset,
                 return FAILURE;
             }
 
-            line[line_len++] = *(next_text++);
+            pszLine[line_len++] = *(next_text++);
         }
 
-        line[line_len] = '\0';
+        pszLine[line_len] = '\0';
         if( *next_text == '\n' )
             next_text++;
 
