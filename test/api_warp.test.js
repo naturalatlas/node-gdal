@@ -478,7 +478,8 @@ describe('gdal', function() {
 
 				assert.throws(function() {
 					gdal.suggestedWarpOutput(options);
-				}, /Cannot find coordinate operations from/);
+					// gdal has a different error message between versions
+				}, /(Cannot find coordinate operations from)|(Mercator_1SP)/);
 			});
 		} else {
 			it.skip('should throw error if GDAL can\'t create transformer', function() {});

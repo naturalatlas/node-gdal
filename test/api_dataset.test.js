@@ -13,8 +13,6 @@ var NAD83_WKT = 'PROJCS["NAD_1983_UTM_Zone_10N",' +
 			    'PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],' +
 			    'UNIT["Meter",1.0]]';
 
-var NAD83_PARSED = 'PROJCS["NAD83 / UTM zone 10N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-123],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]'
-
 describe('gdal.Dataset', function() {
 	afterEach(gc);
 
@@ -315,9 +313,12 @@ describe('gdal.Dataset', function() {
 				});
 				it('should set projection', function() {
 					var ds = gdal.open(fileUtils.clone(__dirname + '/data/dem_azimuth50_pa.img'));
-
+					var expected = [
+						'PROJCS["NAD83 / UTM zone 10N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-123],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]', // new gdal
+						'PROJCS["NAD_1983_UTM_Zone_10N",GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",-123.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_of_Origin",0.0],UNIT["Meter",1.0]]' // old gdal
+					];
 					ds.srs = gdal.SpatialReference.fromWKT(NAD83_WKT);
-					assert.equal(ds.srs.toWKT(), NAD83_PARSED);
+					assert.include(expected, ds.srs.toWKT());
 				});
 				it('should throw error if dataset doesnt support setting srs', function() {
 					var ds = gdal.open(__dirname + '/data/shp/sample.shp');
