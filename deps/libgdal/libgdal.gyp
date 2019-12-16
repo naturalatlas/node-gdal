@@ -202,10 +202,6 @@
 					"sources": [
 						"gdal/port/cpl_odbc.cpp"
 					],
-					"defines": [
-			          "WIN32",
-					  "HAVE_LONG_LONG"
-			        ],
 					"link_settings": {
 						"libraries": [
 							"-lws2_32.lib",
