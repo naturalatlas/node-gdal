@@ -20,20 +20,20 @@ if [[ ! -f gdal-${GDAL_VERSION}.tar.gz ]]; then
 fi
 tar -xzf gdal-${GDAL_VERSION}.tar.gz
 mv gdal-${GDAL_VERSION} $dir_gdal
-
+mv $dir_gdal/gcore/gdal_version.h.in $dir_gdal/gcore/gdal_version.h
 #
 # apply patches
 #
 
-#patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
-#patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
-patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
-patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
-patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
-patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
-patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
-patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
-patch gdal/frmts/sdts/sdts2shp.cpp < patches/frmts_sdts_switches.diff # bad syntax
+#patch $dir_gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
+#patch $dir_gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
+patch $dir_gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
+patch $dir_gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
+patch $dir_gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
+patch $dir_gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
+patch $dir_gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
+patch $dir_gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
+patch $dir_gdal/frmts/sdts/sdts2shp.cpp < patches/frmts_sdts_switches.diff # bad syntax
 
 #
 # create format gyps
