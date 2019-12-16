@@ -203,7 +203,8 @@
 						"gdal/port/cpl_odbc.cpp"
 					],
 					"defines": [
-			          "WIN32"
+			          "WIN32",
+					  "HAVE_LONG_LONG"
 			        ],
 					"link_settings": {
 						"libraries": [
