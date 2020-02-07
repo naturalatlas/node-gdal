@@ -41,7 +41,7 @@
 #include "cpl_json_streaming_parser.h"
 #include <ogr_api.h>
 
-CPL_CVSID("$Id: ogrgeojsonreader.cpp 43762b509f8e237ed57689e733e36eb1266e4f0c 2019-10-10 17:54:41 +0200 Momtchil Momtchev $")
+CPL_CVSID("$Id: ogrgeojsonreader.cpp b471cd08d02f7f05d658fe7da57f30f1b29d3b52 2020-01-07 22:30:27 +0100 Even Rouault $")
 
 static
 OGRGeometry* OGRGeoJSONReadGeometry( json_object* poObj,
@@ -197,6 +197,15 @@ void OGRGeoJSONBaseReader::SetStoreNativeData( bool bStoreNativeData )
 void OGRGeoJSONBaseReader::SetArrayAsString( bool bArrayAsString )
 {
     bArrayAsString_ = bArrayAsString;
+}
+
+/************************************************************************/
+/*                           SetDateAsString                           */
+/************************************************************************/
+
+void OGRGeoJSONBaseReader::SetDateAsString( bool bDateAsString )
+{
+    bDateAsString_ = bDateAsString;
 }
 
 /************************************************************************/
@@ -1450,6 +1459,11 @@ OGRSpatialReference* OGRGeoJSONReadSpatialReference( json_object* poObj )
 
             const char* pszName = json_object_get_string( poNameURL );
 
+            // Mostly to emulate GDAL 2.x behaviour
+            // See https://github.com/OSGeo/gdal/issues/2035
+            if( EQUAL(pszName, "urn:ogc:def:crs:OGC:1.3:CRS84") )
+                pszName = "EPSG:4326";
+
             poSRS = new OGRSpatialReference();
             poSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
             if( OGRERR_NONE != poSRS->SetFromUserInput( pszName ) )
@@ -1648,6 +1662,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
     bool bFlattenNestedAttributes,
     char chNestedAttributeSeparator,
     bool bArrayAsString,
+    bool bDateAsString,
     std::set<int>& aoSetUndeterminedTypeFields )
 {
     if( bFlattenNestedAttributes &&
@@ -1670,6 +1685,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
                                                  true,
                                                  chNestedAttributeSeparator,
                                                  bArrayAsString,
+                                                 bDateAsString,
                                                  aoSetUndeterminedTypeFields);
             }
             else
@@ -1677,6 +1693,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
                 OGRGeoJSONReaderAddOrUpdateField(poDefn, osAttrName, it.val,
                                                  false, 0,
                                                  bArrayAsString,
+                                                 bDateAsString,
                                                  aoSetUndeterminedTypeFields);
             }
         }
@@ -1693,7 +1710,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
         fldDefn.SetSubType(eSubType);
         if( eSubType == OFSTBoolean )
             fldDefn.SetWidth(1);
-        if( fldDefn.GetType() == OFTString )
+        if( fldDefn.GetType() == OFTString && !bDateAsString )
         {
             fldDefn.SetType(GeoJSONStringPropertyToFieldType( poVal ));
         }
@@ -1714,7 +1731,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
                 GeoJSONPropertyToFieldType( poVal, eSubType, bArrayAsString );
             poFDefn->SetSubType(OFSTNone);
             poFDefn->SetType(eNewType);
-            if( poFDefn->GetType() == OFTString )
+            if( poFDefn->GetType() == OFTString && !bDateAsString )
             {
                 poFDefn->SetType(GeoJSONStringPropertyToFieldType( poVal ));
             }
@@ -1894,7 +1911,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
             OGRFieldSubType eSubType;
             OGRFieldType eNewType =
                 GeoJSONPropertyToFieldType( poVal, eSubType, bArrayAsString );
-            if( eNewType == OFTString )
+            if( eNewType == OFTString && !bDateAsString )
                 eNewType = GeoJSONStringPropertyToFieldType( poVal );
             if( eType != eNewType )
             {
@@ -2102,6 +2119,7 @@ bool OGRGeoJSONBaseReader::GenerateFeatureDefn( OGRLayer* poLayer,
                                              bFlattenNestedAttributes_,
                                              chNestedAttributeSeparator_,
                                              bArrayAsString_,
+                                             bDateAsString_,
                                              aoSetUndeterminedTypeFields_);
         }
 
@@ -2136,6 +2154,7 @@ bool OGRGeoJSONBaseReader::GenerateFeatureDefn( OGRLayer* poLayer,
                                                     bFlattenNestedAttributes_,
                                                     chNestedAttributeSeparator_,
                                                     bArrayAsString_,
+                                                    bDateAsString_,
                                                     aoSetUndeterminedTypeFields_);
                 }
             }

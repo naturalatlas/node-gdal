@@ -37,7 +37,7 @@
 #include "cpl_vsi.h"
 #include "hfa.h"
 
-CPL_CVSID("$Id: hfacompress.cpp 6ef13199b493973da285decbfcd5e2a763954b97 2018-06-07 05:46:42 -0400 luzpaz $")
+CPL_CVSID("$Id: hfacompress.cpp 8c1d039cc423641eee65e278fbadf2cf52e15062 2020-01-06 22:17:34 +0100 Even Rouault $")
 
 HFACompress::HFACompress( void *pData, GUInt32 nBlockSize, EPTType eDataType ) :
     m_pData(pData),
@@ -182,14 +182,14 @@ void HFACompress::makeCount( GUInt32 count, GByte *pCounter,
         pCounter[0] = static_cast<GByte>(count);
         *pnSizeCount = 1;
     }
-    else if( count < 0x8000 )
+    else if( count < 0x4000 )
     {
         pCounter[1] = count & 0xff;
         count /= 256;
         pCounter[0] = static_cast<GByte>(count | 0x40);
         *pnSizeCount = 2;
     }
-    else if( count < 0x800000 )
+    else if( count < 0x400000 )
     {
         pCounter[2] = count & 0xff;
         count /= 256;

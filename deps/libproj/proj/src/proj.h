@@ -153,8 +153,8 @@ extern "C" {
 
 /* The version numbers should be updated with every release! **/
 #define PROJ_VERSION_MAJOR 6
-#define PROJ_VERSION_MINOR 2
-#define PROJ_VERSION_PATCH 1
+#define PROJ_VERSION_MINOR 3
+#define PROJ_VERSION_PATCH 0
 
 extern char const PROJ_DLL pj_release[]; /* global release id string */
 
@@ -363,6 +363,7 @@ PJ PROJ_DLL *proj_create_crs_to_crs_from_pj(PJ_CONTEXT *ctx,
                                             PJ_AREA *area,
                                             const char* const *options);
 PJ PROJ_DLL *proj_normalize_for_visualization(PJ_CONTEXT *ctx, const PJ* obj);
+void PROJ_DLL proj_assign_context(PJ* pj, PJ_CONTEXT* ctx);
 PJ PROJ_DLL *proj_destroy (PJ *P);
 
 
@@ -478,8 +479,11 @@ typedef char **PROJ_STRING_LIST;
 /** \brief Guessed WKT "dialect". */
 typedef enum
 {
-    /** \ref WKT2_2018 */
-    PJ_GUESSED_WKT2_2018,
+    /** \ref WKT2_2019 */
+    PJ_GUESSED_WKT2_2019,
+
+    /** Deprecated alias for PJ_GUESSED_WKT2_2019 */
+    PJ_GUESSED_WKT2_2018 = PJ_GUESSED_WKT2_2019,
 
     /** \ref WKT2_2015 */
     PJ_GUESSED_WKT2_2015,
@@ -575,10 +579,14 @@ typedef enum
     PJ_WKT2_2015,
     /** cf osgeo::proj::io::WKTFormatter::Convention::WKT2_SIMPLIFIED */
     PJ_WKT2_2015_SIMPLIFIED,
-    /** cf osgeo::proj::io::WKTFormatter::Convention::WKT2_2018 */
-    PJ_WKT2_2018,
-    /** cf osgeo::proj::io::WKTFormatter::Convention::WKT2_2018_SIMPLIFIED */
-    PJ_WKT2_2018_SIMPLIFIED,
+    /** cf osgeo::proj::io::WKTFormatter::Convention::WKT2_2019 */
+    PJ_WKT2_2019,
+    /** Deprecated alias for PJ_WKT2_2019 */
+    PJ_WKT2_2018 = PJ_WKT2_2019,
+    /** cf osgeo::proj::io::WKTFormatter::Convention::WKT2_2019_SIMPLIFIED */
+    PJ_WKT2_2019_SIMPLIFIED,
+    /** Deprecated alias for PJ_WKT2_2019 */
+    PJ_WKT2_2018_SIMPLIFIED = PJ_WKT2_2019_SIMPLIFIED,
     /** cf osgeo::proj::io::WKTFormatter::Convention::WKT1_GDAL */
     PJ_WKT1_GDAL,
     /** cf osgeo::proj::io::WKTFormatter::Convention::WKT1_ESRI */
@@ -827,6 +835,10 @@ PJ_OBJ_LIST PROJ_DLL *proj_get_non_deprecated(PJ_CONTEXT *ctx,
 
 int PROJ_DLL proj_is_equivalent_to(const PJ *obj, const PJ *other,
                                        PJ_COMPARISON_CRITERION criterion);
+
+int PROJ_DLL proj_is_equivalent_to_with_ctx(PJ_CONTEXT *ctx,
+                                            const PJ *obj, const PJ *other,
+                                            PJ_COMPARISON_CRITERION criterion);
 
 int PROJ_DLL proj_is_crs(const PJ *obj);
 
@@ -1082,6 +1094,9 @@ int PROJ_DLL proj_coordoperation_get_towgs84_values(PJ_CONTEXT *ctx,
                                                     double *out_values,
                                                     int value_count,
                                                     int emit_error_if_incompatible);
+
+PJ PROJ_DLL *proj_coordoperation_create_inverse(PJ_CONTEXT *ctx, const PJ *obj);
+
 
 int PROJ_DLL proj_concatoperation_get_step_count(PJ_CONTEXT *ctx,
                                                  const PJ *concatoperation);

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_pdf.h 65388217f11cfbfaba543663f17db14fe3b5aae0 2019-04-25 10:38:53 -0700 Paul Cornett $
+ * $Id: gdal_pdf.h 68a3c6855387daecff1eab460485cf9ff517a5a5 2020-01-12 23:57:04 +0100 Even Rouault $
  *
  * Project:  PDF Translator
  * Purpose:  Definition of classes for OGR .pdf driver.
@@ -189,6 +189,7 @@ class PDFDataset final: public GDALPamDataset
     friend class PDFRasterBand;
     friend class PDFImageRasterBand;
 
+    VSILFILE    *m_fp = nullptr;
     PDFDataset*  poParentDS;
 
     CPLString    osFilename;
@@ -265,7 +266,7 @@ class PDFDataset final: public GDALPamDataset
 #endif
 
 #if defined(HAVE_POPPLER)
-    void         ExploreLayersPoppler(GDALPDFArray* poArray, int nRecLevel, CPLString osTopLayer = "");
+    void         ExploreLayersPoppler(GDALPDFArray* poArray, CPLString osTopLayer, int nRecLevel, int& nVisited, bool& bStop);
     void         FindLayersPoppler();
     void         TurnLayersOnOffPoppler();
     std::vector<std::pair<CPLString, OptionalContentGroup*> > oLayerOCGListPoppler;
@@ -327,7 +328,7 @@ private:
     void                ExploreTree(GDALPDFObject* poObj,
                                     std::set< std::pair<int,int> > aoSetAlreadyVisited,
                                     int nRecLevel);
-    void                ExploreContents(GDALPDFObject* poObj, GDALPDFObject* poResources);
+    void                ExploreContents(GDALPDFObject* poObj, GDALPDFObject* poResources, int nDepth, int& nVisited, bool& bStop);
 
     void                ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
                                                              GDALPDFObject* poResources,

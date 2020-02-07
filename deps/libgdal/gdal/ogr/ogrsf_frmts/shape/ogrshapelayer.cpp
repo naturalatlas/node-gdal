@@ -57,7 +57,7 @@
 #include "shapefil.h"
 #include "shp_vsi.h"
 
-CPL_CVSID("$Id: ogrshapelayer.cpp 1b45a082709e8378f49bcc50fbd4edf00f9996c1 2019-09-18 13:14:30 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrshapelayer.cpp 1d78f57b1bf38a9021500e98ea929ef982c7e0c0 2019-12-16 12:00:15 +0100 Even Rouault $")
 
 static const char UNSUPPORTED_OP_READ_ONLY[] =
     "%s : unsupported operation on a read-only datasource.";
@@ -2219,7 +2219,7 @@ OGRSpatialReference *OGRShapeGeomFieldDefn::GetSpatialRef() const
                 int* panConfidence = nullptr;
                 OGRSpatialReferenceH* pahSRS =
                     poSRS->FindMatches(nullptr, &nEntries, &panConfidence);
-                if( nEntries == 1 && panConfidence[0] == 100 )
+                if( nEntries == 1 && panConfidence[0] >= 90 )
                 {
                     poSRS->Release();
                     poSRS = reinterpret_cast<OGRSpatialReference*>(pahSRS[0]);

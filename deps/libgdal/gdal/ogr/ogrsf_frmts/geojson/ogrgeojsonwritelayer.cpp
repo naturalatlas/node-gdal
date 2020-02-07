@@ -32,7 +32,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: ogrgeojsonwritelayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrgeojsonwritelayer.cpp ffec3571dd163c73ac70bec1d5cd4385ef324539 2020-01-07 04:30:14 -0700 Sean Gillies $")
 
 /************************************************************************/
 /*                         OGRGeoJSONWriteLayer()                       */
@@ -317,6 +317,7 @@ int OGRGeoJSONWriteLayer::TestCapability( const char* pszCap )
         return TRUE;
     else if( EQUAL(pszCap, OLCSequentialWrite) )
         return TRUE;
-
+    else if( EQUAL(pszCap, OLCStringsAsUTF8) )
+        return TRUE;
     return FALSE;
 }

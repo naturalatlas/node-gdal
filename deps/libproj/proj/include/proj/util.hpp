@@ -166,6 +166,13 @@ namespace proj {}
 
 NS_PROJ_START
 
+//! @cond Doxygen_Suppress
+namespace io {
+class DatabaseContext;
+using DatabaseContextPtr = std::shared_ptr<DatabaseContext>;
+}
+//! @endcond
+
 /** osgeo.proj.util namespace.
  *
  * \brief A set of base types from ISO 19103, \ref GeoAPI and other PROJ
@@ -206,7 +213,7 @@ template <class T> class optional {
     inline explicit optional(T &&val)
         : hasVal_(true), val_(std::forward<T>(val)) {}
 
-    inline optional(const optional &other) = default;
+    inline optional(const optional &) = default;
     inline optional(optional &&other) PROJ_NOEXCEPT
         : hasVal_(other.hasVal_),
           // cppcheck-suppress functionStatic
@@ -224,7 +231,7 @@ template <class T> class optional {
         val_ = std::forward<T>(val);
         return *this;
     }
-    inline optional &operator=(const optional &other) = default;
+    inline optional &operator=(const optional &) = default;
     inline optional &operator=(optional &&other) noexcept {
         hasVal_ = other.hasVal_;
         val_ = std::forward<T>(other.val_);
@@ -342,15 +349,18 @@ class PROJ_GCC_DLL IComparable {
         EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS,
     };
 
-    PROJ_DLL bool isEquivalentTo(const IComparable *other,
-                                 Criterion criterion = Criterion::STRICT) const;
+    PROJ_DLL bool
+    isEquivalentTo(const IComparable *other,
+                   Criterion criterion = Criterion::STRICT,
+                   const io::DatabaseContextPtr &dbContext = nullptr) const;
 
     PROJ_PRIVATE :
 
         //! @cond Doxygen_Suppress
         PROJ_INTERNAL virtual bool
-        _isEquivalentTo(const IComparable *other,
-                        Criterion criterion = Criterion::STRICT) const = 0;
+        _isEquivalentTo(
+            const IComparable *other, Criterion criterion = Criterion::STRICT,
+            const io::DatabaseContextPtr &dbContext = nullptr) const = 0;
     //! @endcond
 };
 

@@ -2,7 +2,12 @@
 #include <errno.h>
 #include "proj.h"
 #include "proj_internal.h"
-#include "proj_math.h"
+#include <math.h>
+
+/* Note: EPSG Guidance 7-2 describes a Vertical Perspective method (EPSG::9838),
+ * that extends 'nsper' with ellipsoidal development, and a ellipsoidal height
+ * of topocentric origin for the projection plan.
+ */
 
 namespace { // anonymous namespace
 enum Mode {

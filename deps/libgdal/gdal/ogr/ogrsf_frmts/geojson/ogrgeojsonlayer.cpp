@@ -48,7 +48,7 @@
 #include "ogr_geojson.h"
 #include "ogrgeojsonreader.h"
 
-CPL_CVSID("$Id: ogrgeojsonlayer.cpp 07b24f8cd487508a42b6ca5df2e5b96a85e9f204 2019-06-27 22:53:04 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrgeojsonlayer.cpp ffec3571dd163c73ac70bec1d5cd4385ef324539 2020-01-07 04:30:14 -0700 Sean Gillies $")
 
 /************************************************************************/
 /*                       STATIC MEMBERS DEFINITION                      */
@@ -454,6 +454,8 @@ int OGRGeoJSONLayer::TestCapability( const char * pszCap )
 {
     if( EQUAL(pszCap, OLCCurveGeometries) )
         return FALSE;
+    else if( EQUAL(pszCap, OLCStringsAsUTF8) )
+        return TRUE;
     return OGRMemLayer::TestCapability(pszCap);
 }
 

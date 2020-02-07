@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sqlite.h 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $
+ * $Id: ogr_sqlite.h 6abf7ec5dcbdc130599feb044698c34f0f91e617 2020-01-11 02:26:14 +0100 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions for OGR/SQLite driver.
@@ -895,6 +895,7 @@ class OGRSQLiteDataSource final : public OGRSQLiteBaseDataSource
     void                ReloadLayers();
 
 #ifdef HAVE_RASTERLITE2
+    void*               GetRL2Context() const { return m_hRL2Ctxt; }
     rl2CoveragePtr      GetRL2CoveragePtr() const { return m_pRL2Coverage; }
     GIntBig             GetSectionId() const { return m_nSectionId; }
     const double*       GetGeoTransform() const { return m_adfGeoTransform; }

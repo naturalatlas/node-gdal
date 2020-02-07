@@ -34,7 +34,7 @@
 
 #include "cpl_vsi.h"
 
-CPL_CVSID("$Id: pdfio.cpp d9ff536713c1bcaff00657f5fb9a94f36b92c0d8 2019-01-17 22:36:09 +0100 Even Rouault $")
+CPL_CVSID("$Id: pdfio.cpp 433cfa35e1b597384a5304b6d784523eeedc18e3 2019-12-12 22:58:55 +0100 Even Rouault $")
 
 /* Poppler 0.31.0 is the first one that needs to know the file size */
 static vsi_l_offset VSIPDFFileStreamGetSize(VSILFILE* f)
@@ -107,8 +107,6 @@ VSIPDFFileStream::~VSIPDFFileStream()
     if (poParent == nullptr)
     {
         delete poFilename;
-        if (f)
-            VSIFCloseL(f);
     }
 }
 
@@ -170,6 +168,9 @@ getStart_ret_type VSIPDFFileStream::getStart()
 /************************************************************************/
 
 StreamKind VSIPDFFileStream::getKind()
+#if POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 83
+                                        const
+#endif
 {
     return strFile;
 }
@@ -223,6 +224,7 @@ int VSIPDFFileStream::FillBuffer()
             if( memcmp(abyBuffer + i, "/Linearized ",
                        strlen("/Linearized ")) == 0 )
             {
+                bFoundLinearizedHint = true;
                 memcpy(abyBuffer + i, "/XXXXXXXXXX ", strlen("/Linearized "));
                 break;
             }

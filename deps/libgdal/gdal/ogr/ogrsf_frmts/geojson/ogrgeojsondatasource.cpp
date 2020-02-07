@@ -57,7 +57,7 @@
 // #include "symbol_renames.h"
 
 
-CPL_CVSID("$Id: ogrgeojsondatasource.cpp dd7abfb578c52e9a808df2f8e2607e5719404518 2019-09-17 23:07:10 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrgeojsondatasource.cpp b471cd08d02f7f05d658fe7da57f30f1b29d3b52 2020-01-07 22:30:27 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRGeoJSONDataSource()                     */
@@ -797,7 +797,9 @@ void OGRGeoJSONDataSource::LoadLayers(GDALOpenInfo* poOpenInfo,
             if( !ReadFromFile( poOpenInfo, pszUnprefixed ) )
                 return;
         }
-        OGRErr err = reader.Parse( pszGeoData_ );
+        OGRErr err = reader.Parse( pszGeoData_,
+            nSrcType == eGeoJSONSourceService &&
+            !STARTS_WITH_CI(poOpenInfo->pszFilename, "TopoJSON:") );
         if( OGRERR_NONE == err )
         {
             reader.ReadLayers( this );
@@ -944,6 +946,10 @@ void OGRGeoJSONDataSource::SetOptionsOnReader(GDALOpenInfo* poOpenInfo,
     poReader->SetArrayAsString(
         CPLTestBool(CSLFetchNameValueDef(poOpenInfo->papszOpenOptions, "ARRAY_AS_STRING",
                 CPLGetConfigOption("OGR_GEOJSON_ARRAY_AS_STRING", "NO"))));
+
+    poReader->SetDateAsString(
+        CPLTestBool(CSLFetchNameValueDef(poOpenInfo->papszOpenOptions, "DATE_AS_STRING",
+                CPLGetConfigOption("OGR_GEOJSON_DATE_AS_STRING", "NO"))));
 }
 
 /************************************************************************/

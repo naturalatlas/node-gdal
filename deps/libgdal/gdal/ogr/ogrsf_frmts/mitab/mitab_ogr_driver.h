@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: mitab_ogr_driver.h 43b6061a355c4bce2283b787b28d5f3ae6b9e2af 2018-05-06 14:19:59 +0200 Even Rouault $
+ * $Id: mitab_ogr_driver.h f83fcc02c2413b7153a8edee8ca109b25a5a6fed 2020-01-16 16:32:14 +0300 Dmitry Baryshnikov $
  *
  * Name:     mitab_ogr_drive.h
  * Project:  Mid/mif tab ogr support
@@ -58,8 +58,10 @@ class OGRTABDataSource : public OGRDataSource
     int                 m_bSingleFile;
     int                 m_bSingleLayerAlreadyCreated;
     GBool               m_bQuickSpatialIndexMode;
-    int                 m_bUpdate;
     int                 m_nBlockSize;
+    
+  private:  
+    inline bool         GetUpdate() const { return eAccess == GA_Update; }
 
   public:
                 OGRTABDataSource();

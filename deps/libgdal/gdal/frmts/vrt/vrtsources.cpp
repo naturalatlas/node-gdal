@@ -66,7 +66,7 @@
 #define isnan std::isnan
 #endif
 
-CPL_CVSID("$Id: vrtsources.cpp 7601a637dfd204948d00f4691c08f02eb7584de5 2019-04-12 04:29:21 -0500 Norman Barker $")
+CPL_CVSID("$Id: vrtsources.cpp 55dc4084b748e8032f8dc9565603a8f3a379aeed 2019-12-13 01:05:26 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -620,9 +620,7 @@ CPLErr VRTSimpleSource::XMLInit( CPLXMLNode *psSrc, const char *pszVRTPath,
     CPLXMLNode* psSrcProperties = CPLGetXMLNode(psSrc,"SourceProperties");
     int nRasterXSize = 0;
     int nRasterYSize = 0;
-    // TODO(schwehr): What is the difference between 0 (GDT_Unknown) and -1?
-    // Does there need to be a GDT_Uninitialized?
-    GDALDataType eDataType = static_cast<GDALDataType>(-1);
+    GDALDataType eDataType = GDT_Unknown;
     int nBlockXSize = 0;
     int nBlockYSize = 0;
     if( psSrcProperties )
@@ -666,7 +664,7 @@ CPLErr VRTSimpleSource::XMLInit( CPLXMLNode *psSrc, const char *pszVRTPath,
     bool bAddToMapIfOk = false;
     GDALDataset *poSrcDS = nullptr;
     if( nRasterXSize == 0 || nRasterYSize == 0 ||
-        eDataType == static_cast<GDALDataType>(-1) ||
+        eDataType == GDT_Unknown ||
         nBlockXSize == 0 || nBlockYSize == 0 )
     {
         /* ----------------------------------------------------------------- */

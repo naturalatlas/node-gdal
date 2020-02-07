@@ -31,7 +31,7 @@
 #define SQUARE(x) ((x)*(x))
 #define EPSILON 1e-5
 
-CPL_CVSID("$Id: pdfreadvectors.cpp 5b629d218bb9b280261daf8f4d1b22f904729505 2019-10-19 19:57:30 +0200 Even Rouault $")
+CPL_CVSID("$Id: pdfreadvectors.cpp abcbfb770f9b14a08544deefa93c39626d2495a7 2020-01-11 23:11:05 +0100 Even Rouault $")
 
 #ifdef HAVE_PDF_READ_SUPPORT
 
@@ -79,7 +79,10 @@ int PDFDataset::OpenVectorLayers(GDALPDFDictionary* poPageDict)
     }
     else
     {
-        ExploreContents(poContents, poResources);
+        int nDepth = 0;
+        int nVisited = 0;
+        bool bStop = false;
+        ExploreContents(poContents, poResources, nDepth, nVisited, bStop);
         std::set< std::pair<int,int> > aoSetAlreadyVisited;
         ExploreTree(poStructTreeRoot, aoSetAlreadyVisited, 0);
     }
@@ -1597,9 +1600,21 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
 /************************************************************************/
 
 void PDFDataset::ExploreContents(GDALPDFObject* poObj,
-                                       GDALPDFObject* poResources)
+                                 GDALPDFObject* poResources,
+                                 int nDepth,
+                                 int& nVisited,
+                                 bool& bStop)
 {
     std::map<CPLString, OGRPDFLayer*> oMapPropertyToLayer;
+    if( nDepth == 10 || nVisited == 1000 )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "ExploreContents(): too deep exploration or too many items");
+        bStop = true;
+        return;
+    }
+    if( bStop )
+        return;
 
     if (poObj->GetType() == PDFObjectType_Array)
     {
@@ -1609,7 +1624,10 @@ void PDFDataset::ExploreContents(GDALPDFObject* poObj,
             GDALPDFObject* poSubObj = poArray->Get(i);
             if( poSubObj )
             {
-                ExploreContents(poSubObj, poResources);
+                nVisited ++;
+                ExploreContents(poSubObj, poResources, nDepth + 1, nVisited, bStop);
+                if( bStop )
+                    return;
             }
         }
     }

@@ -429,8 +429,8 @@ void CoordinateSystemAxis::_exportToJSON(
 
 //! @cond Doxygen_Suppress
 bool CoordinateSystemAxis::_isEquivalentTo(
-    const util::IComparable *other,
-    util::IComparable::Criterion criterion) const {
+    const util::IComparable *other, util::IComparable::Criterion criterion,
+    const io::DatabaseContextPtr &dbContext) const {
     auto otherCSA = dynamic_cast<const CoordinateSystemAxis *>(other);
     if (otherCSA == nullptr) {
         return false;
@@ -441,7 +441,7 @@ bool CoordinateSystemAxis::_isEquivalentTo(
         return false;
     }
     if (criterion == util::IComparable::Criterion::STRICT) {
-        if (!IdentifiedObject::_isEquivalentTo(other, criterion)) {
+        if (!IdentifiedObject::_isEquivalentTo(other, criterion, dbContext)) {
             return false;
         }
         if (abbreviation() != otherCSA->abbreviation()) {
@@ -519,7 +519,7 @@ void CoordinateSystem::_exportToWKT(
     const auto &l_axisList = axisList();
     if (isWKT2) {
         formatter->startNode(io::WKTConstants::CS_, !identifiers().empty());
-        formatter->add(getWKT2Type(formatter->use2018Keywords()));
+        formatter->add(getWKT2Type(formatter->use2019Keywords()));
         formatter->add(static_cast<int>(l_axisList.size()));
         formatter->endNode();
         formatter->startNode(std::string(),
@@ -599,11 +599,11 @@ void CoordinateSystem::_exportToJSON(
 
 //! @cond Doxygen_Suppress
 bool CoordinateSystem::_isEquivalentTo(
-    const util::IComparable *other,
-    util::IComparable::Criterion criterion) const {
+    const util::IComparable *other, util::IComparable::Criterion criterion,
+    const io::DatabaseContextPtr &dbContext) const {
     auto otherCS = dynamic_cast<const CoordinateSystem *>(other);
     if (otherCS == nullptr ||
-        !IdentifiedObject::_isEquivalentTo(other, criterion)) {
+        !IdentifiedObject::_isEquivalentTo(other, criterion, dbContext)) {
         return false;
     }
     const auto &list = axisList();
@@ -615,7 +615,8 @@ bool CoordinateSystem::_isEquivalentTo(
         return false;
     }
     for (size_t i = 0; i < list.size(); i++) {
-        if (!list[i]->_isEquivalentTo(otherList[i].get(), criterion)) {
+        if (!list[i]->_isEquivalentTo(otherList[i].get(), criterion,
+                                      dbContext)) {
             return false;
         }
     }
@@ -785,6 +786,28 @@ EllipsoidalCS::createLongitudeLatitude(const common::UnitOfMeasure &unit) {
     return EllipsoidalCS::create(util::PropertyMap(),
                                  CoordinateSystemAxis::createLONG_EAST(unit),
                                  CoordinateSystemAxis::createLAT_NORTH(unit));
+}
+
+// ---------------------------------------------------------------------------
+
+/** \brief Instantiate a EllipsoidalCS with a Longitude (first), Latitude
+ * (second) axis and ellipsoidal height (third) axis.
+ *
+ * @param angularUnit Angular unit of the latitude and longitude axes.
+ * @param linearUnit Linear unit of the ellipsoidal height axis.
+ * @return a new EllipsoidalCS.
+ * @since 7.0
+ */
+EllipsoidalCSNNPtr EllipsoidalCS::createLongitudeLatitudeEllipsoidalHeight(
+    const common::UnitOfMeasure &angularUnit,
+    const common::UnitOfMeasure &linearUnit) {
+    return EllipsoidalCS::create(
+        util::PropertyMap(), CoordinateSystemAxis::createLONG_EAST(angularUnit),
+        CoordinateSystemAxis::createLAT_NORTH(angularUnit),
+        CoordinateSystemAxis::create(
+            util::PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                    AxisName::Ellipsoidal_height),
+            AxisAbbreviation::h, AxisDirection::UP, linearUnit));
 }
 
 // ---------------------------------------------------------------------------
@@ -1268,8 +1291,8 @@ DateTimeTemporalCS::create(const util::PropertyMap &properties,
 
 // ---------------------------------------------------------------------------
 
-std::string DateTimeTemporalCS::getWKT2Type(bool use2018Keywords) const {
-    return use2018Keywords ? "TemporalDateTime" : "temporal";
+std::string DateTimeTemporalCS::getWKT2Type(bool use2019Keywords) const {
+    return use2019Keywords ? "TemporalDateTime" : "temporal";
 }
 
 // ---------------------------------------------------------------------------
@@ -1301,8 +1324,8 @@ TemporalCountCS::create(const util::PropertyMap &properties,
 
 // ---------------------------------------------------------------------------
 
-std::string TemporalCountCS::getWKT2Type(bool use2018Keywords) const {
-    return use2018Keywords ? "TemporalCount" : "temporal";
+std::string TemporalCountCS::getWKT2Type(bool use2019Keywords) const {
+    return use2019Keywords ? "TemporalCount" : "temporal";
 }
 
 // ---------------------------------------------------------------------------
@@ -1334,8 +1357,8 @@ TemporalMeasureCS::create(const util::PropertyMap &properties,
 
 // ---------------------------------------------------------------------------
 
-std::string TemporalMeasureCS::getWKT2Type(bool use2018Keywords) const {
-    return use2018Keywords ? "TemporalMeasure" : "temporal";
+std::string TemporalMeasureCS::getWKT2Type(bool use2019Keywords) const {
+    return use2019Keywords ? "TemporalMeasure" : "temporal";
 }
 
 } // namespace cs

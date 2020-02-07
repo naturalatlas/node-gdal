@@ -6,7 +6,7 @@
  * Author:   Alexander Lisovenko
  *
  ******************************************************************************
- * Copyright (c) 2014-2015,2019, NextGIS <info@nextgis.com>
+ * Copyright (c) 2014-2020, NextGIS <info@nextgis.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,7 +32,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: minidriver_arcgis_server.cpp 8b5530092695d72d498d4b9b9d5cd0babe60ae40 2019-04-01 14:15:22 +0300 Dmitry Baryshnikov $")
+CPL_CVSID("$Id: minidriver_arcgis_server.cpp 1407356a01b838bc439427e821a4561300e3fd4c 2020-01-05 19:59:08 +0300 Dmitry Baryshnikov $")
 
 WMSMiniDriver_AGS::WMSMiniDriver_AGS() {}
 
@@ -116,7 +116,7 @@ CPLErr WMSMiniDriver_AGS::TiledImageRequest(WMSHTTPRequest &request,
     }
 
     URLPrepare(url);
-    url += "f=image&dpi=&layerdefs=&layerTimeOptions=&dynamicLayers=";
+    url += "f=image";
     char *pszEscapedValue = CPLEscapeString(m_layers, -1, CPLES_URL);
     url += CPLOPrintf("&bbox=%.8f%%2C%.8f%%2C%.8f%%2C%.8f",
                 GetBBoxCoord(iri, m_bbox_order[0]), GetBBoxCoord(iri, m_bbox_order[1]),

@@ -1577,7 +1577,7 @@ static int ParseSect4 (sInt4 *is4, sInt4 ns4, grib_MetaData *meta)
        (is4[7] != GS4_PERCENT_TIME) && (is4[7] != GS4_ENSEMBLE_STAT) &&
        (is4[7] != GS4_SATELLITE) && (is4[7] != GS4_SATELLITE_SYNTHETIC) &&
        (is4[7] != GS4_DERIVED_INTERVAL) && (is4[7] != GS4_STATISTIC_SPATIAL_AREA) &&
-       (is4[7] != GS4_ANALYSIS_CHEMICAL)) {
+       (is4[7] != GS4_ANALYSIS_CHEMICAL) && (is4[7] != GS4_OPTICAL_PROPERTIES_AEROSOL)) {
 #ifdef DEBUG
       //printf ("Un-supported Template. %d\n", is4[7]);
 #endif
@@ -1594,14 +1594,23 @@ static int ParseSect4 (sInt4 *is4, sInt4 ns4, grib_MetaData *meta)
    }
    meta->pds2.sect4.cat = (uChar) is4[9];
    meta->pds2.sect4.subcat = (uChar) is4[10];
-   int nOffset = (is4[7] != GS4_ANALYSIS_CHEMICAL) ? 0 : 2;
+   int nOffset = 0;
+   if( is4[7] == GS4_ANALYSIS_CHEMICAL ) {
+        nOffset = 16 - 14;
+   }
+   else if( is4[7] == GS4_OPTICAL_PROPERTIES_AEROSOL ) {
+        nOffset = 38 - 14;
+   }
+   if (ns4 < 34 + nOffset) {
+      return -1;
+   }
    meta->pds2.sect4.genProcess = (uChar) is4[11 + nOffset];
 
    /* Initialize variables prior to parsing the specific templates. */
    meta->pds2.sect4.typeEnsemble = 0;
    meta->pds2.sect4.perturbNum = 0;
    meta->pds2.sect4.numberFcsts = 0;
-   meta->pds2.sect4.derivedFcst = 0;
+   meta->pds2.sect4.derivedFcst = (uChar)-1;
    meta->pds2.sect4.validTime = meta->pds2.refTime;
 
    if (meta->pds2.sect4.templat == GS4_SATELLITE) {
@@ -1794,6 +1803,20 @@ static int ParseSect4 (sInt4 *is4, sInt4 ns4, grib_MetaData *meta)
          meta->pds2.sect4.derivedFcst = (uChar) is4[34];
          meta->pds2.sect4.numberFcsts = (uChar) is4[35];
          break;
+      case GS4_DERIVED_CLUSTER_RECTANGULAR_AREA: /* 4.3 */
+         if (ns4 < 68) {
+            return -1;
+         }
+         meta->pds2.sect4.derivedFcst = (uChar) is4[34];
+         meta->pds2.sect4.numberFcsts = (uChar) is4[35];
+         break;
+      case GS4_DERIVED_CLUSTER_CIRCULAR_AREA: /* 4.4 */
+         if (ns4 < 64) {
+            return -1;
+         }
+         meta->pds2.sect4.derivedFcst = (uChar) is4[34];
+         meta->pds2.sect4.numberFcsts = (uChar) is4[35];
+         break;
       case GS4_DERIVED_INTERVAL: /* 4.12 */
          if (ns4 < 45) {
             return -1;
@@ -1858,6 +1881,14 @@ static int ParseSect4 (sInt4 *is4, sInt4 ns4, grib_MetaData *meta)
 #endif
             meta->pds2.sect4.numMissing = is4[44];
          }
+         break;
+      case GS4_DERIVED_INTERVAL_CLUSTER_RECTANGULAR_AREA: /* 4.13 */
+      case GS4_DERIVED_INTERVAL_CLUSTER_CIRCULAR_AREA: /* 4.14 */
+         if (ns4 < 36) {
+            return -1;
+         }
+         meta->pds2.sect4.derivedFcst = (uChar) is4[34];
+         meta->pds2.sect4.numberFcsts = (uChar) is4[35];
          break;
       case GS4_STATISTIC: /* 4.8 */
          if (ns4 < 43) {
@@ -2068,6 +2099,9 @@ static int ParseSect4 (sInt4 *is4, sInt4 ns4, grib_MetaData *meta)
             // 37 Number of data points used in spatial processing defined in octet 36
             break;
       case GS4_ANALYSIS_CHEMICAL: /* 4.40 */
+            // TODO
+            break;
+      case GS4_OPTICAL_PROPERTIES_AEROSOL: /* 4.48 */
             // TODO
             break;
       default:
@@ -2430,6 +2464,7 @@ int MetaParse (grib_MetaData *meta, sInt4 *is0, sInt4 ns0,
                   meta->pds2.sect4.templat, meta->pds2.sect4.cat,
                   meta->pds2.sect4.subcat, lenTime, timeRangeUnit, statProcessID,
                   incrType, meta->pds2.sect4.genID, probType, lowerProb, upperProb,
+                  meta->pds2.sect4.derivedFcst,
                   &(meta->element), &(meta->comment), &(meta->unitName),
                   &(meta->convert), meta->pds2.sect4.percentile,
                   meta->pds2.sect4.genProcess,

@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <memory>
 
-CPL_CVSID("$Id: ogrdxflayer.cpp a977483f0946e73193ff13b713d93c3aef7ba22e 2019-01-18 11:44:31 +1100 Alan Thomas $")
+CPL_CVSID("$Id: ogrdxflayer.cpp baa5303d0994a8896d35285093cd4de40e21518f 2019-12-15 12:56:42 +0100 Even Rouault $")
 
 
 /************************************************************************/
@@ -2100,8 +2100,16 @@ OGRDXFFeature *OGRDXFLayer::TranslateSPLINE()
             break;
 
           case 40:
-            adfKnots.push_back( CPLAtof(szLineBuf) );
+          {
+            double dfVal = CPLAtof(szLineBuf);
+            // Ad-hoc fix for https://github.com/OSGeo/gdal/issues/1969
+            // where the first knot is at a very very close to zero negative
+            // value and following knots are at 0.
+            if( dfVal < 0 && dfVal > -1.0e-10 )
+                dfVal = 0;
+            adfKnots.push_back(dfVal);
             break;
+          }
 
           case 41:
             adfWeights.push_back( CPLAtof(szLineBuf) );

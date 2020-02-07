@@ -39,7 +39,7 @@
 
 //! @cond Doxygen_Suppress
 
-CPL_CVSID("$Id: gdalabstractbandblockcache.cpp c019d8db3f6d7f9a265d610521f6823f1e09eb36 2019-04-25 12:13:41 +0200 Even Rouault $")
+CPL_CVSID("$Id: gdalabstractbandblockcache.cpp c590dcec36eb6dcd7c5451623b859e7227475b44 2019-11-13 16:36:03 +0100 Even Rouault $")
 
 #ifdef DEBUG_VERBOSE_ABBC
 static int nAllBandsKeptAlivedBlocks = 0;
@@ -114,7 +114,7 @@ void GDALAbstractBandBlockCache::AddBlockToFreeList( GDALRasterBlock *poBlock )
         psListBlocksToFree = poBlock;
     }
 
-    // If no more blocks in transient state, then warn WaitKeepAliveCounter()
+    // If no more blocks in transient state, then warn WaitCompletionPendingTasks()
     CPLAcquireMutex(hCondMutex, 1000);
     if( CPLAtomicDec(&nKeepAliveCounter) == 0 )
     {
@@ -124,13 +124,13 @@ void GDALAbstractBandBlockCache::AddBlockToFreeList( GDALRasterBlock *poBlock )
 }
 
 /************************************************************************/
-/*                         WaitKeepAliveCounter()                       */
+/*                      WaitCompletionPendingTasks()                    */
 /************************************************************************/
 
-void GDALAbstractBandBlockCache::WaitKeepAliveCounter()
+void GDALAbstractBandBlockCache::WaitCompletionPendingTasks()
 {
 #ifdef DEBUG_VERBOSE
-    CPLDebug("GDAL", "WaitKeepAliveCounter()");
+    CPLDebug("GDAL", "WaitCompletionPendingTasks()");
 #endif
 
     CPLAcquireMutex(hCondMutex, 1000);

@@ -52,7 +52,7 @@
 #include "gdal_rat.h"
 #include "gdal_priv_templates.hpp"
 
-CPL_CVSID("$Id: gdalrasterband.cpp e3511844a11959bd81f5956a1e7e2de96900e7ac 2019-04-25 11:53:15 +0200 Even Rouault $")
+CPL_CVSID("$Id: gdalrasterband.cpp c590dcec36eb6dcd7c5451623b859e7227475b44 2019-11-13 16:36:03 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           GDALRasterBand()                           */
@@ -546,6 +546,7 @@ CPLErr GDALRasterBand::ReadBlock( int nXBlockOff, int nYBlockOff,
 /* -------------------------------------------------------------------- */
 /*      Invoke underlying implementation method.                        */
 /* -------------------------------------------------------------------- */
+
     int bCallLeaveReadWrite = EnterReadWrite(GF_Read);
     CPLErr eErr = IReadBlock( nXBlockOff, nYBlockOff, pImage );
     if( bCallLeaveReadWrite) LeaveReadWrite();

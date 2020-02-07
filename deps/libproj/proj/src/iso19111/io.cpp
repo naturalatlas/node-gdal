@@ -89,7 +89,7 @@ static const std::string emptyString{};
 
 // If changing that value, change it in data/projjson.schema.json as well
 #define PROJJSON_CURRENT_VERSION                                               \
-    "https://proj.org/schemas/v0.1/projjson.schema.json"
+    "https://proj.org/schemas/v0.2/projjson.schema.json"
 //! @endcond
 
 #if 0
@@ -138,7 +138,7 @@ struct WKTFormatter::Private {
         bool forceUNITKeyword_ = false;
         bool outputCSUnitOnlyOnceIfSame_ = false;
         bool primeMeridianInDegree_ = false;
-        bool use2018Keywords_ = false;
+        bool use2019Keywords_ = false;
         bool useESRIDialect_ = false;
         OutputAxisRule outputAxis_ = WKTFormatter::OutputAxisRule::YES;
     };
@@ -299,16 +299,16 @@ WKTFormatter::WKTFormatter(Convention convention)
     : d(internal::make_unique<Private>()) {
     d->params_.convention_ = convention;
     switch (convention) {
-    case Convention::WKT2_2018:
-        d->params_.use2018Keywords_ = true;
+    case Convention::WKT2_2019:
+        d->params_.use2019Keywords_ = true;
         PROJ_FALLTHROUGH
     case Convention::WKT2:
         d->params_.version_ = WKTFormatter::Version::WKT2;
         d->params_.outputAxisOrder_ = true;
         break;
 
-    case Convention::WKT2_2018_SIMPLIFIED:
-        d->params_.use2018Keywords_ = true;
+    case Convention::WKT2_2019_SIMPLIFIED:
+        d->params_.use2019Keywords_ = true;
         PROJ_FALLTHROUGH
     case Convention::WKT2_SIMPLIFIED:
         d->params_.version_ = WKTFormatter::Version::WKT2;
@@ -689,8 +689,8 @@ WKTFormatter::Version WKTFormatter::version() const {
 
 // ---------------------------------------------------------------------------
 
-bool WKTFormatter::use2018Keywords() const {
-    return d->params_.use2018Keywords_;
+bool WKTFormatter::use2019Keywords() const {
+    return d->params_.use2019Keywords_;
 }
 
 // ---------------------------------------------------------------------------
@@ -2569,7 +2569,7 @@ WKTParser::Private::buildCS(const WKTNodeNNPtr &node, /* maybe null */
             return SphericalCS::create(csMap, axisList[0], axisList[1],
                                        axisList[2]);
         }
-    } else if (ci_equal(csType, "ordinal")) { // WKT2-2018
+    } else if (ci_equal(csType, "ordinal")) { // WKT2-2019
         return OrdinalCS::create(csMap, axisList);
     } else if (ci_equal(csType, "parametric")) {
         if (axisCount == 1) {
@@ -2582,15 +2582,15 @@ WKTParser::Private::buildCS(const WKTNodeNNPtr &node, /* maybe null */
                 axisList[0]); // FIXME: there are 3 possible subtypes of
                               // TemporalCS
         }
-    } else if (ci_equal(csType, "TemporalDateTime")) { // WKT2-2018
+    } else if (ci_equal(csType, "TemporalDateTime")) { // WKT2-2019
         if (axisCount == 1) {
             return DateTimeTemporalCS::create(csMap, axisList[0]);
         }
-    } else if (ci_equal(csType, "TemporalCount")) { // WKT2-2018
+    } else if (ci_equal(csType, "TemporalCount")) { // WKT2-2019
         if (axisCount == 1) {
             return TemporalCountCS::create(csMap, axisList[0]);
         }
-    } else if (ci_equal(csType, "TemporalMeasure")) { // WKT2-2018
+    } else if (ci_equal(csType, "TemporalMeasure")) { // WKT2-2019
         if (axisCount == 1) {
             return TemporalMeasureCS::create(csMap, axisList[0]);
         }
@@ -2683,7 +2683,9 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     auto cs = buildCS(csNode, node, angularUnit);
     auto ellipsoidalCS = nn_dynamic_pointer_cast<EllipsoidalCS>(cs);
     if (ellipsoidalCS) {
-        assert(!ci_equal(nodeName, WKTConstants::GEOCCS));
+        if (ci_equal(nodeName, WKTConstants::GEOCCS)) {
+            throw ParsingException("ellipsoidal CS not expected in GEOCCS");
+        }
         try {
             auto crs = GeographicCRS::create(props, datum, datumEnsemble,
                                              NN_NO_CHECK(ellipsoidalCS));
@@ -2729,7 +2731,7 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     } else if (ci_equal(nodeName, WKTConstants::GEOGCRS) ||
                ci_equal(nodeName, WKTConstants::GEOGRAPHICCRS) ||
                ci_equal(nodeName, WKTConstants::BASEGEOGCRS)) {
-        // This is a WKT2-2018 GeographicCRS. An ellipsoidal CS is expected
+        // This is a WKT2-2019 GeographicCRS. An ellipsoidal CS is expected
         throw ParsingException(concat("ellipsoidal CS expected, but found ",
                                       cs->getWKT2Type(true)));
     }
@@ -2795,7 +2797,7 @@ CRSNNPtr WKTParser::Private::buildDerivedGeodeticCRS(const WKTNodeNNPtr &node) {
                                             derivingConversion,
                                             NN_NO_CHECK(ellipsoidalCS));
     } else if (ci_equal(nodeP->value(), WKTConstants::GEOGCRS)) {
-        // This is a WKT2-2018 GeographicCRS. An ellipsoidal CS is expected
+        // This is a WKT2-2019 GeographicCRS. An ellipsoidal CS is expected
         throw ParsingException(concat("ellipsoidal CS expected, but found ",
                                       cs->getWKT2Type(true)));
     }
@@ -3476,6 +3478,14 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
     }
     propertiesMethod.set(IdentifiedObject::NAME_KEY, projectionName);
 
+    std::vector<bool> foundParameters;
+    if (mapping) {
+        size_t countParams = 0;
+        while (mapping->params[countParams] != nullptr) {
+            ++countParams;
+        }
+        foundParameters.resize(countParams);
+    }
     for (const auto &childNode : projCRSNode->GP()->children()) {
         if (ci_equal(childNode->GP()->value(), WKTConstants::PARAMETER)) {
             const auto &childNodeChildren = childNode->GP()->children();
@@ -3496,11 +3506,18 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
                     continue;
                 }
             }
-            const auto *paramMapping =
+            auto *paramMapping =
                 mapping ? getMappingFromWKT1(mapping, parameterName) : nullptr;
             if (mapping &&
                 mapping->epsg_code == EPSG_CODE_METHOD_MERCATOR_VARIANT_B &&
                 ci_equal(parameterName, "latitude_of_origin")) {
+                for (size_t idx = 0; mapping->params[idx] != nullptr; ++idx) {
+                    if (mapping->params[idx]->epsg_code ==
+                        EPSG_CODE_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN) {
+                        foundParameters[idx] = true;
+                        break;
+                    }
+                }
                 parameterName = EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN;
                 propertiesParameter.set(
                     Identifier::CODE_KEY,
@@ -3508,6 +3525,12 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
                 propertiesParameter.set(Identifier::CODESPACE_KEY,
                                         Identifier::EPSG);
             } else if (paramMapping) {
+                for (size_t idx = 0; mapping->params[idx] != nullptr; ++idx) {
+                    if (mapping->params[idx] == paramMapping) {
+                        foundParameters[idx] = true;
+                        break;
+                    }
+                }
                 parameterName = paramMapping->wkt2_name;
                 if (paramMapping->epsg_code != 0) {
                     propertiesParameter.set(Identifier::CODE_KEY,
@@ -3527,6 +3550,38 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
             } catch (const std::exception &) {
                 throw ParsingException(
                     concat("unhandled parameter value type : ", paramValue));
+            }
+        }
+    }
+
+    // Add back important parameters that should normally be present, but
+    // are sometimes missing. Currently we only deal with Scale factor at
+    // natural origin. This is to avoid a default value of 0 to slip in later.
+    // But such WKT should be considered invalid.
+    if (mapping) {
+        for (size_t idx = 0; mapping->params[idx] != nullptr; ++idx) {
+            if (!foundParameters[idx] &&
+                mapping->params[idx]->epsg_code ==
+                    EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN) {
+
+                emitRecoverableWarning(
+                    "The WKT string lacks a value "
+                    "for " EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN
+                    ". Default it to 1.");
+
+                PropertyMap propertiesParameter;
+                propertiesParameter.set(
+                    Identifier::CODE_KEY,
+                    EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN);
+                propertiesParameter.set(Identifier::CODESPACE_KEY,
+                                        Identifier::EPSG);
+                propertiesParameter.set(
+                    IdentifiedObject::NAME_KEY,
+                    EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN);
+                parameters.push_back(
+                    OperationParameter::create(propertiesParameter));
+                values.push_back(ParameterValue::create(
+                    Measure(1.0, UnitOfMeasure::SCALE_UNITY)));
             }
         }
     }
@@ -3820,28 +3875,110 @@ CRSNNPtr WKTParser::Private::buildVerticalCRS(const WKTNodeNNPtr &node) {
         ThrowNotExpectedCSType("vertical");
     }
 
+    auto &props = buildProperties(node);
+
+    // Deal with Lidar WKT1 VertCRS that embeds geoid model in CRS name,
+    // following conventions from
+    // https://pubs.usgs.gov/tm/11b4/pdf/tm11-B4.pdf
+    // page 9
+    if (ci_equal(nodeValue, WKTConstants::VERT_CS)) {
+        std::string name;
+        if (props.getStringValue(IdentifiedObject::NAME_KEY, name)) {
+            std::string geoidName;
+            for (const char *prefix :
+                 {"NAVD88 - ", "NAVD88 via ", "NAVD88 height - ",
+                  "NAVD88 height (ftUS) - "}) {
+                if (starts_with(name, prefix)) {
+                    geoidName = name.substr(strlen(prefix));
+                    auto pos = geoidName.find_first_of(" (");
+                    if (pos != std::string::npos) {
+                        geoidName.resize(pos);
+                    }
+                    break;
+                }
+            }
+            if (!geoidName.empty()) {
+                const auto &axis = verticalCS->axisList()[0];
+                const auto &dir = axis->direction();
+                if (dir == cs::AxisDirection::UP) {
+                    if (axis->unit() == common::UnitOfMeasure::METRE) {
+                        props.set(IdentifiedObject::NAME_KEY, "NAVD88 height");
+                        props.set(Identifier::CODE_KEY, 5703);
+                        props.set(Identifier::CODESPACE_KEY, Identifier::EPSG);
+                    } else if (axis->unit().name() == "US survey foot") {
+                        props.set(IdentifiedObject::NAME_KEY,
+                                  "NAVD88 height (ftUS)");
+                        props.set(Identifier::CODE_KEY, 6360);
+                        props.set(Identifier::CODESPACE_KEY, Identifier::EPSG);
+                    }
+                }
+                PropertyMap propsModel;
+                propsModel.set(IdentifiedObject::NAME_KEY, toupper(geoidName));
+                PropertyMap propsDatum;
+                propsDatum.set(IdentifiedObject::NAME_KEY,
+                               "North American Vertical Datum 1988");
+                propsDatum.set(Identifier::CODE_KEY, 5103);
+                propsDatum.set(Identifier::CODESPACE_KEY, Identifier::EPSG);
+                datum =
+                    VerticalReferenceFrame::create(propsDatum).as_nullable();
+                const auto dummyCRS =
+                    VerticalCRS::create(PropertyMap(), datum, datumEnsemble,
+                                        NN_NO_CHECK(verticalCS));
+                const auto model(Transformation::create(
+                    propsModel, dummyCRS, dummyCRS, nullptr,
+                    OperationMethod::create(
+                        PropertyMap(), std::vector<OperationParameterNNPtr>()),
+                    {}, {}));
+                props.set("GEOID_MODEL", model);
+            }
+        }
+    }
+
+    auto &geoidModelNode = nodeP->lookForChild(WKTConstants::GEOIDMODEL);
+    if (!isNull(geoidModelNode)) {
+        auto &propsModel = buildProperties(geoidModelNode);
+        const auto dummyCRS = VerticalCRS::create(
+            PropertyMap(), datum, datumEnsemble, NN_NO_CHECK(verticalCS));
+        const auto model(Transformation::create(
+            propsModel, dummyCRS, dummyCRS, nullptr,
+            OperationMethod::create(PropertyMap(),
+                                    std::vector<OperationParameterNNPtr>()),
+            {}, {}));
+        props.set("GEOID_MODEL", model);
+    }
+
     auto crs = nn_static_pointer_cast<CRS>(VerticalCRS::create(
-        buildProperties(node), datum, datumEnsemble, NN_NO_CHECK(verticalCS)));
+        props, datum, datumEnsemble, NN_NO_CHECK(verticalCS)));
 
     if (!isNull(datumNode)) {
         auto &extensionNode = datumNode->lookForChild(WKTConstants::EXTENSION);
         const auto &extensionChildren = extensionNode->GP()->children();
         if (extensionChildren.size() == 2) {
             if (ci_equal(stripQuotes(extensionChildren[0]), "PROJ4_GRIDS")) {
-                std::string transformationName(crs->nameStr());
-                if (!ends_with(transformationName, " height")) {
-                    transformationName += " height";
+                const auto gridName(stripQuotes(extensionChildren[1]));
+                // This is the expansion of EPSG:5703 by old GDAL versions.
+                // See
+                // https://trac.osgeo.org/metacrs/changeset?reponame=&new=2281%40geotiff%2Ftrunk%2Flibgeotiff%2Fcsv%2Fvertcs.override.csv&old=1893%40geotiff%2Ftrunk%2Flibgeotiff%2Fcsv%2Fvertcs.override.csv
+                // It is unlikely that the user really explicitly wants this.
+                if (gridName != "g2003conus.gtx,g2003alaska.gtx,"
+                                "g2003h01.gtx,g2003p01.gtx" &&
+                    gridName != "g2012a_conus.gtx,g2012a_alaska.gtx,"
+                                "g2012a_guam.gtx,g2012a_hawaii.gtx,"
+                                "g2012a_puertorico.gtx,g2012a_samoa.gtx") {
+                    std::string transformationName(crs->nameStr());
+                    if (!ends_with(transformationName, " height")) {
+                        transformationName += " height";
+                    }
+                    transformationName += " to WGS84 ellipsoidal height";
+                    auto transformation = Transformation::
+                        createGravityRelatedHeightToGeographic3D(
+                            PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                              transformationName),
+                            crs, GeographicCRS::EPSG_4979, nullptr, gridName,
+                            std::vector<PositionalAccuracyNNPtr>());
+                    return nn_static_pointer_cast<CRS>(BoundCRS::create(
+                        crs, GeographicCRS::EPSG_4979, transformation));
                 }
-                transformationName += " to WGS84 ellipsoidal height";
-                auto transformation =
-                    Transformation::createGravityRelatedHeightToGeographic3D(
-                        PropertyMap().set(IdentifiedObject::NAME_KEY,
-                                          transformationName),
-                        crs, GeographicCRS::EPSG_4979, nullptr,
-                        stripQuotes(extensionChildren[1]),
-                        std::vector<PositionalAccuracyNNPtr>());
-                return nn_static_pointer_cast<CRS>(BoundCRS::create(
-                    crs, GeographicCRS::EPSG_4979, transformation));
             }
         }
     }
@@ -4182,8 +4319,8 @@ WKTParser::Private::buildDerivedProjectedCRS(const WKTNodeNNPtr &node) {
 static bool isGeodeticCRS(const std::string &name) {
     return ci_equal(name, WKTConstants::GEODCRS) ||       // WKT2
            ci_equal(name, WKTConstants::GEODETICCRS) ||   // WKT2
-           ci_equal(name, WKTConstants::GEOGCRS) ||       // WKT2 2018
-           ci_equal(name, WKTConstants::GEOGRAPHICCRS) || // WKT2 2018
+           ci_equal(name, WKTConstants::GEOGCRS) ||       // WKT2 2019
+           ci_equal(name, WKTConstants::GEOGRAPHICCRS) || // WKT2 2019
            ci_equal(name, WKTConstants::GEOGCS) ||        // WKT1
            ci_equal(name, WKTConstants::GEOCCS);          // WKT1
 }
@@ -4987,7 +5124,30 @@ VerticalCRSNNPtr JSONParser::buildVerticalCRS(const json &j) {
     if (!verticalCS) {
         throw ParsingException("expected a vertical CS");
     }
-    return VerticalCRS::create(buildProperties(j), datum, datumEnsemble,
+
+    auto props = buildProperties(j);
+    if (j.contains("geoid_model")) {
+        auto geoidModelJ = getObject(j, "geoid_model");
+        auto propsModel = buildProperties(geoidModelJ);
+        const auto dummyCRS = VerticalCRS::create(
+            PropertyMap(), datum, datumEnsemble, NN_NO_CHECK(verticalCS));
+        CRSPtr interpolationCRS;
+        if (geoidModelJ.contains("interpolation_crs")) {
+            auto interpolationCRSJ =
+                getObject(geoidModelJ, "interpolation_crs");
+            interpolationCRS = buildCRS(interpolationCRSJ).as_nullable();
+        }
+        const auto model(Transformation::create(
+            propsModel, dummyCRS,
+            GeographicCRS::EPSG_4979, // arbitrarily chosen. Ignored,
+            interpolationCRS,
+            OperationMethod::create(PropertyMap(),
+                                    std::vector<OperationParameterNNPtr>()),
+            {}, {}));
+        props.set("GEOID_MODEL", model);
+    }
+
+    return VerticalCRS::create(props, datum, datumEnsemble,
                                NN_NO_CHECK(verticalCS));
 }
 
@@ -5511,13 +5671,18 @@ static BaseObjectNNPtr createFromUserInput(const std::string &text,
         DatabaseContextNNPtr dbContextNNPtr(NN_NO_CHECK(dbContext));
         const auto &authName = tokens[0];
         const auto &code = tokens[1];
-        static const std::string epsg_lowercase("epsg");
-        auto factory = AuthorityFactory::create(
-            dbContextNNPtr,
-            authName == epsg_lowercase ? Identifier::EPSG : authName);
+        auto factory = AuthorityFactory::create(dbContextNNPtr, authName);
         try {
             return factory->createCoordinateReferenceSystem(code);
         } catch (...) {
+
+            // Convenience for well-known misused code
+            // See https://github.com/OSGeo/PROJ/issues/1730
+            if (ci_equal(authName, "EPSG") && code == "102100") {
+                factory = AuthorityFactory::create(dbContextNNPtr, "ESRI");
+                return factory->createCoordinateReferenceSystem(code);
+            }
+
             const auto authorities = dbContextNNPtr->getAuthorities();
             for (const auto &authCandidate : authorities) {
                 if (ci_equal(authCandidate, authName)) {
@@ -5930,7 +6095,7 @@ BaseObjectNNPtr WKTParser::createFromWKT(const std::string &wkt) {
             d->emitRecoverableWarning(errorMsg);
         }
     } else if (dialect == WKTGuessedDialect::WKT2_2015 ||
-               dialect == WKTGuessedDialect::WKT2_2018) {
+               dialect == WKTGuessedDialect::WKT2_2019) {
         auto errorMsg = pj_wkt2_parse(wkt);
         if (!errorMsg.empty()) {
             d->emitRecoverableWarning(errorMsg);
@@ -5970,7 +6135,7 @@ WKTParser::guessDialect(const std::string &wkt) noexcept {
         }
     }
 
-    const std::string *const wkt2_2018_only_keywords[] = {
+    const std::string *const wkt2_2019_only_keywords[] = {
         &WKTConstants::GEOGCRS,
         // contained in previous one
         // &WKTConstants::BASEGEOGCRS,
@@ -5980,19 +6145,19 @@ WKTParser::guessDialect(const std::string &wkt) noexcept {
         &WKTConstants::DERIVEDPROJCRS, &WKTConstants::BASEPROJCRS,
         &WKTConstants::GEOGRAPHICCRS, &WKTConstants::TRF, &WKTConstants::VRF};
 
-    for (const auto &pointerKeyword : wkt2_2018_only_keywords) {
+    for (const auto &pointerKeyword : wkt2_2019_only_keywords) {
         auto pos = ci_find(wkt, *pointerKeyword);
         if (pos != std::string::npos &&
             wkt[pos + pointerKeyword->size()] == '[') {
-            return WKTGuessedDialect::WKT2_2018;
+            return WKTGuessedDialect::WKT2_2019;
         }
     }
-    static const char *const wkt2_2018_only_substrings[] = {
+    static const char *const wkt2_2019_only_substrings[] = {
         "CS[TemporalDateTime,", "CS[TemporalCount,", "CS[TemporalMeasure,",
     };
-    for (const auto &substrings : wkt2_2018_only_substrings) {
+    for (const auto &substrings : wkt2_2019_only_substrings) {
         if (ci_find(wkt, substrings) != std::string::npos) {
-            return WKTGuessedDialect::WKT2_2018;
+            return WKTGuessedDialect::WKT2_2019;
         }
     }
 
@@ -6120,12 +6285,25 @@ struct Step {
             return key == otherKey && value == otherVal;
         }
 
+        bool operator==(const KeyValue &other) const noexcept {
+            return key == other.key && value == other.value;
+        }
+
         bool operator!=(const KeyValue &other) const noexcept {
             return key != other.key || value != other.value;
         }
     };
 
     std::vector<KeyValue> paramValues{};
+
+    bool hasKey(const char *keyName) const {
+        for (const auto &kv : paramValues) {
+            if (kv.key == keyName) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 Step::KeyValue::KeyValue(const char *keyIn, const std::string &valueIn)
@@ -6632,6 +6810,46 @@ const std::string &PROJStringFormatter::toString() const {
                 }
             }
 
+            // +step +proj=hgridshift +grids=grid_A
+            // +step +proj=vgridshift [...] <== curStep
+            // +step +inv +proj=hgridshift +grids=grid_A
+            // ==>
+            // +step +proj=push +v_1 +v_2
+            // +step +proj=hgridshift +grids=grid_A +omit_inv
+            // +step +proj=vgridshift [...]
+            // +step +inv +proj=hgridshift +grids=grid_A +omit_fwd
+            // +step +proj=pop +v_1 +v_2
+            if (i + 1 < d->steps_.size() && prevStep.name == "hgridshift" &&
+                prevStepParamCount == 1 && curStep.name == "vgridshift") {
+                auto iterNext = iterCur;
+                ++iterNext;
+                auto &nextStep = *iterNext;
+                if (nextStep.name == "hgridshift" &&
+                    nextStep.inverted != prevStep.inverted &&
+                    nextStep.paramValues.size() == 1 &&
+                    prevStep.paramValues[0] == nextStep.paramValues[0]) {
+                    Step pushStep;
+                    pushStep.name = "push";
+                    pushStep.paramValues.emplace_back("v_1");
+                    pushStep.paramValues.emplace_back("v_2");
+                    d->steps_.insert(iterPrev, pushStep);
+
+                    prevStep.paramValues.emplace_back("omit_inv");
+
+                    nextStep.paramValues.emplace_back("omit_fwd");
+
+                    Step popStep;
+                    popStep.name = "pop";
+                    popStep.paramValues.emplace_back("v_1");
+                    popStep.paramValues.emplace_back("v_2");
+                    ++iterNext;
+                    d->steps_.insert(iterNext, popStep);
+
+                    changeDone = true;
+                    break;
+                }
+            }
+
             // detect a step and its inverse
             if (curStep.inverted != prevStep.inverted &&
                 curStep.name == prevStep.name &&
@@ -6655,7 +6873,9 @@ const std::string &PROJStringFormatter::toString() const {
 
     if (d->steps_.size() > 1 ||
         (d->steps_.size() == 1 &&
-         (d->steps_.front().inverted || !d->globalParamValues_.empty()))) {
+         (d->steps_.front().inverted || d->steps_.front().hasKey("omit_inv") ||
+          d->steps_.front().hasKey("omit_fwd") ||
+          !d->globalParamValues_.empty()))) {
         d->appendToResult("+proj=pipeline");
 
         for (const auto &paramValue : d->globalParamValues_) {
@@ -6944,6 +7164,12 @@ void PROJStringFormatter::stopInversion() {
     // the current end of steps
     for (auto iter = startIter; iter != d->steps_.end(); ++iter) {
         iter->inverted = !iter->inverted;
+        for (auto &paramValue : iter->paramValues) {
+            if (paramValue.key == "omit_fwd")
+                paramValue.key = "omit_inv";
+            else if (paramValue.key == "omit_inv")
+                paramValue.key = "omit_fwd";
+        }
     }
     // And reverse the order of steps in that range as well.
     std::reverse(startIter, d->steps_.end());
@@ -8214,7 +8440,10 @@ PROJStringParser::Private::buildBoundOrCompoundCRSIfNeeded(int iStep,
             Transformation::createGravityRelatedHeightToGeographic3D(
                 PropertyMap().set(IdentifiedObject::NAME_KEY,
                                   "unknown to WGS84 ellipsoidal height"),
-                crs, GeographicCRS::EPSG_4979, nullptr, geoidgrids,
+                VerticalCRS::create(createMapWithUnknownName(), vdatum,
+                                    VerticalCS::createGravityRelatedHeight(
+                                        common::UnitOfMeasure::METRE)),
+                GeographicCRS::EPSG_4979, nullptr, geoidgrids,
                 std::vector<PositionalAccuracyNNPtr>());
         auto boundvcrs =
             BoundCRS::create(vcrs, GeographicCRS::EPSG_4979, transformation);
@@ -8245,6 +8474,8 @@ static double getAngularValue(const std::string &paramValue,
 // ---------------------------------------------------------------------------
 
 static bool is_in_stringlist(const std::string &str, const char *stringlist) {
+    if (str.empty())
+        return false;
     const char *haystack = stringlist;
     while (true) {
         const char *res = strstr(haystack, str.c_str());
@@ -8364,7 +8595,11 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
                     break;
                 }
             }
-            if (getNumericValue(getParamValue(step, "a")) == 6378137) {
+            if (getNumericValue(getParamValue(step, "a")) == 6378137 &&
+                getAngularValue(getParamValue(step, "lon_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "lat_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "x_0")) == 0.0 &&
+                getAngularValue(getParamValue(step, "y_0")) == 0.0) {
                 bWebMercator = true;
             }
         } else if (hasParamValue(step, "lat_ts")) {

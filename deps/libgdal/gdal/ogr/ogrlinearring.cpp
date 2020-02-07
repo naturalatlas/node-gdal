@@ -39,7 +39,7 @@
 #include "ogr_geometry.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrlinearring.cpp ba2ef4045f82fd2260f1732e9e46a927277ac93d 2018-05-06 19:07:03 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrlinearring.cpp 7a8201c34365f616d11a146cbe31a7910c19c0ce 2019-10-31 11:58:48 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRLinearRing()                            */
@@ -702,16 +702,16 @@ OGRBoolean OGRLinearRing::isPointOnRingBoundary( const OGRPoint* poPoint,
         }
     }
 
-    double prev_diff_x = getX(0) - dfTestX;
-    double prev_diff_y = getY(0) - dfTestY;
+    double prev_diff_x = dfTestX - getX(0);
+    double prev_diff_y = dfTestY - getY(0);
 
     for( int iPoint = 1; iPoint < iNumPoints; iPoint++ )
     {
-        const double x1 = getX(iPoint) - dfTestX;
-        const double y1 = getY(iPoint) - dfTestY;
+        const double dx1 = dfTestX - getX(iPoint);
+        const double dy1 = dfTestY - getY(iPoint);
 
-        const double x2 = prev_diff_x;
-        const double y2 = prev_diff_y;
+        const double dx2 = prev_diff_x;
+        const double dy2 = prev_diff_y;
 
         // If the point is on the segment, return immediately.
         // FIXME? If the test point is not exactly identical to one of
@@ -719,17 +719,29 @@ OGRBoolean OGRLinearRing::isPointOnRingBoundary( const OGRPoint* poPoint,
         // little chance that we get 0. So that should be tested against some
         // epsilon.
 
-        if( x1 * y2 - x2 * y1 == 0 )
+        if( dx1 * dy2 - dx2 * dy1 == 0 )
         {
             // If iPoint and iPointPrev are the same, go on.
-            if( !(x1 == x2 && y1 == y2) )
+            if( !(dx1 == dx2 && dy1 == dy2) )
             {
-                return 1;
+                const double dx_segment = getX(iPoint) - getX(iPoint-1);
+                const double dy_segment = getY(iPoint) - getY(iPoint-1);
+                const double crossproduct =
+                    dx2 * dx_segment + dy2 * dy_segment;
+                if( crossproduct >= 0 )
+                {
+                    const double sq_length_seg = dx_segment * dx_segment +
+                                                 dy_segment * dy_segment;
+                    if( crossproduct <= sq_length_seg )
+                    {
+                        return 1;
+                    }
+                }
             }
         }
 
-        prev_diff_x = x1;
-        prev_diff_y = y1;
+        prev_diff_x = dx1;
+        prev_diff_y = dy1;
     }
 
     return 0;

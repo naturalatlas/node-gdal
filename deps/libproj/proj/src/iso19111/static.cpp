@@ -274,6 +274,7 @@ DEFINE_WKT_CONSTANT(BASEENGCRS);
 DEFINE_WKT_CONSTANT(BASEPARAMCRS);
 DEFINE_WKT_CONSTANT(BASETIMECRS);
 DEFINE_WKT_CONSTANT(VERSION);
+DEFINE_WKT_CONSTANT(GEOIDMODEL);
 
 DEFINE_WKT_CONSTANT(GEODETICCRS);
 DEFINE_WKT_CONSTANT(GEODETICDATUM);
@@ -342,12 +343,12 @@ const UnitOfMeasure UnitOfMeasure::MICRORADIAN("microradian", 1e-6,
 /** \brief Second, unit of measure of type TIME (SI unit). */
 const UnitOfMeasure UnitOfMeasure::SECOND("second", 1.0,
                                           UnitOfMeasure::Type::TIME,
-                                          Identifier::EPSG, "1029");
+                                          Identifier::EPSG, "1040");
 
 /** \brief Year, unit of measure of type TIME */
 const UnitOfMeasure UnitOfMeasure::YEAR("year", 31556925.445,
                                         UnitOfMeasure::Type::TIME,
-                                        Identifier::EPSG, "1040");
+                                        Identifier::EPSG, "1029");
 
 /** \brief Metre per year, unit of measure of type LINEAR. */
 const UnitOfMeasure UnitOfMeasure::METRE_PER_YEAR("metres per year",

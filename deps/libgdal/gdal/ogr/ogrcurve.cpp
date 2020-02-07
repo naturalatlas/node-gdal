@@ -29,7 +29,7 @@
 #include "ogr_geometry.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrcurve.cpp 8a17407edb062b63e064c31ccd56c3660bcb6f20 2018-06-20 12:24:49 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrcurve.cpp e2d634382dd6d3df536ae9d3b1a8dca39ea6b8b0 2019-12-18 13:19:04 +0100 Even Rouault $")
 
 //! @cond Doxygen_Suppress
 
@@ -322,7 +322,7 @@ OGRBoolean OGRCurve::IsConvex() const
 OGRCompoundCurve* OGRCurve::CastToCompoundCurve( OGRCurve* poCurve )
 {
     OGRCompoundCurve* poCC = new OGRCompoundCurve();
-    if( poCurve->getGeometryType() == wkbLineString )
+    if( wkbFlatten(poCurve->getGeometryType()) == wkbLineString )
         poCurve = CastToLineString(poCurve);
     if( !poCurve->IsEmpty() && poCC->addCurveDirectly(poCurve) != OGRERR_NONE )
     {

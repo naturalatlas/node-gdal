@@ -56,7 +56,7 @@
 #include "ogrgeojsonreader.h"
 #include <vector>
 
-CPL_CVSID("$Id: nasakeywordhandler.cpp 1d1b6d0b14c048a9b8ba7b460410d438920e3cd1 2019-05-06 12:04:39 +0200 Even Rouault $")
+CPL_CVSID("$Id: nasakeywordhandler.cpp e154f9ed078e6b9d750c383b3d4fefb3cdfb109f 2019-11-02 12:46:36 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -198,6 +198,18 @@ int NASAKeywordHandler::ReadGroup( const char *pszPathPrefix, CPLJSONObject &oCu
 }
 
 /************************************************************************/
+/*                        StripQuotesIfNeeded()                         */
+/************************************************************************/
+
+static CPLString StripQuotesIfNeeded(const CPLString& osWord,
+                                     bool bQuotesAlreadyRemoved)
+{
+    if( bQuotesAlreadyRemoved || osWord.size() < 2 || osWord[0] != '"' )
+        return osWord;
+    return osWord.substr(1, osWord.size() - 2);
+}
+
+/************************************************************************/
 /*                              ReadPair()                              */
 /*                                                                      */
 /*      Read a name/value pair from the input stream.  Strip off        */
@@ -266,7 +278,7 @@ int NASAKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue,
                       *pszHeaderNext == '{' || *pszHeaderNext == ')' ||
                       *pszHeaderNext == '}')) )
                 {
-                    oArray.Add(osWord);
+                    oArray.Add(StripQuotesIfNeeded(osWord, m_bStripSurroundingQuotes));
                 }
             }
             else  if( CPLGetValueType(osWord) == CPL_VALUE_INTEGER )
@@ -279,6 +291,10 @@ int NASAKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue,
             }
 
             osValue += osWord;
+            while ( isspace( static_cast<unsigned char>( *pszHeaderNext ) ) )
+            {
+                pszHeaderNext++;
+            }
 
             if( *pszHeaderNext == ')' )
             {
@@ -312,6 +328,15 @@ int NASAKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue,
             {
                 osValue += *pszHeaderNext;
                 pszHeaderNext ++;
+                // Do not use SkipWhite() here to avoid being confuse by
+                // constructs like
+                // FOO = (#123456,
+                //        #123456)
+                // where we could confuse the second line with a comment.
+                while ( isspace( static_cast<unsigned char>( *pszHeaderNext ) ) )
+                {
+                    pszHeaderNext++;
+                }
             }
             SkipWhite();
 
@@ -339,7 +364,7 @@ int NASAKeywordHandler::ReadPair( CPLString &osName, CPLString &osValue,
             {
                 if( bIsString )
                 {
-                    oCur.Add( osName, osValue );
+                    oCur.Add( osName, StripQuotesIfNeeded(osValue, m_bStripSurroundingQuotes) );
                 }
                 else if( CPLGetValueType(osValue) == CPL_VALUE_INTEGER )
                 {

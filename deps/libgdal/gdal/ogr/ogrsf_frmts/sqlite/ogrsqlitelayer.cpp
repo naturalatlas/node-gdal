@@ -58,7 +58,7 @@
 #include "ogrsf_frmts.h"
 #include "sqlite3.h"
 
-CPL_CVSID("$Id: ogrsqlitelayer.cpp b1eecf60a04ac462985fd2c7298d38780248497a 2018-10-27 15:20:25 -0400 Simon South $")
+CPL_CVSID("$Id: ogrsqlitelayer.cpp 6dabf35f59892210ce9039d16787d59f0241590b 2020-01-05 16:40:39 +0300 Dmitry Baryshnikov $")
 
 /************************************************************************/
 /*                           OGRSQLiteLayer()                           */
@@ -138,7 +138,7 @@ bool OGRGetDateTimeFieldType( const char* pszValue,
                               OGRFieldType* pFieldType )
 {
     bool bSuccess = FALSE;
-    size_t nValueLength = strnlen( pszValue, 16 );
+    size_t nValueLength = CPLStrnlen( pszValue, 16 );
 
     if( nValueLength >= 5 )
     {

@@ -45,7 +45,7 @@
 #include "cpl_vsi.h"
 #include "gdal.h"
 
-CPL_CVSID("$Id: rasterfill.cpp c23515b39f088883adf93428c484747e4dcf3a56 2019-02-04 15:11:12 +0100 Even Rouault $")
+CPL_CVSID("$Id: rasterfill.cpp 47fc5963633c59f05e820ca575bbddfe88573739 2020-01-07 21:15:46 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                           GDALFilterLine()                           */
@@ -875,7 +875,7 @@ GDALFillNodata( GDALRasterBandH hTargetBand,
         GDALFlushRasterCache( hMaskBand );
 
         void *pScaledProgress =
-            GDALCreateScaledProgress( dfProgressRatio, 1.0, pfnProgress, nullptr );
+            GDALCreateScaledProgress( dfProgressRatio, 1.0, pfnProgress, pProgressArg );
 
         eErr = GDALMultiFilter( hTargetBand, hMaskBand, hFiltMaskBand,
                                 nSmoothingIterations,

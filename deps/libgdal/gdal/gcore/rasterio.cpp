@@ -55,7 +55,7 @@
 #include "memdataset.h"
 #include "vrtdataset.h"
 
-CPL_CVSID("$Id: rasterio.cpp 8401c49a4e8509353d01b3d832705fbc28313741 2019-10-18 19:36:34 +0200 battisti-engineer $")
+CPL_CVSID("$Id: rasterio.cpp d6c22cb12d8c5824353111a84932538b379d71de 2019-12-30 02:46:39 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                             IRasterIO()                              */
@@ -2899,6 +2899,7 @@ template<> void GDALUnrolledCopy<GByte,2,1>( GByte* CPL_RESTRICT pDest,
         }
 #endif
 
+        const __m128i xmm_zero = _mm_setzero_si128();
         const __m128i xmm_mask = _mm_set1_epi16(0xff);
         // If we were sure that there would always be 1 trailing byte, we could
         // check against nIters - 15
@@ -2910,8 +2911,8 @@ template<> void GDALUnrolledCopy<GByte,2,1>( GByte* CPL_RESTRICT pDest,
             xmm0 = _mm_and_si128(xmm0, xmm_mask);
             xmm1 = _mm_and_si128(xmm1, xmm_mask);
             // Pack int16 to uint8
-            xmm0 = _mm_packus_epi16(xmm0, xmm0);
-            xmm1 = _mm_packus_epi16(xmm1, xmm1);
+            xmm0 = _mm_packus_epi16(xmm0, xmm_zero);
+            xmm1 = _mm_packus_epi16(xmm1, xmm_zero);
 
             // Move 64 lower bits of xmm1 to 64 upper bits of xmm0
             xmm1 = _mm_slli_si128(xmm1, 8);

@@ -38,7 +38,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: ogrwfsdatasource.cpp 3189229c71a9620126f6b349f4f80399baeaf528 2019-04-20 20:33:36 +0200 Even Rouault $")
+CPL_CVSID("$Id: ogrwfsdatasource.cpp 39380a6be4086d4bec50dcb6c58eac748304afde 2020-01-05 20:20:19 +0100 Even Rouault $")
 
 constexpr int DEFAULT_BASE_START_INDEX = 0;
 constexpr int DEFAULT_PAGE_SIZE = 100;
@@ -1358,7 +1358,11 @@ int OGRWFSDataSource::Open( const char * pszFilename, int bUpdateIn,
                     pszDefaultSRS = osSRSName.c_str();
                 }
 
-                if (pszDefaultSRS)
+                // EPSG:404000 is a GeoServer joke to indicate a unknown SRS
+                // https://osgeo-org.atlassian.net/browse/GEOS-8993
+                if (pszDefaultSRS &&
+                    !EQUAL(pszDefaultSRS, "EPSG:404000") &&
+                    !EQUAL(pszDefaultSRS, "urn:ogc:def:crs:EPSG::404000"))
                 {
                     OGRSpatialReference oSRS;
                     if (oSRS.SetFromUserInput(pszDefaultSRS) == OGRERR_NONE)

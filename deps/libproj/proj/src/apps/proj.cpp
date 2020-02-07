@@ -290,7 +290,8 @@ static void vprocess(FILE *fid) {
 }
 
 int main(int argc, char **argv) {
-    char *arg, *pargv[MAX_PARGS];
+    char *arg;
+    char *pargv[MAX_PARGS] = {};
     char **eargv = argv;
     FILE *fid;
     int pargc = 0, eargc = 0, mon = 0;
@@ -487,6 +488,14 @@ int main(int argc, char **argv) {
     if (proj_angular_output(Proj, PJ_FWD)) {
         emess(3, "can't initialize operations that produce angular output coordinates");
         exit(0);
+    }
+
+    // Ugly hack. See https://github.com/OSGeo/PROJ/issues/1782
+    if( Proj->right == PJ_IO_UNITS_WHATEVER && Proj->descr &&
+        strncmp(Proj->descr, "General Oblique Transformation",
+                strlen("General Oblique Transformation")) == 0 )
+    {
+        Proj->right = PJ_IO_UNITS_PROJECTED;
     }
 
     if (inverse) {

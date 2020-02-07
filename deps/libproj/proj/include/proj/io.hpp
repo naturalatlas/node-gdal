@@ -182,18 +182,24 @@ class PROJ_GCC_DLL WKTFormatter {
         WKT2_SIMPLIFIED,
         WKT2_2015_SIMPLIFIED = WKT2_SIMPLIFIED,
 
-        /** Full WKT2 string, conforming to ISO 19162:2018 / OGC 18-010, with
-         * (\ref WKT2_2018) all possible nodes and new keyword names.
+        /** Full WKT2 string, conforming to ISO 19162:2019 / OGC 18-010, with
+         * (\ref WKT2_2019) all possible nodes and new keyword names.
          * Non-normative list of differences:
          * <ul>
-         *      <li>WKT2_2018 uses GEOGCRS / BASEGEOGCRS keywords for
+         *      <li>WKT2_2019 uses GEOGCRS / BASEGEOGCRS keywords for
          * GeographicCRS.</li>
          * </ul>
          */
-        WKT2_2018,
+        WKT2_2019,
 
-        /** WKT2_2018 with the simplification rule of WKT2_SIMPLIFIED */
-        WKT2_2018_SIMPLIFIED,
+        /** Deprecated alias for WKT2_2019 */
+        WKT2_2018 = WKT2_2019,
+
+        /** WKT2_2019 with the simplification rule of WKT2_SIMPLIFIED */
+        WKT2_2019_SIMPLIFIED,
+
+        /** Deprecated alias for WKT2_2019_SIMPLIFIED */
+        WKT2_2018_SIMPLIFIED = WKT2_2019_SIMPLIFIED,
 
         /** WKT1 as traditionally output by GDAL, deriving from OGC 01-009.
             A notable departure from WKT1_GDAL with respect to OGC 01-009 is
@@ -322,7 +328,7 @@ class PROJ_GCC_DLL WKTFormatter {
     };
 
     PROJ_INTERNAL Version version() const;
-    PROJ_INTERNAL bool use2018Keywords() const;
+    PROJ_INTERNAL bool use2019Keywords() const;
     PROJ_INTERNAL bool useESRIDialect() const;
 
     PROJ_INTERNAL const DatabaseContextPtr &databaseContext() const;
@@ -736,8 +742,10 @@ class PROJ_GCC_DLL WKTParser {
 
     /** Guessed WKT "dialect" */
     enum class PROJ_MSVC_DLL WKTGuessedDialect {
-        /** \ref WKT2_2018 */
-        WKT2_2018,
+        /** \ref WKT2_2019 */
+        WKT2_2019,
+        /** Deprecated alias for WKT2_2019 */
+        WKT2_2018 = WKT2_2019,
         /** \ref WKT2_2015 */
         WKT2_2015,
         /** \ref WKT1 */
@@ -833,6 +841,11 @@ class PROJ_GCC_DLL DatabaseContext {
     getAliasFromOfficialName(const std::string &officialName,
                              const std::string &tableName,
                              const std::string &source) const;
+
+    PROJ_INTERNAL std::list<std::string>
+    getAliases(const std::string &authName, const std::string &code,
+               const std::string &officialName, const std::string &tableName,
+               const std::string &source) const;
 
     PROJ_INTERNAL bool isKnownName(const std::string &name,
                                    const std::string &tableName) const;
@@ -1042,7 +1055,10 @@ class PROJ_GCC_DLL AuthorityFactory {
         const std::string &sourceCRSAuthName, const std::string &sourceCRSCode,
         const std::string &targetCRSAuthName, const std::string &targetCRSCode,
         bool usePROJAlternativeGridNames, bool discardIfMissingGrid,
-        bool discardSuperseded) const;
+        bool discardSuperseded, bool tryReverseOrder = false,
+        bool reportOnlyIntersectingTransformations = false,
+        const metadata::ExtentPtr &intersectingExtent1 = nullptr,
+        const metadata::ExtentPtr &intersectingExtent2 = nullptr) const;
 
     PROJ_DLL std::vector<operation::CoordinateOperationNNPtr>
     createFromCRSCodesWithIntermediates(
@@ -1051,7 +1067,12 @@ class PROJ_GCC_DLL AuthorityFactory {
         bool usePROJAlternativeGridNames, bool discardIfMissingGrid,
         bool discardSuperseded,
         const std::vector<std::pair<std::string, std::string>>
-            &intermediateCRSAuthCodes) const;
+            &intermediateCRSAuthCodes,
+        ObjectType allowedIntermediateObjectType = ObjectType::CRS,
+        const std::vector<std::string> &allowedAuthorities =
+            std::vector<std::string>(),
+        const metadata::ExtentPtr &intersectingExtent1 = nullptr,
+        const metadata::ExtentPtr &intersectingExtent2 = nullptr) const;
 
     PROJ_DLL std::string getOfficialNameFromAlias(
         const std::string &aliasedName, const std::string &tableName,
@@ -1081,6 +1102,10 @@ class PROJ_GCC_DLL AuthorityFactory {
                                const std::string &datum_code,
                                const std::string &geodetic_crs_type) const;
 
+    PROJ_INTERNAL std::list<crs::VerticalCRSNNPtr>
+    createVerticalCRSFromDatum(const std::string &datum_auth_name,
+                               const std::string &datum_code) const;
+
     PROJ_INTERNAL std::list<crs::GeodeticCRSNNPtr>
     createGeodeticCRSFromEllipsoid(const std::string &ellipsoid_auth_name,
                                    const std::string &ellipsoid_code,
@@ -1095,6 +1120,22 @@ class PROJ_GCC_DLL AuthorityFactory {
     PROJ_INTERNAL crs::CRSNNPtr
     createCoordinateReferenceSystem(const std::string &code,
                                     bool allowCompound) const;
+
+    PROJ_INTERNAL std::vector<operation::CoordinateOperationNNPtr>
+    getTransformationsForGeoid(const std::string &geoidName,
+                               bool usePROJAlternativeGridNames) const;
+
+    PROJ_INTERNAL std::vector<operation::CoordinateOperationNNPtr>
+    createBetweenGeodeticCRSWithDatumBasedIntermediates(
+        const crs::CRSNNPtr &sourceCRS, const std::string &sourceCRSAuthName,
+        const std::string &sourceCRSCode, const crs::CRSNNPtr &targetCRS,
+        const std::string &targetCRSAuthName, const std::string &targetCRSCode,
+        bool usePROJAlternativeGridNames, bool discardIfMissingGrid,
+        bool discardSuperseded,
+        const std::vector<std::string> &allowedAuthorities,
+        const metadata::ExtentPtr &intersectingExtent1,
+        const metadata::ExtentPtr &intersectingExtent2) const;
+
     //! @endcond
 
   protected:

@@ -249,7 +249,6 @@ set(SRC_LIBPROJ_CORE
   list.cpp
   log.cpp
   malloc.cpp
-  math.cpp
   mlfn.cpp
   msfn.cpp
   mutex.cpp
@@ -263,7 +262,6 @@ set(SRC_LIBPROJ_CORE
   pj_list.h
   pr_list.cpp
   proj_internal.h
-  proj_math.h
   proj_mdist.cpp
   qsfn.cpp
   release.cpp
@@ -285,7 +283,9 @@ set(SRC_LIBPROJ_CORE
   wkt_parser.cpp
   wkt_parser.hpp
   zpoly1.cpp
+  proj_json_streaming_writer.hpp
   proj_json_streaming_writer.cpp
+  tracing.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/proj_config.h
 )
 
@@ -294,7 +294,6 @@ set(HEADERS_LIBPROJ
   proj.h
   proj_experimental.h
   proj_constants.h
-  proj_json_streaming_writer.hpp
   geodesic.h
 )
 
@@ -405,6 +404,7 @@ if(WIN32)
     PROPERTIES
     VERSION "${${PROJECT_INTERN_NAME}_BUILD_VERSION}"
     OUTPUT_NAME "${PROJ_CORE_TARGET_OUTPUT_NAME}"
+    ARCHIVE_OUTPUT_NAME "${PROJ_CORE_TARGET}"
     CLEAN_DIRECT_OUTPUT 1)
 elseif(BUILD_FRAMEWORKS_AND_BUNDLE)
   set_target_properties(${PROJ_CORE_TARGET}
@@ -443,7 +443,7 @@ endif()
 include_directories(${SQLITE3_INCLUDE_DIR})
 target_link_libraries(${PROJ_CORE_TARGET} ${SQLITE3_LIBRARY})
 
-if(MSVC)
+if(MSVC AND BUILD_LIBPROJ_SHARED)
   target_compile_definitions(${PROJ_CORE_TARGET}
     PRIVATE PROJ_MSVC_DLL_EXPORT=1)
 endif()

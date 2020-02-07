@@ -50,7 +50,7 @@
 
 /*! @cond Doxygen_Suppress */
 
-CPL_CVSID("$Id: vrtrasterband.cpp 977f2da59e46852f49534361860bb92f9c6ad1fd 2019-03-14 21:46:14 +0100 Even Rouault $")
+CPL_CVSID("$Id: vrtrasterband.cpp bc9641926ce9a7bcd04845bd71487da50ff9d0f0 2019-11-14 16:17:17 +0100 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -1188,7 +1188,10 @@ GDALRasterBand *VRTRasterBand::GetOverview( int iOverview )
             || iOverview >= static_cast<int>( poVRTDS->m_apoOverviews.size() ) )
             return nullptr;
 
-        return poVRTDS->m_apoOverviews[iOverview]->GetRasterBand(nBand ? nBand : 1);
+        auto poOvrBand = poVRTDS->m_apoOverviews[iOverview]->GetRasterBand(nBand ? nBand : 1);
+        if( m_bIsMaskBand )
+            return poOvrBand->GetMaskBand();
+        return poOvrBand;
     }
 
     return nullptr;

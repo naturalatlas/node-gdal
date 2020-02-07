@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_spatialref.h aa2b46947ceef81934fef5a0fd4da1862ce71245 2019-05-23 21:34:37 +0200 Even Rouault $
+ * $Id: ogr_spatialref.h 8b99fd4d3ad3db542705722876fcf484486f46d6 2019-12-17 14:27:30 +0100 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Classes for manipulating spatial reference systems in a
@@ -361,6 +361,7 @@ class CPL_DLL OGRSpatialReference
                             double = 0.0, double = 0.0, double = 0.0,
                             double = 0.0 );
     OGRErr      GetTOWGS84( double *padfCoef, int nCoeff = 7 ) const;
+    OGRErr      AddGuessedTOWGS84();
 
     double      GetSemiMajor( OGRErr * = nullptr ) const;
     double      GetSemiMinor( OGRErr * = nullptr ) const;

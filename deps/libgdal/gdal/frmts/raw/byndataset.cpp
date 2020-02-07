@@ -38,7 +38,10 @@
 
 #include <cstdlib>
 
-CPL_CVSID("$Id: byndataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: byndataset.cpp 9cf37ca4b4b20ed78be7010492ebcb7be5fec0f4 2019-12-14 12:26:47 +0100 Even Rouault $")
+
+// Specification at
+// https://www.nrcan.gc.ca/sites/www.nrcan.gc.ca/files/earthsciences/pdf/gpshgrid_e.pdf
 
 const static BYNEllipsoids EllipsoidTable[] = {
     { "GRS80",       6378137.0,  298.257222101 },
@@ -87,7 +90,9 @@ double BYNRasterBand::GetNoDataValue( int *pbSuccess )
     {
         return dfNoData;
     }
-    return eDataType == GDT_Int16 ? 32767.0 : 9999.0 * GetScale();
+    const double dfFactor =
+        reinterpret_cast<BYNDataset*>(poDS)->hHeader.dfFactor;
+    return eDataType == GDT_Int16 ? 32767.0 : 9999.0 * dfFactor;
 }
 
 /************************************************************************/

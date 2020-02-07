@@ -49,7 +49,7 @@
 #include "gdalwarper.h"
 #include "ogr_geometry.h"
 
-CPL_CVSID("$Id: vrtwarped.cpp f3bab8e15f3795e36b6c045e6ea20393e4085898 2019-02-18 15:50:03 +0100 Even Rouault $")
+CPL_CVSID("$Id: vrtwarped.cpp 776e6027755b1ec5045a2592c565ec164fca0d73 2019-11-12 14:20:18 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                      GDALAutoCreateWarpedVRT()                       */
@@ -464,6 +464,29 @@ CPLErr VRTWarpedDataset::SetMetadataItem( const char *pszName, const char *pszVa
 }
 
 /************************************************************************/
+/*                        VRTWarpedAddOptions()                         */
+/************************************************************************/
+
+static char** VRTWarpedAddOptions(char** papszWarpOptions)
+{
+    /* Avoid errors when adding an alpha band, but source dataset has */
+    /* no alpha band (#4571), and generally don't leave our buffer uninitialized */
+    if (CSLFetchNameValue( papszWarpOptions, "INIT_DEST" ) == nullptr)
+        papszWarpOptions =
+            CSLSetNameValue(papszWarpOptions, "INIT_DEST", "0");
+
+    /* For https://github.com/OSGeo/gdal/issues/1985 */
+    if (CSLFetchNameValue( papszWarpOptions,
+                           "ERROR_OUT_IF_EMPTY_SOURCE_WINDOW" ) == nullptr)
+    {
+        papszWarpOptions =
+            CSLSetNameValue(papszWarpOptions,
+                            "ERROR_OUT_IF_EMPTY_SOURCE_WINDOW", "FALSE");
+    }
+    return papszWarpOptions;
+}
+
+/************************************************************************/
 /*                             Initialize()                             */
 /*                                                                      */
 /*      Initialize a dataset from passed in warp options.               */
@@ -480,11 +503,7 @@ CPLErr VRTWarpedDataset::Initialize( void *psWO )
     GDALWarpOptions* psWO_Dup
         = GDALCloneWarpOptions(static_cast<GDALWarpOptions *>( psWO ) );
 
-    /* Avoid errors when adding an alpha band, but source dataset has */
-    /* no alpha band (#4571), and generally don't leave our buffer uninitialized */
-    if (CSLFetchNameValue( psWO_Dup->papszWarpOptions, "INIT_DEST" ) == nullptr)
-        psWO_Dup->papszWarpOptions =
-            CSLSetNameValue(psWO_Dup->papszWarpOptions, "INIT_DEST", "0");
+    psWO_Dup->papszWarpOptions = VRTWarpedAddOptions(psWO_Dup->papszWarpOptions);
 
     CPLErr eErr = m_poWarper->Initialize( psWO_Dup );
 
@@ -1231,11 +1250,7 @@ CPLErr VRTWarpedDataset::XMLInit( CPLXMLNode *psTree, const char *pszVRTPathIn )
     if( psWO == nullptr )
         return CE_Failure;
 
-    /* Avoid errors when adding an alpha band, but source dataset has */
-    /* no alpha band (#4571) */
-    if( CSLFetchNameValue( psWO->papszWarpOptions, "INIT_DEST" ) == nullptr )
-        psWO->papszWarpOptions =
-            CSLSetNameValue(psWO->papszWarpOptions, "INIT_DEST", "0");
+    psWO->papszWarpOptions = VRTWarpedAddOptions(psWO->papszWarpOptions);
 
     eAccess = GA_Update;
 

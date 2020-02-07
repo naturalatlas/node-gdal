@@ -32,7 +32,7 @@
 #include <json.h>  // JSON-C
 #include <ogr_api.h>
 
-CPL_CVSID("$Id: ogrtopojsonreader.cpp c3b17f3db1f346b23bbab3000bd3b5e4225b7512 2019-01-03 10:26:12 -0500 alanstewart-terragotech $")
+CPL_CVSID("$Id: ogrtopojsonreader.cpp b471cd08d02f7f05d658fe7da57f30f1b29d3b52 2020-01-07 22:30:27 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRTopoJSONReader()                         */
@@ -58,10 +58,20 @@ OGRTopoJSONReader::~OGRTopoJSONReader()
 /*                           Parse()                                    */
 /************************************************************************/
 
-OGRErr OGRTopoJSONReader::Parse( const char* pszText )
+OGRErr OGRTopoJSONReader::Parse( const char* pszText, bool bLooseIdentification )
 {
     json_object *jsobj = nullptr;
-    if( nullptr != pszText && !OGRJSonParse(pszText, &jsobj, true) )
+    if( bLooseIdentification )
+    {
+        CPLPushErrorHandler(CPLQuietErrorHandler);
+    }
+    const bool bOK = nullptr != pszText && OGRJSonParse(pszText, &jsobj, true);
+    if( bLooseIdentification )
+    {
+        CPLPopErrorHandler();
+        CPLErrorReset();
+    }
+    if( !bOK )
     {
         return OGRERR_CORRUPT_DATA;
     }
@@ -432,7 +442,7 @@ static void EstablishLayerDefn( OGRFeatureDefn* poDefn,
         json_object_object_foreachC( poObjProps, it )
         {
             OGRGeoJSONReaderAddOrUpdateField(poDefn, it.key, it.val,
-                                             false, 0, false,
+                                             false, 0, false, false,
                                              aoSetUndeterminedTypeFields);
         }
     }

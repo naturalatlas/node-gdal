@@ -39,7 +39,7 @@
 #include "gdal_frmts.h"
 #include "gdal_priv.h"
 
-CPL_CVSID("$Id: coasp_dataset.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $")
+CPL_CVSID("$Id: coasp_dataset.cpp a7ae5e6f64689138615e640994f9b38739231873 2019-12-30 13:20:40 +0100 Even Rouault $")
 
 constexpr int TYPE_GENERIC = 0;
 constexpr int TYPE_GEOREF = 1;
@@ -388,9 +388,6 @@ GDALDataset *COASPDataset::Open( GDALOpenInfo *poOpenInfo )
     /* Create a fresh dataset for us to work with */
     COASPDataset *poDS = new COASPDataset();
 
-    if (poDS == nullptr)
-        return nullptr;
-
     /* Steal the file pointer for the header */
     poDS->fpHdr = poOpenInfo->fpL;
     poOpenInfo->fpL = nullptr;
@@ -402,6 +399,13 @@ GDALDataset *COASPDataset::Open( GDALOpenInfo *poOpenInfo )
     char *pszDir = VSIStrdup(CPLGetPath(poDS->pszFileName));
     const char *pszExt = "rc";
     int nNull = static_cast<int>(strlen(pszBaseName)) - 1;
+    if( nNull <= 0 )
+    {
+        VSIFree(pszDir);
+        VSIFree(pszBaseName);
+        delete poDS;
+        return nullptr;
+    }
     char *pszBase = (char *)CPLMalloc(nNull);
     strncpy(pszBase, pszBaseName, nNull);
     pszBase[nNull - 1] = '\0';

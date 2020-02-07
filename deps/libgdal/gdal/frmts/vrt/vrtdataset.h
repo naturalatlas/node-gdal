@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vrtdataset.h 977f2da59e46852f49534361860bb92f9c6ad1fd 2019-03-14 21:46:14 +0100 Even Rouault $
+ * $Id: vrtdataset.h c3bfdaa3118385908c35a20b0d4e96de3322c77f 2019-11-15 13:58:59 +0100 Even Rouault $
  *
  * Project:  Virtual GDAL Datasets
  * Purpose:  Declaration of virtual gdal dataset classes.
@@ -939,6 +939,7 @@ public:
     virtual CPLErr FlushCache() override;
 
     GDALRasterBand* GetBand();
+    GDALRasterBand* GetMaskBandMainBand() { return m_poMaskBandMainBand; }
     int             IsSameExceptBandNumber( VRTSimpleSource* poOtherSource );
     CPLErr          DatasetRasterIO(
                                GDALDataType eBandDataType,

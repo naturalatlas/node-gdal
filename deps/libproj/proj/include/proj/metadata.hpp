@@ -55,8 +55,7 @@ namespace metadata {
 
 /** \brief Standardized resource reference.
  *
- * Local names are names which are directly accessible to and maintained by a
- * NameSpace within which they are local, indicated by the scope.
+ * A citation contains a title.
  *
  * \remark Simplified version of [Citation]
  * (http://www.geoapi.org/3.0/javadoc/org/opengis/metadata/citation/Citation.html)
@@ -109,7 +108,8 @@ class PROJ_GCC_DLL GeographicExtent : public util::BaseObject,
     PROJ_INTERNAL bool _isEquivalentTo(
         const util::IComparable *other,
         util::IComparable::Criterion criterion =
-            util::IComparable::Criterion::STRICT) const override = 0;
+            util::IComparable::Criterion::STRICT,
+        const io::DatabaseContextPtr &dbContext = nullptr) const override = 0;
     //! @endcond
 
     /** \brief Returns whether this extent contains the other one. */
@@ -163,10 +163,11 @@ class PROJ_GCC_DLL GeographicBoundingBox : public GeographicExtent {
     create(double west, double south, double east, double north);
 
     //! @cond Doxygen_Suppress
-    PROJ_INTERNAL bool
-    _isEquivalentTo(const util::IComparable *other,
-                    util::IComparable::Criterion criterion =
-                        util::IComparable::Criterion::STRICT) const override;
+    PROJ_INTERNAL bool _isEquivalentTo(
+        const util::IComparable *other,
+        util::IComparable::Criterion criterion =
+            util::IComparable::Criterion::STRICT,
+        const io::DatabaseContextPtr &dbContext = nullptr) const override;
     //! @endcond
 
     PROJ_INTERNAL bool
@@ -215,10 +216,11 @@ class PROJ_GCC_DLL TemporalExtent : public util::BaseObject,
                                                const std::string &stop);
 
     //! @cond Doxygen_Suppress
-    PROJ_INTERNAL bool
-    _isEquivalentTo(const util::IComparable *other,
-                    util::IComparable::Criterion criterion =
-                        util::IComparable::Criterion::STRICT) const override;
+    PROJ_INTERNAL bool _isEquivalentTo(
+        const util::IComparable *other,
+        util::IComparable::Criterion criterion =
+            util::IComparable::Criterion::STRICT,
+        const io::DatabaseContextPtr &dbContext = nullptr) const override;
     //! @endcond
 
     PROJ_DLL bool contains(const TemporalExtentNNPtr &other) const;
@@ -264,10 +266,11 @@ class PROJ_GCC_DLL VerticalExtent : public util::BaseObject,
            const common::UnitOfMeasureNNPtr &unitIn);
 
     //! @cond Doxygen_Suppress
-    PROJ_INTERNAL bool
-    _isEquivalentTo(const util::IComparable *other,
-                    util::IComparable::Criterion criterion =
-                        util::IComparable::Criterion::STRICT) const override;
+    PROJ_INTERNAL bool _isEquivalentTo(
+        const util::IComparable *other,
+        util::IComparable::Criterion criterion =
+            util::IComparable::Criterion::STRICT,
+        const io::DatabaseContextPtr &dbContext = nullptr) const override;
     //! @endcond
 
     PROJ_DLL bool contains(const VerticalExtentNNPtr &other) const;
@@ -324,10 +327,11 @@ class PROJ_GCC_DLL Extent : public util::BaseObject, public util::IComparable {
                        util::optional<std::string>());
 
     //! @cond Doxygen_Suppress
-    PROJ_INTERNAL bool
-    _isEquivalentTo(const util::IComparable *other,
-                    util::IComparable::Criterion criterion =
-                        util::IComparable::Criterion::STRICT) const override;
+    PROJ_INTERNAL bool _isEquivalentTo(
+        const util::IComparable *other,
+        util::IComparable::Criterion criterion =
+            util::IComparable::Criterion::STRICT,
+        const io::DatabaseContextPtr &dbContext = nullptr) const override;
     //! @endcond
 
     PROJ_DLL bool contains(const ExtentNNPtr &other) const;

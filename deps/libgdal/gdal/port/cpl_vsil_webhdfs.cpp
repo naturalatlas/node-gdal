@@ -39,7 +39,7 @@
 
 #include "cpl_alibaba_oss.h"
 
-CPL_CVSID("$Id: cpl_vsil_webhdfs.cpp 78ebfa67fe512cc98e3452fc307a0a17e88d0b68 2019-06-21 00:26:51 +0200 Even Rouault $")
+CPL_CVSID("$Id: cpl_vsil_webhdfs.cpp 66580a13ceae0e4d3a03063d7f12e30088e76ea9 2019-11-12 15:53:17 +0100 Even Rouault $")
 
 #ifndef HAVE_CURL
 
@@ -108,7 +108,7 @@ class VSIWebHDFSHandle final : public VSICurlHandle
     CPLString       m_osUsernameParam{};
     CPLString       m_osDelegationParam{};
 
-    bool            DownloadRegion(vsi_l_offset startOffset, int nBlocks) override;
+   std::string      DownloadRegion(vsi_l_offset startOffset, int nBlocks) override;
 
   public:
     VSIWebHDFSHandle( VSIWebHDFSFSHandler* poFS,
@@ -997,15 +997,15 @@ vsi_l_offset VSIWebHDFSHandle::GetFileSize( bool bSetError )
 /*                          DownloadRegion()                            */
 /************************************************************************/
 
-bool VSIWebHDFSHandle::DownloadRegion( const vsi_l_offset startOffset,
-                                       const int nBlocks )
+std::string VSIWebHDFSHandle::DownloadRegion( const vsi_l_offset startOffset,
+                                              const int nBlocks )
 {
     if( bInterrupted && bStopOnInterruptUntilUninstall )
-        return false;
+        return std::string();
 
     poFS->GetCachedFileProp(m_pszURL, oFileProp);
     if( oFileProp.eExists == EXIST_NO )
-        return false;
+        return std::string();
 
     CURLM* hCurlMultiHandle = poFS->GetCurlMultiHandleFor(m_pszURL);
 
@@ -1076,7 +1076,7 @@ retry:
         CPLFree(sWriteFuncData.pBuffer);
         curl_easy_cleanup(hCurlHandle);
 
-        return false;
+        return std::string();
     }
 
     long response_code = 0;
@@ -1147,7 +1147,7 @@ retry:
         }
         CPLFree(sWriteFuncData.pBuffer);
         curl_easy_cleanup(hCurlHandle);
-        return false;
+        return std::string();
     }
 
     oFileProp.eExists = EXIST_YES;
@@ -1157,10 +1157,13 @@ retry:
                               sWriteFuncData.pBuffer,
                               sWriteFuncData.nSize);
 
+    std::string osRet;
+    osRet.assign(sWriteFuncData.pBuffer, sWriteFuncData.nSize);
+
     CPLFree(sWriteFuncData.pBuffer);
     curl_easy_cleanup(hCurlHandle);
 
-    return true;
+    return osRet;
 }
 
 

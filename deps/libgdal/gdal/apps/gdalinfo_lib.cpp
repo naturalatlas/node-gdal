@@ -61,7 +61,7 @@
 
 using std::vector;
 
-CPL_CVSID("$Id: gdalinfo_lib.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdalinfo_lib.cpp 2ebdf85677d49f5fc4a1307171fd15d8932dbb0f 2020-01-25 22:36:26 +0100 Even Rouault $")
 
 /*! output format */
 typedef enum {
@@ -593,7 +593,6 @@ char *GDALInfo( GDALDatasetH hDataset, const GDALInfoOptions *psOptions )
             bTransformToWGS84 = true;
             hLatLong = OSRNewSpatialReference( nullptr );
             OSRSetWellKnownGeogCS( hLatLong, "WGS84" );
-            OSRSetAxisMappingStrategy(hLatLong, OAMS_TRADITIONAL_GIS_ORDER);
         }
         else
         {
@@ -607,6 +606,7 @@ char *GDALInfo( GDALDatasetH hDataset, const GDALInfoOptions *psOptions )
 
         if( hLatLong != nullptr )
         {
+            OSRSetAxisMappingStrategy(hLatLong, OAMS_TRADITIONAL_GIS_ORDER);
             CPLPushErrorHandler( CPLQuietErrorHandler );
             hTransform = OCTNewCoordinateTransformation( hProj, hLatLong );
             CPLPopErrorHandler();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_xlsx.h 83d53c738a14b78a2b55ae3367ebb2a5a54e454d 2018-05-10 12:21:13 +0200 Even Rouault $
+ * $Id: ogr_xlsx.h 0c4b955ca2f836c9eb53e286904de1d5eafa6d51 2019-12-13 13:33:52 +0100 Even Rouault $
  *
  * Project:  XLSX Translator
  * Purpose:  Definition of classes for OGR OpenOfficeSpreadsheet .xlsx driver.
@@ -38,6 +38,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 namespace OGRXLSX {
 
@@ -49,12 +50,15 @@ class OGRXLSXDataSource;
 
 class OGRXLSXLayer final: public OGRMemLayer
 {
+    friend class OGRXLSXDataSource;
+
     bool               bInit;
     OGRXLSXDataSource* poDS;
     CPLString          osFilename;
     void               Init();
     bool               bUpdated;
     bool               bHasHeaderLine;
+    std::set<int>      oSetFieldsOfUnknownType{};
 
   public:
         OGRXLSXLayer( OGRXLSXDataSource* poDSIn,

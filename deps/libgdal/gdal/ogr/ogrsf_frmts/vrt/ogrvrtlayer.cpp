@@ -53,7 +53,7 @@
 #include "ogrsf_frmts/ogrsf_frmts.h"
 #include "ogrsf_frmts/vrt/ogr_vrt.h"
 
-CPL_CVSID("$Id: ogrvrtlayer.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrvrtlayer.cpp f86a5db0aa1e6694326dfdf97a838d8af7dbad67 2019-11-02 02:39:12 +0100 Even Rouault $")
 
 #define UNSUPPORTED_OP_READ_ONLY \
     "%s : unsupported operation on a read-only datasource."
@@ -232,6 +232,7 @@ bool OGRVRTLayer::FastInitialize( CPLXMLNode *psLTreeIn,
         if( !(EQUAL(pszLayerSRS, "NULL")) )
         {
             OGRSpatialReference oSRS;
+            oSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
             if( oSRS.SetFromUserInput(pszLayerSRS) != OGRERR_NONE )
             {
@@ -456,6 +457,7 @@ bool OGRVRTLayer::ParseGeometryField(CPLXMLNode *psNode,
         if( !(EQUAL(pszSRS,"NULL")) )
         {
             OGRSpatialReference oSRS;
+            oSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
             if( oSRS.SetFromUserInput(pszSRS) != OGRERR_NONE )
             {

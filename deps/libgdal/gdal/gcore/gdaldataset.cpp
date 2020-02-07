@@ -72,7 +72,7 @@
 #include "../sqlite/ogrsqliteexecutesql.h"
 #endif
 
-CPL_CVSID("$Id: gdaldataset.cpp 1cfb49f2aeaa112eae415b0621b8f374312d582d 2019-10-28 10:26:19 +0100 Even Rouault $")
+CPL_CVSID("$Id: gdaldataset.cpp c590dcec36eb6dcd7c5451623b859e7227475b44 2019-11-13 16:36:03 +0100 Even Rouault $")
 
 CPL_C_START
 GDALAsyncReader *
@@ -7272,8 +7272,20 @@ int GDALDataset::EnterReadWrite(GDALRWFlag eRWFlag)
                      CPLGetPID(), GetDescription());
 #endif
             CPLCreateOrAcquireMutex(&(m_poPrivate->hMutex), 1000.0);
-            // Not sure if we can have recursive calls, so...
-            m_poPrivate->oMapThreadToMutexTakenCount[CPLGetPID()]++;
+
+            const int nCountMutex = m_poPrivate->oMapThreadToMutexTakenCount[CPLGetPID()]++;
+            if( nCountMutex == 0 && eRWFlag == GF_Read )
+            {
+                CPLReleaseMutex(m_poPrivate->hMutex);
+                for( int i = 0; i < nBands; i++ )
+                {
+                    auto blockCache = papoBands[i]->poBandBlockCache;
+                    if( blockCache )
+                        blockCache->WaitCompletionPendingTasks();
+                }
+                CPLCreateOrAcquireMutex(&(m_poPrivate->hMutex), 1000.0);
+            }
+
             return TRUE;
         }
     }

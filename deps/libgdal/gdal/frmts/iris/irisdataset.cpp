@@ -37,7 +37,7 @@
 #include <algorithm>
 #include <sstream>
 
-CPL_CVSID("$Id: irisdataset.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: irisdataset.cpp c1ddf7153615962acd70cb146077f7185ae1e48d 2019-10-28 22:22:36 +0100 Even Rouault $")
 
 static double DEG2RAD = M_PI / 180.0;
 static double RAD2DEG = 180.0 / M_PI;
@@ -714,11 +714,18 @@ int IRISDataset::Identify( GDALOpenInfo * poOpenInfo )
 
     const short nId1 = CPL_LSBSINT16PTR(poOpenInfo->pabyHeader);
     const short nId2 = CPL_LSBSINT16PTR(poOpenInfo->pabyHeader + 12);
-    unsigned short nType = CPL_LSBUINT16PTR(poOpenInfo->pabyHeader + 24);
+    unsigned short nProductCode = CPL_LSBUINT16PTR(poOpenInfo->pabyHeader + 12 + 12);
+    const short nYear = CPL_LSBSINT16PTR(poOpenInfo->pabyHeader+26+12);
+    const short nMonth = CPL_LSBSINT16PTR(poOpenInfo->pabyHeader+28+12);
+    const short nDay = CPL_LSBSINT16PTR(poOpenInfo->pabyHeader+30+12);
 
     // Check if the two headers are 27 (product hdr) & 26 (product
-    // configuration), and the product type is in the range 1 -> 34.
-    if( !(nId1 == 27 && nId2 == 26 && nType > 0 && nType < 35) )
+    // configuration), and other metadata
+    if( !(nId1 == 27 && nId2 == 26 &&
+          nProductCode > 0 && nProductCode < CPL_ARRAYSIZE(aszProductNames) &&
+          nYear >= 1900 && nYear < 2100 &&
+          nMonth >= 1 && nMonth <= 12 &&
+          nDay >= 1 && nDay <= 31) )
         return FALSE;
 
     return TRUE;

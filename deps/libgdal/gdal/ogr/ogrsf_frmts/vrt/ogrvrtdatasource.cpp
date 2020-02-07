@@ -49,7 +49,7 @@
 #include "ogrwarpedlayer.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogrvrtdatasource.cpp 8e5eeb35bf76390e3134a4ea7076dab7d478ea0e 2018-11-14 22:55:13 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrvrtdatasource.cpp f86a5db0aa1e6694326dfdf97a838d8af7dbad67 2019-11-02 02:39:12 +0100 Even Rouault $")
 
 /************************************************************************/
 /*                       OGRVRTGetGeometryType()                        */
@@ -402,6 +402,7 @@ OGRLayer *OGRVRTDataSource::InstantiateUnionLayer(
         if( !EQUAL(pszLayerSRS, "NULL") )
         {
             OGRSpatialReference oSRS;
+            oSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
             if( oSRS.SetFromUserInput(pszLayerSRS) != OGRERR_NONE )
             {
@@ -529,6 +530,7 @@ OGRLayer *OGRVRTDataSource::InstantiateUnionLayer(
                 if( !EQUAL(pszSRS, "NULL") )
                 {
                     OGRSpatialReference oSRS;
+                    oSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
                     if( oSRS.SetFromUserInput(pszSRS) != OGRERR_NONE )
                     {

@@ -53,7 +53,7 @@
 #include "ogrsf_frmts.h"
 
 
-CPL_CVSID("$Id: ogrinfo.cpp b628c5c75561341c377d2356a2c3d24af1d7756b 2019-03-28 23:35:51 +0100 Even Rouault $")
+CPL_CVSID("$Id: ogrinfo.cpp 89c0d84eefe6b89d8f5d3b35781ccbddd1dccbad 2019-12-18 12:11:59 +0100 Even Rouault $")
 
 bool bVerbose = true;
 bool bSuperQuiet = false;
@@ -349,7 +349,11 @@ static void ReportOnLayer( OGRLayer * poLayer, const char *pszWHERE,
             }
             else
             {
-                poSRS->exportToPrettyWkt(&pszWKT);
+                CPLString osWKTFormat("FORMAT=");
+                osWKTFormat += pszWKTFormat;
+                const char* const apszWKTOptions[] =
+                    { osWKTFormat.c_str(), "MULTILINE=YES", nullptr };
+                poSRS->exportToWkt(&pszWKT, apszWKTOptions);
             }
 
             printf("Layer SRS WKT:\n%s\n", pszWKT);

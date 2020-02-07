@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogrgeojsonreader.h 8b5aa2265f771dc327f6344c13c14ed16895fc29 2019-05-02 11:16:35 +0200 Even Rouault $
+ * $Id: ogrgeojsonreader.h b471cd08d02f7f05d658fe7da57f30f1b29d3b52 2020-01-07 22:30:27 +0100 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Defines GeoJSON reader within OGR OGRGeoJSON Driver.
@@ -99,6 +99,7 @@ class OGRGeoJSONBaseReader
     void SetFlattenNestedAttributes( bool bFlatten, char chSeparator );
     void SetStoreNativeData( bool bStoreNativeData );
     void SetArrayAsString( bool bArrayAsString );
+    void SetDateAsString( bool bDateAsString );
 
     bool GenerateFeatureDefn( OGRLayer* poLayer, json_object* poObj );
     void FinalizeLayerDefn( OGRLayer* poLayer, CPLString& osFIDColumn );
@@ -113,6 +114,7 @@ class OGRGeoJSONBaseReader
     char chNestedAttributeSeparator_ = 0;
     bool bStoreNativeData_ = false;
     bool bArrayAsString_ = false;
+    bool bDateAsString_ = false;
 
   private:
 
@@ -217,6 +219,7 @@ void OGRGeoJSONReaderAddOrUpdateField(
     bool bFlattenNestedAttributes,
     char chNestedAttributeSeparator,
     bool bArrayAsString,
+    bool bDateAsString,
     std::set<int>& aoSetUndeterminedTypeFields );
 
 /************************************************************************/
@@ -314,7 +317,7 @@ class OGRTopoJSONReader
     OGRTopoJSONReader();
     ~OGRTopoJSONReader();
 
-    OGRErr Parse( const char* pszText );
+    OGRErr Parse( const char* pszText, bool bLooseIdentification );
     void ReadLayers( OGRGeoJSONDataSource* poDS );
 
   private:
