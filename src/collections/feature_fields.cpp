@@ -1,6 +1,5 @@
 #include "../gdal_common.hpp"
 #include "../gdal_feature.hpp"
-#include "../utils/fast_buffer.hpp"
 #include "feature_fields.hpp"
 
 namespace node_gdal {
@@ -572,10 +571,10 @@ Local<Value> FeatureFields::getFieldAsBinary(OGRFeature* feature, int field_inde
 
 	int count_of_bytes = 0;
 
-	unsigned char *data = (unsigned char*) feature->GetFieldAsBinary(field_index, &count_of_bytes);
+	char *data = (char *)feature->GetFieldAsBinary(field_index, &count_of_bytes);
 
 	if (count_of_bytes > 0) {
-		return scope.Escape(FastBuffer::New(data, count_of_bytes));
+		return scope.Escape(Nan::NewBuffer(data, count_of_bytes).ToLocalChecked());
 	}
 
 	return scope.Escape(Nan::Undefined());

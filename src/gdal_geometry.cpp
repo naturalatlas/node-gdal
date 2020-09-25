@@ -12,8 +12,6 @@
 #include "gdal_multilinestring.hpp"
 #include "gdal_multipolygon.hpp"
 
-#include "utils/fast_buffer.hpp"
-
 #include <node_buffer.h>
 #include <sstream>
 #include <stdlib.h>
@@ -654,8 +652,7 @@ NAN_METHOD(Geometry::exportToWKB)
 		return;
 	}
 
-	Local<Value> result = FastBuffer::New(data, size);
-	free(data);
+	Local<Value> result = Nan::NewBuffer((char *)data, size).ToLocalChecked();
 
 	info.GetReturnValue().Set(result);
 
