@@ -120,8 +120,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 		}
 	}
 
-	void *progress;
-	CPLErr err = GDALContourGenerate(src->get(), interval, base, n_fixed_levels, fixed_levels, use_nodata, nodata, dst->get(), id_field, elev_field, NULL, progress);
+	CPLErr err = GDALContourGenerate(src->get(), interval, base, n_fixed_levels, fixed_levels, use_nodata, nodata, dst->get(), id_field, elev_field, NULL, NULL);
 
 	if(err) {
 		NODE_THROW_CPLERR(err);
